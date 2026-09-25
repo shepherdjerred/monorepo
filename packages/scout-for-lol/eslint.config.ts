@@ -98,7 +98,6 @@ const config = [
       "./packages/domain/tsconfig.json",
       "./packages/report/tsconfig.json",
       "./packages/temporal/tsconfig.json",
-      "./packages/evals/tsconfig.json",
       "./tsconfig.scripts.json",
     ],
     ignores: [
@@ -253,7 +252,6 @@ const config = [
     files: [
       "packages/frontend/src/components/ui/**",
       "packages/frontend/src/components/review-tool/ui/**",
-      "packages/evals/src/components/ui/**",
     ],
     rules: { "custom-rules/no-shadcn-theme-tokens": "off" },
   },

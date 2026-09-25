@@ -22,6 +22,7 @@ A beta deployment of the same dashboard runs at
 | `/app/installed`         | Landing page after adding Scout to a server             |
 | `/app/explore`           | Persistent Explore conversations and contract authoring |
 | `/app/challenges`        | Global community challenge catalog                      |
+| `/app/clash`             | Clash schedule and tracked-player roster                |
 | `/app/halls/<server id>` | Member-facing Hall of Fame                              |
 | `/app/g/<server id>/…`   | The management workspace for one server                 |
 
@@ -103,6 +104,8 @@ Creating and editing are gated on `reports:create` and `reports:update`.
 - **Challenges** turn explicitly confirmed Explore drafts into immutable,
   deterministic progress contracts. Runs support a clean slate or retained
   history import.
+- **Clash** shows the current tournament schedule and tracked-player roster.
+  Current Clash games are pre-match only.
 
 See the [competitive progression
 reference](/docs/reference/competitive-progression/) for routes, records,

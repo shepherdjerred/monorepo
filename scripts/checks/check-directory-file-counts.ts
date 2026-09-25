@@ -194,14 +194,13 @@ export function findWarnings(
 export function reportedDirectories(
   requestedPaths: readonly string[] | undefined,
 ): ReadonlySet<string> | undefined {
-  if (requestedPaths === undefined || requestedPaths.length === 0) {
-    return undefined;
-  }
-  return new Set(
-    requestedPaths
-      .filter((path) => isCountedPath(path))
-      .map((path) => directoryOf(path)),
-  );
+  return requestedPaths === undefined || requestedPaths.length === 0
+    ? undefined
+    : new Set(
+        requestedPaths
+          .filter((path) => isCountedPath(path))
+          .map((path) => directoryOf(path)),
+      );
 }
 
 function describe(violation: Violation): string {

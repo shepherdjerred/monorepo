@@ -373,8 +373,9 @@ export function classify(error: AppError): FailureClass {
     case "api": {
       if (error.status === 401 || error.status === 403) return "auth";
       if (error.status === 404) return "not_found";
-      if (error.status === 429 || error.status >= 500) return "transient";
-      return "permanent";
+      return error.status === 429 || error.status >= 500
+        ? "transient"
+        : "permanent";
     }
   }
 }

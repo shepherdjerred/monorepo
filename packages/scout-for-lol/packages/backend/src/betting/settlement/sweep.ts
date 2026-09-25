@@ -1,5 +1,11 @@
 import * as Sentry from "@sentry/bun";
 import {
+  announcingSettlementSink,
+  checkpointFailureIn,
+  recordAnnouncement,
+  type SettlementAnnouncementSink,
+} from "#src/betting/notify/announcement-sink.ts";
+import {
   BUCKS_MATCHING_VERSION,
   BucksAmountSchema,
   BucksDeltaSchema,
@@ -40,6 +46,8 @@ async function matchPoolAtClose(input: {
   poolId: number;
   now: Date;
   requireExpired: boolean;
+  /** Who may announce this closure; v1's behaviour by default. */
+  sink?: SettlementAnnouncementSink | undefined;
 }): Promise<ClosedPool | undefined> {
   const result = await input.prismaClient.$transaction(async (tx) => {
     const claim = await tx.bucksMatchPool.updateMany({
@@ -241,7 +249,7 @@ async function matchPoolAtClose(input: {
       where: { poolId: input.poolId },
     });
 
-    return {
+    const draft = {
       matchId: pool.matchId,
       serverId: pool.serverId,
       messageRefsJson: pool.messageRefs,
@@ -265,35 +273,67 @@ async function matchPoolAtClose(input: {
         };
       }),
     };
+    // Assembled and checkpointed INSIDE the transaction, because the
+    // instruction to announce a closure is only worth having if it commits
+    // with the closure. It used to be finished afterwards, which was right
+    // when the only thing left to do was parse Discord refs and wrong once
+    // there was a durable record to write.
+    const closed: ClosedPool = {
+      matchId: draft.matchId,
+      serverId: draft.serverId,
+      humanMatchedPerSide: draft.humanMatchedPerSide,
+      houseFill: draft.houseFill,
+      totalMatchedPerSide: draft.totalMatchedPerSide,
+      positions: draft.positions,
+      messageRefs: parsedMessageRefs(input.poolId, draft),
+    };
+    await recordAnnouncement({
+      sink: input.sink ?? announcingSettlementSink,
+      db: tx,
+      family: "closure",
+      itemKey: closed.serverId,
+      payload: closed,
+    });
+    return closed;
   });
-  if (result === undefined) {
-    return;
-  }
+  return result;
+}
 
-  let messageRefs: ClosedPool["messageRefs"] = [];
+/**
+ * This pool's Discord references, or none when they are unreadable.
+ *
+ * Deliberately defensive, and that predates the checkpoint: delivery metadata
+ * is not part of the financial transaction, so a damaged reference must not
+ * roll matching and refunds back or leave a finished game's offers reserved.
+ * Moving the parse inside the transaction keeps that promise — it still
+ * cannot throw — while letting the closure and its instruction commit
+ * together.
+ */
+function parsedMessageRefs(
+  poolId: number,
+  draft: { messageRefsJson: string; matchId: string; serverId: string },
+): ClosedPool["messageRefs"] {
   try {
-    messageRefs = BucksMessageRefsSchema.parse(
-      JSON.parse(result.messageRefsJson),
-    ).map((ref) => ({ ...ref }));
+    return BucksMessageRefsSchema.parse(JSON.parse(draft.messageRefsJson)).map(
+      (ref) => ({ ...ref }),
+    );
   } catch (error) {
     // Delivery metadata is not part of the financial transaction. A damaged
     // Discord reference must not roll matching and refunds back or leave a
     // completed game's offers permanently reserved.
     logger.error(
-      `❌ Bryan Bucks pool ${input.poolId.toString()} matched, but its Discord message refs were malformed:`,
+      `❌ Bryan Bucks pool ${poolId.toString()} matched, but its Discord message refs were malformed:`,
       error,
     );
     Sentry.captureException(error, {
       tags: {
         source: "betting-sweep-message-refs",
-        matchId: result.matchId,
+        matchId: draft.matchId,
       },
-      extra: { poolId: input.poolId, serverId: result.serverId },
+      extra: { poolId, serverId: draft.serverId },
     });
+    return [];
   }
-
-  const { messageRefsJson: _messageRefsJson, ...closedPool } = result;
-  return { ...closedPool, messageRefs };
 }
 
 /** Match every expired window and return only pools claimed by this pass. */
@@ -346,6 +386,8 @@ export async function closeBettingWindowsForMatch(
   matchId: string,
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
+  /** Who may announce these closures; v1's behaviour by default. */
+  sink: SettlementAnnouncementSink = announcingSettlementSink,
 ): Promise<ClosedPool[]> {
   let candidates: { id: number }[];
   try {
@@ -379,12 +421,19 @@ export async function closeBettingWindowsForMatch(
         poolId: candidate.id,
         now,
         requireExpired: false,
+        sink,
       });
       if (result !== undefined) {
         closed.push(result);
         recordClosedPool(result, "match_finished");
       }
     } catch (error) {
+      if (checkpointFailureIn(error) !== undefined) throw error;
+      // The exemption this handler must not extend to: a checkpoint failure
+      // means the closure rolled back AND this match's settlement never
+      // became recoverable, so absorbing it lets the caller record a receipt
+      // over a closure nobody was told about. Everything else keeps the
+      // per-pool isolation below.
       // A malformed pool for one guild must not block healthy guild pools,
       // settlement, match awards, or the match-history cursor. The failed
       // transaction rolls its claim back, so this pool remains retryable.

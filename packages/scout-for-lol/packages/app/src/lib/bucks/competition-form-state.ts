@@ -58,10 +58,9 @@ export function buildDates(
 ): { ok: true; value: DatesValue } | { ok: false; message: string } {
   if (state.mode === "SEASON") {
     const parsed = SeasonIdSchema.safeParse(state.seasonId);
-    if (!parsed.success) {
-      return { ok: false, message: "Pick a season." };
-    }
-    return { ok: true, value: { type: "SEASON", seasonId: parsed.data } };
+    return parsed.success
+      ? { ok: true, value: { type: "SEASON", seasonId: parsed.data } }
+      : { ok: false, message: "Pick a season." };
   }
   if (state.startDate === "" || state.endDate === "") {
     return { ok: false, message: "Pick a start and end date." };

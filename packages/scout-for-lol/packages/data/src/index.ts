@@ -1,5 +1,6 @@
 export * from "./model/index.ts";
 export * from "./customs/customs.schema.ts";
+export * from "./scout-client/protocol.schema.ts";
 export {
   friendGroupHistory,
   getPerson,
@@ -21,7 +22,6 @@ export type { ArtStyle } from "./review/art/art-categories.ts";
 export * from "./review/models.ts";
 export * from "./review/prompts.ts";
 export * from "./review/exceptional-performance.ts";
-export * from "./review/art/image-prompt.ts";
 export {
   type ReviewTextMetadata,
   type ReviewImageMetadata,
@@ -115,7 +115,7 @@ export type {
 
 export * from "./model/riot/puuid-key-map.ts";
 export * from "./league/raw-match.schema.ts";
-export * from "./league/raw-tournament.schema.ts";
+export * from "./league/raw-clash.schema.ts";
 export * from "./league/raw-participant.schema.ts";
 export * from "./league/raw-team.schema.ts";
 export * from "./league/raw-perks.schema.ts";

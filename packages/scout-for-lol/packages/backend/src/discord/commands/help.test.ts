@@ -25,7 +25,6 @@ afterEach(() => {
   }
   resetConfigurationForTests();
   resetFlagOverrides("betting_enabled");
-  resetFlagOverrides("tournament_lobbies_enabled");
   resetFlagOverrides("voice_assistant_enabled");
 });
 

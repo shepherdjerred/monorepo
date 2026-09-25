@@ -5,9 +5,9 @@ import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   EXPLORE_SUGGESTIONS,
   PERSISTENT_EXPLORE_SUGGESTION,
-  pickDiverseSuggestions,
   type ExploreFeatureContext,
-} from "#src/components/explore/transcript/explore-suggestions.ts";
+} from "@scout-for-lol/data";
+import { pickDiverseSuggestions } from "#src/components/explore/transcript/explore-suggestions.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 
 export function ExploreSuggestionChips(props: {
@@ -25,6 +25,10 @@ export function ExploreSuggestionChips(props: {
     ...trpc.challenge.status.queryOptions(),
     enabled,
   });
+  const mvpVotesQuery = useQuery({
+    ...trpc.mvpVotes.status.queryOptions(),
+    enabled,
+  });
   const guildsQuery = useQuery({
     ...trpc.guild.listManageable.queryOptions(),
     enabled,
@@ -33,6 +37,7 @@ export function ExploreSuggestionChips(props: {
   const featureContext = useMemo<ExploreFeatureContext>(
     () => ({
       bucksEnabled: bucksQuery.data?.state === "available",
+      mvpVotesEnabled: mvpVotesQuery.data?.state === "available",
       daresEnabled:
         bucksQuery.data?.state === "available" &&
         bucksQuery.data.guilds.some((g) => g.daresAvailable),
@@ -44,7 +49,12 @@ export function ExploreSuggestionChips(props: {
       hallOfFameEnabled:
         guildsQuery.data?.some((g) => g.hallOfFameEnabled) ?? false,
     }),
-    [bucksQuery.data, challengesQuery.data, guildsQuery.data],
+    [
+      bucksQuery.data,
+      challengesQuery.data,
+      guildsQuery.data,
+      mvpVotesQuery.data,
+    ],
   );
 
   const [suggestionChips, setSuggestionChips] = useState<string[]>(() =>

@@ -189,15 +189,12 @@ export function flattenAnd(
   expression: RelationalScoutQlAstValue,
 ): RelationalScoutQlAstValue[] {
   const object = astObject(expression, "a WHERE predicate");
-  if (
-    expressionClass(object) === "CONJUNCTION" &&
+  return expressionClass(object) === "CONJUNCTION" &&
     expressionType(object) === "CONJUNCTION_AND"
-  ) {
-    return astArray(object["children"], "WHERE conjunctions").flatMap((child) =>
-      flattenAnd(child),
-    );
-  }
-  return [expression];
+    ? astArray(object["children"], "WHERE conjunctions").flatMap((child) =>
+        flattenAnd(child),
+      )
+    : [expression];
 }
 
 export function limitFromNode(node: AstObject, label: string): number {

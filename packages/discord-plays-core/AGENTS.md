@@ -6,7 +6,6 @@ web-server wiring, and process boot. Package exports point directly at `src/`.
 
 - Dependencies use the root workspace and `workspace:*`. Do not restore the old
   per-package `file:` install scheme or per-package lockfiles.
-- Keep `src/index.ts` free of re-exports. Consumers use explicit subpath imports.
 - Core accepts game-specific loggers, metrics, hooks, sockets, and stream
   behavior through typed dependencies. Do not make it depend on Pokémon or
   Mario Kart.

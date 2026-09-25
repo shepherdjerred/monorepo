@@ -65,20 +65,18 @@ function rateShape(
   if (to !== "int" && to !== "bigint" && to !== "double") {
     return undefined;
   }
-  if (silentType(arg.operand, { ...ctx, inAggregate: true }) !== "boolean") {
-    return undefined;
-  }
-  return { cast: arg, call };
+  return silentType(arg.operand, { ...ctx, inAggregate: true }) === "boolean"
+    ? { cast: arg, call }
+    : undefined;
 }
 
 function columnDisplayKind(
   arg: ScoutQlExprAst,
   catalog: SourceCatalog | undefined,
 ): ReportDisplayKind | undefined {
-  if (arg.kind !== "column") {
-    return undefined;
-  }
-  return catalog?.columns.get(arg.name)?.displayKind;
+  return arg.kind === "column"
+    ? catalog?.columns.get(arg.name)?.displayKind
+    : undefined;
 }
 
 const DURATION_AGGREGATES: ReadonlySet<string> = new Set([
@@ -119,13 +117,10 @@ export function inferDisplayKind(
   }
   // SUM/MIN/MAX of an integer are still whole numbers, so they format as
   // counts. AVG/MEDIAN/QUANTILE/STDDEV interpolate and stay decimal.
-  if (
-    WHOLE_NUMBER_PRESERVING.has(call.name) &&
+  return WHOLE_NUMBER_PRESERVING.has(call.name) &&
     silentType(arg, { ...ctx, inAggregate: true }) === "integer"
-  ) {
-    return "count";
-  }
-  return "decimal";
+    ? "count"
+    : "decimal";
 }
 
 const WHOLE_NUMBER_PRESERVING: ReadonlySet<string> = new Set([
@@ -137,11 +132,9 @@ const WHOLE_NUMBER_PRESERVING: ReadonlySet<string> = new Set([
 // ── Additivity ───────────────────────────────────────────────────────────────
 
 function isNumericLiteral(expr: ScoutQlExprAst): boolean {
-  if (expr.kind === "number") {
-    return true;
-  }
   return (
-    expr.kind === "unary" && expr.op === "-" && expr.operand.kind === "number"
+    expr.kind === "number" ||
+    (expr.kind === "unary" && expr.op === "-" && expr.operand.kind === "number")
   );
 }
 
@@ -284,10 +277,9 @@ function quotientEvidence(
   const lowerCtx = { refs: ctx.refs, outputNames: NO_OUTPUT_REFS };
   const numerator = lowerAggregate(expr.left, lowerCtx);
   const denominator = lowerAggregate(expr.right, lowerCtx);
-  if (numerator === undefined || denominator === undefined) {
-    return undefined;
-  }
-  return { kind: "ratio", numerator, denominator };
+  return numerator === undefined || denominator === undefined
+    ? undefined
+    : { kind: "ratio", numerator, denominator };
 }
 
 /**
@@ -305,10 +297,9 @@ export function inferEvidence(
     return rateEvidence(shape, ctx) ?? { kind: "sample" };
   }
   const call = unwrapRound(expr);
-  if (call.kind === "call" && call.name === "avg" && call.args.length === 1) {
-    return averageEvidence(call, ctx) ?? { kind: "sample" };
-  }
-  return quotientEvidence(call, ctx) ?? { kind: "sample" };
+  return call.kind === "call" && call.name === "avg" && call.args.length === 1
+    ? (averageEvidence(call, ctx) ?? { kind: "sample" })
+    : (quotientEvidence(call, ctx) ?? { kind: "sample" });
 }
 
 /** Whether an aggregate expression mentions another output by alias. */

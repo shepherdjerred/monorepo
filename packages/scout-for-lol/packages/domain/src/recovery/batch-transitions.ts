@@ -217,14 +217,11 @@ function processingProgressResult(
   if (processedTotal(next) > next.discovered) {
     return conflict("counts-exceed-discovered");
   }
-  if (
-    next.succeeded === current.succeeded &&
+  return next.succeeded === current.succeeded &&
     next.suppressed === current.suppressed &&
     next.failed === current.failed
-  ) {
-    return alreadyApplied;
-  }
-  return applied(withState(batch, { kind: "processing", counts: next }));
+    ? alreadyApplied
+    : applied(withState(batch, { kind: "processing", counts: next }));
 }
 
 export function recordProcessingProgress(

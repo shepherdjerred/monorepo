@@ -20,14 +20,14 @@ import type {
   DareContributorRefund,
   DareTargetPayout,
 } from "#src/betting/dares/settlement/dare-ledger.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import type { SettlementAnnouncementInput } from "#src/betting/notify/announce-prepare.ts";
 import { ParlayLegResultSchema } from "#src/betting/parlays/parlay-evaluator.ts";
 import type {
   ParlaySettlementBet,
   ParlaySettlementSummary,
-} from "#src/betting/parlays/runtime/parlay-settle.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+} from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
 
 /**
@@ -65,7 +65,7 @@ const EarnedAwardReasonSchema = z.enum([
   "mvp",
 ]) satisfies z.ZodType<EarnedAwardReason>;
 
-const EarnedAwardSchema = z.strictObject({
+export const EarnedAwardSchema = z.strictObject({
   serverId: z.string().min(1),
   discordId: z.string().min(1),
   alias: z.string(),
@@ -91,7 +91,7 @@ const SettlementBetSchema = z.strictObject({
   subjectPuuid: LeaguePuuidSchema,
 }) satisfies z.ZodType<SettlementBet>;
 
-const SettlementSummarySchema = z.strictObject({
+export const SettlementSummarySchema = z.strictObject({
   matchId: z.string().min(1),
   serverId: z.string().min(1),
   winningTeamId: z.number().int().optional(),
@@ -116,7 +116,7 @@ const MessageRefSchema = z.strictObject({
   messageId: z.string().min(1),
 });
 
-const ParlaySettlementSummarySchema = z.strictObject({
+export const ParlaySettlementSummarySchema = z.strictObject({
   matchId: z.string().min(1),
   serverId: z.string().min(1),
   yesResult: z.boolean().optional(),
@@ -143,7 +143,7 @@ export const settlementAnnouncementCodec = defineVersionedCodec({
   schema: SettlementAnnouncementSchema,
 });
 
-function settlementSummaryOf(
+export function settlementSummaryOf(
   parsed: SettlementAnnouncement["summary"],
 ): SettlementSummary {
   return {
@@ -158,7 +158,7 @@ function settlementSummaryOf(
   };
 }
 
-function parlaySummaryOf(
+export function parlaySummaryOf(
   parsed: NonNullable<SettlementAnnouncement["parlay"]>,
 ): ParlaySettlementSummary {
   return {

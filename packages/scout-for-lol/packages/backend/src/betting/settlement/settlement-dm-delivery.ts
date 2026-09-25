@@ -22,8 +22,8 @@ import {
   type TeamRecipient,
 } from "#src/betting/settlement/settlement-dm.ts";
 import { shortTeamName } from "#src/betting/team.ts";
-import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { ClosedPosition } from "#src/betting/settlement/sweep-types.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
@@ -142,10 +142,9 @@ async function playerRecipientsForRoster(input: {
   prismaClient: ExtendedPrismaClient;
 }): Promise<TeamRecipient[]> {
   const trackedParticipants = input.roster.flatMap((participant) => {
-    if (participant.puuid === null || participant.trackedAlias === undefined) {
-      return [];
-    }
-    return [{ puuid: participant.puuid, teamId: participant.teamId }];
+    return participant.puuid === null || participant.trackedAlias === undefined
+      ? []
+      : [{ puuid: participant.puuid, teamId: participant.teamId }];
   });
   if (trackedParticipants.length === 0) {
     return [];

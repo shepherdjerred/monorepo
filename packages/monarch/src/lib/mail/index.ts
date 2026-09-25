@@ -88,8 +88,11 @@ const INDEX_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 
 function indexIsFresh(): boolean {
   const modified = Bun.file(INDEX_PATH).lastModified;
-  if (!Number.isFinite(modified) || modified <= 0) return false;
-  return Date.now() - modified < INDEX_MAX_AGE_MS;
+  return (
+    Number.isFinite(modified) &&
+    modified > 0 &&
+    Date.now() - modified < INDEX_MAX_AGE_MS
+  );
 }
 
 export async function loadEmailIndex(
@@ -178,6 +181,5 @@ export async function readIndexedEmail(
   entry: EmailIndexEntry,
 ): Promise<string | undefined> {
   const file = Bun.file(entry.path);
-  if (!(await file.exists())) return undefined;
-  return file.text();
+  return (await file.exists()) ? file.text() : undefined;
 }

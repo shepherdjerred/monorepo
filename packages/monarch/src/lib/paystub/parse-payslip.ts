@@ -143,8 +143,7 @@ function rowFromLine(
   // Nothing in the current-period column means the row did not pay this
   // period — it is on the page only for its year-to-date total.
   const amount = moneyAtColumn(line.cells, amountColumnRight);
-  if (amount === undefined) return undefined;
-  return { label, amount };
+  return amount === undefined ? undefined : { label, amount };
 }
 
 export type PayslipSection = {

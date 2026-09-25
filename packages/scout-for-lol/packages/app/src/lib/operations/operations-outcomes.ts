@@ -483,8 +483,7 @@ export function classifyOperationsConfirmation(
       "intent-expired",
     );
   }
-  if (parsed.data.kind === "already_consumed") {
-    return fromReplay(parsed.data.result);
-  }
-  return fromOutcome(parsed.data.outcome, parsed.data.dispatch);
+  return parsed.data.kind === "already_consumed"
+    ? fromReplay(parsed.data.result)
+    : fromOutcome(parsed.data.outcome, parsed.data.dispatch);
 }

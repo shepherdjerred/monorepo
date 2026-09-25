@@ -44,10 +44,9 @@ function mapExploreOutcome(
   if (outcome === "stopped") {
     return { status: "cancelled", partialOutputAvailable };
   }
-  if (outcome === "interrupted") {
-    return { status: "interrupted", partialOutputAvailable };
-  }
-  return { status: "failed", partialOutputAvailable };
+  return outcome === "interrupted"
+    ? { status: "interrupted", partialOutputAvailable }
+    : { status: "failed", partialOutputAvailable };
 }
 
 async function salvageAmbiguousExploreRun(input: {
@@ -62,6 +61,9 @@ async function salvageAmbiguousExploreRun(input: {
     .parse(input.run.trace === null ? [] : JSON.parse(input.run.trace));
   const salvaged = await persistPartialAnswer(input.database, {
     stopped: false,
+    // The payload is what this turn actually ran with, which is exactly the
+    // guild context the salvaged answer should carry.
+    guildIds: parsedPayload.guildIds,
     conversationId: parsedPayload.started.conversationId,
     parentMessageId: parsedPayload.started.messageId,
     expectedCurrentLeafId: parsedPayload.started.expectedCurrentLeafId,
@@ -393,10 +395,9 @@ export async function runScoutInteractiveActivity(
     );
   }
 
-  if (input.kind === "report-ai") {
-    return await runReportAiActivity(run, database);
-  }
-  return await runExploreActivity(run, database);
+  return input.kind === "report-ai"
+    ? await runReportAiActivity(run, database)
+    : await runExploreActivity(run, database);
 }
 
 export async function persistScoutInteractiveOutcome(

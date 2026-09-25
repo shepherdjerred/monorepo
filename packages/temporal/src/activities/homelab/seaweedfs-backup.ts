@@ -112,6 +112,7 @@ export const seaweedFsBackupActivities = {
           setStage(cadence, progress.stage);
           Context.current().heartbeat({
             stage: progress.stage,
+            ...("bucket" in progress ? { bucket: progress.bucket } : {}),
             ...(progress.stage === "complete"
               ? { snapshotId: progress.snapshotId }
               : {}),

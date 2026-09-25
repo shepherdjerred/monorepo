@@ -143,11 +143,21 @@ export const BucksDareStateSchema = z.enum([
  * reaches a terminal state. The ONE definition shared by the contribution
  * claim and the refundable-headroom query, so the two can never disagree
  * about which dares hold live money.
+ *
+ * Declared as a `readonly BucksDareState[]` rather than inferred as a literal
+ * tuple, and the difference is load-bearing. A tuple gives
+ * `ReadonlyArray.includes` a parameter type of just its two members, so
+ * testing a full {@link BucksDareState} against it does not compile. The
+ * backend masks that with its own `ts-reset`, which widens `includes`; the
+ * packages that compile the backend's sources without that ambient
+ * declaration do not, so the error appears only once one of them reaches the
+ * call site. The annotation still checks every member against the enum, and
+ * nothing here needs the narrower type — the Prisma filters only spread it.
  */
-export const OPEN_BUCKS_DARE_STATES = [
+export const OPEN_BUCKS_DARE_STATES: readonly BucksDareState[] = [
   "pending_accept",
   "active",
-] as const satisfies readonly BucksDareState[];
+];
 
 /**
  * How a dare's clock is bounded: the targets' very next qualifying game, or a

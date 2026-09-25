@@ -148,10 +148,9 @@ function enforceSingleRuntimeReply(
 }
 
 function abortReason(signal: AbortSignal): Error {
-  if (signal.reason instanceof Error) {
-    return signal.reason;
-  }
-  return new DOMException("Tool execution aborted", "AbortError");
+  return signal.reason instanceof Error
+    ? signal.reason
+    : new DOMException("Tool execution aborted", "AbortError");
 }
 
 async function withCancellation<T>(

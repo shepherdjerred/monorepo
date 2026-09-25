@@ -40,8 +40,7 @@ skill for the search-first procedure and issue shape.
 This is one Bun workspace with one root `bun.lock` and the isolated linker.
 Run `bun install --frozen-lockfile` once at the root. Internal dependencies use
 `workspace:*`; never use npm, Yarn, pnpm, per-package lockfiles, or copied
-workspace artifacts. Use Bun APIs in Bun-only TypeScript when they are clearer
-than Node compatibility APIs.
+workspace artifacts.
 
 After dependency or schema changes:
 
@@ -58,36 +57,17 @@ or in-process timers.
 
 ## Engineering invariants
 
-- Never use TypeScript assertions except `as const` and `as unknown`. Parse
-  untyped boundaries with Zod or narrow them explicitly.
 - Let broken internal contracts fail loudly. Handle expected user and external
   boundary errors with typed, useful responses.
 - Do not add fallbacks for corrupt data, unknown enums, missing assets, or
   required tools. Fix the producer or contract.
-- Never suppress CI, lint, tests, Renovate, or architecture rules to get green.
-  Do not skip tests because generated output is missing; build the prerequisite.
+- Do not skip tests because generated output is missing; build the prerequisite.
 - Fix dependency upgrades forward using the migration guide and validation
   tools. Do not revert merely to avoid the migration.
 - Shared cross-language data uses a language-neutral source of truth plus
   per-language validation.
-- Module boundaries are enforced by `@shepherdjerred/architecture`. Fix cycles
-  or coupling; never weaken a rule. Boundary fixtures must prove each rule can
-  fail.
 - After roughly two failed attempts at the same workaround, step back and
   reconsider the design instead of layering more exceptions.
-- No authored directory may exceed 25 code files, counted per directory with
-  source and colocated tests holding separate budgets
-  (`scripts/checks/check-directory-file-counts.ts`). Generated directories and
-  `sandbox/` do not count. Split into sub-domains rather than raising
-  `CEILING`, which has no allowlist to add to. `CEILING` is a ratchet lowered
-  by each reorganization PR toward the permanent `TARGET` of 25; until it
-  reaches `TARGET`, some directories may still legally sit above 25 and below
-  the current `CEILING`.
-
-Automation under `scripts/`, `ci/`, and deploy/build scripts must not
-hide failures or credentials. In particular, do not add `|| true`,
-`2>/dev/null`, `|| echo`, `|| bun install`, `--no-exit-code`, token-bearing
-URLs, token files, `git add .`, or `git add -A`.
 
 Every newly added or rewritten URL must return HTTP 200 before commit.
 
@@ -153,9 +133,9 @@ Feature work uses `toolkit git-spice`; a single PR is a stack of one. Load the
 `monorepo-delivery` skill before branch, stack, PR, or CI-recovery work. Never
 hand-roll a stack rebase or create a feature PR with bare `gh pr create`.
 
-Commits use `type(scope): outcome`. The primary commit and PR body include
-`Why`, `What`, and `Verification`, including live checks not run. Stage explicit
-paths only. Keep PR metadata based on the complete branch diff.
+The primary commit and PR body include `Why`, `What`, and `Verification`,
+including live checks not run. Stage explicit paths only. Keep PR metadata based
+on the complete branch diff.
 
 Attach the lightest useful visual proof when behavior is visual or interactive;
 pure logic and internal refactors need exact commands instead. Use

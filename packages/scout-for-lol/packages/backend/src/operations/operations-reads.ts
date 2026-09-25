@@ -196,6 +196,10 @@ export async function readOperationsQueues(args: {
     }),
     listStalledNotificationIntents(prisma, {
       freshAt: args.now,
+      // The operator surface is where an intent the result overtook must be
+      // visible: the sweep will never drive it again, so this queue is the
+      // only place a person can learn it is sitting there.
+      overtakenByResult: "include",
       limit,
       after: cursorFor("stalledNotifications"),
     }),

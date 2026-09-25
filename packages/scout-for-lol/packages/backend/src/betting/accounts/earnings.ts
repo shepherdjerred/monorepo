@@ -11,7 +11,13 @@ import {
   type RawParticipant,
 } from "@scout-for-lol/data";
 import { isStandardLobby } from "#src/betting/eligibility/eligibility.ts";
-import { isScoutTournamentLobby } from "#src/league/tournament/scout-lobby-lookup.ts";
+import {
+  announcingSettlementSink,
+  checkpointFailureIn,
+  recordAnnouncement,
+  type SettlementAnnouncementSink,
+} from "#src/betting/notify/announcement-sink.ts";
+import { isScoutManagedCustomMatch } from "#src/betting/eligibility/managed-custom-match.ts";
 import {
   BUCKS_EARNING_QUEUES,
   PENDING_EARNING_RETRY_DELAY_MS,
@@ -172,22 +178,24 @@ function targetsFromSnapshot(
 export async function awardBucksForMatch(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
+  /** Who may announce these awards; v1's behaviour by default. */
+  sink: SettlementAnnouncementSink = announcingSettlementSink,
 ): Promise<EarnedAward[]> {
   const matchId = matchData.metadata.matchId;
   const awards: EarnedAward[] = [];
 
   try {
     const queueType = queueTypeOf(matchData);
-    // A Scout-minted 5v5 custom earns like a ranked game. "custom" is
+    // A Scout-managed 5v5 custom earns like a ranked game. "custom" is
     // deliberately NOT in BUCKS_EARNING_QUEUES: an arbitrary custom is
-    // trivially farmable, and this gate is what makes the code we issued the
-    // thing that qualifies rather than the queue id.
+    // trivially farmable, and this gate requires a historical code or the
+    // exact roster of a scheduled Custom or duel.
     const earnableQueue =
       queueType !== undefined &&
       (BUCKS_EARNING_QUEUES.includes(queueType) ||
         (queueType === "custom" &&
           isStandardLobby(matchData.info.participants) &&
-          (await isScoutTournamentLobby(matchData, prismaClient))));
+          (await isScoutManagedCustomMatch(matchData, prismaClient))));
     if (!earnableQueue) {
       return awards;
     }
@@ -221,10 +229,17 @@ export async function awardBucksForMatch(
         queueType,
         mvpPuuid: mvp?.puuid,
         mvpScore: mvp?.score,
+        sink,
       });
       awards.push(...awarded);
     }
   } catch (error) {
+    // This handler promises that earnings never block the match cursor, and
+    // that promise must not extend to a checkpoint failure: the guild's
+    // earning rolled back AND this match's settlement never became
+    // recoverable, so absorbing it lets the caller record a receipt over an
+    // award nobody was told about.
+    if (checkpointFailureIn(error) !== undefined) throw error;
     logger.error(`❌ Could not award Bryan Bucks for ${matchId}:`, error);
     Sentry.captureException(error, {
       tags: { source: "betting-earnings", matchId },
@@ -244,6 +259,8 @@ export async function awardForGuild(input: {
   queueType: QueueType;
   mvpPuuid: string | undefined;
   mvpScore: number | undefined;
+  /** Who may announce what this guild earned; v1's behaviour by default. */
+  sink?: SettlementAnnouncementSink | undefined;
 }): Promise<EarnedAward[]> {
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
 
@@ -442,6 +459,24 @@ export async function awardForGuild(input: {
       logger.info(
         `🪙 Awarded ${totalAwarded.toString()} Bryan Buck(s) for ${input.matchId}`,
       );
+      // The instruction to announce what this guild earned, written with the
+      // earning itself. The marker above is an exactly-once token: once this
+      // commits the guild is `complete`, so a retry claims nothing and
+      // returns nothing, and a recap recorded after the transaction could be
+      // lost with no way to rebuild it.
+      //
+      // Only when something was actually earned. A guild whose targets all
+      // fell away has nothing to announce, and a row saying so would be an
+      // instruction to say nothing.
+      if (awards.length > 0) {
+        await recordAnnouncement({
+          sink: input.sink ?? announcingSettlementSink,
+          db: tx,
+          family: "earnings",
+          itemKey: serverId,
+          payload: awards,
+        });
+      }
       return awards;
     });
     // Post-commit: counting inside the transaction would survive a rollback.

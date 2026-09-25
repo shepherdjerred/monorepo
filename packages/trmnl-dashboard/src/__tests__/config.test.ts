@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { loadConfig, parseEntities } from "../config.ts";
+import {
+  entityIdMatchesGlob,
+  isExpectedUnavailable,
+  loadConfig,
+  parseEntities,
+  UNAVAILABLE_IGNORED_ENTITY_GLOBS,
+} from "../config.ts";
 import { worstStatus } from "../status.ts";
 
 describe("parseEntities", () => {
@@ -34,6 +40,40 @@ describe("loadConfig", () => {
       "http://bugsink-bugsink-service.bugsink:8000/api/canonical/0",
     );
     expect(config.homeAssistant.unavailableIgnoredDomains).toContain("scene");
+    expect(config.homeAssistant.unavailableIgnoredDomains).toContain(
+      "conversation",
+    );
+    expect(config.homeAssistant.unavailableIgnoredEntityGlobs).toEqual(
+      UNAVAILABLE_IGNORED_ENTITY_GLOBS,
+    );
+    expect(UNAVAILABLE_IGNORED_ENTITY_GLOBS).toContain("media_player.rooftop");
+    expect(UNAVAILABLE_IGNORED_ENTITY_GLOBS).toContain("sensor.ipad_*");
+  });
+
+  it("treats companion diagnostics and portable speakers as expected gaps", () => {
+    expect(entityIdMatchesGlob("sensor.ipad_2_ssid", "sensor.ipad_*")).toBe(
+      true,
+    );
+    expect(
+      entityIdMatchesGlob("media_player.bedroom", "media_player.rooftop"),
+    ).toBe(false);
+    expect(
+      isExpectedUnavailable(
+        "media_player.rooftop",
+        [],
+        ["media_player.rooftop"],
+      ),
+    ).toBe(true);
+    expect(
+      isExpectedUnavailable("climate.bedroom", ["scene"], ["sensor.ipad_*"]),
+    ).toBe(false);
+    expect(
+      isExpectedUnavailable(
+        "conversation.home_assistant",
+        ["conversation"],
+        [],
+      ),
+    ).toBe(true);
   });
 
   it("accepts port zero for an OS-assigned listener", () => {

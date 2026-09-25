@@ -1,0 +1,39 @@
+[package]
+name = "scout-client-app"
+description = "egui desktop shell for Scout Client"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[package.metadata.packager]
+product-name = "Scout Client"
+identifier = "com.scout-for-lol.client"
+before-packaging-command = "cargo build --release --locked --package scout-client-app"
+out-dir = "dist"
+
+[[bin]]
+name = "scout-client"
+path = "src/main.rs"
+
+[dependencies]
+auto-launch.workspace = true
+chrono.workspace = true
+directories.workspace = true
+eframe.workspace = true
+egui.workspace = true
+keyring.workspace = true
+open.workspace = true
+reqwest.workspace = true
+scout-client-core = { path = "../scout-client-core" }
+serde_json.workspace = true
+sha2.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+tray-icon.workspace = true
+uuid.workspace = true
+
+[lints]
+workspace = true

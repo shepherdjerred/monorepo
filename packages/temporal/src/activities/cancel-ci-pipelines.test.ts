@@ -69,10 +69,9 @@ function listBody(
  */
 function stubFetch(pipelines: number[], cancelStatus: number): FetchFn {
   return (_url, init) => {
-    if (init?.method === "POST") {
-      return Promise.resolve(new Response("x", { status: cancelStatus }));
-    }
-    return Promise.resolve(listBody(pipelines));
+    return init?.method === "POST"
+      ? Promise.resolve(new Response("x", { status: cancelStatus }))
+      : Promise.resolve(listBody(pipelines));
   };
 }
 
@@ -86,10 +85,9 @@ describe("cancelCiPipelinesForBranchImpl", () => {
     const calls: { url: string; method: string }[] = [];
     const fetchFn: FetchFn = (url, init) => {
       calls.push({ url, method: init?.method ?? "GET" });
-      if (init?.method === "POST") {
-        return Promise.resolve(new Response("{}", { status: 200 }));
-      }
-      return Promise.resolve(listBody([101, 102]));
+      return init?.method === "POST"
+        ? Promise.resolve(new Response("{}", { status: 200 }))
+        : Promise.resolve(listBody([101, 102]));
     };
 
     const result = await cancelCiPipelinesForBranchImpl(INPUT, fetchFn);

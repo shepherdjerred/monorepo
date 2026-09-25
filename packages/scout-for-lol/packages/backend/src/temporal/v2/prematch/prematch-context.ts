@@ -12,7 +12,6 @@ import {
   prisma,
   type ExtendedPrismaClient,
 } from "#src/database/index.ts";
-import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
 
 /**
@@ -55,10 +54,10 @@ const STANDARD_PARTICIPANT_COUNT = 10;
 export function isPrematchRosterComplete(
   gameInfo: RawCurrentGameInfo,
 ): boolean {
-  if (isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
-    return true;
-  }
-  return gameInfo.participants.length >= STANDARD_PARTICIPANT_COUNT;
+  return (
+    isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode) ||
+    gameInfo.participants.length >= STANDARD_PARTICIPANT_COUNT
+  );
 }
 
 /**
@@ -81,6 +80,15 @@ export function isPrematchRosterComplete(
  * stale rather than the game unreachable. The next poll surfaces the same game
  * under another tracked account's puuid, and `ALLOW_DUPLICATE_FAILED_ONLY`
  * lets that run replace this failed one on the same Workflow ID.
+ *
+ * That failure is also why discovery may keep its guild filter while this may
+ * not, rather than merely happening to be safe with it. Discovery pins the
+ * reference to whichever account surfaced the game; a discovery set WIDER than
+ * this one would name a puuid this resolver cannot find, and the capture would
+ * die here non-retryably for a reason that is nothing to do with the game.
+ * Reading every tracked account makes this roster a superset of any filtered
+ * discovery set by construction, which closes that coupling in the one
+ * direction it can be closed in.
  */
 export async function resolveScoutV2PrematchContext(
   gameRef: ScoutPrematchGameRef,
@@ -135,11 +143,45 @@ export async function resolveScoutV2PrematchContext(
   );
 }
 
-/** Every tracked account this process can see, as the task services take them. */
+/**
+ * Every tracked account, as the task services take them, narrowed by no guild
+ * filter at all.
+ *
+ * Deliberately NOT filtered by `getActiveServerIds()`, which the discovery poll
+ * in `prematch-reads.ts` does still apply. The two reads ask different kinds of
+ * question. Discovery's set decides how much WORK to do — which accounts are
+ * worth spending a spectator read on — so widening it costs Riot budget and
+ * nothing else, which is exactly what that helper's fail-open was written for.
+ * This set decides who a durable fact is ABOUT: it becomes the audience
+ * `recordPrematchDeliveryIntentsV2` mints intent rows for, and the tracked
+ * puuids `recordClashPrematchSightings` writes sightings for. `getActiveServerIds`
+ * reads the Discord gateway's guild cache, which answers `undefined` — no filter
+ * — in a process that owns no gateway and a narrowed set in one that does, so a
+ * cache-filtered roster would make the audience depend on WHICH PROCESS ASKS as
+ * well as on when.
+ *
+ * What the filter actually cost is sharper than drift.
+ * `getChannelsSubscribedToPlayers` looks accounts up by puuid with no guild
+ * scope at all, and one puuid has one `Account` row per guild that registered
+ * it. Dropping SOME guilds' copies therefore changed the audience not at all —
+ * the surviving copy still reached every guild's subscriptions. It moved only
+ * when EVERY guild holding that puuid was missing from the cache, and then the
+ * puuid vanished whole and channels in guilds Scout is still in lost the
+ * announcement. All-or-nothing per identity, silent, and unrecoverable for a
+ * first capture attempt: `planPrematchFanOutV2` fans out only the rows that were
+ * minted, and the completed game-scoped Workflow ID refuses every later poll.
+ *
+ * Guild liveness is still enforced, by the two things that decide it without
+ * reading the cache: `reconcile-removed-guilds` deletes a removed guild's data
+ * once two Discord-confirmed 10004s a day apart agree, and the delivery boundary
+ * classifies a channel it cannot resolve. Between a removal and that sweep this
+ * mints intents whose sends then fail and are classified — the same cost a
+ * gatewayless process already pays today for every guild.
+ */
 export async function trackedAccountConfigs(
   database: ExtendedPrismaClient = prisma,
 ): Promise<PlayerConfigEntry[]> {
-  const accounts = await getAccountsWithState(database, getActiveServerIds());
+  const accounts = await getAccountsWithState(database);
   return accounts.map((account) => account.config);
 }
 
@@ -150,6 +192,13 @@ export async function trackedAccountConfigs(
  * an already-archived snapshot back from S3. Both need the same answer — which
  * tracked accounts are in this game — and deriving it twice is how the two
  * paths would drift into minting intents for different sets of channels.
+ *
+ * Sharing the derivation is necessary and was never sufficient. It rules out
+ * two hand-written filters going out of step; it cannot rule out one filter
+ * answering differently on two runs. That is why `trackedAccountConfigs` reads
+ * no gateway cache: a shared derivation over a process-dependent input still
+ * lets the two paths mint for different sets of channels, which is precisely
+ * the drift this comment claims to prevent.
  */
 export function prematchContextFrom(
   gameInfo: RawCurrentGameInfo,

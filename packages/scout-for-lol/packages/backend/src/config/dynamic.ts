@@ -13,10 +13,6 @@ import { createLogger } from "#src/logger.ts";
 import { featureFlagMetrics } from "#src/metrics/platform/feature-flags.ts";
 import configuration from "#src/configuration.ts";
 import {
-  TournamentApiModeSchema,
-  type TournamentApiMode,
-} from "#src/configuration/tournament-mode.ts";
-import {
   DEFAULT_EXPLORE_QUOTA_LIMITS,
   ExploreQuotaLimitsInputSchema,
   type ExploreQuotaLimits,
@@ -119,41 +115,6 @@ const DEFINITION = {
     names: { flag: "scout-explore-model", env: "EXPLORE_MODEL" },
   },
   /**
-   * Which tournament API the tournament client talks to.
-   *
-   * Not bootstrap — nothing needs it to construct the flag client — so it is
-   * flag-capable and can be flipped the hour the Riot key gains tournament
-   * access, with no deploy.
-   *
-   * Defaults to "stub" because that is the safe state: stub codes cannot
-   * create a real game, so a misconfigured deploy fails visibly at lobby
-   * creation rather than minting live codes nobody expected.
-   *
-   * Caveat worth knowing: Scout's flag targetingKey is the constant
-   * "scout-backend", so flipping this in Flipt moves beta and prod together.
-   * That is inert while no prod guild has tournament lobbies enabled, and
-   * stops being inert the moment one does.
-   */
-  tournamentApiMode: {
-    schema: TournamentApiModeSchema,
-    sources: ["flag", "env", "default"],
-    default: "stub",
-    names: { flag: "scout-tournament-api-mode", env: "TOURNAMENT_API_MODE" },
-  },
-  /**
-   * How many lobbies one guild may have open at once. Bounds the poll budget:
-   * each open lobby costs one lobby-events call per 20-second tick.
-   */
-  tournamentMaxOpenLobbies: {
-    schema: z.coerce.number().int().positive(),
-    sources: ["flag", "env", "default"],
-    default: 10,
-    names: {
-      flag: "scout-tournament-max-open-lobbies",
-      env: "TOURNAMENT_MAX_OPEN_LOBBIES",
-    },
-  },
-  /**
    * Percent of eligible messages that carry a feature tip. The roll is only
    * reached after the audience's cooldown has expired and an unused, available
    * tip exists, so this bounds noise within that set rather than overall.
@@ -200,8 +161,6 @@ export type DynamicConfigSeed = {
   reportAiModel?: string;
   bettingParlayAiModel?: string;
   exploreModel?: string;
-  tournamentApiMode?: TournamentApiMode;
-  tournamentMaxOpenLobbies?: number;
   featureTipPercent?: number;
   featureTipCooldownHours?: number;
   // Required, unlike the rest: `temporalCallGraphTracing()` is read
@@ -236,8 +195,6 @@ function buildSnapshot(
                 reportAiModel: "string",
                 bettingParlayAiModel: "string",
                 exploreModel: "string",
-                tournamentApiMode: "string",
-                tournamentMaxOpenLobbies: "number",
                 featureTipPercent: "number",
                 featureTipCooldownHours: "number",
                 temporalCallGraphTracing: "boolean",
@@ -390,17 +347,6 @@ export async function refreshDynamicConfig(): Promise<void> {
   }
   await snapshot.refresh();
   await notifyRefreshListeners();
-}
-
-export function tournamentApiMode(): TournamentApiMode {
-  return snapshot?.get("tournamentApiMode") ?? configuration.tournamentApiMode;
-}
-
-export function tournamentMaxOpenLobbies(): number {
-  return (
-    snapshot?.get("tournamentMaxOpenLobbies") ??
-    configuration.tournamentMaxOpenLobbies
-  );
 }
 
 export function featureTipPercent(): number {

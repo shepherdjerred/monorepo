@@ -2980,6 +2980,12 @@ export type RedisHelmValuesNetworkPolicy = {
   extraIngress?: unknown[];
   extraEgress?: unknown[];
   /**
+   * Allow access from pods with client label set to "true". Ignored if `networkPolicy.allowExternal` is true.
+   *
+   * @default true
+   */
+  addExternalClientAccess?: boolean;
+  /**
    * Labels to match to allow traffic from other namespaces
    *
    * @default {}
@@ -2992,6 +2998,12 @@ export type RedisHelmValuesNetworkPolicy = {
    */
   ingressNSPodMatchLabels?: RedisHelmValuesNetworkPolicyIngressNSPodMatchLabels;
   /**
+   * [object] Labels to match pods in the same release to allow traffic from. Ignored if `networkPolicy.allowExternal` is true.
+   *
+   * @default {}
+   */
+  ingressReleaseMatchLabels?: RedisHelmValuesNetworkPolicyIngressReleaseMatchLabels;
+  /**
    * @default {"allowExternal":true,"ingressNSMatchLabels":{},"ingressNSPodMatchLabels":{}}
    */
   metrics?: RedisHelmValuesNetworkPolicyMetrics;
@@ -3000,6 +3012,8 @@ export type RedisHelmValuesNetworkPolicy = {
 export type RedisHelmValuesNetworkPolicyIngressNSMatchLabels = object;
 
 export type RedisHelmValuesNetworkPolicyIngressNSPodMatchLabels = object;
+
+export type RedisHelmValuesNetworkPolicyIngressReleaseMatchLabels = object;
 
 export type RedisHelmValuesNetworkPolicyMetrics = {
   /**
@@ -4313,7 +4327,7 @@ loadmodule /opt/bi..."
    * Network Policy configuration
    * ref: https://kubernetes.io/docs/concepts/services-networking/network-policies/
    *
-   * @default {...} (8 keys)
+   * @default {...} (10 keys)
    */
   networkPolicy?: RedisHelmValuesNetworkPolicy;
   /**
@@ -4751,6 +4765,7 @@ export type RedisHelmParameters = {
   "networkPolicy.allowExternalEgress"?: string;
   "networkPolicy.extraIngress"?: string;
   "networkPolicy.extraEgress"?: string;
+  "networkPolicy.addExternalClientAccess"?: string;
   "networkPolicy.metrics.allowExternal"?: string;
   "podSecurityPolicy.create"?: string;
   "podSecurityPolicy.enabled"?: string;

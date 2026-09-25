@@ -65,10 +65,7 @@ export class CookView extends TextFileView {
   }
 
   getViewData(): string {
-    if (this.editor) {
-      return this.editor.state.doc.toString();
-    }
-    return this.data;
+    return this.editor ? this.editor.state.doc.toString() : this.data;
   }
 
   setViewData(data: string, _clear: boolean): void {

@@ -190,10 +190,9 @@ function maxRank(
 }
 
 function parseStoredRank(serialized: string | null): Rank | undefined {
-  if (serialized === null || serialized.length === 0) {
-    return undefined;
-  }
-  return RankSchema.parse(JSON.parse(serialized));
+  return serialized === null || serialized.length === 0
+    ? undefined
+    : RankSchema.parse(JSON.parse(serialized));
 }
 
 export async function getHighestRankForPuuidsInWindow(params: {

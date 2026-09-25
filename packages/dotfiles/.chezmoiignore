@@ -29,6 +29,8 @@ coverage
 package.json
 tsconfig.json
 eslint.config.ts
+README.md
+eslint-suppressions.json
 
 # Claude Code rewrites model/effortLevel/fast into this file on every /model or
 # /effort, so tracking it caused perpetual drift and re-add snapshotting a

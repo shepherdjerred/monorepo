@@ -96,10 +96,9 @@ function lowerScalarCall(
     return undefined;
   }
   const args = allDefined(node.args.map((arg) => lowerScalar(arg)));
-  if (args === undefined || args.length === 0) {
-    return undefined;
-  }
-  return { kind: "scalar-call", func, args };
+  return args === undefined || args.length === 0
+    ? undefined
+    : { kind: "scalar-call", func, args };
 }
 
 export function lowerScalar(
@@ -118,10 +117,9 @@ export function lowerScalar(
     )
     .with({ kind: "interval" }, (node): ScoutQlScalarExpr | undefined => {
       const unit = normalizeIntervalUnit(node.unit);
-      if (unit === undefined || node.amount === null) {
-        return undefined;
-      }
-      return { kind: "interval", amount: node.amount, unit };
+      return unit === undefined || node.amount === null
+        ? undefined
+        : { kind: "interval", amount: node.amount, unit };
     })
     .with({ kind: "now" }, (node): ScoutQlScalarExpr => ({
       kind: "now",
@@ -137,10 +135,9 @@ export function lowerScalar(
     .with({ kind: "binary" }, (node): ScoutQlScalarExpr | undefined => {
       if (node.op === "at-time-zone") {
         const operand = lowerScalar(node.left);
-        if (operand === undefined || node.right.kind !== "string") {
-          return undefined;
-        }
-        return { kind: "at-time-zone", operand, timezone: node.right.value };
+        return operand === undefined || node.right.kind !== "string"
+          ? undefined
+          : { kind: "at-time-zone", operand, timezone: node.right.value };
       }
       const op = arithmeticOp(node.op);
       if (op === undefined) {
@@ -187,10 +184,9 @@ function lowerScalarPredicate(
 ): ScoutQlScalarExpr | undefined {
   const refs = new PlayerRefCollector();
   const predicate = lowerPredicate(expr, refs);
-  if (predicate === undefined || refs.names.length > 0) {
-    return undefined;
-  }
-  return { kind: "predicate", predicate };
+  return predicate === undefined || refs.names.length > 0
+    ? undefined
+    : { kind: "predicate", predicate };
 }
 
 // ── Predicate lowering ───────────────────────────────────────────────────────
@@ -223,10 +219,9 @@ function lowerAndOr(
   const operands = allDefined(
     flat.map((operand) => lowerPredicate(operand, refs)),
   );
-  if (operands === undefined || operands.length < 2) {
-    return undefined;
-  }
-  return { kind, operands };
+  return operands === undefined || operands.length < 2
+    ? undefined
+    : { kind, operands };
 }
 
 export function lowerPredicate(
@@ -264,10 +259,9 @@ export function lowerPredicate(
       const items = allDefined(
         node.items.map((item) => inItemLiteral(item)?.value),
       );
-      if (operand === undefined || items === undefined || items.length === 0) {
-        return undefined;
-      }
-      return { kind: "in", operand, negated: node.negated, items };
+      return operand === undefined || items === undefined || items.length === 0
+        ? undefined
+        : { kind: "in", operand, negated: node.negated, items };
     })
     .with({ kind: "between" }, (node): ScoutQlPredicate | undefined => {
       const operand = lowerScalar(node.operand);

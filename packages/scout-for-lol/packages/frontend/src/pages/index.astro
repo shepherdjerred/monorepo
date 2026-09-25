@@ -165,71 +165,63 @@ const initialShowcasePreview = showcasePreviews.at(0)?.asset;
             title="Reports for the modes you play"
           />
 
-          <div
-            class="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2"
-          >
-            {
-              showcasePreviews.map((preview) => (
-                <button
-                  type="button"
-                  class="group mx-auto block w-full cursor-zoom-in overflow-hidden rounded-xl border border-scout-border bg-scout-raised text-left shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-scout-focus focus-visible:ring-offset-4 focus-visible:ring-offset-scout-canvas"
-                  data-scout-lightbox-trigger
-                  data-lightbox-src={preview.asset.src}
-                  data-lightbox-alt={preview.asset.title}
-                  aria-label={`View ${preview.label} example larger`}
-                >
-                  <img
-                    src={preview.asset.src}
-                    alt={preview.asset.title}
-                    loading="lazy"
-                    class="aspect-video h-auto w-full object-cover object-top transition duration-200 group-hover:opacity-90"
-                  />
-                  <span class="block px-5 py-4">
-                    <span class="block text-lg font-semibold text-scout-ink">
-                      {preview.label}
-                    </span>
-                    <span class="mt-1 block text-sm text-scout-subtle">
-                      {preview.detail}
-                    </span>
+          <div class="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2">
+            {showcasePreviews.map((preview) => (
+              <button
+                type="button"
+                class="group mx-auto block w-full cursor-zoom-in overflow-hidden rounded-xl border border-scout-border bg-scout-raised text-left shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-scout-focus focus-visible:ring-offset-4 focus-visible:ring-offset-scout-canvas"
+                data-scout-lightbox-trigger
+                data-lightbox-src={preview.asset.src}
+                data-lightbox-alt={preview.asset.title}
+                aria-label={`View ${preview.label} example larger`}
+              >
+                <img
+                  src={preview.asset.src}
+                  alt={preview.asset.title}
+                  loading="lazy"
+                  class="aspect-video h-auto w-full object-cover object-top transition duration-200 group-hover:opacity-90"
+                />
+                <span class="block px-5 py-4">
+                  <span class="block text-lg font-semibold text-scout-ink">
+                    {preview.label}
                   </span>
-                </button>
-              ))
-            }
+                  <span class="mt-1 block text-sm text-scout-subtle">
+                    {preview.detail}
+                  </span>
+                </span>
+              </button>
+            ))}
           </div>
 
-          {
-            showcasePreviews.length === 0 && (
-              <div class="mt-8 rounded-lg border border-scout-border bg-scout-raised px-5 py-4 text-sm text-scout-subtle ">
-                Scout showcase examples are unavailable right now.
-              </div>
-            )
-          }
+          {showcasePreviews.length === 0 && (
+            <div class="mt-8 rounded-lg border border-scout-border bg-scout-raised px-5 py-4 text-sm text-scout-subtle">
+              Scout showcase examples are unavailable right now.
+            </div>
+          )}
 
-          {
-            initialShowcasePreview !== undefined && (
-              <div
-                class="fixed inset-0 z-50 hidden items-center justify-center bg-scout-canvas/90 p-4 backdrop-blur-sm"
-                data-scout-lightbox
-                role="dialog"
-                aria-modal="true"
-                aria-label="Scout report preview"
+          {initialShowcasePreview !== undefined && (
+            <div
+              class="fixed inset-0 z-50 hidden items-center justify-center bg-scout-canvas/90 p-4 backdrop-blur-sm"
+              data-scout-lightbox
+              role="dialog"
+              aria-modal="true"
+              aria-label="Scout report preview"
+            >
+              <button
+                type="button"
+                class="absolute top-4 right-4 rounded-md bg-scout-surface px-3 py-2 text-sm font-semibold text-scout-ink shadow-sm hover:bg-scout-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-scout-focus"
+                data-scout-lightbox-close
               >
-                <button
-                  type="button"
-                  class="absolute top-4 right-4 rounded-md bg-scout-surface px-3 py-2 text-sm font-semibold text-scout-ink shadow-sm hover:bg-scout-raised focus:outline-none focus-visible:ring-2 focus-visible:ring-scout-focus"
-                  data-scout-lightbox-close
-                >
-                  Close
-                </button>
-                <img
-                  alt=""
-                  loading="lazy"
-                  class="max-h-[88vh] max-w-[95vw] rounded-md shadow-2xl"
-                  data-scout-lightbox-image
-                />
-              </div>
-            )
-          }
+                Close
+              </button>
+              <img
+                alt=""
+                loading="lazy"
+                class="max-h-[88vh] max-w-[95vw] rounded-md shadow-2xl"
+                data-scout-lightbox-image
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -336,7 +328,6 @@ const initialShowcasePreview = showcasePreviews.at(0)?.asset;
           closeButton.focus();
         });
       </script>
-
       <!-- How it works -->
       <div class="bg-scout-raised py-24 sm:py-32">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
@@ -346,9 +337,7 @@ const initialShowcasePreview = showcasePreviews.at(0)?.asset;
             centered={true}
           />
           <div class="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-none">
-            <div
-              class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3"
-            >
+            <div class="grid max-w-xl grid-cols-1 gap-x-8 gap-y-16 lg:max-w-none lg:grid-cols-3">
               <ProcessStep number={1} title="Sign in with Discord">
                 <p class="text-scout-subtle">
                   Open the dashboard and sign in with your Discord account.

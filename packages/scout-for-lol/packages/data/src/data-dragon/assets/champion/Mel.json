@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.18.1",
+  "version": "16.19.1",
   "data": {
     "Mel": {
       "id": "Mel",
@@ -98,6 +98,68 @@
           "name": "Prestige Winterblessed Mel (Vivid)",
           "chromas": false,
           "parentSkin": 10
+        },
+        {
+          "id": "800012",
+          "num": 12,
+          "name": "Coven Mel",
+          "chromas": true
+        },
+        {
+          "id": "800013",
+          "num": 13,
+          "name": "Coven Mel (Ruby)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "800014",
+          "num": 14,
+          "name": "Coven Mel (Aquamarine)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "800015",
+          "num": 15,
+          "name": "Coven Mel (Turquoise)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "800016",
+          "num": 16,
+          "name": "Coven Mel (Obsidian)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "800017",
+          "num": 17,
+          "name": "Coven Mel (Catseye)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "800018",
+          "num": 18,
+          "name": "Coven Mel (Rose Quartz)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "800019",
+          "num": 19,
+          "name": "Coven Mel (Tanzanite)",
+          "chromas": false,
+          "parentSkin": 12
+        },
+        {
+          "id": "800020",
+          "num": 20,
+          "name": "Coven Mel (Pearl)",
+          "chromas": false,
+          "parentSkin": 12
         }
       ],
       "lore": "Mel Medarda is the presumed heir of the Medarda family, once one of the most powerful in Noxus. In appearance she is a graceful aristocrat, but beneath the surface lies a skilled politician who makes it her business to know everything about everyone she meets. After an encounter with the mysterious Black Rose, Mel discovered the depths of her mother's deception and, for once, faced a situation potentially beyond her control. With newly awakened magical abilities, she sailed home in search of answers—and though many still seek to temper the light within her, Mel's soul remains forever defiant.",

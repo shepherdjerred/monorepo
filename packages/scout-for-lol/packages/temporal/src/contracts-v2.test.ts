@@ -16,9 +16,11 @@ import {
   ScoutRecoveryBatchIdSchema,
 } from "./contracts-v2.ts";
 import {
+  SCOUT_CLIENT_MATCH_DISPATCH_V2_INPUT_VERSION,
   SCOUT_NOTIFICATION_V2_RESULT_VERSION,
   ScoutMatchProcessingV2InputSchema,
   ScoutRecoveryBatchV2ResultSchema,
+  scoutClientMatchDispatchV2InputCodec,
   scoutRecoveryBatchV2ResultCodec,
   scoutLakeProjectionV2InputCodec,
   scoutMatchProcessingV2InputCodec,
@@ -56,10 +58,11 @@ const gameRef = ScoutPrematchGameRefSchema.parse({
 function expectRoundTrip<Kind extends string, Schema extends z.ZodType>(
   codec: VersionedCodec<Kind, Schema>,
   input: z.infer<Schema>,
+  expectedVersion = SCOUT_V2_CONTRACT_VERSION,
 ): void {
   const envelope = codec.serialize(input);
   expect(envelope.kind).toBe(codec.kind);
-  expect(envelope.version).toBe(SCOUT_V2_CONTRACT_VERSION);
+  expect(envelope.version).toBe(expectedVersion);
   expect(codec.parse(envelope)).toEqual(input);
 }
 
@@ -73,6 +76,16 @@ describe("V2 workflow input envelopes", () => {
       stage: "prod",
       riotMatchId,
     });
+    expectRoundTrip(
+      scoutClientMatchDispatchV2InputCodec,
+      {
+        stage: "prod",
+        pending: [],
+        lateArrivals: [],
+        orderingWatermark: null,
+      },
+      SCOUT_CLIENT_MATCH_DISPATCH_V2_INPUT_VERSION,
+    );
     expectRoundTrip(scoutPrematchDiscoveryV2InputCodec, { stage: "beta" });
     expectRoundTrip(scoutPrematchGameV2InputCodec, { stage: "beta", gameRef });
     expectRoundTrip(scoutNotificationV2InputCodec, {
@@ -118,6 +131,21 @@ describe("V2 workflow input envelopes", () => {
     expect(() =>
       scoutMatchProcessingV2InputCodec.parse({ stage: "prod", riotMatchId }),
     ).toThrow();
+  });
+
+  test("migrates the dispatcher input from before its durable watermark", () => {
+    expect(
+      scoutClientMatchDispatchV2InputCodec.parse({
+        kind: "scout-client-match-dispatch-v2-input",
+        version: 1,
+        data: { stage: "prod", pending: [] },
+      }),
+    ).toEqual({
+      stage: "prod",
+      pending: [],
+      lateArrivals: [],
+      orderingWatermark: null,
+    });
   });
 });
 
@@ -179,10 +207,11 @@ describe("V2 identifiers stay usable as workflow ids", () => {
 });
 
 describe("V2 reuse policies", () => {
-  test("names exactly the re-drivable families plus operator reconciliation", () => {
+  test("names exactly the re-drivable families plus singleton starts", () => {
     expect(Object.keys(SCOUT_V2_REUSE_POLICIES).sort()).toEqual(
       [
         ...SCOUT_V2_REDRIVABLE_WORKFLOW_NAMES,
+        SCOUT_WORKFLOW_NAMES.clientMatchDispatchV2,
         SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
       ].sort(),
     );
@@ -228,6 +257,11 @@ describe("V2 durable commit outcomes", () => {
       "observation-differs",
       "intent-differs",
       "batch-differs",
+      // Omitting this one made the settlement sink's conflict branch
+      // unreachable: `durableCommitV2` parses the repository's answer, so a
+      // reason missing here threw a ZodError before the branch was read, and
+      // the broad handler below it logged that as an ordinary pool failure.
+      "settlement-announcement-differs",
       "workflow-adopted-by-another-batch",
     ]) {
       expect(
@@ -416,6 +450,12 @@ describe("V2 resume-point read", () => {
     expect(
       ScoutMatchPipelineStateV2ResultSchema.parse({ kind: "absent" }),
     ).toEqual({ kind: "absent" });
+  });
+
+  test("reports a terminal marker that predates its observation", () => {
+    expect(
+      ScoutMatchPipelineStateV2ResultSchema.parse({ kind: "terminal" }),
+    ).toEqual({ kind: "terminal" });
   });
 
   test("spans observation, receipts, intents and tracked accounts", () => {

@@ -221,10 +221,7 @@ function scalarFromVariant(
 ): string | number | boolean | undefined {
   if (variant.stringValue !== undefined) return variant.stringValue;
   const intNumber = coerceIntValue(variant.intValue);
-  if (intNumber !== undefined) return intNumber;
-  if (variant.doubleValue !== undefined) return variant.doubleValue;
-  if (variant.boolValue !== undefined) return variant.boolValue;
-  return undefined;
+  return intNumber ?? variant.doubleValue ?? variant.boolValue;
 }
 
 function coerceIntValue(
@@ -261,8 +258,7 @@ function parseArrayValues(
   }
   if (strings.length > 0) return strings;
   if (numbers.length > 0) return numbers;
-  if (bools.length > 0) return bools;
-  return undefined;
+  return bools.length > 0 ? bools : undefined;
 }
 
 /**

@@ -1,8 +1,8 @@
 tap "artginzburg/tap"
-tap "catppuccin/tap"
+tap "catppuccin/tap", trusted: true
 tap "cormacrelf/tap"
 tap "dsully/tap"
-tap "jdx/tap"
+tap "jdx/tap", trusted: true
 tap "lightpanda-io/browser"
 tap "mobile-dev-inc/tap"
 tap "pinchtab/tap"
@@ -23,6 +23,8 @@ brew "awscli"
 brew "bash"
 # Clone of cat(1) with syntax highlighting and Git integration
 brew "bat"
+# Parser generator
+brew "bison"
 # Resource monitor. C++ version and continuation of bashtop and bpytop
 brew "btop"
 # Define k8s native apps and abstractions using object-oriented programming
@@ -49,12 +51,20 @@ brew "fd"
 brew "ffmpeg"
 # User-friendly command-line shell for UNIX-like operating systems
 brew "fish"
+# Fast Lexical Analyzer, generates Scanners (tokenizers)
+brew "flex"
 # Command-line outline and bitmap font editor/converter
 brew "fontforge"
+# GNU compiler collection
+brew "gcc"
 # CLI for managing Grafana Cloud resources
 brew "gcx"
 # GitHub command-line tool
 brew "gh"
+# Image processing and image analysis library
+brew "leptonica"
+# OCR (Optical Character Recognition) engine
+brew "tesseract"
 # Distributed revision control system
 brew "git"
 # Syntax-highlighting pager for git and diff output
@@ -83,16 +93,20 @@ brew "jq"
 brew "kube-linter"
 # Kubernetes command-line interface
 brew "kubernetes-cli"
-# Image processing and image analysis library
-brew "leptonica"
 # Run LogQL queries against a Loki server
 brew "logcli"
 # Fast, flexible, config-based cli for linting Markdown/CommonMark files
 brew "markdownlint-cli2"
+# Fast and user friendly build system
+brew "meson"
+# Minimalist GNU for Windows and GCC cross-compilers
+brew "mingw-w64"
 # Polyglot runtime manager (asdf rust clone)
 brew "mise"
 # Ambitious Vim-fork focused on extensibility and agility
 brew "neovim"
+# Optimized BLAS library
+brew "openblas"
 # Search tool like grep and The Silver Searcher
 brew "ripgrep"
 # AI coding agent, built for the terminal
@@ -125,8 +139,6 @@ brew "starship"
 brew "swiftlint"
 # Command-line interface for running and interacting with Temporal Server and UI
 brew "temporal"
-# OCR (Optical Character Recognition) engine
-brew "tesseract"
 # CLI tool that moves files or folder to the trash
 brew "trash"
 # Display directories as trees (with optional color/HTML output)
@@ -145,8 +157,6 @@ brew "watch"
 brew "watchman"
 # Internet file retriever
 brew "wget"
-# Network analyzer and capture tool - without graphical user interface
-brew "wireshark"
 # Generate your Xcode project from a spec file and your folder structure
 brew "xcodegen"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
@@ -223,16 +233,22 @@ cask "keka"
 cask "league-of-legends"
 # Free cross-platform office suite, fresh version
 cask "libreoffice"
+# Full TeX Live distribution without GUI applications
+cask "mactex-no-gui"
 # IMAP email client
 cask "mailmate"
 # Add middle click for Trackpad and Magic Mouse
 cask "middle"
+# Interactive terminal coding agent
+cask "muse-code"
 # Free and open-source RSS reader
 cask "netnewswire"
 # Knowledge base that works on top of a local folder of plain text Markdown files
 cask "obsidian"
 # Replacement for Docker Desktop
 cask "orbstack"
+# Minecraft launcher
+cask "prismlauncher"
 # Quick Look generator for Markdown files
 cask "qlmarkdown"
 # Window snapping tool
@@ -253,16 +269,17 @@ cask "tailscale-app"
 cask "utm"
 # Open-source code editor
 cask "visual-studio-code"
-# Network protocol analyzer
-cask "wireshark-app"
 # Multiplayer code editor
 cask "zed"
 vscode "catppuccin.catppuccin-vsc"
 vscode "catppuccin.catppuccin-vsc-icons"
+vscode "tomoki1207.pdf"
 vscode "vscodevim.vim"
 go "cmd/go"
 go "cmd/gofmt"
+uv "browser-use"
 uv "docling[asr,easyocr,htmlrender,ocrmac,onnxruntime,rapidocr,remote-serving,tesserocr,vlm,xbrl]"
+npm "@google/gemini-cli"
 npm "@posthog/cli"
 npm "corepack"
 npm "eslint"

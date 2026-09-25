@@ -9,10 +9,9 @@ const REPORT_SNIPPET_LIMIT = 280;
 export function formatHistoryForPrompt(
   entries: readonly CompletedGoal[],
 ): string {
-  if (entries.length === 0) {
-    return "No completed goals yet this session.";
-  }
-  return entries.map((entry, index) => formatEntry(entry, index)).join("\n\n");
+  return entries.length === 0
+    ? "No completed goals yet this session."
+    : entries.map((entry, index) => formatEntry(entry, index)).join("\n\n");
 }
 
 function formatEntry(entry: CompletedGoal, index: number): string {
@@ -27,6 +26,7 @@ function formatEntry(entry: CompletedGoal, index: number): string {
 
 function snippet(value: string): string {
   const flattened = value.replaceAll(/\s+/g, " ").trim();
-  if (flattened.length <= REPORT_SNIPPET_LIMIT) return flattened;
-  return `${flattened.slice(0, REPORT_SNIPPET_LIMIT)}…`;
+  return flattened.length <= REPORT_SNIPPET_LIMIT
+    ? flattened
+    : `${flattened.slice(0, REPORT_SNIPPET_LIMIT)}…`;
 }

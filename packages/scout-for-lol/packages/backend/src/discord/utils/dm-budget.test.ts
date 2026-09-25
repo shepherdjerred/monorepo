@@ -139,19 +139,19 @@ describe("sendDM message budget", () => {
     await sendDM(budgeted(clientThatSends(send)));
 
     const body = String(send.mock.calls[0]?.[0]);
-    expect(body).toContain("Message 1 of 3");
+    expect(body).toContain("1 of 3");
     expect(body).toContain("Budget Server");
   });
 
-  it("announces the final message as final", async () => {
+  it("keeps the final message short", async () => {
     await seedInstall(NON_CORE_MESSAGE_BUDGET - 1);
     const send = makeSendMock();
 
     await sendDM(budgeted(clientThatSends(send)));
 
     const body = String(send.mock.calls[0]?.[0]);
-    expect(body).toContain("Message 3 of 3");
-    expect(body).toContain("last message Scout will ever send");
+    expect(body).toContain("3 of 3");
+    expect(body).not.toContain("last message Scout will ever send");
   });
 
   it("refuses to send once the budget is spent", async () => {

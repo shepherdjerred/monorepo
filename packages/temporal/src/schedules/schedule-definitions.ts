@@ -338,7 +338,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   {
     id: "glitter-context-refresh-weekly",
     workflowType: "runGlitterContextRefresh",
-    args: [{ maxEstimatedCostUsd: 1 }],
+    args: [{ maxEstimatedCostUsd: 10 }],
     // Monday 11:00 PT, isolated from Discord capture and after other PR jobs.
     timing: {
       kind: "cron",
@@ -377,7 +377,31 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "15 minutes",
-    memo: "Daily Velero orphan ZFS snapshot detection — emits Prometheus metrics for the orphan-snapshot pathology.",
+    memo: "Daily Velero orphan ZFS snapshot and ZFSBackup-CR detection — emits Prometheus metrics for both orphan pathologies.",
+  },
+  {
+    id: "velero-r2-orphan-audit",
+    workflowType: "runVeleroR2OrphanAuditWorkflow",
+    args: [],
+    // 04:00 PT — after the local audit so both halves of the orphan picture
+    // land before the morning backup rush.
+    timing: {
+      kind: "cron",
+      expression: "0 4 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "15 minutes",
+    memo: "Daily Velero orphan R2 prefix detection — emits Prometheus metrics for unreferenced zfspv-incr backup data.",
+    initialPauseNote:
+      "Awaiting read-only R2 credential for the homelab bucket (see runbooks/r2-capacity-remediation.md)",
+    requiredEnvironment: [
+      "VELERO_R2_S3_ENDPOINT",
+      "VELERO_R2_S3_BUCKET",
+      "VELERO_R2_S3_ACCESS_KEY_ID",
+      "VELERO_R2_S3_SECRET_ACCESS_KEY",
+    ],
   },
   {
     id: "golink-sync",

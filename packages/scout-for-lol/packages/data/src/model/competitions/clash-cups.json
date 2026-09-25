@@ -1,0 +1,96 @@
+{
+  "cups": [
+    {
+      "nameKey": "demacia",
+      "queue": "clash",
+      "saturday": "2026-01-24",
+      "sunday": "2026-01-25",
+      "source": "manual"
+    },
+    {
+      "nameKey": "makeup",
+      "queue": "clash",
+      "saturday": "2026-02-07",
+      "sunday": null,
+      "shards": ["EUW1", "EUN1", "KR", "JP1", "SG2", "TW2", "VN2", "OC1"],
+      "source": "manual"
+    },
+    {
+      "nameKey": "ionia",
+      "queue": "aram clash",
+      "saturday": "2026-02-21",
+      "sunday": "2026-02-22",
+      "source": "manual"
+    },
+    {
+      "nameKey": "noxus",
+      "queue": "clash",
+      "saturday": "2026-03-21",
+      "sunday": "2026-03-22",
+      "source": "manual"
+    },
+    {
+      "nameKey": "ixtal",
+      "queue": "aram clash",
+      "saturday": "2026-04-18",
+      "sunday": "2026-04-19",
+      "source": "manual"
+    },
+    {
+      "nameKey": "zaun",
+      "queue": "clash",
+      "saturday": "2026-05-09",
+      "sunday": "2026-05-10",
+      "source": "manual"
+    },
+    {
+      "nameKey": "the_void",
+      "queue": "aram clash",
+      "saturday": "2026-06-20",
+      "sunday": "2026-06-21",
+      "source": "manual"
+    },
+    {
+      "nameKey": "msi",
+      "queue": "clash",
+      "saturday": "2026-07-18",
+      "sunday": "2026-07-19",
+      "source": "manual"
+    },
+    {
+      "nameKey": "bilgewater",
+      "queue": "aram clash",
+      "saturday": "2026-08-22",
+      "sunday": "2026-08-23",
+      "source": "manual"
+    },
+    {
+      "nameKey": "bandle_city",
+      "queue": "clash",
+      "saturday": "2026-09-19",
+      "sunday": "2026-09-20",
+      "source": "manual"
+    },
+    {
+      "nameKey": "piltover",
+      "queue": "aram clash",
+      "saturday": "2026-10-17",
+      "sunday": "2026-10-18",
+      "source": "manual"
+    },
+    {
+      "nameKey": "worlds",
+      "queue": "clash",
+      "saturday": "2026-11-21",
+      "sunday": "2026-11-22",
+      "source": "manual"
+    },
+    {
+      "nameKey": "freljord",
+      "queue": "aram clash",
+      "saturday": "2026-12-19",
+      "sunday": "2026-12-20",
+      "source": "manual"
+    }
+  ]
+}

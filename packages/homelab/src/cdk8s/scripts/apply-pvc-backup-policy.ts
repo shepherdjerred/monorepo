@@ -91,14 +91,11 @@ const changes = PVC_BACKUP_POLICY.flatMap((entry) => {
   }
   const labels = getPvcBackupLabels(entry);
   const currentLabels = pvc.metadata.labels ?? {};
-  if (
-    currentLabels["velero.io/backup"] === labels["velero.io/backup"] &&
+  return currentLabels["velero.io/backup"] === labels["velero.io/backup"] &&
     currentLabels["velero.io/exclude-from-backup"] ===
       labels["velero.io/exclude-from-backup"]
-  ) {
-    return [];
-  }
-  return [{ entry, labels }];
+    ? []
+    : [{ entry, labels }];
 });
 
 console.log(

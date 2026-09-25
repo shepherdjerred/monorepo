@@ -421,11 +421,10 @@ export function snapshotStalenessWarning(
   const ageDays = Math.floor(
     (now.getTime() - generated) / (24 * 60 * 60 * 1000),
   );
-  if (ageDays <= maxAgeDays) return null;
-  return (
-    `vault snapshot is ${String(ageDays)} days old (generated ${generatedAt}). ` +
-    `Fields added or populated since then are invisible to this check — refresh it with snapshot-1password-vault.ts.`
-  );
+  return ageDays <= maxAgeDays
+    ? null
+    : `vault snapshot is ${String(ageDays)} days old (generated ${generatedAt}). ` +
+        `Fields added or populated since then are invisible to this check — refresh it with snapshot-1password-vault.ts.`;
 }
 
 function warnIfSnapshotIsStale(generatedAt: string): void {

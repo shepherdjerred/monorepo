@@ -52,10 +52,9 @@ function sortDiagnostics(
     if (a.span.start !== b.span.start) {
       return a.span.start - b.span.start;
     }
-    if (a.span.end !== b.span.end) {
-      return a.span.end - b.span.end;
-    }
-    return a.code.localeCompare(b.code);
+    return a.span.end === b.span.end
+      ? a.code.localeCompare(b.code)
+      : a.span.end - b.span.end;
   });
 }
 

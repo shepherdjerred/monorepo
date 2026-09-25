@@ -1,0 +1,16 @@
+{
+  "name": "@scout-for-lol/desktop",
+  "private": true,
+  "description": "Pure-Rust egui desktop observer for Scout",
+  "scripts": {
+    "build": "mise exec -- cargo build --workspace --all-targets --locked",
+    "typecheck": "mise exec -- cargo check --workspace --all-targets --all-features --locked",
+    "test": "mise exec -- cargo test --workspace --all-features --locked",
+    "test:ci": "bun run test:report",
+    "test:report": "bun ../../../../scripts/ci/run-ci-test.ts",
+    "lint": "mise exec -- cargo fmt --all -- --check && mise exec -- cargo clippy --workspace --all-targets --all-features --locked -- -D warnings",
+    "format": "mise exec -- cargo fmt --all -- --check",
+    "format:write": "mise exec -- cargo fmt --all",
+    "package": "mise exec -- cargo packager --release"
+  }
+}

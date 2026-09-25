@@ -422,13 +422,15 @@ export class StreambotStreamer implements StreamerLike {
           volumePercent: input.volume,
           pipelineMode,
         });
-
     log.info("starting stream", {
       title: input.resolved.title,
       hardware: useHardware,
       pipelineMode,
+      mediaKind: input.resolved.mediaKind,
+      decidedBy: input.resolved.decidedBy,
+      spoken: input.resolved.spoken,
+      transport,
     });
-
     // Observability seam — forwards ffmpeg command/codec/progress and send-frametime stats to the
     // Prometheus metrics. Passed to both prepare (ffmpeg events) and play (send stats). The stall
     // watchdog routes to the session layer, which converts it into the machine's stall recovery.

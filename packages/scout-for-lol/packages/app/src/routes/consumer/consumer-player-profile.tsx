@@ -15,10 +15,12 @@ import {
 import { ConsumerGuildAvatar } from "#src/components/consumer-guild-avatar.tsx";
 import { ConsumerPlayerChallengeRuns } from "#src/components/challenge/player-challenge-runs.tsx";
 import { CombinedPerformance } from "#src/components/player/player-combined-performance.tsx";
+import { PlayerRankHistoryPanel } from "#src/components/player/player-rank-history.tsx";
 import { RankValue } from "#src/components/player/player-profile-sections.tsx";
 import type { HistoryCursor } from "#src/components/player/recorded-match-history.tsx";
 import { track } from "#src/lib/analytics.ts";
 import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
+import { regionName } from "#src/lib/regions.ts";
 import { useConsumerPlayerParams } from "#src/lib/routes/route-params.ts";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import {
@@ -53,15 +55,11 @@ function playerProfileOutcome(options: {
   accessSuccess: boolean;
   accessState: "available" | "feature_disabled" | "no_shared_guild" | undefined;
 }): "succeeded" | "failed" | null {
-  if (options.summarySuccess) return "succeeded";
-  if (
+  const failed =
     options.summaryError ||
     options.accessError ||
-    (options.accessSuccess && options.accessState !== "available")
-  ) {
-    return "failed";
-  }
-  return null;
+    (options.accessSuccess && options.accessState !== "available");
+  return options.summarySuccess ? "succeeded" : failed ? "failed" : null;
 }
 
 function profileFilterInput(filters: PlayerProfileFilters) {
@@ -88,8 +86,14 @@ function profileUnavailable(
 }
 
 function observedAt(value: Date | string | null): string {
-  if (value === null) return "Not observed yet";
-  return new Date(value).toLocaleString();
+  return value === null ? "Not observed yet" : new Date(value).toLocaleString();
+}
+
+function masteryPoints(points: number): string {
+  return new Intl.NumberFormat(undefined, {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(points);
 }
 
 export function ConsumerPlayerProfile() {
@@ -167,6 +171,12 @@ function ConsumerPlayerProfileContent(props: {
   // `refetchOnMount: "always"`), and `Loaded`'s `degraded` says the exact
   // opposite — keep rendering the last known answer when the refresh fails.
   // That is right for a match list and wrong for an authorization check.
+  const rankHistoryQuery = useQuery(
+    trpc.consumerPlayer.rankHistory.queryOptions(
+      { playerId },
+      { enabled: accessIsFresh },
+    ),
+  );
   const historyQuery = useQuery(
     trpc.consumerPlayer.matchHistory.queryOptions(
       {
@@ -285,17 +295,17 @@ function ConsumerPlayerProfileContent(props: {
     <ProfileShell>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex items-start gap-3">
-          <ConsumerGuildAvatar name={summary.guild.name} size="large" />
+          <ConsumerGuildAvatar
+            guildId={summary.guild.id}
+            icon={summary.guild.icon}
+            name={summary.guild.name}
+            size="large"
+          />
           <div>
             <p className="text-sm text-scout-subtle">{summary.guild.name}</p>
             <h1 className="text-3xl font-semibold tracking-tight">
               {summary.alias}
             </h1>
-            <p className="mt-1 text-sm text-scout-subtle">
-              {summary.accountCount === 1
-                ? "1 Riot account"
-                : `${summary.accountCount.toString()} Riot accounts combined`}
-            </p>
           </div>
         </div>
         <Button asChild variant="outline">
@@ -313,12 +323,10 @@ function ConsumerPlayerProfileContent(props: {
                 <CardTitle className="text-lg">
                   {formatRiotId(account, "Riot ID pending")}
                 </CardTitle>
-                <Badge variant="outline">{account.region}</Badge>
+                <Badge variant="outline">{regionName(account.region)}</Badge>
               </div>
-              <CardDescription>
-                Last observed match: {observedAt(account.lastMatchTime)}
-                <br />
-                Last checked by Scout: {observedAt(account.lastCheckedAt)}
+              <CardDescription className="text-xs">
+                Last match: {observedAt(account.lastMatchTime)}
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 text-sm sm:grid-cols-3">
@@ -335,11 +343,56 @@ function ConsumerPlayerProfileContent(props: {
                 <RankValue rank={account.ranks.ranked5s} compact />
               </div>
             </CardContent>
+            {account.mastery !== null && (
+              <CardContent className="border-t pt-3">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-medium">Champion mastery</p>
+                  <p className="text-xs text-scout-subtle">
+                    {account.mastery.freshness === "stale" ? "Last known " : ""}
+                    {observedAt(account.mastery.fetchedAt)}
+                  </p>
+                </div>
+                {account.mastery.champions.length === 0 ? (
+                  <p className="mt-2 text-sm text-scout-subtle">
+                    No champion mastery recorded.
+                  </p>
+                ) : (
+                  <ul className="mt-2 space-y-1 text-sm">
+                    {account.mastery.champions.map((champion) => (
+                      <li
+                        key={champion.championId}
+                        className="flex items-center justify-between gap-3"
+                      >
+                        <span>{champion.championName}</span>
+                        <span className="text-scout-subtle">
+                          M{champion.level.toString()} ·{" "}
+                          {masteryPoints(champion.points)}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </CardContent>
+            )}
           </Card>
         ))}
       </div>
 
       <ConsumerPlayerChallengeRuns playerId={playerId} />
+
+      <PlayerRankHistoryPanel
+        status={
+          rankHistoryQuery.isPending
+            ? "loading"
+            : rankHistoryQuery.isError
+              ? "error"
+              : "ready"
+        }
+        history={rankHistoryQuery.data}
+        onRetry={() => {
+          void rankHistoryQuery.refetch();
+        }}
+      />
 
       <CombinedPerformance
         filters={props.filters}

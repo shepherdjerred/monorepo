@@ -38,6 +38,7 @@ type FactOverrides = {
   teamId?: number;
   totalDamageDealtToChampions?: number;
   playerId?: number;
+  teamPosition?: string;
 };
 
 function fact(matchId: string, when: Date, overrides: FactOverrides = {}) {
@@ -58,6 +59,9 @@ function fact(matchId: string, when: Date, overrides: FactOverrides = {}) {
     totalDamageDealtToChampions:
       overrides.totalDamageDealtToChampions ?? 12_000,
     gameCreationAt: when,
+    ...(overrides.teamPosition === undefined
+      ? {}
+      : { teamPosition: overrides.teamPosition }),
   };
 }
 
@@ -233,6 +237,37 @@ describe("fetchPlayerChampionPool", () => {
     expect(ashe.wins).toBe(2);
     expect(lee.champion_name).toBe("LeeSin");
     expect(lee.games).toBe(1);
+  });
+
+  test("excludes INVALID and empty team positions from mode position", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        fact("NA1_pos_1", at(0), {
+          championId: 22,
+          championName: "Ashe",
+          teamPosition: "INVALID",
+        }),
+        fact("NA1_pos_2", at(60), {
+          championId: 22,
+          championName: "Ashe",
+          teamPosition: "INVALID",
+        }),
+        fact("NA1_pos_3", at(120), {
+          championId: 22,
+          championName: "Ashe",
+          teamPosition: "BOTTOM",
+        }),
+      ],
+    });
+
+    const pool = await fetchPlayerChampionPool({
+      puuids: [MAIN],
+      lakeDir,
+    });
+
+    expect(pool).toHaveLength(1);
+    expect(pool[0]?.team_position).toBe("BOTTOM");
   });
 });
 

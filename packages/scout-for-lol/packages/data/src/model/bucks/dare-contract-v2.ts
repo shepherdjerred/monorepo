@@ -267,10 +267,11 @@ function dareValueDepth(value: DareValueV2): number {
 }
 
 function dareValueNeedsTimeline(value: DareValueV2): boolean {
-  if (value.kind === "timeline_event_count") return true;
   return (
-    value.kind === "arithmetic" &&
-    (dareValueNeedsTimeline(value.left) || dareValueNeedsTimeline(value.right))
+    value.kind === "timeline_event_count" ||
+    (value.kind === "arithmetic" &&
+      (dareValueNeedsTimeline(value.left) ||
+        dareValueNeedsTimeline(value.right)))
   );
 }
 

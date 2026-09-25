@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { StorySeed } from "#src/lib/storybook/trpc-stub.ts";
+import type { RouterOutputs } from "#src/lib/query/trpc.ts";
 import { OnboardingConceptsStep } from "./onboarding-concepts-step.tsx";
 import { OnboardingCompetitionStep } from "./onboarding-competition-step.tsx";
 import { OnboardingDoneStep } from "./onboarding-done-step.tsx";
@@ -119,6 +120,8 @@ export const SubscribeSelfStep: Story = {
       username="sjerred"
       discordId="444"
       existingSubs={[]}
+      selfAlias=""
+      selfChannelId=""
       onAdded={noop}
       onContinue={noop}
       onBack={noop}
@@ -137,6 +140,63 @@ export const SubscribeMoreStep: Story = {
       username="sjerred"
       discordId="444"
       existingSubs={EXISTING_SUBS}
+      selfAlias="sjerred"
+      selfChannelId={REPORTS_CHANNEL}
+      onAdded={noop}
+      onContinue={noop}
+      onBack={noop}
+      onSkip={noop}
+    />
+  ),
+};
+
+/** Loaded teammate suggestions: the query key must match the component input. */
+const seedTeammates: StorySeed = (trpc, queryClient) => {
+  const seed: RouterOutputs["player"]["suggestTeammates"] = {
+    kind: "ok",
+    suggestions: [
+      {
+        puuid: "duo-puuid",
+        gameName: "DuoQueue",
+        tagLine: "NA1",
+        riotId: "DuoQueue#NA1",
+        region: "AMERICA_NORTH",
+        gamesTogether: 7,
+        lastPlayedMs: 1_771_000_000_000,
+      },
+      {
+        puuid: "flex-puuid",
+        gameName: "FlexFriend",
+        tagLine: "EUW",
+        riotId: "FlexFriend#EUW",
+        region: "EU_WEST",
+        gamesTogether: 3,
+        lastPlayedMs: 1_770_500_000_000,
+      },
+    ],
+  };
+  queryClient.setQueryData(
+    trpc.player.suggestTeammates.queryOptions({
+      guildId: GUILD_ID,
+      alias: "sjerred",
+    }).queryKey,
+    seed,
+  );
+};
+
+export const SubscribeMoreWithSuggestions: Story = {
+  args: stepArgs,
+  parameters: { seedQueries: [seedTeammates] },
+  render: () => (
+    <OnboardingSubscribeStep
+      mode="more"
+      guildId={GUILD_ID}
+      channels={CHANNELS}
+      username="sjerred"
+      discordId="444"
+      existingSubs={EXISTING_SUBS}
+      selfAlias="sjerred"
+      selfChannelId={REPORTS_CHANNEL}
       onAdded={noop}
       onContinue={noop}
       onBack={noop}

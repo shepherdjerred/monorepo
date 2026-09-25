@@ -10,7 +10,7 @@ export const SESSION_QUERY_OPTIONS = {
   retry: 10,
   retryDelay: 500,
   refetchInterval: (query: { state: { status: string } }) =>
-    query.state.status === "error" ? 2000 : false,
+    query.state.status === "error" && 2000,
 };
 
 export type SessionGuardState =

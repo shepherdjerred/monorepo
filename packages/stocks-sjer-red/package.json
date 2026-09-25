@@ -16,12 +16,12 @@
   "dependencies": {
     "@astrojs/check": "^0.9.8",
     "@tailwindcss/vite": "^4.2.4",
-    "astro": "^7.1.5",
+    "astro": "^7.3.3",
     "tailwindcss": "^4.2.4",
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/bun": "1.4.0",
+    "@types/bun": "1.4.2",
     "typescript": "^6.0.3",
     "vite": "^8.0.0",
     "@typescript/native": "npm:typescript@7.0.2"

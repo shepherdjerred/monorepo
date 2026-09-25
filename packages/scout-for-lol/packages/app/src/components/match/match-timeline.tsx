@@ -113,13 +113,11 @@ type MatchTimelineProps = {
 };
 
 export function MatchTimeline(props: MatchTimelineProps) {
-  if (props.source.kind === "consumer") {
-    return (
-      <ConsumerMatchTimeline {...props} playerId={props.source.playerId} />
-    );
-  }
-
-  return <ExploreMatchTimeline {...props} />;
+  return props.source.kind === "consumer" ? (
+    <ConsumerMatchTimeline {...props} playerId={props.source.playerId} />
+  ) : (
+    <ExploreMatchTimeline {...props} />
+  );
 }
 
 function ConsumerMatchTimeline(

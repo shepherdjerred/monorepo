@@ -26,6 +26,13 @@
       "reason": "Retired static site"
     },
     {
+      "name": "ci-handoff",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Ephemeral CI handoff data"
+    },
+    {
       "name": "resume",
       "mode": "excluded",
       "cadences": [],

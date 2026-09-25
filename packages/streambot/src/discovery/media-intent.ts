@@ -51,8 +51,9 @@ function verbMode(verb: string | undefined): MediaMode | undefined {
   if (verb === undefined) return undefined;
   const normalized = verb.trim().toLocaleLowerCase("en-US");
   if (normalized === "watch") return "video";
-  if (normalized === "listen to" || normalized === "put on") return "music";
-  return undefined;
+  return normalized === "listen to" || normalized === "put on"
+    ? "music"
+    : undefined;
 }
 
 /** Turn the compact command surface into a structured, provider-neutral search intent. */
@@ -65,8 +66,14 @@ export function inferMediaIntent(input: {
   const explicitAiCover = /\bai[ -]?covers?\b/iu.test(query);
   const explicitCover = explicitAiCover || /\bcovers?\b/iu.test(query);
   const explicitOriginal = /\boriginal(?: version)?\b/iu.test(query);
-  const verb = /^(?:play|watch|queue|listen to|put on)\s+/iu.exec(query)?.[0];
-  const cleaned = query
+  const withoutPolite = query.replace(
+    /^(?:please\s+|(?:can|could|would)\s+you\s+)+(?=(?:play|watch|queue|listen to|put on)\s)/iu,
+    "",
+  );
+  const verb = /^(?:play|watch|queue|listen to|put on)\s+/iu.exec(
+    withoutPolite,
+  )?.[0];
+  const cleaned = withoutPolite
     .replace(/^(?:play|watch|queue|listen to|put on)\s+/iu, "")
     .replaceAll(/\bai[ -]?covers?\b/giu, "")
     .replaceAll(/\bcovers?\b/giu, "")

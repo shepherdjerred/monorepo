@@ -71,6 +71,7 @@ type GenerationStatus =
   | "budget_refused"
   | "timeout"
   | "invalid_output"
+  | "provider_quota"
   | "provider_error"
   | "persistence_error"
   | "unpriceable";
@@ -366,8 +367,9 @@ function generationStatusForError(
   const shared = sharedLlmFailureKind(deadline, error);
   if (shared !== undefined) return shared;
   if (error instanceof ParlayPersistenceError) return "persistence_error";
-  if (error instanceof ParlayUnpriceableError) return "unpriceable";
-  return "provider_error";
+  return error instanceof ParlayUnpriceableError
+    ? "unpriceable"
+    : "provider_error";
 }
 
 /** Start the caught background task only after normal prematch delivery and
@@ -433,6 +435,7 @@ async function runParlayGenerationInternal(
       status === "budget_refused" ||
       status === "timeout" ||
       status === "invalid_output" ||
+      status === "provider_quota" ||
       status === "unpriceable";
     if (expected) {
       logger.info(

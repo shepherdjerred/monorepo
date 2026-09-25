@@ -16,6 +16,7 @@ import {
   getConsumerPlayerMatchHistory,
   getConsumerPlayerProfileSummary,
 } from "#src/lib/player-profile/queries.ts";
+import { getConsumerPlayerRankHistory } from "#src/lib/player-profile/rank-history.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 
 const ConsumerPlayerInput = z.object({
@@ -152,6 +153,21 @@ function guildDisplay(
   };
 }
 
+function guildProfileDisplay(
+  guilds: { id: string; name: string; icon: string | null }[],
+  guildId: string,
+) {
+  const guild = guilds.find((candidate) => candidate.id === guildId);
+  if (guild === undefined) {
+    throw new Error("Authorized player resolved outside its request scope");
+  }
+  return {
+    id: guild.id,
+    name: guild.name,
+    icon: guild.icon,
+  };
+}
+
 type HomePlayer = {
   id: number;
   alias: string;
@@ -206,13 +222,10 @@ export const consumerPlayerRouter = router({
       if (scope.kind === "forbidden") {
         return { state: scope.reason } as const;
       }
-      if (
-        input?.guildId !== undefined &&
+      return input?.guildId !== undefined &&
         !scope.guilds.some((guild) => guild.id === input.guildId)
-      ) {
-        return { state: "feature_disabled" } as const;
-      }
-      return { state: "available", guildCount: scope.guilds.length } as const;
+        ? ({ state: "feature_disabled" } as const)
+        : ({ state: "available", guildCount: scope.guilds.length } as const);
     }),
 
   home: protectedProcedure.query(async ({ ctx }) => {
@@ -335,7 +348,17 @@ export const consumerPlayerRouter = router({
         ...(input.queues === undefined ? {} : { queues: input.queues }),
       });
       const { guildId, ...profile } = summary;
-      return { ...profile, guild: guildDisplay(guilds, guildId) };
+      return { ...profile, guild: guildProfileDisplay(guilds, guildId) };
+    }),
+
+  rankHistory: protectedProcedure
+    .input(ConsumerPlayerInput)
+    .query(async ({ ctx, input }) => {
+      const guilds = await assertConsumerPlayerScope(ctx.user);
+      return getConsumerPlayerRankHistory({
+        playerId: input.playerId,
+        guildIds: guilds.map((guild) => DiscordGuildIdSchema.parse(guild.id)),
+      });
     }),
 
   matchHistory: protectedProcedure

@@ -79,10 +79,9 @@ function visitRenderValue(
   const [keywordToken] = tokenChildren(node, "KeywordLike");
   if (keywordToken !== undefined) {
     const word = keywordToken.image.toLowerCase();
-    if (word === "true" || word === "false") {
-      return { kind: "boolean", value: word === "true", span };
-    }
-    return { kind: "identifier", name: word, span };
+    return word === "true" || word === "false"
+      ? { kind: "boolean", value: word === "true", span }
+      : { kind: "identifier", name: word, span };
   }
   const [identifierToken] = tokenChildren(node, "Identifier");
   if (identifierToken !== undefined) {
@@ -137,10 +136,9 @@ function visitRenderListItem(
     };
   }
   const [keywordToken] = tokenChildren(node, "KeywordLike");
-  if (keywordToken !== undefined) {
-    return { kind: "identifier", name: keywordToken.image.toLowerCase(), span };
-  }
-  return { kind: "identifier", name: "", span };
+  return keywordToken === undefined
+    ? { kind: "identifier", name: "", span }
+    : { kind: "identifier", name: keywordToken.image.toLowerCase(), span };
 }
 
 function visitRenderPair(

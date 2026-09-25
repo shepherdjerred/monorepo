@@ -52,6 +52,9 @@ describe("post-match discovery intent ordering", () => {
       "NA1_100_B",
       "NA1_300",
     ]);
+    expect(ordered.intents.map((match) => match.gameEndTimestamp)).toEqual([
+      100, 100, 300,
+    ]);
     expect(ordered.deferredMatchIds).toEqual([]);
   });
 

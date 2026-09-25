@@ -9,6 +9,7 @@ import {
   scoutDurableLakeStagingLag,
   scoutDurableNotificationIntents,
   scoutDurableReceiptsRecorded,
+  scoutDurableWorkflowStartAcceptances,
   scoutDurableRecoveryBatches,
 } from "#src/metrics/durable-pipeline.ts";
 import { registry } from "#src/metrics/registry.ts";
@@ -166,5 +167,22 @@ describe("durable pipeline metrics", () => {
     // fact was recorded twice with two different claims about it, which is the
     // duplicate signal the V2 acceptance checklist asks about.
     expect(conflicts?.value).toBe(1);
+  });
+
+  test("counts the ordinary handoff answers beside the rare one", async () => {
+    // The soak this counter exists for is most likely to read zero on
+    // `answered-by-another-run`, and zero has to be trustworthy. Counting the
+    // ordinary answers is what makes it so: `applied` climbing is standing
+    // proof the instrument is live, so a flat rare series beside it is
+    // evidence rather than silence.
+    scoutDurableWorkflowStartAcceptances.inc({ outcome: "applied" });
+    scoutDurableWorkflowStartAcceptances.inc({
+      outcome: "answered-by-another-run",
+    });
+    const metric = await scoutDurableWorkflowStartAcceptances.get();
+    const seriesFor = (outcome: string) =>
+      metric.values.find((value) => value.labels.outcome === outcome)?.value;
+    expect(seriesFor("applied")).toBe(1);
+    expect(seriesFor("answered-by-another-run")).toBe(1);
   });
 });

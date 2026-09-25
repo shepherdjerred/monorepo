@@ -231,12 +231,11 @@ function filterByTitle(
   search: string,
 ): ExploreConversation[] {
   const needle = search.trim().toLowerCase();
-  if (needle.length === 0) {
-    return conversations;
-  }
-  return conversations.filter((conversation) =>
-    conversation.title.toLowerCase().includes(needle),
-  );
+  return needle.length === 0
+    ? conversations
+    : conversations.filter((conversation) =>
+        conversation.title.toLowerCase().includes(needle),
+      );
 }
 
 type Group = { label: string; conversations: ExploreConversation[] };

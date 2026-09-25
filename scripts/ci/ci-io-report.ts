@@ -174,13 +174,10 @@ export function reportSeverity(report: CiIoReport): string {
   ) {
     return "error";
   }
-  if (
-    gateStatus === "inconclusive" ||
+  return gateStatus === "inconclusive" ||
     report.candidate.summary.lowerBoundJobCount > 0
-  ) {
-    return "warning";
-  }
-  return "success";
+    ? "warning"
+    : "success";
 }
 
 export function assertRequestedBenchmarkIntegrity(

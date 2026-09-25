@@ -15,6 +15,10 @@ import {
   KubeNetworkPolicy,
   KubeService,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  dnsEgressRule,
+  externalHttpsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import { TailscaleIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import {
@@ -296,18 +300,7 @@ export function createWoodpeckerServer(chart: Chart) {
         },
       ],
       egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         {
           to: [
             {
@@ -329,13 +322,10 @@ export function createWoodpeckerServer(chart: Chart) {
           ],
           ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
         },
-        {
-          // GitHub: OAuth token exchange, status posts, and repo metadata.
-          // Restricted to HTTPS rather than a CIDR because GitHub's egress
-          // ranges change and a stale list would silently break status posts.
-          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
-        },
+        // GitHub: OAuth token exchange, status posts, and repo metadata.
+        // Restricted to HTTPS rather than a CIDR because GitHub's egress
+        // ranges change and a stale list would silently break status posts.
+        externalHttpsEgressRule(),
       ],
     },
   });

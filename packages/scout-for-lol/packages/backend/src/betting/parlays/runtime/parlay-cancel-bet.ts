@@ -103,10 +103,9 @@ async function cancelParlayBetInner(
       if (current.marketState === "settled") {
         return { kind: "already_resolved", marketState: "settled" };
       }
-      if (current.marketState === "voided") {
-        return { kind: "already_resolved", marketState: "voided" };
-      }
-      return { kind: "window_closed" };
+      return current.marketState === "voided"
+        ? { kind: "already_resolved", marketState: "voided" }
+        : { kind: "window_closed" };
     }
 
     const bet = await tx.bucksParlayBet.findUnique({

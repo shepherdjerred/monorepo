@@ -29,8 +29,9 @@ export function jobSearchColumnKey(
   const raw = task.extraFields["company_status"];
   const status = typeof raw === "string" ? raw.toLowerCase() : "";
   if (JOB_SEARCH_COLUMN_KEY_SET.has(status)) {
-    if (status === "applied" || status === "screener") return status;
-    return "identified";
+    return status === "applied" || status === "screener"
+      ? status
+      : "identified";
   }
 
   for (const tag of task.tags) {

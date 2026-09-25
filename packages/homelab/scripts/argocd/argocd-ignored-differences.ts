@@ -41,13 +41,12 @@ const RESPECT_IGNORE_DIFFERENCES = "RespectIgnoreDifferences=true";
  * rooted is not a pointer, and returning no path leaves the field compared.
  */
 function pointerSegments(pointer: string): readonly string[] | undefined {
-  if (!pointer.startsWith("/")) {
-    return undefined;
-  }
-  return pointer
-    .slice(1)
-    .split("/")
-    .map((segment) => segment.replaceAll("~1", "/").replaceAll("~0", "~"));
+  return pointer.startsWith("/")
+    ? pointer
+        .slice(1)
+        .split("/")
+        .map((segment) => segment.replaceAll("~1", "/").replaceAll("~0", "~"))
+    : undefined;
 }
 
 function ignoreRuleMatches(

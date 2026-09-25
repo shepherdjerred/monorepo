@@ -1,5 +1,10 @@
 import { ScheduleOverlapPolicy } from "@temporalio/client";
-import { scoutFixedScheduleId, type ScoutStage } from "@scout-for-lol/temporal";
+import {
+  SCOUT_WORKFLOW_NAMES,
+  scoutFixedScheduleId,
+  type ScoutStage,
+} from "@scout-for-lol/temporal";
+import { scoutPostMatchDiscoveryV2InputCodec } from "@scout-for-lol/temporal/workflow-contracts-v2";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import type { ScheduleDefinition } from "./schedule-types.ts";
 
@@ -88,16 +93,14 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       catchupWindow: CATCHUP_TIGHT,
     }),
     intervalSchedule(stage, {
-      name: "tournament-lobby-poll",
-      workflowType: "scoutRealtimePollWorkflow",
-      args: [{ stage, kind: "tournament-lobbies", maximumAgeSeconds: 60 }],
-      every: "20 seconds",
-      catchupWindow: CATCHUP_TIGHT,
-    }),
-    intervalSchedule(stage, {
       name: "postmatch-discovery",
-      workflowType: "scoutPostMatchDiscoveryWorkflow",
-      args: [{ stage }],
+      workflowType: SCOUT_WORKFLOW_NAMES.postMatchDiscoveryV2,
+      args: [
+        scoutPostMatchDiscoveryV2InputCodec.serialize({
+          stage,
+          trigger: "schedule",
+        }),
+      ],
       every: "1 minute",
       catchupWindow: CATCHUP_TIGHT,
     }),
@@ -122,6 +125,12 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       name: "competition-refresh",
       workflowType: "scoutBackgroundJobWorkflow",
       args: [{ stage, kind: "competition-refresh" }],
+      every: "15 minutes",
+    }),
+    intervalSchedule(stage, {
+      name: "clash-snapshot",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "clash-snapshot" }],
       every: "15 minutes",
     }),
     intervalSchedule(stage, {

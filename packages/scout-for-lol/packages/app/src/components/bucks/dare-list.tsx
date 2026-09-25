@@ -82,10 +82,9 @@ function trimTrailingFractionZeros(value: string): string {
 }
 
 function formatStatusNumber(value: number, fractionDigits = 1): string {
-  if (Number.isInteger(value)) {
-    return value.toString();
-  }
-  return trimTrailingFractionZeros(value.toFixed(fractionDigits));
+  return Number.isInteger(value)
+    ? value.toString()
+    : trimTrailingFractionZeros(value.toFixed(fractionDigits));
 }
 
 function formatDistinctStatusNumbers(
@@ -113,8 +112,7 @@ function authoredPhrase(
   phrases: Readonly<Record<string, string>> | null,
 ): string | undefined {
   if (phrases === null) return undefined;
-  if (gameSet === null) return undefined;
-  return phrases[gameSet];
+  return gameSet === null ? undefined : phrases[gameSet];
 }
 
 function improvementUnit(
@@ -127,10 +125,9 @@ function improvementUnit(
   if (source.includes("cs_per_minute") || source.includes("cs_per_min")) {
     return "CS/min";
   }
-  if (condition.gameSet !== null && !GENERIC_GAME_SETS.has(condition.gameSet)) {
-    return humanizeSlug(condition.gameSet);
-  }
-  return humanizeSlug(source);
+  return condition.gameSet !== null && !GENERIC_GAME_SETS.has(condition.gameSet)
+    ? humanizeSlug(condition.gameSet)
+    : humanizeSlug(source);
 }
 
 function conditionPhrase(
@@ -140,10 +137,9 @@ function conditionPhrase(
 ): string {
   const authored = authoredPhrase(gameSet, phrases);
   if (authored !== undefined) return authored;
-  if (gameSet !== null && !GENERIC_GAME_SETS.has(gameSet)) {
-    return humanizeSlug(gameSet);
-  }
-  return gamesLabel(target);
+  return gameSet !== null && !GENERIC_GAME_SETS.has(gameSet)
+    ? humanizeSlug(gameSet)
+    : gamesLabel(target);
 }
 
 function countableLine(
@@ -176,16 +172,16 @@ function improvementStatusLine(
     return `Best ${current} ${unit}, needs ${target}`;
   }
   const pending = PendingImprovementSchema.safeParse(progressValues(condition));
-  if (pending.success) {
-    return `Needs ${formatStatusNumber(pending.data.target)} ${unit}`;
-  }
-  return null;
+  return pending.success
+    ? `Needs ${formatStatusNumber(pending.data.target)} ${unit}`
+    : null;
 }
 
 function rankStatusLine(condition: DareProgressCondition): string | null {
   const parsed = RankValuesSchema.safeParse(progressValues(condition));
-  if (!parsed.success) return null;
-  return `${parsed.data.current}, needs ${parsed.data.target}`;
+  return parsed.success
+    ? `${parsed.data.current}, needs ${parsed.data.target}`
+    : null;
 }
 
 function countableStatusLine(
@@ -193,12 +189,13 @@ function countableStatusLine(
   phrases: Readonly<Record<string, string>> | null,
 ): string | null {
   const parsed = CountableValuesSchema.safeParse(progressValues(condition));
-  if (!parsed.success) return null;
-  return countableLine(
-    parsed.data.current,
-    parsed.data.target,
-    conditionPhrase(condition.gameSet, parsed.data.target, phrases),
-  );
+  return parsed.success
+    ? countableLine(
+        parsed.data.current,
+        parsed.data.target,
+        conditionPhrase(condition.gameSet, parsed.data.target, phrases),
+      )
+    : null;
 }
 
 function unmatchedCurrentLine(
@@ -211,8 +208,9 @@ function unmatchedCurrentLine(
   if (authored !== undefined) {
     return `${parsed.data.current.toString()} ${authored}`;
   }
-  if (parsed.data.current === 0) return "Waiting for a game";
-  return `${parsed.data.current.toString()} ${gamesLabel(parsed.data.current)} so far`;
+  return parsed.data.current === 0
+    ? "Waiting for a game"
+    : `${parsed.data.current.toString()} ${gamesLabel(parsed.data.current)} so far`;
 }
 
 function conditionStatusLine(
@@ -232,8 +230,7 @@ function terminalOutcome(progress: DareProgress, state: string): string {
   if (state === "cancelled") return "Cancelled";
   if (state === "expired") return "Expired";
   if (state === "declined") return "Declined";
-  if (state === "voided") return "Voided";
-  return "Not achieved";
+  return state === "voided" ? "Voided" : "Not achieved";
 }
 
 function liveConditionLines(
@@ -274,8 +271,7 @@ export function dareListStatusLines(
     return [{ key: "outcome", text: "Complete, waiting to settle" }];
   }
   const lines = liveConditionLines(progress, statusPhrases);
-  if (lines.length > 0) return lines;
-  return unmatchedProgressLines(progress);
+  return lines.length > 0 ? lines : unmatchedProgressLines(progress);
 }
 
 /**

@@ -90,10 +90,50 @@ describe("AI architecture guard", () => {
         },
       ]).map(({ rule }) => rule),
     ).toEqual(["legacy-agent-sdk", "provider-api-key"]);
+
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/temporal/package.json",
+          contents:
+            '"@anthropic-ai/claude-agent-sdk": "0.3.220"\n"CODEX_ACCESS_TOKEN": "must-not-hide"',
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["provider-api-key"]);
   });
 });
 
 describe("AI architecture compatibility exceptions", () => {
+  test("allows native subscriptions only in the durable chat adapters", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/temporal/package.json",
+          contents: '"@anthropic-ai/claude-agent-sdk": "0.3.220"',
+        },
+        {
+          path: "packages/temporal/src/lib/agent-runner/claude.ts",
+          contents:
+            'import { query } from "@anthropic-ai/claude-agent-sdk";\nconst token = Bun.env.CLAUDE_CODE_OAUTH_TOKEN;',
+        },
+        {
+          path: "packages/temporal/src/lib/agent-runner/codex.ts",
+          contents: 'delete environment["CODEX_ACCESS_TOKEN"]',
+        },
+      ]),
+    ).toEqual([]);
+
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/temporal/src/lib/agent-runner/other.ts",
+          contents:
+            'import { query } from "@anthropic-ai/claude-agent-sdk";\nconst token = Bun.env.CLAUDE_CODE_OAUTH_TOKEN;',
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["legacy-agent-sdk", "provider-api-key"]);
+  });
+
   test("includes templated runtime configuration in the scanned file set", () => {
     expect(isTextArchitectureFile("packages/app/config.fish.tmpl")).toBe(true);
   });
@@ -104,6 +144,15 @@ describe("AI architecture compatibility exceptions", () => {
         {
           path: "packages/temporal/src/activities/agent/agent-task-env.ts",
           contents: 'delete environment["ANTHROPIC_API_KEY"]',
+        },
+        {
+          path: "packages/temporal/src/shared/agent/provider-credentials.ts",
+          contents: 'const blocked = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"]',
+        },
+        {
+          path: "packages/toolkit/src/lib/brim/fish.ts",
+          contents:
+            'scrubEnv: ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "CODEX_API_KEY"]',
         },
         {
           path: "packages/app/src/provider.test.ts",

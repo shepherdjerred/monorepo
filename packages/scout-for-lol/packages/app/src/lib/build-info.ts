@@ -58,13 +58,13 @@ export function isContractMismatch(
   localHash: string,
   remoteHash: string,
 ): boolean {
-  if (localHash === DEV_PLACEHOLDER || remoteHash === DEV_PLACEHOLDER) {
-    return false;
-  }
-  if (localHash.length === 0 || remoteHash.length === 0) {
-    return false;
-  }
-  return localHash !== remoteHash;
+  return (
+    localHash !== DEV_PLACEHOLDER &&
+    remoteHash !== DEV_PLACEHOLDER &&
+    localHash.length > 0 &&
+    remoteHash.length > 0 &&
+    localHash !== remoteHash
+  );
 }
 
 /** First 7 chars of a git SHA (or the whole string when shorter). */

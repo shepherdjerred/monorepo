@@ -1,27 +1,21 @@
 import {
   DUEL_DISCLOSURE_VERSION,
-  DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
   DuelSeriesStatusSchema,
   PlayerIdSchema,
-  RegionSchema,
-  type DiscordChannelId,
   type DiscordGuildId,
 } from "@scout-for-lol/data";
 import type {
   ScoutDuelSeriesInput,
   ScoutDuelSeriesRefreshResult,
 } from "@scout-for-lol/temporal";
-import { tournamentApiMode } from "#src/config/dynamic.ts";
 import { prisma } from "#src/database/index.ts";
-import { provisionTournamentLobby } from "#src/league/tournament/provision-lobby.ts";
 import { duelRolloutAllowed } from "#src/progression/duels/access.ts";
+import { duelCompetitorsUseOneRiotRegion } from "#src/progression/duels/competitors.ts";
 import {
-  duelResults,
   duelSeriesOverdue,
   duelSeriesTransitions,
-  duelTournamentProvisioning,
 } from "#src/metrics/progression.ts";
 
 const TERMINAL_STATES = new Set([
@@ -53,8 +47,7 @@ function closedSeriesResult(
   deadlineAt: Date,
 ): ScoutDuelSeriesRefreshResult | null {
   if (TERMINAL_STATES.has(state)) return refreshResult(state, deadlineAt);
-  if (deadlineAt <= new Date()) return refreshResult(state, deadlineAt);
-  return null;
+  return deadlineAt <= new Date() ? refreshResult(state, deadlineAt) : null;
 }
 
 async function currentRefreshResult(
@@ -75,7 +68,10 @@ async function transitionSeries(options: {
   readonly seriesId: string;
   readonly currentState: string;
   readonly nextState:
-    "awaiting_acceptance" | "awaiting_readiness" | "code_ready";
+    | "awaiting_acceptance"
+    | "awaiting_readiness"
+    | "code_ready"
+    | "needs_review";
   readonly deadlineAt: Date;
   readonly windowStartsAt?: Date | null;
 }): Promise<ScoutDuelSeriesRefreshResult> {
@@ -169,18 +165,20 @@ async function resetStaleParticipantConsent(options: {
   return refreshResult("awaiting_acceptance", options.deadlineAt);
 }
 
-async function claimGameProvisioning(options: {
+async function readyGameForObservedLobby(options: {
   readonly seriesId: string;
   readonly currentState: string;
   readonly gameNumber: number;
-}) {
+  readonly guildId: string;
+  readonly channelId: string;
+}): Promise<boolean> {
   return await prisma.$transaction(async (tx) => {
     const transitioned = await tx.duelSeries.updateMany({
       where: { id: options.seriesId, seriesState: options.currentState },
-      data: { seriesState: "provisioning_code" },
+      data: { seriesState: "code_ready" },
     });
-    if (transitioned.count === 0) return null;
-    return await tx.duelGame.upsert({
+    if (transitioned.count === 0) return false;
+    const game = await tx.duelGame.upsert({
       where: {
         seriesId_gameNumber: {
           seriesId: options.seriesId,
@@ -190,72 +188,16 @@ async function claimGameProvisioning(options: {
       create: {
         seriesId: options.seriesId,
         gameNumber: options.gameNumber,
-        gameState: "provisioning_code",
+        gameState: "code_ready",
       },
-      update: { gameState: "provisioning_code" },
+      update: { gameState: "code_ready", tournamentLobbyId: null },
     });
-  });
-}
-
-async function markRegionReview(options: {
-  readonly seriesId: string;
-  readonly gameId: string;
-  readonly deadlineAt: Date;
-}): Promise<ScoutDuelSeriesRefreshResult> {
-  const transitioned = await prisma.$transaction(async (tx) => {
-    const updatedSeries = await tx.duelSeries.updateMany({
-      where: { id: options.seriesId, seriesState: "provisioning_code" },
-      data: { seriesState: "needs_review" },
-    });
-    if (updatedSeries.count === 0) return false;
-    const updatedGame = await tx.duelGame.updateMany({
-      where: { id: options.gameId, gameState: "provisioning_code" },
-      data: {
-        gameState: "needs_review",
-        resultState: "needs_review",
-        reviewReason: "Duel competitors must use accounts in one Riot region",
-      },
-    });
-    if (updatedGame.count !== 1) {
-      throw new Error("A provisioning duel game changed state unexpectedly");
-    }
-    return true;
-  });
-  if (!transitioned) {
-    return await currentRefreshResult(options.seriesId, options.deadlineAt);
-  }
-  duelResults.inc({ status: "needs_review" });
-  recordTransition("provisioning_code", "needs_review");
-  return refreshResult("needs_review", options.deadlineAt);
-}
-
-async function finishCodeProvisioning(options: {
-  readonly seriesId: string;
-  readonly gameId: string;
-  readonly guildId: string;
-  readonly channelId: DiscordChannelId;
-  readonly gameNumber: number;
-  readonly lobbyId: number;
-}): Promise<boolean> {
-  return await prisma.$transaction(async (tx) => {
-    const transitioned = await tx.duelSeries.updateMany({
-      where: { id: options.seriesId, seriesState: "provisioning_code" },
-      data: { seriesState: "code_ready" },
-    });
-    if (transitioned.count === 0) return false;
-    const updatedGame = await tx.duelGame.updateMany({
-      where: { id: options.gameId, gameState: "provisioning_code" },
-      data: { tournamentLobbyId: options.lobbyId, gameState: "code_ready" },
-    });
-    if (updatedGame.count !== 1) {
-      throw new Error("A provisioned duel game changed state unexpectedly");
-    }
     await tx.duelStatusOutbox.upsert({
-      where: { dedupeKey: `duel-code-ready:${options.gameId}` },
+      where: { dedupeKey: `duel-code-ready:${game.id}` },
       create: {
         guildId: options.guildId,
-        channelId: options.channelId,
-        dedupeKey: `duel-code-ready:${options.gameId}`,
+        channelId: DiscordChannelIdSchema.parse(options.channelId),
+        dedupeKey: `duel-code-ready:${game.id}`,
         payloadJson: JSON.stringify({
           kind: "code_ready",
           seriesId: options.seriesId,
@@ -285,6 +227,19 @@ export async function refreshDuelSeriesWorkflowState(
   const closed = closedSeriesResult(currentState, deadlineAt);
   if (closed !== null) return closed;
   if (
+    !duelCompetitorsUseOneRiotRegion([
+      series.competitorOne,
+      series.competitorTwo,
+    ])
+  ) {
+    return await transitionSeries({
+      seriesId: series.id,
+      currentState,
+      nextState: "needs_review",
+      deadlineAt,
+    });
+  }
+  if (
     series.participants.some((participant) => participant.acceptedAt === null)
   ) {
     return await transitionSeries({
@@ -305,7 +260,10 @@ export async function refreshDuelSeriesWorkflowState(
   }
 
   const existingGame = series.games[0];
-  if (existingGame !== undefined && existingGame.tournamentLobbyId !== null) {
+  if (
+    existingGame !== undefined &&
+    ["code_ready", "in_progress"].includes(existingGame.gameState)
+  ) {
     return await transitionSeries({
       seriesId: series.id,
       currentState,
@@ -326,74 +284,15 @@ export async function refreshDuelSeriesWorkflowState(
     });
   }
   const gameNumber = existingGame?.gameNumber ?? 1;
-  const game = await claimGameProvisioning({
+  const codeReady = await readyGameForObservedLobby({
     seriesId: series.id,
     currentState,
-    gameNumber,
-  });
-  if (game === null) {
-    return await currentRefreshResult(series.id, deadlineAt);
-  }
-  recordTransition(currentState, "provisioning_code");
-  const firstMembers = series.competitorOne.members.toSorted(
-    (left, right) => left.position - right.position,
-  );
-  const secondMembers = series.competitorTwo.members.toSorted(
-    (left, right) => left.position - right.position,
-  );
-  const regions = new Set(
-    [...firstMembers, ...secondMembers].map((member) => member.region),
-  );
-  if (regions.size !== 1) {
-    return await markRegionReview({
-      seriesId: series.id,
-      gameId: game.id,
-      deadlineAt,
-    });
-  }
-  const regionValue = [...regions][0];
-  if (regionValue === undefined) {
-    throw new Error("A ready duel series has no frozen Riot accounts");
-  }
-  let lobby;
-  try {
-    lobby = await provisionTournamentLobby(prisma, {
-      kind: "declared",
-      requestId: `duel:${series.id}:game:${gameNumber.toString()}`,
-      mode: tournamentApiMode(),
-      serverId: guildId,
-      channelId: DiscordChannelIdSchema.parse(series.channelId),
-      creatorDiscordId: DiscordAccountIdSchema.parse(series.organizerDiscordId),
-      blue: {
-        aliases: firstMembers.map((member) => member.playerAlias),
-        puuids: firstMembers.map((member) => member.puuid),
-        region: RegionSchema.parse(regionValue),
-      },
-      red: {
-        aliases: secondMembers.map((member) => member.playerAlias),
-        puuids: secondMembers.map((member) => member.puuid),
-        region: RegionSchema.parse(regionValue),
-      },
-      pickType: "TOURNAMENT_DRAFT",
-      mapType: "SUMMONERS_RIFT",
-      spectatorType: "ALL",
-      lobbyName: `Scout duel ${series.id.slice(0, 8)}`,
-    });
-    duelTournamentProvisioning.inc({ status: "ready" });
-  } catch (error) {
-    duelTournamentProvisioning.inc({ status: "failed" });
-    throw error;
-  }
-  const codeReady = await finishCodeProvisioning({
-    seriesId: series.id,
-    gameId: game.id,
     guildId: series.guildId,
     channelId: series.channelId,
     gameNumber,
-    lobbyId: lobby.id,
   });
   if (!codeReady) return await currentRefreshResult(series.id, deadlineAt);
-  recordTransition("provisioning_code", "code_ready");
+  recordTransition(currentState, "code_ready");
   return refreshResult("code_ready", deadlineAt);
 }
 

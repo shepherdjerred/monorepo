@@ -76,11 +76,12 @@ final class PersistenceSettingsTests: XCTestCase {
     defaults.set([ProviderID.codex.rawValue], forKey: "enabledProviders")
 
     let migrated = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
-    XCTAssertEqual(migrated.enabledProviders, [.codex, .antigravity, .cursor, .grok, .kimi])
+    XCTAssertEqual(
+      migrated.enabledProviders, [.codex, .antigravity, .cursor, .grok, .kimi, .muse])
     migrated.setProvider(.cursor, enabled: false)
 
     let reloaded = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
-    XCTAssertEqual(reloaded.enabledProviders, [.codex, .antigravity, .grok, .kimi])
+    XCTAssertEqual(reloaded.enabledProviders, [.codex, .antigravity, .grok, .kimi, .muse])
   }
 
   @MainActor
@@ -98,9 +99,9 @@ final class PersistenceSettingsTests: XCTestCase {
     defaults.set(1, forKey: "standardProvidersVersion")
 
     let migrated = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
-    XCTAssertEqual(migrated.enabledProviders, [.codex, .antigravity, .grok, .kimi])
+    XCTAssertEqual(migrated.enabledProviders, [.codex, .antigravity, .grok, .kimi, .muse])
     XCTAssertFalse(migrated.enabledProviders.contains(.cursor))
-    XCTAssertEqual(defaults.integer(forKey: "standardProvidersVersion"), 3)
+    XCTAssertEqual(defaults.integer(forKey: "standardProvidersVersion"), 4)
   }
 
   @MainActor
@@ -122,9 +123,34 @@ final class PersistenceSettingsTests: XCTestCase {
     defaults.set(2, forKey: "standardProvidersVersion")
 
     let migrated = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
-    XCTAssertEqual(migrated.enabledProviders, [.codex, .antigravity, .grok, .kimi])
+    XCTAssertEqual(migrated.enabledProviders, [.codex, .antigravity, .grok, .kimi, .muse])
     XCTAssertFalse(migrated.enabledProviders.contains(.cursor))
-    XCTAssertEqual(defaults.integer(forKey: "standardProvidersVersion"), 3)
+    XCTAssertEqual(defaults.integer(forKey: "standardProvidersVersion"), 4)
+  }
+
+  @MainActor
+  func testVersionThreeInstallsGainMuseWithoutReenablingDisabledStandardProviders() throws {
+    let suiteName = "QuotaBarTests.\(UUID().uuidString)"
+    guard let defaults = UserDefaults(suiteName: suiteName) else {
+      XCTFail("Expected isolated defaults")
+      return
+    }
+    defer { defaults.removePersistentDomain(forName: suiteName) }
+    defaults.set(
+      [
+        ProviderID.codex.rawValue,
+        ProviderID.antigravity.rawValue,
+        ProviderID.grok.rawValue,
+        ProviderID.kimi.rawValue,
+      ],
+      forKey: "enabledProviders"
+    )
+    defaults.set(3, forKey: "standardProvidersVersion")
+
+    let migrated = AppSettings(store: UserDefaultsSettingsStore(defaults: defaults))
+    XCTAssertEqual(migrated.enabledProviders, [.codex, .antigravity, .grok, .kimi, .muse])
+    XCTAssertFalse(migrated.enabledProviders.contains(.cursor))
+    XCTAssertEqual(defaults.integer(forKey: "standardProvidersVersion"), 4)
   }
 
   @MainActor

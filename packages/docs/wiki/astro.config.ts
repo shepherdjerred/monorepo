@@ -94,10 +94,12 @@ export default defineConfig({
       "/explanation/homelab/ci-admission/",
     "/how-to/rotate-buildkite-credentials/": "/how-to/rotate-ci-credentials/",
     "/homelab/releases": "/explanation/homelab/release-safety/",
-    "/homelab/scout-evals-tailnet-boundary":
-      "/explanation/homelab/scout-evals-trust-boundary/",
+    "/homelab/scout-evals-tailnet-boundary": "/explanation/homelab/overview/",
     "/homelab/tracker-tracker": "/explanation/homelab/overview/",
+    "/explanation/homelab/scout-evals-trust-boundary/":
+      "/explanation/homelab/overview/",
     "/explanation/homelab/tracker-tracker/": "/explanation/homelab/overview/",
+    "/how-to/operate-scout-evals/": "/explanation/homelab/overview/",
     "/how-this-wiki-works": "/explanation/how-this-wiki-works/",
     "/pr-fleet-controller": "/explanation/pr-fleet-authority-boundary/",
     "/scout-analysis": "/explanation/scout-temporal-analysis/",

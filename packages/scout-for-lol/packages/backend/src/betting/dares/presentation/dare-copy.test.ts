@@ -21,7 +21,7 @@ import {
   type DareCalloutView,
 } from "#src/betting/dares/presentation/dare-copy.ts";
 import type { DareLeaf } from "#src/betting/dares/evaluation/dare-criteria.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 
 const DEADLINE = new Date("2026-09-01T12:00:00.000Z");
 const WINDOW_END = new Date("2026-09-08T12:00:00.000Z");

@@ -53,8 +53,14 @@ const SOURCE_PUUID = LeaguePuuidSchema.parse("s".repeat(78));
 function discovered(
   riotMatchId: RiotMatchId,
   deliveryMode: MatchDeliveryMode = "live",
+  gameEndTimestamp?: number,
 ): ScoutDiscoveredMatchV2 {
-  return { riotMatchId, sourcePuuid: SOURCE_PUUID, deliveryMode };
+  return {
+    riotMatchId,
+    sourcePuuid: SOURCE_PUUID,
+    deliveryMode,
+    ...(gameEndTimestamp === undefined ? {} : { gameEndTimestamp }),
+  };
 }
 const SERIAL_CORE = [
   "readMatchPipelineStateV2",
@@ -64,6 +70,7 @@ const SERIAL_CORE = [
   "applyMatchProgressionV2",
   "finalizeTournamentResultV2",
   "recordMatchReceiptsV2",
+  "mintPostmatchNotificationIntentsV2",
   "advanceMatchCursorV2",
   "planMatchFanOutV2",
 ];
@@ -147,6 +154,28 @@ describe("the V2 per-match core", () => {
       }),
     );
     expect(store.applied).toEqual(["settlement", "progression", "cursor"]);
+  }, 60_000);
+
+  test("mints the report before the cursor moves, and fails the run if it cannot", async () => {
+    // The cursor is what stops the match being rediscovered, so it must move
+    // last. A mint that failed after it would leave the match settled, its
+    // receipts standing, no association unadvanced and no intent row — so
+    // reconciliation reads it as finished, the notification scan has nothing
+    // to recover, and the report is lost with no trace of the loss.
+    const store = createScoutV2MatchStore({
+      failAt: "mintPostmatchNotificationIntentsV2",
+    });
+    await harness.startWorkers(scoutV2MatchActivityStubs(store));
+
+    await expect(
+      processMatch("match-core-mint-before-cursor"),
+    ).rejects.toThrow();
+
+    // The run failed, and crucially the cursor never moved: the next discovery
+    // surfaces this match again.
+    expect(store.calls).not.toContain("advanceMatchCursorV2");
+    expect(store.cursorAdvanced).toBe(0);
+    expect(store.applied).not.toContain("cursor");
   }, 60_000);
 
   test("fans out only after the domain commit and the cursor advance", async () => {
@@ -386,7 +415,7 @@ describe("a contested archive attestation", () => {
 });
 
 describe("the V2 tournament finalization stage", () => {
-  test("finalizes a tournament-code custom game before the cursor advances", async () => {
+  test("finalizes a managed custom game before the cursor advances", async () => {
     // v1 finalizes at exactly this point and is the only caller repo-wide.
     // Advancing the cursor first would leave the result unreported and the
     // Custom Night snapshot unpublished, with nothing left to rediscover the
@@ -580,6 +609,12 @@ describe("V2 post-match discovery", () => {
         await trace("cursor")(input);
         return { advanced: 0, alreadyAdvanced: 2 };
       },
+      mintPostmatchNotificationIntentsV2: () => ({
+        minted: 1,
+        existing: 0,
+        conflicts: 0,
+        silent: 0,
+      }),
       runPostMatchMaintenance: () => {
         log.push("maintenance");
       },

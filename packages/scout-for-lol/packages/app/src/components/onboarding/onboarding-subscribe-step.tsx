@@ -1,5 +1,7 @@
 import { useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSelector } from "@tanstack/react-form";
+import { useTRPC } from "#src/lib/query/trpc.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
@@ -13,6 +15,7 @@ import { useAddSubscription } from "#src/lib/player/use-add-subscription.ts";
 import type { OnboardingStepKind } from "@scout-for-lol/data";
 import { OnboardingShell } from "#src/components/onboarding/onboarding-shell.tsx";
 import { OnboardingNoChannels } from "#src/components/onboarding/onboarding-no-channels.tsx";
+import { TeammateSuggestions } from "#src/components/onboarding/teammate-suggestions.tsx";
 import {
   emptySubscriptionFormValue,
   SubscriptionFormSchema,
@@ -40,13 +43,25 @@ export function OnboardingSubscribeStep(props: {
   username: string;
   discordId: string;
   existingSubs: { alias: string; channelId: string }[];
+  /** Alias tracked in subscribe-self; feeds teammate suggestions. Empty when skipped. */
+  selfAlias: string;
+  /** Destination channel of the self subscription; suggestion adds land here. */
+  selfChannelId: string;
+  /** Reports the alias and channel successfully tracked in subscribe-self. */
+  onSelfAdded?: (self: { alias: string; channelId: string }) => void;
   onAdded: () => void;
   onContinue: () => void;
   onBack: () => void;
   onSkip: () => void;
 }) {
   const initialChannel = props.channels[0]?.id ?? "";
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const formElement = useRef<HTMLFormElement>(null);
+  // The alias and channel the user actually submitted. Reported via
+  // onSelfAdded so the wizard anchors suggestions on the just-added
+  // subscription rather than guessing from the guild's paginated list.
+  const submittedSelf = useRef({ alias: "", channelId: "" });
   const initialValue =
     props.mode === "self"
       ? {
@@ -61,9 +76,16 @@ export function OnboardingSubscribeStep(props: {
     onAdded: () => {
       props.onAdded();
       if (props.mode === "self") {
+        props.onSelfAdded?.(submittedSelf.current);
         form.reset();
         props.onContinue();
       } else {
+        // A manual add may have tracked a suggested Riot ID (custom alias,
+        // Discord link). Refresh suggestions so the stale row disappears; the
+        // server-side cache makes this refetch cheap.
+        void queryClient.invalidateQueries({
+          queryKey: trpc.player.suggestTeammates.pathKey(),
+        });
         form.reset(emptySubscriptionFormValue(initialChannel));
       }
     },
@@ -75,6 +97,10 @@ export function OnboardingSubscribeStep(props: {
     validationLogic: submitThenChangeValidation,
     validators: { onDynamic: SubscriptionFormSchema },
     onSubmit: ({ value }) => {
+      submittedSelf.current = {
+        alias: value.alias,
+        channelId: value.channelId,
+      };
       submit(value);
     },
     onSubmitInvalid: () => {
@@ -127,6 +153,14 @@ export function OnboardingSubscribeStep(props: {
       }}
     >
       <div className="space-y-4">
+        {props.mode === "more" && (
+          <TeammateSuggestions
+            guildId={props.guildId}
+            channelId={props.selfChannelId}
+            selfAlias={props.selfAlias}
+            onAdded={props.onAdded}
+          />
+        )}
         {props.mode === "more" && trackedAliases.length > 0 && (
           <Card>
             <CardContent className="space-y-1 p-4">

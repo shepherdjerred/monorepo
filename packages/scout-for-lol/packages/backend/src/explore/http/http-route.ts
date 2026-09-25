@@ -190,8 +190,18 @@ async function handleSharedTranscript(
   // Keep the anonymous endpoint on its pre-origin wire shape. A cached SPA
   // bundle parses this response strictly and would reject a newly added key;
   // current clients default an absent origin to `legacy`.
+  //
+  // `guildIds` is the same hazard one level down. Redaction empties it so no
+  // guild can leak onto a public link, but an empty array still serializes the
+  // key, and `fetchSharedTranscript` parses each message strictly — so a share
+  // link would fail to load in every tab running a pre-deploy bundle. The key
+  // is dropped here rather than emptied.
   const compatibleShared = {
     ...shared,
+    messages: shared.messages.map((message) => {
+      const { guildIds: _guildIds, ...rest } = message;
+      return rest;
+    }),
     conversation: {
       id: shared.conversation.id,
       title: shared.conversation.title,
@@ -259,8 +269,9 @@ const MESSAGE_MAX_LENGTH = 1000;
 function clampMessage(message: string): string {
   const trimmed = message.trim();
   if (trimmed.length === 0) return "Request failed.";
-  if (trimmed.length <= MESSAGE_MAX_LENGTH) return trimmed;
-  return `${trimmed.slice(0, MESSAGE_MAX_LENGTH - 1)}…`;
+  return trimmed.length <= MESSAGE_MAX_LENGTH
+    ? trimmed
+    : `${trimmed.slice(0, MESSAGE_MAX_LENGTH - 1)}…`;
 }
 
 function errorMessage(error: unknown): string {

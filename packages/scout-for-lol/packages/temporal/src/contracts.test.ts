@@ -1,5 +1,18 @@
 import { describe, expect, test } from "vitest";
-import { PostMatchDiscoveryResultSchema } from "./contracts.ts";
+import {
+  PostMatchDiscoveryResultSchema,
+  ScoutRealtimePollInputSchema,
+} from "./contracts.ts";
+
+test("accepts retired tournament polls so open executions can replay", () => {
+  expect(
+    ScoutRealtimePollInputSchema.parse({
+      stage: "prod",
+      kind: "tournament-lobbies",
+      maximumAgeSeconds: 300,
+    }).kind,
+  ).toBe("tournament-lobbies");
+});
 
 describe("post-match discovery result puuid validation", () => {
   test("accepts a Riot PUUID that starts with an underscore", () => {

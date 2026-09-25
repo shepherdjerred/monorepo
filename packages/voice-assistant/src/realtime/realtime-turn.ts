@@ -3,7 +3,6 @@ import type {
   RealtimeAgentConfiguration,
   RealtimeTransportLayer,
 } from "@openai/agents/realtime";
-import { z } from "zod";
 import { wakePcmToOpenAiPcm } from "@shepherdjerred/voice-assistant/audio/codecs.ts";
 import type { AssistantAudioSink } from "@shepherdjerred/voice-assistant/assistant-sink.ts";
 import type { SpokenFeedbackClips } from "@shepherdjerred/voice-assistant/spoken-feedback.ts";
@@ -17,6 +16,19 @@ import type {
   VoiceObservability,
 } from "@shepherdjerred/voice-assistant/ports.ts";
 import { realtimeErrorToError } from "./realtime-errors.ts";
+import {
+  ConversationItemCreatedEventSchema,
+  ConversationItemDeletedEventSchema,
+  OutputAudioTranscriptEventSchema,
+  TranscriptionCompletedEventSchema,
+  TranscriptionFailedEventSchema,
+  type CompletedTranscription,
+} from "./realtime-events.ts";
+import {
+  buildRealtimeSessionConfig,
+  normalizeTranscript,
+  verifyWakeTranscript,
+} from "./realtime-transcript.ts";
 
 export type RealtimeTurnTools = NonNullable<
   RealtimeAgentConfiguration["tools"]
@@ -86,104 +98,6 @@ function audioTokenCount(details: readonly Record<string, number>[]): number {
     0,
   );
 }
-
-const TranscriptionCompletedEventSchema = z.object({
-  type: z.literal("conversation.item.input_audio_transcription.completed"),
-  item_id: z.string().min(1),
-  transcript: z.string(),
-  usage: z.union([
-    z.object({
-      type: z.literal("tokens"),
-      input_tokens: z.number().nonnegative(),
-      output_tokens: z.number().nonnegative(),
-      total_tokens: z.number().nonnegative(),
-      input_token_details: z
-        .object({
-          audio_tokens: z.number().nonnegative().optional(),
-          text_tokens: z.number().nonnegative().optional(),
-        })
-        .optional(),
-    }),
-    z.object({
-      type: z.literal("duration"),
-      seconds: z.number().nonnegative(),
-    }),
-  ]),
-});
-
-const TranscriptionFailedEventSchema = z.object({
-  type: z.literal("conversation.item.input_audio_transcription.failed"),
-  error: z.unknown().optional(),
-});
-
-const ConversationItemDeletedEventSchema = z.object({
-  type: z.literal("conversation.item.deleted"),
-  item_id: z.string().min(1),
-});
-
-// The Realtime GA API renamed this event from "conversation.item.created" to
-// "conversation.item.added"; the SDK forwards the raw name. Matching only the old
-// name left the command-item wait hanging until the transaction timeout, so no
-// command ever ran. Accept both so the turn works across API revisions.
-const ConversationItemCreatedEventSchema = z.object({
-  type: z.enum(["conversation.item.added", "conversation.item.created"]),
-  item: z.object({ id: z.string().min(1) }),
-});
-
-export function buildRealtimeSessionConfig(options: {
-  readonly assistantVoice: string;
-  readonly transcriptionModel?: string;
-}) {
-  return {
-    outputModalities: ["audio"] as const,
-    parallelToolCalls: false,
-    audio: {
-      input: {
-        format: { type: "audio/pcm" as const, rate: 24_000 },
-        transcription: {
-          model: options.transcriptionModel ?? "gpt-transcribe",
-          language: "en",
-        },
-        turnDetection: null,
-        noiseReduction: null,
-      },
-      output: {
-        format: { type: "audio/pcm" as const, rate: 24_000 },
-        voice: options.assistantVoice,
-      },
-    },
-  };
-}
-
-export type VerifiedWakeTranscript = {
-  readonly normalized: string;
-  readonly command: string;
-};
-
-export function normalizeTranscript(transcript: string): string {
-  return transcript
-    .toLocaleLowerCase("en-US")
-    .replaceAll(/[^a-z0-9\s]/g, " ")
-    .replaceAll(/\s+/g, " ")
-    .trim();
-}
-
-/** Strict final wake gate. A configured phrase must be the leading normalized words. */
-export function verifyWakeTranscript(
-  transcript: string,
-  wakePrefixes: readonly string[],
-): VerifiedWakeTranscript | null {
-  const normalized = normalizeTranscript(transcript);
-  for (const prefix of wakePrefixes) {
-    if (normalized === prefix) return { normalized, command: "" };
-    if (normalized.startsWith(`${prefix} `)) {
-      return { normalized, command: normalized.slice(prefix.length + 1) };
-    }
-  }
-  return null;
-}
-
-type CompletedTranscription = z.infer<typeof TranscriptionCompletedEventSchema>;
 
 function recordTranscriptionUsage(
   metrics: RealtimeTurnMetrics,
@@ -269,6 +183,11 @@ export async function runRealtimeCommandTurn(
   const transcription = new Promise<CompletedTranscription>(
     (resolve, reject) => {
       session.on("transport_event", (event) => {
+        const outputTranscript =
+          OutputAudioTranscriptEventSchema.safeParse(event);
+        if (outputTranscript.success) {
+          attempt.replyTranscript(outputTranscript.data.transcript);
+        }
         const completed = TranscriptionCompletedEventSchema.safeParse(event);
         if (completed.success) {
           resolve(completed.data);
@@ -484,14 +403,10 @@ export async function runRealtimeCommandTurn(
     await Promise.race([created, interruption, sessionFailure]);
     failureStage = "response";
     metrics.cloudRequests.inc({ stage: "response", outcome: "request" });
-    await attempt.runStage(
-      `${stagePrefix}.openai.response`,
-      { [`${stagePrefix}.normalized_command`]: verified.command },
-      async () => {
-        session.transport.sendEvent({ type: "response.create" });
-        await Promise.race([completed, interruption, sessionFailure]);
-      },
-    );
+    await attempt.runStage(`${stagePrefix}.openai.response`, {}, async () => {
+      session.transport.sendEvent({ type: "response.create" });
+      await Promise.race([completed, interruption, sessionFailure]);
+    });
     metrics.cloudRequests.inc({ stage: "response", outcome: "success" });
     // `audio_stopped` only means Realtime finished generating. The sink still paces whatever it
     // queued at 20 ms per packet, so leaving this await unraced lets a long or fast-generated

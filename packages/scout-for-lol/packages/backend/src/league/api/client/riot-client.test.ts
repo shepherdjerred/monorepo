@@ -5,8 +5,33 @@ import { LeaguePuuidSchema, MatchIdSchema } from "@scout-for-lol/data";
 
 function getUrlString(input: string | URL | Request): string {
   if (typeof input === "string") return input;
-  if ("url" in input) return input.url;
-  return input.href;
+  return "url" in input ? input.url : input.href;
+}
+
+function championMasteryResponse(puuid: string): Response {
+  return Response.json([
+    {
+      puuid,
+      championId: 103,
+      championLevel: 7,
+      championPoints: 123_456,
+      lastPlayTime: 1_700_000_000_000,
+      championPointsSinceLastLevel: 101_856,
+      championPointsUntilNextLevel: 0,
+      tokensEarned: 2,
+    },
+  ]);
+}
+
+function championMasteryFetch(puuid: string) {
+  let capturedUrl = "";
+  const fetchFn: FetchFunction = vi.fn(
+    async (input: string | URL | Request): Promise<Response> => {
+      capturedUrl = getUrlString(input);
+      return championMasteryResponse(puuid);
+    },
+  );
+  return { fetchFn, capturedUrl: () => capturedUrl };
 }
 
 describe("RiotClient", () => {
@@ -118,29 +143,22 @@ describe("RiotClient", () => {
     expect(result).toEqual({ gameId: 123_456, participants: [] });
   });
 
-  test("fetches bounded top champion mastery on the platform host", async () => {
-    let capturedUrl = "";
-    const mockFetch: FetchFunction = vi.fn(
-      async (input: string | URL | Request): Promise<Response> => {
-        capturedUrl = getUrlString(input);
-        return Response.json([
-          {
-            puuid: testPuuid,
-            championId: 103,
-            championLevel: 7,
-            championPoints: 123_456,
-            lastPlayTime: 1_700_000_000_000,
-            championPointsSinceLastLevel: 101_856,
-            championPointsUntilNextLevel: 0,
-            chestGranted: true,
-            tokensEarned: 2,
-          },
-        ]);
-      },
+  test("fetches the complete champion-mastery list on the platform host", async () => {
+    const fetch = championMasteryFetch(testPuuid);
+    const client = new RiotClient({ apiKey, fetchFn: fetch.fetchFn });
+    const result = await client.championMastery.byPuuid(testPuuid, "NA1");
+
+    expect(fetch.capturedUrl()).toBe(
+      `https://na1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/${testPuuid}`,
     );
-    const client = new RiotClient({ apiKey, fetchFn: mockFetch });
+    expect(result).toHaveLength(1);
+  });
+
+  test("fetches bounded top champion mastery on the platform host", async () => {
+    const fetch = championMasteryFetch(testPuuid);
+    const client = new RiotClient({ apiKey, fetchFn: fetch.fetchFn });
     const result = await client.championMastery.topByPuuid(testPuuid, "NA1", 5);
-    expect(capturedUrl).toBe(
+    expect(fetch.capturedUrl()).toBe(
       `https://na1.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/${testPuuid}/top?count=5`,
     );
     expect(result[0]?.championId).toBe(103);

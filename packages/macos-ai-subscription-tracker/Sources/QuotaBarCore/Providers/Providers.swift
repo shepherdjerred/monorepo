@@ -39,6 +39,14 @@ public enum Providers {
           creditsEndpoint: endpoints.grokCredits,
           resetEndpoint: endpoints.grokResets
         )
+      case .muse:
+        return MuseProvider(
+          client: ProviderHTTPClient(
+            transport: MuseProvider.noRedirectTransport(),
+            credentials: credentials
+          ),
+          endpoint: MuseProvider.subscriptionURL
+        )
       }
     }
   }

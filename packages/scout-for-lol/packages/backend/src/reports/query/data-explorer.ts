@@ -213,13 +213,12 @@ function parseFilterValue(
   if (columnInfo.type === "number") {
     return z.coerce.number().parse(value);
   }
-  if (columnInfo.type === "boolean") {
-    return z
-      .enum(["true", "false"])
-      .transform((entry) => (entry === "true" ? 1 : 0))
-      .parse(value);
-  }
-  return value;
+  return columnInfo.type === "boolean"
+    ? z
+        .enum(["true", "false"])
+        .transform((entry) => (entry === "true" ? 1 : 0))
+        .parse(value)
+    : value;
 }
 
 function normalizeRow(

@@ -127,11 +127,10 @@ function selectedMetricForPreview(
   options: PreviewToVisualizationOptions | undefined,
 ): ReportResultColumn | undefined {
   const plottableCols = plottableMetricColumns(preview.columns);
-  if (options?.metricKey === undefined) return plottableCols[0];
-  return (
-    preview.columns.find((col) => col.key === options.metricKey) ??
-    plottableCols[0]
-  );
+  return options?.metricKey === undefined
+    ? plottableCols[0]
+    : (preview.columns.find((col) => col.key === options.metricKey) ??
+        plottableCols[0]);
 }
 
 function previewMetricSeries(
@@ -173,8 +172,7 @@ function metricDisplayKind(
   column: ReportResultColumn,
 ): "percent" | "count" | "decimal" {
   if (column.format === "percent") return "percent";
-  if (column.format === "integer") return "count";
-  return "decimal";
+  return column.format === "integer" ? "count" : "decimal";
 }
 
 function targetVisualizationKind(
@@ -184,8 +182,9 @@ function targetVisualizationKind(
   if (preferredKind !== undefined && isChartRenderKind(preferredKind)) {
     return preferredKind;
   }
-  if (isChartRenderKind(preview.renderKind)) return preview.renderKind;
-  return "BAR_CHART";
+  return isChartRenderKind(preview.renderKind)
+    ? preview.renderKind
+    : "BAR_CHART";
 }
 
 function emptyVisualizationSnapshot(): VisualizationSnapshot {

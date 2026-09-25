@@ -63,9 +63,8 @@ export function createMetricsHandler(register: Registry) {
         headers: { "Content-Type": register.contentType },
       });
     }
-    if (request.method === "GET" && url.pathname === "/livez") {
-      return new Response("ok\n");
-    }
-    return new Response("not found\n", { status: 404 });
+    return request.method === "GET" && url.pathname === "/livez"
+      ? new Response("ok\n")
+      : new Response("not found\n", { status: 404 });
   };
 }

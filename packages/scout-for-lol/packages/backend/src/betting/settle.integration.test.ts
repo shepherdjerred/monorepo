@@ -17,7 +17,16 @@ import {
   bucksTestRoster,
 } from "#src/testing/bucks-fixtures.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { settleBettingForMatch } from "#src/betting/settle.ts";
+import {
+  closeAndSettleBettingForMatch,
+  settleBettingForMatch,
+} from "#src/betting/settle.ts";
+import {
+  announcingSettlementSink,
+  SettlementCheckpointError,
+} from "#src/betting/notify/announcement-sink.ts";
+import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { settleAndAwardBucks } from "#src/betting/markets/postmatch-hook.ts";
 import { closeBettingWindowsForMatch } from "#src/betting/settlement/sweep.ts";
 import { voidStaleBettingPools } from "#src/betting/settlement/void-stale.ts";
@@ -141,10 +150,23 @@ async function makeBalancedPool(stake = 10) {
   return { pool, winner, loser };
 }
 
-function withDuration(seconds: number): RawMatch {
+/**
+ * A remake as Riot reports one: the early-surrender flags are set on every
+ * participant. Duration is not the signal — an AFK surrender is available from
+ * 2:55 and is a real result that bets must still settle against.
+ */
+function asRemake(): RawMatch {
   return RawMatchSchema.parse({
     ...fixture,
-    info: { ...fixture.info, gameDuration: seconds },
+    info: {
+      ...fixture.info,
+      gameDuration: 120,
+      participants: fixture.info.participants.map((participant) => ({
+        ...participant,
+        gameEndedInEarlySurrender: true,
+        teamEarlySurrendered: true,
+      })),
+    },
   });
 }
 
@@ -278,6 +300,44 @@ describe("settleBettingForMatch", () => {
     ).toEqual(["principal", "profit"]);
   });
 
+  test("settles a large pool inside one settlement transaction", async () => {
+    // Production pools outgrew the 5s interactive-transaction default
+    // (observed expiry at 5.4s): settlement runs sequential per-bet updates
+    // and credits whose count scales with pool size. This pins the
+    // many-bet path end to end; the local database is too fast to
+    // reproduce the expiry itself, so the raised timeout is covered by
+    // inspection plus the production issue going quiet.
+    const pool = await makePool();
+    const bettors = 30;
+    for (let i = 0; i < bettors; i += 1) {
+      await makeBettor({
+        poolId: pool.id,
+        discordId: bucksTestDiscordId(100 + i),
+        teamId: WINNING_TEAM,
+        stake: 10,
+      });
+      await makeBettor({
+        poolId: pool.id,
+        discordId: bucksTestDiscordId(200 + i),
+        teamId: LOSING_TEAM,
+        stake: 10,
+      });
+    }
+
+    const [summary] = await settleBettingForMatch(fixture, db);
+    expect(summary).toMatchObject({
+      winnersPool: 300,
+      losersPool: 300,
+      houseCut: 60,
+      voidReason: undefined,
+    });
+    expect(summary?.bets).toHaveLength(bettors * 2);
+    const staked =
+      summary?.bets.reduce((sum, bet) => sum + bet.matchedStake, 0) ?? 0;
+    const paid = summary?.bets.reduce((sum, bet) => sum + bet.payout, 0) ?? 0;
+    expect(paid + (summary?.houseCut ?? 0)).toBe(staked);
+  });
+
   test("keeps a one-Buck winning match profitable", async () => {
     const { winner } = await makeBalancedPool(1);
     const [summary] = await settleBettingForMatch(fixture, db);
@@ -397,7 +457,7 @@ describe("settlement claims and idempotency", () => {
 describe("refunds and house settlement", () => {
   test("refunds matched stake without fees on a remake", async () => {
     const { winner, loser } = await makeBalancedPool();
-    const [summary] = await settleBettingForMatch(withDuration(120), db);
+    const [summary] = await settleBettingForMatch(asRemake(), db);
     expect(summary?.voidReason).toBe("remake");
     expect(summary?.houseCut).toBe(0);
     expect(
@@ -1191,5 +1251,154 @@ describe("reconcileBucksBalances", () => {
         message: expect.stringContaining("does not match the pool result"),
       }),
     );
+  });
+});
+
+describe("the announcement instruction a settlement records", () => {
+  test("is written with the settling transaction's own handle", async () => {
+    // Proven by BEHAVIOUR rather than by identity: the Prisma transaction
+    // client is a proxy and re-extends, so comparing it to the ambient client
+    // tells you nothing. What does tell you is whether the write survives a
+    // rollback. This sink records for real and then throws, so the settling
+    // transaction aborts after the row was written.
+    //
+    // Inside the transaction, the row goes back with it and nothing survives.
+    // Written through the ambient client it would have committed on its own,
+    // leaving an instruction to announce a settlement that never happened.
+    await makeBalancedPool(10);
+
+    await expect(
+      closeAndSettleBettingForMatch(fixture, db, {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: async (handle, item) => {
+          await recordSettlementAnnouncementItem(handle, {
+            matchId: RiotMatchIdSchema.parse(MATCH_ID),
+            item,
+          });
+          throw new Error("the settlement failed after recording");
+        },
+      }),
+    ).resolves.toMatchObject({ settlements: [] });
+
+    expect(
+      await db.matchSettlementAnnouncement.findMany({
+        where: { riotMatchId: MATCH_ID },
+      }),
+    ).toEqual([]);
+  });
+
+  test("records one instruction per family this match produced", async () => {
+    await makeBalancedPool(10);
+    const recorded: { family: string; itemKey: string }[] = [];
+
+    const { settlements } = await closeAndSettleBettingForMatch(fixture, db, {
+      ...announcingSettlementSink,
+      recordAnnouncementItem: (_handle, item) => {
+        recorded.push({ family: item.family, itemKey: item.itemKey });
+        return Promise.resolve();
+      },
+    });
+
+    expect(settlements).toHaveLength(1);
+    // Two, because this call both CLOSES the pool and settles it, and each
+    // is its own announcement: closure tells the guild its offers matched,
+    // settlement tells it what they were paid. Each is written in the
+    // transaction that produced it.
+    expect(recorded).toEqual([
+      { family: "closure", itemKey: settlements[0]?.serverId },
+      { family: "settlement", itemKey: settlements[0]?.serverId },
+    ]);
+  });
+
+  test("a checkpoint failure escapes instead of being logged as one pool's", async () => {
+    // The money path. `reportPoolSettlementFailure` exists so one guild's
+    // corrupt pool cannot cost every other guild its settlement, and it
+    // answers by logging, paging and returning normally. A checkpoint failure
+    // is a different class of thing: the pool rolled back AND this
+    // settlement never became recoverable. Absorbed here, the caller records
+    // a settlement receipt, every retry then reads that receipt and skips
+    // settlement, and these bettors are never paid.
+    const { pool } = await makeBalancedPool(10);
+
+    await expect(
+      closeAndSettleBettingForMatch(fixture, db, {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: (_handle, item) =>
+          Promise.reject(
+            new SettlementCheckpointError({
+              family: item.family,
+              itemKey: item.itemKey,
+              retryable: true,
+              message: "the checkpoint row could not be written",
+              cause: new Error("connection reset"),
+            }),
+          ),
+      }),
+    ).rejects.toBeInstanceOf(SettlementCheckpointError);
+
+    // And the pool is left exactly as a retry needs to find it. The failure
+    // now surfaces at the CLOSURE, which is the first family this call
+    // produces, so the match claim rolls back with it and the next attempt
+    // closes and settles from the start.
+    const standing = await db.bucksMatchPool.findUniqueOrThrow({
+      where: { id: pool.id },
+    });
+    expect(standing.poolState).toBe("closed");
+    expect(standing.matchedAt).toBeNull();
+    const bets = await db.bucksBet.findMany({ where: { poolId: pool.id } });
+    expect(bets).not.toHaveLength(0);
+    expect(bets.map((bet) => bet.betOutcome)).toEqual(
+      bets.map(() => "pending"),
+    );
+  });
+
+  test("an ordinary pool failure is still absorbed, one guild at a time", async () => {
+    // The exemption is narrow on purpose. Everything that is NOT a checkpoint
+    // failure keeps the per-pool isolation this handler was written for, so
+    // widening the escape is a visible change rather than a silent one.
+    //
+    // Asserted on the per-pool REPORT rather than only on the return value:
+    // the outer handler also returns normally, so a rethrow that skipped past
+    // this one would still resolve and prove nothing.
+    await makeBalancedPool(10);
+    captureException.mockClear();
+
+    await expect(
+      closeAndSettleBettingForMatch(fixture, db, {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: () =>
+          Promise.reject(new Error("an ordinary pool failure")),
+      }),
+    ).resolves.toMatchObject({ settlements: [] });
+
+    expect(captureException).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        tags: expect.objectContaining({ source: "betting-sweep-force-close" }),
+      }),
+    );
+  });
+
+  test("a settled pool always leaves its instruction behind", async () => {
+    // The pair of the first test: when the settlement DOES commit, so does
+    // the instruction, in the same transaction.
+    await makeBalancedPool(10);
+
+    const { settlements } = await closeAndSettleBettingForMatch(fixture, db, {
+      ...announcingSettlementSink,
+      recordAnnouncementItem: async (handle, item) => {
+        await recordSettlementAnnouncementItem(handle, {
+          matchId: RiotMatchIdSchema.parse(MATCH_ID),
+          item,
+        });
+      },
+    });
+
+    expect(settlements).toHaveLength(1);
+    const stored = await db.matchSettlementAnnouncement.findMany({
+      where: { riotMatchId: MATCH_ID },
+      orderBy: { family: "asc" },
+    });
+    expect(stored.map((row) => row.family)).toEqual(["closure", "settlement"]);
   });
 });

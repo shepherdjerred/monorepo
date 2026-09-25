@@ -13,7 +13,7 @@ const AudioObjectSchema = z.strictObject({
 });
 
 export const VoiceCaptureManifestSchema = z.strictObject({
-  schemaVersion: z.literal(1),
+  schemaVersion: z.literal(2),
   captureId: z.uuid(),
   kind: z.enum(["wake-candidate", "debug-window"]),
   committedAt: z.iso.datetime(),
@@ -21,6 +21,8 @@ export const VoiceCaptureManifestSchema = z.strictObject({
   endedAt: z.iso.datetime(),
   guildId: z.string().min(1),
   channelId: z.string().min(1),
+  /** Groups wake turns from one playback session so consecutive captures can be replayed together. */
+  sessionId: z.uuid().optional(),
   userId: z.string().min(1).optional(),
   traceId: z
     .string()
@@ -61,6 +63,7 @@ export const VoiceCaptureManifestSchema = z.strictObject({
     .optional(),
   transcript: z.string().nullable().optional(),
   normalizedCommand: z.string().nullable().optional(),
+  replyTranscript: z.string().nullable().optional(),
   tools: z.array(
     z.strictObject({
       name: z.string().min(1),

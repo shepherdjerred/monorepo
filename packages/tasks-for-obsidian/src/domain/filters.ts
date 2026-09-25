@@ -131,8 +131,7 @@ function compareOptionalText(
 ): number {
   if (left === undefined && right === undefined) return 0;
   if (left === undefined) return 1;
-  if (right === undefined) return -1;
-  return direction * compareDateValues(left, right);
+  return right === undefined ? -1 : direction * compareDateValues(left, right);
 }
 
 export const EMPTY_FILTER: FilterConfig = {};

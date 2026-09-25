@@ -22,6 +22,7 @@ import {
   resolvePostmatchDeliveryChannels,
 } from "#src/league/tasks/notification-filters.ts";
 import { liveDurableFacts } from "#src/durable/match/live-facts.ts";
+import { recordMatchMvpReportRefs } from "#src/mvp-votes/vote.ts";
 import { recoverCompletedPostmatchDeliveries } from "#src/league/tasks/postmatch/postmatch-delivery-recovery.ts";
 import {
   deliveredMessagesByGuild,
@@ -169,6 +170,7 @@ export async function deliverPostmatchReport(input: {
   });
   await recordCoreOutputsDelivered(delivery.deliveredGuildIds, "postmatch");
   await recordPostmatchMessageIds(matchId, delivery.messageIdsByChannel);
+  await recordMatchMvpReportRefs(matchId, delivery.messageIdsByChannel);
   await recordDeliveryReceipts({
     facts,
     kind: "reportDelivery",

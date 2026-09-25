@@ -114,6 +114,12 @@ export type LoadingScreenRankState = z.infer<
   typeof LoadingScreenRankStateSchema
 >;
 
+export const LoadingScreenMasterySchema = z.strictObject({
+  level: z.number().int().nonnegative(),
+  points: z.number().int().nonnegative(),
+});
+export type LoadingScreenMastery = z.infer<typeof LoadingScreenMasterySchema>;
+
 function validateRankVisibility(
   participant: {
     puuid: string | null;
@@ -160,6 +166,8 @@ export const BaseLoadingScreenParticipantSchema = z.strictObject({
   secondaryTreeId: RuneIdSchema.optional(),
   /** League-V4 lookup state for loading-screen presentation. */
   rankState: LoadingScreenRankStateSchema,
+  /** Mastery on the champion selected in this lobby, when Riot exposes it. */
+  mastery: LoadingScreenMasterySchema.optional(),
   /** Whether this player is tracked by the bot */
   isTrackedPlayer: z.boolean(),
 });
@@ -219,6 +227,19 @@ export const LoadingScreenBanSchema = z.strictObject({
   team: TeamSchema,
 });
 
+export const ClashTeamBannerSchema = z.strictObject({
+  name: z.string().min(1),
+  abbreviation: z.string().min(1),
+});
+export type ClashTeamBanner = z.infer<typeof ClashTeamBannerSchema>;
+
+export const ClashLoadingChromeSchema = z.strictObject({
+  themeLabel: z.string().min(1).optional(),
+  blueTeam: ClashTeamBannerSchema.optional(),
+  redTeam: ClashTeamBannerSchema.optional(),
+});
+export type ClashLoadingChrome = z.infer<typeof ClashLoadingChromeSchema>;
+
 const BaseLoadingScreenDataSchema = z.strictObject({
   /** Riot game ID from spectator API */
   gameId: GameIdSchema,
@@ -234,6 +255,8 @@ const BaseLoadingScreenDataSchema = z.strictObject({
   bans: z.array(LoadingScreenBanSchema),
   /** Game start timestamp in milliseconds */
   gameStartTime: z.number().int().nonnegative(),
+  /** Clash-v1 snapshot overlay; omitted for every other queue. */
+  clashChrome: ClashLoadingChromeSchema.optional(),
 });
 
 /**
@@ -344,6 +367,7 @@ export const ClassicLoadingScreenParticipantSchema = z.strictObject({
   spell1Id: SummonerSpellIdSchema,
   spell2Id: SummonerSpellIdSchema,
   isTrackedPlayer: z.boolean(),
+  mastery: LoadingScreenMasterySchema.optional(),
 });
 export type ClassicLoadingScreenParticipant = z.infer<
   typeof ClassicLoadingScreenParticipantSchema
@@ -407,4 +431,8 @@ export function makeQueueDisplayName(
   queueType: z.infer<typeof QueueTypeSchema>,
 ): QueueDisplayName {
   return QueueDisplayNameSchema.parse(queueTypeToDisplayString(queueType));
+}
+
+export function isClashQueueType(queueType: QueueType): boolean {
+  return queueType === "clash" || queueType === "aram clash";
 }

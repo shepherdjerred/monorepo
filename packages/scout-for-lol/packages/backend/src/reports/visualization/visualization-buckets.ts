@@ -111,6 +111,7 @@ function bucketCursor(
 ): Date {
   const monthDate = bucket === "month" ? `${date.slice(0, 7)}-01` : date;
   const parsed = parseISO(monthDate);
-  if (bucket !== "week") return parsed;
-  return addDays(parsed, -((parsed.getDay() + 6) % 7));
+  return bucket === "week"
+    ? addDays(parsed, -((parsed.getDay() + 6) % 7))
+    : parsed;
 }

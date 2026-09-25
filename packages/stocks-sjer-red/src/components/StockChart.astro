@@ -105,74 +105,72 @@ const pointsJson = JSON.stringify(
     preserveAspectRatio="none"
     role="img"
     aria-label={ariaLabel}
-    class={interactive
-      ? "chart-svg chart-interactive block w-full h-auto"
-      : "chart-svg block w-full h-auto"}
+    class={
+      interactive
+        ? "chart-svg chart-interactive block w-full h-auto"
+        : "chart-svg block w-full h-auto"
+    }
     data-points={interactive ? pointsJson : undefined}
     data-stroke={interactive ? stroke : undefined}
   >
-    {
-      showAxis && (
-        <g>
-          {yTickValues.map((v) => (
-            <g>
-              <line
-                x1={padL}
-                x2={width - padR}
-                y1={yFor(v)}
-                y2={yFor(v)}
-                stroke="var(--color-line)"
-                stroke-width="1"
-                shape-rendering="crispEdges"
-              />
-              <text
-                x={padL - 6}
-                y={yFor(v) + 4}
-                text-anchor="end"
-                fill="var(--color-muted)"
-                font-size="11"
-                font-family="var(--font-mono)"
-              >
-                {fmtTick(v)}
-              </text>
-            </g>
-          ))}
-          <text
-            x={padL}
-            y={height - 8}
-            fill="var(--color-muted)"
-            font-size="11"
-            font-family="var(--font-mono)"
-            text-anchor="start"
-          >
-            {fmtMonth(first.date)}
-          </text>
-          <text
-            x={width - padR}
-            y={height - 8}
-            fill="var(--color-muted)"
-            font-size="11"
-            font-family="var(--font-mono)"
-            text-anchor="end"
-          >
-            {fmtMonth(last.date)}
-          </text>
-        </g>
-      )
-    }
-
-    {
-      interactive && (
-        <rect
-          class="chart-hit-area"
+    {showAxis && (
+      <g>
+        {yTickValues.map((v) => (
+          <g>
+            <line
+              x1={padL}
+              x2={width - padR}
+              y1={yFor(v)}
+              y2={yFor(v)}
+              stroke="var(--color-line)"
+              stroke-width="1"
+              shape-rendering="crispEdges"
+            />
+            <text
+              x={padL - 6}
+              y={yFor(v) + 4}
+              text-anchor="end"
+              fill="var(--color-muted)"
+              font-size="11"
+              font-family="var(--font-mono)"
+            >
+              {fmtTick(v)}
+            </text>
+          </g>
+        ))}
+        <text
           x={padL}
-          y={padT}
-          width={plotW}
-          height={plotH}
-          fill="transparent"
-        />
-      )
-    }
+          y={height - 8}
+          fill="var(--color-muted)"
+          font-size="11"
+          font-family="var(--font-mono)"
+          text-anchor="start"
+        >
+          {fmtMonth(first.date)}
+        </text>
+        <text
+          x={width - padR}
+          y={height - 8}
+          fill="var(--color-muted)"
+          font-size="11"
+          font-family="var(--font-mono)"
+          text-anchor="end"
+        >
+          {fmtMonth(last.date)}
+        </text>
+      </g>
+    )}
+
+    {interactive && (
+      <rect
+        class="chart-hit-area"
+        x={padL}
+        y={padT}
+        width={plotW}
+        height={plotH}
+        fill="transparent"
+      />
+    )}
 
     <path d={areaPath} fill={fill} stroke="none"></path>
     <path
@@ -181,35 +179,32 @@ const pointsJson = JSON.stringify(
       stroke={stroke}
       stroke-width="1.75"
       stroke-linejoin="round"
-      stroke-linecap="round"></path>
+      stroke-linecap="round"
+    ></path>
 
-    {
-      interactive && (
-        <g class="chart-overlay">
-          <line
-            class="chart-crosshair"
-            x1="0"
-            x2="0"
-            y1={padT}
-            y2={padT + plotH}
-            stroke="var(--color-muted)"
-            stroke-width="1"
-            stroke-dasharray="3 3"
-          />
-          <circle class="chart-marker" cx="0" cy="0" r="4" fill={stroke} />
-        </g>
-      )
-    }
+    {interactive && (
+      <g class="chart-overlay">
+        <line
+          class="chart-crosshair"
+          x1="0"
+          x2="0"
+          y1={padT}
+          y2={padT + plotH}
+          stroke="var(--color-muted)"
+          stroke-width="1"
+          stroke-dasharray="3 3"
+        />
+        <circle class="chart-marker" cx="0" cy="0" r="4" fill={stroke} />
+      </g>
+    )}
   </svg>
 
-  {
-    interactive && (
-      <div class="chart-tooltip" role="status" aria-live="polite">
-        <div class="chart-tooltip-date" />
-        <div class="chart-tooltip-price tabular-nums" />
-      </div>
-    )
-  }
+  {interactive && (
+    <div class="chart-tooltip" role="status" aria-live="polite">
+      <div class="chart-tooltip-date" />
+      <div class="chart-tooltip-price tabular-nums" />
+    </div>
+  )}
 </div>
 
 <script>

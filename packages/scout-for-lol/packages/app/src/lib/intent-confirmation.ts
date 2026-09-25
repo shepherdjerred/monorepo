@@ -214,10 +214,9 @@ function classifyDirectCreationResult(
     };
   }
   const refused = RefusedResultSchema.safeParse(result);
-  if (refused.success) {
-    return refusal(refused.data.kind, refused.data.message);
-  }
-  return refusal("unrecognized");
+  return refused.success
+    ? refusal(refused.data.kind, refused.data.message)
+    : refusal("unrecognized");
 }
 
 /**

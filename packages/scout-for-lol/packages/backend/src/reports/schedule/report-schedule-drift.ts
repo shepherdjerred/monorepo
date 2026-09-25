@@ -70,8 +70,7 @@ function namedBoundary(value: string): number | undefined {
   const month = MONTHS.indexOf(value);
   if (month !== -1) return month + 1;
   const day = DAYS.indexOf(value);
-  if (day !== -1) return day;
-  return undefined;
+  return day === -1 ? undefined : day;
 }
 
 function boundaryValue(value: number | string): number | undefined {
@@ -189,16 +188,16 @@ function legacySearchAttributesMatch(
 }
 
 function isDefaultPriority(value: unknown): boolean {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false;
-  }
-  if (Object.keys(value).length === 0) return true;
   return (
-    Object.keys(value).toSorted().join(",") ===
-      "fairnessKey,fairnessWeight,priorityKey" &&
-    Reflect.get(value, "priorityKey") === undefined &&
-    Reflect.get(value, "fairnessKey") === undefined &&
-    Reflect.get(value, "fairnessWeight") === undefined
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    (Object.keys(value).length === 0 ||
+      (Object.keys(value).toSorted().join(",") ===
+        "fairnessKey,fairnessWeight,priorityKey" &&
+        Reflect.get(value, "priorityKey") === undefined &&
+        Reflect.get(value, "fairnessKey") === undefined &&
+        Reflect.get(value, "fairnessWeight") === undefined))
   );
 }
 

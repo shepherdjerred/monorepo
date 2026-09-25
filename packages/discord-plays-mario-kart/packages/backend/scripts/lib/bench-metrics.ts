@@ -26,14 +26,11 @@ export async function scrape(metricsUrl: string): Promise<ScrapedMetrics> {
 
 function helpHint(metricsUrl: string): string {
   const looksLocal = metricsUrl.startsWith("http://localhost");
-  if (looksLocal) {
-    return (
-      "If you're testing against the live cluster, port-forward first:\n" +
-      "  kubectl -n mario-kart port-forward svc/mario-kart-ui-service 18081:8081\n" +
-      "then pass --metrics-url http://localhost:18081/metrics"
-    );
-  }
-  return "";
+  return looksLocal
+    ? "If you're testing against the live cluster, port-forward first:\n" +
+        "  kubectl -n mario-kart port-forward svc/mario-kart-ui-service 18081:8081\n" +
+        "then pass --metrics-url http://localhost:18081/metrics"
+    : "";
 }
 
 // ---------------------------------------------------------------------------

@@ -19,15 +19,12 @@ export type TableCsvOptions = {
 function escapeCsvField(value: string, protectFormula = false): string {
   const safeValue =
     protectFormula && /^[=+\-@]/u.test(value) ? `'${value}` : value;
-  if (
-    safeValue.includes(",") ||
+  return safeValue.includes(",") ||
     safeValue.includes('"') ||
     safeValue.includes("\n") ||
     safeValue.includes("\r")
-  ) {
-    return `"${safeValue.replaceAll('"', '""')}"`;
-  }
-  return safeValue;
+    ? `"${safeValue.replaceAll('"', '""')}"`
+    : safeValue;
 }
 
 export function tableToCsv(
@@ -55,13 +52,12 @@ export function tableToCsv(
         return escapeCsvField(row.label, true);
       }
       const entry = row.values.find((val) => val.column === column.key);
-      if (entry?.value == null) {
-        return "";
-      }
-      return escapeCsvField(
-        formatReportDisplayValue(column, entry.value),
-        column.format === "text",
-      );
+      return entry?.value == null
+        ? ""
+        : escapeCsvField(
+            formatReportDisplayValue(column, entry.value),
+            column.format === "text",
+          );
     });
     lines.push(cells.join(","));
   }

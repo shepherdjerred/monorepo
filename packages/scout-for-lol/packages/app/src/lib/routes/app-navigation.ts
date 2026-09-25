@@ -4,6 +4,7 @@ export type ConsumerNavigationAvailability = {
   exploreAvailable: boolean;
   profilesAvailable: boolean;
   challengesAvailable: boolean;
+  clashAvailable?: boolean;
   bucksAvailable: boolean;
   hallAvailable?: boolean;
   hallTo?: string;
@@ -31,6 +32,9 @@ export function consumerNavigationItems(
       : []),
     ...(input.challengesAvailable
       ? [{ label: "Challenges", to: "/challenges" }]
+      : []),
+    ...(input.clashAvailable === true
+      ? [{ label: "Clash", to: "/clash" }]
       : []),
     ...(input.duelsAvailable === true && input.duelsTo !== undefined
       ? [{ label: "Duels", to: input.duelsTo }]
@@ -66,10 +70,9 @@ export function resolveHallTo(
   if (activeHallGuild !== undefined) {
     return `/halls/${activeHallGuild.id}`;
   }
-  if (hallGuilds.length === 1 && hallGuilds[0] !== undefined) {
-    return `/halls/${hallGuilds[0].id}`;
-  }
-  return "/halls";
+  return hallGuilds.length === 1 && hallGuilds[0] !== undefined
+    ? `/halls/${hallGuilds[0].id}`
+    : "/halls";
 }
 
 export type GuildNavigationItem = {
@@ -178,15 +181,12 @@ export function resolveAppShellMode(
   signedIn: boolean,
 ): AppShellMode {
   if (!signedIn) return "focused";
-  if (
-    pathname === "/welcome" ||
+  return pathname === "/welcome" ||
     pathname === "/installed" ||
     pathname === "/login" ||
     pathname.startsWith("/explore/s/")
-  ) {
-    return "focused";
-  }
-  return "workspace";
+    ? "focused"
+    : "workspace";
 }
 
 export function guildIdFromAppPath(pathname: string): string | undefined {

@@ -190,6 +190,7 @@ const issueCommentProvider: ReviewProvider = {
     ],
   },
   detectSkip: null,
+  detectBlocked: null,
   requestReview: null,
   parseFindingTitle: null,
   findingKey: null,

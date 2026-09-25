@@ -5,6 +5,7 @@ import {
 } from "@scout-for-lol/data";
 import {
   assertEligibleExploreMatchCardRequests,
+  inferFrameTeamId,
   isExploreMatchSnapshotSupported,
   matchIdsInPreview,
   normalizeRiotIdPart,
@@ -111,5 +112,38 @@ describe("matchIdsInPreview", () => {
         eligibleMatchIds: new Set(["NA1_5635906027"]),
       }),
     ).toThrow("was not returned as card-supported by the latest query");
+  });
+});
+
+describe("inferFrameTeamId", () => {
+  // Observed Swiftplay shape: 6 stored rows, 10 frame participants.
+  const swiftplayRows = [1, 2, 3, 4, 5, 6].map((participantId) => ({
+    participant_id: participantId,
+    team_id: participantId <= 5 ? 100 : 200,
+  }));
+
+  test("attributes missing participants by the confirmed 5v5 split", () => {
+    expect(inferFrameTeamId(swiftplayRows, 7)).toBe(200);
+    expect(inferFrameTeamId(swiftplayRows, 10)).toBe(200);
+    expect(inferFrameTeamId(swiftplayRows, 3)).toBe(100);
+  });
+
+  test("refuses to guess when rows disagree with the split", () => {
+    const disagreeing = swiftplayRows.map((row) =>
+      row.participant_id === 3 ? { ...row, team_id: 200 } : row,
+    );
+    expect(inferFrameTeamId(disagreeing, 7)).toBeUndefined();
+  });
+
+  test("refuses to guess without both sides or with one team", () => {
+    const lowSideOnly = swiftplayRows.filter((row) => row.participant_id <= 5);
+    expect(inferFrameTeamId(lowSideOnly, 7)).toBeUndefined();
+    const singleTeam = swiftplayRows.map((row) => ({ ...row, team_id: 100 }));
+    expect(inferFrameTeamId(singleTeam, 7)).toBeUndefined();
+  });
+
+  test("refuses out-of-range participant ids", () => {
+    expect(inferFrameTeamId(swiftplayRows, 0)).toBeUndefined();
+    expect(inferFrameTeamId(swiftplayRows, 11)).toBeUndefined();
   });
 });

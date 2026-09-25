@@ -40,12 +40,11 @@ const state: {
 };
 
 function guard<T>(produce: () => T): Promise<T> {
-  if (state.unavailable) {
-    return Promise.reject(
-      new DiscordUpstreamError("fetch_error", "Discord is unreachable"),
-    );
-  }
-  return Promise.resolve(produce());
+  return state.unavailable
+    ? Promise.reject(
+        new DiscordUpstreamError("fetch_error", "Discord is unreachable"),
+      )
+    : Promise.resolve(produce());
 }
 
 function unused(): never {

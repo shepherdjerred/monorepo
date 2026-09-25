@@ -142,6 +142,41 @@ export function postmatchDeliveryKeyPrefix(matchId: string): string {
   return `postmatch-discord:${matchId}`;
 }
 
+/**
+ * The shared prefix of one match's SETTLEMENT announcement keys.
+ *
+ * Separate from the post-match report's prefix because they are different
+ * decisions to notify about the same match: the report is owed to every
+ * subscribed channel, the recap only to a guild whose pool actually settled
+ * something a player can read. One key per (match, channel), so a guild that
+ * settled twice for one match is a contradiction the key makes unrepresentable
+ * rather than two recaps a user would receive.
+ */
+export function settlementDeliveryKeyPrefix(matchId: string): string {
+  return `settlement-discord:${matchId}`;
+}
+
+/**
+ * A late binding's earnings-only recap is a separate delivery decision from
+ * the settlement recap the completed match pipeline may already have sent.
+ */
+export function lateBindingEarningsDeliveryKeyPrefix(matchId: string): string {
+  return `late-earnings-discord:${matchId}`;
+}
+
+/**
+ * The shared prefix of one DARE's summary key.
+ *
+ * Keyed by the Dare rather than by the match, because a Dare resolves exactly
+ * once and that resolution is the decision to notify. The intent row is still
+ * match-bound — `listIntentsForMatch` is how the fan-out finds it — but the
+ * match is context for the resolution, not its identity, and keying by it
+ * would let one Dare be announced twice if it were ever summarised under two.
+ */
+export function dareSummaryDeliveryKeyPrefix(dareId: string): string {
+  return `dare-summary-discord:${dareId}`;
+}
+
 /** One channel's intent key under a delivery prefix. */
 export function deliveryIntentKey(
   keyPrefix: string,

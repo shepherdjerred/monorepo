@@ -13,15 +13,13 @@ export function newestCustomSnapshot(
     currentAtRequest !== undefined &&
     current !== currentAtRequest
   ) {
-    if (
-      current !== null &&
+    return current !== null &&
       current !== undefined &&
       candidate !== null &&
       candidate.id === current.id &&
       candidate.revision > current.revision
-    )
-      return candidate;
-    return current ?? null;
+      ? candidate
+      : (current ?? null);
   }
   if (candidate === null) {
     return null;

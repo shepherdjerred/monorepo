@@ -353,14 +353,11 @@ function unmetRequirement(
         `in its declared 1Password item. Refresh the vault snapshot after adding it.`
       );
     }
-    if (referencedSecret.isBlank(explicitRef.key)) {
-      return (
-        `${prefix}, but ${explicitRef.secretName} key ${explicitRef.key} is BLANK ` +
-        `in its declared 1Password item. The operator skips empty fields, so the ` +
-        `variable would be missing at runtime.`
-      );
-    }
-    return null;
+    return referencedSecret.isBlank(explicitRef.key)
+      ? `${prefix}, but ${explicitRef.secretName} key ${explicitRef.key} is BLANK ` +
+          `in its declared 1Password item. The operator skips empty fields, so the ` +
+          `variable would be missing at runtime.`
+      : null;
   }
   return (
     `${prefix}, but the step does not provide it through explicit env, a ` +

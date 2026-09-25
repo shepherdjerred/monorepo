@@ -20,6 +20,27 @@ function findFailureRule(alertName: string): string {
   return expression;
 }
 
+const DURATION_MS: Record<string, number> = {
+  s: 1000,
+  m: 60 * 1000,
+  h: 60 * 60 * 1000,
+  d: 24 * 60 * 60 * 1000,
+};
+
+function parseDuration(value: string): number {
+  const match = /^(?<amount>\d+)(?<unit>[smhd])$/u.exec(value);
+  const amount = match?.groups?.["amount"];
+  const unit = match?.groups?.["unit"];
+  if (amount === undefined || unit === undefined) {
+    throw new Error(`Unsupported Prometheus duration: ${value}`);
+  }
+  const multiplier = DURATION_MS[unit];
+  if (multiplier === undefined) {
+    throw new Error(`Unsupported Prometheus duration unit: ${value}`);
+  }
+  return Number(amount) * multiplier;
+}
+
 describe("Temporal workflow outcome rules", () => {
   test("alerts on schedule delay, Workflow Task failures, nondeterminism, and exhausted Activity retries", () => {
     const healthGroup = getTemporalRuleGroups().find(
@@ -297,5 +318,38 @@ describe("Scout Data Dragon failure rules", () => {
     const expression = findFailureRule("ScoutDataDragonPrAutomationFailed");
     expect(expression).not.toContain("pr-merge-failed");
     expect(expression).toContain("git-push-failed|pr-create-failed");
+  });
+});
+
+describe("Prometheus rule shape", () => {
+  // An increase() alert is only true for as long as its events stay inside the
+  // lookback window. If the pending period is at or beyond that window, a
+  // burst of events ages out before the rule can reach firing state and the
+  // alert silently never fires — which is how TemporalActivitiesNeverStarting
+  // shipped as increase(...[1h]) with for: 2h, unable to report the very
+  // zero-poller queue it was written for. Asserted over every rule so the
+  // next one written this way fails here instead of in production silence.
+  test("no increase() rule has a pending period its lookback window cannot outlast", () => {
+    const offenders: string[] = [];
+    for (const group of getTemporalRuleGroups()) {
+      for (const rule of group.rules ?? []) {
+        const expression = rule.expr.value;
+        const pending = rule.for;
+        if (typeof expression !== "string" || pending === undefined) continue;
+        const windows = [
+          ...expression.matchAll(/increase\([^)]*\[(?<window>\d+[smhd])\]\)/gu),
+        ]
+          .map((match) => match.groups?.["window"])
+          .filter((window) => window !== undefined);
+        if (windows.length === 0) continue;
+        const shortest = Math.min(
+          ...windows.map((window) => parseDuration(window)),
+        );
+        if (parseDuration(pending) >= shortest) {
+          offenders.push(`${rule.alert ?? "(unnamed)"} for=${pending}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
   });
 });

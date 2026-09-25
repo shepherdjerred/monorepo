@@ -17,8 +17,7 @@ function categorizeCharge(charge: ConserviceCharge): string {
   if (PET_TYPES.has(charge.chargeTypeId)) return "pets";
   if (WATER_SEWER_TYPES.has(charge.chargeTypeId)) return "waterSewer";
   if (ELECTRIC_TYPES.has(charge.chargeTypeId)) return "electric";
-  if (TRASH_TYPES.has(charge.chargeTypeId)) return "trash";
-  return "rent";
+  return TRASH_TYPES.has(charge.chargeTypeId) ? "trash" : "rent";
 }
 
 // One summary per bill. Grouping by calendar month instead would merge a

@@ -51,11 +51,10 @@ export type DiscordScreenshotOptions = {
 };
 
 function isPng(bytes: Uint8Array): boolean {
-  if (bytes.length < PNG_SIGNATURE.length) {
-    return false;
-  }
-
-  return PNG_SIGNATURE.every((byte, index) => bytes[index] === byte);
+  return (
+    bytes.length >= PNG_SIGNATURE.length &&
+    PNG_SIGNATURE.every((byte, index) => bytes[index] === byte)
+  );
 }
 
 function byteAt(bytes: Uint8Array, index: number): number {

@@ -256,10 +256,9 @@ function formattingProvider(): Monaco.languages.DocumentFormattingEditProvider {
       // `formatScoutQl` returns the input unchanged when the query has error
       // diagnostics, so "no edits" is the normal answer for a half-typed query
       // rather than a failure.
-      if (formatted === current) {
-        return [];
-      }
-      return [{ range: model.getFullModelRange(), text: formatted }];
+      return formatted === current
+        ? []
+        : [{ range: model.getFullModelRange(), text: formatted }];
     },
   };
 }

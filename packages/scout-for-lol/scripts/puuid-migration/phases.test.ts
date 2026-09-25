@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, expect, test } from "vitest";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import type { SqlParam } from "./support.ts";
 
 // support.ts reads the environment once at import, so every value has to be in
 // place before the module graph loads.
@@ -232,6 +233,45 @@ test("apply rewrites scalar columns to the newest return-cycle domain", async ()
 
   const rows = await db.query(`SELECT "puuid" FROM "MatchRankHistory"`);
   expect(rows[0]?.["puuid"]).toBe(OLD_A);
+  await db.close();
+});
+
+test("apply only updates scalar values present in the database", async () => {
+  const db = await seed({
+    accounts: [OLD_A],
+    map: [{ oldPuuid: OLD_A, newPuuid: NEW_A, status: "resolved" }],
+  });
+  for (let index = 0; index < 100; index++) {
+    await db.exec(
+      `INSERT INTO "PuuidKeyMap" ("oldPuuid", "newPuuid", "status") VALUES (${db.param(1)}, ${db.param(2)}, 'resolved')`,
+      [`unused-old-${index.toString()}`, `unused-new-${index.toString()}`],
+    );
+  }
+  await db.exec(
+    `INSERT INTO "MatchRankHistory" VALUES (1, ${db.param(1)}, ${db.param(2)})`,
+    [OLD_A, Date.now()],
+  );
+
+  let scalarUpdates = 0;
+  const measured = {
+    ...db,
+    exec: async (sql: string, params?: readonly SqlParam[]) => {
+      if (
+        /^UPDATE "(?:Account|MatchRankHistory|MatchTrackedAccount)" SET "puuid"/u.test(
+          sql,
+        )
+      ) {
+        scalarUpdates++;
+      }
+      await db.exec(sql, params);
+    },
+  };
+  const { apply } = await import("./phases.ts");
+  await apply(measured, false);
+
+  expect(scalarUpdates).toBe(2);
+  const rows = await db.query(`SELECT "puuid" FROM "MatchRankHistory"`);
+  expect(rows[0]?.["puuid"]).toBe(NEW_A);
   await db.close();
 });
 

@@ -85,10 +85,10 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   // TASK_QUEUES.INFRA
   runBugsinkHousekeepingWorkflow: "infra",
   runVeleroOrphanAuditWorkflow: "infra",
+  runVeleroR2OrphanAuditWorkflow: "infra",
   runZfsMaintenanceWorkflow: "infra",
   syncGolinks: "infra",
   runTasknotesCanary: "infra",
-  runCiIoTelemetry: "infra",
   runDnsAudit: "infra",
   runHomelabCrdImportsRefresh: "infra",
   runHomelabAuditWorkflow: "infra",
@@ -147,6 +147,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runScoutCompetitionUpdatesWorkflow: "scout",
   scoutRealtimePollWorkflow: "scout",
   scoutPostMatchDiscoveryWorkflow: "scout",
+  scoutPostMatchDiscoveryV2Workflow: "scout",
   scoutIngestionReconciliationWorkflow: "scout",
   scoutBackgroundJobWorkflow: "scout",
   scoutReportLakeWorkflow: "scout",
@@ -172,8 +173,7 @@ export function executionEnvironmentForTaskQueue(
   fallback: ExecutionEnvironment,
 ): ExecutionEnvironment {
   if (taskQueue === TASK_QUEUES.SCOUT_BETA) return "beta";
-  if (taskQueue === TASK_QUEUES.SCOUT_PROD) return "prod";
-  return fallback;
+  return taskQueue === TASK_QUEUES.SCOUT_PROD ? "prod" : fallback;
 }
 
 export function buildExecutionMetadata(input: {

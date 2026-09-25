@@ -6,7 +6,7 @@ import { activatePendingDaresV3 } from "#src/betting/dares/lifecycle/dare-activa
 import { refreshPendingDareV2Callouts } from "#src/betting/dares/presentation/dare-callout-v2.ts";
 import { DareV2PartialSettlementError } from "#src/betting/dares/settlement/dare-settle-types-v2.ts";
 import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dare-delivery.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import { checkMatchHistory } from "#src/league/tasks/postmatch/match-history-polling.ts";
 import { announceSettlements } from "#src/betting/notify/announce.ts";
 import { refreshClosedBucksMessages } from "#src/betting/notify/message-refresh.ts";
@@ -28,10 +28,7 @@ import { prisma } from "#src/database/index.ts";
 const logger = createLogger("tasks-postmatch");
 
 function asError(error: unknown, message: string): Error {
-  if (error instanceof Error) {
-    return error;
-  }
-  return new Error(message, { cause: error });
+  return error instanceof Error ? error : new Error(message, { cause: error });
 }
 
 export async function checkPostMatch(): Promise<{

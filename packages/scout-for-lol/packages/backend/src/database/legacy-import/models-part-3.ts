@@ -44,7 +44,7 @@ export const IMPORT_MODELS_PART_3: ImportModelSpec[] = [
       serverId: DiscordGuildIdSchema.parse(toStr(row, "serverId")),
       discordId: DiscordAccountIdSchema.parse(toStr(row, "discordId")),
       // Synthetic house accounts were added after the promoted SQLite image.
-      isHouse: row["isHouse"] === undefined ? false : toBool(row, "isHouse"),
+      isHouse: row["isHouse"] !== undefined && toBool(row, "isHouse"),
       balance: toInt(row, "balance"),
       // peekPassExpiresAt existed in some SQLite snapshots; the feature and
       // its column are retired, so the value is deliberately dropped. The

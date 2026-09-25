@@ -68,10 +68,3 @@ export const duelResults = new Counter({
   labelNames: ["status"] as const,
   registers: [registry],
 });
-
-export const duelTournamentProvisioning = new Counter({
-  name: "scout_duel_tournament_provisioning_total",
-  help: "Duel Tournament API provisioning outcomes",
-  labelNames: ["status"] as const,
-  registers: [registry],
-});

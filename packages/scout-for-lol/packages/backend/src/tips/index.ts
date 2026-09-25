@@ -99,10 +99,9 @@ export async function decorateWithFeatureTip(
     // retire it unseen.
     if (decorated === message) return unchanged;
 
-    if (!(await claimTip({ ...audience, tipKey: tip.key }, deps.db))) {
-      return unchanged;
-    }
-    return { message: decorated, ...outcome(tip, audience, deps) };
+    return (await claimTip({ ...audience, tipKey: tip.key }, deps.db))
+      ? { message: decorated, ...outcome(tip, audience, deps) }
+      : unchanged;
   } catch (error) {
     logger.error("Failed to select a feature tip", getErrorMessage(error));
     return unchanged;
@@ -127,10 +126,9 @@ export async function decorateEmbedWithFeatureTip(
     const decorated = withFeatureTipOnEmbed(embed, tip);
     if (decorated === undefined) return unchanged;
 
-    if (!(await claimTip({ ...audience, tipKey: tip.key }, deps.db))) {
-      return unchanged;
-    }
-    return { embed: decorated, ...outcome(tip, audience, deps) };
+    return (await claimTip({ ...audience, tipKey: tip.key }, deps.db))
+      ? { embed: decorated, ...outcome(tip, audience, deps) }
+      : unchanged;
   } catch (error) {
     logger.error("Failed to select a feature tip", getErrorMessage(error));
     return unchanged;

@@ -25,6 +25,7 @@ import type {
 import type {
   ScoutLakeProjectionV2InputEnvelope,
   ScoutLakeProjectionV2ResultEnvelope,
+  ScoutClientMatchDispatchV2InputEnvelope,
   ScoutMatchProcessingV2InputEnvelope,
   ScoutMatchProcessingV2ResultEnvelope,
   ScoutNotificationV2InputEnvelope,
@@ -59,6 +60,7 @@ import {
   scoutDuelSeriesWorkflow as duelSeries,
   scoutHallBaselineWorkflow as hallBaseline,
 } from "./progression.ts";
+import { scoutClientMatchDispatchV2Workflow as clientMatchDispatchV2 } from "./client-match-dispatch-v2.ts";
 import {
   scoutMatchProcessingV2Workflow as matchProcessingV2,
   scoutPostMatchDiscoveryV2Workflow as postMatchDiscoveryV2,
@@ -186,6 +188,12 @@ export async function scoutMatchProcessingV2Workflow(
   input: ScoutMatchProcessingV2InputEnvelope,
 ): Promise<ScoutMatchProcessingV2ResultEnvelope> {
   return await matchProcessingV2(input);
+}
+
+export async function scoutClientMatchDispatchV2Workflow(
+  input: ScoutClientMatchDispatchV2InputEnvelope,
+): Promise<never> {
+  return await clientMatchDispatchV2(input);
 }
 
 export async function scoutPrematchDiscoveryV2Workflow(

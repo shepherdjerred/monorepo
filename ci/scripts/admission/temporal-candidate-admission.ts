@@ -107,8 +107,9 @@ function willPublishTemporalWorkflowCandidate(
 ): boolean {
   const stable = catalog.values.get(CENTRAL_WORKFLOW_STABLE);
   const candidate = catalog.values.get(CENTRAL_WORKFLOW_CANDIDATE);
-  if (stable === undefined || candidate === undefined) return true;
   return (
+    stable === undefined ||
+    candidate === undefined ||
     stable === candidate ||
     (!isLegacyWorkflowPin(stable) && isLegacyWorkflowPin(candidate))
   );

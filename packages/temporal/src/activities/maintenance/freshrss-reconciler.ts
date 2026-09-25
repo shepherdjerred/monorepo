@@ -1,5 +1,9 @@
 import { parseExportedFeedFilters } from "./freshrss-exported-opml.ts";
-import { assertNoSharedStaleSubscriptions } from "./freshrss-subscription-safety.ts";
+import {
+  assertNoSharedStaleSubscriptions,
+  isInCategory,
+  unmanagedFingerprint,
+} from "./freshrss-subscription-safety.ts";
 
 export type FetchRequest = (
   input: string | URL | Request,
@@ -319,36 +323,6 @@ class FreshRssReaderClient {
   }
 }
 
-function isInCategory(subscription: Subscription, category: string): boolean {
-  return subscription.categories.some(
-    (candidate) => candidate.label === category,
-  );
-}
-
-function unmanagedFingerprint(
-  subscriptions: Subscription[],
-  desiredUrls: Set<string>,
-  category: string,
-): string {
-  return JSON.stringify(
-    subscriptions
-      .filter(
-        (subscription) =>
-          !desiredUrls.has(subscription.url) &&
-          !isInCategory(subscription, category),
-      )
-      .map((subscription) => ({
-        id: subscription.id,
-        title: subscription.title,
-        url: subscription.url,
-        categories: subscription.categories
-          .map((candidate) => ({ id: candidate.id, label: candidate.label }))
-          .toSorted((left, right) => left.id.localeCompare(right.id)),
-      }))
-      .toSorted((left, right) => left.id.localeCompare(right.id)),
-  );
-}
-
 async function waitForExactFilters(
   client: FreshRssReaderClient,
   feeds: DesiredFeed[],
@@ -368,6 +342,37 @@ async function waitForExactFilters(
   throw new Error(
     "FreshRSS managed feed filters did not converge to the desired OPML settings",
   );
+}
+
+/**
+ * Subscribe every desired feed FreshRSS does not already hold, and report the
+ * ones it refused keyed by URL.
+ *
+ * FreshRSS refusing one feed is an answer about that feed, not a reason to
+ * abandon the rest: it rejects any URL it cannot read as a feed, which a
+ * community mirror served as `text/plain` will always be. Stopping at the
+ * first refusal left every later feed unreconciled for as long as that URL
+ * stayed in the manifest. Collecting them lets the caller reconcile what it
+ * can and then fail once, naming all of them.
+ */
+async function subscribeMissingFeeds(
+  client: FreshRssReaderClient,
+  desired: DesiredManifest,
+  existingUrls: ReadonlySet<string>,
+): Promise<Map<string, string>> {
+  const refused = new Map<string, string>();
+  for (const feed of desired.feeds) {
+    if (existingUrls.has(feed.url)) continue;
+    try {
+      await client.subscribe(feed.url, feed.title, desired.category);
+    } catch (error) {
+      refused.set(
+        feed.url,
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  }
+  return refused;
 }
 
 export async function reconcileFreshRss(
@@ -399,16 +404,21 @@ export async function reconcileFreshRss(
   const beforeByUrl = new Map(
     before.map((subscription) => [subscription.url, subscription]),
   );
-  for (const feed of desired.feeds) {
-    if (!beforeByUrl.has(feed.url)) {
-      await client.subscribe(feed.url, feed.title, desired.category);
-    }
-  }
+  const refused = await subscribeMissingFeeds(
+    client,
+    desired,
+    new Set(beforeByUrl.keys()),
+  );
+  // Everything below states what FreshRSS must already hold. A refused feed is
+  // absent by definition, so asserting over it would only restate the refusal
+  // as a less informative error.
+  const reconciled = desired.feeds.filter((feed) => !refused.has(feed.url));
+
   const imported = await client.listSubscriptions();
   const importedByUrl = new Map(
     imported.map((subscription) => [subscription.url, subscription]),
   );
-  for (const feed of desired.feeds) {
+  for (const feed of reconciled) {
     const subscription = importedByUrl.get(feed.url);
     if (subscription === undefined) {
       throw new Error(
@@ -436,9 +446,9 @@ export async function reconcileFreshRss(
   const managed = after.filter((subscription) =>
     isInCategory(subscription, desired.category),
   );
-  if (managed.length !== desired.feeds.length) {
+  if (managed.length !== reconciled.length) {
     throw new Error(
-      `FreshRSS category ${JSON.stringify(desired.category)} has ${String(managed.length)} feeds; expected ${String(desired.feeds.length)}`,
+      `FreshRSS category ${JSON.stringify(desired.category)} has ${String(managed.length)} feeds; expected ${String(reconciled.length)}`,
     );
   }
   for (const subscription of managed) {
@@ -462,11 +472,23 @@ export async function reconcileFreshRss(
       "FreshRSS reconciliation changed a subscription outside the managed category",
     );
   }
-  await waitForExactFilters(client, desired.feeds, input.delay ?? Bun.sleep);
+  await waitForExactFilters(client, reconciled, input.delay ?? Bun.sleep);
+
+  if (refused.size > 0) {
+    // Reported last, after the reconcilable feeds have been brought into line,
+    // so a single unacceptable feed costs its own subscription rather than
+    // every other feed's reconciliation.
+    const detail = [...refused]
+      .map(([url, reason]) => `${url}: ${reason}`)
+      .join("; ");
+    throw new Error(
+      `FreshRSS refused ${String(refused.size)} of ${String(desired.feeds.length)} desired feeds; the rest reconciled. ${detail}`,
+    );
+  }
 
   return {
     desired: desired.feeds.length,
-    edited: desired.feeds.length,
+    edited: reconciled.length,
     pruned: stale.length,
   };
 }

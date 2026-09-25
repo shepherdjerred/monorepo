@@ -18,8 +18,7 @@ const FILE_MODE = 0o10_0000;
  * stored as Uint8Array, and stat returns POSIX-shaped modes.
  */
 function norm(p: string): string {
-  if (!p.startsWith("/")) return `/${p}`;
-  return p;
+  return p.startsWith("/") ? p : `/${p}`;
 }
 function dirname(p: string): string {
   const parts = norm(p).split("/").filter(Boolean);

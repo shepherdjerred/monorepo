@@ -137,11 +137,6 @@ describe("Temporal worker role contracts", () => {
     expect(activityNamesFor("repo")).not.toContain("listTailscaleIngresses");
   });
 
-  it("dispatches CI I/O observability only through infra", () => {
-    expect(activityNamesFor("infra")).toContain("collectCiIoObservability");
-    expect(activityNamesFor("repo")).not.toContain("collectCiIoObservability");
-  });
-
   it("keeps report delivery capabilities separate from agent execution", () => {
     expect(reportActivities.sendAgentTaskEmail).toBe(
       agentActivities.sendAgentTaskEmail,

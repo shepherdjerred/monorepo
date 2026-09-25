@@ -25,10 +25,8 @@ import {
   getExploreQuotaStatus,
   tryStartExploreTurn,
 } from "#src/explore/rate-limit.ts";
-import type {
-  ExploreAgentParams,
-  ExploreAgentResult,
-} from "#src/explore/agent.ts";
+import type { ExploreAgentParams } from "#src/explore/agent-tools.ts";
+import type { ExploreAgentResult } from "#src/explore/agent.ts";
 
 const trpc = await createOfflineTrpcHarness("explore-run-manager");
 const owner = DiscordAccountIdSchema.parse("900000000000009501");

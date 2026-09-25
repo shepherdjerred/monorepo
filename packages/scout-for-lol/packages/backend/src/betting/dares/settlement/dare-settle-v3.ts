@@ -17,15 +17,17 @@ import { matchTouchesRelationalDare } from "#src/betting/dares/evaluation/dare-m
 import { pendingDareV2CalloutRefresh } from "#src/betting/dares/presentation/dare-callout-refresh-state-v2.ts";
 import { dareV2MoneyFactsInTransaction } from "#src/betting/dares/settlement/dare-ledger-v2.ts";
 import { distributeDareResolutionV3 } from "#src/betting/dares/lifecycle/dare-resolution-v3.ts";
+import {
+  announceOrWithholdDare,
+  recordTerminalDareAnnouncement,
+} from "#src/betting/dares/settlement/dare-announcement.ts";
 import { claimActiveDareV2Settlement } from "#src/betting/dares/settlement/dare-settlement-claim-v2.ts";
 import {
   decisiveTargetDependenciesV3,
   executeDareSqlV3,
 } from "#src/betting/dares/sql/dare-sql-v3.ts";
-import {
-  enqueueMaterialDareProgressNotificationV3,
-  enqueueTerminalDareNotification,
-} from "#src/betting/dares/presentation/notify/dare-notification-production.ts";
+import { enqueueMaterialDareProgressNotificationV3 } from "#src/betting/dares/presentation/notify/dare-notification-production.ts";
+import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 import type {
   DareProofV3,
   DareV2SettlementSummary,
@@ -75,10 +77,9 @@ export function dareFinalityForEvidenceV3(
   ) {
     return { value: true, final: true, reason: "monotone_success" };
   }
-  if (evidence.sourceMatchIds.length >= contract.maxEligibleGames) {
-    return { value: evidence.achieved, final: true, reason: "game_cap" };
-  }
-  return { value: evidence.achieved, final: false, reason: "reversible" };
+  return evidence.sourceMatchIds.length >= contract.maxEligibleGames
+    ? { value: evidence.achieved, final: true, reason: "game_cap" }
+    : { value: evidence.achieved, final: false, reason: "reversible" };
 }
 
 export function dareRaceFinalityV3(
@@ -129,6 +130,8 @@ async function resolveV3(
     proof: DareProofV3 | null;
     now: Date;
     matchId?: string | undefined;
+    /** Whether the match this settles is owed a public delivery. */
+    notify: DareNotificationDisposition;
   },
 ): Promise<"achieved" | "unachieved" | "voided"> {
   const value = input.finality.value;
@@ -156,14 +159,7 @@ async function resolveV3(
     facts,
     value,
   });
-  await enqueueTerminalDareNotification(tx, {
-    dareId: input.dare.id,
-    revision: input.contract.revision,
-    potTotal: input.dare.potTotal,
-    resolution,
-    ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
-    now: input.now,
-  });
+  await recordTerminalDareAnnouncement(tx, input, resolution);
   return resolution;
 }
 
@@ -273,6 +269,8 @@ export async function captureDareSqlV3ForMatch(input: {
   matchData: RawMatch;
   prismaClient: ExtendedPrismaClient;
   now: Date;
+  /** Whether the match this settles is owed a public delivery. */
+  notify: DareNotificationDisposition;
 }): Promise<DareV2SettlementSummary | undefined> {
   const { dare, contract, matchData, prismaClient, now } = input;
   if (
@@ -325,17 +323,26 @@ export async function captureDareSqlV3ForMatch(input: {
           proof,
           now,
           matchId: matchData.metadata.matchId,
+          notify: input.notify,
         })
       : "captured";
     if (resolution === "captured") {
-      await enqueueMaterialDareProgressNotificationV3(tx, {
-        dareId: dare.id,
-        contract,
-        evidence: rows,
-        matchId: matchData.metadata.matchId,
-        finality,
-        now,
-      });
+      // Same rule as the version-2 capture: progress and a pending callout
+      // are both things this match would say, and a backfill says neither.
+      await announceOrWithholdDare(
+        tx,
+        { dareId: dare.id, notify: input.notify },
+        async () => {
+          await enqueueMaterialDareProgressNotificationV3(tx, {
+            dareId: dare.id,
+            contract,
+            evidence: rows,
+            matchId: matchData.metadata.matchId,
+            finality,
+            now,
+          });
+        },
+      );
     }
     return {
       contractVersion: 3,
@@ -377,6 +384,9 @@ export async function settleDareSqlV3AtDeadline(
       finality,
       proof,
       now,
+      // A deadline is not a match's announcement; nothing here is owed
+      // silence by a delivery mode.
+      notify: "enqueue",
     });
     return {
       contractVersion: 3,
@@ -443,6 +453,10 @@ export async function settleMatureDareSqlV3Races(
           finality,
           proof,
           now,
+          // Deadline-driven, like its sibling above: a matured race resolves
+          // on the clock rather than on a match being delivered, so no
+          // delivery mode is in play and nothing here is owed silence.
+          notify: "enqueue",
         });
         return {
           contractVersion: 3 as const,

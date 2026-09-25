@@ -1,0 +1,18 @@
+msxml3: Accept a document locator in MXXMLWriter.
+
+MSXML returns S_OK; E_NOTIMPL made the SAX reader abort makepri.exe's
+reader-to-writer copy of its dump output.
+
+--- a/dlls/msxml3/mxwriter.c
++++ b/dlls/msxml3/mxwriter.c
+@@ -1179,8 +1179,8 @@
+     ISAXLocator *locator)
+ {
+     mxwriter *This = impl_from_ISAXContentHandler( iface );
+-    FIXME("(%p)->(%p)\n", This, locator);
+-    return E_NOTIMPL;
++    TRACE("(%p)->(%p)\n", This, locator);
++    return S_OK;
+ }
+ 
+ static HRESULT WINAPI SAXContentHandler_startDocument(ISAXContentHandler *iface)

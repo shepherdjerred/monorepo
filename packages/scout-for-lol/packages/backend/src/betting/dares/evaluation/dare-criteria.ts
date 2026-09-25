@@ -276,13 +276,14 @@ export function evaluateDarePredicate(
 ): boolean {
   if (predicate.kind === "participant_numeric") {
     const actual = participantNumericValue(participant, predicate.field);
-    if (actual === undefined) return false;
-    return compare(actual, predicate.operator, predicate.threshold);
+    return (
+      actual !== undefined &&
+      compare(actual, predicate.operator, predicate.threshold)
+    );
   }
   if (predicate.kind === "participant_boolean") {
     const actual = participantBooleanValue(participant, predicate.field);
-    if (actual === undefined) return false;
-    return actual === predicate.expected;
+    return actual !== undefined && actual === predicate.expected;
   }
   return evaluateDareRatePredicate(predicate, participant);
 }
@@ -425,8 +426,7 @@ export function formatDareRateThreshold(thresholdScaled: number): string {
 
 function comparisonWord(operator: "gte" | "lte" | "eq"): string {
   if (operator === "gte") return "at least";
-  if (operator === "lte") return "at most";
-  return "exactly";
+  return operator === "lte" ? "at most" : "exactly";
 }
 
 function renderDarePredicate(predicate: DarePredicate, who: string): string {
@@ -457,8 +457,9 @@ function renderDareLeaf(leaf: DareLeaf, who: string): string {
 
 function formatAliasList(aliases: readonly string[]): string {
   if (aliases.length <= 1) return aliases[0] ?? "the target";
-  if (aliases.length === 2) return aliases.join(" and ");
-  return `${aliases.slice(0, -1).join(", ")}, and ${aliases.at(-1) ?? ""}`;
+  return aliases.length === 2
+    ? aliases.join(" and ")
+    : `${aliases.slice(0, -1).join(", ")}, and ${aliases.at(-1) ?? ""}`;
 }
 
 function combinatorHeader(kind: DareCombinator): string {

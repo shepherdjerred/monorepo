@@ -157,10 +157,7 @@ function aggregateStatuses(statuses: readonly HealthStatus[]): HealthStatus {
   if (statuses.includes("UNHEALTHY")) {
     return "UNHEALTHY";
   }
-  if (statuses.includes("PENDING")) {
-    return "PENDING";
-  }
-  return "HEALTHY";
+  return statuses.includes("PENDING") ? "PENDING" : "HEALTHY";
 }
 
 export function ciHealth(

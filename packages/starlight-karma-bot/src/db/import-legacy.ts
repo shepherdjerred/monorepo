@@ -280,9 +280,9 @@ export async function runLegacyImportIfNeeded(
   const decision = decideLegacyImport({
     legacyPath,
     legacyFileExists:
-      legacyPath === undefined || legacyPath === ""
-        ? false
-        : await Bun.file(legacyPath).exists(),
+      legacyPath !== undefined &&
+      legacyPath !== "" &&
+      (await Bun.file(legacyPath).exists()),
     targetKarmaRows: await prisma.karma.count(),
     targetPersonRows: await prisma.person.count(),
   });

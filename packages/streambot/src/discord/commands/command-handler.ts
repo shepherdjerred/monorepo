@@ -211,9 +211,11 @@ export class CommandHandler {
     interaction: CommandInteraction,
   ): Promise<boolean> {
     const scope = this.scope(interaction);
-    return scope !== null && this.deps.featureGate !== undefined
-      ? await this.deps.featureGate.assistantV2(scope)
-      : true;
+    return (
+      scope === null ||
+      this.deps.featureGate === undefined ||
+      (await this.deps.featureGate.assistantV2(scope))
+    );
   }
 
   private async handleList(

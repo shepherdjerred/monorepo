@@ -32,18 +32,15 @@ function matchCallForm(
   field: string,
   callee: string,
 ): string | undefined {
-  if (
-    normalize(slice[0]?.image ?? "") !== field ||
+  return normalize(slice[0]?.image ?? "") !== field ||
     slice[1]?.tokenType !== Equals ||
     normalize(slice[2]?.image ?? "") !== callee ||
     slice[3]?.tokenType !== LParen ||
     slice[4]?.tokenType !== StringLiteral ||
     slice[5]?.tokenType !== RParen ||
     slice.length !== 6
-  ) {
-    return undefined;
-  }
-  return parseReportStringLiteral(slice[4].image);
+    ? undefined
+    : parseReportStringLiteral(slice[4].image);
 }
 
 export function matchChampionClause(

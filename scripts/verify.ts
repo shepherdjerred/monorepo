@@ -74,6 +74,7 @@ const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/discord-plays-mario-kart/Dockerfile",
   "packages/homelab/images/redlib/Dockerfile",
   "ci/ci-playwright/Dockerfile",
+  "packages/windows-cross-compiler/",
   "docker-bake.hcl",
   "ci/application-image-smoke.Dockerfile",
   "packages/scout-for-lol/packages/backend/Dockerfile",
@@ -114,8 +115,9 @@ async function readChangedFilesWithGit(
     child.exited,
     new Response(child.stdout).text(),
   ]);
-  if (exitCode !== 0) return undefined;
-  return output.split("\n").filter((path) => path !== "");
+  return exitCode === 0
+    ? output.split("\n").filter((path) => path !== "")
+    : undefined;
 }
 
 function rootScriptsInputsChanged(changedFiles: readonly string[]): boolean {

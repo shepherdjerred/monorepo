@@ -88,13 +88,10 @@ export function createQuotaEngine<Scope extends string, Identity>(options: {
   ): Bucket | undefined => {
     const id = bucketId(rule, identity);
     const existing = buckets.get(id);
-    if (
-      existing !== undefined &&
+    return existing !== undefined &&
       now - existing.startedAt < QUOTA_WINDOW_MS[rule.window]
-    ) {
-      return existing;
-    }
-    return undefined;
+      ? existing
+      : undefined;
   };
 
   const currentBucket = (

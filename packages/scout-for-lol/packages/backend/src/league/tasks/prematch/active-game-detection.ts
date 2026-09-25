@@ -33,6 +33,7 @@ import {
 } from "#src/metrics/index.ts";
 import * as Sentry from "@sentry/bun";
 import { recordPrematchForReportStore } from "#src/report-store/live-ingest.ts";
+import { recordClashPrematchSightings } from "#src/league/clash/sighting.ts";
 
 const logger = createLogger("prematch-active-game-detection");
 
@@ -76,10 +77,10 @@ const LOBBY_RETRY_DELAY_MS = 2000;
  * started-but-undersized lobby rather than throw on it.
  */
 function isLikelyPreStartLobby(gameInfo: RawCurrentGameInfo): boolean {
-  if (isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
-    return false;
-  }
-  return gameInfo.participants.length < STANDARD_PARTICIPANT_COUNT;
+  return (
+    !isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode) &&
+    gameInfo.participants.length < STANDARD_PARTICIPANT_COUNT
+  );
 }
 
 async function refetchLobbyUntilFilled(
@@ -177,6 +178,12 @@ async function processPrematchWithRetryCleanup(input: {
       source: "prematch_live",
       trackedPlayerAliases: input.trackedPlayers.map((p) => p.alias),
     });
+    await recordClashPrematchSightings(
+      input.gameInfo,
+      new Set(
+        input.trackedPlayers.map((player) => player.league.leagueAccount.puuid),
+      ),
+    );
     return await sendPrematchNotification(input.gameInfo, input.trackedPlayers);
   } catch (error) {
     if (!(error instanceof PrematchNotificationPostDeliveryError)) {

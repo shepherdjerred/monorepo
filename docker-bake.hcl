@@ -82,7 +82,6 @@ group "app" {
     "temporal-worker",
     "trmnl-dashboard",
     "scout-for-lol",
-    "scout-evals",
     "discord-plays-pokemon",
     "discord-plays-mario-kart",
     "openrouter-broadcast-ingest",
@@ -140,14 +139,6 @@ target "openrouter-broadcast-ingest" {
   tags       = imagetags("openrouter-broadcast-ingest")
   cache-from = cachefrom("openrouter-broadcast-ingest")
   cache-to   = cacheto("openrouter-broadcast-ingest")
-}
-
-target "scout-evals" {
-  inherits   = ["_app"]
-  dockerfile = "packages/scout-for-lol/packages/evals/Dockerfile"
-  tags       = imagetags("scout-evals")
-  cache-from = cachefrom("scout-evals")
-  cache-to   = cacheto("scout-evals")
 }
 
 target "starlight-karma-bot" {

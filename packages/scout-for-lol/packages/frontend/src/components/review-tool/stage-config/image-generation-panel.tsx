@@ -49,7 +49,7 @@ export function ImageGenerationPanel({
               onChange={(e) => {
                 onChange({ ...config, model: e.target.value });
               }}
-              placeholder="gemini-3-pro-image-preview"
+              placeholder="gemini-2.5-flash-image"
             />
           </div>
           <div>

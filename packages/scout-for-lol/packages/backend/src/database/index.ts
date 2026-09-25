@@ -184,6 +184,49 @@ export async function getChannelsSubscribedToPlayers(
 }
 
 /**
+ * The configs behind a FIXED set of PUUIDs, with no live-guild filter.
+ *
+ * `getAccountsWithState` narrows by `getActiveServerIds()`, which is a read of
+ * the Discord gateway's guild cache and therefore answers differently in
+ * different processes. Its own doc calls the unfiltered fallback "more work,
+ * never the wrong work", and for the polling filter it was written for that is
+ * true: widening the set only costs effort. It is exactly false wherever a
+ * match's already-recorded roster is being rebuilt, because there the filter
+ * NARROWS, so a gateway-owning worker does less work and the wrong work.
+ *
+ * This lookup takes the PUUIDs as given and answers the same way in every
+ * process. One entry per `Account` row, as `getAccountsWithState` also returns,
+ * so a PUUID registered in several guilds yields several configs; ordered so
+ * two runs over the same rows agree.
+ */
+export async function getAccountConfigsByPuuids(
+  puuids: readonly LeaguePuuid[],
+  prismaClient: Pick<ExtendedPrismaClient, "account"> = prisma,
+): Promise<PlayerConfigEntry[]> {
+  if (puuids.length === 0) return [];
+  const accounts = await prismaClient.account.findMany({
+    where: { puuid: { in: [...puuids] } },
+    include: { player: true },
+    orderBy: [{ puuid: "asc" }, { id: "asc" }],
+  });
+  return accounts.map((account) => ({
+    alias: account.player.alias,
+    league: {
+      leagueAccount: LeagueAccountSchema.parse({
+        puuid: account.puuid,
+        region: account.region,
+      }),
+    },
+    discordAccount: {
+      id:
+        account.player.discordId === null
+          ? undefined
+          : DiscordAccountIdSchema.parse(account.player.discordId),
+    },
+  }));
+}
+
+/**
  * Get all player accounts with their runtime state for polling.
  * Includes lastMatchTime and lastCheckedAt to determine polling intervals.
  *
@@ -341,8 +384,16 @@ export async function getLastProcessedMatch(
 }
 
 /**
- * Update the lastMatchTime for an account.
- * This is called when we process a match to track player activity for dynamic polling.
+ * Seed the polling-activity timestamp of an account that has no cursor yet.
+ *
+ * Once an account has a `lastProcessedMatchId`, `lastMatchTime` is the
+ * creation time OF THAT MATCH, and only the cursor writers may move it: V2's
+ * `advanceAccountCursor` orders its monotonic guard on this column. Moving it
+ * ahead on its own — to the newest match in Riot's history, which is exactly
+ * what a stale-account refresh finds while ingestion is behind — makes every
+ * older unprocessed match answer `already-applied`, freezes
+ * `lastProcessedMatchId`, and has discovery return the same processed matches
+ * on every poll. So rows that already carry a cursor are left untouched.
  *
  * @param puuid - Player PUUID to update
  * @param matchTime - The game creation timestamp from the match
@@ -361,6 +412,7 @@ export async function updateLastMatchTime(
     await prismaClient.account.updateMany({
       where: {
         puuid,
+        lastProcessedMatchId: null,
       },
       data: {
         lastMatchTime: matchTime,

@@ -37,16 +37,45 @@ function dnsEgressRule(): NetworkPolicyEgressRule {
   };
 }
 
-function scoutCompetitionActivityIngress(): NetworkPolicyIngressRule {
+// One pod identity, two reasons, so one rule. Scout owns competition database
+// and Discord delivery activities, and each stage polls its own task queue from
+// its stage namespace. The same sole stage backend pod also embeds Scout's
+// Workflow and Activity Workers, so those activities can use the live Discord
+// gateway, stage database, and report-lake PVC directly.
+function scoutBackendIngress(): NetworkPolicyIngressRule {
   return {
-    // Scout owns competition database and Discord delivery activities. Each
-    // stage polls its own task queue from its stage namespace.
     from: ["scout-beta", "scout-prod"].map((namespace) => ({
       namespaceSelector: {
         matchLabels: { "kubernetes.io/metadata.name": namespace },
       },
       podSelector: { matchLabels: { app: "scout-backend" } },
     })),
+    ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+  };
+}
+
+/**
+ * The `gateway` runtime role's Temporal client.
+ *
+ * A separate identity because the split gave the role its own pod and its own
+ * `app` label, and the rules above match `app: scout-backend` exactly. The role
+ * runs no Activity worker at all — `runtime/plan.ts` still pushes `temporal-core`
+ * unconditionally, because Discord commands start Workflows they do not execute,
+ * so a blocked client here is every slash command failing to dispatch rather
+ * than a worker going idle.
+ *
+ * Beta only, matching the stage that actually renders the split topology.
+ */
+function scoutGatewayClientIngress(): NetworkPolicyIngressRule {
+  return {
+    from: [
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "scout-beta" },
+        },
+        podSelector: { matchLabels: { app: "scout-gateway" } },
+      },
+    ],
     ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
   };
 }
@@ -217,28 +246,9 @@ export function createTemporalChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
-        scoutCompetitionActivityIngress(),
+        scoutBackendIngress(),
         scoutWorkflowWorkerIngress(),
-        {
-          // Scout embeds its Workflow and Activity Workers in the sole
-          // stage backend pod so activities can use the live Discord gateway,
-          // stage database, and report-lake PVC directly.
-          from: [
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "scout-beta" },
-              },
-              podSelector: { matchLabels: { app: "scout-backend" } },
-            },
-            {
-              namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "scout-prod" },
-              },
-              podSelector: { matchLabels: { app: "scout-backend" } },
-            },
-          ],
-          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
-        },
+        scoutGatewayClientIngress(),
         {
           // Allow Prometheus scraping metrics
           from: [

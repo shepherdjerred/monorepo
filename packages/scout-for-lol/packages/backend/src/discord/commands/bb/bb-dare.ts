@@ -84,6 +84,8 @@ export function describeDareTranslationFailure(
       return "⏳ The dare translator took too long. Try again in a moment.";
     case "budget_refused":
       return "🧯 The dare translator is out of budget right now. Try again later.";
+    case "provider_quota":
+      return "🧯 The dare translator's provider quota is exhausted. Try again later.";
     case "invalid_output":
       return "🤖 The translator couldn't produce a usable dare from that. Try rewording it.";
     case "provider_error":

@@ -26,9 +26,9 @@ reference. Load `scout-development` for its working procedure.
   Int32; `@scout-for-lol/data` owns the storable subtypes, the re-export shim,
   and `BucksStorageOverflowError`. Never re-declare a branded schema or that
   error class. Both package READMEs carry the contract.
-- Tournament-code custom games and Riot match ingestion keep distinct
-  provenance. Generic Dare conditions remain cross-game unless wording
-  explicitly requires one/same game.
+- Managed custom games, local-client observations, and Riot match ingestion
+  keep distinct provenance. Generic Dare conditions remain cross-game unless
+  wording explicitly requires one/same game.
 
 ## Data and execution
 
@@ -39,8 +39,8 @@ reference. Load `scout-development` for its working procedure.
   selection orders by game end, match, and player identity.
 - Validate Riot, Discord, model, database, and object-store boundaries. Internal
   contract violations fail loudly; user input gets a useful response.
-- Prisma tests disconnect clients. Local routine tests use fixtures and the
-  documented dev-session/bootstrap path, not a real Discord login.
+- Local routine tests use fixtures and the documented dev-session/bootstrap path,
+  not a real Discord login.
 - Temporal owns recurring polling, refresh, maintenance, and evaluation jobs.
   Preserve Workflow determinism and versioning for open histories.
 

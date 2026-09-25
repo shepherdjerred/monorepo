@@ -1,4 +1,8 @@
 import * as Sentry from "@sentry/bun";
+import {
+  announcingSettlementSink,
+  type SettlementAnnouncementSink,
+} from "#src/betting/notify/announcement-sink.ts";
 import { resolveQueueTypeFromGame, type RawMatch } from "@scout-for-lol/data";
 import { z } from "zod";
 import { classifyMatchForBetting } from "#src/betting/outcome.ts";
@@ -22,9 +26,9 @@ import {
   voidDareWithFullRefund,
   DarePartialSettlementError,
   type ActiveDareRow,
-  type DareSettlementSummary,
   type ParsedDare,
 } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
 import {
   prisma,
@@ -233,6 +237,7 @@ export async function settleDaresForMatch(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
   now: Date = new Date(),
+  sink: SettlementAnnouncementSink = announcingSettlementSink,
 ): Promise<DareSettlementSummary[]> {
   const matchId = matchData.metadata.matchId;
   const queue = DareQueueSchema.safeParse(
@@ -304,6 +309,7 @@ export async function settleDaresForMatch(
         queueType: queue.data,
         prismaClient,
         now,
+        sink,
       });
       if (summary !== undefined) {
         summaries.push(summary);
@@ -358,6 +364,7 @@ async function settleOneDareForMatchWithRetry(
     queueType: string;
     prismaClient: ExtendedPrismaClient;
     now: Date;
+    sink: SettlementAnnouncementSink;
   },
 ): Promise<DareSettlementSummary | undefined> {
   return withBoundedRetry(
@@ -373,20 +380,30 @@ async function settleOneDareForMatch(
     queueType: string;
     prismaClient: ExtendedPrismaClient;
     now: Date;
+    sink: SettlementAnnouncementSink;
   },
 ): Promise<DareSettlementSummary | undefined> {
   const { matchData, prismaClient, now } = input;
   const matchId = matchData.metadata.matchId;
   // Evaluator gate FIRST, before any strict conditions parse: voiding is a
   // refund path and must work even when the stored blob no longer parses.
+  //
+  // The match id travels with it, as it does on every other resolution this
+  // function produces. A Dare summary's `matchId` names the match whose
+  // settlement resolved it, and its ABSENCE is what tells the minter the
+  // resolution came from a deadline sweep instead — a sweep's summary must
+  // not be announced under some unrelated match's id. Omitting it here made
+  // this void look like a sweep's, so the refund committed and the minter
+  // skipped it: the money came back and nobody was ever told.
   if (row.evaluatorVersion !== DARE_EVALUATOR_VERSION) {
     return await voidDareWithFullRefund(
-      dareRefundView(row),
+      dareRefundView(row, matchId),
       prismaClient,
       now,
       {
         voidReason: "unknown_evaluator",
         surface: "postmatch",
+        sink: input.sink,
       },
     );
   }
@@ -416,16 +433,29 @@ async function settleOneDareForMatch(
   }
 
   try {
-    return await prismaClient.$transaction((tx) =>
-      captureAndSettleDare(tx, {
+    return await prismaClient.$transaction(async (tx) => {
+      const summary = await captureAndSettleDare(tx, {
         dare,
         matchData,
         queueType: input.queueType,
         leafHits: evaluation.leafHits,
         snapshot: evaluation.snapshot,
         now,
-      }),
-    );
+      });
+      // Inside the SAME transaction that settles the Dare, so the settlement
+      // and the instruction to announce it commit together. This summary is
+      // one-shot: a retry finds the Dare already terminal and returns nothing,
+      // so an instruction written after this transaction could be lost with no
+      // way to rebuild it.
+      if (summary !== undefined) {
+        await input.sink.recordAnnouncementItem(tx, {
+          family: "dare-summary",
+          itemKey: String(summary.dareId),
+          payload: summary,
+        });
+      }
+      return summary;
+    });
   } catch (error) {
     if (error instanceof BucksStorageOverflowError) {
       // A payout the wallet cannot hold rolled the capture back. Stranding
@@ -435,7 +465,11 @@ async function settleOneDareForMatch(
         dareRefundView(row, matchId),
         prismaClient,
         now,
-        { voidReason: "storage_overflow", surface: "postmatch" },
+        {
+          voidReason: "storage_overflow",
+          surface: "postmatch",
+          sink: input.sink,
+        },
       );
     }
     throw error;

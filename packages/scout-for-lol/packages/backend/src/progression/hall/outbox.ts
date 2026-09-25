@@ -39,8 +39,9 @@ function recordLabel(id: string): string {
 
 function truncateToLength(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
-  if (maxLength <= 3) return text.slice(0, Math.max(0, maxLength));
-  return `${text.slice(0, maxLength - 3)}...`;
+  return maxLength <= 3
+    ? text.slice(0, Math.max(0, maxLength))
+    : `${text.slice(0, maxLength - 3)}...`;
 }
 
 /**

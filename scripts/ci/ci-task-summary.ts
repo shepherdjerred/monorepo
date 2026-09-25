@@ -63,8 +63,7 @@ export function taskCategory(task: string): CiTaskCategory {
   if (task.startsWith("test")) return "test";
   if (task.startsWith("lint")) return "lint";
   if (task === "build" || task.startsWith("docker")) return "build";
-  if (task.startsWith("generate")) return "generate";
-  return "quality";
+  return task.startsWith("generate") ? "generate" : "quality";
 }
 
 function taskState(task: z.infer<typeof TaskSummarySchema>): CiTaskState {
@@ -75,10 +74,7 @@ function taskState(task: z.infer<typeof TaskSummarySchema>): CiTaskState {
   if (task.cache?.status === "HIT") {
     return "cached";
   }
-  if (exitCode === 0) {
-    return "passed";
-  }
-  return "not-run";
+  return exitCode === 0 ? "passed" : "not-run";
 }
 
 function taskDuration(

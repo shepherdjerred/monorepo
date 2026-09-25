@@ -26,13 +26,13 @@ import { MatchIdSchema } from "@scout-for-lol/data";
  */
 
 const stubs = vi.hoisted(() => ({
-  resolveScoutV2MatchContext: vi.fn(),
+  resolveScoutV2ObservedMatchContext: vi.fn(),
   resolvePostmatchDeliveryChannels: vi.fn(),
   generateMatchReport: vi.fn(),
 }));
 
 vi.mock("#src/temporal/v2/match-context.ts", () => ({
-  resolveScoutV2MatchContext: stubs.resolveScoutV2MatchContext,
+  resolveScoutV2ObservedMatchContext: stubs.resolveScoutV2ObservedMatchContext,
 }));
 vi.mock("#src/league/tasks/notification-filters.ts", () => ({
   resolvePostmatchDeliveryChannels: stubs.resolvePostmatchDeliveryChannels,
@@ -45,6 +45,7 @@ const { buildPostmatchNotificationMessageV2, renderPostmatchNotificationV2 } =
   await import("#src/temporal/v2/notification/postmatch-notification.ts");
 const { matchLinkComponents } =
   await import("#src/league/tasks/postmatch/match-report-components.ts");
+const { withMvpVoteFurniture } = await import("#src/mvp-votes/components.ts");
 
 const RIOT_MATCH = RiotMatchIdSchema.parse("NA1_9301");
 const MATCH = MatchIdSchema.parse("NA1_9301");
@@ -88,7 +89,7 @@ const GuildIdsSchema = z.object({ targetGuildIds: z.array(z.string()) });
 
 beforeEach(() => {
   vi.clearAllMocks();
-  stubs.resolveScoutV2MatchContext.mockResolvedValue({
+  stubs.resolveScoutV2ObservedMatchContext.mockResolvedValue({
     matchId: MATCH,
     riotMatchId: RIOT_MATCH,
     matchData: {
@@ -114,6 +115,10 @@ describe("the round trip", () => {
       message: standardReport(false),
     },
     { name: "a report without a link button", message: reportWithoutLink() },
+    {
+      name: "a Flex report with MVP vote furniture",
+      message: withMvpVoteFurniture(standardReport(false), MATCH),
+    },
   ])("rebuilds $name exactly as the generator built it", async (scenario) => {
     stubs.generateMatchReport.mockResolvedValue(scenario.message);
 

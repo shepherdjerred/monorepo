@@ -32,6 +32,8 @@ import {
 } from "#src/configuration/flags.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { upsertIntent } from "#src/database/durable/intent-repository.ts";
+import { observeMatch } from "#src/database/durable/observation-repository.ts";
+import { platformRouteOf } from "#src/durable/match/match-identity.ts";
 import {
   recordWorkflowStartAccepted,
   requestWorkflowStart,
@@ -84,12 +86,13 @@ function intentRecord(args: {
   deadlineOffsetMs: number;
   state: MatchNotificationIntentRecord["intent"]["state"];
   attemptCount: number;
+  kind?: MatchNotificationIntentRecord["intent"]["kind"];
 }): MatchNotificationIntentRecord {
   return {
     matchId: MATCH_ID,
     intent: {
       key: NotificationIntentKeySchema.parse(args.key),
-      kind: "postmatch",
+      kind: args.kind ?? "postmatch",
       origin: { kind: "live" },
       target: { kind: "channel", channelId: CHANNEL },
       freshnessDeadline: instant(args.deadlineOffsetMs),
@@ -190,6 +193,7 @@ beforeEach(async () => {
   await db.confirmationIntent.deleteMany();
   await db.auditLog.deleteMany();
   await db.matchNotificationIntent.deleteMany();
+  await db.matchObservation.deleteMany();
   await db.scoutWorkflowStart.deleteMany();
 
   resetFlagOverrides("scout_operations_console_enabled");
@@ -651,6 +655,42 @@ describe("operations reads", () => {
     // The same intent must NOT appear as stalled: nothing may start a child on
     // it, which is exactly why it has its own queue.
     expect(queues.stalledNotifications).toEqual([]);
+  });
+
+  test("the queue view keeps the prematch intents the sweep stopped driving", async () => {
+    // The counterpart of the sweep's exclusion. A prematch intent whose match
+    // carries an observation announces a game that has already ended, so the
+    // reconciliation sweep leaves it alone forever — which makes this queue the
+    // only place a person can find out it is sitting there. Hiding it here too
+    // would turn a visible stranded row into an invisible one.
+    const key = await seedIntent(
+      intentRecord({
+        key: "notification:NA1_5312279829:channel:420010",
+        kind: "prematch",
+        deadlineOffsetMs: 60 * 60_000,
+        attemptCount: 0,
+        state: { kind: "pending" },
+      }),
+    );
+    expect(
+      await observeMatch(db, {
+        matchId: MATCH_ID,
+        platformRoute: platformRouteOf(MATCH_ID),
+        policy: "FULL",
+        owner: { kind: "legacy-v1" },
+        promotion: null,
+        gameCreatedAt: instant(-90 * 60_000),
+        observedAt: instant(-30_000),
+        deliveryMode: "live",
+        artifacts: { match: null, timeline: null },
+      }),
+    ).toEqual({ outcome: "applied" });
+
+    const queues = await caller().operations.queues({});
+
+    expect(queues.stalledNotifications.map((row) => row.intentKey)).toEqual([
+      key,
+    ]);
   });
 
   test("a queued unknown delivery is sufficient to resolve through this API alone", async () => {

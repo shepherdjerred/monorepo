@@ -44,4 +44,21 @@ describe("media intent", () => {
     );
     expect(historyReferenceQuery("play the previous one")).toBe("");
   });
+
+  test("strips a polite prefix only when a command verb follows", () => {
+    expect(
+      inferMediaIntent({ query: "please watch sicko mode" }),
+    ).toMatchObject({
+      work: "sicko mode",
+      mode: "video",
+    });
+    expect(
+      inferMediaIntent({
+        query: "Please Please Please by Sabrina Carpenter",
+      }),
+    ).toMatchObject({
+      work: "Please Please Please",
+      performer: "Sabrina Carpenter",
+    });
+  });
 });

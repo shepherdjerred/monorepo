@@ -36,10 +36,9 @@ export function scheduleDelayedLoading(input: {
   readonly minDurationMs: number;
 }): DelayedLoadingPlan {
   if (input.busy) {
-    if (input.visible || input.delayMs <= 0) {
-      return { visible: true, waitMs: null };
-    }
-    return { visible: false, waitMs: input.delayMs };
+    return input.visible || input.delayMs <= 0
+      ? { visible: true, waitMs: null }
+      : { visible: false, waitMs: input.delayMs };
   }
   if (!input.visible) {
     return { visible: false, waitMs: null };
@@ -49,8 +48,7 @@ export function scheduleDelayedLoading(input: {
       ? input.minDurationMs
       : input.now - input.visibleSince;
   const remaining = input.minDurationMs - shownFor;
-  if (remaining <= 0) {
-    return { visible: false, waitMs: null };
-  }
-  return { visible: true, waitMs: remaining };
+  return remaining <= 0
+    ? { visible: false, waitMs: null }
+    : { visible: true, waitMs: remaining };
 }

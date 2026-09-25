@@ -31,8 +31,7 @@ export type FeatureTipKey =
   | "duels"
   | "dares"
   | "transfers"
-  | "custom-nights"
-  | "tournament-lobbies";
+  | "custom-nights";
 /** Where a feature tip was appended. */
 export type FeatureTipSurface = "postmatch" | "prematch" | "bucks_dm";
 export type CoreOutputKind =
@@ -59,11 +58,10 @@ export type DiscordCommandName =
   | "track"
   | "list"
   | "bb"
-  | "lobby"
   | "scout";
 /**
- * Closed set of subcommand names across the grouped commands (`/bb`, `/scout`,
- * `/lobby`). An unrecognized subcommand drops the property, never mints a new
+ * Closed set of subcommand names across the grouped commands (`/bb` and
+ * `/scout`). An unrecognized subcommand drops the property, never mints a new
  * value — same policy as the command names themselves.
  */
 export type DiscordCommandSubcommand =
@@ -76,10 +74,7 @@ export type DiscordCommandSubcommand =
   | "notifications"
   | "ask"
   | "join"
-  | "leave"
-  | "create"
-  | "status"
-  | "cancel";
+  | "leave";
 export type DiscordCommandStatus = "success" | "error";
 export type BucksMemberActivityKind =
   "command" | "outcome_bet" | "parlay_bet" | "navigation" | "dare";

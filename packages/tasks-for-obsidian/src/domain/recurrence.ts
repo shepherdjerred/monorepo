@@ -69,8 +69,9 @@ export function completionTargetDate(
   task: Task,
   today: string = localTodayYmd(),
 ): string {
-  if (task.recurrenceAnchor === "completion") return today;
-  return resolveOperationTargetDate(undefined, task.scheduled, task.due);
+  return task.recurrenceAnchor === "completion"
+    ? today
+    : resolveOperationTargetDate(undefined, task.scheduled, task.due);
 }
 
 export function toggleCompleteInstance(
@@ -87,10 +88,9 @@ export function nextOptimistic(
   task: Task,
   today: string = localTodayYmd(),
 ): Task {
-  if (!isRecurring(task)) {
-    return { ...task, status: getNextStatus(task.status) };
-  }
-  return toggleCompleteInstance(task, today);
+  return isRecurring(task)
+    ? toggleCompleteInstance(task, today)
+    : { ...task, status: getNextStatus(task.status) };
 }
 
 /**
@@ -116,10 +116,9 @@ export function isCompletedOn(task: Task, day: string): boolean {
  * handle them via due/scheduled directly.
  */
 export function occursOn(task: Task, day: string): boolean {
-  if (!isRecurring(task)) return false;
-  return shouldShowRecurringTaskOnDate(
-    toRecurringLike(task),
-    modelCalendarDate(day),
+  return (
+    isRecurring(task) &&
+    shouldShowRecurringTaskOnDate(toRecurringLike(task), modelCalendarDate(day))
   );
 }
 

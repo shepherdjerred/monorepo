@@ -118,8 +118,7 @@ export async function listDurableExploreRuns(
 function outcomeForStatus(status: string): ExploreRunOutcome {
   if (status === "COMPLETED") return "succeeded";
   if (status === "CANCELLED") return "stopped";
-  if (status === "INTERRUPTED") return "interrupted";
-  return "failed";
+  return status === "INTERRUPTED" ? "interrupted" : "failed";
 }
 
 /**
@@ -293,10 +292,9 @@ export async function durableExploreOutcome(
     where: { id: runId, kind: "explore", ownerId: userId },
     select: { state: true },
   });
-  if (run === null || run.state === "PENDING" || run.state === "RUNNING") {
-    return null;
-  }
-  return outcomeForStatus(run.state);
+  return run === null || run.state === "PENDING" || run.state === "RUNNING"
+    ? null
+    : outcomeForStatus(run.state);
 }
 
 export async function waitForDurableExploreRun(

@@ -9,7 +9,5 @@ export const LeagueSummonerIdSchema = z
 
 export type LeaguePuuid = z.infer<typeof LeaguePuuidSchema>;
 export const LeaguePuuidSchema = z
-  .string()
-  .min(78)
-  .max(78)
+  .union([z.uuid(), z.string().length(78)])
   .brand<"LeaguePuuid">();

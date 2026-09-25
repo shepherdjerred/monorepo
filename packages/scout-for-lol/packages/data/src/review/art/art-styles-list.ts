@@ -100,4 +100,84 @@ export const ART_STYLES: ArtStyle[] = [
     description:
       "Thumbnail style with red circles, arrows, and exaggeraged shocked faces",
   },
+
+  // Friend-group comedy (roast-first picks for group-chat images)
+  {
+    description:
+      "Renaissance oil painting of gamers at a LAN party with dramatic chiaroscuro and cherubs holding energy drinks",
+  },
+  {
+    description:
+      "Cursed image aesthetic: slightly wrong liminal space, fluorescent lighting, uncanny and unsettling",
+  },
+  {
+    description:
+      "Old West wanted poster for the player's champion with ornate typography and a reward bounty in LP",
+  },
+  {
+    description:
+      "Esports trading card with holographic foil, absurdly exaggerated stats, and smack-talk flavor text",
+  },
+  {
+    description:
+      "Shaky courtroom sketch of the match's most criminal play in waxy pastels",
+  },
+  {
+    description:
+      "Motivational office poster celebrating a catastrophic throw, soaring eagle, dead-serious caption energy",
+  },
+  {
+    description:
+      "Bronze statue of the reviewed player mid-facecheck, pigeon on the head, plaque with the KDA",
+  },
+  {
+    description:
+      "Prehistoric cave painting of the decisive teamfight with stick figures and ochre handprints",
+  },
+  {
+    description:
+      "Low-budget cosplay photo of the champion with cardboard armor and a messy living-room background",
+  },
+  {
+    description:
+      "Baroque portrait of the player's KDA with velvet drapes and deeply judgmental lighting",
+  },
+  {
+    description:
+      "Bob Ross landscape where every happy little tree witnessed the int",
+  },
+  {
+    description:
+      "Medieval Bayeux-style tapestry of the Baron steal, complete with horses and Latin-ish captions",
+  },
+
+  // Crossover franchises (other games and anime as art direction)
+  {
+    description:
+      "Classic 90s Pokemon anime aesthetic with cel-shaded creatures, speed lines, and dramatic evolution-sequence lighting",
+  },
+  {
+    description:
+      "Pokemon trading card illustration with holographic foil, dynamic attack poses, and flavor-text grandeur",
+  },
+  {
+    description:
+      "Yu-Gi-Oh card art with gravity-defying hair, ancient Egyptian motifs, holographic shine, and attack-point drama",
+  },
+  {
+    description:
+      "Palworld-style survival-craft key art with cute-creepy creature pals, makeshift bases, and cheerful forced-labor energy",
+  },
+  {
+    description:
+      "Call of Duty campaign key art with gritty photorealism, night-vision green, and helicopter-spotlight drama",
+  },
+  {
+    description:
+      "Call of Duty Zombies poster with shambling hordes, mystery-box glow, a rundown theater, and easter-egg chalk scribbles",
+  },
+  {
+    description:
+      "Studio Ghibli background art with lush painterly skies, drifting dust motes, and cozy melancholy",
+  },
 ];

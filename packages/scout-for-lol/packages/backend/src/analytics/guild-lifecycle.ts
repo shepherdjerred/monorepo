@@ -23,8 +23,7 @@ export function memberCountBucket(memberCount: number): MemberCountBucket {
   if (memberCount <= 10) return "1-10";
   if (memberCount <= 50) return "11-50";
   if (memberCount <= 250) return "51-250";
-  if (memberCount <= 1000) return "251-1000";
-  return "1001+";
+  return memberCount <= 1000 ? "251-1000" : "1001+";
 }
 
 export function tenureBucket(installedAt: Date, removedAt: Date): TenureBucket {
@@ -32,8 +31,7 @@ export function tenureBucket(installedAt: Date, removedAt: Date): TenureBucket {
   if (days < 1) return "<1d";
   if (days < 7) return "1-6d";
   if (days < 30) return "7-29d";
-  if (days < 90) return "30-89d";
-  return "90d+";
+  return days < 90 ? "30-89d" : "90d+";
 }
 
 export function removalActivationState(input: {
@@ -43,10 +41,9 @@ export function removalActivationState(input: {
   competitions: number;
 }): RemovalActivationState {
   if (input.firstCoreOutputAt !== null) return "activated";
-  if (input.subscriptions + input.reports + input.competitions > 0) {
-    return "configured";
-  }
-  return "installed_only";
+  return input.subscriptions + input.reports + input.competitions > 0
+    ? "configured"
+    : "installed_only";
 }
 
 export function captureGuildInstalled(

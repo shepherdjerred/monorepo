@@ -20,7 +20,6 @@ import {
   isPolicyEnabled,
   listGuildsWithFlagEnabled,
 } from "#src/configuration/flags.ts";
-import { lobbyCommand } from "#src/discord/commands/lobby-definition.ts";
 import { exploreGuildCommandGuildIds } from "#src/explore/access.ts";
 import configuration from "#src/configuration.ts";
 
@@ -92,8 +91,9 @@ async function scoutGuildCommandPayload(
   guildId: string,
 ): Promise<RESTPostAPIApplicationCommandsJSONBody[]> {
   const features = await scoutGuildFeatures(guildId);
-  if (!features.ask && !features.voice) return [];
-  return [buildScoutGuildCommand(features).toJSON()];
+  return !features.ask && !features.voice
+    ? []
+    : [buildScoutGuildCommand(features).toJSON()];
 }
 
 export const guildScopedCommandGroups: GuildScopedCommandGroup[] = [
@@ -114,15 +114,6 @@ export const guildScopedCommandGroups: GuildScopedCommandGroup[] = [
     ],
     payload: [scoutGuildCommand.toJSON()],
     guildPayload: scoutGuildCommandPayload,
-  },
-  {
-    enabledGuildIds: () =>
-      listGuildsWithFlagEnabled("tournament_lobbies_enabled"),
-    isEnabled: async (guildId) =>
-      await isPolicyEnabled("tournament_lobbies_enabled", {
-        server: DiscordGuildIdSchema.parse(guildId),
-      }),
-    payload: [lobbyCommand.toJSON()],
   },
 ];
 

@@ -216,6 +216,5 @@ export function cleanRollingSrt(srtText: string): string | null {
   if (cues.length === 0) return null;
   if (!looksLikeRollingCaptions(cues)) return null;
   const collapsed = collapseRollingCaptions(cues);
-  if (collapsed.length === 0) return null;
-  return serializeSrt(collapsed);
+  return collapsed.length === 0 ? null : serializeSrt(collapsed);
 }

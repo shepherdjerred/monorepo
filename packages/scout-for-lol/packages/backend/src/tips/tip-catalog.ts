@@ -74,11 +74,6 @@ export const FEATURE_TIPS: readonly FeatureTip[] = [
     flags: ["custom_nights_enabled"],
     text: "Tip: custom nights organise an in-house lobby with balanced teams.",
   },
-  {
-    key: "tournament-lobbies",
-    flags: ["tournament_lobbies_enabled"],
-    text: "Tip: `/lobby create` runs a tournament-code custom game with full post-game reports.",
-  },
 ];
 
 /**

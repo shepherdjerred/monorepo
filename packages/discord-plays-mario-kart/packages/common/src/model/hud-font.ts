@@ -103,6 +103,7 @@ export function parseUtcTimestampMs(text: string): number | undefined {
   const h = Number(hours);
   const m = Number(minutes);
   const s = Number(seconds);
-  if (h > 23 || m > 59 || s > 59) return undefined;
-  return ((h * 60 + m) * 60 + s) * 1000 + Number(millis);
+  return h > 23 || m > 59 || s > 59
+    ? undefined
+    : ((h * 60 + m) * 60 + s) * 1000 + Number(millis);
 }

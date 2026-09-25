@@ -15,6 +15,27 @@ function database(volumeClaimTemplates: readonly unknown[]): string {
   });
 }
 
+function statefulSetMigration(name: string, syncOptions: string) {
+  return {
+    group: "apps",
+    kind: "StatefulSet",
+    namespace: "minecraft-sjerred",
+    name,
+    liveState: database([{ metadata: { name: "datadir" } }]),
+    targetState: state({
+      metadata: {
+        annotations: {
+          "argocd.argoproj.io/sync-options": syncOptions,
+        },
+      },
+      spec: {
+        serviceName: "db",
+        selector: { matchLabels: { app: "db" } },
+      },
+    }),
+  };
+}
+
 // Exactly what a chart declares for a claim template: no API-populated keys.
 const declaredClaim = {
   metadata: { name: "data" },
@@ -72,6 +93,43 @@ describe("ArgoCD apply safety", () => {
     ]);
     expect(findings).toEqual([
       "apps/StatefulSet loki/loki changes immutable /spec/volumeClaimTemplates",
+    ]);
+  });
+
+  test("allows an explicitly force-replaced resource to change immutable fields", () => {
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          namespace: "minecraft-sjerred",
+          name: "minecraft-sjerred",
+          liveState: database([{ metadata: { name: "datadir" } }]),
+          targetState: state({
+            metadata: {
+              annotations: {
+                "argocd.argoproj.io/sync-options": "Force=true, Replace=true",
+              },
+            },
+            spec: {
+              serviceName: "db",
+              selector: { matchLabels: { app: "db" } },
+            },
+          }),
+        },
+      ]),
+    ).toEqual([]);
+  });
+
+  test("requires both resource-scoped Force and Replace options", () => {
+    expect(
+      analyzeApplySafety([
+        statefulSetMigration("force-only", "Force=true"),
+        statefulSetMigration("replace-only", "Replace=true"),
+      ]),
+    ).toEqual([
+      "apps/StatefulSet minecraft-sjerred/force-only changes immutable /spec/volumeClaimTemplates",
+      "apps/StatefulSet minecraft-sjerred/replace-only changes immutable /spec/volumeClaimTemplates",
     ]);
   });
 
@@ -188,6 +246,50 @@ describe("ArgoCD apply safety", () => {
         databaseWithApiPopulatedClaim({ volumeMode: "Filesystem" }),
       ]),
     ).toEqual([]);
+  });
+});
+
+describe("ArgoCD apply safety on explicit nulls", () => {
+  test("treats a null immutable field as an omission", () => {
+    expect(
+      analyzeApplySafety([
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          namespace: "minecraft-sjerred",
+          name: "existing-claim",
+          liveState: state({
+            spec: {
+              serviceName: "minecraft-sjerred",
+              selector: { matchLabels: { app: "minecraft-sjerred" } },
+            },
+          }),
+          targetState: state({
+            spec: {
+              serviceName: "minecraft-sjerred",
+              selector: { matchLabels: { app: "minecraft-sjerred" } },
+              volumeClaimTemplates: null,
+            },
+          }),
+        },
+        {
+          group: "apps",
+          kind: "StatefulSet",
+          namespace: "minecraft-sjerred",
+          name: "removed-template",
+          liveState: database([{ metadata: { name: "datadir" } }]),
+          targetState: state({
+            spec: {
+              serviceName: "db",
+              selector: { matchLabels: { app: "db" } },
+              volumeClaimTemplates: null,
+            },
+          }),
+        },
+      ]),
+    ).toEqual([
+      "apps/StatefulSet minecraft-sjerred/removed-template changes immutable /spec/volumeClaimTemplates",
+    ]);
   });
 });
 
@@ -581,8 +683,17 @@ describe("ArgoCD probe handler safety", () => {
 // An internal image pin moving backwards is how an unmerged `version
 // commit-back` bump PR silently rolls production back: the release renders from
 // the version catalog whenever a build pushes no digests of its own.
-function workload(image: string): string {
+function workload(image: string, forceReplace = false): string {
   return state({
+    ...(forceReplace
+      ? {
+          metadata: {
+            annotations: {
+              "argocd.argoproj.io/sync-options": "Force=true,Replace=true",
+            },
+          },
+        }
+      : {}),
     spec: {
       template: {
         spec: { containers: [{ name: "worker", image }] },
@@ -591,14 +702,18 @@ function workload(image: string): string {
   });
 }
 
-function deployment(liveImage: string, targetImage: string) {
+function deployment(
+  liveImage: string,
+  targetImage: string,
+  forceReplace = false,
+) {
   return {
     group: "apps",
     kind: "Deployment",
     namespace: "temporal",
     name: "worker",
     liveState: workload(liveImage),
-    targetState: workload(targetImage),
+    targetState: workload(targetImage, forceReplace),
   };
 }
 
@@ -613,6 +728,20 @@ describe("ArgoCD internal image downgrades", () => {
         deployment(
           `${repo}:2.0.0-12684${digestA}`,
           `${repo}:2.0.0-12368${digestB}`,
+        ),
+      ]),
+    ).toEqual([
+      "apps/Deployment temporal/worker downgrades /spec/template/spec/containers/[name=worker]/image from 2.0.0-12684 to 2.0.0-12368; the version catalog is behind the running release",
+    ]);
+  });
+
+  test("still refuses an image rollback on a force-replaced resource", () => {
+    expect(
+      analyzeApplySafety([
+        deployment(
+          `${repo}:2.0.0-12684${digestA}`,
+          `${repo}:2.0.0-12368${digestB}`,
+          true,
         ),
       ]),
     ).toEqual([

@@ -228,13 +228,10 @@ export function formatDareEvidenceJson(value: unknown): string {
   const serialized = JSON.stringify(
     value,
     (key, current: unknown) => {
-      if (
-        typeof current === "number" &&
+      return typeof current === "number" &&
         (key === "skill_slot" || key === "skillSlot")
-      ) {
-        return ["Q", "W", "E", "R"][current - 1] ?? current;
-      }
-      return current;
+        ? (["Q", "W", "E", "R"][current - 1] ?? current)
+        : current;
     },
     2,
   );

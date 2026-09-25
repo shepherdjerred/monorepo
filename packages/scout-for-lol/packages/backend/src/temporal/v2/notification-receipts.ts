@@ -88,11 +88,17 @@ export const ScoutV2AttestedObjectSchema = z.strictObject({
 /**
  * Which message furniture v1's generator attached beside the report image.
  * `match-link` is the Explore "View match" button of a standard-queue report;
- * Arena and Classic reports attach nothing. Recorded as a closed name rather
- * than as the component JSON so the receipt stays readable and a component
- * v1 grows later cannot be attested under a name that misdescribes it.
+ * `match-link-mvp-vote` is that button plus community-MVP vote controls
+ * and the empty tally embed. Arena and Classic reports attach nothing.
+ * Recorded as a closed name rather than as the component JSON so the receipt
+ * stays readable and a component v1 grows later cannot be attested under a
+ * name that misdescribes it.
  */
-export const ScoutV2ReportComponentsSchema = z.enum(["match-link", "none"]);
+export const ScoutV2ReportComponentsSchema = z.enum([
+  "match-link",
+  "match-link-mvp-vote",
+  "none",
+]);
 
 /**
  * What a render receipt claims, by the KIND of notification it rendered.
@@ -186,10 +192,9 @@ export async function readNotificationArtifactV2(
   const rendered = receipts.find(
     (record) => record.receipt.kind === receiptKind,
   );
-  if (rendered?.evidence == null) {
-    return null;
-  }
-  return scoutV2NotificationRenderEvidenceCodec.parse(
-    JSON.parse(rendered.evidence),
-  );
+  return rendered?.evidence == null
+    ? null
+    : scoutV2NotificationRenderEvidenceCodec.parse(
+        JSON.parse(rendered.evidence),
+      );
 }

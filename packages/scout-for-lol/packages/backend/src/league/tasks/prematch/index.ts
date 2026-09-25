@@ -6,7 +6,7 @@ import {
 import { deliverDareSummaries } from "#src/betting/dares/presentation/notify/dare-delivery.ts";
 import { expireDareV2AcceptWindows } from "#src/betting/dares/settlement/dare-sweep-v2.ts";
 import { refreshPendingDareV2Callouts } from "#src/betting/dares/presentation/dare-callout-v2.ts";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import { closeExpiredBettingWindows } from "#src/betting/settlement/sweep.ts";
 import { closeExpiredParlayWindows } from "#src/betting/parlays/runtime/parlay-sweep.ts";
 import { activatePendingParlayMarkets } from "#src/betting/parlays/runtime/parlay-publish.ts";

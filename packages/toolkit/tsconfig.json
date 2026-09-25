@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "types": ["@types/bun"],
+    "jsx": "react-jsx",
     "noEmit": true
   },
   "include": [

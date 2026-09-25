@@ -42,14 +42,9 @@ export class SegmentClock {
     if (this.pendingPreviousPositionSeconds !== null) {
       return this.pendingPreviousPositionSeconds;
     }
-    if (this.startedAtMs === null) {
-      return null;
-    }
-    return computeElapsed(
-      this.startOffsetSeconds,
-      this.startedAtMs,
-      this.now(),
-    );
+    return this.startedAtMs === null
+      ? null
+      : computeElapsed(this.startOffsetSeconds, this.startedAtMs, this.now());
   }
 
   /**

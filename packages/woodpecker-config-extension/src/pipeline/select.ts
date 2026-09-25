@@ -12,8 +12,7 @@ function matchesAny(patterns: readonly string[], file: string): boolean {
 }
 
 function normalizeEvent(event: string): StepEvent | undefined {
-  if (event === "push" || event === "pull_request") return event;
-  return undefined;
+  return event === "push" || event === "pull_request" ? event : undefined;
 }
 
 /**
@@ -71,8 +70,9 @@ export function changedGuardMatches(
     exclude === undefined
       ? changedFiles
       : changedFiles.filter((file) => !matchesAny(exclude, file));
-  if (include === undefined) return candidates.length > 0;
-  return candidates.some((file) => matchesAny(include, file));
+  return include === undefined
+    ? candidates.length > 0
+    : candidates.some((file) => matchesAny(include, file));
 }
 
 function directlySelected(step: CiStep, context: SelectionContext): boolean {

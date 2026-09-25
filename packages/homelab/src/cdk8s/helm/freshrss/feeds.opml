@@ -37,7 +37,7 @@
       <outline text="Visual Studio Code - Code Editing. Redefined." type="rss" xmlUrl="https://code.visualstudio.com/feed.xml" htmlUrl="https://code.visualstudio.com/" frss:priority="hidden"/>
     </outline>
     <outline text="Repo Stack">
-      <outline text="Anthropic Engineering (community RSS)" type="rss" xmlUrl="https://raw.githubusercontent.com/Olshansk/rss-feeds/main/feeds/feed_anthropic_engineering.xml" htmlUrl="https://www.anthropic.com/engineering" description="Community-generated RSS feed for Anthropic's Engineering blog"/>
+      <outline text="Anthropic Engineering (community RSS)" type="rss" xmlUrl="https://cdn.jsdelivr.net/gh/Olshansk/rss-feeds@main/feeds/feed_anthropic_engineering.xml" htmlUrl="https://www.anthropic.com/engineering" description="Community-generated RSS feed for Anthropic's Engineering blog. Served via jsDelivr because raw.githubusercontent.com returns text/plain, which FreshRSS rejects as not a feed."/>
       <outline text="PostgreSQL News" type="rss" xmlUrl="https://www.postgresql.org/news/pgsql.rss" htmlUrl="https://www.postgresql.org/about/news/"/>
       <outline text="SQLite Releases" type="rss" xmlUrl="https://sqlite.org/src/timeline.rss?tag=release" htmlUrl="https://sqlite.org/changes.html"/>
       <outline text="DuckDB Blog" type="rss" xmlUrl="https://duckdb.org/feed.xml" htmlUrl="https://duckdb.org/news/"/>

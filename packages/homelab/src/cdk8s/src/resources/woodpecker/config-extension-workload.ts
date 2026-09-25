@@ -14,6 +14,10 @@ import {
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import {
+  dnsEgressRule,
+  externalHttpsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import {
   setRevisionHistoryLimit,
   withCommonProps,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
@@ -115,26 +119,12 @@ export function createWoodpeckerConfigExtension(chart: Chart): void {
         },
       ],
       egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
-        {
-          // The server's own API (to resolve the last green commit) and
-          // raw.githubusercontent.com (to read the committed image digests at
-          // the commit being built). Both are HTTPS on the public internet;
-          // GitHub's ranges change, so a CIDR list would silently rot.
-          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
-        },
+        dnsEgressRule(),
+        // The server's own API (to resolve the last green commit) and
+        // raw.githubusercontent.com (to read the committed image digests at
+        // the commit being built). Both are HTTPS on the public internet;
+        // GitHub's ranges change, so a CIDR list would silently rot.
+        externalHttpsEgressRule(),
       ],
     },
   });

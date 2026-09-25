@@ -11,6 +11,7 @@ import {
   ReportIdSchema,
 } from "@scout-for-lol/data";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
+import { seedDesignAuditClashHistory } from "#src/database/design-audit-clash-fixture.ts";
 import { seedDesignAuditPlayerProfile } from "#src/database/design-audit-player-fixture.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 
@@ -221,6 +222,7 @@ export async function seedDesignAuditDatabase(
       region,
       now,
     });
+    await seedDesignAuditClashHistory({ prisma, puuid, region });
 
     await prisma.subscription.create({
       data: {
@@ -364,11 +366,12 @@ export async function seedDesignAuditDatabase(
           matchId: "design-audit-match-1",
           puuid: "f".repeat(78),
           queue: "solo",
-          win: true,
+          win: false,
           surrendered: false,
           kills: 20,
           deaths: 4,
           assists: 6,
+          teamId: 200,
           gameCreationAt: new Date("2026-01-01T12:00:00.000Z"),
         },
         {
@@ -377,11 +380,12 @@ export async function seedDesignAuditDatabase(
           matchId: "design-audit-match-2",
           puuid: "g".repeat(78),
           queue: "flex",
-          win: true,
+          win: false,
           surrendered: false,
           kills: 24,
           deaths: 5,
           assists: 9,
+          teamId: 200,
           gameCreationAt: new Date("2025-12-30T18:00:00.000Z"),
         },
         {
@@ -390,11 +394,12 @@ export async function seedDesignAuditDatabase(
           matchId: "design-audit-match-3",
           puuid: "h".repeat(78),
           queue: "solo",
-          win: false,
+          win: true,
           surrendered: false,
           kills: 18,
           deaths: 8,
           assists: 5,
+          teamId: 200,
           gameCreationAt: new Date("2025-12-29T20:00:00.000Z"),
         },
         {
@@ -403,11 +408,12 @@ export async function seedDesignAuditDatabase(
           matchId: "design-audit-match-4",
           puuid: "i".repeat(78),
           queue: "flex",
-          win: false,
+          win: true,
           surrendered: false,
           kills: 22,
           deaths: 6,
           assists: 7,
+          teamId: 200,
           gameCreationAt: new Date("2025-12-28T21:00:00.000Z"),
         },
       ],

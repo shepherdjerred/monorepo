@@ -28,10 +28,9 @@ export function findSurrenderLeaders(
       surrenderRate: p.surrenders / p.totalGames,
     }))
     .toSorted((a, b) => {
-      if (b.surrenderRate !== a.surrenderRate) {
-        return b.surrenderRate - a.surrenderRate;
-      }
-      return b.surrenders - a.surrenders;
+      return b.surrenderRate === a.surrenderRate
+        ? b.surrenders - a.surrenders
+        : b.surrenderRate - a.surrenderRate;
     });
 
   if (playersWithSurrenders.length === 0) {

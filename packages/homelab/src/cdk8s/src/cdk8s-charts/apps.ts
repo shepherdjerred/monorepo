@@ -34,7 +34,6 @@ import { createAllGrafanaDashboards } from "@shepherdjerred/homelab/cdk8s/src/re
 import { createDdnsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/networking/ddns.ts";
 import { createAppsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/apps.ts";
 import { createScoutBetaApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/scout-beta.ts";
-import { createScoutEvalsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/scout-evals.ts";
 import { createScoutProdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/scout-prod.ts";
 import { createStarlightKarmaBotBetaApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/starlight-karma-bot-beta.ts";
 import { createStarlightKarmaBotProdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/starlight-karma-bot-prod.ts";
@@ -59,6 +58,7 @@ import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo
 import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createCpuPowerCap } from "@shepherdjerred/homelab/cdk8s/src/resources/cpu-power-cap.ts";
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/bugsink.ts";
+import { createPhoenixApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/phoenix.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/tasknotes.ts";
 import { createRelayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/relay.ts";
 import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/temporal.ts";
@@ -144,7 +144,6 @@ export async function createAppsChart(app: App) {
   // Per-service ArgoCD apps
   createDdnsApp(chart);
   createScoutBetaApp(chart);
-  createScoutEvalsApp(chart);
   createScoutProdApp(chart);
   createStarlightKarmaBotBetaApp(chart);
   createStarlightKarmaBotProdApp(chart);
@@ -173,6 +172,7 @@ export async function createAppsChart(app: App) {
   createGickupApp(chart);
   createGrafanaDbApp(chart);
   createBugsinkApp(chart);
+  createPhoenixApp(chart);
   createTasknotesApp(chart);
   createRelayApp(chart);
   createTemporalApp(chart);

@@ -87,6 +87,7 @@ export class VoiceAssistantSession {
     this.identity = {
       guildId: options.guildId ?? "offline-guild",
       channelId: options.channelId ?? "offline-channel",
+      sessionId: crypto.randomUUID(),
     };
     this.telemetry = new VoiceSessionTelemetry(this.identity);
     this.captureManager = options.captureManager;
@@ -110,6 +111,7 @@ export class VoiceAssistantSession {
         options.captureManager?.begin({
           guildId: this.identity.guildId,
           channelId: this.identity.channelId,
+          sessionId: this.identity.sessionId,
           ...candidate,
         }) ?? NOOP_VOICE_ATTEMPT_OBSERVER.begin(),
       onWake: () => {
@@ -179,13 +181,8 @@ export class VoiceAssistantSession {
                   await speakClip(
                     options.streamer,
                     options.feedbackClips.retry,
+                    turn.attempt,
                   );
-                  turn.attempt.reply({
-                    outcome: "local-retry-clip",
-                    packets: 0,
-                    bytes: options.feedbackClips.retry.byteLength,
-                    durationMs: 0,
-                  });
                 } finally {
                   release();
                 }
@@ -312,7 +309,11 @@ export class VoiceAssistantSession {
     const previousIdentity = this.identity;
     this.captureManager?.closeSession(previousIdentity);
     this.telemetry.close();
-    this.identity = { guildId: previousIdentity.guildId, channelId };
+    this.identity = {
+      guildId: previousIdentity.guildId,
+      channelId,
+      sessionId: previousIdentity.sessionId,
+    };
     this.telemetry = new VoiceSessionTelemetry(this.identity);
     this.streamer.setVoiceReceiveObserver(this.telemetry.receiveObserver);
   }

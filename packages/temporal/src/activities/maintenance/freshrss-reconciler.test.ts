@@ -48,6 +48,9 @@ class MockFreshRssApi {
   malformedList = false;
   editStatus = 200;
   convergeFilters = true;
+  /** Feed URLs FreshRSS will refuse to subscribe, as it does for a URL whose
+   *  content-type is not a feed type. */
+  readonly refusedSubscribeUrls = new Set<string>();
 
   constructor(subscriptions: MockSubscription[]) {
     this.subscriptions = structuredClone(subscriptions);
@@ -68,16 +71,16 @@ class MockFreshRssApi {
     }
     if (url.pathname.endsWith("/token")) return new Response("test-token");
     if (url.pathname.endsWith("/subscription/list")) {
-      if (this.malformedList) return Response.json({ wrong: [] });
-      return Response.json({ subscriptions: this.subscriptions });
+      return this.malformedList
+        ? Response.json({ wrong: [] })
+        : Response.json({ subscriptions: this.subscriptions });
     }
     if (url.pathname.endsWith("/subscription/export")) {
       return this.#export();
     }
-    if (url.pathname.endsWith("/subscription/edit")) {
-      return this.#edit(url, init);
-    }
-    return new Response("Not Found", { status: 404 });
+    return url.pathname.endsWith("/subscription/edit")
+      ? this.#edit(url, init)
+      : new Response("Not Found", { status: 404 });
   };
 
   #export(): Response {
@@ -107,6 +110,23 @@ class MockFreshRssApi {
     return new Response(`<opml><body>${outlines}</body></opml>`);
   }
 
+  #subscribe(id: string, body: URLSearchParams): Response {
+    const feedUrl = id.replace(/^feed\//u, "");
+    if (this.refusedSubscribeUrls.has(feedUrl))
+      return new Response("Bad Request", { status: 400 });
+    const title = body.get("t");
+    const label = body.get("a")?.replace("user/-/label/", "");
+    if (title === null || label === undefined)
+      return new Response("Bad Request", { status: 400 });
+    this.subscriptions.push({
+      id,
+      title,
+      url: feedUrl,
+      categories: [category(label)],
+    });
+    return new Response("OK");
+  }
+
   async #edit(url: URL, init: RequestInit | undefined): Promise<Response> {
     if (this.editStatus !== 200)
       return new Response("Bad Request", { status: this.editStatus });
@@ -116,20 +136,7 @@ class MockFreshRssApi {
     const action = body.get("ac");
     if (id === null || action === null)
       return new Response("Bad Request", { status: 400 });
-    if (action === "subscribe") {
-      const feedUrl = id.replace(/^feed\//, "");
-      const title = body.get("t");
-      const label = body.get("a")?.replace("user/-/label/", "");
-      if (title === null || label === undefined)
-        return new Response("Bad Request", { status: 400 });
-      this.subscriptions.push({
-        id,
-        title,
-        url: feedUrl,
-        categories: [category(label)],
-      });
-      return new Response("OK");
-    }
+    if (action === "subscribe") return this.#subscribe(id, body);
     const index = this.subscriptions.findIndex(
       (subscription) => subscription.id === id,
     );
@@ -200,6 +207,32 @@ describe("FreshRSS reconciler", () => {
         (subscription) => subscription.categories[0]?.label === "Repo Stack",
       ),
     ).toHaveLength(2);
+  });
+
+  test("reconciles the other feeds when FreshRSS refuses one", async () => {
+    // FreshRSS rejects a URL it cannot read as a feed — a community mirror
+    // served as text/plain, say. Aborting there left every later feed
+    // unreconciled for as long as the bad URL stayed in the manifest, and the
+    // failure only ever named the first refusal.
+    const api = new MockFreshRssApi([]);
+    api.refusedSubscribeUrls.add(BUN_RELEASES_URL);
+
+    await expect(reconcile(api)).rejects.toThrow(
+      new RegExp(
+        `refused 1 of 2.*${BUN_RELEASES_URL.replaceAll(/[.*+?^${}()|[\]\\]/gu, String.raw`\$&`)}`,
+        "su",
+      ),
+    );
+
+    // The refused feed is absent, and the one FreshRSS accepted is fully
+    // reconciled rather than collateral damage.
+    const managed = api.subscriptions.filter(
+      (subscription) => subscription.categories[0]?.label === "Repo Stack",
+    );
+    expect(managed.map((subscription) => subscription.url)).toEqual([
+      TYPESCRIPT_BLOG_URL,
+    ]);
+    expect(managed[0]?.title).toBe("TypeScript Blog");
   });
 
   test("moves existing desired feeds and applies the desired title", async () => {

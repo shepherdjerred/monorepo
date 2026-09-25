@@ -8,15 +8,6 @@ import { pendingDareV2CalloutRefresh } from "#src/betting/dares/presentation/dar
 import type { DareTimelineEvidenceV2 } from "#src/betting/dares/evaluation/dare-evaluator-v2.ts";
 import { dareEvaluatorImplementationV2 } from "#src/betting/dares/evaluation/dare-evaluator-registry-v2.ts";
 import type { DareMatchEvidenceV2 } from "#src/betting/dares/evaluation/dare-evidence-v2.ts";
-import {
-  dareV2MoneyFactsInTransaction,
-  payDareV2TargetsInTransaction,
-  refundDareV2ContributionsInTransaction,
-} from "#src/betting/dares/settlement/dare-ledger-v2.ts";
-import type {
-  DareFinalityV2,
-  DareProofV2,
-} from "#src/betting/dares/evaluation/dare-proof-v2.ts";
 import { collectDareV2Batch } from "#src/betting/dares/settlement/dare-settle-batch-v2.ts";
 import {
   dareV2EvidenceCreateData,
@@ -28,7 +19,7 @@ import {
   type DareV2SettlementSummary,
 } from "#src/betting/dares/settlement/dare-settle-types-v2.ts";
 import { settleDareV2OrVoidOnStorageOverflow } from "#src/betting/dares/settlement/dare-settle-overflow-v2.ts";
-import { claimActiveDareV2Settlement } from "#src/betting/dares/settlement/dare-settlement-claim-v2.ts";
+import { resolveFinalDareV2 } from "#src/betting/dares/settlement/dare-resolution-v2.ts";
 import {
   captureDareSqlV3ForMatch,
   settleDareSqlV3AtDeadline,
@@ -49,10 +40,9 @@ import {
   type RelationalDareContract,
 } from "#src/betting/dares/dare-v2-common.ts";
 import { voidDareV2WithFullRefund } from "#src/betting/dares/settlement/dare-void-v2.ts";
-import {
-  enqueueMaterialDareProgressNotification,
-  enqueueTerminalDareNotification,
-} from "#src/betting/dares/presentation/notify/dare-notification-production.ts";
+import { enqueueMaterialDareProgressNotification } from "#src/betting/dares/presentation/notify/dare-notification-production.ts";
+import { announceOrWithholdDare } from "#src/betting/dares/settlement/dare-announcement.ts";
+import type { DareNotificationDisposition } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
 import {
   prisma,
   type Db,
@@ -61,107 +51,6 @@ import {
 type ActiveDareV2Row = Prisma.BucksDareV2GetPayload<{
   include: { targets: true };
 }>;
-async function freshFacts(
-  tx: Db,
-  input: {
-    dareId: number;
-    matchId?: string | undefined;
-    serverId: string;
-    potTotal: number;
-    plainLanguage: string;
-    targetAliases: string[];
-  },
-) {
-  return await dareV2MoneyFactsInTransaction(tx, {
-    contractVersion: 2,
-    dareId: input.dareId,
-    ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
-    serverId: input.serverId,
-    potTotal: input.potTotal,
-    targetAliases: input.targetAliases,
-    conditionSummary: input.plainLanguage,
-  });
-}
-
-async function resolveFinalDareV2(
-  tx: Db,
-  input: {
-    dare: {
-      id: number;
-      serverId: string;
-      potTotal: number;
-      targets: readonly {
-        id: number;
-        targetKey: string;
-        discordId: string;
-        alias: string;
-        bucksAccountId: number | null;
-        acceptedAt: Date | null;
-      }[];
-    };
-    contract: DareContractV2;
-    matchId?: string | undefined;
-    finality: DareFinalityV2;
-    proof: DareProofV2 | null;
-    now: Date;
-  },
-): Promise<"achieved" | "unachieved" | "voided"> {
-  const value = input.finality.value;
-  const resolution = await claimActiveDareV2Settlement(tx, {
-    dareId: input.dare.id,
-    value,
-    proof: input.proof,
-    now: input.now,
-    contractVersion: "v2",
-    refreshCallout: false,
-  });
-  const facts = await freshFacts(tx, {
-    dareId: input.dare.id,
-    matchId: input.matchId,
-    serverId: input.dare.serverId,
-    potTotal: input.dare.potTotal,
-    plainLanguage: input.contract.plainLanguage,
-    targetAliases: input.dare.targets.map((target) => target.alias),
-  });
-  if (value === true) {
-    if (input.proof === null)
-      throw new Error("An achieved Dare v2 has no proof.");
-    const targetKeys = new Set(input.proof.targetKeys);
-    const payees = input.dare.targets
-      .filter((target) => targetKeys.has(target.targetKey))
-      .map((target) => {
-        if (target.bucksAccountId === null || target.acceptedAt === null) {
-          throw new Error(
-            `Achieved Dare v2 target ${target.id.toString()} is not accepted.`,
-          );
-        }
-        return {
-          id: target.id,
-          discordId: target.discordId,
-          alias: target.alias,
-          bucksAccountId: target.bucksAccountId,
-        };
-      });
-    await payDareV2TargetsInTransaction(tx, { facts, targets: payees });
-  } else {
-    await refundDareV2ContributionsInTransaction(tx, {
-      facts,
-      resolution: value === null ? "voided" : "unachieved",
-      withCut: value === false,
-      ...(value === null ? { voidReason: "missing_evidence" } : {}),
-    });
-  }
-  await enqueueTerminalDareNotification(tx, {
-    dareId: input.dare.id,
-    revision: input.contract.revision,
-    potTotal: input.dare.potTotal,
-    resolution,
-    ...(input.matchId === undefined ? {} : { matchId: input.matchId }),
-    now: input.now,
-  });
-  return resolution;
-}
-
 async function captureOneDareV2(
   tx: Db,
   input: {
@@ -169,6 +58,7 @@ async function captureOneDareV2(
     contract: DareContractV2;
     matchEvidence: DareMatchEvidenceV2;
     now: Date;
+    notify: DareNotificationDisposition;
   },
 ): Promise<DareV2SettlementSummary | undefined> {
   const claim = await tx.bucksDareV2.updateMany({
@@ -223,17 +113,27 @@ async function captureOneDareV2(
         finality,
         proof,
         now: input.now,
+        notify: input.notify,
       })
     : "captured";
   if (resolution === "captured") {
-    await enqueueMaterialDareProgressNotification(tx, {
-      dareId: input.dare.id,
-      contract: input.contract,
-      evidence,
-      matchId: input.matchEvidence.matchId,
-      finality,
-      now: input.now,
-    });
+    // A capture is not final, but it still SAYS something: progress toward a
+    // Dare, and a callout this capture just marked for refresh. A match owed
+    // no public delivery owes neither.
+    await announceOrWithholdDare(
+      tx,
+      { dareId: input.dare.id, notify: input.notify },
+      async () => {
+        await enqueueMaterialDareProgressNotification(tx, {
+          dareId: input.dare.id,
+          contract: input.contract,
+          evidence,
+          matchId: input.matchEvidence.matchId,
+          finality,
+          now: input.now,
+        });
+      },
+    );
   }
   return {
     contractVersion: 2,
@@ -262,7 +162,7 @@ async function inspectStoredContract(
     row,
     "invalid_contract",
     prismaClient,
-    now,
+    { now },
   );
   return {
     kind: "invalid",
@@ -287,9 +187,12 @@ export async function settleDaresV2ForMatch(
   options: {
     now?: Date | undefined;
     timeline?: DareTimelineEvidenceV2 | undefined;
+    /** See `SettlementAnnouncementSink.mayEnqueueDareNotification`. */
+    notify?: DareNotificationDisposition | undefined;
   } = {},
 ): Promise<DareV2SettlementSummary[]> {
   const now = options.now ?? new Date();
+  const notify = options.notify ?? "enqueue";
   const context = relationalDareMatchContext(matchData);
   if (context === null) return [];
   const rows = await prismaClient.bucksDareV2.findMany({
@@ -364,6 +267,7 @@ export async function settleDaresV2ForMatch(
           matchData,
           prismaClient,
           now,
+          notify,
         });
       }
       const plan = DareStoredPlanV2Schema.parse(contract.compiledPlan);
@@ -384,6 +288,7 @@ export async function settleDaresV2ForMatch(
           prismaClient,
           now,
           matchId: matchData.metadata.matchId,
+          notify,
         },
         async () =>
           await prismaClient.$transaction(
@@ -393,6 +298,7 @@ export async function settleDaresV2ForMatch(
                 contract,
                 matchEvidence,
                 now,
+                notify,
               }),
           ),
       );
@@ -427,14 +333,15 @@ export async function settleActiveDareV2AtBound(
   const contract = parseRelationalDareContract(dare.contractJson);
   if (contract.version === 3) {
     return await settleDareV2OrVoidOnStorageOverflow(
-      { dare, prismaClient, now },
+      // A deadline bound delivers no match, so nothing here is owed silence.
+      { dare, prismaClient, now, notify: "enqueue" },
       async () =>
         await settleDareSqlV3AtDeadline(dare, contract, prismaClient, now),
     );
   }
   const evaluator = dareEvaluatorImplementationV2(contract.evaluatorVersion);
   return await settleDareV2OrVoidOnStorageOverflow(
-    { dare, prismaClient, now },
+    { dare, prismaClient, now, notify: "enqueue" },
     async () =>
       await prismaClient.$transaction(async (tx) => {
         const claim = await tx.bucksDareV2.updateMany({
@@ -470,6 +377,8 @@ export async function settleActiveDareV2AtBound(
           finality,
           proof,
           now,
+          // No match is being delivered here, so nothing is owed silence.
+          notify: "enqueue",
         });
         return {
           contractVersion: 2,

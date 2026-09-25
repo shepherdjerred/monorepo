@@ -48,6 +48,9 @@ vi.mock("#src/report-lake/receipted-staging.ts", () => ({
 vi.mock("#src/temporal/v2/prematch/prematch-intents.ts", () => ({
   recordPrematchDeliveryIntentsV2: mocks.intents,
 }));
+vi.mock("#src/league/clash/sighting.ts", () => ({
+  recordClashPrematchSightings: () => Promise.resolve(),
+}));
 vi.mock("#src/temporal/v2/prematch/prematch-resume.ts", () => ({
   resumeArchivedPrematchContext: mocks.resume,
 }));

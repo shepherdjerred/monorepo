@@ -21,6 +21,7 @@ test("AI SDK spans are children of a repository-owned GenAI parent", () => {
     modelId: "openai/text-embedding-3-small",
     value: "hello",
     maxRetries: 2,
+    runtimeContext: {},
     headers: undefined,
     providerOptions: undefined,
     functionId: "test.embedding",
@@ -54,6 +55,7 @@ test("AI SDK spans are children of a repository-owned GenAI parent", () => {
     embedding: [0.1, 0.2],
     usage: { tokens: 1 },
     warnings: [],
+    runtimeContext: {},
     providerMetadata: undefined,
     response: undefined,
   });
@@ -98,6 +100,7 @@ test("the active subject lands on the span that carries usage", async () => {
         modelId: "openai/text-embedding-3-small",
         value: "hello",
         maxRetries: 2,
+        runtimeContext: {},
         headers: undefined,
         providerOptions: undefined,
         functionId: "scout.bucks-ask",
@@ -131,6 +134,7 @@ test("the active subject lands on the span that carries usage", async () => {
         embedding: [0.1, 0.2],
         usage: { tokens: 1 },
         warnings: [],
+        runtimeContext: {},
         providerMetadata: undefined,
         response: undefined,
       });
@@ -187,6 +191,7 @@ test("a call with no enclosing subject span carries no subject attributes", () =
     modelId: "openai/text-embedding-3-small",
     value: "hello",
     maxRetries: 2,
+    runtimeContext: {},
     headers: undefined,
     providerOptions: undefined,
     functionId: "homelab-audit-synthesis",
@@ -202,6 +207,7 @@ test("a call with no enclosing subject span carries no subject attributes", () =
     embedding: [0.1, 0.2],
     usage: { tokens: 1 },
     warnings: [],
+    runtimeContext: {},
     providerMetadata: undefined,
     response: undefined,
   });

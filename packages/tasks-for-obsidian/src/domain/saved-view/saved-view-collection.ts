@@ -110,57 +110,39 @@ export function filterTasksForSavedView(
   dateOnly(referenceDay, "reference");
 
   return tasks.filter((task) => {
-    if (!matchesCompletion(task, query)) return false;
-    if (
-      query.projects.length > 0 &&
-      !task.projects.some((project) =>
-        query.projects.some((wanted) =>
-          projectMatches(String(project), wanted),
-        ),
-      )
-    ) {
-      return false;
-    }
-    if (
-      query.contexts.length > 0 &&
-      !task.contexts.some((context) => query.contexts.includes(String(context)))
-    ) {
-      return false;
-    }
-    if (
-      query.tags.length > 0 &&
-      !task.tags.some((tag) => query.tags.includes(String(tag)))
-    ) {
-      return false;
-    }
-    if (query.statuses.length > 0 && !query.statuses.includes(task.status)) {
-      return false;
-    }
-    if (
-      query.priorities.length > 0 &&
-      !query.priorities.includes(task.priority)
-    ) {
-      return false;
-    }
-    if (!matchesText(task, query.text)) return false;
-    if (query.missingFields.some((field) => !hasMissingField(task, field))) {
-      return false;
-    }
-    if (
-      !isWithinRelativeRange(
+    return (
+      matchesCompletion(task, query) &&
+      !(
+        query.projects.length > 0 &&
+        !task.projects.some((project) =>
+          query.projects.some((wanted) =>
+            projectMatches(String(project), wanted),
+          ),
+        )
+      ) &&
+      !(
+        query.contexts.length > 0 &&
+        !task.contexts.some((context) =>
+          query.contexts.includes(String(context)),
+        )
+      ) &&
+      !(
+        query.tags.length > 0 &&
+        !task.tags.some((tag) => query.tags.includes(String(tag)))
+      ) &&
+      !(query.statuses.length > 0 && !query.statuses.includes(task.status)) &&
+      !(
+        query.priorities.length > 0 && !query.priorities.includes(task.priority)
+      ) &&
+      matchesText(task, query.text) &&
+      !query.missingFields.some((field) => !hasMissingField(task, field)) &&
+      isWithinRelativeRange(
         task.scheduled,
         query.scheduled,
         referenceDay,
         "scheduled",
-      )
-    ) {
-      return false;
-    }
-    return isWithinRelativeRange(
-      task.due,
-      query.deadline,
-      referenceDay,
-      "deadline",
+      ) &&
+      isWithinRelativeRange(task.due, query.deadline, referenceDay, "deadline")
     );
   });
 }
@@ -171,8 +153,7 @@ function compareOptionalStrings(
 ): number {
   if (a === undefined && b === undefined) return 0;
   if (a === undefined) return 1;
-  if (b === undefined) return -1;
-  return compareDateValues(a, b);
+  return b === undefined ? -1 : compareDateValues(a, b);
 }
 
 function compareBySortField(a: Task, b: Task, sort: SavedViewSort): number {
@@ -199,10 +180,10 @@ export function sortTasksForSavedView(
   const direction = sort.direction === "ascending" ? 1 : -1;
   return [...tasks].sort((a, b) => {
     const compared = compareBySortField(a, b, sort);
-    if (compared !== 0) return direction * compared;
-    return (
-      a.title.localeCompare(b.title) || String(a.id).localeCompare(String(b.id))
-    );
+    return compared === 0
+      ? a.title.localeCompare(b.title) ||
+          String(a.id).localeCompare(String(b.id))
+      : direction * compared;
   });
 }
 

@@ -7,7 +7,7 @@ sidebar:
 
 Brim keeps subscription usage visible without turning provider-specific web
 usage pages into a dashboard. Claude Code, Codex, Google Antigravity, Cursor,
-Grok, and Kimi Code are its standard providers.
+Grok, Kimi Code, and Meta Muse are its standard providers.
 The authenticated HTTP providers use
 [typed credential discovery](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Credentials.swift).
 Its [provider-independent model](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Domain.swift)
@@ -21,6 +21,7 @@ flowchart LR
   C[Local credentials or Keychain] --> A[Authenticated HTTP adapters]
   G[Signed-in Antigravity CLI] --> A
   S[Cursor local session] --> A
+  M[Signed-in Muse OAuth login] --> A
   A --> V[Validated UsageSnapshot]
   V --> P[(Application Support cache)]
   V --> U[MenuBarExtra popover]
@@ -35,7 +36,8 @@ reports configured OpenRouter, OpenAI, and Anthropic usage, while local quota
 samples power the subscription History graph.
 The popover includes a personal subscription-spend reminder: $200/month each
 for Claude Code and Codex, $20/month each for Google AI Pro and Cursor Pro,
-$30/month for Grok, and $40/month for Kimi Code ($510/month total). These
+$30/month for Grok, $40/month for Kimi Code, and $15/month for Meta Muse
+($525/month total). These
 figures are reminders, not provider billing data.
 The reminder values live in the
 [subscription plan model](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Domain.swift).
@@ -128,6 +130,19 @@ Those boundaries are implemented by the
 [Kimi adapter](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/KimiProvider.swift)
 and read-only [credential store](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Credentials.swift).
 
+Meta Muse means the Muse Code subscription, not Meta Model API token spend.
+Brim reuses the signed-in `muse` OAuth login and calls the same subscription
+endpoint the CLI itself uses at startup (`POST
+https://api.meta.ai/muse-code/key`), keeping only the returned `subs_usage`
+rolling and weekly windows. The CLI remains the credential owner: Brim never
+rotates, refreshes, logs, or persists the Meta token, and an expired token
+surfaces as a sign-in state. An API-key login carries no subscription, and
+over-quota percentages above 100 are shown as fully used with a note. The
+keychain token is cached in memory and re-read only when the auth file changes
+or the cached token is rejected; a failed read backs off for an hour. Those
+boundaries are implemented by the
+[Muse adapter](https://github.com/shepherdjerred/monorepo/blob/029db3520e63631d4c17457072a2fffe1e524b3a/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Providers/MuseProvider.swift).
+
 ## Runtime behavior
 
 All enabled providers refresh in parallel every five minutes by default, with
@@ -141,12 +156,27 @@ See the [polling coordinator](https://github.com/shepherdjerred/monorepo/blob/23
 [HTTP client](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Networking.swift),
 and [snapshot store](https://github.com/shepherdjerred/monorepo/blob/231bac375d228b685e12308a1d02d243cb3d1481/packages/macos-ai-subscription-tracker/Sources/QuotaBarCore/Persistence.swift).
 
+That snapshot cache also feeds `toolkit brim`, which picks a provider for a
+new session instead of displaying quotas. It withholds providers whose 5-hour
+window is nearly spent, then orders the rest by budget consumption with pacing
+taken into account. Multi-pool providers rank by their tightest pool, and
+snapshots with no usable quota evidence stay unavailable. Weekly and monthly
+budgets rank together, each labeled with its own kind. The winner launches
+through the user's interactive fish function or abbreviation expansion —
+abbreviations never expand inside `fish -i -c`, so brim resolves the
+expansion first — and a spawned session carries the same flags and
+credential scrubbing as a hand-typed command. Providers without a fish word
+fall back to their bare binary (Cursor via `cursor-agent`, Kimi via `kimi`
+once installed). The
+ranking and fish resolution live in the
+[brim toolkit library](https://github.com/shepherdjerred/monorepo/tree/main/packages/toolkit/src/lib/brim).
+
 The menu-bar symbol and text status use the lowest remaining quota: healthy
 above 20%, warning from 5% through 20%, critical below 5%, and unavailable for
 stale or unauthenticated data. Settings controls provider enablement, polling,
 launch at login, optional credentials for supported providers, and links to the
 provider usage pages. Optional overrides are stored in the macOS Keychain and
-are not included in the snapshot cache. Antigravity and Cursor cannot be
+are not included in the snapshot cache. Antigravity, Cursor, and Muse cannot be
 overridden because their respective local applications own those sign-ins;
 Grok fields are for grok CLI subscription credentials, not xAI developer API
 keys. Kimi Code fields are for subscription credentials, not Moonshot developer

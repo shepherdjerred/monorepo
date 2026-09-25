@@ -56,8 +56,7 @@ export function deriveOutputName(expr: ScoutQlExprAst): string {
   if (subject === undefined) {
     return sanitize(expr.name);
   }
-  if (expr.name === "per_minute") {
-    return sanitize(`${subject}_per_minute`);
-  }
-  return sanitize(`${expr.name}_${subject}`);
+  return expr.name === "per_minute"
+    ? sanitize(`${subject}_per_minute`)
+    : sanitize(`${expr.name}_${subject}`);
 }

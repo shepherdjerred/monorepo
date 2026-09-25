@@ -14,6 +14,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@scout-for-lol/design-system/components/table";
 import { ChampionIcon } from "#src/components/match/champion-icon.tsx";
 import {
   ChampionComparisonTable,
@@ -32,6 +40,7 @@ import { usePlayerProfileUrlState } from "#src/lib/player/use-player-profile-url
 
 type Cursor = { offset: number };
 type ComparisonOutput = RouterOutputs["consumerChampion"]["compare"];
+type MasteryOutput = RouterOutputs["consumerChampion"]["masteryLeaderboard"];
 
 function parseComparisonSort(value: string): ChampionComparisonSort {
   const parsed = ChampionComparisonSortSchema.safeParse(value);
@@ -120,6 +129,12 @@ export function ConsumerChampion() {
     sort,
     guildIds,
   });
+  const mastery = useQuery(
+    trpc.consumerChampion.masteryLeaderboard.queryOptions({
+      championId,
+      ...(guildIds === undefined ? {} : { guildIds }),
+    }),
+  );
   const qualified = useQuery(
     trpc.consumerChampion.compare.queryOptions(
       cohortInput(commonInput, "qualified", qualifiedCursors[qualifiedPage]),
@@ -229,6 +244,15 @@ export function ConsumerChampion() {
         }}
       />
 
+      <MasteryLeaderboard
+        data={
+          mastery.isSuccess && !mastery.isFetching ? mastery.data : undefined
+        }
+        pending={mastery.isPending}
+        failed={mastery.isError}
+        onRetry={() => void mastery.refetch()}
+      />
+
       <div className="flex flex-wrap items-end gap-6 rounded-lg border bg-card p-4">
         <fieldset className="space-y-2">
           <legend className="text-sm font-medium">Guilds</legend>
@@ -321,6 +345,92 @@ export function ConsumerChampion() {
         }}
       />
     </PageShell>
+  );
+}
+
+function formatMasteryPoints(points: number): string {
+  return new Intl.NumberFormat(undefined, {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(points);
+}
+
+function MasteryLeaderboard(props: {
+  data: MasteryOutput | undefined;
+  pending: boolean;
+  failed: boolean;
+  onRetry: () => void;
+}) {
+  return (
+    <section className="space-y-3">
+      <PageSectionHeading
+        title="Mastery leaderboard"
+        description="All-time champion familiarity from Riot mastery. This is separate from recent match performance."
+      />
+      {props.pending ? (
+        <p className="text-sm text-scout-subtle">Loading mastery…</p>
+      ) : props.failed ? (
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-scout-subtle">
+            Mastery is temporarily unavailable.
+          </p>
+          <Button size="sm" variant="outline" onClick={props.onRetry}>
+            Retry
+          </Button>
+        </div>
+      ) : props.data === undefined || props.data.rows.length === 0 ? (
+        <p className="text-sm text-scout-subtle">
+          No cached mastery exists for this champion yet.
+        </p>
+      ) : (
+        <div className="space-y-2 overflow-x-auto">
+          <p className="text-xs text-scout-subtle">
+            Cached for {props.data.cachedAccountCount.toString()} of{" "}
+            {props.data.accountCount.toString()} tracked accounts.
+          </p>
+          <Table>
+            <caption className="sr-only">Champion mastery leaderboard</caption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Player</TableHead>
+                <TableHead>Guild</TableHead>
+                <TableHead className="text-right">Mastery</TableHead>
+                <TableHead className="text-right">Points</TableHead>
+                <TableHead className="text-right">Updated</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {props.data.rows.map((row) => (
+                <TableRow
+                  key={`${row.guild.guildId}:${row.playerId.toString()}`}
+                  className={row.viewerLinked ? "bg-primary/10" : "border-b"}
+                >
+                  <TableCell className="font-medium">
+                    <Link to={`/players/${row.playerId.toString()}`}>
+                      {row.alias}
+                    </Link>
+                    {row.viewerLinked && (
+                      <span className="ml-2 text-xs text-primary">You</span>
+                    )}
+                  </TableCell>
+                  <TableCell>{row.guild.name}</TableCell>
+                  <TableCell className="text-right">
+                    M{row.level.toString()}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {formatMasteryPoints(row.points)}
+                  </TableCell>
+                  <TableCell className="text-right text-xs text-scout-subtle">
+                    {row.freshness === "stale" ? "Last known " : ""}
+                    {new Date(row.fetchedAt).toLocaleDateString()}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+    </section>
   );
 }
 

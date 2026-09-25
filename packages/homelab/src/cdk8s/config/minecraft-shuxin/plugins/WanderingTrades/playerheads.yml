@@ -45,14 +45,14 @@ headTrade:
       amount: 1
       # The following value was serialized from an in-game item and is not meant to be human-readable or editable. As long as it is present other options for this item will be ignored.
       itemStackAsBytes: !!binary |-
-        H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQ2sbBwJSZwiCYm5mXmlyUmFZilZqbWpSYk8LMwJqcX5pXwsDAwMgAAD6F7II6AAAA
+        H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQVudgYMpMYRDMzcxLTS5KTCuxSs1NLUrMSWFmYE3OL80rYWBgYGQAALcIn1k6AAAA
     "2":
       customname: NONE
       material: IRON_INGOT
       amount: 1
       # The following value was serialized from an in-game item and is not meant to be human-readable or editable. As long as it is present other options for this item will be ignored.
       itemStackAsBytes: !!binary |-
-        H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQ2sbBwJSZwiCSm5mXmlyUmFZilVmUnxefmZeeX8LMwJqcX5pXwsDAwMgAABHLfw49AAAA
+        H4sIAAAAAAAA/+NiYGBm4HZJLEkMSy0qzszPY2AQVudgYMpMYRDJzcxLTS5KTCuxyizKz4vPzEvPL2FmYE3OL80rYWBgYGQAAEUtuqc9AAAA
   head:
     customname: <yellow>{PLAYER}'s Head
     amount: 1

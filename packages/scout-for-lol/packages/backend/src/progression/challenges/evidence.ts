@@ -51,6 +51,7 @@ export async function fetchChallengeEvidence(options: {
         championName: row.champion_name,
         role: row.team_position.length === 0 ? "UNKNOWN" : row.team_position,
         win: row.win,
+        placement: row.placement,
         kills: row.kills,
         deaths: row.deaths,
         assists: row.assists,

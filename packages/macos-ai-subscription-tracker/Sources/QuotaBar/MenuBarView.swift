@@ -221,7 +221,7 @@ struct MenuBarView: View {
     .padding(.horizontal, 12)
     .padding(.vertical, 7)
     .help(
-      "Claude Code $200, Codex $200, Google AI Pro $20, Cursor Pro $20, Grok $30, Kimi Code $40"
+      "Claude Code $200, Codex $200, Google AI Pro $20, Cursor Pro $20, Grok $30, Kimi Code $40, Meta Muse $15"
     )
   }
 

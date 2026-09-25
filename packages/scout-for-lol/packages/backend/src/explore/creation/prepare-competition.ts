@@ -53,10 +53,9 @@ function subPermissionRefusal(
     input.scheduledUpdates.enabled ||
     input.scheduledUpdates.cronExpression !== DEFAULT_COMPETITION_CRON ||
     input.scheduledUpdates.timezone !== DEFAULT_SCHEDULE_TIMEZONE;
-  if (customizesSchedule && !permissions.can("competitions", "schedule")) {
-    return "Configuring leaderboard updates needs the competitions:schedule permission this user does not have. Offer to create the competition with the default schedule.";
-  }
-  return null;
+  return customizesSchedule && !permissions.can("competitions", "schedule")
+    ? "Configuring leaderboard updates needs the competitions:schedule permission this user does not have. Offer to create the competition with the default schedule."
+    : null;
 }
 
 /**

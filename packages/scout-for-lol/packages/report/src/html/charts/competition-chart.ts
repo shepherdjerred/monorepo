@@ -107,10 +107,7 @@ function pickXAxisInterval(startDate: Date, endDate: Date): number {
   if (days <= 60) {
     return 7 * DAY_MS;
   }
-  if (days <= 180) {
-    return 14 * DAY_MS;
-  }
-  return 30 * DAY_MS;
+  return days <= 180 ? 14 * DAY_MS : 30 * DAY_MS;
 }
 
 const BACKGROUND_GRADIENT = {
@@ -382,10 +379,9 @@ function buildBarOption(
 }
 
 function buildOption(props: CompetitionChartProps): echarts.EChartsOption {
-  if (props.chartType === "bar") {
-    return buildBarOption(props);
-  }
-  return buildLineOption(props);
+  return props.chartType === "bar"
+    ? buildBarOption(props)
+    : buildLineOption(props);
 }
 
 export function competitionChartToSvg(props: CompetitionChartProps): string {

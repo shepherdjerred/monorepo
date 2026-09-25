@@ -103,6 +103,34 @@ describe("Explore trace recording", () => {
     );
   });
 
+  test("a shared transcript carries no guild ids", () => {
+    // The redactor maps by spread, so a column added to ExploreMessage reaches
+    // a public share link unless it is named. Guild ids are internal.
+    const transcript = ExploreTranscriptSchema.parse({
+      conversation: {
+        id: "11111111-1111-4111-8111-111111111111",
+        title: "Shared",
+        createdAt: "2026-08-18T12:00:00.000Z",
+        updatedAt: "2026-08-18T12:00:00.000Z",
+      },
+      messages: [
+        {
+          id: "22222222-2222-4222-8222-222222222222",
+          role: "assistant",
+          content: "Answer",
+          guildIds: ["1337623164146155593"],
+          createdAt: "2026-08-18T12:00:00.000Z",
+        },
+      ],
+    });
+
+    const publicTranscript = redactSharedExploreTranscript(transcript);
+    expect(publicTranscript.messages[0]?.guildIds).toEqual([]);
+    expect(JSON.stringify(publicTranscript)).not.toContain(
+      "1337623164146155593",
+    );
+  });
+
   test("removes Dare draft and confirmation payloads from a shared transcript", () => {
     const trace: ExploreTraceEntry[] = [];
     recordExploreTraceEvent(trace, {

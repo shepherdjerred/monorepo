@@ -36,10 +36,16 @@ const counts = R.pipe(
 
 <div>
   <hgroup class="text-black mb-2 bg-white pr-8 pl-8 pt-4 pb-4">
-    <h2 class="text-2xl font-bold"><FormattedDate date={date} /></h2>
-    <p>{entries.length} questions | {counts}</p>
+    <h2 class="text-2xl font-bold">
+      <FormattedDate date={date} />
+    </h2>
+    <p>
+      {entries.length} questions | {counts}
+    </p>
   </hgroup>
   <div class="flex flex-col gap-6">
-    {R.map(entries, (entry): JSX.Element => <LeetCodeEntry entry={entry} />)}
+    {R.map(entries, (entry): JSX.Element => (
+      <LeetCodeEntry entry={entry} />
+    ))}
   </div>
 </div>

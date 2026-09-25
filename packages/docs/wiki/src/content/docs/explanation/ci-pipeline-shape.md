@@ -69,7 +69,7 @@ fails.
 ## The lanes are phases, not duplicated test suites
 
 - **Browser E2E** covers the shipped Playwright consumers: `sjer.red`, the docs
-  wiki, the alert dashboard, Scout evals, and Scout's public/docs/app design
+  wiki, the alert dashboard, and Scout's public/docs/app design
   audit. The browser matrix comes from the pinned `ci-playwright` image, so the
   lane is about published sites rather than about Playwright as a tool. The
   design audit uses a deterministic local boot and fixture; see [Run the Scout
@@ -95,6 +95,14 @@ fails.
 - **Scout** has three deliberate promotion phases: archive and deploy beta, mint
   the immutable tag, then reconcile the production `versions.ts` pin. They are
   three stages of one release, not three independent Scout test suites.
+- **Toolchain image candidates** rebuild the images other steps run inside:
+  `ci-base`, `ci-playwright`, and the two
+  [`windows-cross-compiler`](https://github.com/shepherdjerred/monorepo/tree/main/packages/windows-cross-compiler)
+  images. Main builds publish a content-addressed candidate and open a pull
+  request that moves the committed digest, so a consumer changes toolchains
+  only when that pull request's CI passes on the new image. The
+  windows-cross-compiler images also run their sample self-tests on pull
+  requests, because their consumers do not exercise every compiler they ship.
 
 ## Native Apple checks are a separate execution surface
 

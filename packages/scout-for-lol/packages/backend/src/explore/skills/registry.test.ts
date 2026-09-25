@@ -30,21 +30,27 @@ describe("enabledExploreSkills", () => {
     expect(names).toContain("match-cards");
     expect(names).not.toContain("dares");
     expect(names).not.toContain("challenges");
+    expect(names).not.toContain("clash");
     expect(names).not.toContain("creation");
     expect(names).not.toContain("bryan-bucks");
+    expect(names).not.toContain("mvp-votes");
   });
 
   test("capability flags gate their skills", () => {
     const names = enabledExploreSkills({
       bucks: { currentTime: "2026-08-29T00:00:00.000Z" },
+      mvpVotes: { currentTime: "2026-08-29T00:00:00.000Z" },
       dares: true,
       challenges: true,
+      clash: true,
       creation: true,
       surface: "web",
     }).map((candidate) => candidate.name);
     expect(names).toContain("bryan-bucks");
+    expect(names).toContain("mvp-votes");
     expect(names).toContain("dares");
     expect(names).toContain("challenges");
+    expect(names).toContain("clash");
     expect(names).toContain("creation");
   });
 
@@ -81,6 +87,17 @@ describe("skill bodies", () => {
     const body = renderExploreSkillBody(skill("scoutql"), WEB_CONTEXT);
     expect(body).toContain(scoutQlFieldGuideSection());
     expect(body).toContain(JSON.stringify(scoutQlLanguageReference()));
+  });
+
+  test("mvp-votes interpolates the turn timestamp and keeps the ScoutQL tripwire", () => {
+    const body = renderExploreSkillBody(skill("mvp-votes"), {
+      bucks: null,
+      mvpVotes: { currentTime: "2026-08-29T00:00:00.000Z" },
+      surface: "web",
+    });
+    expect(body).toContain("2026-08-29T00:00:00.000Z");
+    expect(body).toContain("not Riot honors");
+    expect(body).toContain("set queryText to null");
   });
 
   test("bryan-bucks interpolates the turn timestamp and keeps definitions", () => {
@@ -124,6 +141,16 @@ describe("skill bodies", () => {
     );
     expect(body).toContain("catalog: 'current_champions'");
     expect(body).toContain("draft_challenge_contract");
+  });
+
+  test("clash keeps its load-bearing rules", () => {
+    const body = renderExploreSkillBody(skill("clash"), WEB_CONTEXT);
+    expect(body).toContain("get_clash_schedule");
+    expect(body).toContain("get_clash_roster");
+    expect(body).toContain("get_clash_history");
+    expect(body).toContain("Do not answer win rates");
+    expect(body).toContain("queue = 'clash'");
+    expect(body).toContain("set queryText to null");
   });
 
   test("the dare body renders the frozen prompt version", () => {

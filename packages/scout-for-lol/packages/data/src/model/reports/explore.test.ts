@@ -113,11 +113,18 @@ describe("parseExploreStreamEvent", () => {
       content: "The match was a bloodbath.",
       createdAt: "2026-09-10T04:00:00.000Z",
     });
-    const { matchCards: _matchCards, ...streamMessage } = message;
+    const {
+      matchCards: _matchCards,
+      guildIds: _guildIds,
+      ...streamMessage
+    } = message;
 
-    expect(ExploreStreamMessageSchema.parse(streamMessage)).not.toHaveProperty(
-      "matchCards",
-    );
+    const parsed = ExploreStreamMessageSchema.parse(streamMessage);
+    expect(parsed).not.toHaveProperty("matchCards");
+    // A tab whose bundle predates a column parses this event strictly, so an
+    // extra key means the terminal event never parses and the answer never
+    // lands. Every field added to ExploreMessageSchema has to be omitted here.
+    expect(parsed).not.toHaveProperty("guildIds");
     expect(() => ExploreStreamMessageSchema.parse(message)).toThrow();
   });
 

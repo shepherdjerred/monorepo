@@ -349,18 +349,17 @@ describe("Glitter corpus daily overlap workflows", () => {
         if (input.direction !== "daily-overlap") {
           throw new Error(`unexpected direction ${input.direction}`);
         }
-        if (input.before === undefined) {
-          return pageResult(
-            input,
-            ["300", "200"],
-            ["2010-01-02T00:00:00.000Z", "2010-01-01T00:00:00.000Z"],
-          );
-        }
-        return pageResult(
-          input,
-          ["100", "99"],
-          ["2009-12-31T00:00:00.000Z", "2009-12-30T00:00:00.000Z"],
-        );
+        return input.before === undefined
+          ? pageResult(
+              input,
+              ["300", "200"],
+              ["2010-01-02T00:00:00.000Z", "2010-01-01T00:00:00.000Z"],
+            )
+          : pageResult(
+              input,
+              ["100", "99"],
+              ["2009-12-31T00:00:00.000Z", "2009-12-30T00:00:00.000Z"],
+            );
       },
       applyGlitterCorpusOverlap: async (
         rawInput: z.input<typeof ApplyOverlapInputSchema>,

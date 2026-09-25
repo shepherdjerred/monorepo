@@ -287,6 +287,33 @@ describe("evaluateGate", () => {
     expect(d.message).toContain("Codex");
   });
 
+  test("fails fast with quota remediation when the provider is blocked", () => {
+    const d = evaluateGate({
+      ...base,
+      reviewState: "errored",
+      threads: [],
+      blockedReason: "usage-limited",
+    });
+    expect(d.state).toBe("failed");
+    expect(d.message).toContain("blocked (usage-limited)");
+    expect(d.message).toContain("abc123");
+    // The operator's next action is adding credits, not re-triggering.
+    expect(d.message).toContain("credits");
+    expect(d.message).not.toContain("Re-trigger");
+  });
+
+  test("keeps the generic errored message for an undeclared block reason", () => {
+    const d = evaluateGate({
+      ...base,
+      reviewState: "errored",
+      threads: [],
+      blockedReason: "something-else",
+    });
+    expect(d.state).toBe("failed");
+    expect(d.message).toContain("did not complete successfully");
+    expect(d.message).toContain("something-else");
+  });
+
   test("passes when reviewed with no blocking threads", () => {
     const d = evaluateGate({
       ...base,

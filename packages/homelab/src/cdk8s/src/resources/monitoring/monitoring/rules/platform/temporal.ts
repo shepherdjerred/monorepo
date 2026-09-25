@@ -409,6 +409,66 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
             severity: "warning",
           },
         },
+        {
+          // A Workflow Task fails before any Activity runs, so
+          // `activity_task_fail` above cannot see it and neither can
+          // TemporalScheduledWorkflowFailingDaily. That blind spot hid a
+          // worker pinned three weeks behind `main` for the whole of
+          // September: it could not load two registered Workflow types at all
+          // ("no such function is exported by the workflow bundle"), the tasks
+          // failed and retried forever, and the only visible symptom was the
+          // schedule's own execution timeout hours later. A weekly schedule in
+          // the same state produced two failures total and no alert at all.
+          //
+          // A healthy deployment fails no Workflow Tasks, so any sustained rate
+          // is worth a look; the metric carries only the namespace, so this
+          // says "something here cannot run" and the Temporal UI says what.
+          //
+          // `for` must stay well under the lookback window. A burst of
+          // failures keeps increase(...[1h]) positive for only about an hour,
+          // so a pending period at or beyond that can never be satisfied and
+          // the rule would silently never fire — exactly the blind spot it
+          // exists to close.
+          alert: "TemporalWorkflowTasksFailing",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "Temporal workflow tasks failing in {{ $labels.exported_namespace }}",
+            ),
+            description: escapePrometheusTemplate(
+              "Workflow tasks failed {{ $value }} time(s) in the last hour. A task that fails before its Activity usually means the worker cannot load the Workflow type — check that the Worker Deployment current version actually exports every registered Workflow.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'increase(failed_workflow_tasks{exported_namespace=~"prod|beta"}[1h]) > 0',
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+          },
+        },
+        {
+          // The other way a registered Workflow silently does nothing: its
+          // Activities are scheduled onto a task queue no worker polls, so they
+          // sit until ScheduleToStart expires. Seen in prod on
+          // `scout-prod-background`, which had zero pollers while five Workflow
+          // families kept scheduling against it.
+          alert: "TemporalActivitiesNeverStarting",
+          annotations: {
+            summary: escapePrometheusTemplate(
+              "Temporal activities timing out before starting in {{ $labels.exported_namespace }}",
+            ),
+            description: escapePrometheusTemplate(
+              "Activities hit ScheduleToStart {{ $value }} time(s) in the last hour, meaning they were queued and never picked up. Confirm the task queue has pollers with temporal task-queue describe.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+            'increase(schedule_to_start_timeout{exported_namespace=~"prod|beta"}[1h]) > 0',
+          ),
+          for: "10m",
+          labels: {
+            severity: "warning",
+          },
+        },
         ...buildTemporalDomainWorkerHealthRules(),
         {
           alert: "TemporalReportHeartbeatStale",

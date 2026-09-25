@@ -7,9 +7,10 @@ public enum ProviderID: String, CaseIterable, Codable, Identifiable, Sendable {
   case cursor
   case grok
   case kimi
+  case muse
 
   public static let standard: Set<ProviderID> = [
-    .claudeCode, .codex, .antigravity, .cursor, .grok, .kimi,
+    .claudeCode, .codex, .antigravity, .cursor, .grok, .kimi, .muse,
   ]
   public static let legacy: Set<ProviderID> = []
 
@@ -23,6 +24,7 @@ public enum ProviderID: String, CaseIterable, Codable, Identifiable, Sendable {
     case .cursor: "Cursor"
     case .grok: "Grok"
     case .kimi: "Kimi Code"
+    case .muse: "Meta Muse"
     }
   }
 
@@ -34,20 +36,23 @@ public enum ProviderID: String, CaseIterable, Codable, Identifiable, Sendable {
     case .cursor: URL(string: "https://prod.cursor.com/help/models-and-usage/usage-limits")
     case .grok: URL(string: "https://grok.com/settings/usage?_s=usage")
     case .kimi: URL(string: "https://www.kimi.com/code/console")
+    // Meta Muse has no public usage page: quota is visible only inside the signed-in
+    // CLI (`/usage`), and the accountscenter page requires an interactive login.
+    case .muse: nil
     }
   }
 
   public var supportsManualCredentialOverride: Bool {
     switch self {
     case .claudeCode, .codex, .grok, .kimi: true
-    case .antigravity, .cursor: false
+    case .antigravity, .cursor, .muse: false
     }
   }
 
   public var tracksBankedResets: Bool {
     switch self {
     case .codex, .grok: true
-    case .claudeCode, .antigravity, .cursor, .kimi: false
+    case .claudeCode, .antigravity, .cursor, .kimi, .muse: false
     }
   }
 }
@@ -64,6 +69,7 @@ public struct SubscriptionPlan: Identifiable, Equatable, Sendable {
     SubscriptionPlan(provider: .cursor, monthlyCostUSD: 20),
     SubscriptionPlan(provider: .grok, monthlyCostUSD: 30),
     SubscriptionPlan(provider: .kimi, monthlyCostUSD: 40),
+    SubscriptionPlan(provider: .muse, monthlyCostUSD: 15),
   ]
 
   public static let legacy: [SubscriptionPlan] = []

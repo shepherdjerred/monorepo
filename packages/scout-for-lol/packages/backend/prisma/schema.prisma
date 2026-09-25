@@ -162,6 +162,120 @@ model CurrentRankSnapshot {
   updatedAt    DateTime @updatedAt
 }
 
+// Clash-v1 current snapshot. Riot returns empty registrations when Clash is
+// inactive; rows are replaced on each poll rather than accumulated.
+model ClashTournament {
+  id               Int      @id @default(autoincrement())
+  platform         String
+  riotId           Int
+  themeId          Int
+  nameKey          String
+  nameKeySecondary String
+  scheduleJson     String
+  fetchedAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([platform, riotId])
+}
+
+model ClashTeam {
+  id               Int      @id @default(autoincrement())
+  platform         String
+  riotId           String
+  tournamentRiotId Int
+  name             String
+  abbreviation     String
+  iconId           Int
+  tier             Int
+  fetchedAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([platform, riotId])
+  @@index([platform, tournamentRiotId])
+}
+
+model ClashRegistration {
+  id               Int      @id @default(autoincrement())
+  puuid            String
+  region           String
+  platform         String
+  teamRiotId       String
+  tournamentRiotId Int
+  position         String
+  role             String
+  fetchedAt        DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([puuid, region, tournamentRiotId])
+  @@index([puuid])
+  @@index([platform, teamRiotId])
+}
+
+// Append-only Clash-v1 membership. Current ClashTournament/Team/Registration
+// rows still replace on each poll; this table keeps the named team after Riot
+// returns empty.
+model ClashMembershipHistory {
+  id               Int      @id @default(autoincrement())
+  puuid            String
+  region           String
+  platform         String
+  tournamentRiotId Int
+  teamRiotId       String
+  teamName         String
+  teamAbbreviation String
+  position         String
+  role             String
+  nameKey          String
+  nameKeySecondary String
+  windowStartAt    DateTime
+  windowEndAt      DateTime
+  firstSeenAt      DateTime
+  lastSeenAt       DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@unique([puuid, platform, tournamentRiotId])
+  @@index([puuid])
+  @@index([platform, windowStartAt, windowEndAt])
+}
+
+// One Clash lobby or finished match Scout saw a tracked player in.
+// source=prematch has no outcome; source=match may set win (pre-Feb leftover).
+model ClashGameSighting {
+  id         Int       @id @default(autoincrement())
+  platform   String
+  gameId     String
+  puuid      String
+  source     String
+  queue      String
+  championId Int
+  teamId     Int
+  observedAt DateTime
+  win        Boolean?
+  teamRiotId String?
+  cupKey     String?
+  cupDay     String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([platform, gameId, puuid])
+  @@index([puuid, observedAt])
+  @@index([cupKey, cupDay])
+}
+
+// Champion mastery is public, current account state rather than match history.
+// One PUUID snapshot is shared by every guild that tracks that Riot account.
+model ChampionMasterySnapshot {
+  puuid        String   @id
+  entriesJson  String
+  fetchedAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
 model Report {
   id                     Int       @id @default(autoincrement())
   serverId               String
@@ -441,6 +555,167 @@ model User {
   exploreConversations ExploreConversation[]
   challengeDrafts      ChallengeDraft[]
   challengeRuns        ChallengeRun[]
+  scoutClientDevices   ScoutClientDevice[]
+  scoutClientApprovals ScoutClientPairing[]  @relation("ScoutClientPairingApprover")
+}
+
+/// One short-lived native-client browser approval request. Only a digest of
+/// the one-time secret is stored; approval records intent but does not mint a
+/// device credential until the client proves possession during exchange.
+model ScoutClientPairing {
+  id              String    @id @default(uuid())
+  secretDigest    String    @unique
+  deviceName      String
+  platform        String
+  architecture    String
+  appVersion      String
+  protocolVersion Int
+  state           String    @default("PENDING")
+  expiresAt       DateTime
+  approvedAt      DateTime?
+  exchangedAt     DateTime?
+  approvedById    String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  approvedBy User?              @relation("ScoutClientPairingApprover", fields: [approvedById], references: [discordId], onDelete: SetNull)
+  device     ScoutClientDevice?
+
+  @@index([state, expiresAt])
+  @@index([approvedById, createdAt])
+}
+
+/// One paired Windows or macOS Scout observer. The bearer token is opaque and
+/// stored only as a SHA-256 digest so a database read cannot impersonate it.
+model ScoutClientDevice {
+  id              String    @id @default(uuid())
+  ownerId         String
+  pairingId       String    @unique
+  tokenDigest     String    @unique
+  deviceName      String
+  platform        String
+  architecture    String
+  appVersion      String
+  protocolVersion Int
+  deviceState     String    @default("ACTIVE")
+  lastSeenAt      DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  owner           User                        @relation(fields: [ownerId], references: [discordId], onDelete: Cascade)
+  pairing         ScoutClientPairing          @relation(fields: [pairingId], references: [id], onDelete: Restrict)
+  observations    ScoutClientObservation[]
+  replayArtifacts ScoutClientReplayArtifact[]
+  versions        ScoutClientDeviceVersion[]
+
+  @@index([ownerId, deviceState])
+  @@index([lastSeenAt])
+}
+
+/// Every application version this credential has authenticated. Keeping the
+/// history lets a client upload immutable observations captured before an
+/// upgrade without weakening version attestation for arbitrary values.
+model ScoutClientDeviceVersion {
+  deviceId    String
+  appVersion  String
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @updatedAt
+
+  device ScoutClientDevice @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@id([deviceId, appVersion])
+  @@index([appVersion, lastSeenAt])
+}
+
+/// One content-addressed ROFL received through the authenticated backend relay.
+/// The object key is generated by the server and becomes durable only after the
+/// SeaweedFS S3 put succeeds and its streamed SHA-256 matches the claim.
+model ScoutClientReplayArtifact {
+  id          String    @id @default(uuid())
+  deviceId    String
+  gameId      String
+  digest      String    @unique
+  objectKey   String    @unique
+  bytes       BigInt
+  uploadState String
+  lastError   String?
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  device ScoutClientDevice @relation(fields: [deviceId], references: [id], onDelete: Restrict)
+
+  @@index([gameId, uploadState])
+  @@index([deviceId, createdAt])
+}
+
+/// Immutable, idempotent gameplay observation received from a paired device.
+/// Raw observations are evidence: only ACCEPTED rows may be considered by the
+/// canonical merge, and a conflicting id/sequence is rejected rather than
+/// overwritten.
+model ScoutClientObservation {
+  observationId    String   @id
+  deviceId         String
+  sequence         BigInt
+  capturedAt       DateTime
+  receivedAt       DateTime @default(now())
+  protocolVersion  Int
+  schemaVersion    Int
+  appVersion       String
+  kind             String
+  leaguePatch      String?
+  platformId       String?
+  localPuuid       String?
+  lobbyId          String?
+  gameId           String?
+  payload          Json
+  bodyDigest       String
+  disposition      String
+  quarantineReason String?
+
+  device         ScoutClientDevice          @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  canonicalMatch ScoutClientCanonicalMatch?
+  playerSnapshot ScoutClientPlayerSnapshot?
+
+  @@unique([deviceId, sequence])
+  @@index([kind, capturedAt])
+  @@index([gameId, kind])
+  @@index([lobbyId, kind])
+  @@index([disposition, receivedAt])
+}
+
+/// Latest accepted local account/profile projection. The immutable source
+/// observation retains the payload; this row is only the replaceable lookup
+/// pointer used by mastery, milestone, Challenge, and Clash consumers.
+model ScoutClientPlayerSnapshot {
+  localPuuid    String
+  resource      String
+  kind          String
+  observationId String   @unique
+  capturedAt    DateTime
+  updatedAt     DateTime @updatedAt
+
+  observation ScoutClientObservation @relation(fields: [observationId], references: [observationId], onDelete: Restrict)
+
+  @@id([localPuuid, resource])
+  @@index([kind, capturedAt])
+}
+
+/// The immutable local Match-V5-compatible observation selected only after
+/// Riot has returned no authoritative payload for two minutes. Recording the
+/// selection prevents later Activity retries from silently changing sources
+/// after effects have begun. Riot payloads are still preferred before this row
+/// exists; the local row is a gap-fill, not a competing authority.
+model ScoutClientCanonicalMatch {
+  riotMatchId         String   @id
+  sourceObservationId String   @unique
+  payloadDigest       String
+  selectedAt          DateTime @default(now())
+
+  sourceObservation ScoutClientObservation @relation(fields: [sourceObservationId], references: [observationId], onDelete: Restrict)
+
+  @@index([selectedAt])
 }
 
 /// A saved explore conversation. Explore queries the whole report lake rather
@@ -505,6 +780,13 @@ model ExploreMessage {
   visualization  String?
   /// JSON array matching ExploreMatchCardSchema; frozen with the assistant turn.
   matchCards     String?
+  /// JSON string array of the guilds this turn's capabilities were resolved
+  /// from. A conversation belongs to a person, not a guild, but a *turn* ran
+  /// with a specific one and that decided which tools existed — which replay
+  /// needs and could otherwise only recover from a durable run payload, which
+  /// Discord and voice turns never create. Null on user turns and on every
+  /// row written before this column existed.
+  guildIds       String?
   /// JSON array of the tool calls this turn made, for the reasoning panel.
   trace          String?
   createdAt      DateTime @default(now())
@@ -1542,14 +1824,10 @@ model BucksWeeklyLeaderboardSnapshot {
 }
 
 // =============================================================================
-// Tournament-code custom lobbies
+// Legacy Tournament-code custom lobbies
 //
-// Riot removed custom games from the public API for privacy reasons, so
-// Spectator sees them only unreliably and Match-V5 does not carry them at all.
-// The one sanctioned exception is the Tournament API: a game created from a
-// tournament code IS recorded in Match-V5, with `info.tournamentCode`
-// populated. These two tables are what let Scout mint such a lobby and follow
-// it to its report.
+// Scout no longer creates Riot Tournament API lobbies. These models remain so
+// existing games retain provenance and historical results can still project.
 //
 // Deliberately provider-agnostic: only Int/String/BigInt/DateTime/Boolean, no
 // Prisma enum (SQLite has none) and no @db.* native types. Enum-shaped columns
@@ -1560,12 +1838,7 @@ model BucksWeeklyLeaderboardSnapshot {
 
 /// A registered tournament provider and tournament.
 ///
-/// Both are long-lived registrations produced by an API call, not per-game
-/// state and not a credential — so they live here rather than in 1Password or
-/// an env var. Created by scripts/register-tournament-provider.ts; call sites
-/// read the row and fail loudly naming that script when it is absent, rather
-/// than lazily creating one (which would race two concurrent /lobby create
-/// calls into two providers and silently mint a new one on a fresh volume).
+/// Historical registration rows retained for database compatibility.
 ///
 /// Keyed by (apiMode, region) because stub and live IDs are different
 /// namespaces: a code minted under the stub is meaningless under the live API.
@@ -1585,7 +1858,7 @@ model TournamentRegistration {
   @@unique([apiMode, tournamentRegion])
 }
 
-/// One Scout-created custom lobby, from minted code to delivered report.
+/// One historical Scout-created custom lobby, from minted code to report.
 ///
 /// Not folded into ActiveGame: that row is keyed by prematchMatchId, which does
 /// not exist until a game starts, and it is hard-deleted every 30 seconds once
@@ -1653,9 +1926,7 @@ model TournamentLobby {
   expiresAt    DateTime
   updatedAt    DateTime  @updatedAt
 
-  /// The durable request claim that minted this credential. A lobby can be
-  /// created by `/lobby` or by Customs, but every path goes through the same
-  /// claim-before-Riot provisioning service.
+  /// The historical durable request claim that minted this credential.
   provision  TournamentLobbyProvision?
   customGame CustomGame?
   duelGame   DuelGame?
@@ -1665,7 +1936,7 @@ model TournamentLobby {
   @@index([matchId])
 }
 
-/// Claim for one Tournament-V5 code-creation request.
+/// Historical claim for one Tournament-V5 code-creation request.
 ///
 /// A timeout after the POST may mean Riot minted a credential, so any request
 /// that did not durably reach COMPLETED is intentionally not retried. The
@@ -1777,24 +2048,27 @@ model CustomNightParticipant {
 }
 
 model CustomGame {
-  id                String    @id @default(uuid())
-  nightId           String
-  sequence          Int
-  state             String
-  rosterMode        String
-  map               String
-  pickMode          String
-  activeCaptain     String?
-  tournamentLobbyId Int?      @unique
-  voiceState        String    @default("IDLE")
-  voiceReady        Boolean   @default(false)
-  voiceOverride     Boolean   @default(false)
-  voiceError        String?
-  winner            String?
-  createdAt         DateTime  @default(now())
-  startedAt         DateTime?
-  completedAt       DateTime?
-  updatedAt         DateTime  @updatedAt
+  id                 String    @id @default(uuid())
+  nightId            String
+  sequence           Int
+  state              String
+  rosterMode         String
+  map                String
+  pickMode           String
+  activeCaptain      String?
+  tournamentLobbyId  Int?      @unique
+  matchId            String?   @unique
+  observedLobbyId    String?
+  lobbyObservationId String?   @unique
+  voiceState         String    @default("IDLE")
+  voiceReady         Boolean   @default(false)
+  voiceOverride      Boolean   @default(false)
+  voiceError         String?
+  winner             String?
+  createdAt          DateTime  @default(now())
+  startedAt          DateTime?
+  completedAt        DateTime?
+  updatedAt          DateTime  @updatedAt
 
   night           CustomNight             @relation(fields: [nightId], references: [id], onDelete: Cascade)
   tournamentLobby TournamentLobby?        @relation(fields: [tournamentLobbyId], references: [id], onDelete: Restrict)
@@ -1802,6 +2076,7 @@ model CustomGame {
   auditEvents     CustomAuditEvent[]
 
   @@unique([nightId, sequence])
+  @@index([observedLobbyId])
   @@index([nightId, state])
   @@index([voiceState, updatedAt])
 }
@@ -2356,6 +2631,8 @@ model DuelGame {
   seriesId             String
   gameNumber           Int
   tournamentLobbyId    Int?      @unique
+  observedLobbyId      String?
+  lobbyObservationId   String?   @unique
   matchId              String?   @unique
   gameState            String    @default("awaiting_readiness")
   resultState          String?
@@ -2372,6 +2649,7 @@ model DuelGame {
   tournamentLobby TournamentLobby? @relation(fields: [tournamentLobbyId], references: [id], onDelete: Restrict)
 
   @@unique([seriesId, gameNumber])
+  @@index([observedLobbyId])
   @@index([seriesId, gameState])
 }
 
@@ -2472,6 +2750,50 @@ model MatchObservation {
   @@index([gameCreatedAt])
 }
 
+/// Frozen 10-player Flex roster for community MVP votes. Match-global: the
+/// players are a fact of the Riot match, while ballots below are per guild.
+/// `reportMessageIds` is the durable channel→message map for tally edits;
+/// ActiveGame.postmatchMessageIds expires with the 3-hour active-game TTL.
+model MatchMvpContest {
+  matchId          String    @id
+  roster           Json
+  reportMessageIds Json?
+  /// Riot `info.gameCreation`. Backfilled from MatchObservation / rank history
+  /// for contests that existed before this column; writers fill any remainder.
+  gameCreationAt   DateTime?
+  /// Resolved Scout queue type (`flex`, `ranked 5s`, …). Pre-column contests
+  /// were Flex-only attach and backfill to `flex`.
+  queueType        String?
+  createdAt        DateTime  @default(now())
+
+  @@index([gameCreationAt])
+  @@index([queueType, gameCreationAt])
+}
+
+/// One guild member's vote in one category for one community MVP contest.
+model MatchMvpVote {
+  id             Int      @id @default(autoincrement())
+  matchId        String
+  serverId       String
+  voterDiscordId String
+  /// `ally` or `enemy`, relative to the voter's team in this match.
+  category       String
+  /// Index into MatchMvpContest.roster.participants.
+  nomineeIndex   Int
+  /// Copied from the frozen roster at vote time so leaderboards skip JSON.
+  nomineePuuid   String?
+  nomineeTeamId  Int?
+  voterPuuid     String
+  voterTeamId    Int
+  justification  String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([matchId, serverId, voterDiscordId, category])
+  @@index([matchId, serverId, category])
+  @@index([serverId, nomineePuuid])
+}
+
 /// Association between an observation and one tracked account seen in the
 /// match. FK-by-value on riotMatchId (no relation) so ingestion can record
 /// participants before/independently of any other table. playerId/accountId
@@ -2550,6 +2872,61 @@ model MatchNotificationIntent {
   @@index([state, freshnessDeadline])
   @@index([riotMatchId])
   @@index([recoveryBatchId])
+}
+
+/// One item a completed settlement produced, kept so a takeover need not
+/// reproduce it.
+///
+/// Settlement is a sequence of independently committing steps whose results
+/// are one-shot: each returns a summary only for the transition that committed
+/// it, so a re-run settles nothing and returns nothing. A row here is written
+/// INSIDE the same transaction that produces its item, so the item and the
+/// instruction to announce it commit together or not at all.
+///
+/// One row per item rather than one per match, because the steps commit
+/// separately: a match whose third Dare fails after two settled must keep
+/// those two instructions, and a single per-match row could not be written
+/// until every step had finished — which is the window this closes.
+///
+/// ## Why this row carries amounts when the receipt deliberately does not
+///
+/// A MatchProcessingReceipt names identities and no amounts on purpose, and
+/// the notification lane relied on that when it decided presentation inputs
+/// travel on the intent rather than the receipt. That discipline is about
+/// ATTESTED EVIDENCE: a receipt is proof a phase happened, and restated
+/// payouts on it would be a second, divergent source of truth for settlement
+/// arithmetic.
+///
+/// This row attests nothing. It is a recovery note addressed to the next
+/// attempt of one Activity, saying "settlement already produced this; announce
+/// from it rather than re-settling". Nothing downstream reads it as proof and
+/// nothing derives a fact from it.
+///
+/// ## Write-once
+///
+/// Insert-only, with no updatedAt. A second settlement offering a DIFFERENT
+/// payload for a standing (match, family, item) is two producers disagreeing
+/// about what one transition produced, and it surfaces as a durable-write
+/// conflict rather than overwriting. An identical payload re-presented is
+/// already-applied, which is what lets a retry proceed.
+///
+/// ## Retention
+///
+/// Bounded by deletion once the work it protects is finished, never in the hot
+/// path before the receipt exists. A match carrying a settlement receipt has
+/// had its announcements minted and its rows are sweepable; see SJ-203.
+model MatchSettlementAnnouncement {
+  riotMatchId String
+  /// closure | settlement | parlay | earnings | late-earnings | dare-summary
+  family      String
+  /// The item's identity within its family: a guild id, or a Dare id.
+  itemKey     String
+  version     Int
+  payload     String
+  createdAt   DateTime @default(now())
+
+  @@id([riotMatchId, family, itemKey])
+  @@index([riotMatchId])
 }
 
 /// One recovery batch (domain RecoveryBatch). Cursor and count columns mirror
@@ -2671,10 +3048,10 @@ model PuuidKeyMapHistory {
 /// derived from the tracked rows or carried on the mapping rows.
 model PuuidKeyMigration {
   /// Always 1. One row describes one database.
-  id        Int       @id @default(1)
-  appliedAt DateTime? @db.Timestamptz()
+  id             Int       @id @default(1)
+  appliedAt      DateTime? @db.Timestamptz()
   /// Whether an explicitly opened later transition is still collecting identities.
-  transitionOpen Int @default(1)
+  transitionOpen Int       @default(1)
 }
 
 /// One feature-tip impression, with a temporary pre-send claim.
@@ -2689,20 +3066,20 @@ model PuuidKeyMigration {
 /// `discordId` is null for a guild-channel message and set for a DM, so a
 /// member's DM cadence is their own and does not consume the channel's.
 model FeatureTipImpression {
-  id       Int    @id @default(autoincrement())
-  serverId String
+  id         Int       @id @default(autoincrement())
+  serverId   String
   /// Who the tip went to: a Discord user id for a DM, or "" for the guild
   /// channel. A sentinel rather than null because the uniqueness below is what
   /// makes a tip claim atomic, and Postgres treats NULLs as distinct — a
   /// nullable column would leave every channel-scoped row unconstrained.
   /// Deliberately not named `discordId`: it holds a sentinel as well as an id.
-  audienceId String @default("")
+  audienceId String    @default("")
   /// A `TipKey` from the tips catalog. Validated on read.
-  tipKey    String
-  shownAt   DateTime @default(now())
+  tipKey     String
+  shownAt    DateTime  @default(now())
   /// Non-null while the row is a pre-send claim. Cleared after Discord accepts
   /// the message; the partial audience index serializes all tip keys.
-  claimedAt DateTime?
+  claimedAt  DateTime?
 
   /// The claim. Two concurrent deliveries to one audience race to insert here;
   /// exactly one wins, so a tip cannot be selected twice.

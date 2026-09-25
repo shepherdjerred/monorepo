@@ -24,12 +24,15 @@ export type ScoutV2MatchActivities = Pick<
   ScoutTemporalV2Activities,
   | "discoverPostMatchIdsV2"
   | "readMatchPipelineStateV2"
+  | "readLegacyMatchCompletionV2"
   | "archiveMatchArtifactsV2"
   | "commitMatchObservationV2"
   | "settleMatchMarketsV2"
   | "applyMatchProgressionV2"
   | "finalizeTournamentResultV2"
   | "recordMatchReceiptsV2"
+  | "recordClientMatchTerminalV2"
   | "advanceMatchCursorV2"
+  | "mintPostmatchNotificationIntentsV2"
   | "planMatchFanOutV2"
 >;

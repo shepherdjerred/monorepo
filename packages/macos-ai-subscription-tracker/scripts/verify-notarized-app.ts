@@ -41,6 +41,7 @@ for (const logo of [
   "cursor.svg",
   "kimi.svg",
   "grok.svg",
+  "muse.svg",
 ]) {
   await access(join(resources, logo));
 }

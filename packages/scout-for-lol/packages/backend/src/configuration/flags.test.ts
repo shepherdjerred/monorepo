@@ -33,7 +33,6 @@ const PRODUCTION_DENIED_FLAGS = [
   "dare_extended_contracts_enabled",
   "dare_notifications_enabled",
   "custom_nights_enabled",
-  "tournament_lobbies_enabled",
   "duels_enabled",
   "voice_assistant_enabled",
 ] as const;
@@ -48,9 +47,11 @@ const PRODUCTION_ALLOWED_FLAGS = [
   "ai_reports_unlimited",
   "ai_reviews_enabled",
   "challenge_runs_enabled",
+  "clash_surface",
   "competition_builder_v2_enabled",
   "explore_on_demand_riot_enabled",
   "hall_of_fame_enabled",
+  "mvp_votes_enabled",
   "scoutql_relational_enabled",
 ] as const;
 
@@ -102,7 +103,6 @@ describe("production hard-disable policy", () => {
         dare_extended_contracts_enabled: true,
         dare_notifications_enabled: true,
         custom_nights_enabled: true,
-        tournament_lobbies_enabled: true,
         duels_enabled: true,
         voice_assistant_enabled: true,
       }),
@@ -126,16 +126,29 @@ describe("production hard-disable policy", () => {
     }
   });
 
+  test("fails native-client ingress closed without the production provider", () => {
+    Bun.env["ENVIRONMENT"] = "prod";
+    resetConfigurationForTests();
+
+    expect(getFlag("scout_client_ingestion", { user: ME })).toBe(false);
+    expect(getFlag("scout_client_ingestion", { user: SOMEONE })).toBe(false);
+  });
+
   test("keeps those same beta rollouts outside production", () => {
     Bun.env["ENVIRONMENT"] = "beta";
     resetConfigurationForTests();
 
     expect(getFlag("hall_of_fame_enabled", { server: MY_SERVER })).toBe(true);
+    expect(getFlag("mvp_votes_enabled", { server: MY_SERVER })).toBe(true);
     expect(getFlag("challenge_runs_enabled", { server: MY_SERVER })).toBe(true);
+    expect(getFlag("clash_surface", { server: MY_SERVER })).toBe(true);
+    expect(getFlag("custom_nights_enabled", { server: MY_SERVER })).toBe(true);
     expect(getFlag("ai_reports_unlimited", { user: ME })).toBe(true);
     expect(listGuildsWithFlagEnabled("hall_of_fame_enabled")).toEqual([
       MY_SERVER,
     ]);
+    expect(getFlag("scout_client_ingestion", { user: ME })).toBe(false);
+    expect(getFlag("scout_client_ingestion", { user: SOMEONE })).toBe(false);
   });
 
   test("leaves every other surface to its ordinary flag", async () => {
@@ -148,9 +161,11 @@ describe("production hard-disable policy", () => {
         ai_reports_unlimited: true,
         ai_reviews_enabled: true,
         challenge_runs_enabled: true,
+        clash_surface: true,
         competition_builder_v2_enabled: true,
         explore_on_demand_riot_enabled: true,
         hall_of_fame_enabled: true,
+        mvp_votes_enabled: true,
         scoutql_relational_enabled: true,
       }),
     });

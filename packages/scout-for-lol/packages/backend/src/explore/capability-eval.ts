@@ -52,6 +52,21 @@ function normalize(text: string): string {
   );
 }
 
+/**
+ * Does this answer decline, in any of the wordings Explore is taught to use?
+ *
+ * Exported so the replay eval asks the same question with the same vocabulary
+ * and the same normalization. A second refusal detector would drift from this
+ * one, and the two would disagree about whether Explore had regressed — which
+ * is the one thing neither may be wrong about.
+ */
+export function looksLikeExploreRefusal(answer: string): boolean {
+  const normalized = normalize(answer);
+  return EXPLORE_REFUSAL_PHRASES.some((phrase) =>
+    normalized.includes(normalize(phrase)),
+  );
+}
+
 /** Expand the shared refusal token into its vocabulary, in place. */
 function expandGroup(group: readonly string[]): readonly string[] {
   return group.flatMap((phrase) =>

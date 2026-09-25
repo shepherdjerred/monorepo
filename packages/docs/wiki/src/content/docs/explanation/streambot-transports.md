@@ -101,6 +101,16 @@ flag forcing the pre-split transport, so [`resolveSource`](https://github.com/sh
 rejects the item by name rather than switching it to audio. Silently switching would ignore the
 user, and would make the flag a switch that turns nothing off.
 
+Spoken play is a weaker hint. Slash `/stream play` is unchanged.
+[`requestedPlayMode`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/commands/playback-command-service.ts)
+ignores a model `mode: video` unless the utterance said “watch”. On YouTube,
+[`classifyMediaKind`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/sources/media-kind.ts)
+treats Entertainment, People & Blogs, and Comedy as a music tie instead of forcing Go Live. That is
+the AI-cover case: those categories are typical of lyric and character-cover uploads. Film &
+Animation, TV, Gaming, Sports, and News stay video. The streamer logs `mediaKind`, `decidedBy`,
+`spoken`, and `transport` on
+[`starting stream`](https://github.com/shepherdjerred/monorepo/blob/main/packages/streambot/src/streamer/streamer.ts).
+
 ## What this rules out
 
 **One transport with audio-only encoding.** Go Live with no picture still costs a second connection

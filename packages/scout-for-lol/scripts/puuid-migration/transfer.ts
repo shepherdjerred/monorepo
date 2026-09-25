@@ -15,7 +15,22 @@ import { z } from "zod";
 import { composePuuidRemap } from "@scout-for-lol/backend/report-lake/puuid-remap.ts";
 import { PuuidKeyMapStatusSchema } from "@scout-for-lol/data/model/riot/puuid-key-map.ts";
 import type { Db } from "./db.ts";
-import { asOptionalString, asString, countOf, toSqlParam } from "./support.ts";
+import {
+  asOptionalString,
+  asString,
+  countOf,
+  type SqlParam,
+  toSqlParam,
+} from "./support.ts";
+
+const IMPORT_BATCH_SIZE = 500;
+
+function asOptionalTimestamp(value: unknown): string | null {
+  // SQLite returns timestamp columns as text, while Prisma returns Postgres
+  // TIMESTAMPTZ columns as Date objects. Normalize both before carrying an
+  // applied edge into history.
+  return value instanceof Date ? value.toISOString() : asOptionalString(value);
+}
 
 export type MapRow = {
   oldPuuid: string;
@@ -236,10 +251,13 @@ export async function importMap(
     `SELECT "oldPuuid", "newPuuid", "appliedAt" FROM "PuuidKeyMap"
       ORDER BY "appliedAt" ASC NULLS LAST, "oldPuuid" ASC`,
   );
-  const existing = new Map(
+  const existingByOld = new Map(
     existingRows.map((row) => [
       asString(row["oldPuuid"], "oldPuuid"),
-      asOptionalString(row["newPuuid"]),
+      {
+        newPuuid: asOptionalString(row["newPuuid"]),
+        appliedAt: asOptionalTimestamp(row["appliedAt"]),
+      },
     ]),
   );
   const historicalRows = await db.query(
@@ -272,7 +290,7 @@ export async function importMap(
   // wrong identity. Unlike a missing replacement, which is only older news,
   // this has to stop the import.
   for (const row of rows) {
-    const held = existing.get(row.oldPuuid) ?? null;
+    const held = existingByOld.get(row.oldPuuid)?.newPuuid ?? null;
     if (
       held !== null &&
       row.newPuuid !== null &&
@@ -289,7 +307,13 @@ export async function importMap(
 
   let inserted = 0;
   let updated = 0;
+  const newRows: MapRow[] = [];
   for (const row of rows) {
+    const existingRow = existingByOld.get(row.oldPuuid);
+    if (existingRow === undefined) {
+      newRows.push(row);
+      continue;
+    }
     const params = [
       toSqlParam(row.oldPuuid, "oldPuuid"),
       toSqlParam(row.gameName, "gameName"),
@@ -297,56 +321,66 @@ export async function importMap(
       toSqlParam(row.newPuuid, "newPuuid"),
       toSqlParam(row.status, "status"),
     ];
-    if (existing.has(row.oldPuuid)) {
-      const existingRow = existingRows.find(
-        (candidate) => candidate["oldPuuid"] === row.oldPuuid,
-      );
-      const previousReplacement = asOptionalString(existingRow?.["newPuuid"]);
-      const previousAppliedAt = asOptionalString(existingRow?.["appliedAt"]);
-      if (
-        previousReplacement !== null &&
-        previousAppliedAt !== null &&
-        previousReplacement !== row.newPuuid
-      ) {
-        await db.exec(
-          `INSERT INTO "PuuidKeyMapHistory" ("oldPuuid", "newPuuid", "appliedAt")
-           VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)})
-           ON CONFLICT DO NOTHING`,
-          [row.oldPuuid, previousReplacement, previousAppliedAt],
-        );
-      }
-      // COALESCE, not assignment: an incoming null leaves a replacement this
-      // database already holds standing only while it is still unapplied. Once
-      // an applied source is reused, its old edge is archived above and the live
-      // row must carry the current unresolved decision instead.
+    const previousReplacement = existingRow.newPuuid;
+    const previousAppliedAt = existingRow.appliedAt;
+    if (
+      previousReplacement !== null &&
+      previousAppliedAt !== null &&
+      previousReplacement !== row.newPuuid
+    ) {
       await db.exec(
-        `UPDATE "PuuidKeyMap"
-            SET "gameName" = COALESCE(${db.param(2)}, "gameName"),
-                "tagLine"  = COALESCE(${db.param(3)}, "tagLine"),
-                "status"   = CASE WHEN ${db.param(4)} IS NULL AND "newPuuid" IS NOT NULL AND "appliedAt" IS NULL
-                                  THEN "status" ELSE ${db.param(5)} END,
-                "newPuuid" = CASE WHEN ${db.param(4)} IS NULL AND "newPuuid" IS NOT NULL AND "appliedAt" IS NULL
-                                  THEN "newPuuid" ELSE ${db.param(4)} END,
-                "appliedAt" = CASE
-                  WHEN ${db.param(4)} IS NOT NULL
-                   AND ("newPuuid" IS NULL OR "newPuuid" <> ${db.param(4)})
-                  THEN NULL
-                  WHEN ${db.param(4)} IS NULL
-                   AND "newPuuid" IS NOT NULL AND "appliedAt" IS NOT NULL
-                  THEN NULL
-                  ELSE "appliedAt" END
-          WHERE "oldPuuid" = ${db.param(1)}`,
-        params,
+        `INSERT INTO "PuuidKeyMapHistory" ("oldPuuid", "newPuuid", "appliedAt")
+         VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)})
+         ON CONFLICT DO NOTHING`,
+        [row.oldPuuid, previousReplacement, previousAppliedAt],
       );
-      updated++;
-      continue;
     }
+    // COALESCE, not assignment: an incoming null leaves a replacement this
+    // database already holds standing only while it is still unapplied. Once
+    // an applied source is reused, its old edge is archived above and the live
+    // row must carry the current unresolved decision instead.
     await db.exec(
-      `INSERT INTO "PuuidKeyMap" ("oldPuuid", "gameName", "tagLine", "newPuuid", "status")
-       VALUES (${db.param(1)}, ${db.param(2)}, ${db.param(3)}, ${db.param(4)}, ${db.param(5)})`,
+      `UPDATE "PuuidKeyMap"
+          SET "gameName" = COALESCE(${db.param(2)}, "gameName"),
+              "tagLine"  = COALESCE(${db.param(3)}, "tagLine"),
+              "status"   = CASE WHEN ${db.param(4)} IS NULL AND "newPuuid" IS NOT NULL AND "appliedAt" IS NULL
+                                THEN "status" ELSE ${db.param(5)} END,
+              "newPuuid" = CASE WHEN ${db.param(4)} IS NULL AND "newPuuid" IS NOT NULL AND "appliedAt" IS NULL
+                                THEN "newPuuid" ELSE ${db.param(4)} END,
+              "appliedAt" = CASE
+                WHEN ${db.param(4)} IS NOT NULL
+                 AND ("newPuuid" IS NULL OR "newPuuid" <> ${db.param(4)})
+                THEN NULL
+                WHEN ${db.param(4)} IS NULL
+                 AND "newPuuid" IS NOT NULL AND "appliedAt" IS NOT NULL
+                THEN NULL
+                ELSE "appliedAt" END
+        WHERE "oldPuuid" = ${db.param(1)}`,
       params,
     );
-    inserted++;
+    updated++;
+  }
+
+  for (let start = 0; start < newRows.length; start += IMPORT_BATCH_SIZE) {
+    const batch = newRows.slice(start, start + IMPORT_BATCH_SIZE);
+    const params: SqlParam[] = [];
+    const values = batch.map((row, index) => {
+      const firstParam = index * 5 + 1;
+      params.push(
+        toSqlParam(row.oldPuuid, "oldPuuid"),
+        toSqlParam(row.gameName, "gameName"),
+        toSqlParam(row.tagLine, "tagLine"),
+        toSqlParam(row.newPuuid, "newPuuid"),
+        toSqlParam(row.status, "status"),
+      );
+      return `(${db.param(firstParam)}, ${db.param(firstParam + 1)}, ${db.param(firstParam + 2)}, ${db.param(firstParam + 3)}, ${db.param(firstParam + 4)})`;
+    });
+    await db.exec(
+      `INSERT INTO "PuuidKeyMap" ("oldPuuid", "gameName", "tagLine", "newPuuid", "status")
+       VALUES ${values.join(", ")}`,
+      params,
+    );
+    inserted += batch.length;
   }
   return { inserted, updated, downgraded };
 }

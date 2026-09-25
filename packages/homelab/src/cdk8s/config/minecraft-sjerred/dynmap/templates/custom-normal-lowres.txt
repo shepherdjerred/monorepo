@@ -1,0 +1,22 @@
+version: 0.20
+templates:
+  normal-lowres:
+    enabled: true
+    extrazoomout: 2
+    maps:
+      - class: org.dynmap.hdmap.HDMap
+        name: flat
+        title: "Flat"
+        prefix: flat
+        perspective: iso_S_90_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 2
+      - class: org.dynmap.hdmap.HDMap
+        name: surface
+        title: "Surface"
+        prefix: t
+        perspective: iso_SE_60_lowres
+        shader: stdtexture
+        lighting: shadows
+        mapzoomin: 2

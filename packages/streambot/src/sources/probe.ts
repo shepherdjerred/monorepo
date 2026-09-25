@@ -57,8 +57,7 @@ export function resolutionBucket(height?: number): string {
   if (height >= 2000) return "2160p";
   if (height >= 1400) return "1440p";
   if (height >= 1000) return "1080p";
-  if (height >= 600) return "720p";
-  return "sd";
+  return height >= 600 ? "720p" : "sd";
 }
 
 /** ffprobe `color_transfer` values that denote HDR (PQ / HLG). */

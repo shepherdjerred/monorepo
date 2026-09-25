@@ -1,4 +1,4 @@
-import { afterAll, describe, expect, test } from "vitest";
+import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import { mkdtemp, rm } from "node:fs/promises";
 import path from "node:path";
@@ -21,13 +21,6 @@ type RequestObservation = {
 };
 
 const RELEASE_REQUEST_ID = "11111111-1111-4111-8111-111111111111";
-
-afterAll(async () => {
-  await rm(
-    path.resolve(import.meta.dir, "../../..", "homelab-release-result.json"),
-    { force: true },
-  );
-});
 
 const WorkerApplicationResource = {
   group: "argoproj.io",
@@ -199,13 +192,10 @@ describe("Argo CD prune safety", () => {
             },
           });
         }
-        if (
-          request.method === "GET" &&
+        return request.method === "GET" &&
           url.pathname === "/api/v1/applications/apps"
-        ) {
-          return Response.json({});
-        }
-        return new Response("not found", { status: 404 });
+          ? Response.json({})
+          : new Response("not found", { status: 404 });
       },
     });
 
@@ -1350,16 +1340,14 @@ describe("Argo CD operator script", () => {
           if (request.headers.get("content-type") !== "application/json") {
             return new Response("Invalid content type", { status: 415 });
           }
-          if (url.searchParams.get("project") !== "default") {
-            return new Response("permission denied", { status: 403 });
-          }
-          return new Response(null, { status: 204 });
+          return url.searchParams.get("project") === "default"
+            ? new Response(null, { status: 204 })
+            : new Response("permission denied", { status: 403 });
         }
         if (request.method === "GET") {
-          if (url.searchParams.get("project") !== "default") {
-            return new Response("permission denied", { status: 403 });
-          }
-          return new Response("not found", { status: 404 });
+          return url.searchParams.get("project") === "default"
+            ? new Response("not found", { status: 404 })
+            : new Response("permission denied", { status: 403 });
         }
         return new Response("method not allowed", { status: 405 });
       },

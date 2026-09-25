@@ -50,6 +50,10 @@ import {
   type TargetSpec,
 } from "#src/betting/dares/dare-integration-fixtures.ts";
 import { settleDaresForMatch } from "#src/betting/dares/settlement/dare-settle.ts";
+import { checkpointRecordingSink } from "#src/betting/notify/announcement-sink.test-fixtures.ts";
+import { announcingSettlementSink } from "#src/betting/notify/announcement-sink.ts";
+import { recordSettlementAnnouncementItem } from "#src/database/durable/settlement-announcement-repository.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { DarePartialSettlementError } from "#src/betting/dares/settlement/dare-settle-shared.ts";
 import {
   abandonExpiredDareProposals,
@@ -349,6 +353,74 @@ describe("contributions", () => {
       refundableBucksHeld(tx, account.id),
     );
     expect(releasedHeld).toBe(0n);
+  });
+});
+
+/** Where a settlement's announcement instruction is written, and when. */
+describe("dare announcement instructions", () => {
+  test("a Dare's announcement instruction is written with the settling transaction", async () => {
+    // Proven by BEHAVIOUR, not by comparing client identities: the Prisma
+    // transaction client is a proxy that re-extends, so identity says nothing.
+    // This sink records for real and then throws, aborting the settling
+    // transaction after the row was written. Inside the transaction the row
+    // goes back with it; written through the ambient client it would have
+    // committed on its own, leaving an instruction to announce a Dare
+    // resolution that was rolled back.
+    const dareId = await makeActive({ horizonKind: "next_game", amount: 5 });
+
+    await expect(
+      settleDaresForMatch(
+        winningMatch(ONE_TARGET),
+        db,
+        new Date(GAME_END + 1000),
+        {
+          ...announcingSettlementSink,
+          recordAnnouncementItem: async (handle, item) => {
+            await recordSettlementAnnouncementItem(handle, {
+              matchId: RiotMatchIdSchema.parse("NA1_9500"),
+              item,
+            });
+            throw new Error("the Dare settlement failed after recording");
+          },
+        },
+      ),
+    ).rejects.toThrow();
+
+    expect(
+      await db.matchSettlementAnnouncement.findMany({
+        where: { riotMatchId: "NA1_9500" },
+      }),
+    ).toEqual([]);
+    // And the Dare itself is untouched, which is what makes the rollback the
+    // right outcome rather than a lost settlement.
+    expect(await dareState(dareId)).toBe("active");
+  });
+
+  test("a settled Dare leaves its instruction behind", async () => {
+    // The pair: when the settlement commits, so does the instruction.
+    const dareId = await makeActive({ horizonKind: "next_game", amount: 5 });
+
+    await settleDaresForMatch(
+      winningMatch(ONE_TARGET),
+      db,
+      new Date(GAME_END + 1000),
+      {
+        ...announcingSettlementSink,
+        recordAnnouncementItem: async (handle, item) => {
+          await recordSettlementAnnouncementItem(handle, {
+            matchId: RiotMatchIdSchema.parse("NA1_9501"),
+            item,
+          });
+        },
+      },
+    );
+
+    expect(await dareState(dareId)).toBe("achieved");
+    const stored = await db.matchSettlementAnnouncement.findMany({
+      where: { riotMatchId: "NA1_9501" },
+    });
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.family).toBe("dare-summary");
   });
 
   test("a contribution racing settlement either lands in the pot or is too late", async () => {
@@ -673,11 +745,10 @@ describe("capture and settlement: retry and partial failure", () => {
     // reads `.$transaction` off the object THIS TEST passed in is fooled.
     const failingClient = new Proxy(db, {
       get(target, prop) {
-        if (prop === "$transaction") {
-          return () =>
-            Promise.reject(new Error("simulated persistent database failure"));
-        }
-        return Reflect.get(target, prop, target);
+        return prop === "$transaction"
+          ? () =>
+              Promise.reject(new Error("simulated persistent database failure"))
+          : Reflect.get(target, prop, target);
       },
     });
     let caught: unknown;
@@ -721,10 +792,9 @@ describe("capture and settlement: retry and partial failure", () => {
         if (prop === "$transaction") {
           return (...args: Parameters<typeof db.$transaction>) => {
             transactionCalls += 1;
-            if (transactionCalls === 1) {
-              return Reflect.apply(target.$transaction, target, args);
-            }
-            return Promise.reject(new Error("simulated outage, dare two"));
+            return transactionCalls === 1
+              ? Reflect.apply(target.$transaction, target, args)
+              : Promise.reject(new Error("simulated outage, dare two"));
           };
         }
         return Reflect.get(target, prop, target);
@@ -829,9 +899,20 @@ describe("capture and settlement: payouts", () => {
   test("remakes, wrong queues, pre-activation and post-window games never capture", async () => {
     const dareId = await makeActive({ conditions: winConditions(2) });
 
+    // Riot marks a remake with the early-surrender flags, not a short clock.
     const remake = RawMatchSchema.parse({
       ...winningMatch(ONE_TARGET),
-      info: { ...winningMatch(ONE_TARGET).info, gameDuration: 200 },
+      info: {
+        ...winningMatch(ONE_TARGET).info,
+        gameDuration: 120,
+        participants: winningMatch(ONE_TARGET).info.participants.map(
+          (participant) => ({
+            ...participant,
+            gameEndedInEarlySurrender: true,
+            teamEarlySurrendered: true,
+          }),
+        ),
+      },
     });
     expect(await settleDaresForMatch(remake, db, settleTime)).toEqual([]);
 
@@ -880,6 +961,42 @@ describe("capture and settlement: payouts", () => {
     await expectNoDrift();
   });
 
+  test("a fallback void commits its summary with the refund", async () => {
+    // This void is a FALLBACK: it runs when a capture failed, in a
+    // transaction of its own, and its summary is the only record of a refund
+    // no retry can reproduce — the Dare is terminal once it commits, so the
+    // re-run finds nothing to settle. Recording for real and then failing
+    // shows the instruction going back with the money rather than surviving
+    // to describe a refund that never happened.
+    const dareId = await makeActive({ amount: 5 });
+    await db.bucksDare.update({
+      where: { id: dareId },
+      data: { evaluatorVersion: "0" },
+    });
+    const match = winningMatch(ONE_TARGET);
+
+    await expect(
+      settleDaresForMatch(
+        match,
+        db,
+        settleTime,
+        checkpointRecordingSink(match.metadata.matchId, {
+          thenThrow: "the void failed after recording",
+        }),
+      ),
+    ).rejects.toThrow();
+
+    expect(
+      await db.matchSettlementAnnouncement.findMany({
+        where: { riotMatchId: match.metadata.matchId },
+      }),
+    ).toEqual([]);
+    // And the refund went back with it: the Dare is still active, so a retry
+    // can void it again.
+    expect(await dareState(dareId)).toBe("active");
+    expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT - 5);
+  });
+
   test("a stored evaluator version this code does not implement voids with full refunds", async () => {
     const dareId = await makeActive({ amount: 5 });
     await db.bucksDare.update({
@@ -887,13 +1004,15 @@ describe("capture and settlement: payouts", () => {
       data: { evaluatorVersion: "0" },
     });
     const houseBefore = await houseBalance();
-    const summaries = await settleDaresForMatch(
-      winningMatch(ONE_TARGET),
-      db,
-      settleTime,
-    );
+    const match = winningMatch(ONE_TARGET);
+    const summaries = await settleDaresForMatch(match, db, settleTime);
     expect(summaries.map((summary) => summary.resolution)).toEqual(["voided"]);
     expect(summaries[0]?.voidReason).toBe("unknown_evaluator");
+    // This refund happened on THIS match, and its summary has to say so. An
+    // absent match id is the minter's signal that a DEADLINE sweep resolved
+    // the Dare, so a void that looked like one returned the money and told
+    // nobody it had.
+    expect(summaries[0]?.matchId).toBe(match.metadata.matchId);
     expect(await dareState(dareId)).toBe("voided");
     expect(await balanceOf(CHALLENGER)).toBe(SEED_GRANT);
     expect(await houseBalance()).toBe(houseBefore);

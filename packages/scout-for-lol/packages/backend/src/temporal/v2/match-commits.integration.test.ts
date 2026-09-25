@@ -5,8 +5,10 @@ import {
   type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
+  SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
   SCOUT_V2_MATCH_RECEIPT_KINDS,
   SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
+  scoutV2ClientMatchTerminalEvidenceCodec,
   scoutV2MatchStageConflictEvidenceCodec,
 } from "@scout-for-lol/temporal/match-receipts-v2";
 import type * as DatabaseModule from "#src/database/index.ts";
@@ -31,7 +33,7 @@ vi.mock("#src/database/index.ts", async () => {
   return { ...actual, prisma };
 });
 
-const { recordMatchReceiptsV2 } =
+const { recordClientMatchTerminalV2, recordMatchReceiptsV2 } =
   await import("#src/temporal/v2/match-commits.ts");
 const { readMatchPipelineStateV2 } =
   await import("#src/temporal/v2/match-reads.ts");
@@ -85,6 +87,26 @@ async function kindsOf(matchId: RiotMatchId): Promise<string[]> {
   return records.map((record) => record.receipt.kind);
 }
 
+async function expectDurableMarker(
+  matchId: RiotMatchId,
+  kind: string,
+  parseEvidence: (input: unknown) => unknown,
+): Promise<void> {
+  const records = await listReceipts(prisma, { matchId });
+  const marker = records.find((record) => record.receipt.kind === kind);
+  expect(marker).toBeDefined();
+  expect(parseEvidence(JSON.parse(marker?.evidence ?? "null"))).toEqual({
+    riotMatchId: matchId,
+  });
+
+  const resume = await readMatchPipelineStateV2({ riotMatchId: matchId });
+  expect(resume.kind).toBe("present");
+  if (resume.kind !== "present") {
+    throw new Error(`Expected pipeline state for ${matchId}`);
+  }
+  expect(resume.state.receiptKinds).toContain(kind);
+}
+
 describe("recordMatchReceiptsV2", () => {
   test("attests cleanly and records no marker when nothing is contested", async () => {
     const matchId = RiotMatchIdSchema.parse("NA1_8201");
@@ -126,25 +148,10 @@ describe("recordMatchReceiptsV2", () => {
       { outcome: "conflict", reason: "receipt-evidence-mismatch" },
       { outcome: "applied" },
     ]);
-    const records = await listReceipts(prisma, { matchId });
-    const marker = records.find(
-      (record) =>
-        record.receipt.kind === SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
-    );
-    expect(marker).toBeDefined();
-    expect(
-      scoutV2MatchStageConflictEvidenceCodec.parse(
-        JSON.parse(marker?.evidence ?? "null"),
-      ),
-    ).toEqual({ riotMatchId: matchId });
-
-    // And the resume point is where it shows: this is exactly what the next
-    // execution reads before deciding which phases already happened.
-    const resume = await readMatchPipelineStateV2({ riotMatchId: matchId });
-    expect(resume.kind).toBe("present");
-    if (resume.kind !== "present") return;
-    expect(resume.state.receiptKinds).toContain(
+    await expectDurableMarker(
+      matchId,
       SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
+      (evidence) => scoutV2MatchStageConflictEvidenceCodec.parse(evidence),
     );
   });
 
@@ -173,5 +180,36 @@ describe("recordMatchReceiptsV2", () => {
         (kind) => kind === SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
       ),
     ).toHaveLength(1);
+  });
+});
+
+describe("recordClientMatchTerminalV2", () => {
+  test("surfaces an operator-review marker recorded before observation", async () => {
+    const matchId = RiotMatchIdSchema.parse("NA1_8205");
+
+    await expect(
+      recordClientMatchTerminalV2({ riotMatchId: matchId }),
+    ).resolves.toEqual({ outcome: "applied" });
+    await expect(
+      readMatchPipelineStateV2({ riotMatchId: matchId }),
+    ).resolves.toEqual({ kind: "terminal" });
+  });
+
+  test("persists an idempotent operator-review marker in pipeline state", async () => {
+    const matchId = RiotMatchIdSchema.parse("NA1_8204");
+    await seedObservation(matchId);
+
+    await expect(
+      recordClientMatchTerminalV2({ riotMatchId: matchId }),
+    ).resolves.toEqual({ outcome: "applied" });
+    await expect(
+      recordClientMatchTerminalV2({ riotMatchId: matchId }),
+    ).resolves.toEqual({ outcome: "already-applied" });
+
+    await expectDurableMarker(
+      matchId,
+      SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
+      (evidence) => scoutV2ClientMatchTerminalEvidenceCodec.parse(evidence),
+    );
   });
 });

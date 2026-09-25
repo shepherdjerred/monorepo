@@ -298,6 +298,13 @@ export const ExploreMessageSchema = z
     preview: ReportAiPreviewSummarySchema.nullable().default(null),
     visualization: VisualizationSnapshotSchema.nullable().default(null),
     matchCards: z.array(ExploreMatchCardSchema).max(5).default([]),
+    /**
+     * The guilds this turn's capabilities were resolved from.
+     *
+     * Defaulted so every row written before the column existed still parses,
+     * and so the user turn — which carries none — is not a special case.
+     */
+    guildIds: z.array(z.string()).default([]),
     trace: z.array(ExploreTraceEntrySchema).default([]),
     createdAt: z.iso.datetime(),
   })
@@ -309,9 +316,14 @@ export type ExploreMessage = z.infer<typeof ExploreMessageSchema>;
  * The final SSE event is consumed by tabs whose bundle can predate a server
  * deployment. Keep it to the pre-card message shape: after `done`, current
  * clients refetch the persisted transcript, where match cards are available.
+ *
+ * `guildIds` is omitted for the same reason and it is not optional: an open
+ * tab parses this event with a strict schema, so a key its bundle has never
+ * heard of makes the terminal event unparseable and the answer never lands.
  */
 export const ExploreStreamMessageSchema = ExploreMessageSchema.omit({
   matchCards: true,
+  guildIds: true,
 }).strict();
 export type ExploreStreamMessage = z.infer<typeof ExploreStreamMessageSchema>;
 

@@ -23,8 +23,7 @@ export function formatReportDisplayValue(
       maximumFractionDigits: 1,
     })}%`;
   }
-  if (column.format === "integer") {
-    return value.toLocaleString("en-US", { maximumFractionDigits: 0 });
-  }
-  return value.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  return column.format === "integer"
+    ? value.toLocaleString("en-US", { maximumFractionDigits: 0 })
+    : value.toLocaleString("en-US", { maximumFractionDigits: 2 });
 }

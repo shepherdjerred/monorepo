@@ -1,5 +1,0 @@
-dist/
-data/
-playwright-report/
-test-results/
-*.tsbuildinfo

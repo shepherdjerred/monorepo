@@ -1,0 +1,5 @@
+{
+  "base_url": "https://api.meta.ai/v1",
+  "is_subs_active": true,
+  "subs_tier_name": "Muse Code High Usage"
+}

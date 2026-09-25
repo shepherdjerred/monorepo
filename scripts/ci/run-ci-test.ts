@@ -188,7 +188,17 @@ async function commandForStep(
           : []),
       ];
     case "cargo":
-      return ["cargo", "test", ...step.args, "--", "--format", "pretty"];
+      return [
+        "mise",
+        "exec",
+        "--",
+        "cargo",
+        "test",
+        ...step.args,
+        "--",
+        "--format",
+        "pretty",
+      ];
     case "dotnet": {
       const [project, ...argumentsList] = step.args;
       if (project === undefined) {

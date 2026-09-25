@@ -149,9 +149,9 @@ final class DomainTests: XCTestCase {
   }
 
   func testSubscriptionPlansAndProviderMetadata() {
-    XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD(), 510)
-    XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD(includingLegacy: true), 510)
-    XCTAssertEqual(SubscriptionPlan.standard.count, 6)
+    XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD(), 525)
+    XCTAssertEqual(SubscriptionPlan.totalMonthlyCostUSD(includingLegacy: true), 525)
+    XCTAssertEqual(SubscriptionPlan.standard.count, 7)
     XCTAssertTrue(SubscriptionPlan.legacy.isEmpty)
     XCTAssertTrue(ProviderID.legacy.isEmpty)
     XCTAssertEqual(ProviderID.standard, Set(ProviderID.allCases))
@@ -161,22 +161,31 @@ final class DomainTests: XCTestCase {
     XCTAssertEqual(SubscriptionPlan.plan(for: .cursor).monthlyCostUSD, 20)
     XCTAssertEqual(SubscriptionPlan.plan(for: .kimi).monthlyCostUSD, 40)
     XCTAssertEqual(SubscriptionPlan.plan(for: .grok).monthlyCostUSD, 30)
+    XCTAssertEqual(SubscriptionPlan.plan(for: .muse).monthlyCostUSD, 15)
     XCTAssertEqual(
       ProviderID.grok.usageURL?.absoluteString,
       "https://grok.com/settings/usage?_s=usage"
     )
     XCTAssertEqual(
       ProviderID.allCases,
-      [.claudeCode, .codex, .antigravity, .cursor, .grok, .kimi]
+      [.claudeCode, .codex, .antigravity, .cursor, .grok, .kimi, .muse]
     )
     XCTAssertFalse(ProviderID.antigravity.supportsManualCredentialOverride)
     XCTAssertFalse(ProviderID.cursor.supportsManualCredentialOverride)
+    XCTAssertFalse(ProviderID.muse.supportsManualCredentialOverride)
     XCTAssertTrue(ProviderID.codex.tracksBankedResets)
     XCTAssertTrue(ProviderID.grok.tracksBankedResets)
     XCTAssertFalse(ProviderID.claudeCode.tracksBankedResets)
+    XCTAssertFalse(ProviderID.muse.tracksBankedResets)
+    XCTAssertEqual(ProviderID.muse.displayName, "Meta Muse")
     for provider in ProviderID.allCases {
       XCTAssertFalse(provider.displayName.isEmpty)
-      XCTAssertNotNil(provider.usageURL)
+      if provider == .muse {
+        // Muse quota is visible only inside the signed-in CLI; it has no public usage page.
+        XCTAssertNil(provider.usageURL)
+      } else {
+        XCTAssertNotNil(provider.usageURL)
+      }
     }
   }
 

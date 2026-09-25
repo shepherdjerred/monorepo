@@ -248,15 +248,15 @@ export function runPassthrough(
     return Promise.resolve(127);
   }
 
-  if (process.execve === undefined) {
-    return Promise.reject(
-      new Error("toolkit: process replacement is unavailable on this platform"),
-    );
-  }
-
-  return process.execve(
-    executable,
-    [invocation.executable, ...invocation.args],
-    invocation.env,
-  );
+  return process.execve === undefined
+    ? Promise.reject(
+        new Error(
+          "toolkit: process replacement is unavailable on this platform",
+        ),
+      )
+    : process.execve(
+        executable,
+        [invocation.executable, ...invocation.args],
+        invocation.env,
+      );
 }

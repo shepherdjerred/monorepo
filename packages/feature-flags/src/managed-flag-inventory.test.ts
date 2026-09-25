@@ -135,6 +135,7 @@ describe("ManagedFlagInventorySchema", () => {
     for (const key of [
       "hall_of_fame_enabled",
       "challenge_runs_enabled",
+      "mvp_votes_enabled",
       "voice_assistant_enabled",
     ]) {
       expect(scoutPolicyFlag("prod", key)).toMatchObject({
@@ -170,6 +171,40 @@ describe("ManagedFlagInventorySchema", () => {
         result: true,
       },
     ]);
+  });
+
+  test("opens Scout client ingestion through managed rollouts while its fallback stays off", () => {
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === "scout_client_ingestion",
+    );
+    expect(declared?.default).toBe(false);
+
+    expect(scoutPolicyFlag("beta", "scout_client_ingestion")).toMatchObject({
+      default: true,
+      thresholdRollouts: [],
+    });
+    expect(scoutPolicyFlag("prod", "scout_client_ingestion")).toMatchObject({
+      default: false,
+      thresholdRollouts: [
+        {
+          rank: 1,
+          percentage: 10,
+          result: true,
+        },
+      ],
+    });
+  });
+
+  test("keeps Custom nights beta-only while production client ingestion ramps", () => {
+    expect(
+      scoutPolicyFlag("beta", "custom_nights_enabled").rollouts,
+    ).toHaveLength(1);
+    expect(scoutPolicyFlag("prod", "custom_nights_enabled")).toMatchObject({
+      default: false,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
   });
 
   test("materializes a full-state environment override", () => {
@@ -251,5 +286,38 @@ describe("ManagedFlagInventorySchema", () => {
     ).text();
     const expected = await generateFlagTypesSource();
     expect(generatedOnDisk).toBe(expected);
+  });
+});
+
+describe("pet dashboard rollout", () => {
+  test("keeps the pet dashboard off by default and in beta while prod stays rolled out", () => {
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === "pet-dashboard-enabled",
+    );
+    expect(declared?.default).toBe(false);
+
+    const betaFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "beta",
+      "trmnl-dashboard",
+    ).find((candidate) => candidate.key === "pet-dashboard-enabled");
+    expect(betaFlag).toMatchObject({
+      default: false,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
+
+    const prodFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "prod",
+      "trmnl-dashboard",
+    ).find((candidate) => candidate.key === "pet-dashboard-enabled");
+    expect(prodFlag).toMatchObject({
+      default: true,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
   });
 });

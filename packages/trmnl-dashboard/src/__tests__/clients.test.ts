@@ -20,10 +20,7 @@ function requestUrl(input: Parameters<typeof fetch>[0]): string {
   if (typeof input === "string") {
     return input;
   }
-  if (input instanceof URL) {
-    return input.href;
-  }
-  return input.url;
+  return input instanceof URL ? input.href : input.url;
 }
 
 afterEach(() => {
@@ -57,7 +54,7 @@ describe("HomeStatusClient", () => {
     });
 
     const client = new HomeStatusClient("http://homeassistant.local", "token");
-    const result = await client.getProblemEntities(20, ["scene"]);
+    const result = await client.getProblemEntities(20, ["scene"], []);
 
     expect(result.unavailableCount).toBe(13);
     expect(result.unavailable).toHaveLength(12);
@@ -69,6 +66,51 @@ describe("HomeStatusClient", () => {
         state: "10",
         status: "error",
         detail: "10%",
+      },
+    ]);
+  });
+
+  it("omits expected-unavailable entity globs from the problem list", async () => {
+    setFetchMock(async (input) => {
+      expect(requestUrl(input)).toBe("http://homeassistant.local/api/states");
+      return Response.json([
+        {
+          entity_id: "media_player.rooftop",
+          state: "unavailable",
+          attributes: { friendly_name: "Play" },
+        },
+        {
+          entity_id: "sensor.ipad_ssid",
+          state: "unavailable",
+          attributes: { friendly_name: "iPad SSID" },
+        },
+        {
+          entity_id: "climate.bedroom",
+          state: "unavailable",
+          attributes: { friendly_name: "Bedroom AC" },
+        },
+        {
+          entity_id: "button.identify",
+          state: "unknown",
+          attributes: { friendly_name: "Identify" },
+        },
+      ]);
+    });
+
+    const client = new HomeStatusClient("http://homeassistant.local", "token");
+    const result = await client.getProblemEntities(
+      20,
+      ["button"],
+      ["media_player.rooftop", "sensor.ipad_*"],
+    );
+
+    expect(result.unavailableCount).toBe(1);
+    expect(result.unavailable).toEqual([
+      {
+        entity_id: "climate.bedroom",
+        label: "Bedroom AC",
+        state: "unavailable",
+        status: "warning",
       },
     ]);
   });

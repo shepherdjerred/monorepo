@@ -182,6 +182,7 @@ describe("normalizePath", () => {
     expect(normalizePath("/challenges/drafts/draft-123")).toBe(
       "/challenges/drafts/:draftId",
     );
+    expect(normalizePath("/clash")).toBe("/clash");
     expect(normalizePath("/challenge-runs/run-123")).toBe(
       "/challenge-runs/:runId",
     );

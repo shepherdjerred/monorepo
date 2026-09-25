@@ -34,8 +34,7 @@ export async function handleBryanBucksControl(
   if (request.method !== "POST") {
     return new Response("Method Not Allowed", { status: 405 });
   }
-  if (!authorized(request, token)) {
-    return new Response("Unauthorized", { status: 401 });
-  }
-  return Response.json(await runBryanBucksAnalyticsSync(), { status: 200 });
+  return authorized(request, token)
+    ? Response.json(await runBryanBucksAnalyticsSync(), { status: 200 })
+    : new Response("Unauthorized", { status: 401 });
 }

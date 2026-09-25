@@ -25,6 +25,7 @@
     "./satori/og-card": "./src/brand/og-card.ts",
     "./satori/classic-fonts": "./src/satori/classic-fonts.ts",
     "./satori/classic-style": "./src/satori/classic-style.ts",
+    "./satori/clash-style": "./src/satori/clash-style.ts",
     "./satori/colors": "./src/satori/colors.ts",
     "./satori/file-assets": "./src/satori/file-assets.ts",
     "./satori/fonts": "./src/satori/fonts.ts",
@@ -74,8 +75,8 @@
     "clsx": "^2.1.1",
     "lucide-react": "^1.14.0",
     "opentype.js": "^2.0.0",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
     "satori": "^0.33.0",
@@ -88,21 +89,21 @@
     "@storybook/addon-a11y": "^10.6.0",
     "@storybook/addon-docs": "^10.6.0",
     "@storybook/react-vite": "^10.6.0",
-    "@types/bun": "1.4.0",
-    "@types/react": "^19.2.18",
+    "@types/bun": "1.4.2",
+    "@types/react": "^19.3.0",
     "@types/react-dom": "^19.1.9",
     "@typescript/native": "npm:typescript@7.0.2",
-    "@vitest/coverage-istanbul": "4.1.10",
+    "@vitest/coverage-istanbul": "5.0.1",
     "ajv": "^8.20.0",
     "eslint": "^10.3.0",
     "prettier": "^3.9.6",
     "storybook": "^10.6.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.11",
-    "vitest": "4.1.10"
+    "vitest": "5.0.1"
   },
   "peerDependencies": {
-    "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   }
 }

@@ -169,13 +169,17 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             take: 100,
           });
           const parsedDetachedWorks = detachedWorks.map((work) => {
-            if (work.kind !== "parlay-generation") {
+            if (
+              work.kind !== "parlay-generation" &&
+              work.kind !== "champion-mastery-refresh"
+            ) {
               throw ApplicationFailure.nonRetryable(
                 `Unknown Scout Temporal work kind ${work.kind}`,
                 "InvalidTemporalWorkKind",
               );
             }
-            const kind: "parlay-generation" = work.kind;
+            const kind: "parlay-generation" | "champion-mastery-refresh" =
+              work.kind;
             return { kind, workId: work.id };
           });
           const parsedInteractiveRuns = interactiveRuns.map((run) => {
@@ -288,6 +292,12 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
               deliverHallRecordBreakOutbox(),
               deliverDuelStatusOutbox(),
             ]);
+            break;
+          }
+          case "clash-snapshot": {
+            const { runClashSnapshot } =
+              await import("#src/league/clash/snapshot.ts");
+            await runClashSnapshot();
             break;
           }
           case "prediction-ingest":

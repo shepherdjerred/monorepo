@@ -1,10 +1,9 @@
 /**
- * Dialect shims for the two live Scout database shapes.
+ * Dialect shims for the migration's database shapes.
  *
- * Prod is SQLite (`file:` URL, driven through bun:sqlite) and beta is Postgres
- * (driven through the generated Prisma client). Every statement the migration
- * issues is written to work on both, which is why the rewrite uses correlated
- * subqueries rather than `UPDATE ... FROM`.
+ * Live beta and prod are Postgres, driven through the generated Prisma client.
+ * The long-running local harvest uses SQLite (`file:` URL, through bun:sqlite).
+ * Every statement the migration issues is written to work on both.
  */
 
 import {

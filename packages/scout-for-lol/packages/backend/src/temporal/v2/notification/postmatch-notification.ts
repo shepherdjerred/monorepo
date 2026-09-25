@@ -7,6 +7,8 @@ import {
 } from "@scout-for-lol/data";
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import { matchLinkComponents } from "#src/league/tasks/postmatch/match-report-components.ts";
+import { withMvpVoteFurniture } from "#src/mvp-votes/components.ts";
+import { emptyMvpTallyEmbed } from "#src/mvp-votes/tally.ts";
 import { generateMatchReport } from "#src/league/tasks/postmatch/match-report-generator.ts";
 import {
   AI_REVIEW_ATTACHMENT_NAME,
@@ -15,7 +17,7 @@ import {
   reportImageAttachmentName,
 } from "#src/league/tasks/postmatch/match-report-image.ts";
 import { resolvePostmatchDeliveryChannels } from "#src/league/tasks/notification-filters.ts";
-import { resolveScoutV2MatchContext } from "#src/temporal/v2/match-context.ts";
+import { resolveScoutV2ObservedMatchContext } from "#src/temporal/v2/match-context.ts";
 import type { ScoutV2AttestedReportArtifact } from "#src/temporal/v2/notification/notification-artifact.ts";
 import type { ScoutV2ReportComponentsSchema } from "#src/temporal/v2/notification-receipts.ts";
 import type { z } from "zod";
@@ -62,8 +64,9 @@ import type { z } from "zod";
  * a second copy of that decision would drift from the one v1 delivers. The
  * disassembly is strict: an attachment under a name this module does not
  * know, an embed the delivery would not rebuild, or components other than
- * the match link is a message the receipt could not describe truthfully, and
- * that is a broken contract with v1's builders rather than a degraded mode.
+ * the match link (and, on Flex, the MVP vote furniture) is a message the
+ * receipt could not describe truthfully, and that is a broken contract with
+ * v1's builders rather than a degraded mode.
  */
 
 export type ScoutV2ReportComponents = z.infer<
@@ -113,6 +116,13 @@ function classifyComponents(
   ) {
     return "match-link";
   }
+  const voteFurniture = withMvpVoteFurniture(
+    { components: matchLinkComponents(matchId) },
+    matchId,
+  );
+  if (JSON.stringify(components) === JSON.stringify(voteFurniture.components)) {
+    return "match-link-mvp-vote";
+  }
   throw new Error(
     `The report message for ${matchId} carries components other than the match link, which the render receipt cannot describe`,
   );
@@ -149,10 +159,13 @@ function disassembleReport(
       `The report message for ${matchId} carried no report image, so there is nothing to commit`,
     );
   }
+  const components = classifyComponents(message, matchId);
   const [, expectedEmbed] = attachReportImage(image, matchId);
-  if (
-    JSON.stringify(message.embeds ?? []) !== JSON.stringify([expectedEmbed])
-  ) {
+  const expectedEmbeds =
+    components === "match-link-mvp-vote"
+      ? [expectedEmbed, emptyMvpTallyEmbed()]
+      : [expectedEmbed];
+  if (JSON.stringify(message.embeds ?? []) !== JSON.stringify(expectedEmbeds)) {
     throw new Error(
       `The report message for ${matchId} carries embeds other than the report image's, which the delivery would not rebuild`,
     );
@@ -161,7 +174,7 @@ function disassembleReport(
     image,
     review,
     content,
-    components: classifyComponents(message, matchId),
+    components,
     queueId,
   };
 }
@@ -169,7 +182,18 @@ function disassembleReport(
 export async function renderPostmatchNotificationV2(
   riotMatchId: RiotMatchId,
 ): Promise<ScoutV2PostmatchRender> {
-  const context = await resolveScoutV2MatchContext(riotMatchId);
+  // The OBSERVED roster, which is the one the minter used to decide this
+  // report was owed. Rebuilding it here asked a different question and could
+  // answer it differently for reasons outside the match: the live roster is
+  // narrowed by the Discord gateway's guild cache, and this Activity runs on
+  // the `background` queue while the mint runs on `realtime`, so the two are
+  // different worker pools. An empty rebuild produced no report at all, after
+  // the cursor had already advanced past the match.
+  //
+  // The subscription lookup below still asks who subscribes NOW, which is
+  // right — a channel that unsubscribed should not receive this. It is only
+  // the PUUIDs it is keyed by that belong to the past.
+  const context = await resolveScoutV2ObservedMatchContext(riotMatchId);
   const audience = await resolvePostmatchDeliveryChannels({
     puuids: context.trackedPlayers.map(
       (player) => player.league.leagueAccount.puuid,
@@ -224,6 +248,11 @@ export function buildPostmatchNotificationMessageV2(
   switch (artifact.evidence.components) {
     case "match-link":
       return { ...message, components: matchLinkComponents(matchId) };
+    case "match-link-mvp-vote":
+      return withMvpVoteFurniture(
+        { ...message, components: matchLinkComponents(matchId) },
+        matchId,
+      );
     case "none":
       return message;
   }

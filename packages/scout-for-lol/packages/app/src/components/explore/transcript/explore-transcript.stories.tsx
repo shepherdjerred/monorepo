@@ -169,6 +169,16 @@ const seedSuggestionContext: StorySeed = (trpc, queryClient) => {
   queryClient.setQueryData(trpc.challenge.status.queryOptions().queryKey, {
     enabled: true,
   });
+  queryClient.setQueryData(trpc.mvpVotes.status.queryOptions().queryKey, {
+    state: "available",
+    guilds: [
+      {
+        id: "1337623164146155593",
+        name: "Summoner's Lounge",
+        icon: null,
+      },
+    ],
+  });
   queryClient.setQueryData(trpc.guild.listManageable.queryOptions().queryKey, [
     {
       id: "1337623164146155593",
@@ -178,6 +188,7 @@ const seedSuggestionContext: StorySeed = (trpc, queryClient) => {
       isDiscordAdmin: true,
       customNightsEnabled: true,
       hallOfFameEnabled: true,
+      mvpVotesEnabled: true,
       permissions: [...ALL_PERMISSIONS],
     },
   ]);

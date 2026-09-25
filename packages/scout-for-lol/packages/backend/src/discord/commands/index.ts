@@ -20,7 +20,6 @@ import { executeTrack } from "#src/discord/commands/track.ts";
 import { executeBb } from "#src/discord/commands/bb/bb.ts";
 import { executeScout } from "#src/discord/commands/scout.ts";
 import { executeScoutVoice } from "#src/discord/commands/scout-voice.ts";
-import { executeLobby } from "#src/discord/commands/lobby.ts";
 
 const logger = createLogger("discord-commands");
 
@@ -81,9 +80,6 @@ export async function handleChatInputCommand(
         await executeScout(interaction);
         break;
       }
-      case "lobby":
-        await executeLobby(interaction);
-        break;
       default:
         await interaction.reply({
           content:

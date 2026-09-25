@@ -24,13 +24,13 @@ function bold(t: string): string {
 }
 
 function padRight(str: string, width: number): string {
-  if (str.length >= width) return str.slice(0, width);
-  return str + " ".repeat(width - str.length);
+  return str.length >= width
+    ? str.slice(0, width)
+    : str + " ".repeat(width - str.length);
 }
 
 function truncate(str: string, maxLen: number): string {
-  if (str.length <= maxLen) return str;
-  return str.slice(0, maxLen - 1) + "…";
+  return str.length <= maxLen ? str : str.slice(0, maxLen - 1) + "…";
 }
 
 export function displayTierBreakdown(

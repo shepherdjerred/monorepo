@@ -25,8 +25,9 @@ function latencySeconds(
   if (reviewedAt === null || headPushedAt === null) return null;
   const reviewed = Date.parse(reviewedAt);
   const pushed = Date.parse(headPushedAt);
-  if (!Number.isFinite(reviewed) || !Number.isFinite(pushed)) return null;
-  return Math.round((reviewed - pushed) / 1000);
+  return !Number.isFinite(reviewed) || !Number.isFinite(pushed)
+    ? null
+    : Math.round((reviewed - pushed) / 1000);
 }
 
 /**
@@ -90,6 +91,7 @@ export function buildSignalEvent(input: {
     gate_wait_s: input.gateWaitSeconds,
     timed_out: input.timedOut,
     stale_reaction: input.state.staleReaction,
+    blocked_reason: input.state.blockedReason,
     decision: input.decision === null ? null : input.decision.state,
     request_attempts: input.requestAttempts,
     parser_commit: parserCommit(),

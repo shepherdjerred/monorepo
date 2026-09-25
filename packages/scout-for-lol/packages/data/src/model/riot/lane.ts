@@ -25,10 +25,7 @@ export function parseLane(input: string): Lane | undefined {
   if (normalized === "bottom") {
     return "adc";
   }
-  if (normalized === "utility") {
-    return "support";
-  }
-  return undefined;
+  return normalized === "utility" ? "support" : undefined;
 }
 
 export function laneToString(lane: Lane): string {

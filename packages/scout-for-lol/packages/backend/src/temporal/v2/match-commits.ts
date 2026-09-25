@@ -12,7 +12,9 @@ import {
   type ScoutReceiptOutcomeV2,
 } from "@scout-for-lol/temporal/contracts-v2";
 import {
+  SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
   SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
+  scoutV2ClientMatchTerminalEvidenceCodec,
   scoutV2MatchPhaseOf,
   scoutV2MatchStageConflictEvidenceCodec,
   scoutV2MatchStageEvidenceCodec,
@@ -94,10 +96,7 @@ export async function readMatchReceiptEvidenceV2(
 ): Promise<unknown> {
   const receipts = await listReceipts(prisma, { matchId });
   const standing = receipts.find((record) => record.receipt.kind === kind);
-  if (standing?.evidence == null) {
-    return null;
-  }
-  return JSON.parse(standing.evidence);
+  return standing?.evidence == null ? null : JSON.parse(standing.evidence);
 }
 
 /**
@@ -140,6 +139,25 @@ export async function recordMatchReceiptsV2(
     await markStageReceiptsContested(input.riotMatchId);
   }
   return { receipts };
+}
+
+/** Persist the dispatcher's terminal/review outcome before it advances. */
+export async function recordClientMatchTerminalV2(input: {
+  riotMatchId: RiotMatchId;
+}): Promise<ScoutDurableCommitV2> {
+  const marker = await recordMatchReceiptV2({
+    matchId: input.riotMatchId,
+    kind: SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
+    evidence: scoutV2ClientMatchTerminalEvidenceCodec.serialize({
+      riotMatchId: input.riotMatchId,
+    }),
+  });
+  if (marker.outcome === "conflict") {
+    throw new Error(
+      `The client-match terminal marker for ${input.riotMatchId} conflicts (${marker.reason}); its evidence names only the match, so this is a broken contract`,
+    );
+  }
+  return marker;
 }
 
 /**

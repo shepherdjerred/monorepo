@@ -48,6 +48,12 @@
     "reason": "Disposable OpenTofu provider archives - re-downloadable, holds no state"
   },
   {
+    "namespace": "phoenix",
+    "name": "pgdata-phoenix-postgresql-0",
+    "backup": "enabled",
+    "reason": "Phoenix users, API keys, datasets, annotations, and sampled LLM traces"
+  },
+  {
     "namespace": "buildkitd",
     "name": "buildkitd-cache-liskov",
     "backup": "disabled",
@@ -243,7 +249,13 @@
     "namespace": "minecraft-sjerred",
     "name": "datadir-minecraft-sjerred-0",
     "backup": "enabled",
-    "reason": "Selected Minecraft world"
+    "reason": "Retained pre-RLCraft Minecraft world rollback volume"
+  },
+  {
+    "namespace": "minecraft-sjerred",
+    "name": "minecraft-sjerred-rlcraft-data",
+    "backup": "enabled",
+    "reason": "Active RLCraft server world and mod data"
   },
   {
     "namespace": "minecraft-tsmc",
@@ -396,12 +408,6 @@
     "reason": "Replicated Syncthing bulk data"
   },
   {
-    "namespace": "scout-evals",
-    "name": "scout-evals-data",
-    "backup": "enabled",
-    "reason": "Scout review evals SQLite \u2014 human ratings live only here"
-  },
-  {
     "namespace": "tasknotes",
     "name": "tasknotes-vault-pvc",
     "backup": "enabled",
@@ -429,6 +435,6 @@
     "namespace": "flipt",
     "name": "flipt-data",
     "backup": "enabled",
-    "reason": "Flipt git-backed flag state \u2014 the only durable copy of every flag definition"
+    "reason": "Flipt git-backed flag state — the only durable copy of every flag definition"
   }
 ]

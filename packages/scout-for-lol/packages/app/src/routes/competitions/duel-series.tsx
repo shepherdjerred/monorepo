@@ -47,7 +47,6 @@ function ParticipantActions(props: {
   onDisclosure: (playerId: number) => void;
   onAccept: () => void;
   onReady: () => void;
-  onRevealCode: () => void;
 }) {
   if (props.participants.length === 0) return null;
   const needsAcceptance = props.participants.some(
@@ -56,8 +55,6 @@ function ParticipantActions(props: {
   const needsReadiness = props.participants.some(
     (participant) => !participant.ready,
   );
-  const codeAvailable =
-    props.state === "code_ready" || props.state === "in_progress";
   return (
     <Card>
       <CardHeader>
@@ -88,11 +85,6 @@ function ParticipantActions(props: {
         {!needsAcceptance && needsReadiness ? (
           <Button type="button" onClick={props.onReady}>
             Mark ready
-          </Button>
-        ) : null}
-        {codeAvailable ? (
-          <Button type="button" onClick={props.onRevealCode}>
-            Reveal tournament code
           </Button>
         ) : null}
       </CardContent>
@@ -259,7 +251,6 @@ export function DuelSeries() {
   const queryClient = useQueryClient();
   const { perms } = usePermissions(guildId);
   const [error, setError] = useState<string | null>(null);
-  const [code, setCode] = useState<string | null>(null);
   const series = useQuery(
     trpc.duel.series.queryOptions(
       { guildId, seriesId },
@@ -309,18 +300,6 @@ export function DuelSeries() {
   const ownParticipants = series.data.participants.filter((participant) =>
     ownPlayerIds.has(participant.playerId),
   );
-  const revealCode = async () => {
-    try {
-      const result = await queryClient.query(
-        trpc.duel.code.queryOptions({ guildId, seriesId }),
-      );
-      setCode(result.code);
-    } catch (codeError) {
-      setError(
-        codeError instanceof Error ? codeError.message : String(codeError),
-      );
-    }
-  };
   const reviewRequired =
     series.data.state === "needs_review" || series.data.state === "overdue";
   const canReview =
@@ -374,24 +353,24 @@ export function DuelSeries() {
           setError(null);
           ready.mutate({ guildId, seriesId });
         }}
-        onRevealCode={() => {
-          void revealCode();
-        }}
       />
-      {code === null ? null : (
+      {series.data.state === "code_ready" ||
+      series.data.state === "in_progress" ? (
         <Card>
           <CardHeader>
-            <CardTitle>Tournament code</CardTitle>
+            <CardTitle>Create the duel lobby in League</CardTitle>
             <CardDescription>
-              Visible only in this authenticated participant view. Do not post
-              it publicly.
+              Either participant may create or join an ordinary custom lobby.
+              Scout observes the lobby and completed game automatically when at
+              least one participant is running Scout Client.
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <code className="break-all text-lg">{code}</code>
+          <CardContent className="text-sm text-scout-subtle">
+            Use the configured map and rules below. No tournament code is
+            required.
           </CardContent>
         </Card>
-      )}
+      ) : null}
       <RulesCard ruleset={series.data.ruleset} />
       <GamesCard games={series.data.games} />
       {reviewRequired && canReview ? (

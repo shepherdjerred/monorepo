@@ -54,10 +54,9 @@ function formatWeekTransaction(
 
   const resolved = resolvedMap.get(txn.id);
   if (resolved) {
-    if (resolved.detail !== undefined) {
-      return `  [RESOLVED → SPLIT] ${txn.date} | ${amount} | ${merchant} | ${resolved.detail}`;
-    }
-    return `  [RESOLVED → ${resolved.category}] ${txn.date} | ${amount} | ${merchant}${bankDesc}`;
+    return resolved.detail === undefined
+      ? `  [RESOLVED → ${resolved.category}] ${txn.date} | ${amount} | ${merchant}${bankDesc}`
+      : `  [RESOLVED → SPLIT] ${txn.date} | ${amount} | ${merchant} | ${resolved.detail}`;
   }
 
   if (isCurrentWeek && classifyIndex !== undefined) {

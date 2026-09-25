@@ -121,8 +121,9 @@ function defaultDeps(): VoiceAssistantManagerDeps {
         .getClient()
         ?.guilds.cache.get(guildId)
         ?.channels.cache.get(channelId);
-      if (channel?.isVoiceBased() !== true) return null;
-      return channel.members.filter((member) => !member.user.bot).size;
+      return channel?.isVoiceBased() === true
+        ? channel.members.filter((member) => !member.user.bot).size
+        : null;
     },
     createSession: (input) =>
       new ScoutVoiceSession({

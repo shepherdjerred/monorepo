@@ -1,0 +1,22 @@
+diff --git a/dist/schemas/head.js b/dist/schemas/head.js
+--- a/dist/schemas/head.js
++++ b/dist/schemas/head.js
+@@ -1,5 +1,5 @@
+ import { z } from "astro/zod";
+-import yaml from "js-yaml";
++import * as yaml from "js-yaml";
+ //#region src/schemas/head.ts
+ const HeadConfigSchema = ({ source }) => z.array(z.object({
+ 	tag: z.enum([
+diff --git a/dist/utils/translations-fs.js b/dist/utils/translations-fs.js
+--- a/dist/utils/translations-fs.js
++++ b/dist/utils/translations-fs.js
+@@ -2,7 +2,7 @@
+ import { fileURLToPath } from "node:url";
+ import path from "node:path";
+ import fs from "node:fs";
+-import yaml from "js-yaml";
++import * as yaml from "js-yaml";
+ //#region src/utils/translations-fs.ts
+ const contentCollectionFileExtensions = [
+ 	".json",

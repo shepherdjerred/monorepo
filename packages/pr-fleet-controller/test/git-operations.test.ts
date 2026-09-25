@@ -77,10 +77,9 @@ function fakeGit(trackedExit: number) {
   };
   const mustRun = (executable: string, args: string[]): Promise<string> => {
     mustCalls.push([executable, ...args]);
-    if (executable === "gh" && args.includes("headRefOid")) {
-      return Promise.resolve(JSON.stringify({ headRefOid: "a".repeat(40) }));
-    }
-    return Promise.resolve("");
+    return executable === "gh" && args.includes("headRefOid")
+      ? Promise.resolve(JSON.stringify({ headRefOid: "a".repeat(40) }))
+      : Promise.resolve("");
   };
   return { run, mustRun, mustCalls, runCalls };
 }

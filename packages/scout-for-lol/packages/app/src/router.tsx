@@ -54,12 +54,14 @@ import { ChallengeCatalog } from "#src/routes/challenges/challenge-catalog.tsx";
 import { ChallengeTemplate } from "#src/routes/challenges/challenge-template.tsx";
 import { ChallengeDraft } from "#src/routes/challenges/challenge-draft.tsx";
 import { ChallengeRun } from "#src/routes/challenges/challenge-run.tsx";
+import { ConsumerClash } from "#src/routes/consumer/consumer-clash.tsx";
 import { DuelOverview } from "#src/routes/competitions/duel-overview.tsx";
 import { DuelEvent } from "#src/routes/competitions/duel-event.tsx";
 import { DuelSeries } from "#src/routes/competitions/duel-series.tsx";
 import { DuelStandings } from "#src/routes/competitions/duel-standings.tsx";
 import { DuelHeadToHead } from "#src/routes/competitions/duel-head-to-head.tsx";
 import { RouteErrorPanel } from "#src/components/chrome/route-error-panel.tsx";
+import { ScoutClientPairing } from "#src/routes/scout-client-pairing.tsx";
 import { GUILD_ACTION_ROUTE_PERMISSIONS } from "#src/lib/player/guild-route-permissions.ts";
 import {
   accessLoader,
@@ -287,6 +289,11 @@ export const routes: RouteObject[] = [
                 errorElement: <RouteErrorPanel />,
               },
               {
+                path: "clash",
+                element: <ConsumerClash />,
+                errorElement: <RouteErrorPanel />,
+              },
+              {
                 path: "challenges/drafts/:draftId",
                 element: <ChallengeDraft />,
                 errorElement: <RouteErrorPanel />,
@@ -374,6 +381,11 @@ export const routes: RouteObject[] = [
           { path: "manage", element: <ManageServers /> },
           { path: "welcome", element: <OnboardingWizard /> },
           { path: "installed", element: <InstallLanding /> },
+          {
+            path: "scout-client/pair/:pairingId",
+            element: <ScoutClientPairing />,
+            errorElement: <RouteErrorPanel />,
+          },
           {
             // The operator surface. `OperationsWorkspace` is the gate and the
             // gate is the server: its probe is an operations procedure, so the

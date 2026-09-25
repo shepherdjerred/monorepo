@@ -1,11 +1,15 @@
 import {
+  WorkflowExecutionAlreadyStartedError,
   WorkflowIdConflictPolicy,
+  type Client,
   type WorkflowStartOptions,
 } from "@temporalio/client";
 import {
   SCOUT_V2_REUSE_POLICIES,
   SCOUT_WORKFLOW_NAMES,
+  scoutClientMatchDispatchV2WorkflowId,
   scoutLakeProjectionV2WorkflowId,
+  scoutMatchProcessingV2WorkflowId,
   scoutNotificationV2WorkflowId,
   scoutPipelineReconciliationV2WorkflowId,
   scoutTaskQueues,
@@ -13,12 +17,17 @@ import {
 } from "@scout-for-lol/temporal";
 import {
   scoutLakeProjectionV2InputCodec,
+  scoutClientMatchDispatchV2InputCodec,
+  scoutMatchProcessingV2InputCodec,
   scoutNotificationV2InputCodec,
   scoutPipelineReconciliationV2InputCodec,
   type ScoutLakeProjectionV2Input,
+  type ScoutClientMatchDispatchBatchV2,
+  type ScoutMatchProcessingV2Input,
   type ScoutNotificationV2Input,
   type ScoutPipelineReconciliationV2Input,
 } from "@scout-for-lol/temporal/workflow-contracts-v2";
+import { dispatchScoutClientMatchesV2Signal } from "@scout-for-lol/temporal/signals";
 import {
   buildTemporalExecutionStartMetadata,
   ExecutionMetadataSchema,
@@ -64,6 +73,9 @@ const JOIN_RUNNING_EXECUTION = {
   workflowIdConflictPolicy: WorkflowIdConflictPolicy.USE_EXISTING,
 } as const;
 
+/** Give Riot first refusal before a native payload may become canonical. */
+export const SCOUT_CLIENT_MATCH_START_DELAY = "2 minutes";
+
 /**
  * The slice of `Client` these starts need, and the handle field the caller
  * reads back. Structural so a test can pass a plain object and assert the exact
@@ -94,6 +106,88 @@ function operatorStartMetadata(
     summary,
     description,
   });
+}
+
+function apiStartMetadata(
+  stage: ScoutStage,
+  summary: string,
+  description: string,
+) {
+  return buildTemporalExecutionStartMetadata({
+    metadata: ExecutionMetadataSchema.parse({
+      Environment: stage,
+      Domain: "scout",
+      Trigger: "api",
+      ReleaseCommit: configuration.gitSha,
+    }),
+    summary,
+    description,
+  });
+}
+
+/** Start or join the durable per-match pipeline for native-client ingress. */
+export async function startScoutMatchProcessingV2(
+  client: ScoutV2WorkflowStarter,
+  input: ScoutMatchProcessingV2Input,
+): Promise<{ firstExecutionRunId: string } | null> {
+  try {
+    return await client.workflow.start(SCOUT_WORKFLOW_NAMES.matchProcessingV2, {
+      ...JOIN_RUNNING_EXECUTION,
+      workflowIdReusePolicy:
+        SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.matchProcessingV2],
+      workflowId: scoutMatchProcessingV2WorkflowId(
+        input.stage,
+        input.riotMatchId,
+      ),
+      taskQueue: scoutTaskQueues(input.stage).workflow,
+      startDelay: SCOUT_CLIENT_MATCH_START_DELAY,
+      args: [scoutMatchProcessingV2InputCodec.serialize(input)],
+      ...apiStartMetadata(
+        input.stage,
+        "Ingest a native Scout match observation",
+        "Runs the existing post-match pipeline with Riot-first, paired-client gap filling.",
+      ),
+    });
+  } catch (error) {
+    // The caller acknowledges the deterministic start conflict only after it
+    // reconciles any Custom or duel binding that arrived after this execution
+    // passed its binding-dependent stages.
+    if (error instanceof WorkflowExecutionAlreadyStartedError) return null;
+    throw error;
+  }
+}
+
+/** Durably enqueue native matches behind the environment's serial dispatcher. */
+export async function signalScoutClientMatchDispatchV2(
+  client: Client,
+  stage: ScoutStage,
+  matches: ScoutClientMatchDispatchBatchV2,
+): Promise<void> {
+  await client.workflow.signalWithStart(
+    SCOUT_WORKFLOW_NAMES.clientMatchDispatchV2,
+    {
+      ...JOIN_RUNNING_EXECUTION,
+      workflowIdReusePolicy:
+        SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.clientMatchDispatchV2],
+      workflowId: scoutClientMatchDispatchV2WorkflowId(stage),
+      taskQueue: scoutTaskQueues(stage).workflow,
+      args: [
+        scoutClientMatchDispatchV2InputCodec.serialize({
+          stage,
+          pending: [],
+          lateArrivals: [],
+          orderingWatermark: null,
+        }),
+      ],
+      signal: dispatchScoutClientMatchesV2Signal,
+      signalArgs: [matches],
+      ...apiStartMetadata(
+        stage,
+        "Serialize native Scout match observations",
+        "Queues complete paired-client matches in completion order behind Riot's first-refusal window.",
+      ),
+    },
+  );
 }
 
 export async function startScoutPipelineReconciliationV2(

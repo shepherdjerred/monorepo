@@ -22,10 +22,11 @@ function StateIcon(props: { state: ConfirmationCardState }) {
   if (props.state === "confirmed") {
     return <CheckCircle2 className="size-4 text-scout-primary" />;
   }
-  if (props.state === "expired" || props.state === "failed") {
-    return <CircleX className="size-4 text-scout-danger" />;
-  }
-  return <Clock3 className="size-4 text-scout-primary" />;
+  return props.state === "expired" || props.state === "failed" ? (
+    <CircleX className="size-4 text-scout-danger" />
+  ) : (
+    <Clock3 className="size-4 text-scout-primary" />
+  );
 }
 
 /**

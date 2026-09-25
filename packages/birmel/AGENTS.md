@@ -60,6 +60,6 @@ bun run docker:build
 bun run smoke
 ```
 
-Disconnect Prisma in test teardown. Routine tests use fake Discord, model, and
-browser boundaries. Production delivery uses the existing homelab image and
-ArgoCD path; verify live behavior separately.
+Routine tests use fake Discord, model, and browser boundaries. Production
+delivery uses the existing homelab image and ArgoCD path; verify live behavior
+separately.

@@ -1272,6 +1272,30 @@
       "key": "60005",
       "name": "Xin Zhao",
       "modernKey": "5"
+    },
+    "Jade_Fizz": {
+      "id": "Jade_Fizz",
+      "key": "60105",
+      "name": "Fizz",
+      "modernKey": "105"
+    },
+    "Jade_Graves": {
+      "id": "Jade_Graves",
+      "key": "60104",
+      "name": "Graves",
+      "modernKey": "104"
+    },
+    "Jade_Nami": {
+      "id": "Jade_Nami",
+      "key": "60267",
+      "name": "Nami",
+      "modernKey": "267"
+    },
+    "Jade_Nautilus": {
+      "id": "Jade_Nautilus",
+      "key": "60111",
+      "name": "Nautilus",
+      "modernKey": "111"
     }
   }
 }

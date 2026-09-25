@@ -4,7 +4,10 @@ import {
   type DiscordAccountId,
   type RawMatch,
 } from "@scout-for-lol/data";
-import { publishChallengeDraft } from "#src/progression/challenges/catalog.ts";
+import {
+  publishChallengeDraft,
+  searchChallengeCatalog,
+} from "#src/progression/challenges/catalog.ts";
 import { previewChallengeDraft } from "#src/progression/challenges/drafts.ts";
 import {
   challengeMatchNeedsTimeline,
@@ -451,5 +454,46 @@ describe("challenge timeline durability", () => {
         where: { runId_revision: { runId: run.runId, revision: 2 } },
       }),
     ).resolves.toMatchObject({ revisionState: "queued" });
+  });
+
+  test("seeds four built-in challenge templates and removes legacy template", async () => {
+    const legacy = await db.challengeTemplate.create({
+      data: {
+        slug: "scout-win-every-current-champion",
+        authorDiscordId: "scout",
+        latestVersion: 1,
+      },
+    });
+    await db.challengeTemplateVersion.create({
+      data: {
+        templateId: legacy.id,
+        version: 1,
+        title: "Legacy Win on every current champion A–Z",
+        summary: "Legacy summary",
+        contractJson: JSON.stringify(challengeContract("Legacy")),
+        authorDiscordId: "scout",
+      },
+    });
+
+    const catalog = await searchChallengeCatalog(db, undefined);
+    expect(catalog.length).toBe(4);
+    const templates = await db.challengeTemplate.findMany({
+      select: { slug: true },
+    });
+    const slugs = templates
+      .map((t) => t.slug)
+      .toSorted((left, right) => (left ?? "").localeCompare(right ?? ""));
+    expect(slugs).toEqual([
+      "scout-win-every-champion-arena-first",
+      "scout-win-every-champion-arena-win",
+      "scout-win-every-champion-flex",
+      "scout-win-every-champion-solo",
+    ]);
+
+    expect(
+      await db.challengeTemplate.findUnique({
+        where: { slug: "scout-win-every-current-champion" },
+      }),
+    ).toBeNull();
   });
 });

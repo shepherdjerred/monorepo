@@ -1,12 +1,31 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { getAllSeasons, PlayerIdSchema } from "@scout-for-lol/data";
+import type * as ScoutData from "@scout-for-lol/data";
+
+vi.mock("@scout-for-lol/data", async (importOriginal) => {
+  const original = await importOriginal<typeof ScoutData>();
+  return {
+    ...original,
+    // COMPETITION_EXAMPLES is built at module load and omits the "rank"
+    // starter when no season is current (e.g. between acts), which made the
+    // legacy-starter test depend on the wall clock. Pin a fixed catalog act
+    // so the test is deterministic. getCurrentSeason's only app consumer is
+    // onboarding-examples, so nothing else in this file is affected.
+    getCurrentSeason: () => ({
+      id: "2026_SEASON_3_ACT_1",
+      displayName: "Classic (Act 1)",
+      startDate: new Date("2026-07-29T12:00:00-07:00"),
+      endDate: new Date("2026-09-22T23:59:59-07:00"),
+    }),
+  };
+});
 import {
   buildCompetitionSubmission,
   competitionBuilderReducer,
   initialCompetitionBuilderState,
 } from "#src/lib/bucks/competition-builder-state.ts";
 import { buildCompetitionScenarios } from "#src/lib/bucks/competition-scenarios.ts";
-import { COMPETITION_EXAMPLES } from "#src/lib/onboarding/onboarding-examples.ts";
+import { buildCompetitionExamples } from "#src/lib/onboarding/onboarding-examples.ts";
 import { validateForm } from "#src/lib/bucks/competition-form-state.ts";
 import { competitionReviewSummary } from "#src/components/competition/competition-builder-review.tsx";
 
@@ -106,7 +125,9 @@ describe("competition builder reducer and submission", () => {
   });
 
   test("the legacy rank starter also builds and validates HIGHEST_RANK", () => {
-    const rank = COMPETITION_EXAMPLES.find((example) => example.id === "rank");
+    const rank = buildCompetitionExamples("2026_SEASON_3_ACT_1").find(
+      (example) => example.id === "rank",
+    );
     expect(rank).toBeDefined();
     if (rank === undefined) return;
     const result = validateForm(rank.build("200000000000000005"));
@@ -117,6 +138,14 @@ describe("competition builder reducer and submission", () => {
       queues: ["solo"],
       aggregation: "MAX",
     });
+  });
+
+  test("omits the rank starter when no season can be selected", () => {
+    expect(
+      buildCompetitionExamples(undefined).some(
+        (example) => example.id === "rank",
+      ),
+    ).toBe(false);
   });
 
   test("preset switching is atomic and preserves roster and delivery settings", () => {

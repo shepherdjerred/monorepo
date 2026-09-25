@@ -11,6 +11,8 @@ import {
   UnsupportedLoadingScreenQueueError,
 } from "#src/league/tasks/prematch/loading-screen-errors.ts";
 import { buildLoadingScreenData } from "#src/league/tasks/prematch/loading-screen-builder.ts";
+import { clashSurfaceEnabledForPuuids } from "#src/league/clash/access.ts";
+import { attachClashChrome } from "#src/league/clash/chrome.ts";
 import {
   loadingScreenToImage,
   loadingScreenToSvg,
@@ -58,10 +60,9 @@ export async function renderPrematchLoadingScreen(input: {
       trackedPlayers.map((p) => p.league.leagueAccount.puuid),
     );
 
-    loadingScreenData = await buildLoadingScreenData(
-      gameInfo,
-      trackedPuuidSet,
-      region,
+    loadingScreenData = await attachClashChrome(
+      await buildLoadingScreenData(gameInfo, trackedPuuidSet, region),
+      await clashSurfaceEnabledForPuuids([...trackedPuuidSet]),
     );
     const [image, svg] = await Promise.all([
       loadingScreenToImage(loadingScreenData),

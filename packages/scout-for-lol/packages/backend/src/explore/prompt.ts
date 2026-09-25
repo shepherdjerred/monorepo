@@ -46,6 +46,11 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
       : [
           "This server also has Bryan Bucks (friendly betting) data, answered with the dedicated bucks tools.",
         ]),
+    ...(options.mvpVotes == null
+      ? []
+      : [
+          "This server also has community Discord MVP votes, answered with the dedicated MVP tools — not ScoutQL.",
+        ]),
     "",
     "## What the data is",
     "The corpus is every participant of every match Scout has ingested: the games of players tracked by servers running Scout, including all nine other participants of those games.",

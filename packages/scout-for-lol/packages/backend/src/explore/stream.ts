@@ -339,8 +339,7 @@ function toolCallMessage(toolName: string): string {
     return "Querying Bryan Bucks records.";
   }
   const dareMessage = DARE_TOOL_CALL_MESSAGES.get(toolName);
-  if (dareMessage !== undefined) return dareMessage;
-  return `Running ${toolName}.`;
+  return dareMessage ?? `Running ${toolName}.`;
 }
 
 function toolResultMessage(toolName: string, ok: boolean): string {
@@ -370,8 +369,7 @@ function toolResultMessage(toolName: string, ok: boolean): string {
   ) {
     return "Got Bryan Bucks results.";
   }
-  if (DARE_RESULT_TOOL_NAMES.has(toolName)) {
-    return "Dare action completed.";
-  }
-  return `${toolName} completed.`;
+  return DARE_RESULT_TOOL_NAMES.has(toolName)
+    ? "Dare action completed."
+    : `${toolName} completed.`;
 }

@@ -13,13 +13,14 @@ import {
   type BucksMessageEdit,
 } from "#src/betting/notify/message-refresh.ts";
 import {
+  announceEarnedAwards,
   announceSettlements,
   sendSettlementMessage,
   type SettlementDeliveryDependencies,
 } from "#src/betting/notify/announce.ts";
-import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 import { recordPoolMessageRefs } from "#src/betting/markets/pool-open.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import {
   bucksTestDiscordId,
   bucksTestPuuid,
@@ -194,7 +195,9 @@ function parlaySettlement(): ParlaySettlementSummary {
 }
 
 /** The nonce one settlement delivery of `kind` carries into this channel. */
-async function capturedNonce(kind: "outcome" | "parlay"): Promise<unknown> {
+async function capturedNonce(
+  kind: "outcome" | "parlay" | "earnings",
+): Promise<unknown> {
   const attempts: MessageCreateOptions[] = [];
   await sendSettlementMessage(
     {
@@ -548,6 +551,39 @@ describe("announceSettlements visibility", () => {
 
     expect(sends).toHaveLength(2);
     expect(JSON.stringify(sends[0])).toContain("Sean");
+  });
+
+  test("announces late-binding earnings without colliding with the outcome nonce", async () => {
+    await createPool({ prematchContentBase: null });
+    const sends: MessageCreateOptions[] = [];
+    await announceEarnedAwards(
+      {
+        matchId: MATCH_ID,
+        earnings: [
+          {
+            serverId: SERVER_ID,
+            discordId: bucksTestDiscordId(1),
+            alias: "Sean",
+            reasons: ["played"],
+            total: 1,
+          },
+        ],
+        postmatchMessageIds: new Map(),
+      },
+      db,
+      {
+        sendMessage: (options) => {
+          sends.push(options);
+          return Promise.resolve();
+        },
+        sleep: () => Promise.resolve(),
+      },
+    );
+
+    expect(sends).toHaveLength(2);
+    expect(JSON.stringify(sends[0])).toContain("Sean");
+    expect(sends[0]?.nonce).toBe(await capturedNonce("earnings"));
+    expect(sends[0]?.nonce).not.toBe(await capturedNonce("outcome"));
   });
 
   // An empty outcome paired with a parlay is delivered as the parlay carrier,

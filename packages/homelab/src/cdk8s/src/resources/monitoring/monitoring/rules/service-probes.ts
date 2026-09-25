@@ -21,7 +21,7 @@ export function getServiceProbeRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           // The minecraft namespaces hibernate at 0 desired replicas
-          // (mc-router scales them up on player connect), so their bluemap
+          // (mc-router scales them up on player connect), so their web-map
           // probes are EXPECTED to fail while the namespace sleeps. Suppress
           // the alert whenever every StatefulSet in a minecraft-* namespace
           // has 0 desired replicas; the 10m `for` absorbs wake-up time once

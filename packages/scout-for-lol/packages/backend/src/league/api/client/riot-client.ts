@@ -12,6 +12,12 @@ import {
   RawChampionMasteryListSchema,
   type RawChampionMastery,
   MatchIdSchema,
+  RawClashPlayerListSchema,
+  RawClashTeamSchema,
+  RawClashTournamentListSchema,
+  type RawClashPlayerList,
+  type RawClashTeam,
+  type RawClashTournament,
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import {
@@ -153,6 +159,15 @@ export class RiotClient {
   };
 
   public readonly championMastery = {
+    byPuuid: async (
+      puuid: LeaguePuuid,
+      platform: PlatformRoute,
+      requestOptions: RateLimitedRequestOptions = {},
+    ): Promise<RawChampionMastery[]> => {
+      const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/champion-mastery/v4/champion-masteries/by-puuid/${encodeURIComponent(puuid)}`;
+      const data = await this.fetchJson(url, requestOptions);
+      return RawChampionMasteryListSchema.parse(data);
+    },
     topByPuuid: async (
       puuid: LeaguePuuid,
       platform: PlatformRoute,
@@ -172,6 +187,34 @@ export class RiotClient {
     ): Promise<unknown> => {
       const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/${encodeURIComponent(puuid)}`;
       return this.fetchJson(url);
+    },
+  };
+
+  public readonly clash = {
+    tournaments: async (
+      platform: PlatformRoute,
+    ): Promise<RawClashTournament[]> => {
+      const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/clash/v1/tournaments`;
+      const data = await this.fetchJson(url);
+      return RawClashTournamentListSchema.parse(data);
+    },
+
+    playersByPuuid: async (
+      puuid: LeaguePuuid,
+      platform: PlatformRoute,
+    ): Promise<RawClashPlayerList> => {
+      const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/clash/v1/players/by-puuid/${encodeURIComponent(puuid)}`;
+      const data = await this.fetchJson(url);
+      return RawClashPlayerListSchema.parse(data);
+    },
+
+    teamById: async (
+      teamId: string,
+      platform: PlatformRoute,
+    ): Promise<RawClashTeam> => {
+      const url = `https://${platform.toLowerCase()}.api.riotgames.com/lol/clash/v1/teams/${encodeURIComponent(teamId)}`;
+      const data = await this.fetchJson(url);
+      return RawClashTeamSchema.parse(data);
     },
   };
 }

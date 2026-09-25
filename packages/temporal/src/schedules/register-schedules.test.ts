@@ -26,6 +26,7 @@ import {
   type TemporalBootstrapMetadata,
 } from "#shared/execution-metadata.ts";
 import * as workflowEntrypoint from "#workflows/index.ts";
+import { scoutPostMatchDiscoveryV2InputCodec } from "@scout-for-lol/temporal/workflow-contracts-v2";
 
 const DYNAMIC_AGENT_TASK_MEMO = {
   [DYNAMIC_AGENT_TASK_MEMO_KEY]: true,
@@ -97,6 +98,23 @@ test("every declared schedule workflow is exported by the workflow bundle", () =
 
   expect(missingWorkflowTypes).toEqual([]);
 });
+
+test.each(["beta", "prod"] as const)(
+  "the %s post-match schedule keeps its ID while routing through V2 dispatch",
+  (stage) => {
+    const schedule = findScheduleById(`scout-${stage}-postmatch-discovery`);
+    expect(schedule.workflowType).toBe("scoutPostMatchDiscoveryV2Workflow");
+    expect(schedule.args).toEqual([
+      scoutPostMatchDiscoveryV2InputCodec.serialize({
+        stage,
+        trigger: "schedule",
+      }),
+    ]);
+    expect(schedule.taskQueue).toBe(
+      stage === "beta" ? TASK_QUEUES.SCOUT_BETA : TASK_QUEUES.SCOUT_PROD,
+    );
+  },
+);
 
 describe("central Workflow schedule routing", () => {
   const definitions = [
@@ -225,25 +243,21 @@ describe("declared schedules are never reconciled as dynamic agent tasks", () =>
     ).toBe(true);
   });
 
-  // Regression: ci-io-post-merge-impact was created as a dynamic agent task
-  // and later promoted into SCHEDULES. Temporal memos are immutable after
-  // creation, so its live memo still carried the marker while its action
-  // started a declared workflow. Reconciling it threw "must start
+  // Regression: ci-io-post-merge-impact (retired 2026-09) was created as a
+  // dynamic agent task and later promoted into SCHEDULES. Temporal memos are
+  // immutable after creation, so its live memo still carried the marker while
+  // its action started runCiIoImpact. Reconciling it threw "must start
   // agentTaskWorkflow" and crash-looped the worker before it could register
-  // any schedule. That schedule has since been retired, so the regression is
-  // pinned against an arbitrary declared id instead — the rule is about
-  // declared-vs-dynamic precedence, not about that one schedule.
+  // any schedule. The behavior pin now uses dns-audit-daily since the
+  // original schedule is deleted.
   test("a declared schedule with a stale marker is skipped", () => {
-    const declared = SCHEDULES[0];
-    if (declared === undefined) {
-      throw new Error("no declared schedules to check precedence against");
-    }
+    expect(declaredIds.has("dns-audit-daily")).toBe(true);
     expect(
       isReconcilableDynamicAgentTaskSchedule(
-        declared.id,
+        "dns-audit-daily",
         {
           ...DYNAMIC_AGENT_TASK_MEMO,
-          description: "Agent task: promoted into SCHEDULES",
+          description: "Agent task: stale marker on a declared schedule",
         },
         declaredIds,
       ),
@@ -267,7 +281,7 @@ describe("declared schedules are never reconciled as dynamic agent tasks", () =>
   test("declared precedence matches orphan detection", () => {
     expect(
       isOrphanSchedule({
-        scheduleId: "ci-io-telemetry-daily",
+        scheduleId: "dns-audit-daily",
         memo: DYNAMIC_AGENT_TASK_MEMO,
         namespace: "prod",
         declaredIds,
@@ -416,7 +430,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "generateDependencySummary",
   "runProtobufWatch",
   "runTasknotesCanary",
-  "runCiIoTelemetry",
   "runDnsAudit",
   "runHomelabAuditWorkflow",
   "agentTaskWorkflow",
@@ -449,6 +462,10 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // sleeps; the activity carries its own startToCloseTimeout + retry budget.
   "runScoutImageGcWorkflow",
   "runVeleroOrphanAuditWorkflow",
+  // Awaits a single runVeleroR2OrphanAudit activity (Backup CR + two R2
+  // prefix listings). No workflow-level sleeps; the activity carries its own
+  // startToCloseTimeout + retry budget.
+  "runVeleroR2OrphanAuditWorkflow",
   "runSeaweedFsBackupWorkflow",
   "runSeaweedFsBackupRetentionAndGcWorkflow",
   "syncGolinks",
@@ -462,7 +479,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // activities or child workflows. Their activity retry budgets are bounded
   // independently; none sleeps inside Workflow code.
   "scoutRealtimePollWorkflow",
-  "scoutPostMatchDiscoveryWorkflow",
+  "scoutPostMatchDiscoveryV2Workflow",
   "scoutIngestionReconciliationWorkflow",
   "scoutBackgroundJobWorkflow",
   "scoutReportScheduleReconcilerWorkflow",
@@ -615,6 +632,7 @@ test("terminates running executions of retired workflow types", async () => {
     'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runScoutWeeklyParlayWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runScoutWeeklyParlayCatchupWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runCiIoImpact" AND ExecutionStatus = "Running"',
   ]);
   expect(terminated).toEqual(
     Array.from(
@@ -672,6 +690,7 @@ test("terminates a retired workflow in the namespace it actually ran in", async 
   );
   expect(prodQueries).toEqual([
     'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runCiIoImpact" AND ExecutionStatus = "Running"',
   ]);
 });
 
@@ -764,7 +783,7 @@ describe("Glitter context refresh schedule", () => {
       expression: "0 11 * * 1",
       timezone: "America/Los_Angeles",
     });
-    expect(schedule.args).toEqual([{ maxEstimatedCostUsd: 1 }]);
+    expect(schedule.args).toEqual([{ maxEstimatedCostUsd: 10 }]);
     expect(schedule.workflowExecutionTimeout).toBe("15 hours");
     expect(buildScheduleState(schedule, {}).paused).toBe(true);
     expect(
@@ -852,6 +871,13 @@ describe("orphan schedule detection", () => {
     expect(DELETED_SCHEDULE_IDS).toContain("review-signals-collect");
     expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
       "review-signals-collect",
+    );
+  });
+
+  test("retired CI I/O schedule is queued for deletion", () => {
+    expect(DELETED_SCHEDULE_IDS).toContain("ci-io-post-merge-impact");
+    expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
+      "ci-io-post-merge-impact",
     );
   });
 

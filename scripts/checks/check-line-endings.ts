@@ -58,10 +58,9 @@ function isViolation(entry: EolEntry): string | null {
   if (!wantsCrlf && entry.index === "crlf") {
     return `index has CRLF but attributes want LF (attr=${entry.attr})`;
   }
-  if (entry.index === "mixed") {
-    return `index has MIXED line endings (attr=${entry.attr})`;
-  }
-  return null;
+  return entry.index === "mixed"
+    ? `index has MIXED line endings (attr=${entry.attr})`
+    : null;
 }
 
 function main(): void {

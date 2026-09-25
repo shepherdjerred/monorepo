@@ -1,9 +1,7 @@
-import type { ThreadEvent, Usage as CodexUsage } from "@openai/codex-sdk";
-import {
-  codexAgentStepViolation as sharedCodexAgentStepViolation,
-  runCodexAgentTurn,
-} from "#lib/agent-runner/codex.ts";
+import type { ThreadEvent } from "@openai/codex-sdk";
+import { codexAgentStepViolation as sharedCodexAgentStepViolation } from "#lib/agent-runner/codex.ts";
 import { agentTurnExecutionError } from "#lib/agent-runner/errors.ts";
+import { runAgentTurn } from "#lib/agent-runner/run.ts";
 import type { AgentTaskSdkConfig } from "./agent-task-sdk-config.ts";
 
 export type AgentTaskSdkUsage = {
@@ -49,16 +47,6 @@ export type AgentTaskSdkRunInput = {
   warn: (message: string) => void;
 };
 
-function normalizedUsage(usage: CodexUsage): AgentTaskSdkUsage {
-  return {
-    inputTokens: usage.input_tokens,
-    cachedInputTokens: usage.cached_input_tokens,
-    cacheWriteInputTokens: usage.cache_write_input_tokens,
-    outputTokens: usage.output_tokens,
-    reasoningTokens: usage.reasoning_output_tokens,
-  };
-}
-
 const CODEX_TOOL_ITEM_TYPES = new Set([
   "command_execution",
   "file_change",
@@ -78,8 +66,9 @@ export function codexFinalizationToolViolation(input: {
   ) {
     return undefined;
   }
-  if (!CODEX_TOOL_ITEM_TYPES.has(input.event.item.type)) return undefined;
-  return `Codex finalization invoked the ${input.event.item.type} tool; the finalization phase may only reason over the captured evidence catalog`;
+  return CODEX_TOOL_ITEM_TYPES.has(input.event.item.type)
+    ? `Codex finalization invoked the ${input.event.item.type} tool; the finalization phase may only reason over the captured evidence catalog`
+    : undefined;
 }
 
 export function codexAgentStepViolation(input: {
@@ -105,7 +94,8 @@ export async function runAgentTaskSdk(
     });
   }
 
-  const outcome = await runCodexAgentTurn({
+  const outcome = await runAgentTurn({
+    provider: "codex",
     service: "temporal",
     callSite: "agent-task",
     prompt: input.config.prompt,
@@ -166,7 +156,7 @@ export async function runAgentTaskSdk(
     model: input.config.model,
     durationMs: outcome.durationMs,
     sessionId: outcome.sessionId,
-    usage: normalizedUsage(outcome.usage),
+    usage: outcome.usage,
     costUsd: undefined,
     eventCount: outcome.eventCount,
     firstEventLatencyMs: outcome.firstEventLatencyMs,

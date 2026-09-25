@@ -148,8 +148,9 @@ function inferLegacyArtifactType(
     return "helm-chart";
   }
   if (datasource === "npm") return "package";
-  if (datasource === "docker" || value.includes("@sha256:")) return "image";
-  return "source";
+  return datasource === "docker" || value.includes("@sha256:")
+    ? "image"
+    : "source";
 }
 
 function legacyKey(trimmed: string): string | undefined {

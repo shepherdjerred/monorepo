@@ -47,17 +47,43 @@ Confirm the pull request pins `temporalio/server` and
 The 1.31.2 change is a separate future release and must not merge until the
 1.30.6 acceptance below is recorded.
 
-Argo runs two ordered PreSync hooks before touching the server Deployment:
+Argo runs two ordered gates before touching the server Deployment:
 
-1. `temporal-backup-preflight` requires the newest `6hourly-backup` to be less
-   than seven hours old, completed without errors, and to have completed every
-   attempted volume snapshot.
-2. `temporal-schema-migration` runs the matching admin-tools image and updates
-   both the core and visibility PostgreSQL schemas over verified TLS.
+1. `temporal-backup-preflight`, a PreSync hook, requires the newest
+   `6hourly-backup` to be less than seven hours old, completed without errors,
+   and to have completed every attempted volume snapshot. It then proves that
+   backup covered the PostgreSQL volume specifically, by reading the
+   `ZFSBackup` object openebs zfs-localpv writes for the PVC's bound PV under
+   that backup's name and requiring status `Done`.
+2. `temporal-schema-migration`, a Sync hook at wave -1, runs the matching
+   admin-tools image and updates both the core and visibility PostgreSQL
+   schemas over verified TLS.
 
 A failed hook fails the Argo sync, so the old server stays running. Do not skip
 or delete a failed hook to force the rollout. Repair the backup, certificate,
 database, or schema problem and retry the same release.
+
+The temporal child sync waits up to 20 minutes because the migration hook may
+run up to 15 minutes: DDL that rewrites a hot table runs under live server
+traffic. The visibility v1.14 migration (two `STORED` generated columns on a
+6 GiB `executions_visibility`) needed most of that budget across two attempts.
+The waiter must outlast the hook, so both numbers live together in
+`temporal-release-budgets.ts`, which the chart and the release script share.
+
+If a sync times out mid-migration, check whether the DDL landed before the
+version marker:
+
+```sh
+kubectl --namespace temporal exec temporal-postgresql-0 -- \
+  psql -U postgres -d temporal_visibility -c "SELECT * FROM schema_version;"
+kubectl --namespace temporal exec temporal-postgresql-0 -- \
+  psql -U postgres -d temporal_visibility -c "\d executions_visibility"
+```
+
+`temporal-sql-tool` tolerates already-applied statements
+(`Duplicate update ... Ignoring it and continue`), so retrying the same
+release resumes a partially applied migration instead of restarting it: the
+landed statements are skipped as duplicates and only the pending work remains.
 
 Watch the gates and the Deployment:
 

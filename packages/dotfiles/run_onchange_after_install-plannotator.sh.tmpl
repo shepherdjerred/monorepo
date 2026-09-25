@@ -69,4 +69,11 @@ plugins="$(claude plugin list)"
 if [[ $plugins != *"$claude_plugin"* ]]; then
   claude plugin install "$claude_plugin"
 fi
+
+# Clean up retired unofficial wrappers and hook registrations from earlier installs
+rm -f \
+  "$HOME/.grok/hooks/plannotator.json" \
+  "$HOME/.local/bin/plannotator-antigravity-stop-hook" \
+  "$HOME/.local/bin/plannotator-cursor-session-end-hook"
 {{- end -}}
+

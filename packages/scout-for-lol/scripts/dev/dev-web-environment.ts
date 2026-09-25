@@ -25,6 +25,7 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   bucks_dares_enabled: false,
   bucks_transfers_enabled: false,
   challenge_runs_enabled: false,
+  clash_surface: false,
   competition_builder_v2_enabled: false,
   custom_nights_enabled: false,
   dare_extended_contracts_enabled: false,
@@ -33,14 +34,15 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   debug: false,
   duels_enabled: false,
   explore_creation_enabled: false,
+  explore_on_demand_riot_enabled: false,
   feature_tips_enabled: false,
   hall_of_fame_enabled: false,
+  mvp_votes_enabled: false,
   initial_match_history_import_enabled: false,
   scout_operations_console_enabled: false,
   scoutql_relational_enabled: false,
   "scout-consumer-player-profiles-enabled": true,
   "scout-temporal-call-graph-tracing": false,
-  tournament_lobbies_enabled: false,
   voice_assistant_enabled: false,
   // Variant flags: same defaults as the `DEFINITION` snapshot in
   // packages/backend/src/config/dynamic.ts, which already falls back to them
@@ -51,8 +53,6 @@ export const DEFAULT_STATIC_FLAG_OVERRIDES: Record<
   "scout-report-ai-model": "gpt-5.6-sol",
   "scout-feature-tip-percent": 10,
   "scout-feature-tip-cooldown-hours": 72,
-  "scout-tournament-api-mode": "stub",
-  "scout-tournament-max-open-lobbies": 10,
   "llm-hourly-token-budget": 2_000_000,
   "llm-daily-token-budget": 20_000_000,
 };

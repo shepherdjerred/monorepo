@@ -19,10 +19,9 @@ export function createEnvSource(environment: Environment): ConfigSource {
     name: "env",
     get: (names: ConfigKeyNames): Promise<SourceResult | undefined> => {
       const raw = environment[names.env];
-      if (raw === undefined || raw.length === 0) {
-        return Promise.resolve(undefined);
-      }
-      return Promise.resolve({ value: raw });
+      return raw === undefined || raw.length === 0
+        ? Promise.resolve(undefined)
+        : Promise.resolve({ value: raw });
     },
   };
 }

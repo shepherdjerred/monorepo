@@ -17,7 +17,9 @@ import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts"
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { getMatchPipelineState } from "#src/database/durable/match-pipeline-state.ts";
 import { getObservation } from "#src/database/durable/observation-repository.ts";
+import { listReceipts } from "#src/database/durable/receipt-repository.ts";
 import { discoverPostMatchIntents } from "#src/league/tasks/postmatch/match-history-polling.ts";
+import { SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND } from "@scout-for-lol/temporal/match-receipts-v2";
 
 /**
  * The V2 core's reads: what to process, where a run can resume from, and what
@@ -103,14 +105,22 @@ export async function discoverPostMatchIdsV2(options?: {
     );
   }
   const matches = discovery.matches
-    .map((intent) => ({
-      riotMatchId: RiotMatchIdSchema.parse(intent.matchId),
-      sourcePuuid: LeaguePuuidSchema.parse(intent.sourcePuuid),
-      // v1's own per-match call, carried rather than re-derived: a match it
-      // surfaced while filling a gap announces nothing, and this pass is the
-      // only place that knows which kind of pass found it.
-      deliveryMode: MatchDeliveryModeSchema.parse(intent.delivery),
-    }))
+    .map((intent) => {
+      if (intent.gameEndTimestamp === undefined) {
+        throw new Error(
+          `Current V2 discovery omitted the completion timestamp for ${intent.matchId}`,
+        );
+      }
+      return {
+        riotMatchId: RiotMatchIdSchema.parse(intent.matchId),
+        sourcePuuid: LeaguePuuidSchema.parse(intent.sourcePuuid),
+        // v1's own per-match call, carried rather than re-derived: a match it
+        // surfaced while filling a gap announces nothing, and this pass is the
+        // only place that knows which kind of pass found it.
+        deliveryMode: MatchDeliveryModeSchema.parse(intent.delivery),
+        gameEndTimestamp: intent.gameEndTimestamp,
+      };
+    })
     .slice(0, SCOUT_V2_PAGE_MAX);
   return ScoutPostMatchScanV2ResultSchema.parse({
     outcome: "scanned",
@@ -163,7 +173,14 @@ export async function readMatchPipelineStateV2(input: {
   const matchId = RiotMatchIdSchema.parse(input.riotMatchId);
   const aggregate = await getMatchPipelineState(prisma, { matchId });
   if (aggregate === null) {
-    return { kind: "absent" };
+    const receipts = await listReceipts(prisma, { matchId });
+    const terminal = receipts.some(
+      (record) =>
+        record.receipt.kind === SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
+    );
+    return ScoutMatchPipelineStateV2ResultSchema.parse({
+      kind: terminal ? "terminal" : "absent",
+    });
   }
   const receiptKinds: ReceiptKind[] = [
     ...new Set(aggregate.processing.receipts.map((receipt) => receipt.kind)),
@@ -213,8 +230,33 @@ export async function planMatchFanOutV2(input: {
     getObservation(prisma, { matchId }),
   ]);
   return ScoutFanOutV2ResultSchema.parse({
+    // Every drivable intent for this match EXCEPT a prematch one.
+    //
+    // Kind is not a routing decision here: the notification child is started
+    // from an intent key and the delivery arm selects its renderer from the
+    // row's own `kind`, so excluding a kind does not send it differently — it
+    // leaves it unstarted. That is why the announcement kinds are included.
+    // They are minted inside the fenced settlement effect, which commits
+    // before this Activity runs, so they are already standing here, and
+    // dropping them would strand rows the operator backlog gauge counts.
+    //
+    // `prematch` is the one kind that must be left alone, and the reason is
+    // this Activity's timing rather than its routing. A prematch intent
+    // announces a game STARTING, and a post-match fan-out runs at the one
+    // moment the pipeline knows the game ended. The freshness deadline does
+    // not cover this: it is the game's own three-hour TTL, and a match
+    // discovered minutes after it ended is still comfortably inside it, so a
+    // prematch row left `pending` by a failed prematch child would pass
+    // `beginSend` and post "game starting" after the result was already known.
+    // A delivered one is settled and was never drivable; this is only about
+    // the ones an outage left behind. The prematch lane's own fan-out drives
+    // them while the game is live, which is the only time they are true.
     notificationIntentKeys: intents
-      .filter((record) => DRIVABLE_INTENT_STATES.has(record.intent.state.kind))
+      .filter(
+        (record) =>
+          record.intent.kind !== "prematch" &&
+          DRIVABLE_INTENT_STATES.has(record.intent.state.kind),
+      )
       .map((record) => record.intent.key),
     lakeProjection:
       observation !== null && observation.artifacts.match !== null,

@@ -274,7 +274,9 @@ describe("initialization", () => {
     const harness = shutdownRetryHarness((attempt) =>
       attempt === 1
         ? Promise.reject(new Error("backend unreachable"))
-        : new Promise<void>((resolve) => void resolve),
+        : new Promise<void>(() => {
+            // Never settles by design: the attempt hangs until retry.
+          }),
     );
 
     await initFeatureFlags({
@@ -305,7 +307,10 @@ describe("initialization", () => {
             attempts === 1
               ? () => Promise.reject(new Error("backend unreachable"))
               : attempts === 2
-                ? () => new Promise<void>((resolve) => void resolve)
+                ? () =>
+                    new Promise<void>(() => {
+                      // Never settles by design: the attempt hangs until retry.
+                    })
                 : () => Promise.resolve(),
         });
         return provider;

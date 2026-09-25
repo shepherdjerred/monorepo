@@ -30,10 +30,11 @@ const UndoContext = createContext<UndoContextValue | null>(null);
 
 export function UndoProvider({ children }: { children: React.ReactNode }) {
   const parent = useContext(UndoContext);
-  if (parent !== null) {
-    return <UndoHost value={parent}>{children}</UndoHost>;
-  }
-  return <UndoStateProvider>{children}</UndoStateProvider>;
+  return parent === null ? (
+    <UndoStateProvider>{children}</UndoStateProvider>
+  ) : (
+    <UndoHost value={parent}>{children}</UndoHost>
+  );
 }
 
 function UndoStateProvider({ children }: { children: React.ReactNode }) {

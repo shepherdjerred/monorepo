@@ -178,7 +178,7 @@ describe("devGuildOverride", () => {
       {
         id: "1337623164146155593",
         name: "Dev Guild 1",
-        icon: null,
+        icon: "847f22af55d2a9dc3ec87e66384a7d07",
         owner: true,
         permissions: "8",
       },

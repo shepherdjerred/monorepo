@@ -153,10 +153,9 @@ function todaySection(
   today: string,
 ): TodayAgendaSectionKey {
   if (reasons.some((reason) => reason.day < today)) return "overdue";
-  if (reasons.some((reason) => reason.kind === "planned")) {
-    return "scheduled-today";
-  }
-  return "due-today";
+  return reasons.some((reason) => reason.kind === "planned")
+    ? "scheduled-today"
+    : "due-today";
 }
 
 function primaryReasonForToday(
@@ -207,8 +206,9 @@ function compareTodayEntries(
   const byDate = earliestReasonDay(left.reasons).localeCompare(
     earliestReasonDay(right.reasons),
   );
-  if (byDate !== 0) return byDate;
-  return left.task.title.localeCompare(right.task.title);
+  return byDate === 0
+    ? left.task.title.localeCompare(right.task.title)
+    : byDate;
 }
 
 function completionDayForAgendaEntry(
@@ -332,12 +332,11 @@ function primaryKindForDay(
   reasons: readonly AgendaDateReason[],
   day: string,
 ): AgendaDateKind {
-  if (
-    reasons.some((reason) => reason.day === day && reason.kind === "planned")
-  ) {
-    return "planned";
-  }
-  return "deadline";
+  return reasons.some(
+    (reason) => reason.day === day && reason.kind === "planned",
+  )
+    ? "planned"
+    : "deadline";
 }
 
 function compareUpcomingEntries(

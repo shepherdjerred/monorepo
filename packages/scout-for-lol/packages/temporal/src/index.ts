@@ -96,6 +96,7 @@ export {
   SCOUT_V2_REUSE_POLICIES,
   SCOUT_V2_WORKFLOW_NAMES,
   scoutLakeProjectionV2WorkflowId,
+  scoutClientMatchDispatchV2WorkflowId,
   scoutMatchProcessingV2WorkflowId,
   scoutNotificationAttemptNonce,
   scoutNotificationV2WorkflowId,

@@ -223,15 +223,6 @@
         "*.ts"
       ]
     },
-    "packages/scout-for-lol/packages/evals": {
-      "entry": [
-        "playwright.config.ts",
-        "src/scripts/**/*.ts",
-        "src/**/*.test.ts",
-        "e2e/**/*.ts"
-      ],
-      "project": ["src/**/*.{ts,tsx,css}", "e2e/**/*.ts", "*.ts"]
-    },
     "packages/scout-for-lol/packages/design-audit": {
       "entry": ["playwright.config.ts"]
     },
@@ -276,8 +267,8 @@
       "project": ["src/**/*.ts"]
     },
     "packages/toolkit": {
-      "entry": ["src/**/*.ts"],
-      "project": ["src/**/*.ts"]
+      "entry": ["src/**/*.ts", "src/**/*.tsx"],
+      "project": ["src/**/*.ts", "src/**/*.tsx"]
     },
     "packages/tasknotes-macos": {
       "entry": ["scripts/*.ts"],

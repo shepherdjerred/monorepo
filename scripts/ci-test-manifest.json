@@ -466,6 +466,16 @@
       ]
     },
     {
+      "package": "@scout-for-lol/desktop",
+      "directory": "packages/scout-for-lol/packages/desktop",
+      "steps": [
+        {
+          "runner": "cargo",
+          "args": ["--workspace", "--all-features", "--locked"]
+        }
+      ]
+    },
+    {
       "package": "@scout-for-lol/domain",
       "directory": "packages/scout-for-lol/packages/domain",
       "steps": [
@@ -488,16 +498,6 @@
       "package": "@scout-for-lol/design-audit",
       "directory": "packages/scout-for-lol/packages/design-audit",
       "steps": [{ "runner": "vitest", "args": ["src"] }]
-    },
-    {
-      "package": "@scout-for-lol/evals",
-      "directory": "packages/scout-for-lol/packages/evals",
-      "steps": [
-        {
-          "runner": "vitest",
-          "args": ["src"]
-        }
-      ]
     },
     {
       "package": "@scout-for-lol/frontend",
@@ -793,6 +793,16 @@
         {
           "runner": "vitest",
           "args": ["src/"]
+        }
+      ]
+    },
+    {
+      "package": "windows-cross-compiler",
+      "directory": "packages/windows-cross-compiler",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
         }
       ]
     },

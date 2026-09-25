@@ -135,6 +135,14 @@ describe("League Classic queue resolution", () => {
     expect(resolveQueueTypeFromGame(3110, "CLASSIC", "CUSTOM")).toBe("custom");
   });
 
+  test("keeps Clash on its queue id when Spectator reports gameType CUSTOM", () => {
+    // Live Clash spectator payloads are CUSTOM with queue 700/720, not
+    // MATCHED_GAME. The mapped queue id must win so the loading screen stays
+    // Clash rather than collapsing to a generic custom lobby.
+    expect(resolveQueueTypeFromGame(700, "CLASSIC", "CUSTOM")).toBe("clash");
+    expect(resolveQueueTypeFromGame(720, "ARAM", "CUSTOM")).toBe("aram clash");
+  });
+
   test("identifies both dedicated Classic queue types", () => {
     expect(isClassicQueueType("classic")).toBe(true);
     expect(isClassicQueueType("classic aram mayhem")).toBe(true);
@@ -180,8 +188,8 @@ describe("queueTypeToDisplayString", () => {
     ["solo", "ranked solo"],
     ["flex", "ranked flex"],
     ["ranked 5s", "ranked 5s"],
-    ["clash", "clash"],
-    ["aram clash", "ARAM clash"],
+    ["clash", "Clash"],
+    ["aram clash", "ARAM Clash"],
     ["aram", "ARAM"],
     ["arurf", "ARURF"],
     ["urf", "URF"],

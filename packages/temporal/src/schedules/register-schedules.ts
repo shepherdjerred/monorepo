@@ -39,14 +39,6 @@ export const DELETED_SCHEDULE_IDS = [
   "buildkite-bun-cache-gc",
   "buildkite-uv-cache-prune-weekly",
   "buildkite-trivy-db-refresh",
-  // The post-merge CI I/O impact report measured one PR against a frozen
-  // July-2026 Buildkite cohort. That baseline lives in `buildkite:` recording
-  // rules the migration stopped producing, so the comparison can never be
-  // reproduced -- and the report's own retirement criteria (seven days and 100
-  // builds observed) had already been met. Its replacement,
-  // `ci-io-telemetry-daily`, keeps the part that was still earning its keep:
-  // watching whether the measurement chain itself is intact.
-  "ci-io-post-merge-impact",
   // Replaced by the stage-specific Scout competition update Schedules owned
   // by the embedded Scout Workers.
   "scout-competition-updates-minute",
@@ -92,6 +84,12 @@ export const DELETED_SCHEDULE_IDS = [
   // Replaced by per-execution temporal-failure-watch alerts and worker-task
   // health guardrails. Delete the old aggregate alert on worker startup.
   "agent-task-timeout-watch",
+  // The CI I/O post-merge impact observation (PR #1602, frozen 2026-07-19
+  // cohort) completed its seven-day and 100-build window; the workflow
+  // itself recommended retirement. The workflow type (`runCiIoImpact`) is
+  // no longer in the bundle, so this schedule must be deleted or it would
+  // keep firing a missing workflow.
+  "ci-io-post-merge-impact",
 ] as const;
 
 /**
@@ -122,6 +120,9 @@ const RETIRED_WORKFLOW_TYPES = [
   // left exactly the executions this is here to stop.
   { workflowType: "runScoutWeeklyParlayWorkflow", namespace: "beta" },
   { workflowType: "runScoutWeeklyParlayCatchupWorkflow", namespace: "beta" },
+  // The retired CI I/O observation runs up to 2 hours daily, so a deploy can
+  // land mid-run. Terminate the open execution during reconciliation.
+  { workflowType: "runCiIoImpact", namespace: "prod" },
 ] as const satisfies readonly {
   workflowType: string;
   namespace: TemporalNamespace;

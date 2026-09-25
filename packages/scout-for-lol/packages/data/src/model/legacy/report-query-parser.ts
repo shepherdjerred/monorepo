@@ -451,8 +451,7 @@ function comparisonOperator(token: IToken): string | undefined {
   if (token.tokenType === Less) return "<";
   if (token.tokenType === LessEqual) return "<=";
   if (token.tokenType === Greater) return ">";
-  if (token.tokenType === GreaterEqual) return ">=";
-  return undefined;
+  return token.tokenType === GreaterEqual ? ">=" : undefined;
 }
 
 function matchLookbackClause(
@@ -476,18 +475,15 @@ function matchLookbackClause(
     .toLowerCase();
   const intervalMatch = /^(?<days>\d+)\s+days?$/u.exec(interval);
   const days = Number(intervalMatch?.groups?.["days"] ?? Number.NaN);
-  if (!Number.isInteger(days)) {
-    return undefined;
-  }
-  return { kind: "lookback", field, days, span };
+  return Number.isInteger(days)
+    ? { kind: "lookback", field, days, span }
+    : undefined;
 }
 
 function parseFilterValue(token: IToken): ReportFilterValue {
   if (token.tokenType === NumberLiteral) return Number(token.image);
   const value = normalizeQueueValue(token.image);
-  if (value === "true") return true;
-  if (value === "false") return false;
-  return value;
+  return value === "true" || (value !== "false" && value);
 }
 
 export { INVALID_QUERY_MESSAGE, UNSUPPORTED_WHERE_MESSAGE };

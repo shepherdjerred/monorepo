@@ -1,6 +1,0 @@
-apiVersion: v2
-name: scout-evals
-description: Scout post-match review evals calibration app (tailnet-only)
-type: application
-version: "$version"
-appVersion: "$appVersion"

@@ -75,9 +75,7 @@ export function authorizePipeline(pipeline: Pipeline): AuthorizationResult {
   if (!trusted.has(pipeline.author)) {
     return { allowed: false, reason: "pipeline author is not a trusted actor" };
   }
-  if (pipeline.sender !== "" && !trusted.has(pipeline.sender)) {
-    return { allowed: false, reason: "pipeline sender is not a trusted actor" };
-  }
-
-  return { allowed: true };
+  return pipeline.sender !== "" && !trusted.has(pipeline.sender)
+    ? { allowed: false, reason: "pipeline sender is not a trusted actor" }
+    : { allowed: true };
 }

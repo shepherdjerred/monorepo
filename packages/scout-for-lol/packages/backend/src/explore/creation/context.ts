@@ -149,13 +149,12 @@ export async function requirePostableChannel(
   if (lookup.kind === "unavailable") {
     return creationRefusal("verification_unavailable", lookup.message);
   }
-  if (lookup.channels.some((channel) => channel.id === input.channelId)) {
-    return null;
-  }
-  return creationRefusal(
-    "invalid",
-    "Scout cannot post in that channel. Call list_guild_channels and ask the user to pick one of the channels it returns.",
-  );
+  return lookup.channels.some((channel) => channel.id === input.channelId)
+    ? null
+    : creationRefusal(
+        "invalid",
+        "Scout cannot post in that channel. Call list_guild_channels and ask the user to pick one of the channels it returns.",
+      );
 }
 
 /**

@@ -85,8 +85,9 @@ export async function readProviderStartupFailure(
   const file = Bun.file(
     path.join(runDirectory, BENCHMARK_PROVIDER_STARTUP_FAILURE_FILE),
   );
-  if (!(await file.exists())) return null;
-  return BenchmarkProviderStartupFailureSchema.parse(await file.json());
+  return (await file.exists())
+    ? BenchmarkProviderStartupFailureSchema.parse(await file.json())
+    : null;
 }
 
 export function evaluateWorkerCatch(input: {

@@ -17,10 +17,7 @@ const TrackedPuuidsSchema = z.array(z.string());
 const MessageIdsByChannelSchema = z.record(z.string(), z.string());
 
 function parseMessageIdsByChannel(raw: string | null): Record<string, string> {
-  if (raw === null) {
-    return {};
-  }
-  return MessageIdsByChannelSchema.parse(JSON.parse(raw));
+  return raw === null ? {} : MessageIdsByChannelSchema.parse(JSON.parse(raw));
 }
 
 export type ActiveGameRecord = {
@@ -200,12 +197,9 @@ export async function getPrematchMessageIdsForMatchId(
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<Map<string, string>> {
   const row = await findPrematchMessageIdsRowForMatchId(matchId, prismaClient);
-  if (row?.prematchMatchId !== matchId) {
-    return new Map();
-  }
-  return new Map(
-    Object.entries(parseMessageIdsByChannel(row.prematchMessageIds)),
-  );
+  return row?.prematchMatchId === matchId
+    ? new Map(Object.entries(parseMessageIdsByChannel(row.prematchMessageIds)))
+    : new Map();
 }
 
 /**
@@ -230,12 +224,9 @@ export async function getPrematchMessageIdsForMatchIdOrEmpty(
     });
     return new Map();
   }
-  if (row?.prematchMatchId !== matchId) {
-    return new Map();
-  }
-  return new Map(
-    Object.entries(parseMessageIdsByChannel(row.prematchMessageIds)),
-  );
+  return row?.prematchMatchId === matchId
+    ? new Map(Object.entries(parseMessageIdsByChannel(row.prematchMessageIds)))
+    : new Map();
 }
 
 /**
@@ -310,12 +301,9 @@ export async function getPostmatchMessageIdsForMatchIdOrEmpty(
     });
     return new Map();
   }
-  if (row?.prematchMatchId !== matchId) {
-    return new Map();
-  }
-  return new Map(
-    Object.entries(parseMessageIdsByChannel(row.postmatchMessageIds)),
-  );
+  return row?.prematchMatchId === matchId
+    ? new Map(Object.entries(parseMessageIdsByChannel(row.postmatchMessageIds)))
+    : new Map();
 }
 
 /**

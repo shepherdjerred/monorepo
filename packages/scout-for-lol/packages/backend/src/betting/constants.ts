@@ -88,12 +88,6 @@ export const MIN_STAKE = 1;
 export const MINIMUM_BUCKS_TRANSFER = 2;
 
 /**
- * Below this, a game is a remake: no Bucks are earned and every stake is
- * refunded. Riot reports `gameDuration` in seconds.
- */
-export const REMAKE_MAX_DURATION_SECONDS = 300;
-
-/**
  * Queues that earn Bucks and can carry a market.
  *
  * which also matches "clash" and "aram clash". That helper exists to gate AI

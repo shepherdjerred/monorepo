@@ -22,10 +22,7 @@ import {
  */
 
 export function isBettableQueue(queueType: QueueType | undefined): boolean {
-  if (queueType === undefined) {
-    return false;
-  }
-  return BUCKS_EARNING_QUEUES.includes(queueType);
+  return queueType !== undefined && BUCKS_EARNING_QUEUES.includes(queueType);
 }
 
 /**
@@ -60,25 +57,24 @@ export function isBettableGame(input: {
   queueType: QueueType | undefined;
   participants: readonly { teamId: number }[];
   /**
-   * Whether this game was created by a Scout `/lobby` command, resolved by the
-   * caller from the match's `tournamentCode`.
+   * Whether this game belongs to a Scout-managed Custom or duel, resolved by
+   * the caller from a historical code or an exact scheduled roster.
    *
-   * A custom game is bettable only when Scout minted its code. The check is
-   * NOT `queueType === "custom"`, and `"custom"` is deliberately not added to
-   * BUCKS_EARNING_QUEUES: an arbitrary custom is trivially farmable — ten
-   * accounts, instant surrender, repeat — and `earn_game` moves real balance.
-   * Requiring a code we issued means the only way to farm is to keep asking
-   * Scout for lobbies, in a guild an operator opted in.
+   * The check is NOT `queueType === "custom"`, and `"custom"` is deliberately
+   * not added to BUCKS_EARNING_QUEUES: an arbitrary custom is trivially
+   * farmable — ten accounts, instant surrender, repeat — and `earn_game` moves
+   * real balance. Requiring a scheduled roster keeps that trust decision in
+   * Scout even though players now create ordinary League lobbies themselves.
    *
    * The 5v5 requirement comes free from `isStandardLobby` below, and it
    * matters: the MVP formula normalizes each player's share against a
    * hardcoded five-man baseline, so a 2v2 would produce systematically wrong
    * grades and payouts rather than merely noisy ones.
    */
-  isScoutTournamentLobby?: boolean;
+  isScoutManagedCustom?: boolean;
 }): boolean {
   const queueEligible =
     isBettableQueue(input.queueType) ||
-    (input.queueType === "custom" && input.isScoutTournamentLobby === true);
+    (input.queueType === "custom" && input.isScoutManagedCustom === true);
   return queueEligible && isStandardLobby(input.participants);
 }

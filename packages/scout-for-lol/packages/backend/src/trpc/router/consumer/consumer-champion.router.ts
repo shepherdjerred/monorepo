@@ -16,6 +16,11 @@ import { prisma } from "#src/database/index.ts";
 import { assertConsumerPlayerScope } from "#src/consumer/player-access.ts";
 import { fetchChampionComparisons } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
+import { enqueueChampionMasteryRefresh } from "#src/temporal/work-store.ts";
+import {
+  getCachedChampionMasterySnapshots,
+  masteryForChampion,
+} from "#src/league/champion-mastery/snapshots.ts";
 
 const PAGE_SIZE = 25;
 const QUALIFYING_GAMES = 10;
@@ -54,6 +59,61 @@ type ComparisonRow = {
   goldPerMinute: number;
   visionPerMinute: number;
 };
+
+type MasteryRow = {
+  playerId: number;
+  alias: string;
+  guild: { guildId: string; name: string };
+  viewerLinked: boolean;
+  account: { gameName: string | null; tagLine: string | null; region: string };
+  level: number;
+  points: number;
+  fetchedAt: Date;
+  freshness: "fresh" | "stale";
+};
+
+const ScopedPlayerSelect = {
+  id: true,
+  alias: true,
+  serverId: true,
+  discordId: true,
+  accounts: {
+    select: {
+      puuid: true,
+      riotGameName: true,
+      riotTagLine: true,
+      region: true,
+    },
+  },
+} as const;
+
+async function findScopedPlayers(guildIds: readonly string[]) {
+  return await prisma.player.findMany({
+    where: { serverId: { in: [...guildIds] } },
+    select: ScopedPlayerSelect,
+  });
+}
+
+async function getScopedChampionPlayers(
+  user: Parameters<typeof assertConsumerPlayerScope>[0],
+  requestedGuildIds: readonly string[] | undefined,
+) {
+  const accessibleGuilds = await assertConsumerPlayerScope(user);
+  const accessibleIds = new Set(accessibleGuilds.map((guild) => guild.id));
+  const selectedGuildIds =
+    requestedGuildIds ??
+    accessibleGuilds.map((guild) => DiscordGuildIdSchema.parse(guild.id));
+  if (selectedGuildIds.some((guildId) => !accessibleIds.has(guildId))) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Requested guild is outside the current player scope",
+    });
+  }
+  return {
+    accessibleGuilds,
+    players: await findScopedPlayers(selectedGuildIds),
+  };
+}
 
 function metric(row: ComparisonRow, sort: ChampionComparisonSort): number {
   switch (sort) {
@@ -98,36 +158,129 @@ function comparisonOrder(
       if (alias !== 0) return alias;
     }
     const guild = left.guild.name.localeCompare(right.guild.name);
-    if (guild !== 0) return guild;
-    return left.playerId - right.playerId;
+    return guild === 0 ? left.playerId - right.playerId : guild;
   };
 }
 
 export const consumerChampionRouter = router({
+  masteryLeaderboard: protectedProcedure
+    .input(
+      z.object({
+        championId: ChampionIdSchema,
+        guildIds: GuildSelectionSchema.optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const { accessibleGuilds, players } = await getScopedChampionPlayers(
+        ctx.user,
+        input.guildIds,
+      );
+      const snapshots = await getCachedChampionMasterySnapshots({
+        puuids: players.flatMap((player) =>
+          player.accounts.map((account) => account.puuid),
+        ),
+      });
+      const refreshesByPuuid = new Map<
+        string,
+        { puuid: string; region: string; fetchedAt: Date | undefined }
+      >();
+      for (const player of players) {
+        for (const account of player.accounts) {
+          const snapshot = snapshots.get(account.puuid);
+          if (snapshot?.freshness === "fresh") continue;
+          refreshesByPuuid.set(account.puuid, {
+            puuid: account.puuid,
+            region: account.region,
+            fetchedAt: snapshot?.fetchedAt,
+          });
+        }
+      }
+      await Promise.allSettled(
+        [...refreshesByPuuid.values()].map(async (refresh) => {
+          await enqueueChampionMasteryRefresh(refresh);
+        }),
+      );
+      const guildById = new Map(
+        accessibleGuilds.map((guild) => [guild.id, guild] as const),
+      );
+      const rows = players.flatMap((player): MasteryRow[] => {
+        const guild = guildById.get(player.serverId);
+        if (guild === undefined) {
+          throw new Error("Champion mastery returned an unscoped guild");
+        }
+        const candidates = player.accounts.flatMap((account) => {
+          const snapshot = snapshots.get(account.puuid);
+          if (snapshot === undefined) return [];
+          const mastery = masteryForChampion(
+            snapshot.entries,
+            input.championId,
+          );
+          return mastery === undefined ? [] : [{ account, snapshot, mastery }];
+        });
+        const best = candidates.toSorted((left, right) => {
+          const points =
+            right.mastery.championPoints - left.mastery.championPoints;
+          return points === 0
+            ? right.mastery.championLevel - left.mastery.championLevel
+            : points;
+        })[0];
+        if (best === undefined) return [];
+        return [
+          {
+            playerId: player.id,
+            alias: player.alias,
+            guild: { guildId: guild.id, name: guild.name },
+            viewerLinked: player.discordId === ctx.user.discordId,
+            account: {
+              gameName: best.account.riotGameName,
+              tagLine: best.account.riotTagLine,
+              region: best.account.region,
+            },
+            level: best.mastery.championLevel,
+            points: best.mastery.championPoints,
+            fetchedAt: best.snapshot.fetchedAt,
+            freshness: best.snapshot.freshness,
+          },
+        ];
+      });
+      const ordered = rows.toSorted((left, right) => {
+        const points = right.points - left.points;
+        if (points !== 0) return points;
+        const level = right.level - left.level;
+        if (level !== 0) return level;
+        const alias = left.alias.localeCompare(right.alias);
+        if (alias !== 0) return alias;
+        const guild = left.guild.name.localeCompare(right.guild.name);
+        return guild === 0 ? left.playerId - right.playerId : guild;
+      });
+      const accountCount = players.reduce(
+        (count, player) => count + player.accounts.length,
+        0,
+      );
+      const cachedAccountCount = players.reduce(
+        (count, player) =>
+          count +
+          player.accounts.filter((account) => snapshots.has(account.puuid))
+            .length,
+        0,
+      );
+      return {
+        champion: {
+          championId: input.championId,
+          name: getChampionDisplayName(input.championId),
+        },
+        rows: ordered.slice(0, 25),
+        cachedAccountCount,
+        accountCount,
+      };
+    }),
   compare: protectedProcedure
     .input(ComparisonInput)
     .query(async ({ ctx, input }) => {
-      const accessibleGuilds = await assertConsumerPlayerScope(ctx.user);
-      const accessibleIds = new Set(accessibleGuilds.map((guild) => guild.id));
-      const selectedGuildIds =
-        input.guildIds ??
-        accessibleGuilds.map((guild) => DiscordGuildIdSchema.parse(guild.id));
-      if (selectedGuildIds.some((guildId) => !accessibleIds.has(guildId))) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Requested guild is outside the current player scope",
-        });
-      }
-      const players = await prisma.player.findMany({
-        where: { serverId: { in: selectedGuildIds } },
-        select: {
-          id: true,
-          alias: true,
-          serverId: true,
-          discordId: true,
-          accounts: { select: { puuid: true } },
-        },
-      });
+      const { accessibleGuilds, players } = await getScopedChampionPlayers(
+        ctx.user,
+        input.guildIds,
+      );
       const lakeRows = await fetchChampionComparisons({
         championId: input.championId,
         games: input.games,

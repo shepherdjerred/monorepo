@@ -156,6 +156,7 @@ async function askAndAnswer(input: {
     attach: input.attach ?? { kind: "leaf" },
   });
   const answer = await appendExploreAnswer(prisma, {
+    guildIds: [],
     conversationId: started.conversationId,
     parentMessageId: started.messageId,
     answer: { ...ANSWER, answer: input.answer ?? ANSWER.answer },
@@ -189,6 +190,7 @@ describe("explore store — voice", () => {
       origin: "voice",
     });
     await appendExploreAnswer(prisma, {
+      guildIds: [],
       conversationId: first.conversationId,
       parentMessageId: first.messageId,
       answer: ANSWER,
@@ -221,6 +223,7 @@ describe("explore store — voice", () => {
       origin: "voice",
     });
     const message = await appendExploreAnswer(prisma, {
+      guildIds: [],
       conversationId: started.conversationId,
       parentMessageId: started.messageId,
       answer: { ...ANSWER, spokenAnswer: "Short spoken summary." },
@@ -259,6 +262,7 @@ describe("explore store — voice", () => {
       origin: "voice",
     });
     const secondAnswer = await appendExploreAnswer(prisma, {
+      guildIds: [],
       conversationId: first.conversationId,
       parentMessageId: secondTurn.messageId,
       answer: {
@@ -312,6 +316,7 @@ describe("explore store", () => {
       attach: { kind: "leaf" },
     });
     await appendExploreAnswer(prisma, {
+      guildIds: [],
       conversationId: started.conversationId,
       parentMessageId: started.messageId,
       answer: ANSWER,
@@ -511,6 +516,7 @@ describe("explore store — background branches", () => {
       ),
     ).toBe(true);
     const backgroundAnswer = await appendExploreAnswer(prisma, {
+      guildIds: [],
       conversationId: first.conversationId,
       parentMessageId: running.messageId,
       answer: { ...ANSWER, answer: "Patch 26.16 favors Caitlyn." },
@@ -655,6 +661,7 @@ describe("explore store — branching", () => {
     expect(target.question).toBe("Which champion has the most games?");
 
     await appendExploreAnswer(prisma, {
+      guildIds: [],
       conversationId: first.conversationId,
       parentMessageId: target.messageId,
       answer: { ...ANSWER, answer: "Actually Caitlyn edges it." },

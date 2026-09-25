@@ -137,18 +137,14 @@ export function resolveQueueTypeFromGame(
   }
   const mapped = parseQueueType(queueId);
   if (mapped !== undefined) {
-    if (mapped === "classic" && !isClassicAssetMode(queueId, gameMode)) {
-      return "normal";
-    }
-    return mapped;
+    return mapped === "classic" && !isClassicAssetMode(queueId, gameMode)
+      ? "normal"
+      : mapped;
   }
   // Unknown queue ID: only treat as "custom" when the payload says so. A
   // genuinely-new ranked/normal queue still resolves to undefined (unchanged
   // behavior for callers that don't pass gameType).
-  if (isCustomGameType(gameType)) {
-    return "custom";
-  }
-  return undefined;
+  return isCustomGameType(gameType) ? "custom" : undefined;
 }
 
 /**
@@ -173,8 +169,8 @@ export function queueTypeToDisplayString(queueType: QueueType): string {
     .with("solo", () => "ranked solo")
     .with("flex", () => "ranked flex")
     .with("ranked 5s", () => "ranked 5s")
-    .with("clash", () => "clash")
-    .with("aram clash", () => "ARAM clash")
+    .with("clash", () => "Clash")
+    .with("aram clash", () => "ARAM Clash")
     .with("aram", () => "ARAM")
     .with("arurf", () => "ARURF")
     .with("urf", () => "URF")

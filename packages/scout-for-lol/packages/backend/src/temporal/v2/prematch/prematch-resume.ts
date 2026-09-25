@@ -26,6 +26,28 @@ import {
  * The archived payload is the answer. It is the canonical copy by definition —
  * S3 is the raw store the report lake rebuilds from — so a resumed run can
  * finish every remaining phase from it without Riot being involved at all.
+ *
+ * ## The roster is NOT in it, and there is nowhere else to read it from
+ *
+ * The snapshot answers who was in the GAME. It does not answer who the game was
+ * ABOUT: its body is the whole spectator payload, all ten participants, with
+ * nothing marking which of them Scout tracks. Do not try to recover the tracked
+ * set from it — the marking was never written.
+ *
+ * Nor is it anywhere else at this point in the pipeline, which is why this path
+ * derives the roster with `trackedAccountConfigs` instead of reading one.
+ * `MatchTrackedAccount` — the table the post-match core's observed resolver
+ * reads — is written only by the post-match path, long after a game has ended.
+ * The prematch intent rows ARE a durable record of the audience, and they are
+ * still no use here: they are written by the very step this module exists to
+ * resume, and the case it exists for is a run that archived and then died
+ * BEFORE minting them. At the moment the audience is needed, the only durable
+ * artifact that exists does not contain it.
+ *
+ * That is why the derivation must be process- and cache-independent rather than
+ * snapshot-backed. The post-match core solved the same problem by pointing a
+ * second resolver at its observation; prematch has no observation to point one
+ * at, so it makes the one derivation answer the same in every process instead.
  */
 
 /**

@@ -19,8 +19,9 @@ function compareCount(
   if (expression.operator === "eq") return count === expression.threshold;
   if (expression.operator === "gte") return count >= expression.threshold;
   if (expression.operator === "lte") return count <= expression.threshold;
-  if (expression.operator === "gt") return count > expression.threshold;
-  return count < expression.threshold;
+  return expression.operator === "gt"
+    ? count > expression.threshold
+    : count < expression.threshold;
 }
 
 function scopedRows(
@@ -74,8 +75,9 @@ function compareAggregate(
   if (expression.operator === "eq") return actual === expression.threshold;
   if (expression.operator === "gte") return actual >= expression.threshold;
   if (expression.operator === "lte") return actual <= expression.threshold;
-  if (expression.operator === "gt") return actual > expression.threshold;
-  return actual < expression.threshold;
+  return expression.operator === "gt"
+    ? actual > expression.threshold
+    : actual < expression.threshold;
 }
 
 function aggregateTruth(

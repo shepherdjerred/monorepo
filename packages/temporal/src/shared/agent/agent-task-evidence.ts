@@ -61,8 +61,7 @@ export type NormalizedAgentTaskV2Result = {
 };
 
 function stringifyEvidence(value: unknown): string {
-  if (typeof value === "string") return value;
-  return JSON.stringify(value);
+  return typeof value === "string" ? value : JSON.stringify(value);
 }
 
 function bounded(value: string, maximum = 2000): string | undefined {
@@ -204,8 +203,9 @@ function deriveAgentTaskVerdict(
     return "attention";
   }
   if (findings.length > 0) return "changed";
-  if (checks.some((check) => check.status === "skipped")) return "pending";
-  return "clear";
+  return checks.some((check) => check.status === "skipped")
+    ? "pending"
+    : "clear";
 }
 
 type DeclaredCheckV2 = ReturnType<typeof agentTaskChecksV2>[number];

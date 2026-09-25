@@ -8,8 +8,7 @@ export function formatDuration(seconds: number): string {
 
 export function queueLabel(queueType: CompletedMatch["queueType"]): string {
   if (queueType === "flex") return "RANKED FLEX";
-  if (queueType === "ranked 5s") return "RANKED 5S";
-  return "RANKED SOLO";
+  return queueType === "ranked 5s" ? "RANKED 5S" : "RANKED SOLO";
 }
 
 export function winningTeamOf(

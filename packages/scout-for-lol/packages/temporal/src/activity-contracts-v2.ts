@@ -68,6 +68,14 @@ export const ScoutDiscoveredMatchV2Schema = z.strictObject({
    * back what was decided rather than guessing.
    */
   deliveryMode: MatchDeliveryModeSchema,
+  /**
+   * Completion time used by the shared post-match serializer.
+   *
+   * Optional only for replay: histories recorded before the shared
+   * dispatcher existed do not contain it and keep their original direct-child
+   * path. Every newly produced discovery result carries it.
+   */
+  gameEndTimestamp: z.int().nonnegative().optional(),
 });
 export type ScoutDiscoveredMatchV2 = z.infer<
   typeof ScoutDiscoveredMatchV2Schema
@@ -248,13 +256,11 @@ export const ScoutReceiptsV2ResultSchema = z.strictObject({
 export type ScoutReceiptsV2Result = z.infer<typeof ScoutReceiptsV2ResultSchema>;
 
 /**
- * What the tournament-code finalization stage found and did.
+ * What the managed-custom finalization stage found and did.
  *
- * Tournament custom games and ordinary Riot match ingestion keep distinct
- * provenance, so this is its own stage with its own answer rather than a flag
- * on the observation: `not-a-tournament-match` is the ordinary case and says
- * so out loud, instead of being indistinguishable from a finalization that
- * happened to publish nothing.
+ * The schema and its legacy `not-a-tournament-match` discriminator are frozen
+ * because existing Temporal histories contain them. New games are bound from
+ * local observations; historical Tournament API rows remain readable.
  *
  * `publishedNight` reports the Custom Night snapshot broadcast, which is a
  * projection of current state rather than an event, so a resumed run that
@@ -276,6 +282,24 @@ export const ScoutTournamentResultV2ResultSchema = z.discriminatedUnion(
 );
 export type ScoutTournamentResultV2Result = z.infer<
   typeof ScoutTournamentResultV2ResultSchema
+>;
+
+/**
+ * What one post-match minting pass did.
+ *
+ * `silent` is counted rather than folded into a zero, because "this match is
+ * owed no public delivery" and "this match had no subscribed channel" are
+ * different facts and a result envelope that reported both as nothing minted
+ * could not tell an operator which happened.
+ */
+export const ScoutMintedIntentsV2ResultSchema = z.strictObject({
+  minted: z.int().nonnegative(),
+  existing: z.int().nonnegative(),
+  conflicts: z.int().nonnegative(),
+  silent: z.int().nonnegative(),
+});
+export type ScoutMintedIntentsV2Result = z.infer<
+  typeof ScoutMintedIntentsV2ResultSchema
 >;
 
 export const ScoutMatchCursorV2ResultSchema = z.strictObject({
@@ -346,6 +370,10 @@ export const ScoutMatchPipelineStateV2ResultSchema = z.discriminatedUnion(
   "kind",
   [
     z.strictObject({ kind: z.literal("absent") }),
+    // A terminal dispatcher receipt can predate the observation when a child
+    // fails its source-account precondition. Keep that durable state distinct
+    // from both an unstarted match and a complete pipeline aggregate.
+    z.strictObject({ kind: z.literal("terminal") }),
     z.strictObject({
       kind: z.literal("present"),
       state: ScoutMatchPipelineStateV2Schema,
@@ -354,6 +382,20 @@ export const ScoutMatchPipelineStateV2ResultSchema = z.discriminatedUnion(
 );
 export type ScoutMatchPipelineStateV2Result = z.infer<
   typeof ScoutMatchPipelineStateV2ResultSchema
+>;
+
+/**
+ * The authoritative terminal state of a legacy match execution.
+ *
+ * Legacy durable receipts are deliberately fail-open, so they cannot prove
+ * that the owning Workflow finished. The execution itself can: v1 completes
+ * only after its effects and account cursors have been applied.
+ */
+export const ScoutLegacyMatchCompletionV2ResultSchema = z.strictObject({
+  completed: z.boolean(),
+});
+export type ScoutLegacyMatchCompletionV2Result = z.infer<
+  typeof ScoutLegacyMatchCompletionV2ResultSchema
 >;
 
 /**

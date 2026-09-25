@@ -511,6 +511,8 @@ Green_Thumb_Replanting_Crops:
 Bonus_Drops:
   Herbalism:
     Bush: true
+    Red_Shrub: true
+    Shelf_Mushroom: true
     Cactus_Flower: true
     Firefly_Bush: true
     Leaf_Litter: true
@@ -656,6 +658,8 @@ Bonus_Drops:
     Warped_Stem: true
     Crimson_Roots: true
     Warped_Roots: true
+    Poplar_Log: true
+    Poplar_Wood: true
     Acacia_Wood: true
     Acacia_Log: true
     Birch_Wood: true

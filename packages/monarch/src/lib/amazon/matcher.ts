@@ -46,12 +46,11 @@ function comparePairings<T>(a: Pairing<T>, b: Pairing<T>): number {
   const { candidate: x } = a;
   const { candidate: y } = b;
   if (x.dateDiff !== y.dateDiff) return x.dateDiff - y.dateDiff;
-  if (x.amountDiff !== y.amountDiff) return x.amountDiff - y.amountDiff;
-  return (
-    a.transaction.date.localeCompare(b.transaction.date) ||
-    x.orderId.localeCompare(y.orderId) ||
-    a.transaction.id.localeCompare(b.transaction.id)
-  );
+  return x.amountDiff === y.amountDiff
+    ? a.transaction.date.localeCompare(b.transaction.date) ||
+        x.orderId.localeCompare(y.orderId) ||
+        a.transaction.id.localeCompare(b.transaction.id)
+    : x.amountDiff - y.amountDiff;
 }
 
 // Assign globally rather than one transaction at a time. Taking each

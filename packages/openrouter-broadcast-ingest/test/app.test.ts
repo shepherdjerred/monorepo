@@ -347,12 +347,13 @@ describe("OpenRouter Broadcast ingest", () => {
 
 function reorderKeys(value: unknown): unknown {
   if (Array.isArray(value)) return value.map((entry) => reorderKeys(entry));
-  if (typeof value !== "object" || value === null) return value;
-  return Object.fromEntries(
-    Object.entries(value)
-      .toReversed()
-      .map(([key, entry]) => [key, reorderKeys(entry)]),
-  );
+  return typeof value !== "object" || value === null
+    ? value
+    : Object.fromEntries(
+        Object.entries(value)
+          .toReversed()
+          .map(([key, entry]) => [key, reorderKeys(entry)]),
+      );
 }
 
 describe("Broadcast dedupe is key-order independent", () => {

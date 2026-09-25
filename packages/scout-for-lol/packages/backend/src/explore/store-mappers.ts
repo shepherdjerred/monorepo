@@ -43,6 +43,7 @@ export type MessageRow = {
   preview: string | null;
   visualization: string | null;
   matchCards: string | null;
+  guildIds: string | null;
   trace: string | null;
   createdAt: Date;
 };
@@ -90,6 +91,8 @@ export function toMessage(
     ),
     matchCards:
       parseJsonColumn(row.matchCards, MatchCardsSchema, "matchCards") ?? [],
+    guildIds:
+      parseJsonColumn(row.guildIds, StringArraySchema, "guildIds") ?? [],
     trace: parseJsonColumn(row.trace, TraceArraySchema, "trace") ?? [],
     createdAt: row.createdAt.toISOString(),
   });

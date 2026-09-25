@@ -85,7 +85,7 @@ gateway latency in milliseconds.
 An embed containing the dashboard URL, the documentation URL, the command list,
 and a summary of what the dashboard is for. Production includes `/scout ask` in
 every server where Scout is installed; beta includes it only in selected beta
-servers. Server-scoped commands (such as `/lobby`) are listed only in servers
+servers. Server-scoped commands are listed only in servers
 where the matching feature is enabled, mirroring where the commands themselves
 are registered.
 

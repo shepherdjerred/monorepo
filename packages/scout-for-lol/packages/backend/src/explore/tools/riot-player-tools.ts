@@ -3,14 +3,13 @@ import { z } from "zod";
 import {
   LeaguePuuidSchema,
   getChampionList,
-  regionToPlatformRoute,
   type DiscordAccountId,
+  type Region,
 } from "@scout-for-lol/data";
 import {
   RankedHistoryTargetSchema,
   resolveRiotPlayerTarget,
 } from "#src/explore/tools/riot-history-tools.ts";
-import { riotClient } from "#src/league/api/api.ts";
 import { fetchCurrentRanks } from "#src/league/initial-history/riot.ts";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -23,6 +22,11 @@ import {
   scalarParam,
 } from "#src/reports/duckdb/lake.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
+import {
+  getChampionMasterySnapshot,
+  topChampionMastery,
+} from "#src/league/champion-mastery/snapshots.ts";
+import { readLocalMasterySnapshot } from "#src/scout-client/player-snapshots.ts";
 
 const LakeCountSchema = z.union([z.bigint(), z.number()]).transform(Number);
 const CoverageRowSchema = z.object({
@@ -32,6 +36,7 @@ const CoverageRowSchema = z.object({
 });
 const TimelineCountRowSchema = z.object({ timelines: LakeCountSchema });
 const MatchIdRowSchema = z.object({ match_id: z.string() });
+const LOCAL_MASTERY_FRESHNESS_MS = 24 * 60 * 60 * 1000;
 
 async function inspectCoverage(puuid: string): Promise<{
   games: number;
@@ -120,6 +125,51 @@ export function resolveMasteryChampionName(
   return name;
 }
 
+/**
+ * The freshest mastery Scout can answer with, and where it came from.
+ *
+ * A recent paired-client capture wins: it carries the season-milestone fields
+ * Riot omits. Otherwise Riot answers through its persisted snapshot, so this
+ * tool shares the cache, freshness accounting and metrics the rest of the
+ * mastery surface uses rather than re-fetching behind their backs. Riot is an
+ * expected external boundary: when it has nothing, a stale local capture is
+ * still useful, and `null` — not a throw — reports that neither source could
+ * answer.
+ */
+async function currentMastery(
+  puuid: ReturnType<typeof LeaguePuuidSchema.parse>,
+  region: Region,
+  count: number,
+) {
+  const local = await readLocalMasterySnapshot(puuid);
+  const fromLocal = (snapshot: NonNullable<typeof local>) => ({
+    source: "scout-client" as const,
+    capturedAt: snapshot.capturedAt,
+    fetchedAt: null,
+    freshness: null,
+    rows: snapshot.rows
+      .toSorted((left, right) => right.championPoints - left.championPoints)
+      .slice(0, count),
+  });
+  if (
+    local !== null &&
+    Date.now() - local.capturedAt.getTime() <= LOCAL_MASTERY_FRESHNESS_MS
+  ) {
+    return fromLocal(local);
+  }
+  const snapshot = await getChampionMasterySnapshot({ puuid, region });
+  if (snapshot !== undefined) {
+    return {
+      source: "riot" as const,
+      capturedAt: null,
+      fetchedAt: snapshot.fetchedAt,
+      freshness: snapshot.freshness,
+      rows: topChampionMastery(snapshot.entries, count),
+    };
+  }
+  return local === null ? null : fromLocal(local);
+}
+
 export function createRiotPlayerExploreTools(input: {
   requesterId: DiscordAccountId;
   guildIds: string[];
@@ -202,6 +252,10 @@ export function createRiotPlayerExploreTools(input: {
         })
         .strict(),
       outputSchema: ResultBaseSchema.extend({
+        source: z.enum(["riot", "scout-client"]).nullable(),
+        capturedAt: z.string().nullable(),
+        fetchedAt: z.string().nullable(),
+        freshness: z.enum(["fresh", "stale"]).nullable(),
         champions: z.array(
           z.object({
             championId: z.number().int().positive(),
@@ -209,6 +263,14 @@ export function createRiotPlayerExploreTools(input: {
             level: z.number().int().nonnegative(),
             points: z.number().int().nonnegative(),
             lastPlayedAt: z.string(),
+            seasonMilestone: z.number().int().nonnegative().optional(),
+            highestGrade: z.string().optional(),
+            marksRequiredForNextLevel: z
+              .number()
+              .int()
+              .nonnegative()
+              .optional(),
+            milestoneGrades: z.array(z.string()).optional(),
           }),
         ),
       }).strict(),
@@ -219,16 +281,31 @@ export function createRiotPlayerExploreTools(input: {
             return {
               ok: false,
               player: null,
+              source: null,
+              capturedAt: null,
+              fetchedAt: null,
+              freshness: null,
               champions: [],
               message: targetResult.message,
             };
           }
-          const mastery = await riotClient.championMastery.topByPuuid(
+          const mastery = await currentMastery(
             LeaguePuuidSchema.parse(targetResult.puuid),
-            regionToPlatformRoute(targetResult.region),
+            targetResult.region,
             count,
-            { maxRetries: 0 },
           );
+          if (mastery === null) {
+            return {
+              ok: false,
+              player: targetResult.label,
+              source: null,
+              capturedAt: null,
+              fetchedAt: null,
+              freshness: null,
+              champions: [],
+              message: `Mastery is unavailable for ${targetResult.label}.`,
+            };
+          }
           const championList = await getChampionList();
           const championNames = new Map(
             championList.map((champion) => [
@@ -236,18 +313,41 @@ export function createRiotPlayerExploreTools(input: {
               champion.name,
             ]),
           );
-          const champions = mastery.map((row) => ({
-            championId: row.championId,
-            champion: resolveMasteryChampionName(championNames, row.championId),
-            level: row.championLevel,
-            points: row.championPoints,
-            lastPlayedAt: new Date(row.lastPlayTime).toISOString(),
-          }));
+          const champions =
+            mastery.source === "scout-client"
+              ? mastery.rows.map((row) => ({
+                  championId: row.championId,
+                  champion: resolveMasteryChampionName(
+                    championNames,
+                    row.championId,
+                  ),
+                  level: row.championLevel,
+                  points: row.championPoints,
+                  lastPlayedAt: new Date(row.lastPlayTime).toISOString(),
+                  seasonMilestone: row.championSeasonMilestone,
+                  highestGrade: row.highestGrade,
+                  marksRequiredForNextLevel: row.markRequiredForNextLevel,
+                  milestoneGrades: row.milestoneGrades,
+                }))
+              : mastery.rows.map((row) => ({
+                  championId: row.championId,
+                  champion: resolveMasteryChampionName(
+                    championNames,
+                    row.championId,
+                  ),
+                  level: row.championLevel,
+                  points: row.championPoints,
+                  lastPlayedAt: new Date(row.lastPlayTime).toISOString(),
+                }));
           return {
             ok: true,
             player: targetResult.label,
+            source: mastery.source,
+            capturedAt: mastery.capturedAt?.toISOString() ?? null,
+            fetchedAt: mastery.fetchedAt?.toISOString() ?? null,
+            freshness: mastery.freshness,
             champions,
-            message: `Fetched ${champions.length.toString()} mastery entries for ${targetResult.label}.`,
+            message: `Fetched ${champions.length.toString()} mastery entries for ${targetResult.label} from ${mastery.source === "riot" ? "Riot" : "their paired Scout Client"}.`,
           };
         }),
     }),

@@ -23,17 +23,17 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@prisma/adapter-libsql": "7.9.1",
-    "@prisma/client": "^7.9.1",
-    "@prisma/client-runtime-utils": "7.9.1",
-    "@sentry/bun": "^10.70.0",
+    "@prisma/adapter-libsql": "7.10.0",
+    "@prisma/client": "^7.10.0",
+    "@prisma/client-runtime-utils": "7.10.0",
+    "@sentry/bun": "^10.75.0",
     "@shepherdjerred/config": "workspace:*",
     "@shepherdjerred/feature-flags": "workspace:*",
     "cron-parser": "^5.5.0",
     "discord.js": "^14.27.0",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.1",
     "env-var": "^7.5.0",
-    "prisma": "7.9.1",
+    "prisma": "7.10.0",
     "prom-client": "^15.1.3",
     "zod": "^4.4.3"
   },
@@ -50,13 +50,13 @@
     "@commitlint/types": "^21.0.0",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@total-typescript/ts-reset": "^0.6.1",
-    "@types/bun": "1.4.0",
-    "bun-types": "1.4.0",
+    "@types/bun": "1.4.2",
+    "bun-types": "1.4.2",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "4.1.10",
-    "@vitest/coverage-istanbul": "4.1.10"
+    "vitest": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.1"
   }
 }

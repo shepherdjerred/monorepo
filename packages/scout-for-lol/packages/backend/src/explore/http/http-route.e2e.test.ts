@@ -325,6 +325,7 @@ async function appendCompleteAnswer(input: {
   parentMessageId: string;
 }) {
   return await appendExploreAnswer(trpc.prisma, {
+    guildIds: [],
     conversationId: input.conversationId,
     parentMessageId: input.parentMessageId,
     answer: {
@@ -343,10 +344,31 @@ async function appendCompleteAnswer(input: {
   });
 }
 
+/** Seed a question, answer it, then cancel over that answer with `text`. */
+async function cancelOverExistingAnswer(text: string) {
+  const seeded = await seedQuestion();
+  const persisted = await appendCompleteAnswer({
+    conversationId: seeded.conversationId,
+    parentMessageId: seeded.questionId,
+  });
+  const salvaged = await persistPartialAnswer(trpc.prisma, {
+    guildIds: [],
+    stopped: true,
+    conversationId: seeded.conversationId,
+    parentMessageId: seeded.questionId,
+    expectedCurrentLeafId: null,
+    text,
+    trace: [],
+    existingMessageId: persisted.id,
+  });
+  return { seeded, persisted, salvaged };
+}
+
 describe("explore salvage", () => {
   test("a stop before prose salvages nothing", async () => {
     const seeded = await seedQuestion();
     const salvaged = await persistPartialAnswer(trpc.prisma, {
+      guildIds: [],
       stopped: true,
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
@@ -363,6 +385,7 @@ describe("explore salvage", () => {
   test("a stopped turn with text is saved with the stop caveat", async () => {
     const seeded = await seedQuestion();
     const salvaged = await persistPartialAnswer(trpc.prisma, {
+      guildIds: [],
       stopped: true,
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
@@ -383,6 +406,7 @@ describe("explore salvage", () => {
   test("an errored turn with streamed text is saved with the interrupted caveat", async () => {
     const seeded = await seedQuestion();
     const salvaged = await persistPartialAnswer(trpc.prisma, {
+      guildIds: [],
       stopped: false,
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
@@ -405,6 +429,7 @@ describe("explore salvage", () => {
   test("an errored turn with no text saves nothing", async () => {
     const seeded = await seedQuestion();
     const salvaged = await persistPartialAnswer(trpc.prisma, {
+      guildIds: [],
       stopped: false,
       conversationId: seeded.conversationId,
       parentMessageId: seeded.questionId,
@@ -419,21 +444,8 @@ describe("explore salvage", () => {
   });
 
   test("cancellation during persistence replaces the answer instead of adding a sibling", async () => {
-    const seeded = await seedQuestion();
-    const persisted = await appendCompleteAnswer({
-      conversationId: seeded.conversationId,
-      parentMessageId: seeded.questionId,
-    });
-
-    const salvaged = await persistPartialAnswer(trpc.prisma, {
-      stopped: true,
-      conversationId: seeded.conversationId,
-      parentMessageId: seeded.questionId,
-      expectedCurrentLeafId: null,
-      text: "Partial answer",
-      trace: [],
-      existingMessageId: persisted.id,
-    });
+    const { persisted, salvaged } =
+      await cancelOverExistingAnswer("Partial answer");
 
     expect(salvaged?.id).toBe(persisted.id);
     expect(salvaged?.content).toBe("Partial answer");
@@ -442,21 +454,7 @@ describe("explore salvage", () => {
   });
 
   test("cancellation during persistence removes an answer when no prose streamed", async () => {
-    const seeded = await seedQuestion();
-    const persisted = await appendCompleteAnswer({
-      conversationId: seeded.conversationId,
-      parentMessageId: seeded.questionId,
-    });
-
-    const salvaged = await persistPartialAnswer(trpc.prisma, {
-      stopped: true,
-      conversationId: seeded.conversationId,
-      parentMessageId: seeded.questionId,
-      expectedCurrentLeafId: null,
-      text: "",
-      trace: [],
-      existingMessageId: persisted.id,
-    });
+    const { seeded, salvaged } = await cancelOverExistingAnswer("");
 
     expect(salvaged).toBeNull();
     expect(await trpc.prisma.exploreMessage.count()).toBe(1);
@@ -525,6 +523,9 @@ describe("explore http route — remaining surface", () => {
         messages: z.array(
           z.object({
             content: z.string(),
+            // Same contract one level down: a cached client parses each
+            // message strictly, and an empty array still serializes the key.
+            guildIds: z.never().optional(),
             trace: z.array(
               z.object({
                 details: z.object({ kind: z.string() }).nullable(),

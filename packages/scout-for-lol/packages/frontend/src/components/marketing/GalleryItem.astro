@@ -14,31 +14,24 @@ const { imageSrc, imageAlt, caption, fullWidth = false } = Astro.props;
 
 <div class={`scout-gallery-item ${fullWidth ? "w-full" : "mx-auto max-w-5xl"}`}>
   <div class="relative">
-    {
-      typeof imageSrc === "string" ? (
-        <img
-          src={imageSrc}
-          alt={imageAlt}
-          class="w-full h-auto rounded-xl shadow-xl ring-1 ring-scout-border/10 ring-scout-border"
-          loading="lazy"
-        />
-      ) : (
-        <Image
-          src={imageSrc}
-          alt={imageAlt}
-          class="w-full h-auto rounded-xl shadow-xl ring-1 ring-scout-border/10 ring-scout-border"
-          loading="lazy"
-        />
-      )
-    }
-    <div
-      class="absolute inset-0 rounded-xl ring-1 ring-inset ring-scout-border/10 ring-scout-border/10"
-    >
-    </div>
+    {typeof imageSrc === "string" ? (
+      <img
+        src={imageSrc}
+        alt={imageAlt}
+        class="w-full h-auto rounded-xl shadow-xl ring-1 ring-scout-border/10 ring-scout-border"
+        loading="lazy"
+      />
+    ) : (
+      <Image
+        src={imageSrc}
+        alt={imageAlt}
+        class="w-full h-auto rounded-xl shadow-xl ring-1 ring-scout-border/10 ring-scout-border"
+        loading="lazy"
+      />
+    )}
+    <div class="absolute inset-0 rounded-xl ring-1 ring-inset ring-scout-border/10 ring-scout-border/10"></div>
   </div>
-  {
-    caption && (
-      <p class="text-sm text-scout-subtle mt-3 text-center">{caption}</p>
-    )
-  }
+  {caption && (
+    <p class="text-sm text-scout-subtle mt-3 text-center">{caption}</p>
+  )}
 </div>

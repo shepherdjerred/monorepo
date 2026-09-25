@@ -71,18 +71,21 @@ export const SourceSchema = z.discriminatedUnion("kind", [
     title: z.string().min(1),
     subtitles: SubtitlePrefSchema.optional(),
     mode: MediaModeSchema.optional(),
+    spoken: z.boolean().optional(),
   }),
   z.strictObject({
     kind: z.literal("url"),
     url: z.url(),
     subtitles: SubtitlePrefSchema.optional(),
     mode: MediaModeSchema.optional(),
+    spoken: z.boolean().optional(),
   }),
   z.strictObject({
     kind: z.literal("search"),
     query: z.string().min(1),
     subtitles: SubtitlePrefSchema.optional(),
     mode: MediaModeSchema.optional(),
+    spoken: z.boolean().optional(),
   }),
 ]);
 
@@ -153,5 +156,20 @@ export function withMode(source: Source, mode: MediaMode | undefined): Source {
       return { ...source, mode };
     case "search":
       return { ...source, mode };
+  }
+}
+
+/** Stamp or clear a spoken-command hint so classification can break YouTube category ties. */
+export function withSpoken(
+  source: Source,
+  spoken: boolean | undefined,
+): Source {
+  switch (source.kind) {
+    case "file":
+      return { ...source, spoken: spoken === true || undefined };
+    case "url":
+      return { ...source, spoken: spoken === true || undefined };
+    case "search":
+      return { ...source, spoken: spoken === true || undefined };
   }
 }

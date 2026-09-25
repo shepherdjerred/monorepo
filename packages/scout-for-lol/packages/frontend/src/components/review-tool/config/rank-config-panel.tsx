@@ -216,14 +216,11 @@ function getPreset(before: Rank, after: Rank): Preset {
   ) {
     return "lp-gain";
   }
-  if (
-    after.lp < before.lp &&
+  return after.lp < before.lp &&
     before.tier === after.tier &&
     before.division === after.division
-  ) {
-    return "lp-loss";
-  }
-  return "custom";
+    ? "lp-loss"
+    : "custom";
 }
 
 function applyPreset(
@@ -341,20 +338,18 @@ export function RankConfigPanel({ config, onChange }: RankConfigPanelProps) {
     if (config.rankAfter.lp > config.rankBefore.lp) {
       return `+${(config.rankAfter.lp - config.rankBefore.lp).toString()} LP`;
     }
-    if (config.rankAfter.lp < config.rankBefore.lp) {
-      return `${(config.rankAfter.lp - config.rankBefore.lp).toString()} LP`;
-    }
-    return "No change";
+    return config.rankAfter.lp < config.rankBefore.lp
+      ? `${(config.rankAfter.lp - config.rankBefore.lp).toString()} LP`
+      : "No change";
   }, [config.rankBefore, config.rankAfter]);
 
   const statusClass = useMemo(() => {
     if (wasPromoted(config.rankBefore, config.rankAfter)) {
       return "text-scout-warning-ink bg-scout-warning";
     }
-    if (wasDemoted(config.rankBefore, config.rankAfter)) {
-      return "text-scout-danger-ink bg-scout-danger";
-    }
-    return "text-scout-subtle bg-scout-raised";
+    return wasDemoted(config.rankBefore, config.rankAfter)
+      ? "text-scout-danger-ink bg-scout-danger"
+      : "text-scout-subtle bg-scout-raised";
   }, [config.rankBefore, config.rankAfter]);
 
   return (

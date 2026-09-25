@@ -31,10 +31,7 @@ const REQUIRED_LANE_GROUPS = [
 ] as const;
 
 function percentChange(candidate: number, baseline: number): number | null {
-  if (baseline === 0) {
-    return null;
-  }
-  return ((candidate - baseline) / baseline) * 100;
+  return baseline === 0 ? null : ((candidate - baseline) / baseline) * 100;
 }
 
 function corpusBuilds(
@@ -74,10 +71,9 @@ function mixedPhysicalSchemaDescription(report: WindowIoReport): string | null {
       current.add(job.stepKey);
     }
   }
-  if (legacy.size === 0 || current.size === 0) {
-    return null;
-  }
-  return `legacy aliases ${[...legacy].sort().join(", ")} and current aliases ${[...current].sort().join(", ")}`;
+  return legacy.size === 0 || current.size === 0
+    ? null
+    : `legacy aliases ${[...legacy].sort().join(", ")} and current aliases ${[...current].sort().join(", ")}`;
 }
 
 function laneKey(lane: Pick<FixedCorpusLane, "branch" | "stepKey">): string {

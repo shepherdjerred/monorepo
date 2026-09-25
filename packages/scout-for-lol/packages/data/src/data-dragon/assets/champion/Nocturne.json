@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.18.1",
+  "version": "16.19.1",
   "data": {
     "Nocturne": {
       "id": "Nocturne",
@@ -510,8 +510,8 @@
             ]
           },
           "maxrank": 3,
-          "cooldown": [140, 115, 90],
-          "cooldownBurn": "140/115/90",
+          "cooldown": [160, 130, 100],
+          "cooldownBurn": "160/130/100",
           "cost": [100, 100, 100],
           "costBurn": "100",
           "datavalues": {},

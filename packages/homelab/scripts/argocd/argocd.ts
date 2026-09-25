@@ -66,6 +66,8 @@ import {
   type SyncOperationResource,
 } from "./argocd-manifest-overrides.ts";
 import { autoSyncPolicyDivergences } from "./argocd-auto-sync-policy.ts";
+import { childSyncTimeoutSeconds } from "./argocd-child-sync-timeout.ts";
+import { TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS } from "../../src/cdk8s/src/temporal-release-budgets.ts";
 import {
   appliedVerifiedReleaseResult,
   HOMELAB_RELEASE_RESULT_FILE,
@@ -2920,6 +2922,16 @@ async function assertReleaseInventoryIsComplete(
   );
 }
 
+/**
+ * Minimum sync wait budgets for children whose operation outlasts the
+ * pipeline `--timeout`. Only temporal qualifies: its operation runs the
+ * schema-migration hook, budgeted in `temporal-release-budgets.ts` next to
+ * the chart's own deadline.
+ */
+const CHILD_SYNC_TIMEOUT_FLOORS: ReadonlyMap<string, number> = new Map([
+  ["temporal", TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS],
+]);
+
 async function reconcileRelease(
   expectedPath: string,
   timeoutSeconds: number,
@@ -2990,13 +3002,22 @@ async function reconcileRelease(
       continue;
     }
     await assertApplySafe(wanted.name, token, wanted.revision);
-    await sync(wanted.name, timeoutSeconds, false, {
-      prune: wanted.prune,
-      revision: wanted.revision,
-      ...(exactRequestId === undefined
-        ? {}
-        : { requestId: exactRequestId, releasePhase: "child" }),
-    });
+    await sync(
+      wanted.name,
+      childSyncTimeoutSeconds(
+        wanted.name,
+        timeoutSeconds,
+        CHILD_SYNC_TIMEOUT_FLOORS,
+      ),
+      false,
+      {
+        prune: wanted.prune,
+        revision: wanted.revision,
+        ...(exactRequestId === undefined
+          ? {}
+          : { requestId: exactRequestId, releasePhase: "child" }),
+      },
+    );
   }
   if (waitForHealth) {
     await releaseHealthWait(expectedPath, timeoutSeconds, false);

@@ -273,8 +273,7 @@ export async function storedRawArchiveDescriptor(
   const kind = rawArchiveReceiptKind(artifact);
   const receipts = await listReceipts(db, { matchId });
   const archived = receipts.find((record) => record.receipt.kind === kind);
-  if (archived === undefined) return null;
-  return rawArchiveDescriptorOf(archived);
+  return archived === undefined ? null : rawArchiveDescriptorOf(archived);
 }
 
 export function buildReceipt(args: {

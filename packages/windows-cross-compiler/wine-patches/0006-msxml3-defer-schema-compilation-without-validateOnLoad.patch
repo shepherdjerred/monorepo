@@ -1,0 +1,506 @@
+msxml3: Resolve schemas across a collection when validateOnLoad is off.
+
+With validateOnLoad disabled, MSXML resolves references between the schemas in
+a collection when it validates, so the AppX manifest schemas reference each
+other's namespaces without xs:import. A schema that does not compile alone is
+kept and compiled on first use or on validate(), with imports of the other
+cached namespaces served from the cache through the entity loader.
+
+MSXML also accepts constructs libxml2 rejects: whitespace inside QName values,
+an extension redeclaring an attribute of its base type, and pattern facets in
+its own regular expression dialect. The deferred copy normalizes the first two
+and drops patterns libxml2 cannot compile, with a warning.
+
+Regular expression errors from pattern facets bypass the parser context's
+handlers; route them to the debug channel instead of stderr, where build
+tools that scan output for errors would treat them as failures.
+
+--- a/dlls/msxml3/schema.c	2026-09-23 18:58:24
++++ b/dlls/msxml3/schema.c	2026-09-23 20:37:12
+@@ -23,6 +23,9 @@
+ 
+ #include <assert.h>
+ #include <stdarg.h>
++#include <stdio.h>
++#include <stdlib.h>
++#include <string.h>
+ #include <libxml/xmlerror.h>
+ #include <libxml/tree.h>
+ #include <libxml/xmlschemas.h>
+@@ -33,6 +36,7 @@
+ #include <libxml/xmlIO.h>
+ #include <libxml/xmlversion.h>
+ #include <libxml/xpath.h>
++#include <libxml/xmlregexp.h>
+ 
+ #include "windef.h"
+ #include "winbase.h"
+@@ -107,6 +111,7 @@
+     CacheEntryType type;
+     xmlSchemaPtr schema;
+     xmlDocPtr doc;
++    xmlDocPtr compiled_doc;
+     LONG ref;
+ } cache_entry;
+ 
+@@ -176,11 +181,19 @@
+ 
+ static inline xmlSchemaPtr Schema_parse(xmlSchemaParserCtxtPtr spctx)
+ {
++    xmlGenericErrorFunc error_func = xmlGenericError;
++    void *error_context = xmlGenericErrorContext;
++    xmlSchemaPtr schema;
++
+     TRACE("(%p)\n", spctx);
+ 
+     xmlSchemaSetParserErrors(spctx, parser_error, parser_warning, NULL);
+     xmlSchemaSetParserStructuredErrors(spctx, parser_serror, NULL);
+-    return xmlSchemaParse(spctx);
++    /* pattern facet errors come from the regexp compiler, not the parser context */
++    xmlSetGenericErrorFunc(NULL, parser_error);
++    schema = xmlSchemaParse(spctx);
++    xmlSetGenericErrorFunc(error_context, error_func);
++    return schema;
+ }
+ 
+ static void LIBXML2_LOG_CALLBACK validate_error(void* ctx, char const* msg, ...)
+@@ -571,12 +584,304 @@
+ {
+     return (!nsURI)? xmlHashLookup(This->cache, BAD_CAST "") :
+                      xmlHashLookup(This->cache, nsURI);
++}
++
++/* With validateOnLoad disabled, MSXML resolves references between the schemas
++ * of a collection when it validates, so a schema may use another cached
++ * namespace without importing it. Such schemas are compiled on first use, with
++ * imports of the other cached namespaces served from the cache itself. */
++#define CACHE_SCHEMA_URL "wine-msxml-schema-cache:"
++
++struct deferred_compile
++{
++    schema_cache *cache;
++    xmlChar **buffers;
++    int count;
++};
++
++static struct deferred_compile *deferred_compile;
++static CRITICAL_SECTION deferred_cs;
++static CRITICAL_SECTION_DEBUG deferred_cs_debug =
++{
++    0, 0, &deferred_cs,
++    { &deferred_cs_debug.ProcessLocksList, &deferred_cs_debug.ProcessLocksList },
++      0, 0, { (DWORD_PTR)(__FILE__ ": deferred_cs") }
++};
++static CRITICAL_SECTION deferred_cs = { &deferred_cs_debug, -1, 0, 0, 0, 0 };
++
++static BOOL xsd_imports_namespace(xmlNodePtr root, const xmlChar *uri)
++{
++    xmlNodePtr child;
++
++    for (child = xmlFirstElementChild(root); child; child = xmlNextElementSibling(child))
++    {
++        xmlChar *ns;
++        BOOL found;
++
++        if (!xmlStrEqual(child->name, BAD_CAST "import")) continue;
++        ns = xmlGetProp(child, BAD_CAST "namespace");
++        found = xmlStrEqual(ns ? ns : BAD_CAST "", uri);
++        xmlFree(ns);
++        if (found) return TRUE;
++    }
++    return FALSE;
++}
++
++static void LIBXML2_LOG_CALLBACK ignore_regexp_error(void *ctx, char const *msg, ...)
++{
++}
++
++static xmlRegexpPtr compile_pattern_quietly(const xmlChar *pattern)
++{
++    xmlGenericErrorFunc error_func = xmlGenericError;
++    void *error_context = xmlGenericErrorContext;
++    xmlRegexpPtr regexp;
++
++    xmlSetGenericErrorFunc(NULL, ignore_regexp_error);
++    regexp = xmlRegexpCompile(pattern);
++    xmlSetGenericErrorFunc(error_context, error_func);
++    return regexp;
++}
++
++/* MSXML accepts QName values with surrounding whitespace or whitespace between
++ * the prefix and the local name, and pattern facets written in its own regular
++ * expression dialect. libxml2 cannot express some of those patterns, so they
++ * are dropped rather than failing the whole collection. */
++static void normalize_xsd_node(xmlNodePtr node)
++{
++    static const char *qname_attrs[] = { "type", "ref", "base", "itemType", "substitutionGroup" };
++    xmlNodePtr child, next;
++    unsigned int i;
++
++    for (i = 0; i < ARRAY_SIZE(qname_attrs); i++)
++    {
++        xmlChar *value = xmlGetNoNsProp(node, BAD_CAST qname_attrs[i]);
++        xmlChar *src, *dst;
++        BOOL changed = FALSE;
++
++        if (!value) continue;
++        for (src = dst = value; *src; src++)
++        {
++            if (IS_BLANK_CH(*src))
++            {
++                changed = TRUE;
++                continue;
++            }
++            *dst++ = *src;
++        }
++        *dst = 0;
++        if (changed) xmlSetProp(node, BAD_CAST qname_attrs[i], value);
++        xmlFree(value);
++    }
++
++    for (child = xmlFirstElementChild(node); child; child = next)
++    {
++        next = xmlNextElementSibling(child);
++        if (xmlStrEqual(child->name, BAD_CAST "pattern"))
++        {
++            xmlChar *value = xmlGetNoNsProp(child, BAD_CAST "value");
++            xmlRegexpPtr regexp = value ? compile_pattern_quietly(value) : NULL;
++
++            if (regexp) xmlRegFreeRegexp(regexp);
++            else
++            {
++                WARN("ignoring pattern %s\n", debugstr_a((const char *)value));
++                xmlUnlinkNode(child);
++                xmlFreeNode(child);
++            }
++            xmlFree(value);
++            continue;
++        }
++        normalize_xsd_node(child);
++    }
++}
++
++static xmlNodePtr xsd_find_complex_type(xmlNodePtr root, const xmlChar *qname)
++{
++    const xmlChar *name = xmlStrchr(qname, ':') ? xmlStrchr(qname, ':') + 1 : qname;
++    xmlNodePtr child;
++    xmlChar *value;
++    BOOL found;
++
++    for (child = xmlFirstElementChild(root); child; child = xmlNextElementSibling(child))
++    {
++        if (!xmlStrEqual(child->name, BAD_CAST "complexType")) continue;
++        value = xmlGetNoNsProp(child, BAD_CAST "name");
++        found = xmlStrEqual(value, name);
++        xmlFree(value);
++        if (found) return child;
++    }
++    return NULL;
++}
++
++static BOOL xsd_type_declares_attribute(xmlNodePtr root, xmlNodePtr type, const xmlChar *attr, int depth)
++{
++    xmlNodePtr content, extension, child;
++    xmlChar *value;
++    BOOL found = FALSE;
++
++    if (!type || depth > 32) return FALSE;
++    for (child = xmlFirstElementChild(type); child && !found; child = xmlNextElementSibling(child))
++    {
++        if (!xmlStrEqual(child->name, BAD_CAST "attribute")) continue;
++        value = xmlGetNoNsProp(child, BAD_CAST "name");
++        found = xmlStrEqual(value, attr);
++        xmlFree(value);
++    }
++    if (found) return TRUE;
++
++    for (content = xmlFirstElementChild(type); content; content = xmlNextElementSibling(content))
++    {
++        if (!xmlStrEqual(content->name, BAD_CAST "complexContent")) continue;
++        for (extension = xmlFirstElementChild(content); extension; extension = xmlNextElementSibling(extension))
++        {
++            if (!xmlStrEqual(extension->name, BAD_CAST "extension")) continue;
++            if (xsd_type_declares_attribute(root, extension, attr, depth + 1)) return TRUE;
++            value = xmlGetNoNsProp(extension, BAD_CAST "base");
++            found = value && xsd_type_declares_attribute(root, xsd_find_complex_type(root, value), attr, depth + 1);
++            xmlFree(value);
++            if (found) return TRUE;
++        }
++    }
++    return FALSE;
++}
++
++/* MSXML ignores an extension redeclaring an attribute its base type declares. */
++static void xsd_remove_inherited_attributes(xmlNodePtr root, xmlNodePtr node)
++{
++    xmlNodePtr child, next;
++
++    for (child = xmlFirstElementChild(node); child; child = next)
++    {
++        next = xmlNextElementSibling(child);
++
++        if (xmlStrEqual(child->name, BAD_CAST "extension"))
++        {
++            xmlChar *base = xmlGetNoNsProp(child, BAD_CAST "base");
++            xmlNodePtr base_type = base ? xsd_find_complex_type(root, base) : NULL;
++            xmlNodePtr attr, next_attr;
++
++            for (attr = xmlFirstElementChild(child); base_type && attr; attr = next_attr)
++            {
++                xmlChar *name;
++
++                next_attr = xmlNextElementSibling(attr);
++                if (!xmlStrEqual(attr->name, BAD_CAST "attribute")) continue;
++                name = xmlGetNoNsProp(attr, BAD_CAST "name");
++                if (name && xsd_type_declares_attribute(root, base_type, name, 0))
++                {
++                    WARN("ignoring redeclared attribute %s\n", debugstr_a((const char *)name));
++                    xmlUnlinkNode(attr);
++                    xmlFreeNode(attr);
++                }
++                xmlFree(name);
++            }
++            xmlFree(base);
++        }
++        xsd_remove_inherited_attributes(root, child);
++    }
+ }
+ 
++static xmlDocPtr xsd_doc_with_cache_imports(schema_cache *cache, xmlDocPtr doc)
++{
++    xmlDocPtr copy = xmlCopyDoc(doc, 1);
++    xmlNodePtr root = xmlDocGetRootElement(copy), import, first;
++    xmlChar *target = xmlGetProp(root, BAD_CAST "targetNamespace");
++    char url[sizeof(CACHE_SCHEMA_URL) + 12];
++    int i;
++
++    normalize_xsd_node(root);
++    xsd_remove_inherited_attributes(root, root);
++
++    for (i = 0; i < cache->count; i++)
++    {
++        const xmlChar *uri = cache->uris[i];
++        cache_entry *entry = xmlHashLookup(cache->cache, uri);
++
++        if (!entry || entry->type != CacheEntryType_XSD) continue;
++        if (xmlStrEqual(uri, target ? target : BAD_CAST "")) continue;
++        if (xsd_imports_namespace(root, uri)) continue;
++
++        sprintf(url, CACHE_SCHEMA_URL "%d", i);
++        import = xmlNewDocNode(copy, root->ns, BAD_CAST "import", NULL);
++        if (*uri) xmlSetProp(import, BAD_CAST "namespace", uri);
++        xmlSetProp(import, BAD_CAST "schemaLocation", BAD_CAST url);
++        if ((first = xmlFirstElementChild(root))) xmlAddPrevSibling(first, import);
++        else xmlAddChild(root, import);
++    }
++
++    xmlFree(target);
++    return copy;
++}
++
++static xmlParserInputPtr cached_schema_input(const char *URL, xmlParserCtxtPtr ctxt)
++{
++    struct deferred_compile *compile = deferred_compile;
++    cache_entry *entry;
++    xmlChar *buffer, **buffers;
++    xmlNodePtr node, next;
++    xmlDocPtr doc;
++    int index, size;
++
++    if (!compile) return NULL;
++    index = atoi(URL + sizeof(CACHE_SCHEMA_URL) - 1);
++    if (index < 0 || index >= compile->cache->count) return NULL;
++    if (!(entry = xmlHashLookup(compile->cache->cache, compile->cache->uris[index]))) return NULL;
++
++    doc = xsd_doc_with_cache_imports(compile->cache, entry->doc);
++    /* the DOM keeps the XML declaration as a processing instruction */
++    for (node = doc->children; node; node = next)
++    {
++        next = node->next;
++        if (node->type == XML_PI_NODE && xmlStrEqual(node->name, BAD_CAST "xml"))
++        {
++            xmlUnlinkNode(node);
++            xmlFreeNode(node);
++        }
++    }
++    xmlDocDumpMemoryEnc(doc, &buffer, &size, "UTF-8");
++    xmlFreeDoc(doc);
++    if (!buffer) return NULL;
++
++    if (!(buffers = realloc(compile->buffers, (compile->count + 1) * sizeof(*buffers))))
++    {
++        xmlFree(buffer);
++        return NULL;
++    }
++    compile->buffers = buffers;
++    compile->buffers[compile->count++] = buffer;
++    return xmlNewStringInputStream(ctxt, buffer);
++}
++
++static void compile_deferred_entry(schema_cache *cache, cache_entry *entry)
++{
++    struct deferred_compile compile = { cache };
++    xmlSchemaParserCtxtPtr spctx;
++    xmlDocPtr doc;
++    int i;
++
++    EnterCriticalSection(&deferred_cs);
++    deferred_compile = &compile;
++    doc = xsd_doc_with_cache_imports(cache, entry->doc);
++    spctx = xmlSchemaNewDocParserCtxt(doc);
++    entry->schema = Schema_parse(spctx);
++    xmlSchemaFreeParserCtxt(spctx);
++    deferred_compile = NULL;
++    LeaveCriticalSection(&deferred_cs);
++
++    for (i = 0; i < compile.count; i++) xmlFree(compile.buffers[i]);
++    free(compile.buffers);
++
++    if (entry->schema) entry->compiled_doc = doc;
++    else xmlFreeDoc(doc);
++}
++
+ static inline xmlSchemaPtr get_node_schema(schema_cache* This, xmlNodePtr node)
+ {
+     cache_entry* entry = get_entry(This, get_node_nsURI(node));
+-    return (!entry)? NULL : entry->schema;
++    if (!entry) return NULL;
++    if (!entry->schema && entry->type == CacheEntryType_XSD) compile_deferred_entry(This, entry);
++    return entry->schema;
+ }
+ 
+ static xmlExternalEntityLoader _external_entity_loader;
+@@ -593,9 +898,13 @@
+     assert(datatypes_handle != NULL);
+     assert(datatypes_src != NULL);
+ 
+-    /* TODO: if the desired schema is in the cache, load it from there */
+-    if (lstrcmpA(URL, "urn:schemas-microsoft-com:datatypes") == 0)
++    if (URL && !strncmp(URL, CACHE_SCHEMA_URL, sizeof(CACHE_SCHEMA_URL) - 1))
+     {
++        TRACE("loading cached schema for %s\n", URL);
++        input = cached_schema_input(URL, ctxt);
++    }
++    else if (lstrcmpA(URL, "urn:schemas-microsoft-com:datatypes") == 0)
++    {
+         TRACE("loading built-in schema for %s\n", URL);
+         input = xmlNewStringInputStream(ctxt, datatypes_src);
+     }
+@@ -662,8 +971,12 @@
+         if (entry->type == CacheEntryType_XSD)
+         {
+             xmldoc_release(entry->doc);
+-            entry->schema->doc = NULL;
+-            xmlSchemaFree(entry->schema);
++            if (entry->schema)
++            {
++                entry->schema->doc = NULL;
++                xmlSchemaFree(entry->schema);
++            }
++            if (entry->compiled_doc) xmlFreeDoc(entry->compiled_doc);
+         }
+         else if (entry->type == CacheEntryType_XDR)
+         {
+@@ -745,9 +1058,9 @@
+     return TRUE;
+ }
+ 
+-static cache_entry* cache_entry_from_xsd_doc(xmlDocPtr doc, xmlChar const* nsURI, MSXML_VERSION v)
++static cache_entry* cache_entry_from_xsd_doc(xmlDocPtr doc, xmlChar const* nsURI, MSXML_VERSION v, BOOL defer)
+ {
+-    cache_entry* entry = malloc(sizeof(cache_entry));
++    cache_entry* entry = calloc(1, sizeof(cache_entry));
+     xmlSchemaParserCtxtPtr spctx;
+     xmlDocPtr new_doc = xmlCopyDoc(doc, 1);
+ 
+@@ -765,6 +1078,13 @@
+         entry->doc = entry->schema->doc;
+         xmldoc_add_ref(entry->doc);
+     }
++    else if (defer)
++    {
++        TRACE("deferring compilation of schema for %s\n", debugstr_a((const char *)nsURI));
++        entry->doc = new_doc;
++        xmldoc_init(entry->doc, v);
++        xmldoc_add_ref(entry->doc);
++    }
+     else
+     {
+         FIXME("failed to parse doc\n");
+@@ -778,7 +1098,7 @@
+ 
+ static cache_entry* cache_entry_from_xdr_doc(xmlDocPtr doc, xmlChar const* nsURI, MSXML_VERSION version)
+ {
+-    cache_entry* entry = malloc(sizeof(cache_entry));
++    cache_entry* entry = calloc(1, sizeof(cache_entry));
+     xmlSchemaParserCtxtPtr spctx;
+     xmlDocPtr new_doc = xmlCopyDoc(doc, 1), xsd_doc = XDR_to_XSD_doc(doc, nsURI);
+ 
+@@ -843,7 +1163,7 @@
+     switch (type)
+     {
+         case CacheEntryType_XSD:
+-            entry = cache_entry_from_xsd_doc(doc, nsURI, version);
++            entry = cache_entry_from_xsd_doc(doc, nsURI, version, FALSE);
+             break;
+         case CacheEntryType_XDR:
+             entry = cache_entry_from_xdr_doc(doc, nsURI, version);
+@@ -952,7 +1272,7 @@
+                     continue;
+                 }
+ 
+-                entry = malloc(sizeof(cache_entry));
++                entry = calloc(1, sizeof(cache_entry));
+                 entry->type = CacheEntryType_NS;
+                 entry->ref = 1;
+                 entry->schema = NULL;
+@@ -1160,7 +1480,7 @@
+ 
+                 if (type == CacheEntryType_XSD)
+                 {
+-                    entry = cache_entry_from_xsd_doc(doc, name, This->version);
++                    entry = cache_entry_from_xsd_doc(doc, name, This->version, !This->validateOnLoad);
+                 }
+                 else if (type == CacheEntryType_XDR)
+                 {
+@@ -1321,21 +1641,33 @@
+ static HRESULT WINAPI schema_cache_validate(IXMLDOMSchemaCollection2* iface)
+ {
+     schema_cache* This = impl_from_IXMLDOMSchemaCollection2(iface);
+-    FIXME("(%p): stub\n", This);
+-    return E_NOTIMPL;
++    int i;
++
++    TRACE("(%p)\n", This);
++
++    for (i = 0; i < This->count; i++)
++    {
++        cache_entry *entry = xmlHashLookup(This->cache, This->uris[i]);
++
++        if (!entry || entry->type != CacheEntryType_XSD || entry->schema) continue;
++        compile_deferred_entry(This, entry);
++        if (!entry->schema)
++        {
++            WARN("schema for %s does not compile\n", debugstr_a((const char *)This->uris[i]));
++            return E_FAIL;
++        }
++    }
++    return S_OK;
+ }
+ 
+ static HRESULT WINAPI schema_cache_put_validateOnLoad(IXMLDOMSchemaCollection2* iface,
+                                                       VARIANT_BOOL value)
+ {
+     schema_cache* This = impl_from_IXMLDOMSchemaCollection2(iface);
+-    FIXME("(%p)->(%d): stub\n", This, value);
++    TRACE("(%p)->(%d)\n", This, value);
+ 
+     This->validateOnLoad = value;
+-    /* it's ok to disable it, cause we don't validate on load anyway */
+-    if (value == VARIANT_FALSE) return S_OK;
+-
+-    return E_NOTIMPL;
++    return S_OK;
+ }
+ 
+ static HRESULT WINAPI schema_cache_get_validateOnLoad(IXMLDOMSchemaCollection2* iface,

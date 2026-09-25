@@ -16,7 +16,18 @@ export const ManagedResourcesSchema = z.object({
 export type ManagedResource = z.infer<typeof ManagedResourceSchema>;
 
 const JsonObjectSchema = z.record(z.string(), z.unknown());
+const ResourceSyncOptionsSchema = z
+  .object({
+    metadata: z
+      .object({
+        annotations: z.record(z.string(), z.string()).optional(),
+      })
+      .loose()
+      .optional(),
+  })
+  .loose();
 const PROBE_HANDLERS = ["exec", "grpc", "httpGet", "tcpSocket"] as const;
+const ARGO_SYNC_OPTIONS_ANNOTATION = "argocd.argoproj.io/sync-options";
 
 /**
  * Unreadable state stays fatal — a resource whose live or target state cannot
@@ -100,16 +111,16 @@ function targetMatchesLive(
     if (!liveObject.success) {
       return false;
     }
-    if (
+    const removesManagedKey =
       liveOnlyKeys === "removes-managed-key" &&
       Object.keys(liveObject.data).some(
         (key) => !Object.hasOwn(targetObject.data, key),
+      );
+    return (
+      !removesManagedKey &&
+      Object.entries(targetObject.data).every(([key, value]) =>
+        targetMatchesLive(value, liveObject.data[key], liveOnlyKeys),
       )
-    ) {
-      return false;
-    }
-    return Object.entries(targetObject.data).every(([key, value]) =>
-      targetMatchesLive(value, liveObject.data[key], liveOnlyKeys),
     );
   }
   return JSON.stringify(target) === JSON.stringify(live);
@@ -174,7 +185,13 @@ function declaredTargetChanged(
 ): boolean {
   const targetValue = valueAt(target, field.path);
   const liveValue = valueAt(live, field.path);
-  return targetValue === undefined
+  // Kubernetes treats an explicit null in a manifest as an omitted field.
+  // Helm commonly emits null for disabled optional lists (for example a
+  // StatefulSet using an existing claim emits volumeClaimTemplates: null),
+  // while the API server drops that key from the stored object. Compare both
+  // shapes with the field's omission semantics so an absent live field is not
+  // misclassified as an immutable change.
+  return targetValue === undefined || targetValue === null
     ? omissionChanges(field, liveValue)
     : !targetMatchesLive(targetValue, liveValue, field.liveOnlyKeys);
 }
@@ -280,10 +297,9 @@ function arrayEntrySegments(entries: readonly unknown[]): readonly string[] {
     const name = parsed.data["name"];
     return typeof name === "string" && name !== "" ? [name] : [];
   });
-  if (names.length !== entries.length || new Set(names).size !== names.length) {
-    return entries.map((_entry, index) => index.toString());
-  }
-  return names.map((name) => `[name=${name}]`);
+  return names.length !== entries.length || new Set(names).size !== names.length
+    ? entries.map((_entry, index) => index.toString())
+    : names.map((name) => `[name=${name}]`);
 }
 
 /**
@@ -359,10 +375,9 @@ function parseReleaseImage(value: unknown): ReleaseImage | null {
   const match = RELEASE_IMAGE_PATTERN.exec(value);
   const repository = match?.groups?.["repository"];
   const build = match?.groups?.["build"];
-  if (repository === undefined || build === undefined) {
-    return null;
-  }
-  return { repository, build: Number.parseInt(build, 10) };
+  return repository === undefined || build === undefined
+    ? null
+    : { repository, build: Number.parseInt(build, 10) };
 }
 
 function collectReleaseImages(
@@ -429,6 +444,24 @@ function imageDowngradeFindings(
 
 function identity(resource: ManagedResource): string {
   return `${resource.group ?? ""}/${resource.kind} ${resource.namespace ?? "_cluster"}/${resource.name}`;
+}
+
+/**
+ * A resource carrying both options is deleted and recreated by Argo rather
+ * than patched. That makes immutable-field and probe-handler update checks
+ * inapplicable, but only when the destructive intent is declared on the
+ * target resource itself. Application-wide options do not reach this parser.
+ */
+function targetRequestsForceReplace(target: Record<string, unknown>): boolean {
+  const annotation =
+    ResourceSyncOptionsSchema.parse(target).metadata?.annotations?.[
+      ARGO_SYNC_OPTIONS_ANNOTATION
+    ];
+  if (annotation === undefined) {
+    return false;
+  }
+  const options = new Set(annotation.split(",").map((option) => option.trim()));
+  return options.has("Force=true") && options.has("Replace=true");
 }
 
 function immutableFields(kind: string): readonly ImmutableField[] {
@@ -554,19 +587,25 @@ export function analyzeApplySafety(
     if (live === null || target === null) {
       continue;
     }
-    for (const field of immutableFields(resource.kind)) {
-      if (declaredTargetChanged(live, target, field)) {
+    const forceReplace = targetRequestsForceReplace(target);
+    if (!forceReplace) {
+      for (const field of immutableFields(resource.kind)) {
+        if (declaredTargetChanged(live, target, field)) {
+          findings.push(
+            `${identity(resource)} changes immutable /${field.path.join("/")}`,
+          );
+        }
+      }
+      for (const list of embeddedResourceLists(resource.kind)) {
         findings.push(
-          `${identity(resource)} changes immutable /${field.path.join("/")}`,
+          ...embeddedListFindings(live, target, list, identity(resource)),
         );
       }
     }
-    for (const list of embeddedResourceLists(resource.kind)) {
-      findings.push(
-        ...embeddedListFindings(live, target, list, identity(resource)),
-      );
-    }
     findings.push(...imageDowngradeFindings(live, target, identity(resource)));
+    if (forceReplace) {
+      continue;
+    }
     const liveProbes = new Map<string, string>();
     const targetProbes = new Map<string, string>();
     collectProbeHandlers(live, "", liveProbes);

@@ -1,19 +1,19 @@
 export const REGIONS = [
-  { value: "AMERICA_NORTH", label: "NA" },
-  { value: "EU_WEST", label: "EUW" },
-  { value: "EU_EAST", label: "EUNE" },
-  { value: "KOREA", label: "KR" },
-  { value: "JAPAN", label: "JP" },
-  { value: "BRAZIL", label: "BR" },
-  { value: "LAT_NORTH", label: "LAN" },
-  { value: "LAT_SOUTH", label: "LAS" },
-  { value: "OCEANIA", label: "OCE" },
-  { value: "TURKEY", label: "TR" },
-  { value: "RUSSIA", label: "RU" },
-  { value: "VIETNAM", label: "VN" },
-  { value: "TAIWAN", label: "TW" },
-  { value: "SINGAPORE", label: "SG" },
-  { value: "PBE", label: "PBE" },
+  { value: "AMERICA_NORTH", label: "NA", name: "North America" },
+  { value: "EU_WEST", label: "EUW", name: "Europe West" },
+  { value: "EU_EAST", label: "EUNE", name: "Europe Nordic & East" },
+  { value: "KOREA", label: "KR", name: "Korea" },
+  { value: "JAPAN", label: "JP", name: "Japan" },
+  { value: "BRAZIL", label: "BR", name: "Brazil" },
+  { value: "LAT_NORTH", label: "LAN", name: "Latin America North" },
+  { value: "LAT_SOUTH", label: "LAS", name: "Latin America South" },
+  { value: "OCEANIA", label: "OCE", name: "Oceania" },
+  { value: "TURKEY", label: "TR", name: "Turkey" },
+  { value: "RUSSIA", label: "RU", name: "Russia" },
+  { value: "VIETNAM", label: "VN", name: "Vietnam" },
+  { value: "TAIWAN", label: "TW", name: "Taiwan" },
+  { value: "SINGAPORE", label: "SG", name: "Singapore" },
+  { value: "PBE", label: "PBE", name: "Public Beta Environment" },
 ] as const;
 
 export type RegionValue = (typeof REGIONS)[number]["value"];
@@ -29,4 +29,14 @@ export function findRegion(value: string): RegionValue | null {
  */
 export function regionLabel(value: string): string {
   return REGIONS.find((region) => region.value === value)?.label ?? value;
+}
+
+/**
+ * Full display name for a region (e.g. `AMERICA_NORTH` → `North America`),
+ * falling back to short label or raw value.
+ */
+export function regionName(value: string): string {
+  return (
+    REGIONS.find((region) => region.value === value)?.name ?? regionLabel(value)
+  );
 }

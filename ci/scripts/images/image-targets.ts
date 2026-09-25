@@ -36,7 +36,6 @@ export const IMAGE_TARGET_REGISTRY: Readonly<
     owner: "@scout-for-lol/backend",
     ghcrVisibility: "public",
   },
-  "scout-evals": { owner: "@scout-for-lol/evals", ghcrVisibility: "public" },
   "discord-plays-pokemon": {
     owner: "@discord-plays-pokemon/backend",
     ghcrVisibility: "public",

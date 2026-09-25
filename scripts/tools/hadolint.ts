@@ -9,11 +9,11 @@ import { trackedExistingFiles } from "../lib/tracked-files.ts";
 export function isHadolintCandidate(path: string): boolean {
   if (path.startsWith("sandbox/")) return false;
   const basename = path.split("/").at(-1);
-  if (basename === undefined) return false;
   return (
-    basename === "Dockerfile" ||
-    basename.startsWith("Dockerfile.") ||
-    basename.endsWith(".Dockerfile")
+    basename !== undefined &&
+    (basename === "Dockerfile" ||
+      basename.startsWith("Dockerfile.") ||
+      basename.endsWith(".Dockerfile"))
   );
 }
 

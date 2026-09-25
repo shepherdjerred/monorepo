@@ -4,7 +4,7 @@ import {
   type ReportAiPreviewSummary,
   type ExploreStreamEvent,
 } from "@scout-for-lol/data";
-import type { ExploreAgentParams } from "#src/explore/agent.ts";
+import type { ExploreAgentParams } from "#src/explore/agent-tools.ts";
 import {
   getExploreQuotaStatus,
   resetExploreRateLimitStateForTests,

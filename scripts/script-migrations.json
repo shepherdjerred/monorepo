@@ -696,6 +696,16 @@
       "source": "packages/homelab/src/helm-types/demos/record-cli-demo.sh",
       "disposition": "retain",
       "reason": "Terminal narration for asciinema capture: emits raw ANSI cursor/clear sequences and human-paced sleeps to drive a live tty recording, not automation logic"
+    },
+    {
+      "source": "packages/windows-cross-compiler/test/selftest-base.sh",
+      "disposition": "retain",
+      "reason": "Runs inside the windows-cross-compiler image, which ships no Bun; it drives the Windows SDK, cargo-xwin, and dotnet toolchains the image provides"
+    },
+    {
+      "source": "packages/windows-cross-compiler/test/selftest-winui.sh",
+      "disposition": "retain",
+      "reason": "Runs inside the windows-cross-compiler image, which ships no Bun; it drives the Windows SDK, cargo-xwin, and dotnet toolchains the image provides"
     }
   ]
 }

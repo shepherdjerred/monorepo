@@ -156,7 +156,7 @@ describe("Temporal agent provider network boundary", () => {
     expect(worker.securityContext).toMatchObject({
       runAsUser: 0,
       allowPrivilegeEscalation: false,
-      capabilities: { add: ["SETUID"], drop: ["ALL"] },
+      capabilities: { add: ["CHOWN", "DAC_OVERRIDE", "SETUID"], drop: ["ALL"] },
     });
     expect(
       worker.env.find((variable) => variable.name === "AGENT_PROVIDER_UID")

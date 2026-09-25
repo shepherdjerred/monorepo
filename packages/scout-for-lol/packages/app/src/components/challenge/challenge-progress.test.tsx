@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 import {
   freezeChallengeCatalogs,
-  WIN_EVERY_CURRENT_CHAMPION_TEMPLATE,
+  WIN_EVERY_CURRENT_CHAMPION_SOLO_TEMPLATE,
 } from "@scout-for-lol/data";
 import { ChallengeProgress } from "#src/components/challenge/challenge-progress.tsx";
 import { championCoverageFromDistinct } from "#src/components/challenge/challenge-champion-coverage.tsx";
@@ -71,7 +71,9 @@ describe("ChallengeProgress", () => {
   });
 
   test("renders a portrait for every frozen current-champion catalog entry", () => {
-    const frozen = freezeChallengeCatalogs(WIN_EVERY_CURRENT_CHAMPION_TEMPLATE);
+    const frozen = freezeChallengeCatalogs(
+      WIN_EVERY_CURRENT_CHAMPION_SOLO_TEMPLATE,
+    );
     expect(frozen.progressGoal.kind).toBe("distinct");
     if (frozen.progressGoal.kind !== "distinct") return;
     const [first, ...rest] = frozen.progressGoal.requiredValues;

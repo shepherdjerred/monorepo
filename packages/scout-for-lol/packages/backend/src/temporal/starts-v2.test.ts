@@ -8,8 +8,11 @@ import {
   NotificationIntentKeySchema,
   RiotMatchIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
+import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   startScoutLakeProjectionV2,
+  SCOUT_CLIENT_MATCH_START_DELAY,
+  startScoutMatchProcessingV2,
   startScoutNotificationV2,
   startScoutPipelineReconciliationV2,
   type ScoutV2WorkflowStarter,
@@ -37,6 +40,7 @@ const INTENT_KEY = NotificationIntentKeySchema.parse(
 const MATCH_ID = RiotMatchIdSchema.parse("NA1_5312279829");
 const NOTIFICATION_ID = `scout-beta-notification-v2-${INTENT_KEY}`;
 const PROJECTION_ID = `scout-beta-lake-projection-v2-${MATCH_ID}`;
+const SOURCE_PUUID = LeaguePuuidSchema.parse("p".repeat(78));
 
 async function startNotification(client: ScoutV2WorkflowStarter) {
   return await startScoutNotificationV2(client, {
@@ -80,6 +84,46 @@ describe("operator starts share the sweep's per-family reuse policies", () => {
     expect(second.firstExecutionRunId).toBe(first.firstExecutionRunId);
     expect(starts).toHaveLength(1);
   });
+});
+
+test("native ingress starts the same durable per-match workflow", async () => {
+  const temporal = fakeTemporal();
+  await startScoutMatchProcessingV2(temporal.client, {
+    stage: "beta",
+    riotMatchId: MATCH_ID,
+    sourcePuuid: SOURCE_PUUID,
+    deliveryMode: "live",
+  });
+
+  const [start] = temporal.starts;
+  expect(start?.workflowType).toBe(SCOUT_WORKFLOW_NAMES.matchProcessingV2);
+  expect(start?.options.workflowId).toBe(`scout-beta-match-v2-${MATCH_ID}`);
+  expect(start?.options.workflowIdReusePolicy).toBe(
+    SCOUT_V2_REUSE_POLICIES[SCOUT_WORKFLOW_NAMES.matchProcessingV2],
+  );
+  expect(start?.options.startDelay).toBe(SCOUT_CLIENT_MATCH_START_DELAY);
+});
+
+test("native ingress reports an already-completed workflow for binding reconciliation", async () => {
+  const temporal = fakeTemporal();
+  const first = await startScoutMatchProcessingV2(temporal.client, {
+    stage: "beta",
+    riotMatchId: MATCH_ID,
+    sourcePuuid: SOURCE_PUUID,
+    deliveryMode: "live",
+  });
+  temporal.close(`scout-beta-match-v2-${MATCH_ID}`, "completed");
+
+  const historical = await startScoutMatchProcessingV2(temporal.client, {
+    stage: "beta",
+    riotMatchId: MATCH_ID,
+    sourcePuuid: SOURCE_PUUID,
+    deliveryMode: "live",
+  });
+
+  expect(first).not.toBeNull();
+  expect(historical).toBeNull();
+  expect(temporal.starts).toHaveLength(1);
 });
 
 describe("notification and projection answer reuse differently", () => {

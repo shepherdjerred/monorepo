@@ -141,64 +141,75 @@ function toIsoDate(date: Date): string {
   return `${year}-${month}-${day}`;
 }
 
-export const COMPETITION_EXAMPLES: CompetitionExample[] = [
-  ...(CURRENT_SEASON_ID === undefined
-    ? []
-    : [buildRankPreset(CURRENT_SEASON_ID)]),
-  {
-    id: "games-sprint",
-    label: "Most games — 2-month sprint",
-    description:
-      "A two-month race to see who grinds the most games across every queue.",
-    build: (channelId) => {
-      const now = new Date();
-      return {
-        ...EMPTY_STATE,
-        title: "Most games — 2-month sprint",
-        description: "Rack up the most games over the next two months.",
-        channelId,
-        criteria: {
-          criteriaType: "MOST_GAMES_PLAYED",
-          queues: ["ALL"],
-          aggregation: "MAX",
-          championId: "",
-          minGames: "10",
-        },
-        dates: {
-          mode: "FIXED_DATES",
-          startDate: toIsoDate(now),
-          endDate: toIsoDate(new Date(now.getTime() + SIXTY_DAYS_MS)),
-          seasonId: "",
-        },
-      };
+/**
+ * Competition starters for an explicit season. The season-based "rank"
+ * preset is omitted when no season can be selected; the module-level
+ * COMPETITION_EXAMPLES passes the real current season while tests pass a
+ * fixed id so they don't flip with the calendar.
+ */
+export function buildCompetitionExamples(
+  seasonId: string | undefined,
+): CompetitionExample[] {
+  return [
+    ...(seasonId === undefined ? [] : [buildRankPreset(seasonId)]),
+    {
+      id: "games-sprint",
+      label: "Most games — 2-month sprint",
+      description:
+        "A two-month race to see who grinds the most games across every queue.",
+      build: (channelId) => {
+        const now = new Date();
+        return {
+          ...EMPTY_STATE,
+          title: "Most games — 2-month sprint",
+          description: "Rack up the most games over the next two months.",
+          channelId,
+          criteria: {
+            criteriaType: "MOST_GAMES_PLAYED",
+            queues: ["ALL"],
+            aggregation: "MAX",
+            championId: "",
+            minGames: "10",
+          },
+          dates: {
+            mode: "FIXED_DATES",
+            startDate: toIsoDate(now),
+            endDate: toIsoDate(new Date(now.getTime() + SIXTY_DAYS_MS)),
+            seasonId: "",
+          },
+        };
+      },
     },
-  },
-  {
-    id: "yuumi",
-    label: "Most wins on Yuumi",
-    description:
-      "A one-month sprint for the most wins on a single champion (Yuumi).",
-    build: (channelId) => {
-      const now = new Date();
-      return {
-        ...EMPTY_STATE,
-        title: "Most wins on Yuumi",
-        description: "Most Yuumi wins over the next month.",
-        channelId,
-        criteria: {
-          criteriaType: "MOST_WINS_CHAMPION",
-          queues: ["ALL"],
-          aggregation: "MAX",
-          championId: "350",
-          minGames: "10",
-        },
-        dates: {
-          mode: "FIXED_DATES",
-          startDate: toIsoDate(now),
-          endDate: toIsoDate(new Date(now.getTime() + THIRTY_DAYS_MS)),
-          seasonId: "",
-        },
-      };
+    {
+      id: "yuumi",
+      label: "Most wins on Yuumi",
+      description:
+        "A one-month sprint for the most wins on a single champion (Yuumi).",
+      build: (channelId) => {
+        const now = new Date();
+        return {
+          ...EMPTY_STATE,
+          title: "Most wins on Yuumi",
+          description: "Most Yuumi wins over the next month.",
+          channelId,
+          criteria: {
+            criteriaType: "MOST_WINS_CHAMPION",
+            queues: ["ALL"],
+            aggregation: "MAX",
+            championId: "350",
+            minGames: "10",
+          },
+          dates: {
+            mode: "FIXED_DATES",
+            startDate: toIsoDate(now),
+            endDate: toIsoDate(new Date(now.getTime() + THIRTY_DAYS_MS)),
+            seasonId: "",
+          },
+        };
+      },
     },
-  },
-];
+  ];
+}
+
+export const COMPETITION_EXAMPLES: CompetitionExample[] =
+  buildCompetitionExamples(CURRENT_SEASON_ID);

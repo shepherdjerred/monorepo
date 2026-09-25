@@ -76,10 +76,9 @@ function message(
   maxCharacters: number,
 ): HistoryMessage | null {
   const text = cleanText(extractText(value, 0, maxCharacters));
-  if (text.length === 0 || isSystemText(text)) {
-    return null;
-  }
-  return { role, text, createdAt };
+  return text.length === 0 || isSystemText(text)
+    ? null
+    : { role, text, createdAt };
 }
 
 function messagesFromContent(
@@ -264,16 +263,15 @@ export function openingPrompt(
     return null;
   }
   const envelope = messageEnvelopes.get(firstUser);
-  if (envelope === undefined) {
-    return firstUser.text;
-  }
-  return messages
-    .filter(
-      (entry) =>
-        entry.role === "user" && messageEnvelopes.get(entry) === envelope,
-    )
-    .map((entry) => entry.text)
-    .join("\n");
+  return envelope === undefined
+    ? firstUser.text
+    : messages
+        .filter(
+          (entry) =>
+            entry.role === "user" && messageEnvelopes.get(entry) === envelope,
+        )
+        .map((entry) => entry.text)
+        .join("\n");
 }
 
 export function normalizeOpeningPrompt(value: string): string {

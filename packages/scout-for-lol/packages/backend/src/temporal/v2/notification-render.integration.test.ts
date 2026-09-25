@@ -49,7 +49,7 @@ const world = vi.hoisted(() => ({
 }));
 
 vi.mock("#src/temporal/v2/match-context.ts", () => ({
-  resolveScoutV2MatchContext: (riotMatchId: string) =>
+  resolveScoutV2ObservedMatchContext: (riotMatchId: string) =>
     Promise.resolve({
       matchId: riotMatchId,
       riotMatchId,

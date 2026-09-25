@@ -51,6 +51,7 @@ const seedEverythingEnabled: StorySeed = (trpc, queryClient) => {
       isDiscordAdmin: true,
       customNightsEnabled: true,
       hallOfFameEnabled: true,
+      mvpVotesEnabled: true,
       permissions: [...ALL_PERMISSIONS],
     },
   ]);
@@ -94,6 +95,7 @@ const seedTwoGuilds: StorySeed = (trpc, queryClient) => {
       isDiscordAdmin: true,
       customNightsEnabled: true,
       hallOfFameEnabled: true,
+      mvpVotesEnabled: true,
       permissions: [...ALL_PERMISSIONS],
     },
     {
@@ -104,6 +106,7 @@ const seedTwoGuilds: StorySeed = (trpc, queryClient) => {
       isDiscordAdmin: false,
       customNightsEnabled: false,
       hallOfFameEnabled: false,
+      mvpVotesEnabled: false,
       permissions: [{ resource: "reports", action: "read" }],
     },
   ]);

@@ -2,7 +2,7 @@ import {
   HomeAssistantRestClient,
   type EntityState,
 } from "@shepherdjerred/home-assistant";
-import type { ConfiguredEntity } from "../config.ts";
+import { isExpectedUnavailable, type ConfiguredEntity } from "../config.ts";
 import { isUnavailableState } from "../status.ts";
 import type { EntitySummary } from "../types.ts";
 
@@ -28,6 +28,7 @@ export class HomeStatusClient {
   async getProblemEntities(
     batteryThreshold: number,
     unavailableIgnoredDomains: readonly string[],
+    unavailableIgnoredEntityGlobs: readonly string[] = [],
   ): Promise<{
     unavailable: EntitySummary[];
     unavailableCount: number;
@@ -37,7 +38,14 @@ export class HomeStatusClient {
     const states = await this.client.getStates();
     const unavailable = states
       .filter((state) => isUnavailableState(state.state))
-      .filter((state) => !unavailableIgnoredDomains.includes(domainOf(state)))
+      .filter(
+        (state) =>
+          !isExpectedUnavailable(
+            state.entity_id,
+            unavailableIgnoredDomains,
+            unavailableIgnoredEntityGlobs,
+          ),
+      )
       .map((state) => toEntitySummary(undefined, state))
       .toSorted((a, b) => a.label.localeCompare(b.label));
     const lowBatteries = states
@@ -97,8 +105,4 @@ function batterySummary(
 function friendlyName(state: EntityState): string {
   const name = state.attributes["friendly_name"];
   return typeof name === "string" && name.length > 0 ? name : state.entity_id;
-}
-
-function domainOf(state: EntityState): string {
-  return state.entity_id.split(".", 1)[0] ?? "";
 }

@@ -3,7 +3,7 @@ import {
   riotApiAppRateLimitCount,
   riotApiAppRateLimitLimit,
 } from "#src/metrics/riot-rate-limit.ts";
-import { RiotHttpError } from "./errors.ts";
+import { RiotHttpError, RiotTransportError } from "./errors.ts";
 import { RateLimiter } from "./rate-limiter.ts";
 
 type Waiter = {
@@ -76,6 +76,18 @@ async function captureRiotError(
 }
 
 describe("RateLimiter error bodies", () => {
+  test("wraps request transport failures with the Riot boundary type", async () => {
+    const { runtime } = createAdvancingRuntime();
+    const limiter = new RateLimiter({ maxRetries: 0 }, runtime);
+    const cause = new TypeError("connection reset");
+
+    await expect(
+      limiter.execute("https://example.test/transport", async () => {
+        throw cause;
+      }),
+    ).rejects.toBeInstanceOf(RiotTransportError);
+  });
+
   test("preserves JSON error bodies", async () => {
     const { runtime } = createAdvancingRuntime();
     const limiter = new RateLimiter({ maxRetries: 0 }, runtime);

@@ -14,3 +14,13 @@ export function getMinecraftBlueMapPort(): MinecraftPort {
     ingress: { enabled: false },
   };
 }
+
+export function getMinecraftDynmapPort(): MinecraftPort {
+  return {
+    service: { enabled: true, port: 8123 },
+    protocol: "TCP",
+    containerPort: 8123,
+    name: "dynmap",
+    ingress: { enabled: false },
+  };
+}

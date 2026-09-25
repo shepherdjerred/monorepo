@@ -16,8 +16,8 @@ import {
 import { observeBucksDelivery } from "#src/betting/notify/delivery-observability.ts";
 import { deliverSettlementDms } from "#src/betting/settlement/settlement-dm-delivery.ts";
 import { bettingSettlementUndeliverableTotal } from "#src/metrics/betting/betting.ts";
-import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { ClosedPool } from "#src/betting/settlement/sweep-types.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {
@@ -72,7 +72,7 @@ const defaultSettlementDeliveryDependencies: SettlementDeliveryDependencies = {
 function settlementNonce(
   matchId: string,
   channelId: DiscordChannelId,
-  kind: "outcome" | "parlay",
+  kind: "outcome" | "parlay" | "earnings",
 ): string {
   const deliveryKey = `${matchId}:${channelId}:${kind}`;
   return `bbs:${Bun.hash(deliveryKey).toString(36)}`;
@@ -134,7 +134,7 @@ export async function sendSettlementMessage(
     matchId: string;
     channelId: string;
     guildId: string;
-    kind: "outcome" | "parlay";
+    kind: "outcome" | "parlay" | "earnings";
     postmatchMessageId?: string;
   },
   dependencies: SettlementDeliveryDependencies = defaultSettlementDeliveryDependencies,
@@ -192,6 +192,7 @@ async function sendSettlementMessages(input: {
   message: MessageCreateOptions;
   summary: SettlementSummary;
   includeOutcome: boolean;
+  deliveryNonceKind?: "earnings" | undefined;
   postmatchMessageIds: ReadonlyMap<string, string>;
   dependencies: SettlementDeliveryDependencies;
 }): Promise<void> {
@@ -205,7 +206,9 @@ async function sendSettlementMessages(input: {
           matchId: input.summary.matchId,
           channelId: ref.channelId,
           guildId: input.summary.serverId,
-          kind: input.includeOutcome ? "outcome" : "parlay",
+          kind:
+            input.deliveryNonceKind ??
+            (input.includeOutcome ? "outcome" : "parlay"),
           ...(postmatchMessageId === undefined ? {} : { postmatchMessageId }),
         },
         input.dependencies,
@@ -365,6 +368,8 @@ export async function announceSettlements(
     parlaySettlements: readonly ParlaySettlementSummary[];
     earnings: readonly EarnedAward[];
     postmatchMessageIds: ReadonlyMap<string, string>;
+    /** A later earnings-only recap must not collide with the outcome send. */
+    deliveryNonceKind?: "earnings" | undefined;
   },
   prismaClient: ExtendedPrismaClient = prisma,
   deliveryDependencies: SettlementDeliveryDependencies = defaultSettlementDeliveryDependencies,
@@ -408,6 +413,7 @@ export async function announceSettlements(
           message: prepared.message,
           summary,
           includeOutcome: prepared.showOutcome,
+          deliveryNonceKind: input.deliveryNonceKind,
           postmatchMessageIds: input.postmatchMessageIds,
           dependencies: deliveryDependencies,
         });
@@ -449,4 +455,41 @@ export async function announceSettlements(
       });
     }
   }
+}
+
+/**
+ * Deliver the awards created when a live match becomes Scout-managed only
+ * after its ordinary settlement completed.
+ *
+ * The empty settlement is a presentation carrier for the pool's recorded
+ * channel references; the awards are the only visible content. Its distinct
+ * nonce is load-bearing because the original settlement may already have sent
+ * an outcome recap for the same match and channel.
+ */
+export async function announceEarnedAwards(
+  input: {
+    matchId: string;
+    earnings: readonly EarnedAward[];
+    postmatchMessageIds: ReadonlyMap<string, string>;
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+  deliveryDependencies: SettlementDeliveryDependencies = defaultSettlementDeliveryDependencies,
+): Promise<void> {
+  const serverIds = [...new Set(input.earnings.map((award) => award.serverId))];
+  if (serverIds.length === 0) return;
+  await announceSettlements(
+    {
+      matchId: input.matchId,
+      closures: [],
+      settlements: serverIds.map((serverId) =>
+        zeroSummary(input.matchId, serverId),
+      ),
+      parlaySettlements: [],
+      earnings: input.earnings,
+      postmatchMessageIds: input.postmatchMessageIds,
+      deliveryNonceKind: "earnings",
+    },
+    prismaClient,
+    deliveryDependencies,
+  );
 }

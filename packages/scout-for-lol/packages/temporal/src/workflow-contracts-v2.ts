@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { defineVersionedCodec } from "@scout-for-lol/domain/codec/versioned.ts";
-import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  IsoInstantSchema,
+  RiotMatchIdSchema,
+} from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
 import {
   MatchDeliveryModeSchema,
@@ -78,6 +81,102 @@ export type ScoutMatchProcessingV2Input = z.infer<
   typeof ScoutMatchProcessingV2InputSchema
 >;
 
+/**
+ * One complete native-client match waiting for the serialized dispatcher.
+ *
+ * `readyAt` is chosen by ingress after the observation is committed. It gives
+ * Riot the same first-refusal window as canonical local-match selection,
+ * without making the HTTP request or an individual match Workflow sleep.
+ * `gameEndTimestamp` is the ordering fact from the validated canonical match;
+ * it is never taken from an unparsed client field.
+ */
+export const ScoutClientMatchDispatchItemV2Schema = z.strictObject({
+  riotMatchId: RiotMatchIdSchema,
+  sourcePuuid: LeaguePuuidSchema,
+  deliveryMode: MatchDeliveryModeSchema,
+  gameEndTimestamp: z.int().nonnegative(),
+  readyAt: IsoInstantSchema,
+  completionTargets: z
+    .array(
+      z.strictObject({
+        workflowId: z.string().min(1).max(255),
+        runId: z.string().min(1).max(255),
+      }),
+    )
+    .max(20)
+    .readonly(),
+});
+export type ScoutClientMatchDispatchItemV2 = z.infer<
+  typeof ScoutClientMatchDispatchItemV2Schema
+>;
+
+/** A signal is bounded by the native ingress batch limit. */
+export const ScoutClientMatchDispatchBatchV2Schema = z
+  .array(ScoutClientMatchDispatchItemV2Schema)
+  .min(1)
+  .max(100)
+  .readonly();
+export type ScoutClientMatchDispatchBatchV2 = z.infer<
+  typeof ScoutClientMatchDispatchBatchV2Schema
+>;
+
+/**
+ * Pending work crosses Continue-As-New so an accepted signal is never lost.
+ * The larger bound permits a short burst from several clients while keeping
+ * the Workflow payload well below Temporal's service limit.
+ */
+const ScoutClientMatchDispatchV1InputSchema = z.strictObject({
+  stage: ScoutStageSchema,
+  pending: z.array(ScoutClientMatchDispatchItemV2Schema).max(5000).readonly(),
+});
+
+export const ScoutClientMatchDispatchOrderKeyV2Schema = z.strictObject({
+  gameEndTimestamp: z.int().nonnegative(),
+  riotMatchId: RiotMatchIdSchema,
+});
+export type ScoutClientMatchDispatchOrderKeyV2 = z.infer<
+  typeof ScoutClientMatchDispatchOrderKeyV2Schema
+>;
+
+/**
+ * `orderingWatermark` is the last match whose ordered processing began. A
+ * newly arriving offline match that sorts before it can no longer be safely
+ * settled, because effects for the watermark match may already be durable.
+ * Such arrivals remain in `lateArrivals` until their review marker and exact
+ * requester acknowledgement are both durable.
+ */
+export const ScoutClientMatchDispatchV2InputSchema = z
+  .strictObject({
+    stage: ScoutStageSchema,
+    pending: z.array(ScoutClientMatchDispatchItemV2Schema).max(5000).readonly(),
+    lateArrivals: z
+      .array(ScoutClientMatchDispatchItemV2Schema)
+      .max(5000)
+      .readonly(),
+    orderingWatermark: ScoutClientMatchDispatchOrderKeyV2Schema.nullable(),
+  })
+  .superRefine((input, context) => {
+    if (input.pending.length + input.lateArrivals.length <= 5000) return;
+    context.addIssue({
+      code: "custom",
+      message: "combined dispatcher queue exceeds 5000 matches",
+      path: ["lateArrivals"],
+    });
+  });
+export type ScoutClientMatchDispatchV2Input = z.infer<
+  typeof ScoutClientMatchDispatchV2InputSchema
+>;
+
+/** Completion acknowledgement sent to the exact discovery run that waited. */
+export const ScoutClientMatchDispatchResultV2Schema = z.strictObject({
+  riotMatchId: RiotMatchIdSchema,
+  outcome: z.enum(["processed", "already-complete", "terminal-failure"]),
+  failureType: z.string().min(1).max(160).optional(),
+});
+export type ScoutClientMatchDispatchResultV2 = z.infer<
+  typeof ScoutClientMatchDispatchResultV2Schema
+>;
+
 export const ScoutPrematchDiscoveryV2InputSchema = z.strictObject({
   stage: ScoutStageSchema,
 });
@@ -147,6 +246,20 @@ export const scoutMatchProcessingV2InputCodec = defineVersionedCodec({
   version: SCOUT_V2_CONTRACT_VERSION,
   schema: ScoutMatchProcessingV2InputSchema,
 });
+export const SCOUT_CLIENT_MATCH_DISPATCH_V2_INPUT_VERSION = 2;
+
+export const scoutClientMatchDispatchV2InputCodec = defineVersionedCodec({
+  kind: "scout-client-match-dispatch-v2-input",
+  version: SCOUT_CLIENT_MATCH_DISPATCH_V2_INPUT_VERSION,
+  schema: ScoutClientMatchDispatchV2InputSchema,
+  migrations: {
+    1: (old) => ({
+      ...ScoutClientMatchDispatchV1InputSchema.parse(old),
+      lateArrivals: [],
+      orderingWatermark: null,
+    }),
+  },
+});
 export const scoutPrematchDiscoveryV2InputCodec = defineVersionedCodec({
   kind: "scout-prematch-discovery-v2-input",
   version: SCOUT_V2_CONTRACT_VERSION,
@@ -183,6 +296,9 @@ export type ScoutPostMatchDiscoveryV2InputEnvelope = EnvelopeOf<
 >;
 export type ScoutMatchProcessingV2InputEnvelope = EnvelopeOf<
   typeof scoutMatchProcessingV2InputCodec
+>;
+export type ScoutClientMatchDispatchV2InputEnvelope = EnvelopeOf<
+  typeof scoutClientMatchDispatchV2InputCodec
 >;
 export type ScoutPrematchDiscoveryV2InputEnvelope = EnvelopeOf<
   typeof scoutPrematchDiscoveryV2InputCodec

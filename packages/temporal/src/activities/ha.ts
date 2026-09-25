@@ -45,10 +45,7 @@ function optionalMediaPlayerEntityIds(data: Record<string, unknown>): string[] {
 
   const entityId = data["entity_id"];
   const result = MediaPlayerEntityId.safeParse(entityId);
-  if (result.success) {
-    return [result.data];
-  }
-  return [];
+  return result.success ? [result.data] : [];
 }
 
 function isOptionalMediaPlayerUnavailable(

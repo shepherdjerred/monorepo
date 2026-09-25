@@ -1,5 +1,29 @@
 import { z } from "zod";
 
+/**
+ * ISO 8601 allows minute precision ("2026-09-20T12:00Z"), and `--from`,
+ * `--to`, `--baseline-from` and `--baseline-to` have always accepted it. zod
+ * 4.6 tightened `z.iso.datetime()` to require seconds, which would silently
+ * narrow a documented CLI contract, so pad minute-precision input to the
+ * equivalent second-precision instant before validating it. Anything else is
+ * passed through untouched and still has to satisfy the strict validator.
+ */
+const MINUTE_PRECISION_ISO =
+  /^(?<instant>\d{4}-\d{2}-\d{2}T\d{2}:\d{2})(?<offset>Z|[+-]\d{2}:\d{2})$/u;
+
+const IsoTimestampSchema = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") return value;
+    const groups = MINUTE_PRECISION_ISO.exec(value)?.groups;
+    const instant = groups?.["instant"];
+    const offset = groups?.["offset"];
+    return instant === undefined || offset === undefined
+      ? value
+      : `${instant}:00${offset}`;
+  },
+  z.iso.datetime({ offset: true }),
+);
+
 type CliValidationOptions = {
   buildNumbers: number[];
   baselineBuildNumbers: number[];
@@ -66,10 +90,10 @@ const CliOptionsSchema = z
   .object({
     buildNumbers: z.array(z.number().int().positive()),
     baselineBuildNumbers: z.array(z.number().int().positive()),
-    from: z.iso.datetime({ offset: true }).optional(),
-    to: z.iso.datetime({ offset: true }).optional(),
-    baselineFrom: z.iso.datetime({ offset: true }).optional(),
-    baselineTo: z.iso.datetime({ offset: true }).optional(),
+    from: IsoTimestampSchema.optional(),
+    to: IsoTimestampSchema.optional(),
+    baselineFrom: IsoTimestampSchema.optional(),
+    baselineTo: IsoTimestampSchema.optional(),
     organization: z.string().min(1).optional(),
     pipeline: z.string().min(1).optional(),
     prometheusUrl: z.url().optional(),

@@ -3,6 +3,10 @@ import {
   IntOrString,
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  dnsEgressRule,
+  externalHttpsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 /**
  * Label every generated CI step pod carries.
@@ -62,18 +66,7 @@ export function createWoodpeckerStepNetworkPolicy(chart: Chart) {
       // step share its pod and talk over localhost.
       ingress: [],
       egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         {
           // The image lanes drive builds through buildkitd's plaintext gRPC
           // endpoint. It is the one in-cluster destination steps need, and the
@@ -92,16 +85,13 @@ export function createWoodpeckerStepNetworkPolicy(chart: Chart) {
             { port: IntOrString.fromNumber(BUILDKITD_PORT), protocol: "TCP" },
           ],
         },
-        {
-          // Everything else a step reaches is HTTPS: github.com and its API,
-          // ghcr.io, registry.npmjs.org, the published sites, and SeaweedFS S3
-          // — which is reached over the tailnet rather than by cluster DNS.
-          // A CIDR allowlist is not an option: GitHub's and npm's ranges
-          // change, and a rotted list would fail builds for a boundary that is
-          // not enforced anyway.
-          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
-        },
+        // Everything else a step reaches is HTTPS: github.com and its API,
+        // ghcr.io, registry.npmjs.org, the published sites, and SeaweedFS S3
+        // — which is reached over the tailnet rather than by cluster DNS.
+        // A CIDR allowlist is not an option: GitHub's and npm's ranges
+        // change, and a rotted list would fail builds for a boundary that is
+        // not enforced anyway.
+        externalHttpsEgressRule(),
       ],
     },
   });

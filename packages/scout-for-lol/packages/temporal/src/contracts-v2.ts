@@ -23,7 +23,7 @@ import { ScoutStageSchema } from "./contracts.ts";
  * Workflow contracts live in `workflow-contracts-v2.ts` and the Activity
  * contracts in `activity-contracts-v2.ts`.
  *
- * The eight V2 Workflow Types are NEW types alongside the v1 ones in
+ * The nine V2 Workflow Types are NEW types alongside the v1 ones in
  * `contracts.ts`. No v1 contract changes: open v1 executions recorded the v1
  * shapes and replay them forever.
  *
@@ -146,6 +146,14 @@ export const ScoutDurableCommitConflictReasonV2Schema = z.enum([
   "observation-differs",
   "intent-differs",
   "batch-differs",
+  /**
+   * A standing settlement-announcement instruction differs from the one this
+   * settlement produced for the same item — two producers disagreeing about
+   * what ONE settlement did. Raised by
+   * `settlement-announcement-repository.ts` comparing stored payload bytes,
+   * which no pure transition ever sees.
+   */
+  "settlement-announcement-differs",
   "workflow-adopted-by-another-batch",
   /**
    * The recovery policy governing a recovery-born intent does not permit its

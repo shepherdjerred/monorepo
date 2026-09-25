@@ -51,10 +51,7 @@ function getMedal(rank: number): string {
   if (rank === 2) {
     return "🥈";
   }
-  if (rank === 3) {
-    return "🥉";
-  }
-  return "";
+  return rank === 3 ? "🥉" : "";
 }
 
 /**
@@ -85,10 +82,9 @@ function formatTop3Entry(options: FormatTop3EntryOptions): string {
   const { entry, rank, aliasToDiscordId, useMentions, showGamesCount } =
     options;
   const medal = getMedal(rank);
-  if (showGamesCount) {
-    return `${medal} ${rank.toString()}. ${formatPairing(entry, aliasToDiscordId, useMentions)} - ${formatWinRate(entry.winRate)} (${entry.totalGames.toString()} games)`;
-  }
-  return `${medal} ${rank.toString()}. **${formatPairing(entry, aliasToDiscordId, useMentions)}** - ${entry.totalGames.toString()} games (${formatWinRate(entry.winRate)})`;
+  return showGamesCount
+    ? `${medal} ${rank.toString()}. ${formatPairing(entry, aliasToDiscordId, useMentions)} - ${formatWinRate(entry.winRate)} (${entry.totalGames.toString()} games)`
+    : `${medal} ${rank.toString()}. **${formatPairing(entry, aliasToDiscordId, useMentions)}** - ${entry.totalGames.toString()} games (${formatWinRate(entry.winRate)})`;
 }
 
 /**

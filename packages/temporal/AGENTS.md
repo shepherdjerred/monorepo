@@ -32,6 +32,9 @@ reference; the Temporal wiki explains workflow families and boundaries. Load
 - Generic agent tasks follow the shared typed schema, bounded tools, redacted
   environment, and OpenRouter/Codex SDK policy. Never pass inference credentials
   to tool subprocesses.
+- Durable agent chats use the reviewed Claude Agent SDK or Codex App Server adapter
+  with subscription authentication. Their provider is fixed at chat creation;
+  provider session state is durable, while each turn gets a fresh workspace.
 - PR-creating workflows use the bot-clone helper and repository PR contract;
   do not hand-roll installs or stack state in ephemeral clones.
 

@@ -5,8 +5,8 @@ import {
   formatParlayNumericValue,
 } from "@scout-for-lol/data";
 import type { EarnedAward } from "#src/betting/accounts/earnings.ts";
-import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
 import type { ClosedPosition } from "#src/betting/settlement/sweep-types.ts";
 import type { OutcomeFraming } from "#src/betting/team.ts";
@@ -147,10 +147,9 @@ function settlementBetLines(input: SettlementMessageInput): {
 }
 
 function formatEarningAlias(alias: string): string {
-  if (alias.length <= MAX_EARNING_ALIAS_LENGTH) {
-    return alias;
-  }
-  return `${alias.slice(0, MAX_EARNING_ALIAS_LENGTH - 1)}…`;
+  return alias.length <= MAX_EARNING_ALIAS_LENGTH
+    ? alias
+    : `${alias.slice(0, MAX_EARNING_ALIAS_LENGTH - 1)}…`;
 }
 
 function settlementEarningLines(input: SettlementMessageInput): string[] {

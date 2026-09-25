@@ -15,6 +15,8 @@ const { year, entries } = Astro.props;
 <div>
   <h2 class="text-white font-bold text-2xl mb-2">{year}</h2>
   <div class="flex flex-col gap-6">
-    {R.map(entries, (entry): JSX.Element => <BlogEntry entry={entry} />)}
+    {R.map(entries, (entry): JSX.Element => (
+      <BlogEntry entry={entry} />
+    ))}
   </div>
 </div>

@@ -49,11 +49,7 @@ describe("Discord command reconciliation", () => {
     resetConfigurationForTests();
 
     const payload = await guildCommandPayload(guildId);
-    expect(payload.map((command) => command.name)).toEqual([
-      "bb",
-      "scout",
-      "lobby",
-    ]);
+    expect(payload.map((command) => command.name)).toEqual(["bb", "scout"]);
   });
 
   test("sends empty payloads to clear stale guild commands", async () => {

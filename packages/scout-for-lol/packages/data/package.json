@@ -9,7 +9,7 @@
     "./*": "./src/*"
   },
   "scripts": {
-    "generate": "bun run scripts/generate-permission-catalog.ts && bun run scripts/generate-asset-manifest.ts --check && bun run scripts/generate-dare-paraphrase-schema.ts",
+    "generate": "bun run scripts/generate-permission-catalog.ts && bun run scripts/generate-asset-manifest.ts --check && bun run scripts/generate-dare-paraphrase-schema.ts && bun run scripts/generate-scout-client-protocol.ts",
     "generate:asset-manifest": "bun run scripts/generate-asset-manifest.ts --write",
     "check:asset-manifest": "bun run scripts/generate-asset-manifest.ts --check",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run",
@@ -37,13 +37,13 @@
   },
   "devDependencies": {
     "ajv": "^8.20.0",
-    "bun-types": "1.4.0",
+    "bun-types": "1.4.2",
     "eslint": "^10.3.0",
-    "prettier": "3.9.6",
+    "prettier": "3.9.8",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "4.1.10",
-    "@vitest/coverage-istanbul": "4.1.10"
+    "vitest": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.1"
   },
   "imports": {
     "#competitive-progression-catalog": "./competitive-progression-catalog.json",

@@ -1,0 +1,49 @@
+[workspace]
+resolver = "3"
+members = ["crates/scout-client-core", "crates/scout-client-app"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.98"
+license = "GPL-3.0-only"
+publish = false
+
+[workspace.dependencies]
+auto-launch = "0.6.0"
+base64 = "0.22.1"
+chrono = { version = "0.4.42", default-features = false, features = ["clock", "serde"] }
+directories = "6.0.0"
+eframe = { version = "0.36.2", default-features = false, features = ["accesskit", "default_fonts", "glow", "persistence", "wayland", "x11"] }
+egui = "0.36.2"
+futures-util = "0.3.31"
+keyring = "4.2.0"
+open = "5.3.3"
+reqwest = { version = "0.13.1", default-features = false, features = ["json", "rustls", "stream"] }
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+sha2 = "0.10.9"
+thiserror = "2.0.18"
+tokio = { version = "1.49.0", features = ["fs", "io-util", "macros", "rt-multi-thread", "sync", "time"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter", "fmt"] }
+tray-icon = { version = "0.25.1", default-features = false, features = ["ksni"] }
+url = "2.5.8"
+uuid = { version = "1.21.0", features = ["serde", "v4"] }
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

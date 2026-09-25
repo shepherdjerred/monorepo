@@ -372,12 +372,11 @@ function applyTraceEvent(
     rawInput: current?.rawInput ?? null,
     rawOutput: event.rawOutput,
   });
-  if (index === -1) {
-    return [...trace, completed];
-  }
-  return trace.map((entry, entryIndex) =>
-    entryIndex === index ? completed : entry,
-  );
+  return index === -1
+    ? [...trace, completed]
+    : trace.map((entry, entryIndex) =>
+        entryIndex === index ? completed : entry,
+      );
 }
 
 function interruptRunningTrace(

@@ -2856,6 +2856,12 @@ export type MariadbHelmValuesNetworkPolicy = {
   extraIngress?: unknown[];
   extraEgress?: unknown[];
   /**
+   * Allow access from pods with client label set to "true". Ignored if `networkPolicy.allowExternal` is true.
+   *
+   * @default true
+   */
+  addExternalClientAccess?: boolean;
+  /**
    * [object] Labels to match to allow traffic from other namespaces
    *
    * @default {}
@@ -2867,11 +2873,19 @@ export type MariadbHelmValuesNetworkPolicy = {
    * @default {}
    */
   ingressNSPodMatchLabels?: MariadbHelmValuesNetworkPolicyIngressNSPodMatchLabels;
+  /**
+   * [object] Labels to match pods in the same release to allow traffic from. Ignored if `networkPolicy.allowExternal` is true.
+   *
+   * @default {}
+   */
+  ingressReleaseMatchLabels?: MariadbHelmValuesNetworkPolicyIngressReleaseMatchLabels;
 };
 
 export type MariadbHelmValuesNetworkPolicyIngressNSMatchLabels = object;
 
 export type MariadbHelmValuesNetworkPolicyIngressNSPodMatchLabels = object;
+
+export type MariadbHelmValuesNetworkPolicyIngressReleaseMatchLabels = object;
 
 export type MariadbHelmValues = {
   /**
@@ -3043,7 +3057,7 @@ export type MariadbHelmValues = {
   /**
    * ref: https://kubernetes.io/docs/concepts/services-networking/network-policies/
    *
-   * @default {...} (7 keys)
+   * @default {...} (9 keys)
    */
   networkPolicy?: MariadbHelmValuesNetworkPolicy;
 };
@@ -3402,4 +3416,5 @@ export type MariadbHelmParameters = {
   "networkPolicy.allowExternalEgress"?: string;
   "networkPolicy.extraIngress"?: string;
   "networkPolicy.extraEgress"?: string;
+  "networkPolicy.addExternalClientAccess"?: string;
 };

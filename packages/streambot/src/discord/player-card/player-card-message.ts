@@ -232,9 +232,8 @@ export class PlayerCardMessenger implements PlayerCardPort {
 
   private async fetchMessage(channelId: ChannelId, messageId: string) {
     const channel = await this.client.channels.fetch(channelId);
-    if (channel?.isTextBased() !== true) {
-      return null;
-    }
-    return await channel.messages.fetch(messageId);
+    return channel?.isTextBased() === true
+      ? await channel.messages.fetch(messageId)
+      : null;
   }
 }

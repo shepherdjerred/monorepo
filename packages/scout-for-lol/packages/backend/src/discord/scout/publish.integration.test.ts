@@ -65,6 +65,7 @@ async function savedAnswer(answerText = "Ahri wins most often.") {
     attach: { kind: "leaf" },
   });
   const answer = await appendExploreAnswer(prisma, {
+    guildIds: [],
     conversationId: started.conversationId,
     parentMessageId: started.messageId,
     answer: {

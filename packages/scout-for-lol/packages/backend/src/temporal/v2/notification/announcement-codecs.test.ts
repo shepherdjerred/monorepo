@@ -6,7 +6,7 @@ import {
   DiscordAccountIdSchema,
   LeaguePuuidSchema,
 } from "@scout-for-lol/data";
-import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settle-shared.ts";
+import type { DareSettlementSummary } from "#src/betting/dares/settlement/dare-settlement-types.ts";
 import type { SettlementAnnouncementInput } from "#src/betting/notify/announce-prepare.ts";
 import {
   dareSettlementSummaryOf,

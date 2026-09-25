@@ -21,8 +21,10 @@ const QUOTA_MARKERS = [
 
 export function isQuotaExhaustedError(error: unknown): boolean {
   const haystack = quotaHaystack(error).toLowerCase();
-  if (haystack.length === 0) return false;
-  return QUOTA_MARKERS.some((marker) => haystack.includes(marker));
+  return (
+    haystack.length > 0 &&
+    QUOTA_MARKERS.some((marker) => haystack.includes(marker))
+  );
 }
 
 /** OpenAI SDK errors carry a structured `code`/`type` alongside the message, and may wrap a cause. */

@@ -21,8 +21,7 @@ import { logger } from "#src/logger.ts";
 
 function argValue(flag: string): string | undefined {
   const index = process.argv.indexOf(flag);
-  if (index === -1) return undefined;
-  return process.argv[index + 1];
+  return index === -1 ? undefined : process.argv[index + 1];
 }
 
 const wasmPath = new URL("../assets/pokeemerald.wasm", import.meta.url)

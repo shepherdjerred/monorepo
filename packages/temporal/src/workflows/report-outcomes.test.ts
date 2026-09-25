@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vitest";
-import type { CiIoObservabilityResult } from "#activities/maintenance/ci-io-observability.ts";
 import type {
   DataDragonUpdateResult,
   DataDragonVersionState,
@@ -9,7 +8,6 @@ import type { ScoutSeasonRefreshResult } from "#activities/scout/scout-season-re
 import type { TasknotesCanaryResult } from "#activities/maintenance/tasknotes-canary.ts";
 import type { ActivityReportInput } from "#activities/reports/report-delivery.ts";
 import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
-import { ciIoTelemetryReport } from "./ci/ci-io-telemetry.ts";
 import { dataDragonReport } from "./scout/data-dragon.ts";
 import { protobufWatchReport } from "./ci/protobuf-watch.ts";
 import { scoutQueueWindowsReport } from "./scout/scout-queue-windows.ts";
@@ -33,17 +31,6 @@ function validate(report: ActivityReportInput): ActivityReportInput {
     },
   });
   return report;
-}
-
-function ciIoChecks(failing = 0): CiIoObservabilityResult[] {
-  return Array.from({ length: 11 }, (_, index) => ({
-    id: `query-${index.toString()}`,
-    query: `metric_${index.toString()}`,
-    series: 1,
-    minimumRequiredSeries: 1,
-    values: [1],
-    passed: index >= failing,
-  }));
 }
 
 const VERSION_STATE: DataDragonVersionState = {
@@ -104,40 +91,6 @@ function tasknotesResult(
 }
 
 describe("deterministic report outcome matrices", () => {
-  test("CI I/O telemetry is clear only when every check passes", () => {
-    expect(
-      validate(ciIoTelemetryReport(STARTED_AT, OBSERVED_AT, ciIoChecks())),
-    ).toMatchObject({
-      execution: "complete",
-      verdict: "clear",
-    });
-
-    const broken = validate(
-      ciIoTelemetryReport(STARTED_AT, OBSERVED_AT, ciIoChecks(2)),
-    );
-    expect(broken).toMatchObject({
-      execution: "complete",
-      verdict: "attention",
-    });
-    expect(broken.findings).toHaveLength(2);
-    expect(
-      broken.checks.filter((check) => check.status === "failed"),
-    ).toHaveLength(2);
-  });
-
-  // A broken measurement chain says nothing about how much CI wrote, and the
-  // report must not let a reader infer that it does.
-  test("CI I/O telemetry states what a failure does and does not mean", () => {
-    const broken = validate(
-      ciIoTelemetryReport(STARTED_AT, OBSERVED_AT, ciIoChecks(1)),
-    );
-    expect(broken.limitations.join(" ")).toContain("not that CI wrote more");
-    expect(
-      validate(ciIoTelemetryReport(STARTED_AT, OBSERVED_AT, ciIoChecks()))
-        .limitations,
-    ).toEqual([]);
-  });
-
   test("TaskNotes distinguishes first baseline, clean, and task-count attention", () => {
     expect(
       validate(tasknotesReport(STARTED_AT, tasknotesResult(100, undefined))),

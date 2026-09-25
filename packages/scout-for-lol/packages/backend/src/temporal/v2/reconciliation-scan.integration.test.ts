@@ -13,6 +13,7 @@ import {
 import {
   NotificationAttemptNonceSchema,
   NotificationIntentSchema,
+  type NotificationIntentKind,
   type NotificationIntentOrigin,
   type NotificationIntentState,
   type NotificationTarget,
@@ -128,9 +129,22 @@ const COMPLETE_BATCH = RecoveryBatchIdSchema.parse("rc-complete");
 const ABANDONED_BATCH = RecoveryBatchIdSchema.parse("rc-abandoned");
 const REQUESTED_BATCH = RecoveryBatchIdSchema.parse("rc-requested");
 
+/** The match the notification family's intents belong to: no observation. */
+const LIVE_INTENT_MATCH = RiotMatchIdSchema.parse("NA1_870000");
+
 function intentKey(name: string): NotificationIntentKey {
   return NotificationIntentKeySchema.parse(
-    `postmatch-discord:NA1_870000:${name}`,
+    `postmatch-discord:${LIVE_INTENT_MATCH}:${name}`,
+  );
+}
+
+/** A key for an intent that belongs to a match other than the default one. */
+function intentKeyFor(
+  matchId: RiotMatchId,
+  name: string,
+): NotificationIntentKey {
+  return NotificationIntentKeySchema.parse(
+    `postmatch-discord:${matchId}:${name}`,
   );
 }
 
@@ -146,6 +160,42 @@ const READY_INTENT = intentKey("ready");
 const SENDING_INTENT = intentKey("sending");
 const STALE_INTENT = intentKey("stale");
 const REQUESTED_INTENT = intentKey("requested");
+
+/**
+ * The prematch window, spelled as three rows that differ only in the two facts
+ * the predicate reads.
+ *
+ * Every one of them is given a deadline FURTHER in the future than nothing at
+ * all can reach and EARLIER than every other drivable intent's, so a
+ * regression cannot hide: if the observation predicate stops doing the work,
+ * the overtaken row lands at the FRONT of the ordered page and the family's
+ * equality assertion names it first.
+ */
+const PREMATCH_DEADLINE = "2098-06-01T00:00:00.000Z";
+/** Prematch, game still live (its match has no observation): drivable. */
+const PREMATCH_LIVE_INTENT = intentKey("prematch-live");
+/** Prematch, but the match has been observed: the game ended. */
+const PREMATCH_OVERTAKEN_INTENT = intentKeyFor(
+  FINISHED_MATCH,
+  "prematch-overtaken",
+);
+/** Post-result kind on that same observed match: still drivable. */
+const POSTMATCH_OBSERVED_INTENT = intentKeyFor(
+  FINISHED_MATCH,
+  "postmatch-observed",
+);
+/**
+ * Prematch, observed match, but mid-attempt: driving it sends NOTHING.
+ *
+ * `beginSend` answers `already-sending`, so the child runs the unobserved-send
+ * recovery that carries the row to `unknown-delivery` and the queue an operator
+ * can resolve it from. It is the only route out of that ambiguity, so the truth
+ * window must not touch it however overtaken the message would have been.
+ */
+const PREMATCH_SENDING_OBSERVED_INTENT = intentKeyFor(
+  FINISHED_MATCH,
+  "prematch-sending-observed",
+);
 
 async function seedObservation(args: {
   matchId: RiotMatchId;
@@ -307,15 +357,17 @@ async function seedIntent(args: {
   state: NotificationIntentState;
   attemptCount: number;
   freshnessDeadline: string;
+  kind?: NotificationIntentKind;
+  matchId?: RiotMatchId;
   origin?: NotificationIntentOrigin;
   target?: NotificationTarget;
 }): Promise<void> {
   expect(
     await upsertIntent(prisma, {
-      matchId: RiotMatchIdSchema.parse("NA1_870000"),
+      matchId: args.matchId ?? LIVE_INTENT_MATCH,
       intent: NotificationIntentSchema.parse({
         key: args.key,
-        kind: "postmatch",
+        kind: args.kind ?? "postmatch",
         origin: args.origin ?? { kind: "live" },
         target: args.target ?? {
           kind: "channel",
@@ -476,6 +528,43 @@ async function seedNotificationFamily(): Promise<void> {
     state: { kind: "pending" },
     attemptCount: 0,
     freshnessDeadline: PASSED_DEADLINE,
+  });
+
+  // The prematch window. `FINISHED_MATCH` already carries an observation, so
+  // these three rows differ from each other in exactly the two facts the
+  // predicate reads — the intent's kind and whether its match was observed —
+  // and in nothing else. All three are well inside their deadline, which is
+  // the point: the deadline is the game's own three-hour TTL and cannot tell
+  // the overtaken row from the live one.
+  await seedIntent({
+    key: PREMATCH_LIVE_INTENT,
+    kind: "prematch",
+    state: { kind: "pending" },
+    attemptCount: 0,
+    freshnessDeadline: PREMATCH_DEADLINE,
+  });
+  await seedIntent({
+    key: PREMATCH_OVERTAKEN_INTENT,
+    kind: "prematch",
+    matchId: FINISHED_MATCH,
+    state: { kind: "pending" },
+    attemptCount: 0,
+    freshnessDeadline: PREMATCH_DEADLINE,
+  });
+  await seedIntent({
+    key: POSTMATCH_OBSERVED_INTENT,
+    matchId: FINISHED_MATCH,
+    state: { kind: "ready" },
+    attemptCount: 0,
+    freshnessDeadline: PREMATCH_DEADLINE,
+  });
+  await seedIntent({
+    key: PREMATCH_SENDING_OBSERVED_INTENT,
+    kind: "prematch",
+    matchId: FINISHED_MATCH,
+    state: { kind: "sending", attemptNonce: NONCE, startedAt: OBSERVED_AT },
+    attemptCount: 1,
+    freshnessDeadline: PREMATCH_DEADLINE,
   });
 
   // Recovery-born intents under the two policies that hold. The batch rows
@@ -667,12 +756,54 @@ describe("the notification family", () => {
     // sending it, so a sweep that started one would be asking for news the user
     // has already had by other means.
     expect(page.pending.notifications).toEqual([
+      POSTMATCH_OBSERVED_INTENT,
+      PREMATCH_SENDING_OBSERVED_INTENT,
+      PREMATCH_LIVE_INTENT,
       PENDING_INTENT,
       READY_INTENT,
       SENDING_INTENT,
       RELEASED_DM_INTENT,
       REQUESTED_INTENT,
     ]);
+  });
+
+  test("leaves a prematch intent whose match has been observed alone", () => {
+    // A prematch intent announces a game STARTING. An observation row is
+    // written only by a pipeline that ingested a FINISHED match, so its
+    // existence is the durable fact that the game ended and the message is no
+    // longer true. The deadline cannot express that — it is the game's own
+    // three-hour TTL, and this row's is the same far-future instant as the
+    // live prematch row's on the page above — so the observation is what has
+    // to be asked, and this assertion fails if it stops being asked.
+    expect(page.pending.notifications).not.toContain(PREMATCH_OVERTAKEN_INTENT);
+    expect(page.pending.notifications).toContain(PREMATCH_LIVE_INTENT);
+  });
+
+  test("keeps driving an overtaken prematch intent that is mid-attempt", () => {
+    // The truth window is a statement about a MESSAGE, so it can only govern a
+    // drive that produces one. This row is `sending`: `beginSend` answers
+    // `already-sending`, so driving it sends nothing and instead runs the
+    // unobserved-send recovery that carries it to `unknown-delivery`, where a
+    // person can resolve it against the exact attempt nonce. Excluding it would
+    // stop the only process that ever resolves it — the row would sit in
+    // `sending` forever, never reaching the unknown-delivery queue. It shares
+    // its kind, its match and its deadline with the excluded prematch row
+    // above, so the drive effect is the only thing separating them.
+    expect(page.pending.notifications).toContain(
+      PREMATCH_SENDING_OBSERVED_INTENT,
+    );
+    expect(page.pending.notifications).not.toContain(PREMATCH_OVERTAKEN_INTENT);
+  });
+
+  test("keeps driving the post-result kinds on that same observed match", () => {
+    // The exclusion is by TRUTH WINDOW, never "postmatch only". Settlement and
+    // dare-summary intents are minted inside the fenced settlement effect, so
+    // they exist only once the result is known and their match always carries
+    // an observation; a predicate that keyed off the observation alone would
+    // strand every row that effect has already committed. This intent shares
+    // `FINISHED_MATCH` and its deadline with the excluded prematch row, so the
+    // kind is the only thing that can be separating them.
+    expect(page.pending.notifications).toContain(POSTMATCH_OBSERVED_INTENT);
   });
 
   test("leaves intents their batch policy holds off the page", () => {

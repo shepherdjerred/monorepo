@@ -6,6 +6,7 @@ import {
   IntOrString,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createPinchtabDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/pinchtab/index.ts";
+import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 const PINCHTAB_PORT = 9867;
 
@@ -86,18 +87,7 @@ export function createPinchtabChart(app: App) {
       policyTypes: ["Egress"],
       egress: [
         // DNS
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
         // External HTTPS for public browsing.
         {
           to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],

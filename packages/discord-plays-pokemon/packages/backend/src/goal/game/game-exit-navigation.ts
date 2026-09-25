@@ -328,10 +328,9 @@ function currentNavigationStopReason(
   if (observation.phase !== "overworld") return "phase-changed";
   if (!mapMatchesTopology(observation, topology))
     return "unexpected-map-change";
-  if (observation.world === null || !observation.readiness.inputReady) {
-    return "field-input-not-ready";
-  }
-  return null;
+  return observation.world === null || !observation.readiness.inputReady
+    ? "field-input-not-ready"
+    : null;
 }
 
 function completedStepStopReason(

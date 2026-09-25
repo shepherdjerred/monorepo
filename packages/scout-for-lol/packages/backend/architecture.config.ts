@@ -61,6 +61,7 @@ const layers = [
   "league",
   "lib",
   "metrics",
+  "mvp-votes",
   "observability",
   "operations",
   "report-lake",

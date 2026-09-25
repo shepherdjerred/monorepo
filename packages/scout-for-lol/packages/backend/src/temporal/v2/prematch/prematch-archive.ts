@@ -22,6 +22,7 @@ import {
 import { archivePrematchReceipted } from "#src/report-lake/receipted-archive.ts";
 import { stagePrematchReceipted } from "#src/report-lake/receipted-staging.ts";
 import { recordPrematchDeliveryIntentsV2 } from "#src/temporal/v2/prematch/prematch-intents.ts";
+import { recordClashPrematchSightings } from "#src/league/clash/sighting.ts";
 import {
   resolveScoutV2PrematchContext,
   type ScoutV2PrematchContext,
@@ -271,6 +272,12 @@ export async function archivePrematchSnapshotV2(
 
   const observedAt = new Date();
   const artifacts = await captureArtifactsV2(context, observedAt, riotMatchId);
+  await recordClashPrematchSightings(
+    context.gameInfo,
+    new Set(
+      context.trackedPlayers.map((player) => player.league.leagueAccount.puuid),
+    ),
+  );
   await recordPrematchDeliveryIntentsV2(context, observedAt);
   return { artifacts, riotMatchId };
 }

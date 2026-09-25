@@ -21,7 +21,7 @@ import { createGrafanaDbChart } from "./cdk8s-charts/platform/grafana-db.ts";
 import { createS3StaticSitesChart } from "./cdk8s-charts/s3-static-sites.ts";
 import { createBugsinkChart } from "./cdk8s-charts/platform/bugsink.ts";
 import { createWoodpeckerChart } from "./cdk8s-charts/platform/woodpecker.ts";
-import { createScoutEvalsChart } from "./cdk8s-charts/scout-evals.ts";
+import { createPhoenixChart } from "./cdk8s-charts/platform/phoenix.ts";
 import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
 import { createRelayChart } from "./cdk8s-charts/relay.ts";
 import { createTemporalChart } from "./cdk8s-charts/platform/temporal.ts";
@@ -76,7 +76,7 @@ export async function setupCharts(app: App): Promise<void> {
   createGrafanaDbChart(app);
   createBugsinkChart(app);
   createWoodpeckerChart(app);
-  createScoutEvalsChart(app);
+  createPhoenixChart(app);
   createTasknotesChart(app);
   createAlertDashboardChart(app);
   createRelayChart(app);

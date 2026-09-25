@@ -4,6 +4,7 @@ import {
   DareSqlV3EvidenceSchema,
   type DareContractV3,
 } from "@scout-for-lol/data";
+import { dareSqlV3ContractCore } from "#src/betting/dares/dare-v2-test-fixtures.ts";
 import {
   evaluateImprovementEvidenceV3,
   evaluateRankEvidenceV3,
@@ -24,33 +25,7 @@ function contract(
   snapshot: DareContractV3["activationSnapshot"],
 ) {
   return DareContractV3Schema.parse({
-    version: 3,
-    canonicalSql: "SELECT FALSE AS achieved",
-    immutableAst: "{}",
-    queryHash: HASH,
-    maxEligibleGames: 100,
-    compilerVersion: "dare-scoutql-3",
-    evaluatorVersion: "dare-evaluator-3",
-    finality: "deadline_only",
-    facts: {
-      cteCount: 1,
-      joinedRelations: 0,
-      predicates: 0,
-      maxExpressionDepth: 1,
-      physicalSources: ["match_participants"],
-      functions: [],
-      targetKeys: ["T1"],
-    },
-    resultStructure: {
-      gameSets: [
-        {
-          name: "attempts",
-          projectionColumns: ["score"],
-          targetDependencies: ["T1"],
-        },
-      ],
-    },
-    competition: { kind: "standard" },
+    ...dareSqlV3ContractCore({ queryHash: HASH, maxEligibleGames: 100 }),
     activation,
     activationSnapshot: snapshot,
     targets: [

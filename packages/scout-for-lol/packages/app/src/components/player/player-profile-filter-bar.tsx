@@ -13,13 +13,10 @@ function sameQueues(
   selected: QueueType[] | undefined,
   preset: readonly QueueType[] | undefined,
 ): boolean {
-  if (selected === undefined || preset === undefined) {
-    return selected === undefined && preset === undefined;
-  }
-  return (
-    selected.length === preset.length &&
-    selected.every((queue) => preset.includes(queue))
-  );
+  return selected === undefined || preset === undefined
+    ? selected === undefined && preset === undefined
+    : selected.length === preset.length &&
+        selected.every((queue) => preset.includes(queue));
 }
 
 const PRESETS: readonly {

@@ -26,7 +26,11 @@ describe("createTempoForwarder", () => {
     });
     globalThis.fetch = Object.assign(
       () => Promise.resolve(new Response(body, { status: 503 })),
-      { preconnect: (url: string | URL) => void url },
+      {
+        preconnect: (_url: string | URL) => {
+          // No preconnect in tests.
+        },
+      },
     );
 
     const forwarder = createTempoForwarder("https://tempo.test/v1/traces");
@@ -45,7 +49,11 @@ describe("createTempoForwarder", () => {
     const oversized = "y".repeat(10 * ERROR_BODY_LIMIT);
     globalThis.fetch = Object.assign(
       () => Promise.resolve(new Response(oversized, { status: 500 })),
-      { preconnect: (url: string | URL) => void url },
+      {
+        preconnect: (_url: string | URL) => {
+          // No preconnect in tests.
+        },
+      },
     );
 
     const forwarder = createTempoForwarder("https://tempo.test/v1/traces");
@@ -64,7 +72,11 @@ describe("createTempoForwarder", () => {
   test("resolves without inspecting the body on success", async () => {
     globalThis.fetch = Object.assign(
       () => Promise.resolve(new Response("ok", { status: 200 })),
-      { preconnect: (url: string | URL) => void url },
+      {
+        preconnect: (_url: string | URL) => {
+          // No preconnect in tests.
+        },
+      },
     );
 
     const forwarder = createTempoForwarder("https://tempo.test/v1/traces");

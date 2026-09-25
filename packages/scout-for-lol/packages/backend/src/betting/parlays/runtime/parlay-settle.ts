@@ -1,26 +1,20 @@
 import * as Sentry from "@sentry/bun";
 import {
   BUCKS_INT32_MAX,
-  BucksDeltaSchema,
   BucksMessageRefsSchema,
   BucksParlaySideSchema,
-  BucksParlayVoidReasonSchema,
-  BucksStakeSchema,
   type BucksParlaySide,
   type BucksParlayVoidReason,
+  BucksParlayVoidReasonSchema,
   type DiscordGuildId,
   type RawMatch,
 } from "@scout-for-lol/data";
 import { ensureHouseAccountInTransaction } from "#src/betting/eligibility/house.ts";
 import { logBucksTransition } from "#src/betting/transition-log.ts";
-import {
-  applyBucksDelta,
-  refundableBucksHeldForAccounts,
-} from "#src/betting/ledger.ts";
+import { refundableBucksHeldForAccounts } from "#src/betting/ledger.ts";
 import {
   evaluateParlay,
   ParlayLegResultsSchema,
-  type ParlayLegResult,
 } from "#src/betting/parlays/parlay-evaluator.ts";
 import {
   prisma,
@@ -34,54 +28,27 @@ import {
 } from "#src/metrics/betting/betting-parlay.ts";
 import { createLogger } from "#src/logger.ts";
 
+import type {
+  ParlaySettlementBet,
+  ParlaySettlementSummary,
+  PendingParlayBet,
+  PlannedPosition,
+} from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
+import { settlePosition } from "#src/betting/parlays/runtime/parlay-settle-positions.ts";
+import {
+  announcingSettlementSink,
+  checkpointFailureIn,
+  recordAnnouncement,
+  type SettlementAnnouncementSink,
+} from "#src/betting/notify/announcement-sink.ts";
+
 const logger = createLogger("betting-parlay-settle");
-
-export type ParlaySettlementBet = {
-  discordId: string;
-  side: BucksParlaySide;
-  stake: number;
-  grossPayout: number;
-  payout: number;
-  outcome: "won" | "lost" | "refunded";
-};
-
-export type ParlaySettlementSummary = {
-  matchId: string;
-  serverId: string;
-  yesResult: boolean | undefined;
-  voidReason: BucksParlayVoidReason | undefined;
-  legs: ParlayLegResult[];
-  messageRefs: { channelId: string; messageId: string }[];
-  bets: ParlaySettlementBet[];
-};
 
 function creditFits(balance: number, credit: bigint, held: bigint): boolean {
   return (
     held >= 0n && BigInt(balance) + credit + held <= BigInt(BUCKS_INT32_MAX)
   );
 }
-
-type PendingParlayBet = {
-  id: number;
-  bucksAccountId: number;
-  side: string;
-  stake: number;
-  houseReserve: number;
-  grossPayout: number;
-  bucksAccount: {
-    discordId: string;
-    serverId: string;
-    isHouse: boolean;
-    balance: number;
-  };
-  refundableHeld: bigint;
-};
-
-type PlannedPosition = {
-  bet: PendingParlayBet;
-  outcome: "won" | "lost" | "refunded";
-  payout: number;
-};
 
 type SettlementEvaluation = ReturnType<typeof evaluateParlay>;
 
@@ -157,89 +124,6 @@ function settlementPlan(
   };
 }
 
-async function settlePosition(
-  tx: Db,
-  input: {
-    position: PlannedPosition;
-    houseId: number;
-    houseRefundableHeldAfterSettlement: bigint;
-    matchId: string;
-    voidReason: BucksParlayVoidReason | undefined;
-    yesResult: boolean | undefined;
-  },
-): Promise<ParlaySettlementBet> {
-  const { bet, outcome, payout } = input.position;
-  const side = BucksParlaySideSchema.parse(bet.side);
-  const contextBase = {
-    type: "parlay_settlement" as const,
-    side,
-    stake: BucksStakeSchema.parse(bet.stake),
-    reserve: bet.houseReserve,
-    grossPayout: BucksStakeSchema.parse(bet.grossPayout),
-  };
-  if (outcome === "refunded") {
-    await applyBucksDelta(tx, {
-      bucksAccountId: bet.bucksAccountId,
-      delta: BucksDeltaSchema.parse(bet.stake),
-      kind: "parlay_refund",
-      matchId: input.matchId,
-      parlayBetId: bet.id,
-      context: {
-        ...contextBase,
-        credited: bet.stake,
-        voidReason: input.voidReason,
-      },
-      knownRefundableHeld: bet.refundableHeld - BigInt(bet.stake),
-    });
-    await applyBucksDelta(tx, {
-      bucksAccountId: input.houseId,
-      delta: BucksDeltaSchema.parse(bet.houseReserve),
-      kind: "parlay_release",
-      matchId: input.matchId,
-      parlayBetId: bet.id,
-      context: {
-        ...contextBase,
-        credited: bet.houseReserve,
-        voidReason: input.voidReason,
-      },
-      knownRefundableHeld: input.houseRefundableHeldAfterSettlement,
-    });
-    return {
-      discordId: bet.bucksAccount.discordId,
-      side,
-      stake: bet.stake,
-      grossPayout: bet.grossPayout,
-      payout,
-      outcome,
-    };
-  }
-
-  const won = outcome === "won";
-  await applyBucksDelta(tx, {
-    bucksAccountId: won ? bet.bucksAccountId : input.houseId,
-    delta: BucksDeltaSchema.parse(bet.grossPayout),
-    kind: won ? "parlay_payout" : "parlay_release",
-    matchId: input.matchId,
-    parlayBetId: bet.id,
-    context: {
-      ...contextBase,
-      yesResult: input.yesResult,
-      credited: bet.grossPayout,
-    },
-    knownRefundableHeld: won
-      ? bet.refundableHeld - BigInt(bet.stake)
-      : input.houseRefundableHeldAfterSettlement,
-  });
-  return {
-    discordId: bet.bucksAccount.discordId,
-    side,
-    stake: bet.stake,
-    grossPayout: bet.grossPayout,
-    payout,
-    outcome,
-  };
-}
-
 async function settleMarketTransaction(
   tx: Db,
   input: {
@@ -250,6 +134,7 @@ async function settleMarketTransaction(
       messageRefs: string;
     };
     evaluation: SettlementEvaluation;
+    sink: SettlementAnnouncementSink;
   },
 ): Promise<ParlaySettlementSummary | undefined> {
   const settledAt = new Date();
@@ -380,7 +265,7 @@ async function settleMarketTransaction(
       }),
     );
   }
-  return {
+  const summary: ParlaySettlementSummary = {
     matchId: input.market.matchId,
     serverId: input.market.serverId,
     yesResult:
@@ -397,11 +282,31 @@ async function settleMarketTransaction(
     ).map((ref) => ({ ...ref })),
     bets: settledBets,
   };
+  // The instruction to announce this settlement, written with the settlement
+  // itself. A parlay summary is one-shot: the market is no longer open or
+  // closed once this commits, so a re-run returns nothing and a recap
+  // recorded after the transaction can be lost in the gap with no way to
+  // rebuild it.
+  // The instruction to announce this settlement, written with the settlement
+  // itself. A parlay summary is one-shot: the market is no longer open or
+  // closed once this commits, so a re-run returns nothing and a recap
+  // recorded after the transaction can be lost in the gap with no way to
+  // rebuild it.
+  await recordAnnouncement({
+    sink: input.sink,
+    db: tx,
+    family: "parlay",
+    itemKey: summary.serverId,
+    payload: summary,
+  });
+  return summary;
 }
 
 export async function settleParlaysForMatch(
   matchData: RawMatch,
   prismaClient: ExtendedPrismaClient = prisma,
+  /** Who may announce what this settles; v1's own behaviour by default. */
+  sink: SettlementAnnouncementSink = announcingSettlementSink,
 ): Promise<ParlaySettlementSummary[]> {
   const matchId = matchData.metadata.matchId;
   const markets = await (async () => {
@@ -443,7 +348,7 @@ export async function settleParlaysForMatch(
         criteria: JSON.parse(market.definition.criteria),
       });
       const summary = await prismaClient.$transaction((tx) =>
-        settleMarketTransaction(tx, { market, evaluation }),
+        settleMarketTransaction(tx, { market, evaluation, sink }),
       );
       if (summary !== undefined) {
         summaries.push(summary);
@@ -484,6 +389,13 @@ export async function settleParlaysForMatch(
         }
       }
     } catch (error) {
+      if (checkpointFailureIn(error) !== undefined) throw error;
+      // The exemption this handler must not extend to. It was written so one
+      // guild's broken market could not cost every other guild its
+      // settlement, and it answers by logging and continuing. A checkpoint
+      // failure is a different class: the market rolled back AND this
+      // match's settlement never became recoverable, so absorbing it lets
+      // the caller record a receipt over bettors who were never paid.
       logger.error(
         `Could not settle Bryan Bucks parlay ${matchId} in guild ${market.serverId}:`,
         error,

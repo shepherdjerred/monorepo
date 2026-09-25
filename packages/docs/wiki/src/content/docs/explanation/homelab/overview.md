@@ -104,10 +104,8 @@ survive the next sync.
 Private services use a **Tailscale ingress** and are reachable only from the
 tailnet. Public services go through a **Cloudflare Tunnel**.
 
-Choosing tailnet-only is the default, and for some services the tailnet is the
-entire authorization model — see
-[the Scout evals trust boundary](/explanation/homelab/scout-evals-trust-boundary/)
-for what that implies.
+Choosing tailnet-only is the default, and the tailnet can serve as a service's
+authorization boundary.
 
 Funnel, which would publish a tailnet service to the public internet, is
 deliberately never configured.

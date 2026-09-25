@@ -16,8 +16,7 @@ architecture, controls, harness, profiling, and deployment reference.
   channel, or user identity.
 - Emulation timing is monotonic and frame-paced. Profile real ROM-backed paths
   before changing frame skip, buffer, encoder, or copy behavior.
-- Prisma-backed session/leaderboard state must disconnect during test and
-  shutdown.
+- Prisma-backed session/leaderboard state must disconnect during shutdown.
 
 Routine CI uses ROM-free unit and integration tests. Real emulator scenarios,
 media probes, and performance harnesses are manual acceptance layers.

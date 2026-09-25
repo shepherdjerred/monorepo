@@ -17,7 +17,6 @@ import {
 } from "#src/explore/http/http-route.ts";
 import { exploreRunManager } from "#src/explore/runs/run-manager.ts";
 import { handleVersion } from "#src/http/version.ts";
-import { handleTournamentCallback } from "#src/http/tournament-callback.ts";
 import {
   classifyMethod,
   classifyRoute,
@@ -35,6 +34,7 @@ import {
   upgradeCustomSocket,
   type CustomSocketData,
 } from "#src/customs/socket.ts";
+import { handleScoutClientRoute } from "#src/scout-client/http.ts";
 
 const logger = createLogger("http-server");
 
@@ -185,6 +185,9 @@ const server = Bun.serve<CustomSocketData>({
  * {@link withHttpMetrics}, including the 404 fallback and error paths.
  */
 async function dispatch(request: Request, url: URL): Promise<Response> {
+  const scoutClientResponse = await handleScoutClientRoute(request, url);
+  if (scoutClientResponse !== null) return scoutClientResponse;
+
   const customsAuthResponse = await handleCustomAuthRoutes(request, url);
   if (customsAuthResponse !== null) return customsAuthResponse;
 
@@ -221,26 +224,6 @@ async function dispatch(request: Request, url: URL): Promise<Response> {
   // Build/deploy identity: version, git SHA, tRPC contract hash
   if (url.pathname === "/api/version") {
     return handleVersion(request, corsHeadersFor(request));
-  }
-
-  // Riot tournament provider callback.
-  //
-  // Registering a provider REQUIRES a callback URL, so this endpoint has to
-  // exist. It acknowledges and discards, and mutates nothing.
-  //
-  // That restraint is the point. tournament-v5 has no shared secret and no
-  // signature, so the URL is the only credential — a handler that wrote
-  // anything would be an unauthenticated injection path into the canonical S3
-  // match store. It would also be a second ingest path competing with the
-  // match-history cursor, whose S3 write is what gates the cursor advance. And
-  // the stub emits no callbacks at all, so none of it could be tested before
-  // the key gains tournament access.
-  //
-  // What it does buy: proof the URL is live if Riot ever validates it at
-  // registration, and real latency data (callback arrival vs. games/by-code
-  // resolution) to justify promoting this to an accelerator later.
-  if (url.pathname === "/api/riot/tournament-callback") {
-    return handleTournamentCallback(request);
   }
 
   // Internal Bryan Bucks analytics reconciliation, driven by the Temporal

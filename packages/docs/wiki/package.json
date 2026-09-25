@@ -20,10 +20,10 @@
     "@astrojs/check": "^0.9.10",
     "@astrojs/markdown-satteri": "0.3.7",
     "@astrojs/sitemap": "^3.7.3",
-    "@astrojs/starlight": "^0.41.5",
-    "astro": "^7.1.5",
+    "@astrojs/starlight": "^0.42.0",
+    "astro": "^7.3.3",
     "astro-mermaid": "^2.1.0",
-    "mermaid": "^11.16.0",
+    "mermaid": "^12.0.0",
     "satteri": "0.10.5",
     "sharp": "^0.35.0"
   },
@@ -31,11 +31,11 @@
     "@playwright/test": "^1.61.1",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@typescript/native": "npm:typescript@7.0.2",
-    "@types/bun": "1.4.0",
+    "@types/bun": "1.4.2",
     "eslint": "^10.3.0",
     "eslint-plugin-astro": "^3.0.1",
     "typescript": "^6.0.3",
-    "vitest": "4.1.10",
-    "@vitest/coverage-istanbul": "4.1.10"
+    "vitest": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.1"
   }
 }

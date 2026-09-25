@@ -39,14 +39,13 @@ export async function claimExploreRunFinished(
     const activeStorage = storage ?? globalThis.localStorage;
     const lockManager =
       typeof navigator === "undefined" ? undefined : navigator.locks;
-    if (lockManager === undefined) {
-      return claimWithoutLock(activeStorage, runId);
-    }
-    return await lockManager.request(
-      `scout:explore-finished:${runId}`,
-      { ifAvailable: true },
-      (lock) => lock !== null && claimWithoutLock(activeStorage, runId),
-    );
+    return lockManager === undefined
+      ? claimWithoutLock(activeStorage, runId)
+      : await lockManager.request(
+          `scout:explore-finished:${runId}`,
+          { ifAvailable: true },
+          (lock) => lock !== null && claimWithoutLock(activeStorage, runId),
+        );
   } catch {
     return false;
   }

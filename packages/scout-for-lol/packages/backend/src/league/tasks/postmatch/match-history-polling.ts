@@ -40,7 +40,7 @@ import {
   type DiscoveredMatchIntent,
   type MatchDiscovery,
 } from "#src/league/tasks/postmatch/match-intents.ts";
-import { finalizeAndPublishTournamentResult } from "#src/customs/riot-result-publication.ts";
+import { finalizeAndPublishManagedCustomResult } from "#src/customs/riot-result-publication.ts";
 import { fetchMatchData } from "#src/league/tasks/postmatch/match-data-fetcher.ts";
 import {
   deliverVisiblePostmatchReport,
@@ -133,6 +133,7 @@ export async function processMatchAndUpdatePlayers(
     settle: async () =>
       await settleBucksWithDareTimelineV2({
         matchData,
+        matchDataSource: "RIOT",
         trackedPlayers: allTrackedPlayers,
         prismaClient: prisma,
       }),
@@ -189,7 +190,7 @@ export async function processMatchAndUpdatePlayers(
   // past the match. Tournament lobbies — and linked Customs games — finalize
   // here, after authoritative S3 ingest and post-match side effects. A failure
   // therefore leaves the cursors in place and retries the same match.
-  await finalizeAndPublishTournamentResult(prisma, matchData);
+  await finalizeAndPublishManagedCustomResult(prisma, matchData, "RIOT");
 
   const { processCompetitiveProgressionMatch } =
     await import("#src/progression/postmatch.ts");
@@ -206,6 +207,7 @@ export async function processMatchAndUpdatePlayers(
         advance: async () => {
           await processCompetitiveProgressionMatch({
             match: matchData,
+            matchDataSource: "RIOT",
             timeline: prefetchedTimeline,
             trackedPlayers: allTrackedPlayers,
           });
@@ -249,12 +251,9 @@ async function recoverUnavailableActiveDares(input: {
       logger.warn(
         `Voiding Dare ${dare.id.toString()} because frozen target account(s) are unavailable: ${unavailable.join(", ")}`,
       );
-      await voidDareV2WithFullRefund(
-        dare,
-        "target_unavailable",
-        prisma,
-        input.currentTime,
-      );
+      await voidDareV2WithFullRefund(dare, "target_unavailable", prisma, {
+        now: input.currentTime,
+      });
       continue;
     }
     for (const puuid of darePuuids) requiredPuuids.add(puuid);

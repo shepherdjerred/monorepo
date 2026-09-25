@@ -14,7 +14,7 @@ import {
 function snapshotFlag(flag: ManagedFlag) {
   return {
     key: flag.key,
-    enabled: flag.type === "boolean" ? flag.default : true,
+    enabled: flag.type !== "boolean" || flag.default,
     type: flag.type === "boolean" ? "BOOLEAN_FLAG_TYPE" : "VARIANT_FLAG_TYPE",
     defaultVariant: flag.type === "variant" ? { key: flag.default } : undefined,
     rules: flag.rules,

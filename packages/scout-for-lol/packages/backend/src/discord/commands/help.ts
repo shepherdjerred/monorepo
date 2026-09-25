@@ -63,10 +63,6 @@ const flagGatedCommands: {
     entry: "`/bb` — Bryan Bucks: balances, history, rules, and dares",
   },
   {
-    flag: "tournament_lobbies_enabled",
-    entry: "`/lobby` — Create and manage custom-game lobbies",
-  },
-  {
     flag: "voice_assistant_enabled",
     entry: '`/scout join` · `/scout leave` — "Hey Scout" voice questions',
     // Not an activation gate — `voice_assistant_enabled` owns that. This only

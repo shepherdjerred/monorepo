@@ -1103,6 +1103,38 @@ describe("outputs and CLI", () => {
     expect(markdown).not.toContain("secret-token");
   });
 
+  // ISO 8601 permits minute precision and --from/--to have always taken it.
+  // zod 4.6 made z.iso.datetime() require seconds, which silently narrowed the
+  // documented CLI contract, so minute-precision input is padded to the same
+  // instant instead of being rejected. Garbage must still fail.
+  test("accepts minute-precision ISO windows and still rejects malformed ones", () => {
+    const parsed = parseCliOptions([
+      "--from",
+      "2026-09-20T12:00Z",
+      "--to",
+      "2026-09-20T18:30+02:00",
+    ]);
+    expect(parsed.from).toBe("2026-09-20T12:00:00Z");
+    expect(parsed.to).toBe("2026-09-20T18:30:00+02:00");
+
+    const withSeconds = parseCliOptions([
+      "--from",
+      "2026-09-20T12:00:30.500Z",
+      "--to",
+      "2026-09-20T18:30:00Z",
+    ]);
+    expect(withSeconds.from).toBe("2026-09-20T12:00:30.500Z");
+
+    expect(() =>
+      parseCliOptions([
+        "--from",
+        "2026-09-20T12Z",
+        "--to",
+        "2026-09-20T18:30Z",
+      ]),
+    ).toThrow();
+  });
+
   test("parses explicit builds and requires a baseline for impact gates", () => {
     const parsed = parseCliOptions(["--build", "101,102", "--benchmark"]);
     expect(parsed.buildNumbers).toEqual([101, 102]);

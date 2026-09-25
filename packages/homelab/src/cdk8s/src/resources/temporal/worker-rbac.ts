@@ -178,4 +178,43 @@ export function createTemporalWorkerMaintenanceRbac(
       namespace: serviceAccount.metadata.namespace ?? "temporal",
     })),
   });
+
+  // Lets the Velero orphan audit list per-volume ZFSBackup CRs so it can
+  // detect the CR-orphan pathology (parent Backup gone, CR left behind),
+  // which otherwise bloats etcd with no alert. Read-only: remediation stays
+  // a manual runbook procedure.
+  new KubeRole(chart, "temporal-worker-openebs-zfsbackups-read", {
+    metadata: {
+      name: "temporal-worker-openebs-zfsbackups-read",
+      namespace: "openebs",
+    },
+    rules: [
+      {
+        apiGroups: ["zfs.openebs.io"],
+        resources: ["zfsbackups"],
+        verbs: ["get", "list"],
+      },
+    ],
+  });
+
+  new KubeRoleBinding(
+    chart,
+    "temporal-worker-openebs-zfsbackups-read-binding",
+    {
+      metadata: {
+        name: "temporal-worker-openebs-zfsbackups-read",
+        namespace: "openebs",
+      },
+      roleRef: {
+        apiGroup: "rbac.authorization.k8s.io",
+        kind: "Role",
+        name: "temporal-worker-openebs-zfsbackups-read",
+      },
+      subjects: serviceAccounts.map((serviceAccount) => ({
+        kind: "ServiceAccount",
+        name: serviceAccount.name,
+        namespace: serviceAccount.metadata.namespace ?? "temporal",
+      })),
+    },
+  );
 }

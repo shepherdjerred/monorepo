@@ -2,6 +2,10 @@ import { describe, expect, test } from "vitest";
 import { App } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
+import {
+  TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS,
+  TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS,
+} from "@shepherdjerred/homelab/cdk8s/src/temporal-release-budgets.ts";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 
 const ResourceSchema = z
@@ -10,12 +14,26 @@ const ResourceSchema = z
     metadata: z
       .object({
         name: z.string(),
+        namespace: z.string().optional(),
         annotations: z.record(z.string(), z.string()).optional(),
       })
       .loose(),
     spec: z.unknown().optional(),
   })
   .loose();
+
+const RbacRulesSchema = z.object({
+  rules: z.array(
+    z
+      .object({
+        apiGroups: z.array(z.string()),
+        resources: z.array(z.string()),
+        resourceNames: z.array(z.string()).optional(),
+        verbs: z.array(z.string()),
+      })
+      .loose(),
+  ),
+});
 
 function resources() {
   const app = new App({ outdir: ".test-synth-temporal-server-lifecycle" });
@@ -34,6 +52,27 @@ function findResource(kind: string, name: string) {
     throw new Error(`Missing ${kind}/${name}`);
   }
   return resource;
+}
+
+// The preflight's RBAC reuses one name across three namespaces, so a
+// kind-and-name lookup would silently assert against whichever came first.
+function findNamespacedResource(kind: string, name: string, namespace: string) {
+  const resource = resources().find(
+    (candidate) =>
+      candidate.kind === kind &&
+      candidate.metadata.name === name &&
+      candidate.metadata.namespace === namespace,
+  );
+  if (resource === undefined) {
+    throw new Error(`Missing ${kind}/${name} in namespace ${namespace}`);
+  }
+  return resource;
+}
+
+function backupPreflightRules(namespace: string) {
+  return RbacRulesSchema.parse(
+    findNamespacedResource("Role", "temporal-backup-preflight", namespace),
+  ).rules;
 }
 
 const ContainerSchema = z.object({
@@ -94,11 +133,25 @@ describe("Temporal server lifecycle", () => {
 
     // Aggregate counters alone can be positive purely because OTHER
     // backup-enabled PVCs succeeded; the preflight must specifically confirm
-    // the Temporal PVC's own snapshot, not just any completed snapshot.
+    // the Temporal PVC's own snapshot, not just any completed snapshot. The
+    // per-PVC proof is the ZFSBackup object openebs zfs-localpv writes per
+    // volume, keyed by the PVC's bound PV and the Velero backup name.
     expect(command).toContain("pgdata-temporal-postgresql-0");
     expect(command).toContain("velero.io/backup=enabled");
-    expect(command).toContain("enabled_pvc_count");
-    expect(command).toContain('snapshots_attempted" -ne "$enabled_pvc_count');
+    expect(command).toContain("{.spec.volumeName}");
+    expect(command).toContain(
+      'zfsbackups.zfs.openebs.io "$temporal_pv_name.$backup_name"',
+    );
+    expect(command).toContain('volume_backup_status" != "Done');
+
+    // Comparing the backup's snapshot count against the CURRENT number of
+    // backup-enabled PVCs asserted that cluster inventory never changes
+    // between a backup and a release, which is not an invariant: retiring or
+    // adding any backup-enabled PVC anywhere failed every Temporal release
+    // until the next backup ran. The ZFSBackup lookup above proves the same
+    // thing directly, so that inference must not come back.
+    expect(command).not.toContain("enabled_pvc_count");
+    expect(command).not.toContain("--all-namespaces");
   });
 
   test("stages backup-preflight RBAC as an earlier PreSync hook than the Job it serves", () => {
@@ -111,21 +164,17 @@ describe("Temporal server lifecycle", () => {
       findResource("ServiceAccount", "temporal-backup-preflight").metadata
         .annotations,
     ).toMatchObject(rbacAnnotations);
-    expect(
-      findResource("Role", "temporal-backup-preflight").metadata.annotations,
-    ).toMatchObject(rbacAnnotations);
-    expect(
-      findResource("RoleBinding", "temporal-backup-preflight").metadata
-        .annotations,
-    ).toMatchObject(rbacAnnotations);
-    expect(
-      findResource("ClusterRole", "temporal-backup-preflight-pvc-reader")
-        .metadata.annotations,
-    ).toMatchObject(rbacAnnotations);
-    expect(
-      findResource("ClusterRoleBinding", "temporal-backup-preflight-pvc-reader")
-        .metadata.annotations,
-    ).toMatchObject(rbacAnnotations);
+
+    // One Role per namespace that owns the objects the script reads: the Velero
+    // Backup, this PVC, and its ZFSBackup each live somewhere different.
+    for (const namespace of ["velero", "temporal", "openebs"]) {
+      for (const kind of ["Role", "RoleBinding"]) {
+        expect(
+          findNamespacedResource(kind, "temporal-backup-preflight", namespace)
+            .metadata.annotations,
+        ).toMatchObject(rbacAnnotations);
+      }
+    }
 
     // The RBAC's wave (-3) must sort strictly before the Job's own wave (-2)
     // within the shared PreSync hook phase.
@@ -136,6 +185,36 @@ describe("Temporal server lifecycle", () => {
       ],
     );
     expect(rbacWave).toBeLessThan(jobWave);
+  });
+
+  test("reads only the objects the backup preflight proof needs", () => {
+    expect(backupPreflightRules("temporal")).toEqual([
+      {
+        apiGroups: [""],
+        resources: ["persistentvolumeclaims"],
+        resourceNames: ["pgdata-temporal-postgresql-0"],
+        verbs: ["get"],
+      },
+    ]);
+    expect(backupPreflightRules("openebs")).toEqual([
+      {
+        apiGroups: ["zfs.openebs.io"],
+        resources: ["zfsbackups"],
+        verbs: ["get"],
+      },
+    ]);
+
+    // Listing every PVC in the cluster was only ever needed by the
+    // inventory-count inference the ZFSBackup lookup replaced, so the hook must
+    // no longer hold a cluster-scoped grant at all.
+    expect(
+      resources().filter(
+        (resource) =>
+          (resource.kind === "ClusterRole" ||
+            resource.kind === "ClusterRoleBinding") &&
+          resource.metadata.name.startsWith("temporal-backup-preflight"),
+      ),
+    ).toEqual([]);
   });
 
   test("migrates both schemas in a blocking Sync hook", () => {
@@ -153,7 +232,7 @@ describe("Temporal server lifecycle", () => {
     const container = firstContainer(job.spec, "Schema migration");
     const command = container.args?.join("\n") ?? "";
 
-    expect(container.image).toContain("temporalio/admin-tools:1.30.6@sha256:");
+    expect(container.image).toContain("temporalio/admin-tools:1.31.2@sha256:");
     expect(command).toContain(
       "update-schema -d /etc/temporal/schema/postgresql/v12/temporal/versioned",
     );
@@ -244,7 +323,7 @@ describe("Temporal server lifecycle", () => {
     const deployment = findResource("Deployment", "temporal-temporal-server");
     const container = firstContainer(deployment.spec, "Temporal server");
 
-    expect(container.image).toContain("temporalio/server:1.30.6@sha256:");
+    expect(container.image).toContain("temporalio/server:1.31.2@sha256:");
     expect(container.args?.join(" ") ?? "").not.toContain("autosetup");
     expect(container.securityContext.readOnlyRootFilesystem).toBe(true);
     expect(container.volumeMounts).toEqual(
@@ -288,5 +367,25 @@ describe("Temporal server lifecycle", () => {
     expect(serialized).toContain('"port":53');
     expect(serialized).toContain('"port":5432');
     expect(serialized).not.toContain('"port":7233');
+  });
+});
+
+describe("Temporal release budgets", () => {
+  test("keeps the schema migration inside the release sync budget", () => {
+    // The release waiter must outlast this hook. Raising the deadline without
+    // raising the floor reintroduces the builds 16963/16977 failure, where CI
+    // timed out a still-running migration and the next build replaced the
+    // in-flight hook mid-DDL.
+    expect(TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS).toBeGreaterThan(
+      TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS,
+    );
+    const job = findResource("Job", "temporal-schema-migration");
+    const spec = z
+      .object({ activeDeadlineSeconds: z.number() })
+      .loose()
+      .parse(job.spec);
+    expect(spec.activeDeadlineSeconds).toBe(
+      TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS,
+    );
   });
 });

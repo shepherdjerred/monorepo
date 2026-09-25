@@ -15,8 +15,7 @@ export type ChampionCoverageEntry = {
 };
 
 function parseChampionId(value: string): number | null {
-  if (!CHAMPION_ID_PATTERN.test(value)) return null;
-  return Number.parseInt(value, 10);
+  return CHAMPION_ID_PATTERN.test(value) ? Number.parseInt(value, 10) : null;
 }
 
 /**

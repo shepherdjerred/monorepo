@@ -3,6 +3,7 @@ import {
   ciImagePromotionFiles,
   classifyCiImageRuntimePromotion,
   isCurrentSourceCandidate,
+  localPromotionDecision,
   newestPinState,
   parseCiImageCandidate,
   parseCiImagePinState,
@@ -364,6 +365,10 @@ describe("Playwright candidate promotion", () => {
       "ci/ci-image/DIGEST",
       "ci/ci-image/STATE.json",
     ]);
+    expect(ciImagePromotionFiles("windows-cross-compiler-winui")).toEqual([
+      "packages/windows-cross-compiler/images/windows-cross-compiler-winui/DIGEST",
+      "packages/windows-cross-compiler/images/windows-cross-compiler-winui/STATE.json",
+    ]);
   });
 
   test("coordinates its nested lockfile install with cache collection", async () => {
@@ -428,7 +433,8 @@ describe("Playwright candidate promotion", () => {
     const dryRunBlock = source.slice(dryRunIndex, cloneIndex);
     expect(dryRunBlock).not.toContain("finalizeSkippedPromotion");
     expect(dryRunBlock).not.toContain("retireStalePromotion");
-    expect(dryRunBlock).toContain("DRYRUN: would promote");
+    expect(dryRunBlock).toContain("dryRunReport(");
+    expect(source).toContain("DRYRUN: would promote");
   });
 
   test("the retirement helper closes the stale PR and deletes its branch", async () => {
@@ -461,5 +467,29 @@ describe("Playwright candidate promotion", () => {
     );
     expect(helperBody).toContain('"fetch", "origin", "main"');
     expect(helperBody).toContain("throw new TransientError(");
+  });
+});
+
+describe("local promotion decision", () => {
+  test("promotes the first pin when main has none", () => {
+    expect(localPromotionDecision(undefined, state(1, "a"))).toBe("promote");
+  });
+
+  test("promotes a newer build with a new digest", () => {
+    expect(localPromotionDecision(state(5, "a"), state(6, "b"))).toBe(
+      "promote",
+    );
+  });
+
+  test("skips a candidate whose digest is already pinned", () => {
+    expect(localPromotionDecision(state(5, "a"), state(6, "a"))).toBe(
+      "no-digest-change",
+    );
+  });
+
+  test("refuses to replace a newer pin", () => {
+    expect(localPromotionDecision(state(7, "a"), state(6, "b"))).toBe(
+      "older-than-pin",
+    );
   });
 });

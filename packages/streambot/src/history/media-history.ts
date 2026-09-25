@@ -6,6 +6,7 @@ import {
   SourceSchema,
   sourceIdentity,
   withMode,
+  withSpoken,
   type Source,
 } from "@shepherdjerred/streambot/sources/source.ts";
 
@@ -320,13 +321,14 @@ export class MediaHistoryStore {
     // watch it" — and `source_json` is what every later replay (favorites, /stream again, history
     // requeue) is rebuilt from. Persisting the override verbatim would pin the item to that
     // transport forever, and because `sourceIdentity` ignores `mode`, the very next play of the
-    // same URL would overwrite this row and silently inherit it. Resume state is the opposite case
-    // and deliberately keeps the real mode: it is the same play continuing, not a new one.
+    // same URL would overwrite this row and silently inherit it. The spoken YouTube-tie hint is
+    // the same kind of request-scoped flag. Resume state is the opposite case and deliberately
+    // keeps the real mode: it is the same play continuing, not a new one.
     //
     // Stripped rather than set to `"auto"`, which is the same thing to every reader of `Source` and
     // additionally keeps this column byte-identical to what it holds today for any item requested
     // without a mode — no silent rewrite of every history row on deploy.
-    const source = withMode(media.source, undefined);
+    const source = withSpoken(withMode(media.source, undefined), undefined);
     const id = crypto.randomUUID();
     this.database
       .query(

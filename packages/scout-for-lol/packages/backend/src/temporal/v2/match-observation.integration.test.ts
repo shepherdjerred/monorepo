@@ -2,8 +2,10 @@ import { afterAll, describe, expect, test, vi } from "vitest";
 import { ApplicationFailure } from "@temporalio/common";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema } from "@scout-for-lol/domain/identity/league-account.ts";
-import type * as DatabaseModule from "#src/database/index.ts";
-import { createTestDatabase } from "#src/testing/test-database.ts";
+import {
+  createTestDatabase,
+  testDatabaseModule,
+} from "#src/testing/test-database.ts";
 
 /**
  * v1's source precondition on the V2 observation commit, against real rows.
@@ -26,12 +28,7 @@ const riot = vi.hoisted(() => ({
   trackedPuuids: ["s".repeat(78), "t".repeat(78)],
 }));
 
-vi.mock("#src/database/index.ts", async () => {
-  const actual = await vi.importActual<typeof DatabaseModule>(
-    "#src/database/index.ts",
-  );
-  return { ...actual, prisma };
-});
+vi.mock("#src/database/index.ts", async () => await testDatabaseModule(prisma));
 
 vi.mock("#src/temporal/v2/match-context.ts", () => ({
   resolveScoutV2MatchContext: (riotMatchId: string) =>
@@ -43,7 +40,6 @@ vi.mock("#src/temporal/v2/match-context.ts", () => ({
         alias: puuid.slice(0, 4),
         league: { leagueAccount: { puuid } },
       })),
-      allPlayerConfigs: [],
     }),
 }));
 

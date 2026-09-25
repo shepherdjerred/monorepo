@@ -11,9 +11,19 @@
       "rationale": "Process and Pipe lack Sendable conformances; cancellation state is guarded by NSLock."
     },
     {
+      "path": "Sources/QuotaBarCore/Providers/MuseProvider.swift",
+      "count": 1,
+      "rationale": "URLSession retains its delegate; the redirect refusal is stateless and touches no shared state."
+    },
+    {
       "path": "Sources/QuotaBarCore/Credentials.swift",
       "count": 1,
       "rationale": "The rejected-token cache is guarded by NSLock; all other stored dependencies are immutable."
+    },
+    {
+      "path": "Sources/QuotaBarCore/MuseKeychainCache.swift",
+      "count": 1,
+      "rationale": "The cached credential and failure record are guarded by NSLock; the clock closure is Sendable."
     },
     {
       "path": "Sources/QuotaBarCore/Persistence.swift",
@@ -49,6 +59,11 @@
       "path": "Tests/QuotaBarCoreTests/ModelTests.swift",
       "count": 1,
       "rationale": "The test double protects recorded snapshots and counts with NSLock."
+    },
+    {
+      "path": "Tests/QuotaBarCoreTests/MuseDiscoveryTests.swift",
+      "count": 2,
+      "rationale": "The test doubles protect recorded reads, injected failures, and the manual clock with NSLock."
     },
     {
       "path": "Tests/QuotaBarCoreTests/OpenRouterTests.swift",

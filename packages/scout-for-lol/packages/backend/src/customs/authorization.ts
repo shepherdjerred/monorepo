@@ -15,8 +15,7 @@ export function customRoleFor(
   const participant = snapshot.participants.find(
     (candidate) => candidate.discordId === discordId,
   );
-  if (participant?.role === "CAPTAIN") return "CAPTAIN";
-  return "MEMBER";
+  return participant?.role === "CAPTAIN" ? "CAPTAIN" : "MEMBER";
 }
 
 export function canManageCustomNight(role: CustomRole): boolean {
@@ -29,11 +28,13 @@ export function canDraftForTeam(
   participants: readonly CustomGameParticipant[],
   activeTeam: "A" | "B",
 ): boolean {
-  if (canManageCustomNight(role)) return true;
-  return participants.some(
-    (participant) =>
-      participant.discordId === actorDiscordId &&
-      participant.captain &&
-      participant.team === activeTeam,
+  return (
+    canManageCustomNight(role) ||
+    participants.some(
+      (participant) =>
+        participant.discordId === actorDiscordId &&
+        participant.captain &&
+        participant.team === activeTeam,
+    )
   );
 }

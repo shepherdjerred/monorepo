@@ -5,6 +5,15 @@ import path from "node:path";
 import { z } from "zod";
 import { SyncInfoEntrySchema } from "./argocd-script-support.ts";
 
+const PACKAGE_ROOT = path.resolve(import.meta.dir, "../../..");
+const ARGOCD_SCRIPT = path.join(PACKAGE_ROOT, "scripts/argocd/argocd.ts");
+const RELEASE_RESULT_FILE = "homelab-release-result.json";
+const ReleaseReceiptSchema = z.object({
+  outcome: z.string(),
+  requestId: z.string(),
+  revision: z.string(),
+});
+
 const RELEASE_REQUEST_ID = "11111111-1111-4111-8111-111111111111";
 const RELEASE_OPERATION_ID = "33333333-3333-4333-8333-333333333333";
 const BATCH_PHASE_INFO = {
@@ -843,7 +852,7 @@ test("release-root resumes at a live later phase instead of restaging", async ()
       [
         "bun",
         "--no-install",
-        "scripts/argocd/argocd.ts",
+        ARGOCD_SCRIPT,
         "release-root",
         "apps",
         expectedPath,
@@ -855,7 +864,11 @@ test("release-root resumes at a live later phase instead of restaging", async ()
         "1",
       ],
       {
-        cwd: path.resolve(import.meta.dir, "../../.."),
+        // This is the only spawn here that completes a real release, so it is
+        // the only one that writes the release receipt. The receipt path is
+        // relative to the working directory, so the release runs from the
+        // scratch directory and the script is addressed absolutely.
+        cwd: directory,
         env: {
           ...Bun.env,
           ARGOCD_POLL_INTERVAL_MS: "5",
@@ -882,6 +895,17 @@ test("release-root resumes at a live later phase instead of restaging", async ()
     expect(stdout).not.toContain("stage-root-release");
     expect(syncPosts).toBe(0);
     expect(deleteRequests).toBe(1);
+    const receipt = ReleaseReceiptSchema.parse(
+      await Bun.file(path.join(directory, RELEASE_RESULT_FILE)).json(),
+    );
+    expect(receipt.outcome).toBe("applied-verified");
+    expect(receipt.requestId).toBe(RELEASE_REQUEST_ID);
+    expect(receipt.revision).toBe("2.0.0-43");
+    // The receipt belongs to the directory the release was driven from. A test
+    // must never leave one behind in the package root of a working tree.
+    expect(
+      await Bun.file(path.join(PACKAGE_ROOT, RELEASE_RESULT_FILE)).exists(),
+    ).toBe(false);
   } finally {
     await server.stop(true);
     await rm(directory, { recursive: true, force: true });

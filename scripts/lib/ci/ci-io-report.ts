@@ -154,10 +154,9 @@ function coverageFor(
   if (measurements.length === 0) {
     return "missing";
   }
-  if (!hasPostFinishParentSample || sampleCount < 2) {
-    return "lower-bound";
-  }
-  return "complete";
+  return !hasPostFinishParentSample || sampleCount < 2
+    ? "lower-bound"
+    : "complete";
 }
 
 function lastParentSampleAt(measurements: PodMeasurement[]): string | null {

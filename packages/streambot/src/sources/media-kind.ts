@@ -38,6 +38,7 @@ export type MediaKindDecidedBy =
   | "categories"
   | "track-tags"
   | "extractor"
+  | "spoken-youtube-tie"
   | "provider-default"
   | "default";
 
@@ -85,6 +86,12 @@ export type MediaKindInput = {
   readonly extractorKey?: string | null | undefined;
   /** The provenance provider the resolver settled on, for the per-provider default. */
   readonly provider?: "local" | "youtube" | "url" | undefined;
+  /**
+   * True when the request came from a spoken voice command. Used only as a YouTube category
+   * tie-break: Entertainment / People & Blogs / Comedy follow the music default instead of
+   * forcing Go Live. Film, TV, Gaming, Sports, and News stay video.
+   */
+  readonly spoken?: boolean | undefined;
 };
 
 /**
@@ -106,7 +113,30 @@ const AUDIO_ONLY_EXTRACTOR_PREFIXES = [
   "jamendo",
 ] as const;
 
-/** True for a metadata string yt-dlp actually populated (it omits keys and emits nulls freely). */
+function isYoutubeTieCategory(category: string): boolean {
+  const normalized = category.trim().toLowerCase();
+  return (
+    normalized === "entertainment" ||
+    normalized === "people & blogs" ||
+    normalized === "comedy"
+  );
+}
+
+function isSpokenYoutubeTie(input: MediaKindInput): boolean {
+  if (input.spoken !== true || input.provider !== "youtube") return false;
+  const categories = input.categories;
+  return (
+    categories !== undefined &&
+    categories !== null &&
+    categories.length > 0 &&
+    categories.every(
+      (category) =>
+        category.trim().toLowerCase() === "music" ||
+        isYoutubeTieCategory(category),
+    )
+  );
+}
+
 function hasText(value: string | null | undefined): boolean {
   return value !== null && value !== undefined && value.trim().length > 0;
 }
@@ -231,10 +261,15 @@ export function classifyMediaKind(
   if (isAudioOnlyExtractor(input.extractorKey)) {
     return { kind: "music", decidedBy: "extractor" };
   }
-  // 6. A stated non-music category (talks, gaming, entertainment) outranks the provider default.
+  // 6. A stated non-music category (talks, gaming, film) outranks the provider default.
   //    Without this, YouTube's music-leaning default below would swallow every talk and let-s-play.
+  //    A spoken YouTube request is the exception: Entertainment / People & Blogs / Comedy are
+  //    typical of AI covers and lyric uploads, so they follow the music default instead of
+  //    forcing Go Live. Film, TV, Gaming, Sports, and News still go to video.
   if (category === "video") {
-    return { kind: "video", decidedBy: "categories" };
+    return isSpokenYoutubeTie(input)
+      ? { kind: "music", decidedBy: "spoken-youtube-tie" }
+      : { kind: "video", decidedBy: "categories" };
   }
   // 7. Provider default. YouTube leans music: the overwhelming majority of what gets queued from it
   //    is listened to rather than watched, and getting it wrong costs a full video encode plus a

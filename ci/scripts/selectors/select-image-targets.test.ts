@@ -110,11 +110,8 @@ describe("selectImageTargets", () => {
     }
   });
 
-  test("selects explicit Docker inputs outside workspace dependencies", async () => {
-    // scout-evals depends on the toolkit for the shared Postgres pod helper
-    // its sync-beta script uses, and the selector walks devDependencies too.
+  test("selects toolkit's transitive image consumer", async () => {
     expect(await select(["packages/toolkit/src/commands/pr.ts"])).toEqual([
-      "scout-evals",
       "temporal-worker",
     ]);
   });
@@ -181,11 +178,9 @@ describe("selectImageTargets", () => {
     expect(await select(["packages/birmel/package.json"])).toEqual(["birmel"]);
   });
 
-  test("selects both Scout images for its shared base TypeScript config", async () => {
-    // The evals image build copies this file and its runtime tsconfig extends
-    // it, so a change to it must rebuild scout-evals alongside scout-for-lol.
+  test("selects Scout for its shared base TypeScript config", async () => {
     expect(await select(["packages/scout-for-lol/tsconfig.base.json"])).toEqual(
-      ["scout-evals", "scout-for-lol"],
+      ["scout-for-lol"],
     );
   });
 
@@ -472,7 +467,7 @@ describe("patch attribution", () => {
     // rebuild images that never resolve the patched package.
     expect(
       await select([
-        "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.3.patch",
+        "patches/@lng2004%2Fnode-datachannel@0.32.3-20260815.5.patch",
       ]),
     ).toEqual([
       "discord-plays-mario-kart",
@@ -484,7 +479,7 @@ describe("patch attribution", () => {
   test("a patch resolved through several packages selects only those images", async () => {
     expect(
       await select(["patches/@openrouter%2Fai-sdk-provider@3.0.0.patch"]),
-    ).toEqual(["birmel", "scout-evals", "scout-for-lol", "temporal-worker"]);
+    ).toEqual(["birmel", "scout-for-lol", "temporal-worker"]);
   });
 
   test("a patch for a dep outside every image closure selects nothing", async () => {

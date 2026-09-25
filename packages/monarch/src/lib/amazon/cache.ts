@@ -62,9 +62,9 @@ async function readCacheFile(): Promise<AmazonCache | null> {
     LEGACY_AMAZON_ORDERS_PATH,
   );
   const file = Bun.file(cachePath);
-  if (!(await file.exists())) return null;
-
-  return parseAmazonCache(JSON.parse(await file.text()));
+  return (await file.exists())
+    ? parseAmazonCache(JSON.parse(await file.text()))
+    : null;
 }
 
 // Reads either schema. A v1 cache is migrated, not discarded: returning null

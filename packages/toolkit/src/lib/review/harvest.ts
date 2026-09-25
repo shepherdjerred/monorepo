@@ -148,8 +148,7 @@ export function harvestVerdict(input: {
     };
   }
   const pipelineNumber = pipelineNumberFromTargetUrl(input.gate.targetUrl);
-  if (pipelineNumber === null) {
-    return { retryable: false, reason: "gate status names no CI pipeline" };
-  }
-  return { retryable: true, pipelineNumber };
+  return pipelineNumber === null
+    ? { retryable: false, reason: "gate status names no CI pipeline" }
+    : { retryable: true, pipelineNumber };
 }

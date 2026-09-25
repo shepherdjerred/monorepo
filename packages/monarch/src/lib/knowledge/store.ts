@@ -153,9 +153,9 @@ function parseHintLine(content: string): ParsedHint | undefined {
   }
   categoryName = categoryName.replace(/\.+$/, "").trim();
 
-  if (categoryName === "") return undefined;
-
-  return { merchantNames, description, categoryName };
+  return categoryName === ""
+    ? undefined
+    : { merchantNames, description, categoryName };
 }
 
 export function parseHintsToKB(

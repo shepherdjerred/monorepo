@@ -23,6 +23,7 @@ import type {
   ScoutMatchObservationV2Result,
   ScoutMatchPipelineStateV2Result,
   ScoutMatchReceiptsV2Input,
+  ScoutMintedIntentsV2Result,
   ScoutReceiptsV2Result,
   ScoutTournamentResultV2Result,
 } from "#src/activity-contracts-v2.ts";
@@ -75,7 +76,7 @@ export type ScoutV2MatchStore = {
   applied: string[];
   calls: string[];
   completedClaims: Set<string>;
-  /** Whether this match belongs to a tournament-code custom game. */
+  /** Whether this match belongs to a managed custom game. */
   tournamentMatch: boolean;
   /** The committed delivery mode the resume point and the commit report. */
   deliveryMode: MatchDeliveryMode;
@@ -370,6 +371,14 @@ export function scoutV2MatchActivityStubs(store: ScoutV2MatchStore) {
         // Workflow resumes from history without re-running discovery.
         throw new Error("maintenance attempt failed");
       }
+    },
+    mintPostmatchNotificationIntentsV2: (): ScoutMintedIntentsV2Result => {
+      record("mintPostmatchNotificationIntentsV2");
+      // The real Activity is read-gated, so a resumed run mints nothing new;
+      // the store counts calls, which is what the ordering tests assert on.
+      return store.deliveryMode === "silent-backfill"
+        ? { minted: 0, existing: 0, conflicts: 0, silent: 1 }
+        : { minted: 1, existing: 0, conflicts: 0, silent: 0 };
     },
     planMatchFanOutV2: (): ScoutFanOutV2Result => {
       record("planMatchFanOutV2");

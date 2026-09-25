@@ -31,11 +31,20 @@ vi.doMock("#src/league/model/rank.ts", () => ({
   },
 }));
 
+// Builder fixtures exercise layout transforms. Keep their mastery dependency
+// fixture-backed as well, rather than reaching the production Prisma singleton.
+vi.doMock("#src/league/tasks/prematch/loading-screen-mastery.ts", () => ({
+  fetchParticipantMasteries: async () => new Map(),
+  withSelectedChampionMastery: () => ({}),
+}));
+
 const { buildLoadingScreenData, fetchParticipantRanks } =
   await import("#src/league/tasks/prematch/loading-screen-builder.ts");
 
 const currentDir = new URL(".", import.meta.url).pathname;
 const realS3ClassicAramMayhemFixture = `${currentDir}testdata/spectator-classic-aram-mayhem-s3.json`;
+const realS3ClashFixture = `${currentDir}testdata/spectator-clash-s3.json`;
+const realS3AramClashFixture = `${currentDir}testdata/spectator-aram-clash-s3.json`;
 
 beforeEach(() => {
   rejectRankFetch = false;
@@ -299,6 +308,71 @@ describe("buildLoadingScreenData layout variants", () => {
     expect(trackedParticipant.isTrackedPlayer).toBe(true);
     expect("bans" in parsed).toBe(false);
     expect("isRanked" in parsed).toBe(false);
+  });
+
+  test("builds the captured production S3 Clash lobby as standard", async () => {
+    // Captured from scout-prod/prematch/2026/09/19/5645340874/spectator-data.json.
+    const gameInfo = await loadSpectatorPayload(realS3ClashFixture);
+    const trackedPuuid = gameInfo.participants[0]?.puuid;
+    if (trackedPuuid === null || trackedPuuid === undefined) {
+      throw new Error("Real Clash fixture has no tracked PUUID");
+    }
+
+    expect(gameInfo.gameId).toBe(5_645_340_874);
+    expect(gameInfo.gameQueueConfigId).toBe(700);
+    expect(gameInfo.gameType).toBe("CUSTOM");
+    expect(gameInfo.gameMode).toBe("CLASSIC");
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set([trackedPuuid]),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.layout).toBe("standard");
+    expect(parsed.queueType).toBe("clash");
+    expect(parsed.mapName).toBe("Summoner's Rift");
+    expect(parsed.participants).toHaveLength(10);
+    if (parsed.layout !== "standard") {
+      throw new Error("Expected standard Clash loading screen data");
+    }
+    expect(parsed.bans).toHaveLength(10);
+    expect(
+      parsed.participants.some((participant) => participant.isTrackedPlayer),
+    ).toBe(true);
+  });
+
+  test("builds the captured production S3 ARAM Clash lobby as ARAM", async () => {
+    // Captured from scout-prod/prematch/2026/08/23/5627356114/spectator-data.json.
+    const gameInfo = await loadSpectatorPayload(realS3AramClashFixture);
+    const trackedPuuid = gameInfo.participants.find(
+      (participant) => participant.puuid !== null,
+    )?.puuid;
+    if (trackedPuuid === undefined || trackedPuuid === null) {
+      throw new Error("Real ARAM Clash fixture has no tracked PUUID");
+    }
+
+    expect(gameInfo.gameId).toBe(5_627_356_114);
+    expect(gameInfo.gameQueueConfigId).toBe(720);
+    expect(gameInfo.gameType).toBe("CUSTOM");
+    expect(gameInfo.gameMode).toBe("ARAM");
+
+    const result = await buildLoadingScreenData(
+      gameInfo,
+      new Set([trackedPuuid]),
+      "AMERICA_NORTH",
+    );
+
+    const parsed = LoadingScreenDataSchema.parse(result);
+    expect(parsed.layout).toBe("aram");
+    expect(parsed.queueType).toBe("aram clash");
+    expect(parsed.mapName).toBe("Howling Abyss");
+    expect(parsed.participants).toHaveLength(10);
+    if (parsed.layout !== "aram") {
+      throw new Error("Expected ARAM Clash loading screen data");
+    }
+    expect(parsed.bans).toHaveLength(0);
   });
 });
 

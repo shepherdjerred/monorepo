@@ -37,7 +37,9 @@ async function collectNewMatchesForPlayer(
     matchHistoryReadCount(requiredForActiveDare),
   );
   if (recentMatchIds === undefined) {
-    throw new Error(`Match history is unavailable for ${puuid}`);
+    // No PUUID in the message: Bugsink groups issues on it, and the catch
+    // below already tags the event with puuid and playerAlias.
+    throw new Error("Match history is unavailable");
   }
   await updateLastCheckedAt(puuid, currentTime);
   if (recentMatchIds.length === 0) {

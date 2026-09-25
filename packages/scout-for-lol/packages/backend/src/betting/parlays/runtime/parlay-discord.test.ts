@@ -9,7 +9,7 @@ import {
 import { buildSettlementMessage } from "#src/betting/notify/outcome-message.ts";
 import { buildParlayButtons } from "#src/betting/parlays/parlay-components.ts";
 import { buildParlayContent } from "#src/betting/parlays/parlay-line.ts";
-import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
 
 const subjects = ParlaySubjectsSchema.parse([
   {

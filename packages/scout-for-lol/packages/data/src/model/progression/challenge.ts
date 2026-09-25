@@ -7,12 +7,13 @@ import type {
   ChallengeEvidenceMatch,
   ChallengeProgress,
 } from "#src/model/progression/challenge-public.ts";
-import { validateDistinctGoal } from "#src/model/progression/challenge-refinements.ts";
+import {
+  validateContractComplexity,
+  validateDistinctGoal,
+} from "#src/model/progression/challenge-refinements.ts";
 
 export const CHALLENGE_CONTRACT_VERSION = 1;
 export const CHALLENGE_EVALUATOR_VERSION = "challenge-evaluator-1" as const;
-const MAX_CHALLENGE_DEPTH = 12;
-const MAX_CHALLENGE_NODES = 80;
 
 export const ChallengeComparisonOperatorSchema = z.enum([
   "eq",
@@ -43,6 +44,7 @@ export const ChallengeNumericFieldSchema = z.enum([
   "crowd_control_time",
   "longest_life",
   "total_time_dead",
+  "placement",
 ]);
 export type ChallengeNumericField = z.infer<typeof ChallengeNumericFieldSchema>;
 
@@ -184,38 +186,6 @@ export const ChallengeProgressGoalSchema: z.ZodType<ChallengeProgressGoal> =
     ]),
   );
 
-type ContractComplexity = { nodes: number; depth: number };
-
-function predicateComplexity(
-  predicate: ChallengeMatchPredicate,
-): ContractComplexity {
-  if (predicate.kind === "not") {
-    const child = predicateComplexity(predicate.predicate);
-    return { nodes: child.nodes + 1, depth: child.depth + 1 };
-  }
-  if (predicate.kind === "all" || predicate.kind === "any") {
-    const children = predicate.predicates.map((child) =>
-      predicateComplexity(child),
-    );
-    return {
-      nodes: 1 + children.reduce((total, child) => total + child.nodes, 0),
-      depth: 1 + Math.max(...children.map((child) => child.depth)),
-    };
-  }
-  return { nodes: 1, depth: 1 };
-}
-
-function goalComplexity(goal: ChallengeProgressGoal): ContractComplexity {
-  if (goal.kind === "all" || goal.kind === "any") {
-    const children = goal.goals.map((child) => goalComplexity(child));
-    return {
-      nodes: 1 + children.reduce((total, child) => total + child.nodes, 0),
-      depth: 1 + Math.max(...children.map((child) => child.depth)),
-    };
-  }
-  return { nodes: 1, depth: 1 };
-}
-
 export const ChallengeContractV1Schema = z
   .strictObject({
     version: z.literal(CHALLENGE_CONTRACT_VERSION),
@@ -226,22 +196,7 @@ export const ChallengeContractV1Schema = z
     matchPredicate: ChallengeMatchPredicateSchema,
     progressGoal: ChallengeProgressGoalSchema,
   })
-  .superRefine((contract, context) => {
-    const predicate = predicateComplexity(contract.matchPredicate);
-    const goal = goalComplexity(contract.progressGoal);
-    if (predicate.nodes + goal.nodes > MAX_CHALLENGE_NODES) {
-      context.addIssue({
-        code: "custom",
-        message: `Challenge contracts may contain at most ${MAX_CHALLENGE_NODES.toString()} nodes`,
-      });
-    }
-    if (Math.max(predicate.depth, goal.depth) > MAX_CHALLENGE_DEPTH) {
-      context.addIssue({
-        code: "custom",
-        message: `Challenge contracts may be at most ${MAX_CHALLENGE_DEPTH.toString()} levels deep`,
-      });
-    }
-  });
+  .superRefine(validateContractComplexity);
 export type ChallengeContractV1 = z.infer<typeof ChallengeContractV1Schema>;
 
 function compare(
@@ -265,15 +220,32 @@ function compare(
   }
 }
 
+function predicateMatchesAny(
+  predicate: ChallengeMatchPredicate,
+  test: (predicate: ChallengeMatchPredicate) => boolean,
+): boolean {
+  if (test(predicate)) return true;
+  return predicate.kind === "not"
+    ? predicateMatchesAny(predicate.predicate, test)
+    : (predicate.kind === "all" || predicate.kind === "any") &&
+        predicate.predicates.some((child) => predicateMatchesAny(child, test));
+}
+
 export function challengeNeedsTimeline(
   predicate: ChallengeMatchPredicate,
 ): boolean {
-  if (predicate.kind === "timeline_event_count") return true;
-  if (predicate.kind === "not")
-    return challengeNeedsTimeline(predicate.predicate);
-  return (
-    (predicate.kind === "all" || predicate.kind === "any") &&
-    predicate.predicates.some((child) => challengeNeedsTimeline(child))
+  return predicateMatchesAny(
+    predicate,
+    (child) => child.kind === "timeline_event_count",
+  );
+}
+
+export function challengeNeedsPlacement(
+  predicate: ChallengeMatchPredicate,
+): boolean {
+  return predicateMatchesAny(
+    predicate,
+    (child) => child.kind === "numeric" && child.field === "placement",
   );
 }
 
@@ -293,12 +265,13 @@ export function evaluateChallengePredicate(
       return predicate.championIds.includes(match.championId);
     case "role_in":
       return predicate.roles.includes(match.role);
-    case "numeric":
-      return compare(
-        match[predicate.field],
-        predicate.operator,
-        predicate.threshold,
+    case "numeric": {
+      const value = match[predicate.field];
+      return (
+        value !== null &&
+        compare(value, predicate.operator, predicate.threshold)
       );
+    }
     case "timeline_event_count":
       return compare(
         match.timelineEventCounts[predicate.eventType]?.[predicate.role] ?? 0,
@@ -314,7 +287,12 @@ export function evaluateChallengePredicate(
         evaluateChallengePredicate(child, match),
       );
     case "not":
-      return !evaluateChallengePredicate(predicate.predicate, match);
+      return (
+        !(
+          match.placement === null &&
+          challengeNeedsPlacement(predicate.predicate)
+        ) && !evaluateChallengePredicate(predicate.predicate, match)
+      );
   }
 }
 
@@ -325,10 +303,9 @@ function distinctMatchValue(
   if (goal.dimension === "champions" || goal.explicitField === "champion") {
     return match.championId.toString();
   }
-  if (goal.dimension === "roles" || goal.explicitField === "role") {
-    return match.role;
-  }
-  return match.queue;
+  return goal.dimension === "roles" || goal.explicitField === "role"
+    ? match.role
+    : match.queue;
 }
 
 function longestTrueStreak(matches: readonly boolean[]): number {
@@ -339,6 +316,78 @@ function longestTrueStreak(matches: readonly boolean[]): number {
     best = Math.max(best, current);
   }
   return best;
+}
+
+function evaluateDistinctGoal(
+  goal: Extract<ChallengeProgressGoal, { kind: "distinct" }>,
+  matches: readonly ChallengeEvidenceMatch[],
+  matched: readonly boolean[],
+): ChallengeProgress {
+  if (goal.catalog !== null) {
+    throw new Error(
+      "Challenge distinct catalog must be frozen before evaluation",
+    );
+  }
+  const coveredValues = new Set(
+    matches
+      .filter((_match, index) => matched[index] === true)
+      .map((match) => distinctMatchValue(goal, match)),
+  );
+  const covered = goal.requiredValues.filter((entry) =>
+    coveredValues.has(entry.value),
+  );
+  const missing = goal.requiredValues.filter(
+    (entry) => !coveredValues.has(entry.value),
+  );
+  return {
+    kind: "distinct",
+    current: covered.length,
+    target: goal.target,
+    covered,
+    missing,
+    completed: covered.length >= goal.target,
+  };
+}
+
+function aggregateNumericField(
+  field: ChallengeNumericField,
+  matches: readonly ChallengeEvidenceMatch[],
+  matched: readonly boolean[],
+  reducer: "sum" | "maximum",
+): number {
+  const values: number[] = [];
+  for (const [index, match] of matches.entries()) {
+    if (matched[index] === true && match[field] !== null) {
+      values.push(match[field]);
+    }
+  }
+  if (reducer === "sum") {
+    return values.reduce((total, value) => total + value, 0);
+  }
+  return values.length === 0 ? 0 : Math.max(0, ...values);
+}
+
+function evaluateScalarGoal(
+  goal: Extract<
+    ChallengeProgressGoal,
+    { kind: "count" | "sum" | "maximum" | "consecutive_streak" }
+  >,
+  matches: readonly ChallengeEvidenceMatch[],
+  matched: readonly boolean[],
+): ChallengeProgress {
+  const current =
+    goal.kind === "count"
+      ? matched.filter(Boolean).length
+      : goal.kind === "consecutive_streak"
+        ? longestTrueStreak(matched)
+        : aggregateNumericField(goal.field, matches, matched, goal.kind);
+  return {
+    kind: "scalar",
+    reducer: goal.kind,
+    current,
+    target: goal.target,
+    completed: current >= goal.target,
+  };
 }
 
 function evaluateGoal(
@@ -361,54 +410,9 @@ function evaluateGoal(
     };
   }
 
-  if (goal.kind === "distinct") {
-    if (goal.catalog !== null) {
-      throw new Error(
-        "Challenge distinct catalog must be frozen before evaluation",
-      );
-    }
-    const coveredValues = new Set(
-      matches
-        .filter((_match, index) => matched[index] === true)
-        .map((match) => distinctMatchValue(goal, match)),
-    );
-    const covered = goal.requiredValues.filter((entry) =>
-      coveredValues.has(entry.value),
-    );
-    const missing = goal.requiredValues.filter(
-      (entry) => !coveredValues.has(entry.value),
-    );
-    return {
-      kind: "distinct",
-      current: covered.length,
-      target: goal.target,
-      covered,
-      missing,
-      completed: covered.length >= goal.target,
-    };
-  }
-
-  let current: number;
-  if (goal.kind === "count") {
-    current = matched.filter(Boolean).length;
-  } else if (goal.kind === "consecutive_streak") {
-    current = longestTrueStreak(matched);
-  } else {
-    const values = matches
-      .filter((_match, index) => matched[index] === true)
-      .map((match) => match[goal.field]);
-    current =
-      goal.kind === "sum"
-        ? values.reduce((total, value) => total + value, 0)
-        : Math.max(0, ...values);
-  }
-  return {
-    kind: "scalar",
-    reducer: goal.kind,
-    current,
-    target: goal.target,
-    completed: current >= goal.target,
-  };
+  return goal.kind === "distinct"
+    ? evaluateDistinctGoal(goal, matches, matched)
+    : evaluateScalarGoal(goal, matches, matched);
 }
 
 export function evaluateChallengeContract(

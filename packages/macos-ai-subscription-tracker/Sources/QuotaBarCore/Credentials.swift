@@ -54,6 +54,8 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
   private let grokHome: URL?
   private let cursorStateDatabase: URL?
   private let claudeKeychain: any KeychainReading
+  private let museKeychain: any KeychainReading
+  private let museKeychainCache: MuseKeychainCredentialCache
   private let selectionLock = NSLock()
   private var rejectedTokens: [ProviderID: Set<String>] = [:]
 
@@ -63,7 +65,9 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     kimiCodeHome: URL? = nil,
     grokHome: URL? = nil,
     cursorStateDatabase: URL? = nil,
-    claudeKeychain: any KeychainReading = SecurityToolKeychainClient()
+    claudeKeychain: any KeychainReading = SecurityToolKeychainClient(),
+    museKeychain: any KeychainReading = SecurityToolKeychainClient(),
+    dateProvider: @escaping @Sendable () -> Date = { Date.now }
   ) {
     self.fileManager = fileManager
     self.homeDirectory = homeDirectory ?? fileManager.homeDirectoryForCurrentUser
@@ -71,6 +75,8 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     self.grokHome = Self.configuredHome(grokHome, environmentKey: "GROK_HOME")
     self.cursorStateDatabase = cursorStateDatabase
     self.claudeKeychain = claudeKeychain
+    self.museKeychain = museKeychain
+    self.museKeychainCache = MuseKeychainCredentialCache(dateProvider: dateProvider)
   }
 
   private static func configuredHome(_ explicit: URL?, environmentKey: String) -> URL? {
@@ -95,6 +101,7 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
     case .antigravity: credential = nil
     case .cursor: credential = try readCursor(excluding: excludedTokens)
     case .kimi: credential = try readCurrentKimiCredential(excluding: excludedTokens)
+    case .muse: credential = try readMuse(excluding: excludedTokens)
     case .grok:
       credential = try GrokCLICredentialDiscovery.read(
         grokHome: grokHome,
@@ -401,5 +408,82 @@ public final class LocalCredentialStore: CredentialStore, @unchecked Sendable {
       throw QuotaError.commandFailed("SQLite")
     }
     return value
+  }
+}
+
+private extension LocalCredentialStore {
+  var museAuthFileURL: URL {
+    let environment = ProcessInfo.processInfo.environment
+    if let override = environment["MUSE_AUTH_PATH"], !override.isEmpty {
+      return URL(fileURLWithPath: override)
+    }
+    if let configured = environment["XDG_CONFIG_HOME"], !configured.isEmpty {
+      return URL(fileURLWithPath: configured, isDirectory: true)
+        .appendingPathComponent("muse/auth.json")
+    }
+    return homeDirectory.appendingPathComponent(".config/muse/auth.json")
+  }
+
+  func readMuse(excluding excludedTokens: Set<String>) throws -> ProviderCredential? {
+    guard let file = try decodeFile(MuseAuthFile.self, at: museAuthFileURL, provider: .muse)
+    else { return nil }
+    let source = museAuthFileURL.path
+    if let token = file.providers?.meta?.oauthToken {
+      let credential = try makeCredential(token, source: source)
+      return excludedTokens.contains(credential.accessToken) ? nil : credential
+    }
+    guard file.providers?.meta?.usesKeychain == true else { return nil }
+    // `muse` rewrites auth.json alongside the keychain item on rotation, so the file mtime is
+    // a silent rotation signal: reuse the cached token between rotations instead of prompting.
+    let fileMTime = museAuthFileMTime()
+    if let cached = museKeychainCache.credential(
+      fileMTime: fileMTime, excluding: excludedTokens
+    ) {
+      return cached
+    }
+    if museKeychainCache.isReadSuppressed(fileMTime: fileMTime) {
+      throw QuotaError.commandFailed("security")
+    }
+    let data: Data?
+    do {
+      data = try museKeychain.read(service: "ai.meta.dev.credentials", account: "meta")
+    } catch {
+      museKeychainCache.recordFailure(fileMTime: fileMTime)
+      throw error
+    }
+    guard let data else {
+      museKeychainCache.clear()
+      return nil
+    }
+    let bundle: MuseKeychainBundle
+    do {
+      bundle = try decode(MuseKeychainBundle.self, from: data, provider: .muse)
+    } catch {
+      // A paid-for read that decoded to nothing usable backs off like any failed read.
+      museKeychainCache.recordFailure(fileMTime: fileMTime)
+      throw error
+    }
+    guard let token = bundle.oauthToken else {
+      museKeychainCache.clear()
+      museKeychainCache.recordFailure(fileMTime: fileMTime)
+      return nil
+    }
+    let credential = try makeCredential(token, source: "macOS Keychain")
+    museKeychainCache.store(credential, fileMTime: fileMTime)
+    guard !excludedTokens.contains(credential.accessToken) else {
+      // The keychain still holds the token that just failed: suppress re-reads until rotation
+      // instead of prompting for the same unusable token on every poll.
+      museKeychainCache.recordFailure(fileMTime: fileMTime)
+      return nil
+    }
+    return credential
+  }
+
+  private func museAuthFileMTime() -> Date? {
+    guard
+      let attributes = try? fileManager.attributesOfItem(atPath: museAuthFileURL.path),
+      let mtime = attributes[.modificationDate] as? Date
+    else { return nil }
+    return mtime
   }
 }

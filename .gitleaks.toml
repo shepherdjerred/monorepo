@@ -50,12 +50,19 @@ paths = [
   '''node_modules/''',
   '''/dist/''',
   '''/target/''',
+  # Storybook output is gitignored generated code assembled from already-scanned
+  # source and third-party dependencies.
+  '''/storybook-static/''',
   '''\.turbo/''',
   # Storybook's bundled output; `e.key,n=...` in a minified chunk reads as a
   # generic API key.
   '''storybook-static/''',
   '''\.venv/''',
   '''\.moon/''',
+  # Built static-site bundles (gitignored) — the design-system Storybook build
+  # writes storybook-static/ while the parallel full-tree scan runs, and the
+  # bundled vendor JS trips generic-api-key. Same race as the logs/ entry below.
+  '''storybook-static/''',
   # Scout test/runtime logs are gitignored outputs and may be written while the
   # parallel source scan runs. Staged source still goes through `gitleaks protect`.
   '''packages/scout-for-lol/.*/logs/''',

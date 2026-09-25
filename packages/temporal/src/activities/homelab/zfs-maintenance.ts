@@ -137,10 +137,9 @@ export function selectZfsCollectorPods(
     resourceDescription: "zfs-zpool-collector",
     requireExactlyOneReadyPodPerNode: true,
   };
-  if (expectedNodes !== undefined) {
-    return selectRunningReadyNodePods(pods, { ...context, expectedNodes });
-  }
-  return selectRunningReadyNodePods(pods, context);
+  return expectedNodes === undefined
+    ? selectRunningReadyNodePods(pods, context)
+    : selectRunningReadyNodePods(pods, { ...context, expectedNodes });
 }
 
 export function parseManagedZfsPools(

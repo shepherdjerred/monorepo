@@ -21,6 +21,7 @@ import {
   scoutWorkflowStartRowToRecord,
 } from "#src/database/durable/workflow-start-row.ts";
 import { dateFromIsoInstant } from "#src/database/durable/row-values.ts";
+import { scoutDurableWorkflowStartAcceptances } from "#src/metrics/durable-pipeline.ts";
 
 /**
  * Repository for ScoutWorkflowStart.
@@ -161,7 +162,7 @@ export type RecordWorkflowStartAcceptedResult =
     };
 
 /**
- * Record that Temporal accepted the start, on the request that asked for it.
+ * Record that Temporal accepted the start, and count what the handoff said.
  *
  * Guarded on the not-yet-accepted row, so exactly one acceptance is ever
  * written and it is never overwritten. When the guard matches nothing the
@@ -170,8 +171,29 @@ export type RecordWorkflowStartAcceptedResult =
  * `answered-by-another-run`, carrying the acceptance that stands. Both are
  * reachable whenever a request has two drivers — the requester and whoever
  * adopted it — and neither loses a write, so neither is suppressed.
+ *
+ * Every acceptance passes through here, which is why the counter is here
+ * rather than at each caller: the operator dispatcher and v1's recorded-start
+ * helper both land on this function, and an instrument at either would miss
+ * the other. `answered-by-another-run` is the series the beta soak is for —
+ * see the counter for what it means and why it is deliberately not alertable.
+ * The throws below are not counted, matching `recordReceipt`: a broken
+ * invariant is not one of the answers the table can legitimately give.
  */
 export async function recordWorkflowStartAccepted(
+  db: Db,
+  args: {
+    requestId: WorkflowStartRequestId;
+    acceptedAt: IsoInstant;
+    runId: WorkflowRunId | null;
+  },
+): Promise<RecordWorkflowStartAcceptedResult> {
+  const result = await applyWorkflowStartAcceptance(db, args);
+  scoutDurableWorkflowStartAcceptances.inc({ outcome: result.outcome });
+  return result;
+}
+
+async function applyWorkflowStartAcceptance(
   db: Db,
   args: {
     requestId: WorkflowStartRequestId;

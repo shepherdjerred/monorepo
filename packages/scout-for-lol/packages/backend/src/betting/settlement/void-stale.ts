@@ -16,7 +16,7 @@ import {
   parseStoredIdentity,
   reportCorruptBucksRow,
 } from "#src/betting/settlement/corrupt-identity.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
 import { closeBettingPoolById } from "#src/betting/settlement/sweep.ts";
 import {

@@ -129,14 +129,12 @@ function simctlList(filter: string): Map<string, SimDevice[]> {
 /** iOS runtime sort key, e.g. "…SimRuntime.iOS-18-2" -> [18, 2]. */
 function runtimeVersion(runtimeId: string): number[] {
   const match = /iOS-(\d+)-(\d+)/.exec(runtimeId);
-  if (match === null) return [0, 0];
-  return [Number(match[1]), Number(match[2])];
+  return match === null ? [0, 0] : [Number(match[1]), Number(match[2])];
 }
 
 function compareVersion(a: number[], b: number[]): number {
   const major = (a[0] ?? 0) - (b[0] ?? 0);
-  if (major !== 0) return major;
-  return (a[1] ?? 0) - (b[1] ?? 0);
+  return major === 0 ? (a[1] ?? 0) - (b[1] ?? 0) : major;
 }
 
 function ensureBootedSimulator(): SimDevice {

@@ -68,7 +68,7 @@ export function includeMatchForReportGraph(
     match.info.gameMode,
     match.info.gameType,
   );
-  return queue === undefined ? false : queueFilter.includes(queue);
+  return queue !== undefined && queueFilter.includes(queue);
 }
 
 export async function generateReportGraph(

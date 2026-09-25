@@ -1,0 +1,232 @@
+{
+  "version": 1,
+  "stage": "prod",
+  "capturedAt": "2026-09-21T04:19:56.909Z",
+  "conversations": [
+    {
+      "conversationId": "2b839cef-1297-4dd1-a3b0-6453a63fa1f3",
+      "leafId": "45f3847f-05e4-4a82-87c9-46c0f77e5152",
+      "kind": "question",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "e7cc8905-f74b-4be1-8818-f4c5aab15737",
+          "answerMessageId": "50a4b080-d1c5-4196-b9c5-d9aeb6640b3d"
+        },
+        {
+          "index": 1,
+          "questionMessageId": "213cdd41-ef2f-4946-9b8b-c9775ec14fa2",
+          "answerMessageId": "3c149d24-6dd9-4ae8-8ce8-093911c03f5d"
+        },
+        {
+          "index": 2,
+          "questionMessageId": "29a4088b-bb83-4bfe-8bb9-51c9c9a1d9d8",
+          "answerMessageId": "1c44381c-6e75-4641-bd3e-5f95c25e7da8"
+        },
+        {
+          "index": 3,
+          "questionMessageId": "c1580afa-c67c-4b04-a1c2-ef4589e31537",
+          "answerMessageId": "61f79d5d-074e-4785-82be-c0d68a532537"
+        },
+        {
+          "index": 4,
+          "questionMessageId": "32b1ded7-1754-4f5d-8146-805caac81392",
+          "answerMessageId": "f3434cc0-b635-4bda-8fa9-df26fc28e8eb"
+        },
+        {
+          "index": 5,
+          "questionMessageId": "55d5fe51-003d-4d0a-b371-2e9c367a26f5",
+          "answerMessageId": "62bb354c-53d7-4681-89d6-91c434b198cb"
+        },
+        {
+          "index": 6,
+          "questionMessageId": "61925817-37c9-4901-a008-a130208395bf",
+          "answerMessageId": "f6bd4fba-3521-4582-ac2d-ccf9224b8e58"
+        },
+        {
+          "index": 7,
+          "questionMessageId": "aecb799a-a8c2-4339-aa1e-e108fba541aa",
+          "answerMessageId": "652873ff-13e7-4310-96b3-0ddfa151e762"
+        },
+        {
+          "index": 8,
+          "questionMessageId": "736ff3e4-dd1c-4372-ae0a-a39a7068afe8",
+          "answerMessageId": "c5cee7ea-8d1c-4e2f-a477-68cc7084d295"
+        },
+        {
+          "index": 9,
+          "questionMessageId": "d67c6509-caff-4dc4-a50d-fbe489b8f271",
+          "answerMessageId": "2b6e5a44-b941-4863-a872-8ff5e27fadda"
+        },
+        {
+          "index": 10,
+          "questionMessageId": "66d259fd-f59f-4ba8-b5d8-4bb3d82f4cf9",
+          "answerMessageId": "f68098b1-c8bd-4e2e-bd35-0b1602697588"
+        },
+        {
+          "index": 11,
+          "questionMessageId": "81c644ee-9e41-432a-94c0-a39612026a91",
+          "answerMessageId": "0adbe938-978c-45b6-aa9b-3e9ef6fd15df"
+        },
+        {
+          "index": 12,
+          "questionMessageId": "7096c770-16d2-41a3-9155-2b8e18b39f03",
+          "answerMessageId": "86a8c0cb-3cd3-455f-bd6c-08a9733888a9"
+        },
+        {
+          "index": 13,
+          "questionMessageId": "e040fd9e-f1a5-466d-8bd7-74745fb01447",
+          "answerMessageId": "254d4b9f-e5ea-4cf8-a28f-1f0f581d845a"
+        },
+        {
+          "index": 14,
+          "questionMessageId": "e122177f-7fb2-4380-95bc-41a24d897360",
+          "answerMessageId": "9aba29a5-4540-4d79-9051-ea364a33ae51"
+        },
+        {
+          "index": 15,
+          "questionMessageId": "9b7027ed-9b85-4d1b-a0db-29d231292820",
+          "answerMessageId": "7029bc77-4475-4e59-97a2-f48559b28f0f"
+        },
+        {
+          "index": 16,
+          "questionMessageId": "3f911ada-83c0-4eb5-8968-f5c6267014f3",
+          "answerMessageId": "4eaf8db4-5367-436d-9675-deb6dd83e5ca"
+        },
+        {
+          "index": 17,
+          "questionMessageId": "dce00a0d-9daf-4709-a862-12f7fcfcd430",
+          "answerMessageId": "55e0661c-31fc-427d-ac15-135d0a4dfa35"
+        },
+        {
+          "index": 18,
+          "questionMessageId": "886bef5d-d51e-4834-a89c-60146be96190",
+          "answerMessageId": "6e2845a1-229f-42d6-844c-2346bdc95da9"
+        },
+        {
+          "index": 19,
+          "questionMessageId": "3cf5eda3-114b-463c-bb93-9d789e589617",
+          "answerMessageId": "903d751d-a4f9-444f-b653-1f5554c6462b"
+        },
+        {
+          "index": 20,
+          "questionMessageId": "45991aa0-778f-4cbe-8ead-39bb7d7f8b10",
+          "answerMessageId": "b7cf7177-cab0-4828-b9f0-8e388665efcb"
+        },
+        {
+          "index": 21,
+          "questionMessageId": "df6655c4-c06a-4d39-856c-31a21c2476d6",
+          "answerMessageId": "7faa20c4-e16f-4b6e-9582-fa9ec99d7100"
+        },
+        {
+          "index": 22,
+          "questionMessageId": "5e9848a0-de59-499a-b4e5-9d49e9767f72",
+          "answerMessageId": "8ef8d7aa-44f2-4810-8655-f26696ca6188"
+        },
+        {
+          "index": 23,
+          "questionMessageId": "701caade-f0ee-49dd-87ce-35c9892adfdc",
+          "answerMessageId": "94dd1e52-c5b8-43b7-8238-fa9a0193fa74"
+        },
+        {
+          "index": 24,
+          "questionMessageId": "dde0230e-5b04-4249-90a0-b809bc48c3d1",
+          "answerMessageId": "9d76490a-f921-40c7-97c9-8747a78cdafd"
+        },
+        {
+          "index": 25,
+          "questionMessageId": "c0fea3d4-721c-42be-80f0-088ef7549f1d",
+          "answerMessageId": "a9c0611c-8cd3-44ef-90b8-507fab126cdb"
+        },
+        {
+          "index": 26,
+          "questionMessageId": "d08fbb57-a911-4b77-9b72-78d4a404bbbe",
+          "answerMessageId": "ce81f235-d5af-4f9a-b617-ff9e53a8981d"
+        },
+        {
+          "index": 27,
+          "questionMessageId": "234aac74-a6aa-4248-9011-06ee0793693e",
+          "answerMessageId": "d47eded7-4482-48ef-b317-4019524ae658"
+        },
+        {
+          "index": 28,
+          "questionMessageId": "bd9d45ce-870d-4b0e-8f73-e68a03e35381",
+          "answerMessageId": "a7e85d7d-cd09-4503-9047-4d308cbae0c8"
+        },
+        {
+          "index": 29,
+          "questionMessageId": "0e0d49dc-a148-4088-97f4-dde77a510279",
+          "answerMessageId": "4e9c6cbb-4edf-47fa-8cdd-8d96b93e1fe1"
+        },
+        {
+          "index": 30,
+          "questionMessageId": "8f6e5508-3482-4a05-a172-bd0f522a9b7c",
+          "answerMessageId": "46560085-3d3f-4f1d-acc3-7454f240a124"
+        },
+        {
+          "index": 31,
+          "questionMessageId": "eb190272-aca0-4be9-abf0-b63da2db3074",
+          "answerMessageId": "27fb906c-c943-40ce-ae29-f03b7185ecbe"
+        },
+        {
+          "index": 32,
+          "questionMessageId": "9f76de97-3fc3-4f9d-995a-33a99a6ebe8f",
+          "answerMessageId": "e9b9ef3c-b87d-4443-8891-22e38052a90c"
+        },
+        {
+          "index": 33,
+          "questionMessageId": "bf8f4346-cbc6-4e47-9963-8c0c36385fb5",
+          "answerMessageId": "7b02b10a-053e-4c78-862b-76024620ff1b"
+        },
+        {
+          "index": 34,
+          "questionMessageId": "459f3eec-4ad0-4aeb-9ec7-849e6b18427c",
+          "answerMessageId": "13e34c18-21c8-4705-9528-cade9967892e"
+        },
+        {
+          "index": 35,
+          "questionMessageId": "37f03966-1f61-4878-9dde-8922ae91d36d",
+          "answerMessageId": "551c452f-abcf-4999-b6e4-31074cdc1390"
+        },
+        {
+          "index": 36,
+          "questionMessageId": "45f676b4-0052-4a23-bf2d-bb4d66c9c3e5",
+          "answerMessageId": "42d3b4ea-c701-449c-ae81-b1e0f468dd0a"
+        },
+        {
+          "index": 37,
+          "questionMessageId": "852226d3-f4d8-43e6-9864-06a8b2c1505f",
+          "answerMessageId": "5cf54f39-03f1-4a4c-85de-76c8200dab51"
+        },
+        {
+          "index": 38,
+          "questionMessageId": "30a3feef-c66b-43ea-9dfe-bd8b40b1b705",
+          "answerMessageId": "addcb7a8-3b00-4dab-86f4-2278a981464d"
+        },
+        {
+          "index": 39,
+          "questionMessageId": "e5af6046-2e48-460b-80b4-47b45a6ed155",
+          "answerMessageId": "45f3847f-05e4-4a82-87c9-46c0f77e5152"
+        }
+      ],
+      "note": "40 turn(s), question"
+    },
+    {
+      "conversationId": "3c004891-a282-4607-94ed-6d1a233f8058",
+      "leafId": "6a1398b0-150c-43bf-8935-c6fb6c5ff71e",
+      "kind": "question",
+      "surface": "web",
+      "guildSource": "run-payload",
+      "turns": [
+        {
+          "index": 0,
+          "questionMessageId": "4646abbb-30e7-4569-9a2c-06a107268ab2",
+          "answerMessageId": "6a1398b0-150c-43bf-8935-c6fb6c5ff71e"
+        }
+      ],
+      "note": "1 turn(s), question"
+    }
+  ]
+}

@@ -107,12 +107,11 @@ function member(userId: string) {
 
 function guard<T>(produce: () => T): Promise<T> {
   state.restCalls += 1;
-  if (state.unavailable) {
-    return Promise.reject(
-      new DiscordUpstreamError("http_error", "Discord is down", 503),
-    );
-  }
-  return Promise.resolve(produce());
+  return state.unavailable
+    ? Promise.reject(
+        new DiscordUpstreamError("http_error", "Discord is down", 503),
+      )
+    : Promise.resolve(produce());
 }
 
 const fakeRest: BotRestReader = {

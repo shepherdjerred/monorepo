@@ -98,22 +98,25 @@ presets:
         preserve-entity: 5s
       # Optional mcMMO progression path.
       # Leave disabled from use-preset until placeholder is confirmed.
-      player-variable-mod-mcmmo:
-        player-variable: "%mcmmo_power_level%"
-        player-variable-scale: 1.0
-        player-variable-tiers:
-          "0-100": 0-2
-          "101-300": 2-4
-          "301-600": 4-7
-          "601-1000": 6-10
-          "1001-99999": 8-12
-          default: 0
-        match-variable: false
-        use-variable-as-max: false
-        recheck-players: true
-        decrease-output: true
-        output-cap: 14
-        preserve-entity: 5s
+      # Commented out (not a valid second "modifiers" entry under this rule -
+      # LevelledMobs logged "Invalid modifier 'player-variable-mod-mcmmo'"
+      # every boot): re-enable as its own rule once ready to wire up.
+      # player-variable-mod-mcmmo:
+      #   player-variable: "%mcmmo_power_level%"
+      #   player-variable-scale: 1.0
+      #   player-variable-tiers:
+      #     "0-100": 0-2
+      #     "101-300": 2-4
+      #     "301-600": 4-7
+      #     "601-1000": 6-10
+      #     "1001-99999": 8-12
+      #     default: 0
+      #   match-variable: false
+      #   use-variable-as-max: false
+      #   recheck-players: true
+      #   decrease-output: true
+      #   output-cap: 14
+      #   preserve-entity: 5s
 
   lvlmodifier-custom-formula:
     name: "LVL Modifier - Custom Formula"

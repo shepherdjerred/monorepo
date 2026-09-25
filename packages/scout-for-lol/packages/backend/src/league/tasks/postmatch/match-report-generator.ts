@@ -29,6 +29,9 @@ import { toMatch, toArenaMatch } from "#src/league/model/match.ts";
 import { logErrorDetails } from "./match-report-debug.ts";
 import { fetchTimelineIfStandardMatch } from "./match-report-standard.ts";
 import { generateAiReviewIfEnabled } from "./match-report-ai-review.ts";
+import { withMvpVoteFurniture } from "#src/mvp-votes/components.ts";
+import { shouldAttachMvpVotes } from "#src/mvp-votes/eligibility.ts";
+import { ensureMatchMvpContest } from "#src/mvp-votes/vote.ts";
 import { createLogger } from "#src/logger.ts";
 import {
   saveMatchRankHistory,
@@ -317,12 +320,26 @@ async function processStandardMatch(
       ? `${completionMessage}\n\n${reviewText}`
       : completionMessage;
 
-  return {
+  const message: MessageCreateOptions = {
     files: files,
     embeds: [matchReportEmbed],
     content: messageContent,
     components: matchLinkComponents(matchId),
   };
+  if (
+    await shouldAttachMvpVotes({
+      queueType: completedMatch.queueType,
+      targetGuildIds,
+      participants: matchData.info.participants,
+      trackedPuuids: playersInMatch.map(
+        (player) => player.league.leagueAccount.puuid,
+      ),
+    })
+  ) {
+    await ensureMatchMvpContest(matchData);
+    return withMvpVoteFurniture(message, matchId);
+  }
+  return message;
 }
 
 /**

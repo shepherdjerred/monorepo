@@ -210,10 +210,9 @@ export function interpretArgoApplications(
           if (automated === undefined || automated === null) {
             return "automation=manual";
           }
-          if (automated.enabled === false) {
-            return "automation=disabled";
-          }
-          return `automation=enabled (prune=${String(automated.prune ?? false)}, selfHeal=${String(automated.selfHeal ?? false)}, allowEmpty=${String(automated.allowEmpty ?? false)})`;
+          return automated.enabled === false
+            ? "automation=disabled"
+            : `automation=enabled (prune=${String(automated.prune ?? false)}, selfHeal=${String(automated.selfHeal ?? false)}, allowEmpty=${String(automated.allowEmpty ?? false)})`;
         })(),
         app.status.operationState === undefined
           ? undefined

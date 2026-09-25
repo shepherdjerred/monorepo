@@ -15,7 +15,7 @@
     "@fontsource/roboto": "^5.2.5",
     "astro": "^7.1.5",
     "astro-seo": "^1.1.0",
-    "react": "19.2.8",
+    "react": "19.3.0",
     "typescript": "^6.0.3"
   },
   "overrides": {

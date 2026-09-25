@@ -14,7 +14,7 @@ const fixtureSnapshot = FliptSnapshotSchema.parse({ flags: fixture.flags });
 const snapshot = FliptSnapshotSchema.parse({
   flags: managedFlagInventory.flags.map((flag) => ({
     key: flag.key,
-    enabled: flag.type === "boolean" ? flag.default : false,
+    enabled: flag.type === "boolean" && flag.default,
     type: flag.type === "boolean" ? "BOOLEAN_FLAG_TYPE" : "VARIANT_FLAG_TYPE",
     rules: flag.rules,
     rollouts: [

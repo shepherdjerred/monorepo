@@ -54,20 +54,17 @@ export function initialChartKind(
     }
   }
 
-  if (preview !== null && isChartRenderKind(preview.renderKind)) {
-    return preview.renderKind;
-  }
-
-  return "BAR_CHART";
+  return preview !== null && isChartRenderKind(preview.renderKind)
+    ? preview.renderKind
+    : "BAR_CHART";
 }
 
 function initialChartOrientation(
   rawChart: VisualizationSnapshot | null,
 ): "vertical" | "horizontal" {
-  if (rawChart === null) {
-    return "vertical";
-  }
-  return rawChart.display.options?.orientation ?? "vertical";
+  return rawChart === null
+    ? "vertical"
+    : (rawChart.display.options?.orientation ?? "vertical");
 }
 
 export function initialMetricKey(
@@ -75,13 +72,10 @@ export function initialMetricKey(
   plottableCols: ReportResultColumn[],
 ): string | undefined {
   const persistedMetric = rawChart?.series[0]?.metric;
-  if (
-    persistedMetric !== undefined &&
+  return persistedMetric !== undefined &&
     plottableCols.some((column) => column.key === persistedMetric)
-  ) {
-    return persistedMetric;
-  }
-  return plottableCols[0]?.key;
+    ? persistedMetric
+    : plottableCols[0]?.key;
 }
 
 export type ExploreVisualResultProps = {

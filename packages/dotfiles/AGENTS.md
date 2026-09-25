@@ -71,10 +71,8 @@ project `AGENTS.md` or skill.
 - OpenCode uses native `AGENTS.md` and Claude-compatible discovery; do not add a
   prose copy.
 
-Keep global and root `AGENTS.md` files below 200 lines and 16 KiB. Keep nested
-project files below 120 lines and 8 KiB. Skill entrypoints should route, not
-serve as handbooks; use references or durable documentation for conditional
-detail.
+Skill entrypoints should route, not serve as handbooks; use references or
+durable documentation for conditional detail.
 
 ## Chezmoi
 

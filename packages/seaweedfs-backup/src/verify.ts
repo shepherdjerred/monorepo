@@ -10,6 +10,11 @@ export type VerificationResult = {
   hashedObjects: number;
 };
 
+// Full verification performs two R2 round trips and streams every protected
+// byte for each entry. Keep enough requests in flight to make a six-figure
+// recovery point operable while bounding sockets and response bodies.
+const VERIFY_CONCURRENCY = 16;
+
 async function sha256Object(
   store: ObjectStore,
   bucket: string,
@@ -91,17 +96,25 @@ async function verifyManifest(input: {
     );
   }
   let hashed = 0;
-  for (const entry of entries) {
-    if (
-      await verifyEntry({
-        store: input.store,
-        backupBucket: input.backupBucket,
-        bucket: input.descriptor.bucket,
-        entry,
-        hash: shouldHash(entry, input.full),
-      })
-    ) {
-      hashed += 1;
+  for (let offset = 0; offset < entries.length; offset += VERIFY_CONCURRENCY) {
+    const batch = entries.slice(offset, offset + VERIFY_CONCURRENCY);
+    const results = await Promise.allSettled(
+      batch.map((entry) =>
+        verifyEntry({
+          store: input.store,
+          backupBucket: input.backupBucket,
+          bucket: input.descriptor.bucket,
+          entry,
+          hash: shouldHash(entry, input.full),
+        }),
+      ),
+    );
+    const failed = results.find((result) => result.status === "rejected");
+    if (failed !== undefined) {
+      throw failed.reason;
+    }
+    for (const result of results) {
+      if (result.status === "fulfilled" && result.value) hashed += 1;
     }
   }
   const first = entries[0];

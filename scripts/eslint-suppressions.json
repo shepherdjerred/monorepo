@@ -1,9 +1,4 @@
 {
-  "checks/deps/check-patched-deps.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "checks/deps/check-react-version-sync.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

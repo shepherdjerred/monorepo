@@ -10,8 +10,7 @@ or the stale `file:` dependency model.
 - Field names match the upstream wire contract, including `details` and
   snake_case recurrence fields.
 - The upstream model uses Zod 3 while consumers use Zod 4. Keep explicit Zod 4
-  wire mirrors and the key-for-key drift tests; do not compose incompatible
-  schema instances or cast around them.
+  wire mirrors and the key-for-key drift tests.
 - Both `.` and `./v2` exports resolve to the same contract.
 
 ```bash

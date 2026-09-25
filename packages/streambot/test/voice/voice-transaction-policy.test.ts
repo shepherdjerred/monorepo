@@ -4,6 +4,7 @@ import {
   createStreambotVoiceTools,
 } from "@shepherdjerred/streambot/voice/voice-tools.ts";
 import { voiceToolSchemas } from "@shepherdjerred/streambot/voice/voice-tool-types.ts";
+import { VOICE_INSTRUCTIONS } from "@shepherdjerred/streambot/voice/constants.ts";
 import { VoiceMutationGate } from "@shepherdjerred/voice-assistant/mutation-gate.ts";
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import { loadConfig } from "@shepherdjerred/streambot/config/index.ts";
@@ -120,5 +121,11 @@ describe("voice transaction policy", () => {
     expect(voiceToolSchemas.setVolume.safeParse({ percent: 201 }).success).toBe(
       false,
     );
+  });
+
+  test("instructs the model to speak titles instead of bare 1/2/3", () => {
+    expect(VOICE_INSTRUCTIONS).toContain("actual titles");
+    expect(VOICE_INSTRUCTIONS).toContain("same work");
+    expect(VOICE_INSTRUCTIONS).not.toContain("ask for first, second, or third");
   });
 });

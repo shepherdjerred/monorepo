@@ -19,6 +19,7 @@ import {
   classifyMediaKind,
   type MediaKind,
   type MediaKindDecision,
+  type MediaKindDecidedBy,
   type MediaKindPass,
   type MediaMode,
 } from "@shepherdjerred/streambot/sources/media-kind.ts";
@@ -182,14 +183,11 @@ export function selectedHasVideoStream(info: YtdlpInfo): boolean | undefined {
     // Only an explicit `"none"` on EVERY entry is a denial. A merge whose entries left `vcodec`
     // unset says nothing, and answering `false` there would be the tri-state collapse described
     // above — with the video transport as the casualty.
-    return requested.every((format) => isAbsentCodec(format.vcodec))
-      ? false
-      : undefined;
+    return (
+      !requested.every((format) => isAbsentCodec(format.vcodec)) && undefined
+    );
   }
-  if (isRealCodec(info.vcodec)) {
-    return true;
-  }
-  return isAbsentCodec(info.vcodec) ? false : undefined;
+  return isRealCodec(info.vcodec) || (!isAbsentCodec(info.vcodec) && undefined);
 }
 
 /**
@@ -281,6 +279,7 @@ export function classifyYtdlpInfo(
   info: YtdlpInfo,
   mode: MediaMode | undefined,
   pass: MediaKindPass,
+  spoken?: boolean,
 ): MediaKindDecision {
   return classifyMediaKind(
     {
@@ -291,6 +290,7 @@ export function classifyYtdlpInfo(
       artist: info.artist,
       extractorKey: info.extractor_key,
       provider: ytdlpProvider(info),
+      ...(spoken === true ? { spoken: true } : {}),
     },
     pass,
   );
@@ -299,6 +299,8 @@ export function classifyYtdlpInfo(
 export type ToResolvedSourceOptions = {
   /** The kind {@link classifyYtdlpInfo} settled on for the pass that produced `info`. */
   readonly mediaKind: MediaKind;
+  readonly decidedBy?: MediaKindDecidedBy;
+  readonly spoken?: boolean;
 };
 
 /**
@@ -316,6 +318,10 @@ export function toResolvedSource(
     title: info.title,
     ffmpegInput: inputs.ffmpegInput,
     mediaKind: options.mediaKind,
+    ...(options.decidedBy === undefined
+      ? {}
+      : { decidedBy: options.decidedBy }),
+    ...(options.spoken === true ? { spoken: true } : {}),
     ...(inputs.ffmpegInputHeaders === undefined
       ? {}
       : { ffmpegInputHeaders: inputs.ffmpegInputHeaders }),

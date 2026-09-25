@@ -159,6 +159,77 @@ const CASES: readonly {
     expected: { kind: "video", decidedBy: "categories" },
   },
   {
+    name: "an Entertainment AI cover stays video for slash (no spoken hint)",
+    input: {
+      categories: ["Entertainment"],
+      extractorKey: "Youtube",
+      provider: "youtube",
+    },
+    pass: "audio-first",
+    expected: { kind: "video", decidedBy: "categories" },
+  },
+  {
+    name: "a spoken YouTube Entertainment cover follows the music default",
+    input: {
+      categories: ["Entertainment"],
+      extractorKey: "Youtube",
+      provider: "youtube",
+      spoken: true,
+    },
+    pass: "audio-first",
+    expected: { kind: "music", decidedBy: "spoken-youtube-tie" },
+  },
+  {
+    name: "a spoken YouTube People & Blogs upload is a music tie",
+    input: {
+      categories: ["People & Blogs"],
+      provider: "youtube",
+      spoken: true,
+    },
+    pass: "audio-first",
+    expected: { kind: "music", decidedBy: "spoken-youtube-tie" },
+  },
+  {
+    name: "a spoken YouTube Comedy upload is a music tie",
+    input: {
+      categories: ["Comedy"],
+      provider: "youtube",
+      spoken: true,
+    },
+    pass: "audio-first",
+    expected: { kind: "music", decidedBy: "spoken-youtube-tie" },
+  },
+  {
+    name: "spoken Film & Animation stays Go Live",
+    input: {
+      categories: ["Film & Animation"],
+      provider: "youtube",
+      spoken: true,
+    },
+    pass: "audio-first",
+    expected: { kind: "video", decidedBy: "categories" },
+  },
+  {
+    name: "spoken Gaming stays Go Live",
+    input: {
+      categories: ["Gaming"],
+      provider: "youtube",
+      spoken: true,
+    },
+    pass: "audio-first",
+    expected: { kind: "video", decidedBy: "categories" },
+  },
+  {
+    name: "spoken Entertainment on a non-YouTube URL is still video",
+    input: {
+      categories: ["Entertainment"],
+      provider: "url",
+      spoken: true,
+    },
+    pass: "audio-first",
+    expected: { kind: "video", decidedBy: "categories" },
+  },
+  {
     name: "YouTube with no other signal leans music",
     input: { extractorKey: "Youtube", provider: "youtube" },
     pass: "audio-first",

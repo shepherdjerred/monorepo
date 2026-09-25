@@ -216,15 +216,18 @@ function agentTaskReportInput(
   runResult: RunAgentTaskResult,
   title: string,
 ): ActivityReportInput {
-  if (runResult.contractVersion === 1) {
-    return legacyReportInput(input, runResult, title);
-  }
-  return v2ReportInput(
-    input,
-    runResult,
-    title,
-    normalizeAgentTaskV2Result(input, runResult.payload, runResult.evidence),
-  );
+  return runResult.contractVersion === 1
+    ? legacyReportInput(input, runResult, title)
+    : v2ReportInput(
+        input,
+        runResult,
+        title,
+        normalizeAgentTaskV2Result(
+          input,
+          runResult.payload,
+          runResult.evidence,
+        ),
+      );
 }
 
 export type AgentTaskReportDeliveryWorkflowOptions = {

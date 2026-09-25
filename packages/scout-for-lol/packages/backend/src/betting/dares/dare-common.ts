@@ -89,10 +89,9 @@ export async function loadChallengerDare(
   if (dare === undefined) {
     return { kind: "not_found" };
   }
-  if (dare.challengerDiscordId !== input.challengerDiscordId) {
-    return { kind: "not_challenger" };
-  }
-  return { kind: "ok", dare };
+  return dare.challengerDiscordId === input.challengerDiscordId
+    ? { kind: "ok", dare }
+    : { kind: "not_challenger" };
 }
 
 /**
@@ -123,10 +122,9 @@ export async function loadTargetDare(
   if (target === undefined) {
     return { kind: "not_a_target" };
   }
-  if (target.acceptedAt !== null) {
-    return { kind: "already_accepted" };
-  }
-  return { kind: "ok", dare, target };
+  return target.acceptedAt === null
+    ? { kind: "ok", dare, target }
+    : { kind: "already_accepted" };
 }
 
 /** The code-rendered condition summary for a stored dare row — the one

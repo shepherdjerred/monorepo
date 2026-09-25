@@ -1,4 +1,4 @@
-import type { ThreadEvent, Usage as CodexUsage } from "@openai/codex-sdk";
+import type { ThreadEvent } from "@openai/codex-sdk";
 import { z } from "zod/v4";
 
 /**
@@ -34,14 +34,25 @@ export const SandboxPolicySchema = z.object({
 export type SandboxPolicy = z.infer<typeof SandboxPolicySchema>;
 
 /**
- * Runner authentication. The discriminated union is intentionally left open so
- * a later PR can add a `chatgpt-subscription` arm; this PR ships OpenRouter
- * only. The key is stripped from the child environment and injected through
- * `codexOptions.apiKey` by the adapter.
+ * Codex authentication is explicit: existing automation can route through an
+ * OpenRouter API key, while durable chats pass the complete short-lived
+ * ChatGPT subscription auth document. The adapter passes its access token to
+ * the official App Server over private stdin with ephemeral credential storage.
+ * It never writes subscription credentials into the provider's session home.
  */
-export type AgentTurnAuth = {
-  readonly kind: "openrouter";
-  readonly apiKey: string;
+export type CodexAgentTurnAuth =
+  | {
+      readonly kind: "openrouter";
+      readonly apiKey: string;
+    }
+  | {
+      readonly kind: "chatgpt-subscription";
+      readonly authJson: string;
+    };
+
+export type ClaudeAgentTurnAuth = {
+  readonly kind: "claude-subscription";
+  readonly oauthToken: string;
 };
 
 /** A single observed provider event, surfaced to the caller's `onEvent`. */
@@ -52,40 +63,75 @@ export type AgentTurnEvent = {
 };
 
 /**
- * Input shared by every in-process Codex caller. Provider credentials are
- * separated from the child environment so the SDK can authenticate without
- * making the inference credential visible to tools.
+ * Input shared by both provider adapters. Provider credentials are kept
+ * separate from the general child environment so stale or conflicting
+ * credential variables cannot silently choose a different auth path.
  */
-export type RunAgentTurnInput = {
+export type AgentTurnCommonInput = {
   readonly service: string;
   readonly callSite: string;
   readonly prompt: string;
   readonly model: string;
   readonly maxTurns: number;
-  readonly turnBudgetKind: TurnBudgetKind;
   readonly cwd: string;
-  readonly auth: AgentTurnAuth;
   readonly env: Record<string, string>;
   readonly signal: AbortSignal;
-  readonly sandboxPolicy: SandboxPolicy;
   readonly outputSchema?: Record<string, unknown>;
   /** Fail the turn when the provider completes without an agent message. */
   readonly requireFinalText?: boolean;
   /** Retain redacted completed events only for callers that derive evidence. */
   readonly captureEvidenceEvents?: boolean;
+  readonly resumeSessionId?: string;
   readonly redactTokens?: readonly (string | undefined)[];
   readonly beforeEvent: () => Promise<boolean>;
   readonly onEvent: (event: AgentTurnEvent) => void;
   readonly warn?: (message: string) => void;
   readonly errorMessagePrefix?: string;
+};
+
+export type RunCodexAgentTurnInput = AgentTurnCommonInput & {
+  readonly auth: CodexAgentTurnAuth;
+  readonly sandboxPolicy: SandboxPolicy;
+  readonly turnBudgetKind: TurnBudgetKind;
+  readonly skipGitRepoCheck?: boolean;
+  /** Optional executable wrapper used to launch the CLI under a provider uid. */
+  readonly codexPathOverride?: string;
   /** Return a diagnostic to reject a provider event, or undefined to allow it. */
   readonly eventViolation?: (event: ThreadEvent) => string | undefined;
 };
 
+export const ClaudePermissionPolicySchema = z.enum([
+  "plan",
+  "acceptEdits",
+  "bypassPermissions",
+]);
+export type ClaudePermissionPolicy = z.infer<
+  typeof ClaudePermissionPolicySchema
+>;
+
+export type RunClaudeAgentTurnInput = AgentTurnCommonInput & {
+  readonly auth: ClaudeAgentTurnAuth;
+  readonly permissionPolicy: ClaudePermissionPolicy;
+  /** Original checkpoint's cwd; mandatory when resuming cwd-indexed Claude state. */
+  readonly resumeWorkspacePath?: string;
+};
+
+export type RunAgentTurnInput =
+  | ({ readonly provider: "codex" } & RunCodexAgentTurnInput)
+  | ({ readonly provider: "claude" } & RunClaudeAgentTurnInput);
+
+export type AgentTurnUsage = {
+  readonly inputTokens: number;
+  readonly cachedInputTokens: number;
+  readonly cacheWriteInputTokens: number;
+  readonly outputTokens: number;
+  readonly reasoningTokens: number;
+};
+
 /**
- * Everything the Codex event loop produces, before any caller-specific output
- * decoding. `usage` is the summed raw Codex usage (zeroed when the run emitted
- * no completed turn); each call site projects it into its own token shape.
+ * Everything a provider event loop produces before caller-specific output
+ * decoding. Usage is normalized across providers and zeroed when a run emits
+ * no terminal usage record.
  * `finalText` is the redacted final agent message, or `undefined` when the run
  * produced none — callers decide whether that is an error.
  */
@@ -93,7 +139,7 @@ export type AgentTurnOutcome = {
   readonly finalText: string | undefined;
   readonly evidenceEvents: unknown[];
   readonly sessionId: string | undefined;
-  readonly usage: CodexUsage;
+  readonly usage: AgentTurnUsage;
   readonly numTurns: number;
   readonly generationStarted: boolean;
   readonly possiblyAppliedEffects: boolean;

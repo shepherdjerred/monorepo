@@ -74,10 +74,9 @@ export class ExploreInvalidTurnError extends Error {
  */
 export function titleFromQuestion(question: string): string {
   const collapsed = question.replaceAll(/\s+/g, " ").trim();
-  if (collapsed.length <= EXPLORE_TITLE_MAX_LENGTH) {
-    return collapsed;
-  }
-  return `${collapsed.slice(0, EXPLORE_TITLE_MAX_LENGTH - 1).trimEnd()}…`;
+  return collapsed.length <= EXPLORE_TITLE_MAX_LENGTH
+    ? collapsed
+    : `${collapsed.slice(0, EXPLORE_TITLE_MAX_LENGTH - 1).trimEnd()}…`;
 }
 
 export async function listExploreConversations(
@@ -107,14 +106,9 @@ export async function loadExploreTranscript(
     where: { id: conversationId, userId },
     include: { messages: true },
   });
-  if (row === null) {
-    return null;
-  }
-  return buildTranscript(
-    row,
-    row.messages,
-    leafIdOverride ?? row.currentLeafId,
-  );
+  return row === null
+    ? null
+    : buildTranscript(row, row.messages, leafIdOverride ?? row.currentLeafId);
 }
 
 /**
@@ -132,10 +126,9 @@ export async function loadSharedExploreTranscript(
     where: { shareToken },
     include: { messages: true },
   });
-  if (row === null) {
-    return null;
-  }
-  return buildTranscript(row, row.messages, row.sharedLeafId);
+  return row === null
+    ? null
+    : buildTranscript(row, row.messages, row.sharedLeafId);
 }
 
 /**
@@ -327,6 +320,14 @@ export async function appendExploreAnswer(
     preview: ReportAiPreviewSummary | null;
     visualization: VisualizationSnapshot | null;
     matchCards?: ExploreMatchCard[] | undefined;
+    /**
+     * The guilds this turn resolved its capabilities from.
+     *
+     * Recorded per turn rather than per conversation: a conversation belongs
+     * to a person, but the tools a turn had depended on this, and replaying it
+     * with the wrong guild silently changes which tools existed.
+     */
+    guildIds: readonly string[];
     trace: ExploreTraceEntry[];
     /**
      * Move the visible branch only if it still names the leaf this run began
@@ -356,6 +357,8 @@ export async function appendExploreAnswer(
         input.answer.includeVisualization && input.visualization !== null
           ? JSON.stringify(input.visualization)
           : null,
+      guildIds:
+        input.guildIds.length === 0 ? null : JSON.stringify(input.guildIds),
       matchCards:
         input.matchCards === undefined || input.matchCards.length === 0
           ? null
@@ -543,10 +546,7 @@ export async function shareExploreConversation(
     // The token is only real once the row carries it. Returning one from an
     // update that matched nothing — the conversation deleted in between —
     // would hand the owner a link that can only ever 404.
-    if (updated.count === 0) {
-      return null;
-    }
-    return shareToken;
+    return updated.count === 0 ? null : shareToken;
   });
 }
 

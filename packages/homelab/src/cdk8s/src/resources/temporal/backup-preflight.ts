@@ -1,20 +1,20 @@
 import type { Chart } from "cdk8s";
-import { Duration, Size } from "cdk8s";
-import { Cpu, Job, ServiceAccount } from "cdk8s-plus-31";
+import { Duration } from "cdk8s";
+import { Job, ServiceAccount } from "cdk8s-plus-31";
 import {
-  KubeClusterRole,
-  KubeClusterRoleBinding,
   KubeRole,
   KubeRoleBinding,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { kubectlScriptContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/kubectl-script-container.ts";
 
 const BACKUP_SCHEDULE_NAME = "6hourly-backup";
 const MAXIMUM_BACKUP_AGE_SECONDS = 7 * 60 * 60;
 const TEMPORAL_POSTGRES_PVC_NAMESPACE = "temporal";
 const TEMPORAL_POSTGRES_PVC_NAME = "pgdata-temporal-postgresql-0";
 const BACKUP_ENABLED_LABEL = "velero.io/backup";
+const OPENEBS_NAMESPACE = "openebs";
+const ZFS_BACKUP_RESOURCE = "zfsbackups.zfs.openebs.io";
+const ZFS_BACKUP_DONE_STATUS = "Done";
 
 const BACKUP_PREFLIGHT_SCRIPT = String.raw`
 set -eu -o pipefail
@@ -75,15 +75,12 @@ fi
 # The aggregate counters above are cluster-wide: they can be positive and
 # equal purely because OTHER backup-enabled PVCs succeeded, even if this
 # specific Temporal PVC was never selected or its snapshot silently failed to
-# attempt. The openebs zfs-localpv plugin (per-PVC "zfs send", not Velero's
-# CSI DataUpload machinery) records no separate per-PVC status object we can
-# query, so instead prove the Temporal PVC's snapshot specifically by
-# cross-referencing against the live PVC inventory: first confirm it still
-# carries the label the backup selected on, then confirm the counters equal
-# the CURRENT count of backup-enabled PVCs cluster-wide. If every
-# backup-enabled PVC that exists right now was attempted and completed, the
-# Temporal PVC — already confirmed to be one of them — cannot have been
-# omitted or have failed silently.
+# attempt. openebs zfs-localpv records each per-PVC "zfs send" as its own
+# ${ZFS_BACKUP_RESOURCE} object named "<pv-name>.<velero-backup-name>", so
+# resolve this PVC's bound PV and read that exact object's status. A missing
+# object means the snapshot was never attempted for this volume; any status
+# other than ${ZFS_BACKUP_DONE_STATUS} means it did not finish. Both fail
+# closed.
 temporal_pvc_label=$(kubectl get persistentvolumeclaim ${TEMPORAL_POSTGRES_PVC_NAME} \
   --namespace ${TEMPORAL_POSTGRES_PVC_NAMESPACE} \
   --output jsonpath='{.metadata.labels.velero\.io/backup}')
@@ -93,13 +90,27 @@ if [ "$temporal_pvc_label" != "enabled" ]; then
   exit 1
 fi
 
-enabled_pvc_count=$(kubectl get persistentvolumeclaims \
-  --all-namespaces \
-  --selector ${BACKUP_ENABLED_LABEL}=enabled \
-  --output jsonpath='{.items[*].metadata.name}' | wc -w | tr -d ' ')
+temporal_pv_name=$(kubectl get persistentvolumeclaim ${TEMPORAL_POSTGRES_PVC_NAME} \
+  --namespace ${TEMPORAL_POSTGRES_PVC_NAMESPACE} \
+  --output jsonpath='{.spec.volumeName}')
 
-if [ "$enabled_pvc_count" -le 0 ] || [ "$snapshots_attempted" -ne "$enabled_pvc_count" ]; then
-  echo "Backup $backup_name attempted $snapshots_attempted snapshot(s) but $enabled_pvc_count PVC(s) are currently backup-enabled — cannot prove ${TEMPORAL_POSTGRES_PVC_NAME} was included" >&2
+if [ -z "$temporal_pv_name" ]; then
+  echo "${TEMPORAL_POSTGRES_PVC_NAME} in namespace ${TEMPORAL_POSTGRES_PVC_NAMESPACE} is not bound to a PersistentVolume" >&2
+  exit 1
+fi
+
+volume_backup_status=$(kubectl get ${ZFS_BACKUP_RESOURCE} "$temporal_pv_name.$backup_name" \
+  --namespace ${OPENEBS_NAMESPACE} \
+  --ignore-not-found \
+  --output jsonpath='{.status}')
+
+if [ -z "$volume_backup_status" ]; then
+  echo "Backup $backup_name has no ${ZFS_BACKUP_RESOURCE} record for $temporal_pv_name, so ${TEMPORAL_POSTGRES_PVC_NAME} was not snapshotted" >&2
+  exit 1
+fi
+
+if [ "$volume_backup_status" != "${ZFS_BACKUP_DONE_STATUS}" ]; then
+  echo "Backup $backup_name snapshot of $temporal_pv_name (${TEMPORAL_POSTGRES_PVC_NAME}) is $volume_backup_status, not ${ZFS_BACKUP_DONE_STATUS}" >&2
   exit 1
 fi
 
@@ -138,6 +149,30 @@ export function createTemporalBackupPreflightJob(chart: Chart) {
     },
   );
 
+  // The Job runs in `temporal`, so each Role below lives in the namespace that
+  // owns the objects the script reads and is bound back to that ServiceAccount.
+  const bindRole = (id: string, namespace: string) => {
+    new KubeRoleBinding(chart, id, {
+      metadata: {
+        name: "temporal-backup-preflight",
+        namespace,
+        annotations: RBAC_HOOK_ANNOTATIONS,
+      },
+      roleRef: {
+        apiGroup: "rbac.authorization.k8s.io",
+        kind: "Role",
+        name: "temporal-backup-preflight",
+      },
+      subjects: [
+        {
+          kind: "ServiceAccount",
+          name: serviceAccount.name,
+          namespace: TEMPORAL_POSTGRES_PVC_NAMESPACE,
+        },
+      ],
+    });
+  };
+
   new KubeRole(chart, "temporal-backup-preflight-role", {
     metadata: {
       name: "temporal-backup-preflight",
@@ -153,65 +188,50 @@ export function createTemporalBackupPreflightJob(chart: Chart) {
     ],
   });
 
-  new KubeRoleBinding(chart, "temporal-backup-preflight-role-binding", {
-    metadata: {
-      name: "temporal-backup-preflight",
-      namespace: "velero",
-      annotations: RBAC_HOOK_ANNOTATIONS,
-    },
-    roleRef: {
-      apiGroup: "rbac.authorization.k8s.io",
-      kind: "Role",
-      name: "temporal-backup-preflight",
-    },
-    subjects: [
-      {
-        kind: "ServiceAccount",
-        name: serviceAccount.name,
-        namespace: "temporal",
-      },
-    ],
-  });
+  bindRole("temporal-backup-preflight-role-binding", "velero");
 
-  // Cluster-wide, read-only: proving the Temporal PVC's snapshot specifically
-  // succeeded (see BACKUP_PREFLIGHT_SCRIPT) needs the current count of every
-  // backup-enabled PVC across every namespace, not only the temporal
-  // namespace's own PVC.
-  new KubeClusterRole(chart, "temporal-backup-preflight-pvc-reader", {
+  // Resolving the PVC's bound PV name is what turns the cluster-wide Velero
+  // counters into a claim about this volume specifically; the ZFSBackup object
+  // it keys is owned by the openebs namespace.
+  new KubeRole(chart, "temporal-backup-preflight-pvc-reader-role", {
     metadata: {
-      name: "temporal-backup-preflight-pvc-reader",
+      name: "temporal-backup-preflight",
+      namespace: TEMPORAL_POSTGRES_PVC_NAMESPACE,
       annotations: RBAC_HOOK_ANNOTATIONS,
     },
     rules: [
       {
         apiGroups: [""],
         resources: ["persistentvolumeclaims"],
-        verbs: ["get", "list"],
+        resourceNames: [TEMPORAL_POSTGRES_PVC_NAME],
+        verbs: ["get"],
       },
     ],
   });
 
-  new KubeClusterRoleBinding(
-    chart,
-    "temporal-backup-preflight-pvc-reader-binding",
-    {
-      metadata: {
-        name: "temporal-backup-preflight-pvc-reader",
-        annotations: RBAC_HOOK_ANNOTATIONS,
-      },
-      roleRef: {
-        apiGroup: "rbac.authorization.k8s.io",
-        kind: "ClusterRole",
-        name: "temporal-backup-preflight-pvc-reader",
-      },
-      subjects: [
-        {
-          kind: "ServiceAccount",
-          name: serviceAccount.name,
-          namespace: "temporal",
-        },
-      ],
+  bindRole(
+    "temporal-backup-preflight-pvc-reader-role-binding",
+    TEMPORAL_POSTGRES_PVC_NAMESPACE,
+  );
+
+  new KubeRole(chart, "temporal-backup-preflight-zfs-backup-reader-role", {
+    metadata: {
+      name: "temporal-backup-preflight",
+      namespace: OPENEBS_NAMESPACE,
+      annotations: RBAC_HOOK_ANNOTATIONS,
     },
+    rules: [
+      {
+        apiGroups: ["zfs.openebs.io"],
+        resources: ["zfsbackups"],
+        verbs: ["get"],
+      },
+    ],
+  });
+
+  bindRole(
+    "temporal-backup-preflight-zfs-backup-reader-role-binding",
+    OPENEBS_NAMESPACE,
   );
 
   const job = new Job(chart, "temporal-backup-preflight", {
@@ -236,22 +256,7 @@ export function createTemporalBackupPreflightJob(chart: Chart) {
   });
 
   job.addContainer(
-    withCommonProps({
-      name: "backup-preflight",
-      image: `bitnamilegacy/kubectl:${versions["bitnamilegacy/kubectl"]}`,
-      command: ["/bin/bash", "-c"],
-      args: [BACKUP_PREFLIGHT_SCRIPT],
-      securityContext: {
-        user: 1001,
-        group: 1001,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-      },
-      resources: {
-        cpu: { request: Cpu.millis(10), limit: Cpu.millis(100) },
-        memory: { request: Size.mebibytes(32), limit: Size.mebibytes(128) },
-      },
-    }),
+    kubectlScriptContainer("backup-preflight", BACKUP_PREFLIGHT_SCRIPT),
   );
 
   return job;

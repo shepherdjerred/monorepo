@@ -59,10 +59,9 @@ export function parseTitleYear(raw: string): {
     const title = trimSeparators(spaced.slice(0, yearMatch.index));
     // A year at the very start (`2001 A Space Odyssey`) is part of the title, not a release year —
     // keep the whole thing and report no year.
-    if (title.length > 0) {
-      return { title, year: yearMatch.value };
-    }
-    return { title: trimSeparators(spaced), year: null };
+    return title.length > 0
+      ? { title, year: yearMatch.value }
+      : { title: trimSeparators(spaced), year: null };
   }
 
   const tagMatch = TAG_RE.exec(spaced);

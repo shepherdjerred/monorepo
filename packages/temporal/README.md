@@ -43,6 +43,22 @@ The production manifests land in layers. The gateway, Workflow worker, and
 domain Activity Workers deploy independently so each queue has its own
 credentials, concurrency, health, and metrics boundary.
 
+The agent worker keeps the Temporal poller at UID 0 and launches provider
+subprocesses at UID 1001. The owner firewall blocks provider access to Temporal.
+The worker retains only `SETUID`, `CHOWN`, and `DAC_OVERRIDE`: it must transfer
+fresh checkouts, then read and clean up private provider-owned session files.
+Provider subprocesses lose these capabilities when their UID changes, and
+`allowPrivilegeEscalation: false` prevents regaining them.
+
+The shared agent runner keeps authentication separate from tool environments.
+OpenRouter automation uses the Codex SDK. Subscription chats use Claude Agent
+SDK or Codex App Server with in-memory `chatgptAuthTokens` authentication and
+ephemeral credential storage. Subscription Codex requires an isolated
+`CODEX_HOME` without `auth.json`; dropped-UID Claude requires an explicit isolated
+`HOME`. Both providers receive writable session directories, restored to the
+worker after execution. Codex credential renewal is a terminal authentication
+failure requiring an updated credential source, not a session-file write.
+
 ## Quick start
 
 Run from `packages/temporal`:

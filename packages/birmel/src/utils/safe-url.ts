@@ -40,10 +40,9 @@ export async function resolveHostAddresses(
 ): Promise<{ address: string; family: number }[]> {
   signal?.throwIfAborted();
   const lookupPromise = dns.lookup(hostname, { all: true });
-  if (signal == null) {
-    return await lookupPromise;
-  }
-  return await Promise.race([lookupPromise, waitForAbort(signal)]);
+  return signal == null
+    ? await lookupPromise
+    : await Promise.race([lookupPromise, waitForAbort(signal)]);
 }
 
 export function sanitizeUrlForLogging(url: string): string {
@@ -253,21 +252,14 @@ function isPrivateOrReservedIpv6(ip: string): boolean {
     return isPrivateOrReservedIpv4Uint(ipv4Uint);
   }
   const w0 = words[0] ?? 0;
-  if (matchesIpv6MaskRules(w0)) {
-    return true;
-  }
-  return isIpv6SpecialPrefix(words);
+  return matchesIpv6MaskRules(w0) || isIpv6SpecialPrefix(words);
 }
 
 export function isPrivateOrReservedIp(ip: string): boolean {
   const family = net.isIP(ip);
-  if (family === 4) {
-    return isPrivateOrReservedIpv4(ip);
-  }
-  if (family === 6) {
-    return isPrivateOrReservedIpv6(ip);
-  }
-  return true;
+  return family === 4
+    ? isPrivateOrReservedIpv4(ip)
+    : family !== 6 || isPrivateOrReservedIpv6(ip);
 }
 
 const FORBIDDEN_HOST_PATTERNS = [

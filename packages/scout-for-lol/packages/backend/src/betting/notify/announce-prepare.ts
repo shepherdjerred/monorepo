@@ -10,8 +10,8 @@ import { requireValidBucksAllocation } from "#src/betting/accounts/allocation.ts
 import type { EarnedAward } from "#src/betting/accounts/earnings.ts";
 import { bettingAnchor, subjectFraming } from "#src/betting/components.ts";
 import { buildSettlementMessage } from "#src/betting/notify/outcome-message.ts";
-import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settle.ts";
-import type { SettlementSummary } from "#src/betting/settle.ts";
+import type { ParlaySettlementSummary } from "#src/betting/parlays/runtime/parlay-settlement-types.ts";
+import type { SettlementSummary } from "#src/betting/settlement/settlement-types.ts";
 import type { ClosedPool } from "#src/betting/settlement/sweep-types.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import {

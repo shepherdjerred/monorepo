@@ -1,5 +1,6 @@
 import {
   ReportIdSchema,
+  calendarDateInTimeZone,
   type Report,
   type ReportRunId,
 } from "@scout-for-lol/data";
@@ -436,17 +437,5 @@ function recordScheduledReportFailure(report: Report, error: unknown): void {
 }
 
 export function scheduledLocalDate(now: Date, timezone: string): string {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(now);
-  const year = parts.find((part) => part.type === "year")?.value;
-  const month = parts.find((part) => part.type === "month")?.value;
-  const day = parts.find((part) => part.type === "day")?.value;
-  if (year === undefined || month === undefined || day === undefined) {
-    throw new Error(`Unable to resolve scheduled date in ${timezone}`);
-  }
-  return `${year}-${month}-${day}`;
+  return calendarDateInTimeZone(now, timezone);
 }

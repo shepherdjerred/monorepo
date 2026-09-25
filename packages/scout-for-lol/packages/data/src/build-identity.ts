@@ -23,8 +23,5 @@ export function scoutReleaseVersion(raw: string): string {
   if (raw === DEV_PLACEHOLDER || CANONICAL_RELEASE_VERSION.test(raw)) {
     return raw;
   }
-  if (BAKE_NUMBER.test(raw)) {
-    return `2.0.0-${raw}`;
-  }
-  return raw;
+  return BAKE_NUMBER.test(raw) ? `2.0.0-${raw}` : raw;
 }

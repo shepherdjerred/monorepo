@@ -663,8 +663,7 @@ function parseQodoSeverity(body: string | null): number | null {
   if (body === null) return null;
   if (/action required/iu.test(body)) return 1;
   if (/remediation recommended/iu.test(body)) return 2;
-  if (/informational/iu.test(body)) return 3;
-  return null;
+  return /informational/iu.test(body) ? 3 : null;
 }
 
 export const qodoProvider: ReviewProvider = {
@@ -686,6 +685,7 @@ export const qodoProvider: ReviewProvider = {
     parseFindings: parseQodoIssueComment,
   },
   detectSkip: null,
+  detectBlocked: null,
   // Qodo 2.x documents `/agentic_review` as the manual trigger. The older
   // `/review` still works, but it is no longer the documented spelling and can
   // stop working without notice. Preferred over asking at all: enabling

@@ -3,10 +3,8 @@ import { describe, expect, test, vi } from "vitest";
 import { glitterCorpusStorageIntegrityFailuresTotal } from "#observability/metrics-glitter.ts";
 import { StoredObjectSchema } from "#shared/glitter/glitter-corpus.ts";
 import { discordRequestLeaseDelayMs } from "./glitter-corpus-rate-limit.ts";
-import {
-  isTransientCorpusStorageError,
-  type CorpusStore,
-} from "./glitter-corpus-store.ts";
+import { type CorpusStore } from "./glitter-corpus-store.ts";
+import { isTransientStorageError } from "#shared/infra/s3.ts";
 import {
   LatestSnapshotPointerSchema,
   latestSnapshotPointerNeedsUpdate,
@@ -69,7 +67,7 @@ describe("Glitter corpus transient storage errors", () => {
       "EAI_AGAIN",
       "ENOTFOUND",
     ]) {
-      expect(isTransientCorpusStorageError(new Error(code))).toBe(true);
+      expect(isTransientStorageError(new Error(code))).toBe(true);
     }
   });
 
@@ -82,7 +80,7 @@ describe("Glitter corpus transient storage errors", () => {
       ),
       { name: "TimeoutError", code: "ECONNRESET" },
     );
-    expect(isTransientCorpusStorageError(error)).toBe(true);
+    expect(isTransientStorageError(error)).toBe(true);
   });
 
   test("recognizes a reset wrapped in a cause chain", () => {
@@ -91,13 +89,13 @@ describe("Glitter corpus transient storage errors", () => {
         code: "ECONNRESET",
       }),
     });
-    expect(isTransientCorpusStorageError(wrapped)).toBe(true);
+    expect(isTransientStorageError(wrapped)).toBe(true);
   });
 
   test("terminates on a self-referential cause chain", () => {
     const looped = new Error("invalid snapshot JSON");
     looped.cause = looped;
-    expect(isTransientCorpusStorageError(looped)).toBe(false);
+    expect(isTransientStorageError(looped)).toBe(false);
   });
 
   test("recognizes retryable HTTP responses", () => {
@@ -105,7 +103,7 @@ describe("Glitter corpus transient storage errors", () => {
       const error = Object.assign(new Error(`HTTP ${String(statusCode)}`), {
         $metadata: { httpStatusCode: statusCode },
       });
-      expect(isTransientCorpusStorageError(error)).toBe(true);
+      expect(isTransientStorageError(error)).toBe(true);
     }
   });
 
@@ -114,11 +112,11 @@ describe("Glitter corpus transient storage errors", () => {
       const error = Object.assign(new Error(`HTTP ${String(statusCode)}`), {
         $metadata: { httpStatusCode: statusCode },
       });
-      expect(isTransientCorpusStorageError(error)).toBe(false);
+      expect(isTransientStorageError(error)).toBe(false);
     }
-    expect(
-      isTransientCorpusStorageError(new Error("invalid snapshot JSON")),
-    ).toBe(false);
+    expect(isTransientStorageError(new Error("invalid snapshot JSON"))).toBe(
+      false,
+    );
   });
 });
 

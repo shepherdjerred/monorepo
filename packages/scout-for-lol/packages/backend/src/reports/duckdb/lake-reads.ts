@@ -369,6 +369,10 @@ const ChampionPoolRowSchema = z.object({
   assists: LakeIntSchema,
   creep_score: LakeIntSchema,
   time_played: LakeIntSchema,
+  gold_earned: LakeIntSchema.default(0),
+  vision_score: LakeIntSchema.default(0),
+  damage_to_champions: LakeIntSchema.default(0),
+  team_position: z.string().nullable().default(null),
 });
 
 export type LakeChampionPoolRow = z.infer<typeof ChampionPoolRowSchema>;
@@ -411,7 +415,11 @@ export async function fetchPlayerChampionPool(options: {
       `sum(CASE WHEN win THEN 1 ELSE 0 END)::BIGINT AS wins, ` +
       `sum(kills)::BIGINT AS kills, sum(deaths)::BIGINT AS deaths, ` +
       `sum(assists)::BIGINT AS assists, sum(creep_score)::BIGINT AS creep_score, ` +
-      `sum(time_played)::BIGINT AS time_played ` +
+      `sum(time_played)::BIGINT AS time_played, ` +
+      `sum(COALESCE(gold_earned, 0))::BIGINT AS gold_earned, ` +
+      `sum(COALESCE(vision_score, 0))::BIGINT AS vision_score, ` +
+      `sum(COALESCE(total_damage_dealt_to_champions, 0))::BIGINT AS damage_to_champions, ` +
+      `mode(CASE WHEN upper(trim(team_position)) IN ('', 'INVALID') THEN NULL ELSE team_position END) AS team_position ` +
       `FROM player_matches ` +
       `GROUP BY champion_id, champion_name ORDER BY games DESC, champion_name ASC`,
     extraParams:

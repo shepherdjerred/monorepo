@@ -51,13 +51,10 @@ describe("classifyMatchForBetting", () => {
     expect(result).toEqual({ kind: "void", reason: "remake" });
   });
 
-  test("voids a game shorter than the remake threshold", () => {
+  test("a short game with no early surrender is still bettable", () => {
+    // Duration alone says nothing. Riot's remakes all carry the
+    // early-surrender flags, so a short game without them is a real result.
     const result = classifyMatchForBetting(withInfo({ gameDuration: 240 }));
-    expect(result).toEqual({ kind: "void", reason: "remake" });
-  });
-
-  test("a game at exactly the remake threshold is still bettable", () => {
-    const result = classifyMatchForBetting(withInfo({ gameDuration: 300 }));
     expect(result.kind).toBe("decided");
   });
 
@@ -89,6 +86,20 @@ describe("classifyMatchForBetting", () => {
       gameEndedInSurrender: true,
     }));
     const result = classifyMatchForBetting(withInfo({ participants }));
+    expect(result.kind).toBe("decided");
+  });
+
+  test("an AFK surrender minutes into the game is not a remake", () => {
+    // Riot offers an AFK surrender from 2:55 and records it as a real win and
+    // loss. Observed beta matches land between 201s and 293s, so a duration
+    // floor at five minutes silently voided every one of them.
+    const participants = fixture.info.participants.map((participant) => ({
+      ...participant,
+      gameEndedInSurrender: true,
+    }));
+    const result = classifyMatchForBetting(
+      withInfo({ participants, gameDuration: 201 }),
+    );
     expect(result.kind).toBe("decided");
   });
 

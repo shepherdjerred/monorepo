@@ -40,10 +40,9 @@ export function nextParseFailureRepair(
   error: string,
   rawContent: string | null,
 ): ChunkExtractionRepair {
-  if (prior === null || prior.previous === EMPTY_CHUNK_SUMMARY) {
-    return { previous: EMPTY_CHUNK_SUMMARY, error, rawContent };
-  }
-  return { previous: prior.previous, error: prior.error, rawContent: null };
+  return prior === null || prior.previous === EMPTY_CHUNK_SUMMARY
+    ? { previous: EMPTY_CHUNK_SUMMARY, error, rawContent }
+    : { previous: prior.previous, error: prior.error, rawContent: null };
 }
 
 /**

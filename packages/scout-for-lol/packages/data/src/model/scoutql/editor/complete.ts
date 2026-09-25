@@ -74,10 +74,9 @@ function renderItems(
     return [...renderKindItems(), ...keywordItems(["WITH"])];
   }
   const optionName = position.optionName;
-  if (optionName !== undefined) {
-    return renderValueItems(optionName, analysis);
-  }
-  return renderOptionItems(renderKindOf(analysis));
+  return optionName === undefined
+    ? renderOptionItems(renderKindOf(analysis))
+    : renderValueItems(optionName, analysis);
 }
 
 /** An aggregate argument may not contain another aggregate. */
@@ -169,9 +168,8 @@ export function completeScoutQl(
   const context = scoutQlContextAt(text, offset);
   const analysis = analyzeScoutQl(text);
   return itemsFor(context, analysis).sort((left, right) => {
-    if (left.sortGroup !== right.sortGroup) {
-      return left.sortGroup - right.sortGroup;
-    }
-    return left.label.localeCompare(right.label);
+    return left.sortGroup === right.sortGroup
+      ? left.label.localeCompare(right.label)
+      : left.sortGroup - right.sortGroup;
   });
 }

@@ -19,10 +19,9 @@ function classifyEventBridgeStartFailure(error: unknown): string {
   if (message.includes("ha_url") || message.includes("ha_token")) {
     return "config";
   }
-  if (message.includes("401") || message.includes("unauthorized")) {
-    return "auth";
-  }
-  return "unknown";
+  return message.includes("401") || message.includes("unauthorized")
+    ? "auth"
+    : "unknown";
 }
 
 type EventBridgeSupervisorState = {

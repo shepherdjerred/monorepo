@@ -166,11 +166,7 @@ export function inferTypeFromValue(value: unknown): string | null {
   }
 
   // Plain string
-  if (StringSchema.safeParse(value).success) {
-    return "string";
-  }
-
-  return "unknown";
+  return StringSchema.safeParse(value).success ? "string" : "unknown";
 }
 
 /**
@@ -262,14 +258,14 @@ export function convertToTypeScriptInterface(options: {
 
   // Check if this interface should allow arbitrary properties
   const allowArbitraryProps =
-    options.chartName != null && options.chartName !== ""
-      ? shouldAllowArbitraryProps(
-          keyPrefix,
-          options.chartName,
-          keyPrefix.split(".").pop() ?? "",
-          options.yamlComments?.get(keyPrefix),
-        )
-      : false;
+    options.chartName != null &&
+    options.chartName !== "" &&
+    shouldAllowArbitraryProps(
+      keyPrefix,
+      options.chartName,
+      keyPrefix.split(".").pop() ?? "",
+      options.yamlComments?.get(keyPrefix),
+    );
 
   return {
     name: options.interfaceName,
@@ -396,14 +392,10 @@ function inferArrayType(
 
   // If mixed types, use union type for common cases
   const types = [...elementTypes].toSorted();
-  if (
-    types.length <= 3 &&
+  return types.length <= 3 &&
     types.every((t) => ["string", "number", "boolean"].includes(t))
-  ) {
-    return { type: `(${types.join(" | ")})[]`, optional: true };
-  }
-
-  return { type: "unknown[]", optional: true };
+    ? { type: `(${types.join(" | ")})[]`, optional: true }
+    : { type: "unknown[]", optional: true };
 }
 
 /**
@@ -424,14 +416,16 @@ function inferUniformArrayType(
   if (elementProp.nested) {
     const arrayElementTypeName = `${nestedTypeName}Element`;
     const allowArbitraryProps =
-      chartName !== "" && fullKey !== "" && chartName != null && fullKey != null
-        ? shouldAllowArbitraryProps(
-            fullKey,
-            chartName,
-            propertyName ?? "",
-            yamlComment,
-          )
-        : false;
+      chartName !== "" &&
+      fullKey !== "" &&
+      chartName != null &&
+      fullKey != null &&
+      shouldAllowArbitraryProps(
+        fullKey,
+        chartName,
+        propertyName ?? "",
+        yamlComment,
+      );
     const arrayElementInterface: TypeScriptInterface = {
       name: arrayElementTypeName,
       properties: elementProp.nested.properties,

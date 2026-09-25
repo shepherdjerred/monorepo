@@ -2,10 +2,8 @@ import type { ComponentProps } from "react";
 import type { Loaded } from "@shepherdjerred/loaded";
 import { Section } from "#src/components/player/player-detail-sections.tsx";
 import { PlayerProfileFilterBar } from "#src/components/player/player-profile-filter-bar.tsx";
-import {
-  ChampionPoolTable,
-  PlayerSummaryCards,
-} from "#src/components/player/player-profile-sections.tsx";
+import { ChampionPoolTable } from "#src/components/player/champion-pool-table.tsx";
+import { PlayerSummaryCards } from "#src/components/player/player-profile-sections.tsx";
 import {
   RecordedMatchHistory,
   shouldShowPlayerPerformanceBlank,

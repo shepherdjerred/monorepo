@@ -16,6 +16,10 @@ import {
   classifyWorkflowTimeoutHistory,
   type WorkflowTimeoutHistoryClassification,
 } from "./workflow-failure-history.ts";
+import {
+  DEFAULT_WORKFLOW_FAILURE_RPC_TIMEOUT_MS,
+  withWorkflowFailureRpcTimeout,
+} from "./workflow-failure-watch-timeout.ts";
 import type { WorkflowVisibilityClient } from "#shared/infra/workflow-visibility-client.ts";
 
 const COMPONENT = "temporal-failure-watch";
@@ -39,15 +43,12 @@ function innermostTemporalFailure(failure: TemporalFailure): TemporalFailure {
 }
 
 function failureTypeName(failure: TemporalFailure): string {
-  if (
-    failure instanceof ApplicationFailure &&
+  return failure instanceof ApplicationFailure &&
     failure.type !== undefined &&
     failure.type !== null &&
     failure.type !== ""
-  ) {
-    return failure.type;
-  }
-  return failure.name;
+    ? failure.type
+    : failure.name;
 }
 
 type TimeoutInspection = {
@@ -57,11 +58,16 @@ type TimeoutInspection = {
 
 async function inspectTimeoutHistory(
   handle: ReturnType<WorkflowVisibilityClient["workflow"]["getHandle"]>,
+  rpcTimeoutMs: number,
 ): Promise<TimeoutInspection> {
   try {
     return {
       classification: classifyWorkflowTimeoutHistory(
-        await handle.fetchHistory(),
+        await withWorkflowFailureRpcTimeout(
+          handle.fetchHistory(),
+          "fetch-history",
+          rpcTimeoutMs,
+        ),
       ),
       historyError: undefined,
     };
@@ -91,10 +97,9 @@ function workerTaskQueueUnavailableReason(
   if (classification.workflowTaskScheduledButNotStarted) {
     return "a scheduled workflow task has not started";
   }
-  if (!classification.workflowTaskStarted && !classification.activityStarted) {
-    return "no activity reached execution";
-  }
-  return undefined;
+  return !classification.workflowTaskStarted && !classification.activityStarted
+    ? "no activity reached execution"
+    : undefined;
 }
 
 function timeoutFailureFields(
@@ -177,13 +182,18 @@ function workflowFailureDetail(
 async function fetchFailureDetail(
   client: WorkflowVisibilityClient,
   execution: FailedWorkflowExecution,
+  rpcTimeoutMs: number,
 ): Promise<WorkflowFailureDetail> {
   const handle = client.workflow.getHandle(
     execution.workflowId,
     execution.runId,
   );
   try {
-    await handle.result();
+    await withWorkflowFailureRpcTimeout(
+      handle.result(),
+      "workflow-result",
+      rpcTimeoutMs,
+    );
     throw new Error(
       `workflow ${execution.workflowId}/${execution.runId} unexpectedly resolved while polling failures`,
     );
@@ -199,7 +209,7 @@ async function fetchFailureDetail(
         execution.status === "TIMED_OUT" ||
         terminalCause instanceof TimeoutFailure;
       const inspection = shouldInspectTimeout
-        ? await inspectTimeoutHistory(handle)
+        ? await inspectTimeoutHistory(handle, rpcTimeoutMs)
         : { classification: undefined, historyError: undefined };
       return workflowFailureDetail(error, execution, inspection);
     }
@@ -207,15 +217,27 @@ async function fetchFailureDetail(
   }
 }
 
+export type BuildFailureAlertOptions = {
+  now: Date;
+  ttlMs: number;
+  rpcTimeoutMs?: number;
+};
+
 export async function buildFailureAlertForExecution(
   client: WorkflowVisibilityClient,
   execution: FailedWorkflowExecution,
-  now: Date,
-  ttlMs: number,
+  options: BuildFailureAlertOptions,
 ): Promise<AlertmanagerAlert | undefined> {
+  const rpcTimeoutMs =
+    options.rpcTimeoutMs ?? DEFAULT_WORKFLOW_FAILURE_RPC_TIMEOUT_MS;
   try {
-    const failure = await fetchFailureDetail(client, execution);
-    return buildWorkflowFailureAlert(execution, failure, now, ttlMs);
+    const failure = await fetchFailureDetail(client, execution, rpcTimeoutMs);
+    return buildWorkflowFailureAlert(
+      execution,
+      failure,
+      options.now,
+      options.ttlMs,
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     Sentry.withScope((scope) => {

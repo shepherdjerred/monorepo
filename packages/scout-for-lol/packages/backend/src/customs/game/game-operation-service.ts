@@ -1,20 +1,15 @@
 import {
   AccountIdSchema,
-  DiscordAccountIdSchema,
-  DiscordChannelIdSchema,
-  DiscordGuildIdSchema,
   RegionSchema,
   type CustomActivityClaims,
   type CustomNightSnapshot,
-  type CustomTeam,
   type DiscordAccountId,
 } from "@scout-for-lol/data";
-import { tournamentApiMode } from "#src/config/dynamic.ts";
-import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { type CustomActivityActor } from "#src/customs/activity/activity-actor.ts";
 import {
   assertCustomTeamsComplete,
   assertRosterLockable,
+  assertSingleRiotRegion,
   snapshotCustomParticipant,
 } from "#src/customs/game/draft.ts";
 import type { CustomRevisionInput as RevisionInput } from "#src/customs/activity/activity-mutation-context.ts";
@@ -28,9 +23,11 @@ import { commitCustomMutation } from "#src/customs/repository.ts";
 import { buildCustomNightSnapshot } from "#src/customs/snapshot.ts";
 import { returnCustomVoiceToLobby } from "#src/customs/voice-service.ts";
 import { prisma } from "#src/database/index.ts";
-import { provisionTournamentLobby } from "#src/league/tournament/provision-lobby.ts";
 
-async function resolvedSides(game: ReturnType<typeof currentGame>) {
+async function assertObservedCustomLobbyRoster(
+  snapshot: CustomNightSnapshot,
+): Promise<void> {
+  const game = currentGame(snapshot);
   assertCustomTeamsComplete(game.participants);
   const accountIds = game.participants.map((participant) =>
     AccountIdSchema.parse(participant.accountId),
@@ -38,75 +35,32 @@ async function resolvedSides(game: ReturnType<typeof currentGame>) {
   const accounts = await prisma.account.findMany({
     where: { id: { in: accountIds } },
   });
-  const regions = new Map(
+  const regionsByAccount = new Map(
     accounts.map((account) => [account.id, RegionSchema.parse(account.region)]),
   );
-  const side = (team: CustomTeam) => {
-    const participants = game.participants.filter(
-      (participant) => participant.team === team,
-    );
-    const firstParticipant = participants[0];
-    if (firstParticipant === undefined) {
-      throw new Error(`Team ${team} has no participants`);
+  const regions = accountIds.map((accountId) => {
+    const region = regionsByAccount.get(accountId);
+    if (region === undefined) {
+      throw new Error("Custom lobby contains an unknown Riot account");
     }
-    const firstRegion = regions.get(
-      AccountIdSchema.parse(firstParticipant.accountId),
-    );
-    if (firstRegion === undefined) {
-      throw new Error(`Team ${team} has an unknown Riot account`);
-    }
-    for (const participant of participants) {
-      if (
-        regions.get(AccountIdSchema.parse(participant.accountId)) !==
-        firstRegion
-      ) {
-        throw new Error("Tournament lobby players must use one Riot region");
-      }
-    }
-    return {
-      aliases: participants.map((participant) => participant.playerAlias),
-      puuids: participants.map((participant) => participant.puuid),
-      region: firstRegion,
-    };
-  };
-  return { blue: side("A"), red: side("B") };
+    return region;
+  });
+  assertSingleRiotRegion(regions);
 }
 
-async function provisionCustomCode(
+async function markObservedCustomLobbyReady(
   actor: CustomActivityActor,
   snapshot: CustomNightSnapshot,
 ): Promise<CustomNightSnapshot> {
   const game = currentGame(snapshot);
-  if (
-    !(await isPolicyEnabled("tournament_lobbies_enabled", {
-      server: actor.guildId,
-    }))
-  ) {
-    throw new Error("Tournament lobbies are not enabled in this guild");
-  }
-  const sides = await resolvedSides(game);
-  const lobby = await provisionTournamentLobby(prisma, {
-    kind: "declared",
-    requestId: `customs:${game.id}`,
-    mode: tournamentApiMode(),
-    serverId: DiscordGuildIdSchema.parse(snapshot.guildId),
-    channelId: DiscordChannelIdSchema.parse(snapshot.launchChannelId),
-    creatorDiscordId: DiscordAccountIdSchema.parse(snapshot.hostDiscordId),
-    blue: sides.blue,
-    red: sides.red,
-    pickType: game.pickMode,
-    mapType: game.map,
-    spectatorType: "ALL",
-    lobbyName: `${snapshot.guildName} Customs #${game.sequence.toString()}`,
-  });
   await commitCustomMutation(
     prisma,
     {
       nightId: snapshot.id,
       expectedRevision: snapshot.revision,
       actorId: actor.discordId,
-      action: "TOURNAMENT_LOBBY_LINKED",
-      payload: { tournamentLobbyId: lobby.id },
+      action: "LOCAL_LOBBY_REQUESTED",
+      payload: {},
       source: "ACTIVITY",
       now: new Date(),
       gameId: game.id,
@@ -114,7 +68,7 @@ async function provisionCustomCode(
     async (transaction) => {
       await transaction.customGame.update({
         where: { id: game.id },
-        data: { tournamentLobbyId: lobby.id, state: "LOBBY_READY" },
+        data: { state: "LOBBY_READY", tournamentLobbyId: null },
       });
       await transaction.customNight.update({
         where: { id: snapshot.id },
@@ -123,6 +77,14 @@ async function provisionCustomCode(
     },
   );
   return afterGameMutation(snapshot.id, actor);
+}
+
+async function openObservedCustomLobby(
+  actor: CustomActivityActor,
+  snapshot: CustomNightSnapshot,
+): Promise<CustomNightSnapshot> {
+  await assertObservedCustomLobbyRoster(snapshot);
+  return markObservedCustomLobbyReady(actor, snapshot);
 }
 
 export async function lockCustomTeams(
@@ -135,6 +97,7 @@ export async function lockCustomTeams(
     throw new Error("Teams cannot be locked in the current game state");
   }
   assertCustomTeamsComplete(game.participants);
+  await assertObservedCustomLobbyRoster(snapshot);
   await commitCustomMutation(
     prisma,
     {
@@ -162,7 +125,7 @@ export async function lockCustomTeams(
   if (pending === undefined) {
     throw new Error("Custom night disappeared before lobby provisioning");
   }
-  return provisionCustomCode(actor, pending);
+  return markObservedCustomLobbyReady(actor, pending);
 }
 
 export async function retryCustomCode(
@@ -171,9 +134,9 @@ export async function retryCustomCode(
 ): Promise<CustomNightSnapshot> {
   const { actor, snapshot } = await gameContext(claims, input, true);
   if (currentGame(snapshot).state !== "CODE_PENDING") {
-    throw new Error("The game is not waiting for a tournament code");
+    throw new Error("The game is not waiting for a custom lobby");
   }
-  return provisionCustomCode(actor, snapshot);
+  return openObservedCustomLobby(actor, snapshot);
 }
 
 export async function substituteCustomParticipant(

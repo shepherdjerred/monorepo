@@ -28,13 +28,6 @@ function ActiveGameControls(props: GameControlProps & { manager: boolean }) {
         <h2>Game {props.game.sequence.toString()}</h2>
         <StatePill state={props.game.state} />
       </div>
-      {props.game.tournamentLobby?.code === null ||
-      props.game.tournamentLobby === null ? null : (
-        <div className="code-card">
-          <span>Tournament code</span>
-          <code>{props.game.tournamentLobby.code}</code>
-        </div>
-      )}
       <div className="teams">
         {(["A", "B"] as const).map((team) => (
           <div key={team}>
@@ -54,7 +47,8 @@ function ActiveGameControls(props: GameControlProps & { manager: boolean }) {
       {props.manager ? <LobbyOperationControls {...props} /> : null}
       {waitingForRiot ? (
         <p className="waiting">
-          Waiting for Riot Match-V5. Results cannot be entered manually.
+          Waiting for Riot or a paired Scout Client to verify the result.
+          Results cannot be entered manually.
         </p>
       ) : null}
       {props.manager ? <SubstitutionControls {...props} /> : null}

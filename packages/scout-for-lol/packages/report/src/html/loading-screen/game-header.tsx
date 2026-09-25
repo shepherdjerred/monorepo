@@ -123,7 +123,13 @@ function BansRow({
   );
 }
 
-export function GameHeader({ data }: { data: LoadingScreenData }) {
+export function GameHeader({
+  data,
+  omitTitle = false,
+}: {
+  data: LoadingScreenData;
+  omitTitle?: boolean;
+}) {
   if (data.layout === "classic") {
     return null;
   }
@@ -139,19 +145,20 @@ export function GameHeader({ data }: { data: LoadingScreenData }) {
         marginBottom: "16px",
       }}
     >
-      {/* Mode label */}
-      <span
-        style={{
-          fontSize: "42px",
-          fontFamily: font.title,
-          fontWeight: 700,
-          color: palette.gold[2],
-          textTransform: "uppercase",
-          letterSpacing: "2px",
-        }}
-      >
-        {data.queueDisplayName}
-      </span>
+      {omitTitle ? null : (
+        <span
+          style={{
+            fontSize: "42px",
+            fontFamily: font.title,
+            fontWeight: 700,
+            color: palette.gold[2],
+            textTransform: "uppercase",
+            letterSpacing: "2px",
+          }}
+        >
+          {data.queueDisplayName}
+        </span>
+      )}
 
       {shouldRenderBans ? (
         <div

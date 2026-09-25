@@ -39,8 +39,9 @@ export function buildSessionHandle(
       session.voiceAssistant?.debugCaptureStatus() ?? null,
     listSubtitleCandidates: (signal) => {
       const current = session.actor.getSnapshot().context.current;
-      if (current === null) return Promise.resolve([]);
-      return listSubtitleCandidatesForSource(config, current.source, signal);
+      return current === null
+        ? Promise.resolve([])
+        : listSubtitleCandidatesForSource(config, current.source, signal);
     },
     currentSourceId: () => {
       const current = session.actor.getSnapshot().context.current;

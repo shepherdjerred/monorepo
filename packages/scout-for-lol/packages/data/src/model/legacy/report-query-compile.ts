@@ -81,10 +81,9 @@ export function parseGroupByClause(
     return { groupBy: "group", groupSize: "all" };
   }
   const numeric = Number(size);
-  if (numeric < 2 || numeric > 5) {
-    return undefined;
-  }
-  return { groupBy: "group", groupSize: numeric };
+  return numeric < 2 || numeric > 5
+    ? undefined
+    : { groupBy: "group", groupSize: numeric };
 }
 
 export function parseGroupByClauses(value: string): ReportGroupByClause[] {

@@ -193,10 +193,9 @@ export function useMatchBrowser(
           const batchResults = await Promise.allSettled(
             batch.map(async (matchKey) => {
               const rawMatch = await fetchMatchFromS3(s3Config, matchKey.key);
-              if (rawMatch) {
-                return extractMatchMetadataFromRawMatch(rawMatch, matchKey.key);
-              }
-              return null;
+              return rawMatch
+                ? extractMatchMetadataFromRawMatch(rawMatch, matchKey.key)
+                : null;
             }),
           );
 
@@ -298,13 +297,9 @@ export function useMatchBrowser(
 
     if (filterOutcome !== "all") {
       result = result.filter((m) => {
-        if (filterOutcome === "victory") {
-          return m.outcome.includes("Victory");
-        }
-        if (filterOutcome === "defeat") {
-          return m.outcome.includes("Defeat");
-        }
-        return true;
+        return filterOutcome === "victory"
+          ? m.outcome.includes("Victory")
+          : filterOutcome !== "defeat" || m.outcome.includes("Defeat");
       });
     }
 

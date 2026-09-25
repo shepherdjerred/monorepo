@@ -13,3 +13,7 @@ and checked against their official product sites on 2026-08-09:
 - Cursor: <https://cursor.com/brand>
 - Kimi: <https://www.kimi.com/>
 - xAI/Grok: <https://docs.x.ai/overview>
+
+The Muse mark is an original Brim asset drawn for this dashboard, not Meta's
+official mark. Meta and Muse remain trademarks of Meta Platforms, Inc. Brim is
+not affiliated with or endorsed by Meta.

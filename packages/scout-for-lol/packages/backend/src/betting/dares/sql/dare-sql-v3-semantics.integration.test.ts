@@ -429,7 +429,12 @@ describe("Dare SQL v3 eligibility boundaries", () => {
   test("applies the game cap after excluding remakes", async () => {
     const base = await loadMatchFixture();
     const remake = matchAt(base, 0, true, 1);
+    // Riot marks a remake with the early-surrender flags, not a short clock.
     remake.info.gameDuration = 120;
+    for (const participant of remake.info.participants) {
+      participant.gameEndedInEarlySurrender = true;
+      participant.teamEarlySurrendered = true;
+    }
     const completed = matchAt(base, 1, true, 2);
     expect(await writeMatchStagingFile(lakeDir, remake)).toBe(true);
     expect(await writeMatchStagingFile(lakeDir, completed)).toBe(true);

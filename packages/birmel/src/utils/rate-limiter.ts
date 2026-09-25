@@ -31,18 +31,14 @@ export function getRateLimitRemaining(
   maxRequests: number,
 ): number {
   const limit = rateLimits.get(key);
-  if (!limit || Date.now() > limit.resetAt) {
-    return maxRequests;
-  }
-  return Math.max(0, maxRequests - limit.count);
+  return !limit || Date.now() > limit.resetAt
+    ? maxRequests
+    : Math.max(0, maxRequests - limit.count);
 }
 
 export function getRateLimitResetTime(key: string): number | null {
   const limit = rateLimits.get(key);
-  if (!limit || Date.now() > limit.resetAt) {
-    return null;
-  }
-  return limit.resetAt;
+  return !limit || Date.now() > limit.resetAt ? null : limit.resetAt;
 }
 
 export function clearRateLimit(key: string): void {

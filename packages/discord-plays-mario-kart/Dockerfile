@@ -24,7 +24,7 @@
 # time. No binaries are committed — the build is reproducible from source.
 # Pinned Emscripten 6 toolchain for the legacy SDL2/GLES2 core.
 # ---------------------------------------------------------------------------
-FROM emscripten/emsdk:6.0.8@sha256:f174124ff798a3ead1abef247d9a849c270b642d552fea500a42565ff210f765 AS wasm-builder
+FROM emscripten/emsdk:6.0.9@sha256:96617f27fe16421588241def73908fd348a7f9d260440ed0d00b36dcf7a063cc AS wasm-builder
 
 WORKDIR /src
 # Copy only the vendored wasm source tree (patches + the pristine `code/` tree).
@@ -44,7 +44,7 @@ RUN make clean && make
 # ---------------------------------------------------------------------------
 # Bun stages.
 # ---------------------------------------------------------------------------
-FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
+FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
 # ── deps: full install (dev deps) — feeds the artifact builds below ─────────

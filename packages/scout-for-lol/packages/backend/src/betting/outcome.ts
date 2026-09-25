@@ -1,9 +1,6 @@
 import type { RawMatch } from "@scout-for-lol/data";
 import { BLUE_TEAM_ID, RED_TEAM_ID } from "#src/betting/constants.ts";
-import {
-  REMAKE_MAX_DURATION_SECONDS,
-  STANDARD_LOBBY_SIZE,
-} from "#src/betting/constants.ts";
+import { STANDARD_LOBBY_SIZE } from "#src/betting/constants.ts";
 import { isStandardLobby } from "#src/betting/eligibility/eligibility.ts";
 
 /**
@@ -22,23 +19,27 @@ export type MatchBettingOutcome =
   | { kind: "void"; reason: "remake" | "unsupported_mode" };
 
 /**
- * A remake, by the same predicate `report-lake/flatten.ts` uses, plus the two
- * signals that only appear at match level.
+ * A remake, by the same predicate `report-lake/flatten.ts` uses, plus the
+ * signal that only appears at match level.
  *
  * Note this checks `gameEndedInEarlySurrender`, not `gameEndedInSurrender`: an
  * ordinary surrender at 20 minutes is a real, bettable loss, while an early
  * surrender means the game never properly happened.
+ *
+ * Duration is deliberately not consulted. Riot sets the early-surrender flags
+ * on every participant of a remade game, so they already identify every
+ * remake, while a short game is not evidence of one: an AFK early surrender is
+ * available from 2:55 and is a real, LP-affecting loss that bets must settle
+ * against. A duration floor only misreads those as remakes.
  */
 export function isRemakeMatch(matchData: RawMatch): boolean {
-  if (matchData.info.endOfGameResult !== "GameComplete") {
-    return true;
-  }
-  if (matchData.info.gameDuration < REMAKE_MAX_DURATION_SECONDS) {
-    return true;
-  }
-  return matchData.info.participants.some(
-    (participant) =>
-      participant.gameEndedInEarlySurrender || participant.teamEarlySurrendered,
+  return (
+    matchData.info.endOfGameResult !== "GameComplete" ||
+    matchData.info.participants.some(
+      (participant) =>
+        participant.gameEndedInEarlySurrender ||
+        participant.teamEarlySurrendered,
+    )
   );
 }
 
@@ -61,10 +62,9 @@ function findWinningTeamId(matchData: RawMatch): number | undefined {
     return undefined;
   }
   const winningTeamId = winners[0]?.teamId;
-  if (winningTeamId !== BLUE_TEAM_ID && winningTeamId !== RED_TEAM_ID) {
-    return undefined;
-  }
-  return winningTeamId;
+  return winningTeamId !== BLUE_TEAM_ID && winningTeamId !== RED_TEAM_ID
+    ? undefined
+    : winningTeamId;
 }
 
 export function classifyMatchForBetting(
@@ -85,9 +85,7 @@ export function classifyMatchForBetting(
   // Shape before remake: a payload we cannot even read a winner from is not
   // "a remake", and labelling it one would put a misleading reason in the
   // ledger.
-  if (isRemakeMatch(matchData)) {
-    return { kind: "void", reason: "remake" };
-  }
-
-  return { kind: "decided", winningTeamId };
+  return isRemakeMatch(matchData)
+    ? { kind: "void", reason: "remake" }
+    : { kind: "decided", winningTeamId };
 }

@@ -71,10 +71,7 @@ export function fieldMetaFromSpec(spec: ServiceFieldSpec): FieldMeta {
 export function targetDomainFromSpec(
   target: ServiceTargetSpec | undefined,
 ): string | undefined {
-  if (target === undefined) {
-    return undefined;
-  }
-  return extractEntityDomain(target);
+  return target === undefined ? undefined : extractEntityDomain(target);
 }
 
 function extractSelectOptions(
@@ -115,10 +112,9 @@ function extractEntityDomain(
   if (typeof domain === "string") {
     return domain;
   }
-  if (Array.isArray(domain) && typeof domain[0] === "string") {
-    return domain[0];
-  }
-  return undefined;
+  return Array.isArray(domain) && typeof domain[0] === "string"
+    ? domain[0]
+    : undefined;
 }
 
 function inferFromExample(spec: ServiceFieldSpec): HaFieldType {
@@ -132,8 +128,5 @@ function inferFromExample(spec: ServiceFieldSpec): HaFieldType {
   if (typeof example === "string") {
     return "string";
   }
-  if (example !== null && typeof example === "object") {
-    return "object";
-  }
-  return "unknown";
+  return example !== null && typeof example === "object" ? "object" : "unknown";
 }

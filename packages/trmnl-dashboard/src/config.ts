@@ -14,6 +14,7 @@ export type AppConfig = {
     token: string;
     batteryThreshold: number;
     unavailableIgnoredDomains: string[];
+    unavailableIgnoredEntityGlobs: readonly string[];
     presence: ConfiguredEntity[];
     security: ConfiguredEntity[];
     climate: ConfiguredEntity[];
@@ -45,7 +46,7 @@ const EnvSchema = z.object({
   HA_UNAVAILABLE_IGNORED_DOMAINS: z
     .string()
     .default(
-      "group,automation,scene,script,button,event,number,select,text,update",
+      "group,automation,scene,script,button,event,number,select,text,update,conversation,stt,tts",
     ),
   HA_PRESENCE_ENTITIES: z.string().default(""),
   HA_SECURITY_ENTITIES: z.string().default(""),
@@ -76,6 +77,26 @@ const EnvSchema = z.object({
     .default("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"),
 });
 
+// Portable speakers, TVs, and companion diagnostics are often unavailable
+// by design. This is product policy in source, not an environment override.
+export const UNAVAILABLE_IGNORED_ENTITY_GLOBS = [
+  "sensor.ipad_*",
+  "binary_sensor.ipad_*",
+  "sensor.shuxin_*",
+  "binary_sensor.shuxin_*",
+  "sensor.iphone_*",
+  "binary_sensor.iphone_*",
+  "sensor.jerred_iphone_*",
+  "media_player.rooftop",
+  "sensor.rooftop_*",
+  "switch.rooftop_*",
+  "switch.play_*",
+  "binary_sensor.rooftop_*",
+  "media_player.living_room_television",
+  "sensor.living_room_television_*",
+  "binary_sensor.*_ac_mains_*",
+] as const;
+
 export function loadConfig(env: Record<string, string | undefined>): AppConfig {
   const parsed = EnvSchema.parse(env);
   const kubernetesUrl =
@@ -95,6 +116,7 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
       unavailableIgnoredDomains: parseCsv(
         parsed.HA_UNAVAILABLE_IGNORED_DOMAINS,
       ),
+      unavailableIgnoredEntityGlobs: UNAVAILABLE_IGNORED_ENTITY_GLOBS,
       presence: parseEntities(parsed.HA_PRESENCE_ENTITIES),
       security: parseEntities(parsed.HA_SECURITY_ENTITIES),
       climate: parseEntities(parsed.HA_CLIMATE_ENTITIES),
@@ -118,6 +140,25 @@ function parseCsv(value: string): string[] {
     .split(",")
     .map((part) => part.trim())
     .filter((part) => part.length > 0);
+}
+
+export function entityIdMatchesGlob(entityId: string, glob: string): boolean {
+  const escaped = glob
+    .replaceAll(/[.+^${}()|[\]\\]/g, String.raw`\$&`)
+    .replaceAll("*", ".*");
+  return new RegExp(`^${escaped}$`).test(entityId);
+}
+
+export function isExpectedUnavailable(
+  entityId: string,
+  ignoredDomains: readonly string[],
+  ignoredGlobs: readonly string[],
+): boolean {
+  const domain = entityId.split(".", 1)[0] ?? "";
+  return (
+    ignoredDomains.includes(domain) ||
+    ignoredGlobs.some((glob) => entityIdMatchesGlob(entityId, glob))
+  );
 }
 
 export function parseEntities(value: string): ConfiguredEntity[] {

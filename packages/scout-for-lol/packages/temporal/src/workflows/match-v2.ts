@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { ApplicationFailure, startChild } from "@temporalio/workflow";
+import { ApplicationFailure, patched, startChild } from "@temporalio/workflow";
 import { WorkflowExecutionAlreadyStartedError } from "@temporalio/common";
 import type {
   IsoInstant,
@@ -30,6 +30,7 @@ import {
   scoutTaskQueues,
 } from "#src/identifiers.ts";
 import {
+  SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
   SCOUT_V2_MATCH_RECEIPT_KINDS,
   SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND,
 } from "#src/match-receipts-v2.ts";
@@ -44,6 +45,11 @@ import {
   planMatchFanOutChildrenV2,
   type ScoutMatchFanOutChildV2,
 } from "./match-fan-out-v2.ts";
+import {
+  ScoutDispatchableDiscoveredMatchesV2Schema,
+  installMatchDispatchCompletionHandler,
+  processDiscoveredMatchesThroughDispatcher,
+} from "./shared-match-dispatch-v2.ts";
 
 /**
  * One discovered match as the loop consumes it: the id always, and the fields
@@ -53,10 +59,12 @@ const ScoutDiscoveredMatchesSchema = z
   .array(ScoutDiscoveredMatchV2Schema)
   .readonly();
 
-type ScoutDiscoveredMatchV2Ref = {
+export type ScoutDiscoveredMatchV2Ref = {
   readonly riotMatchId: RiotMatchId;
   readonly sourcePuuid?: ScoutDiscoveredMatchV2["sourcePuuid"] | undefined;
   readonly deliveryMode?: ScoutDiscoveredMatchV2["deliveryMode"] | undefined;
+  readonly gameEndTimestamp?:
+    ScoutDiscoveredMatchV2["gameEndTimestamp"] | undefined;
 };
 
 /**
@@ -161,8 +169,30 @@ export function pollClaimOf(scan: { pollOwner?: IsoInstant | undefined }): {
 export function observedDeliveryModeOf(observation: {
   deliveryMode?: MatchDeliveryMode | undefined;
 }): MatchDeliveryMode {
-  if (observation.deliveryMode !== undefined) return observation.deliveryMode;
-  return "live";
+  return observation.deliveryMode ?? "live";
+}
+
+async function processLegacyDiscoveredMatches(
+  stage: ScoutStage,
+  discovered: readonly ScoutDiscoveredMatchV2Ref[],
+): Promise<{
+  readonly childrenStarted: number;
+  readonly ownedWholeTail: boolean;
+  readonly childFailure?: unknown;
+}> {
+  let childrenStarted = 0;
+  for (const match of discovered) {
+    setWorkflowPhase(`**Phase:** processing match \`${match.riotMatchId}\``);
+    try {
+      if (!(await processMatchAsChild(stage, match))) {
+        return { childrenStarted, ownedWholeTail: false };
+      }
+    } catch (error) {
+      return { childrenStarted, ownedWholeTail: false, childFailure: error };
+    }
+    childrenStarted += 1;
+  }
+  return { childrenStarted, ownedWholeTail: true };
 }
 
 /**
@@ -196,6 +226,7 @@ export async function scoutPostMatchDiscoveryV2Workflow(
   rawInput: ScoutPostMatchDiscoveryV2InputEnvelope,
 ): Promise<ScoutPostMatchDiscoveryV2ResultEnvelope> {
   const input = scoutPostMatchDiscoveryV2InputCodec.parse(rawInput);
+  const dispatchResults = installMatchDispatchCompletionHandler();
   setWorkflowPhase("**Phase:** discovering completed matches");
   const scan = await realtimeV2Activities(input.stage).discoverPostMatchIdsV2(
     input,
@@ -227,27 +258,32 @@ export async function scoutPostMatchDiscoveryV2Workflow(
   // the deterministic fact and a patch flag was the wrong boundary.
   const discovered = discoveredMatchesOf(scan);
 
-  let childrenStarted = 0;
-  let ownedWholeTail = true;
+  let childrenStarted: number;
+  let ownedWholeTail: boolean;
   let childFailure: unknown;
-  for (const match of discovered) {
-    setWorkflowPhase(`**Phase:** processing match \`${match.riotMatchId}\``);
-    try {
-      if (!(await processMatchAsChild(input.stage, match))) {
-        // Another execution already owns this match's ID. Continuing past it
-        // would let a LATER match settle while an EARLIER one is still being
-        // processed elsewhere, which is exactly the chronology the
-        // serialization above exists to preserve — so this run stops and
-        // reports that it did not see the whole tail through. The next
-        // discovery rediscovers it.
-        ownedWholeTail = false;
-        break;
-      }
-    } catch (error) {
-      childFailure = error;
-      break;
-    }
-    childrenStarted += 1;
+  const dispatchable =
+    ScoutDispatchableDiscoveredMatchesV2Schema.safeParse(discovered);
+  if (dispatchable.success) {
+    setWorkflowPhase("**Phase:** awaiting the shared match serializer");
+    const dispatched = await processDiscoveredMatchesThroughDispatcher(
+      input.stage,
+      dispatchable.data,
+      dispatchResults,
+    );
+    childrenStarted = dispatched.childrenStarted;
+    ownedWholeTail = dispatched.ownedWholeTail;
+    childFailure = dispatched.childFailure;
+  } else {
+    // Replay-only branch: these Activity results were recorded before game end
+    // timestamps crossed the boundary, so they must emit the direct child
+    // commands their histories already hold.
+    const legacy = await processLegacyDiscoveredMatches(
+      input.stage,
+      discovered,
+    );
+    childrenStarted = legacy.childrenStarted;
+    ownedWholeTail = legacy.ownedWholeTail;
+    childFailure = legacy.childFailure;
   }
 
   // Maintenance closes the poll this run opened, and it runs on EVERY exit
@@ -306,7 +342,7 @@ export async function scoutPostMatchDiscoveryV2Workflow(
  * less than it found. Only the already-started rejection is an answer rather
  * than a fault — some other execution is driving that match.
  */
-async function processMatchAsChild(
+export async function processMatchAsChild(
   stage: ScoutStage,
   match: ScoutDiscoveredMatchV2Ref,
 ): Promise<boolean> {
@@ -507,10 +543,21 @@ async function commitObservation(
 }
 
 /**
+ * The marker that says a history was recorded by a run that minted its
+ * postmatch intents from the Workflow.
+ *
+ * Named once so the gate and its pin cannot drift apart, and never reused: a
+ * patch id identifies ONE change to one Workflow's command sequence for the
+ * life of that Workflow, so changing this string would silently re-run the
+ * decision for every execution that already made it.
+ */
+export const SCOUT_V2_MATCH_MINT_INTENTS_PATCH = "scout-v2-match-mint-intents";
+
+/**
  * The per-match core, V2.
  *
  * Phases, in order: archive the raw artifacts, commit the observation, settle
- * markets, apply progression, finalize any tournament result, record receipts,
+ * markets, apply progression, finalize any managed-custom result, record receipts,
  * advance tracked-account cursors, and only then fan out notification and
  * lake-projection children.
  *
@@ -567,6 +614,12 @@ export async function scoutMatchProcessingV2Workflow(
 
   setWorkflowPhase("**Phase:** reading the match resume point");
   const resume = await activities.readMatchPipelineStateV2(ref);
+  if (resume.kind === "terminal") {
+    throw ApplicationFailure.nonRetryable(
+      `Match ${input.riotMatchId} is awaiting review (${SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND} stands); refusing to restart its failed pipeline`,
+      "ClientMatchTerminalReview",
+    );
+  }
   const observed = resume.kind === "present" ? resume.state : null;
   const attested = new Set<ReceiptKind>(observed?.receiptKinds);
   if (attested.has(SCOUT_V2_MATCH_STAGE_CONFLICT_RECEIPT_KIND)) {
@@ -654,15 +707,60 @@ export async function scoutMatchProcessingV2Workflow(
   // is the only caller repo-wide, so a V2 core that skipped it would leave the
   // result unfinalized and the snapshot unpublished — with the cursor moved
   // past the match, so nothing would ever rediscover it. The stage answers
-  // `not-a-tournament-match` cheaply for an ordinary match.
+  // The legacy `not-a-tournament-match` result cheaply covers an ordinary match.
   if (!attested.has(SCOUT_V2_MATCH_RECEIPT_KINDS.tournament)) {
-    setWorkflowPhase("**Phase:** finalizing any tournament result");
+    setWorkflowPhase("**Phase:** finalizing any managed custom result");
     await activities.finalizeTournamentResultV2(ref);
     receiptKinds.push(SCOUT_V2_MATCH_RECEIPT_KINDS.tournament);
   }
 
   await attestPhases(activities, ref, receiptKinds);
 
+  // Minted BEFORE the cursor moves, and the order is the whole point.
+  //
+  // Every domain fact this match asserts is already durable here: the
+  // observation, the guarded effects and the stage receipts all committed
+  // above, so an intent minted now cannot promise a report for something the
+  // run then failed to commit. The cursor is not one of those facts. It is
+  // what stops the match being rediscovered at all, so it must be the LAST
+  // thing that moves.
+  //
+  // Minting after it was a permanent-loss path. A mint that exhausted its
+  // retries or failed non-retryably left every tracked-account cursor already
+  // past the match, its observation receipt standing and no association
+  // unadvanced — so the reconciliation scan reads the match as finished, and
+  // with no intent row there is nothing for the notification scan to recover.
+  // Nobody would ever be told the game happened, and nothing would say so.
+  // Minting first means a failure leaves the cursor where it was and the next
+  // discovery surfaces the match again.
+  //
+  // Gated, because this is an inserted COMMAND rather than a changed payload.
+  //
+  // A history recorded before this Activity existed has `advanceMatchCursorV2`
+  // where replay would now schedule the mint. That is nondeterminism, and it
+  // wedges the execution rather than failing it — no retry clears it, and the
+  // match is stuck with its cursor unmoved forever.
+  //
+  // Everywhere else in this file the pre-change generation is told apart by
+  // the recorded payload, which is the better instrument because the payload
+  // IS that execution's fact. A command sequence leaves no payload to read:
+  // nothing in the history says which generation wrote it except a marker put
+  // there for the purpose. So this one is a patch, and the difference is not
+  // stylistic — it is which fact exists to be read.
+  //
+  // The old branch mints nothing, and that is exactly what that generation
+  // did: no per-match Activity minted postmatch intents before this one, so
+  // an execution replaying past this point already behaves as its own code
+  // wrote it. Nothing is lost that that execution ever had.
+  //
+  // Retire with `deprecatePatch` once no execution predating it can still
+  // replay, not before.
+  if (patched(SCOUT_V2_MATCH_MINT_INTENTS_PATCH)) {
+    setWorkflowPhase("**Phase:** minting the post-match report intents");
+    await activities.mintPostmatchNotificationIntentsV2(ref);
+  }
+
+  // Last, because it is what stops rediscovery.
   setWorkflowPhase("**Phase:** advancing tracked-account cursors");
   await activities.advanceMatchCursorV2(ref);
 

@@ -89,11 +89,6 @@ const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> = {
     "packages/scout-for-lol/scripts/contract-hash.ts",
     "packages/scout-for-lol/tsconfig.base.json",
   ],
-  // The evals image build copies packages/scout-for-lol/tsconfig.base.json and
-  // its runtime tsconfig extends it, but that file sits above every workspace
-  // package dir, so the closure walk never attributes it. Rebuild scout-evals
-  // when it changes so the image never pins stale compiler configuration.
-  "scout-evals": ["packages/scout-for-lol/tsconfig.base.json"],
   // Temporal compiles toolkit into the worker image as an embedded CLI, but
   // toolkit is deliberately not a runtime workspace dependency.
   "temporal-worker": ["packages/toolkit/"],
@@ -495,8 +490,7 @@ async function baseFile(
   });
   const stdout = await new Response(proc.stdout).text();
   const exitCode = await proc.exited;
-  if (exitCode !== 0) return null;
-  return stdout;
+  return exitCode === 0 ? stdout : null;
 }
 
 async function changedFilePair(base: string, path: string): Promise<FilePair> {

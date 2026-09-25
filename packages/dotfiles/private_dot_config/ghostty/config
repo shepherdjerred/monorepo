@@ -12,9 +12,9 @@ keybind = shift+enter=text:\x1b\r
 keybind = global:cmd+backquote=unbind
 
 window-save-state = always
-macos-titlebar-style = native
+# macos-titlebar-style = native
 cursor-click-to-move = true
 shell-integration-features = cursor,sudo,title,ssh-env,ssh-terminfo,path
-background-blur = macos-glass-regular
+# background-blur = macos-glass-regular
 scrollback-limit = 100000000
 quick-terminal-position = top

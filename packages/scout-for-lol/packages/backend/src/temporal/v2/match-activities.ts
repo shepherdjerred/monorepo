@@ -3,8 +3,7 @@ import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
 import type { ScoutV2MatchActivities } from "#src/temporal/v2/match-activity-surface.ts";
 
 /**
- * The nine Activities of the V2 post-match core, as the Activity Worker sees
- * them.
+ * The Activities of the V2 post-match core, as the Activity Worker sees them.
  *
  * Every one is declared `realtime` in `SCOUT_V2_ACTIVITY_QUEUE_CLASSES`, so
  * they register on the same queue v1's realtime Activities already run on and
@@ -47,6 +46,18 @@ export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
           const { readMatchPipelineStateV2 } =
             await import("#src/temporal/v2/match-reads.ts");
           return await readMatchPipelineStateV2(input);
+        },
+      ),
+    readLegacyMatchCompletionV2: async (input) =>
+      await heartbeatWhile(
+        {
+          riotMatchId: input.riotMatchId,
+          phase: "reading-legacy-match-completion-v2",
+        },
+        async () => {
+          const { readLegacyMatchCompletionV2 } =
+            await import("#src/league/tasks/postmatch/cursor-reconciliation.ts");
+          return await readLegacyMatchCompletionV2(input);
         },
       ),
     archiveMatchArtifactsV2: async (input) =>
@@ -103,6 +114,18 @@ export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
           return await recordMatchReceiptsV2(input);
         },
       ),
+    recordClientMatchTerminalV2: async (input) =>
+      await heartbeatWhile(
+        {
+          riotMatchId: input.riotMatchId,
+          phase: "receipting-client-match-terminal-v2",
+        },
+        async () => {
+          const { recordClientMatchTerminalV2 } =
+            await import("#src/temporal/v2/match-commits.ts");
+          return await recordClientMatchTerminalV2(input);
+        },
+      ),
     advanceMatchCursorV2: async (input) =>
       await heartbeatWhile(
         { riotMatchId: input.riotMatchId, phase: "advancing-cursors-v2" },
@@ -110,6 +133,15 @@ export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
           const { advanceMatchCursorV2 } =
             await import("#src/temporal/v2/match-commits.ts");
           return await advanceMatchCursorV2(input);
+        },
+      ),
+    mintPostmatchNotificationIntentsV2: async (input) =>
+      await heartbeatWhile(
+        { riotMatchId: input.riotMatchId, phase: "minting-report-intents-v2" },
+        async () => {
+          const { mintPostmatchNotificationIntentsV2 } =
+            await import("#src/temporal/v2/match-effects.ts");
+          return await mintPostmatchNotificationIntentsV2(input);
         },
       ),
     planMatchFanOutV2: async (input) =>

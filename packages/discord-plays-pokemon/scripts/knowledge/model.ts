@@ -78,8 +78,7 @@ export function humanizeIdentifier(value: string): string {
 }
 
 export function compactList(values: readonly string[], limit = 30): string {
-  if (values.length <= limit) {
-    return values.join(", ");
-  }
-  return `${values.slice(0, limit).join(", ")}; plus ${String(values.length - limit)} more`;
+  return values.length <= limit
+    ? values.join(", ")
+    : `${values.slice(0, limit).join(", ")}; plus ${String(values.length - limit)} more`;
 }

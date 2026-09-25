@@ -49,6 +49,9 @@ export type VoiceAttemptHandle = {
     readonly normalizedCommand: string | null;
     readonly outcome: string;
   }) => void;
+  /** Normalized command after the wake prefix, when transcription has completed. */
+  readonly spokenCommand: () => string | null;
+  readonly replyTranscript: (transcript: string) => void;
   readonly tool: (observation: VoiceToolObservation) => void;
   readonly cloudOutcome: (outcome: string) => void;
   readonly cloudUsage: (usage: unknown) => void;
@@ -57,6 +60,7 @@ export type VoiceAttemptHandle = {
     readonly packets: number;
     readonly bytes: number;
     readonly durationMs: number;
+    readonly pcm24k?: Uint8Array;
   }) => void;
   readonly finish: (outcome: string, error?: unknown) => void;
 };
@@ -80,6 +84,8 @@ const noopAttempt: VoiceAttemptHandle = {
   localVerification: () => null,
   endpoint: () => null,
   transcription: () => null,
+  spokenCommand: () => null,
+  replyTranscript: () => null,
   tool: () => null,
   cloudOutcome: () => null,
   cloudUsage: () => null,

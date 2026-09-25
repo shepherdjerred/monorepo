@@ -222,8 +222,7 @@ async function cleanCreatedChannels(
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return "Unknown voice operation failure";
+  return typeof error === "string" ? error : "Unknown voice operation failure";
 }
 
 async function recordVoiceFailure(input: {
@@ -300,7 +299,7 @@ export async function arrangeCustomVoice(
   const { actor, snapshot } = await voiceContext(claims, input);
   const game = snapshot.currentGame;
   if (game?.state !== "LOBBY_READY") {
-    throw new Error("Tournament lobby must be ready before arranging voice");
+    throw new Error("The observed lobby must be ready before arranging voice");
   }
   await commitCustomMutation(
     prisma,

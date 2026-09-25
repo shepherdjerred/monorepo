@@ -16,6 +16,7 @@ export * from "./phrase-verifier.ts";
 export * from "./ports.ts";
 export * from "./quota-errors.ts";
 export * from "./realtime/realtime-errors.ts";
+export * from "./realtime/realtime-transcript.ts";
 export * from "./realtime/realtime-turn.ts";
 export * from "./speaker-registry.ts";
 export * from "./spoken-feedback.ts";

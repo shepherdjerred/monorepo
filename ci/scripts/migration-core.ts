@@ -286,7 +286,6 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/scout-for-lol/packages/docs-site",
     "packages/scout-for-lol/packages/design-audit",
     "packages/scout-for-lol/packages/design-system",
-    "packages/scout-for-lol/packages/evals",
     "packages/scout-for-lol/packages/temporal",
     "packages/scout-for-lol/package.json",
     "packages/scout-for-lol/scripts/dev/dev-web.ts",
@@ -401,9 +400,29 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "ci/scripts/images/update-ci-image-pin.ts",
     "scripts/lib/transient-error.ts",
   ],
+  "windows-cross-compiler": [
+    "packages/windows-cross-compiler/Dockerfile",
+    "packages/windows-cross-compiler/bin/",
+    "packages/windows-cross-compiler/msbuild/",
+    "packages/windows-cross-compiler/wine-patches/",
+    "ci/scripts/images/application-image-runtime.ts",
+    "ci/scripts/images/bake-retry.ts",
+    "ci/scripts/images/build-ci-image-core.ts",
+    "ci/scripts/images/build-ci-image.ts",
+    "ci/scripts/reporting/buildkit-env.ts",
+    "ci/scripts/images/update-ci-image-pin-core.ts",
+    "ci/scripts/images/update-ci-image-pin-github.ts",
+    "ci/scripts/images/update-ci-image-pin.ts",
+    "scripts/lib/transient-error.ts",
+  ],
 };
 
-const lanesWithoutGlobalPaths = new Set(["site-scout"]);
+// windows-cross-compiler images are content-addressed from their own sources;
+// pipeline edits cannot change them, so they do not re-trigger the long build.
+const lanesWithoutGlobalPaths = new Set([
+  "site-scout",
+  "windows-cross-compiler",
+]);
 
 export function selectorPathsForLane(
   lane: string,

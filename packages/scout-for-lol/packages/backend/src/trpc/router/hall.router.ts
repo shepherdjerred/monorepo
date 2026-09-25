@@ -86,6 +86,15 @@ export const hallRouter = router({
         actorDiscordId: ctx.user.discordId,
         stage: configuration.environment,
       });
+      if (request === null) {
+        // BAD_REQUEST is an expected client error: surfaced as 4xx, never
+        // shipped to Sentry.
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Enable at least one Hall of Fame queue family and record to start a baseline.",
+        });
+      }
       await launchHallBaseline(configuration.environment, request);
       return request;
     }),

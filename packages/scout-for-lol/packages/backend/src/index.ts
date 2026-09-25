@@ -75,8 +75,6 @@ await initializeDynamicConfig({
     reportAiModel: configuration.reportAiModel ?? "gpt-5.6-sol",
     bettingParlayAiModel: configuration.bettingParlayAiModel ?? "gpt-5.6-sol",
     exploreModel: configuration.exploreModel,
-    tournamentApiMode: configuration.tournamentApiMode,
-    tournamentMaxOpenLobbies: configuration.tournamentMaxOpenLobbies,
     featureTipPercent: configuration.featureTipPercent,
     featureTipCooldownHours: configuration.featureTipCooldownHours,
     // Flag-only, so there is no env-derived value: seed the definition's

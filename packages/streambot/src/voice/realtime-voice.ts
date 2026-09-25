@@ -5,6 +5,7 @@ import {
   verifyWakeTranscript as verifyVoiceAssistantWakeTranscript,
   PacedAssistantSender,
   type AssistantAudioSink,
+  type AssistantAudioTransport,
   type RealtimeCommandTurnResult,
   type RealtimeTurnOptions,
   type SpokenFeedbackClips,
@@ -155,7 +156,11 @@ export async function runRealtimeVoiceTurn(
   return await runRealtimeCommandTurn(config, {
     pcm16k: input.pcm16k,
     activatedAtMs: input.activatedAtMs,
-    commands: bindPlaybackVoiceCommandPort(input.service, input.userId),
+    commands: bindPlaybackVoiceCommandPort(
+      input.service,
+      input.userId,
+      input.attempt,
+    ),
     assistantAudio: new PacedAssistantSender(input.streamer, {
       stagePrefix: STREAMBOT_VOICE_STAGE_PREFIX,
       metrics: streambotVoiceReplyMetrics,
@@ -178,12 +183,14 @@ export async function runRealtimeVoiceTurn(
 
 /** Speak one local clip over normal voice with the standard paced sender and duck handling. */
 export async function speakClip(
-  streamer: StreamerLike,
+  transport: AssistantAudioTransport,
   clip: Uint8Array,
+  attempt?: VoiceAttemptHandle,
 ): Promise<void> {
-  const sender = new PacedAssistantSender(streamer, {
+  const sender = new PacedAssistantSender(transport, {
     stagePrefix: STREAMBOT_VOICE_STAGE_PREFIX,
     metrics: streambotVoiceReplyMetrics,
+    ...(attempt === undefined ? {} : { attempt }),
   });
   sender.enqueue(clip);
   await sender.finish();

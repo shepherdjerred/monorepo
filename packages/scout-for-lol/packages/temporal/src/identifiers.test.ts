@@ -19,6 +19,7 @@ import {
   scoutInitialHistoryWorkflowId,
   scoutInteractiveWorkflowId,
   scoutLakeProjectionV2WorkflowId,
+  scoutClientMatchDispatchV2WorkflowId,
   scoutMatchProcessingV2WorkflowId,
   scoutMatchWorkflowId,
   scoutNotificationAttemptNonce,
@@ -96,6 +97,7 @@ const gameRef = ScoutPrematchGameRefSchema.parse({
 const v2WorkflowIds = [
   scoutPostMatchDiscoveryV2WorkflowId("prod", "schedule"),
   scoutMatchProcessingV2WorkflowId("prod", riotMatchId),
+  scoutClientMatchDispatchV2WorkflowId("prod"),
   scoutPrematchDiscoveryV2WorkflowId("prod"),
   scoutPrematchGameV2WorkflowId("prod", gameRef),
   scoutNotificationV2WorkflowId("prod", intentKey),
@@ -109,6 +111,7 @@ describe("Scout V2 workflow identifiers", () => {
     expect(v2WorkflowIds).toEqual([
       "scout-prod-post-match-discovery-v2-schedule",
       "scout-prod-match-v2-NA1_5312279829",
+      "scout-prod-client-match-dispatch-v2",
       "scout-prod-prematch-discovery-v2",
       "scout-prod-prematch-game-v2-NA1_5312279829",
       "scout-prod-notification-v2-notify:NA1_5312279829:guild:1234567890",

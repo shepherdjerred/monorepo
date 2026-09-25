@@ -82,10 +82,9 @@ function resolveTarget(
   const output = input.outputs.find((candidate) =>
     sameExpr(candidate.ast, expr),
   );
-  if (output !== undefined) {
-    return { kind: "output", name: output.name };
-  }
-  return undefined;
+  return output === undefined
+    ? undefined
+    : { kind: "output", name: output.name };
 }
 
 export function analyzeOrderBy(input: OrderInput): ScoutQlOrderKey[] {

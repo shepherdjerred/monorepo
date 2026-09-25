@@ -1,4 +1,4 @@
-import { DiscordOpusEncoder } from "./audio/codecs.ts";
+import { concatBytes, DiscordOpusEncoder } from "./audio/codecs.ts";
 import type {
   AssistantAudioTransport,
   DuckObserver,
@@ -27,6 +27,7 @@ export type PacedAssistantSenderOptions = {
 export class PacedAssistantSender implements AssistantAudioSink {
   private readonly encoder = new DiscordOpusEncoder();
   private readonly queue: Uint8Array[] = [];
+  private readonly capturedPcm: Uint8Array[] = [];
   private task: Promise<void> | null = null;
   private finishTask: Promise<void> | null = null;
   private wake: (() => void) | null = null;
@@ -54,6 +55,7 @@ export class PacedAssistantSender implements AssistantAudioSink {
     // Realtime transport callbacks can race session teardown. Once finish/cancel has sealed the
     // encoder, late audio is no longer part of this reply and must not touch the native encoder.
     if (this.cancelled || this.done) return;
+    if (pcm24k.byteLength > 0) this.capturedPcm.push(pcm24k);
     this.queue.push(...this.encoder.encode(pcm24k));
     this.start();
     this.wake?.();
@@ -76,6 +78,7 @@ export class PacedAssistantSender implements AssistantAudioSink {
         packets: 0,
         bytes: 0,
         durationMs: 0,
+        ...this.capturedReplyPcm(),
       });
       this.finishTask ??= Promise.resolve();
       return this.finishTask;
@@ -125,6 +128,7 @@ export class PacedAssistantSender implements AssistantAudioSink {
         packets: this.sentPackets,
         bytes: this.sentBytes,
         durationMs: performance.now() - startedAt,
+        ...this.capturedReplyPcm(),
       });
       throw error;
     } finally {
@@ -138,9 +142,16 @@ export class PacedAssistantSender implements AssistantAudioSink {
           packets: this.sentPackets,
           bytes: this.sentBytes,
           durationMs: performance.now() - startedAt,
+          ...this.capturedReplyPcm(),
         });
       }
     }
+  }
+
+  private capturedReplyPcm(): { readonly pcm24k?: Uint8Array } {
+    return this.capturedPcm.length === 0
+      ? {}
+      : { pcm24k: concatBytes(this.capturedPcm) };
   }
 
   private start(): void {

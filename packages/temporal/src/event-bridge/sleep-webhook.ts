@@ -52,10 +52,7 @@ function tokenMatches(
   }
   const a = Buffer.from(presented);
   const b = Buffer.from(expected);
-  if (a.length !== b.length) {
-    return false;
-  }
-  return timingSafeEqual(a, b);
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 function bearerToken(header: string | undefined): string | undefined {
@@ -63,10 +60,7 @@ function bearerToken(header: string | undefined): string | undefined {
   if (header === undefined) {
     return undefined;
   }
-  if (!header.startsWith(prefix)) {
-    return undefined;
-  }
-  return header.slice(prefix.length);
+  return header.startsWith(prefix) ? header.slice(prefix.length) : undefined;
 }
 
 function sleepWorkflowTimeout(durationMinutes: number): Duration {

@@ -271,7 +271,7 @@ type InteractiveRun = {
 };
 
 type DetachedWork = {
-  readonly kind: "parlay-generation";
+  readonly kind: ScoutDetachedWorkInput["kind"];
   readonly workId: string;
 };
 

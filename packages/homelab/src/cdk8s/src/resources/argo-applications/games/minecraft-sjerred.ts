@@ -1,70 +1,93 @@
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import {
+  KubePersistentVolumeClaim,
+  Quantity,
+} from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
-import { getMinecraftBlueMapPort } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-ports.ts";
+import { getMinecraftDynmapPort } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-ports.ts";
 import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 import {
-  DISCORDSRV_PLUGIN_URL,
-  getDiscordSrvConfigMapManifest,
-  getDiscordSrvExtraVolumes,
-  getDiscordSrvExtraEnv,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/discordsrv-config.ts";
+  DISCORD_INTEGRATION_MOD_URL,
+  getDiscordIntegrationConfigInitContainer,
+  getDiscordIntegrationConfigMapManifest,
+  getDiscordIntegrationExtraVolumes,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/discord-integration-config.ts";
 import {
-  createMinecraftConfigMaps,
-  getMinecraftExtraVolumes,
-  getMinecraftExtraEnv,
-  getMinecraftPluginConfigInitContainer,
-} from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-config.ts";
+  getDynmapConfigInitContainer,
+  getDynmapConfigMapManifest,
+  getDynmapExtraVolumes,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/dynmap-config.ts";
 
 const NAMESPACE = "minecraft-sjerred";
-const SECRET_NAME = "minecraft-sjerred-discord";
+const DISCORD_SECRET_NAME = "minecraft-sjerred-discord";
+const CURSEFORGE_SECRET_NAME = "minecraft-sjerred-curseforge";
+const DATA_PVC_NAME = "minecraft-sjerred-rlcraft-data";
+const DYNMAP_MOD_URL =
+  "https://github.com/webbukkit/dynmap/releases/download/v3.3-beta-2/Dynmap-3.3-beta-2-forge-1.12.2.jar";
 
 export function createMinecraftSjerredApp(chart: Chart) {
-  // Create ConfigMaps externally (not in Helm values) to avoid Application size limits
-  createMinecraftConfigMaps(chart, "sjerred", NAMESPACE);
+  new KubePersistentVolumeClaim(chart, "minecraft-sjerred-rlcraft-data", {
+    metadata: {
+      name: DATA_PVC_NAME,
+      namespace: NAMESPACE,
+      labels: {
+        "velero.io/backup": "enabled",
+        "velero.io/exclude-from-backup": "false",
+      },
+    },
+    spec: {
+      accessModes: ["ReadWriteOnce"],
+      storageClassName: NVME_STORAGE_CLASS,
+      resources: { requests: { storage: Quantity.fromString("64Gi") } },
+    },
+  });
 
-  // 1Password secret for DiscordSRV configuration
-  // Required fields in 1Password (UPPERCASE_SNAKE labels, matching the env-var refs):
-  // - DISCORD_BOT_TOKEN: Discord bot token
-  // - DISCORD_CHANNEL_ID: Main chat channel ID
-  // - discord-console-channel-id: (optional) Console channel ID
-  // - discord-invite-link: (optional) Discord invite link
+  // Existing Discord bot item. Only the init container receives these fields,
+  // and it interpolates them into a writable emptyDir rather than the PVC.
   new OnePasswordItem(chart, "minecraft-sjerred-discord-1p", {
     spec: {
       itemPath:
         "vaults/v64ocnykdqju4ui6j6pua56xw4/items/q37vet77dfggoqbvu4bqle3gje",
     },
     metadata: {
-      name: SECRET_NAME,
+      name: DISCORD_SECRET_NAME,
       namespace: NAMESPACE,
     },
   });
 
-  createIngress(chart, "minecraft-sjerred-bluemap-ingress", {
-    namespace: "minecraft-sjerred",
-    service: "minecraft-sjerred-bluemap",
-    port: 8100,
-    hosts: ["minecraft-sjerred-bluemap"],
+  // Existing Minecraft item containing the CurseForge API key.
+  new OnePasswordItem(chart, "minecraft-sjerred-curseforge-1p", {
+    spec: {
+      itemPath:
+        "vaults/v64ocnykdqju4ui6j6pua56xw4/items/evbgkoazs6dquzlrl5fv7h2gtm",
+    },
+    metadata: {
+      name: CURSEFORGE_SECRET_NAME,
+      namespace: NAMESPACE,
+    },
+  });
+
+  createIngress(chart, "minecraft-sjerred-dynmap-ingress", {
+    namespace: NAMESPACE,
+    service: "minecraft-sjerred-dynmap",
+    port: 8123,
+    hosts: ["minecraft-sjerred-dynmap"],
     // The server statefulset hibernates at 0 replicas (mc-router wake-on-join),
     // so a synthetic probe only measures sleep: 60s failures around the clock.
     disableProbe: true,
   });
 
-  createCloudflareTunnelBinding(chart, "minecraft-sjerred-bluemap-cf-tunnel", {
-    serviceName: "minecraft-sjerred-bluemap",
-    // First-level subdomain: Cloudflare Universal SSL covers only *.sjer.red,
-    // so the former sjerred.bluemap.sjer.red could never complete a TLS
-    // handshake. Must match the tofu DNS record in
-    // src/tofu/cloudflare/sjer-red.tf.
-    subdomain: "sjerred-bluemap",
-    namespace: "minecraft-sjerred",
-    port: 8100,
+  createCloudflareTunnelBinding(chart, "minecraft-sjerred-dynmap-cf-tunnel", {
+    serviceName: "minecraft-sjerred-dynmap",
+    subdomain: "dynmap",
+    namespace: NAMESPACE,
+    port: 8123,
     // Hibernates at 0 replicas (see above).
     disableProbe: true,
   });
@@ -81,23 +104,37 @@ export function createMinecraftSjerredApp(chart: Chart) {
       "mc-router.itzg.me/externalServerName": "sjer.red,mc.sjer.red",
     },
     image: {
-      tag: versions["itzg/minecraft-server"],
+      tag: versions["itzg/minecraft-server-java8"],
     },
     resources: {
       requests: {
-        memory: "3Gi",
-        cpu: "500m",
+        memory: "6Gi",
+        cpu: "2",
       },
       limits: {
-        memory: "4Gi",
+        memory: "8Gi",
       },
+    },
+    startupProbe: {
+      enabled: true,
+      failureThreshold: 120,
+      periodSeconds: 10,
     },
     minecraftServer: {
       eula: true,
       difficulty: "hard",
-      version: versions.paper,
-      type: "PAPER",
-      motd: "Jerred's Really Cool Minecraft Server",
+      version: "1.12.2",
+      type: "AUTO_CURSEFORGE",
+      autoCurseForge: {
+        apiKey: {
+          existingSecret: CURSEFORGE_SECRET_NAME,
+          secretKey: "CF_API_KEY",
+        },
+        slug: "rlcraft",
+        fileId: "4612979",
+        parallelDownloads: 4,
+      },
+      motd: "Jerred's RLCraft Server",
       whitelist: [
         "lolopToaster",
         "gexboy8",
@@ -106,65 +143,48 @@ export function createMinecraftSjerredApp(chart: Chart) {
         "XiguaJerred",
       ].join(","),
       spawnProtection: 0,
-      viewDistance: 15,
-      memory: "3G",
+      viewDistance: 10,
+      memory: "5G",
+      gameMode: "survival",
+      onlineMode: true,
+      maxPlayers: 20,
       forcegameMode: true,
+      enableCommandBlock: true,
+      announcePlayerAchievements: true,
+      maxTickTime: -1,
+      overrideServerProperties: true,
       // Use ClusterIP - mc-router handles external routing
       serviceType: "ClusterIP",
-      pluginUrls: [
-        DISCORDSRV_PLUGIN_URL,
-        "https://github.com/BlueMap-Minecraft/BlueMap/releases/download/v5.23/bluemap-5.23-paper.jar",
-        "https://cdn.modrinth.com/data/fALzjamp/versions/MdY6JATr/Chunky-Bukkit-1.5.3.jar",
-        // EssentialsX - core commands and teleportation
-        "https://cdn.modrinth.com/data/hXiIvTyT/versions/nY6VN1XH/EssentialsX-2.22.0.jar",
-        "https://cdn.modrinth.com/data/sYpvDxGJ/versions/lc5JHiNJ/EssentialsXSpawn-2.22.0.jar",
-        // Core plugins (all servers)
-        "https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar",
-        "https://cdn.modrinth.com/data/Lu3KuzdV/versions/Kma0kBsY/CoreProtect-CE-24.0.jar",
-        "https://cdn.modrinth.com/data/Kt3eUOUy/versions/hvoPVYQT/Sleeper-1.10.8.jar",
-        // Harder mobs - scale health/damage based on distance from spawn
-        "https://cdn.modrinth.com/data/eX8JZ3Zr/versions/dSBu3PRW/LevelledMobs-4.5.3.2%20b159.jar",
-        // Blood moons - mobs get armor, speed, bigger detection range
-        "https://cdn.modrinth.com/data/uA289E2d/versions/F4QSC1D9/Lunamatic-2.0.8-all.jar",
-        // Death chests (QoL to offset harder mobs)
-        "https://cdn.modrinth.com/data/vCFaodCy/versions/JpbCUK5u/GravesX-2026.4.9.1.jar",
-      ],
-      extraPorts: [getMinecraftBlueMapPort()],
+      modUrls: [DYNMAP_MOD_URL, DISCORD_INTEGRATION_MOD_URL],
+      extraPorts: [getMinecraftDynmapPort()],
       rcon: {
         enabled: true,
         withGeneratedPassword: true,
       },
     },
     persistence: {
-      storageClass: NVME_STORAGE_CLASS,
-      // Note: persistence.labels doesn't work in this Helm chart (not templated to
-      // the PVC), so this volume is not enrolled in Velero backups.
       dataDir: {
-        Size: Size.gibibytes(32).asString(),
         enabled: true,
+        existingClaim: DATA_PVC_NAME,
       },
     },
-    // DiscordSRV ConfigMap (main server ConfigMaps are created externally to avoid size limits)
-    extraDeploy: [getDiscordSrvConfigMapManifest(NAMESPACE)],
-
-    // Mount configs to /config (itzg syncs to /data on startup)
-    // Use split ConfigMaps (true) to match extraDeploy
-    extraVolumes: [
-      ...getMinecraftExtraVolumes("sjerred", NAMESPACE, true),
-      ...getDiscordSrvExtraVolumes(NAMESPACE),
+    extraDeploy: [
+      getDynmapConfigMapManifest(NAMESPACE),
+      getDiscordIntegrationConfigMapManifest(NAMESPACE),
     ],
-
-    // Config sync settings + DiscordSRV secrets
+    extraVolumes: [
+      ...getDynmapExtraVolumes(NAMESPACE),
+      ...getDiscordIntegrationExtraVolumes(NAMESPACE),
+    ],
     extraEnv: {
-      ...getMinecraftExtraEnv(),
-      ...getDiscordSrvExtraEnv(SECRET_NAME),
+      ALLOW_FLIGHT: "TRUE",
+      ENABLE_WHITELIST: "TRUE",
     },
-
-    // Init container to copy plugin configs (bypasses itzg sync which fails with DirectoryNotEmptyException)
-    initContainers: [getMinecraftPluginConfigInitContainer("sjerred", true)],
+    initContainers: [
+      getDynmapConfigInitContainer(),
+      getDiscordIntegrationConfigInitContainer(DISCORD_SECRET_NAME),
+    ],
   };
-
-  // DNS records are now managed by mc-router
 
   return new Application(chart, "minecraft-sjerred-app", {
     metadata: {
@@ -196,7 +216,6 @@ export function createMinecraftSjerredApp(chart: Chart) {
             "/spec/podManagementPolicy",
             "/spec/revisionHistoryLimit",
             "/spec/persistentVolumeClaimRetentionPolicy",
-            "/spec/volumeClaimTemplates",
           ],
         },
         {

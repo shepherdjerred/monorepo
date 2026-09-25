@@ -29,6 +29,8 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
         "No local Cursor sign-in was found. Sign in through Cursor."
       case .grok:
         "No local Grok credentials found. Sign in with grok login."
+      case .muse:
+        "No Muse OAuth credentials found. Sign in with muse login."
       default:
         "No local credentials found for \(provider.displayName)."
       }
@@ -39,6 +41,8 @@ public enum QuotaError: Error, Equatable, LocalizedError, Sendable {
         "Grok credentials expired. Sign in again with grok login."
       } else if provider == .cursor {
         "Cursor credentials expired. Sign in again through Cursor."
+      } else if provider == .muse {
+        "Muse credentials expired. Sign in again with muse login."
       } else {
         "\(provider.displayName) credentials expired. Sign in again with its CLI."
       }
