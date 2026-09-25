@@ -154,9 +154,22 @@ final class SignCreationTest {
   void usingNeedsTheUseLevel() {
     var gatekeeper = new Gatekeeper(config);
 
-    assertThat(gatekeeper.mayUse(Feature.ELEVATOR, "thestorm.track.mechanic.2"::equals)).isEmpty();
+    assertThat(gatekeeper.mayUse(Feature.LIGHT_SWITCH, "thestorm.track.mechanic.1"::equals))
+        .isEmpty();
     assertThat(
-            gatekeeper.mayUse(Feature.ELEVATOR, permission -> false).map(SignCreationTest::plain))
-        .contains("Using this needs Mechanic II.");
+            gatekeeper
+                .mayUse(Feature.LIGHT_SWITCH, permission -> false)
+                .map(SignCreationTest::plain))
+        .contains("Using this needs Mechanic I.");
+  }
+
+  @Test
+  void anyoneMayUseLiftsBridgesGatesAndDoors() {
+    var gatekeeper = new Gatekeeper(config);
+
+    for (var feature : List.of(Feature.ELEVATOR, Feature.BRIDGE, Feature.GATE, Feature.DOOR)) {
+      assertThat(gatekeeper.mayUse(feature, permission -> false)).as(feature.name()).isEmpty();
+      assertThat(gatekeeper.mayCreate(feature, permission -> false)).as(feature.name()).isPresent();
+    }
   }
 }

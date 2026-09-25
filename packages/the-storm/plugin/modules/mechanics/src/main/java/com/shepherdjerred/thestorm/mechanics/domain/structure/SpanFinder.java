@@ -119,7 +119,6 @@ public final class SpanFinder {
           LIFT,
           BRIDGE,
           GATE,
-          MAP_CHANGER,
           CRUSH,
           BOUNCE,
           SUPER_STICKY,
