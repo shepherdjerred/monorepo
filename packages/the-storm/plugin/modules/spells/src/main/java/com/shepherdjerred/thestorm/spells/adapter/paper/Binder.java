@@ -10,6 +10,8 @@ import com.shepherdjerred.thestorm.spells.domain.cast.CastRules;
 import com.shepherdjerred.thestorm.spells.domain.cast.CasterState;
 import com.shepherdjerred.thestorm.spells.domain.config.Spellbook;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.bukkit.entity.Player;
@@ -21,6 +23,9 @@ import org.bukkit.inventory.Inventory;
  * chest, or duplicated) is dead weight that crumbles when used.
  */
 final class Binder {
+
+  /** Slots 0-35: the hotbar and backpack, where a new focus can go. */
+  private static final int STORAGE_SLOTS = 36;
 
   private final SpellItems items;
   private final SpellState state;
@@ -64,30 +69,59 @@ final class Binder {
     if (refused.isPresent()) {
       return refused;
     }
-    removeFoci(player.getInventory(), player, spell);
-    removeFoci(player.getEnderChest(), player, spell);
-    if (player.getInventory().firstEmpty() < 0) {
+    // Refuse before touching anything: the new focus goes into a free hotbar or backpack slot, or
+    // into the slot of the focus it replaces.
+    var inventory = player.getInventory();
+    var slot =
+        freeSlot(inventory)
+            .or(
+                () ->
+                    fociSlots(inventory, player, spell).stream()
+                        .filter(held -> held < STORAGE_SLOTS)
+                        .findFirst());
+    if (slot.isEmpty()) {
       return Optional.of(new Refusal.InventoryFull());
     }
+    removeFoci(inventory, player, spell);
+    removeFoci(player.getEnderChest(), player, spell);
     var key = new FocusKey(player.getUniqueId(), spell);
     var generation = state.foci().bind(key);
     storage
         .async()
         .logFailure(
             storage.store().saveFocus(key, generation), "recording a " + spell.id() + " bind");
-    player.getInventory().addItem(items.focus(spell, player.getUniqueId(), generation));
+    inventory.setItem(slot.get(), items.focus(spell, player.getUniqueId(), generation));
+    return Optional.empty();
+  }
+
+  private static Optional<Integer> freeSlot(Inventory inventory) {
+    for (var slot = 0; slot < STORAGE_SLOTS; slot++) {
+      var item = inventory.getItem(slot);
+      if (item == null || item.isEmpty()) {
+        return Optional.of(slot);
+      }
+    }
     return Optional.empty();
   }
 
   private void removeFoci(Inventory inventory, Player owner, SpellKind spell) {
+    for (var slot : fociSlots(inventory, owner, spell)) {
+      inventory.setItem(slot, null);
+    }
+  }
+
+  /** The slots holding {@code owner}'s foci for {@code spell}. */
+  private List<Integer> fociSlots(Inventory inventory, Player owner, SpellKind spell) {
+    var slots = new ArrayList<Integer>();
     for (var slot = 0; slot < inventory.getSize(); slot++) {
       var item = inventory.getItem(slot);
       if (item != null
           && items.identify(item).orElse(null) instanceof SpellIdentity.Focus focus
           && focus.spell() == spell
           && focus.owner().equals(owner.getUniqueId())) {
-        inventory.setItem(slot, null);
+        slots.add(slot);
       }
     }
+    return slots;
   }
 }

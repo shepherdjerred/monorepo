@@ -131,6 +131,49 @@ final class JooqSpellStoreTest {
   }
 
   @Test
+  void aRevertedRecordSurvivesACrashUntilItsWorldIsSaved() throws Exception {
+    var wall = block(1, "minecraft:deepslate_bricks");
+    var ice = block(2, "minecraft:packed_ice");
+    await(store.saveTemporaryBlocks(List.of(wall, ice)));
+    assertThat(await(store.markReverted(List.of(wall.key())))).isEqualTo(1);
+
+    // kill -9 after the revert, before the world save: the record must still be there so the
+    // next start can revert the block the world rolled back to.
+    database.close();
+    reopen();
+    assertThat(await(store.temporaryBlocks())).containsExactly(wall, ice);
+
+    // The world saves: only reverted records go.
+    assertThat(await(store.forgetReverted(WORLD))).isEqualTo(1);
+    assertThat(await(store.forgetReverted("minecraft:the_nether"))).isZero();
+    assertThat(await(store.temporaryBlocks())).containsExactly(ice);
+  }
+
+  @Test
+  void aSavedChunkForgetsOnlyRevertedRecords() throws Exception {
+    var reverted = block(1, "minecraft:packed_ice");
+    var pending = block(2, "minecraft:packed_ice");
+    await(store.saveTemporaryBlocks(List.of(reverted, pending)));
+    await(store.markReverted(List.of(reverted.key())));
+
+    assertThat(await(store.forgetReverted(List.of(reverted.key(), pending.key())))).isEqualTo(1);
+    assertThat(await(store.temporaryBlocks())).containsExactly(pending);
+  }
+
+  @Test
+  void aRevertedRecordMayBeReplacedByANewPlacement() throws Exception {
+    var old = block(1, "minecraft:packed_ice");
+    await(store.saveTemporaryBlocks(List.of(old)));
+    await(store.markReverted(List.of(old.key())));
+    var fresh = block(1, "minecraft:white_wool");
+
+    assertThat(await(store.saveTemporaryBlocks(List.of(fresh)))).containsExactly(fresh.key());
+    assertThat(await(store.temporaryBlocks())).containsExactly(fresh);
+    // The replacement is pending again: a world save does not forget it.
+    assertThat(await(store.forgetReverted(WORLD))).isZero();
+  }
+
+  @Test
   void anEmptyDatabaseHasNothingPending() throws Exception {
     assertThat(await(store.temporaryBlocks())).isEmpty();
     assertThat(await(store.marks())).isEmpty();

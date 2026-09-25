@@ -23,16 +23,19 @@ import org.bukkit.potion.PotionEffectType;
 /**
  * The lasting parts of spells: Stealth ends when its caster attacks and hides them from monsters,
  * Leap's landing does not hurt, Wards keep monsters from targeting anyone inside and creepers from
- * igniting, and a personal sky resets when its owner leaves.
+ * igniting, and a personal sky resets when its owner leaves. The immune bosses ignore Stealth and
+ * Wards.
  */
 final class SpellEffectsListener implements Listener {
 
   private final SpellState state;
   private final InstantSource time;
+  private final Targets targets;
 
-  SpellEffectsListener(SpellState state, InstantSource time) {
+  SpellEffectsListener(SpellState state, InstantSource time, Targets targets) {
     this.state = state;
     this.time = time;
+    this.targets = targets;
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -69,7 +72,7 @@ final class SpellEffectsListener implements Listener {
   @EventHandler(ignoreCancelled = true)
   void onTarget(EntityTargetLivingEntityEvent event) {
     var target = event.getTarget();
-    if (target == null) {
+    if (target == null || targets.isImmune(event.getEntity())) {
       return;
     }
     var hidden =
@@ -82,7 +85,9 @@ final class SpellEffectsListener implements Listener {
 
   @EventHandler(ignoreCancelled = true)
   void onPrime(ExplosionPrimeEvent event) {
-    if (event.getEntity() instanceof Creeper creeper && warded(creeper.getLocation())) {
+    if (event.getEntity() instanceof Creeper creeper
+        && !targets.isImmune(creeper)
+        && warded(creeper.getLocation())) {
       event.setCancelled(true);
     }
   }

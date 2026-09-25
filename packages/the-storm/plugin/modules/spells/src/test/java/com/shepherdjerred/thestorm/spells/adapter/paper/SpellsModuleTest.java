@@ -14,8 +14,12 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -214,6 +218,93 @@ final class SpellsModuleTest {
     var lines = said(player);
     assertThat(lines).anyMatch(line -> line.contains("wall") && line.contains("Spellcaster II"));
     assertThat(lines).anyMatch(line -> line.contains("chainlightning"));
+  }
+
+  /** Another plugin that cancels every read after the spells module has prepared it. */
+  static final class Veto implements Listener {
+    @EventHandler(priority = EventPriority.HIGHEST)
+    void veto(PlayerItemConsumeEvent event) {
+      event.setCancelled(true);
+    }
+  }
+
+  private PlayerItemConsumeEvent read(PlayerMock player, ItemStack scroll) {
+    var event = new PlayerItemConsumeEvent(player, scroll, EquipmentSlot.HAND);
+    server.getPluginManager().callEvent(event);
+    return event;
+  }
+
+  private ItemStack scroll(String spell) {
+    return plugin.services.require(SpellScrolls.class).scroll(spell, 1).orElseThrow();
+  }
+
+  @Test
+  void aScrollIsConsumedOnlyWhenItsSpellGoesOff() {
+    var reader = server.addPlayer();
+
+    var first = read(reader, scroll("haste"));
+    assertThat(first.isCancelled()).isFalse();
+    assertThat(reader.hasPotionEffect(PotionEffectType.SPEED)).isTrue();
+
+    // Haste is cooling down: the second read is refused and the scroll is kept.
+    var second = read(reader, scroll("haste"));
+    assertThat(second.isCancelled()).isTrue();
+  }
+
+  @Test
+  void aScrollReadCancelledByAnotherPluginCastsNothing() {
+    server.getPluginManager().registerEvents(new Veto(), plugin);
+    var reader = server.addPlayer();
+
+    read(reader, scroll("haste"));
+
+    assertThat(reader.hasPotionEffect(PotionEffectType.SPEED)).isFalse();
+  }
+
+  @Test
+  void aFocusIsNotAScroll() {
+    var player = spellcaster(1);
+    player.performCommand("spells bind haste");
+
+    assertThat(read(player, focusIn(player)).isCancelled()).isTrue();
+  }
+
+  @Test
+  void bindingIntoAFullInventoryIsRefusedBeforeAnythingIsRemoved() {
+    var player = spellcaster(1);
+    player.performCommand("spells bind haste");
+    var focus = focusIn(player);
+    // Move the focus to the ender chest and fill the backpack.
+    player.getInventory().remove(focus);
+    player.getEnderChest().addItem(focus);
+    for (var slot = 0; slot < 36; slot++) {
+      player.getInventory().setItem(slot, ItemStack.of(Material.DIRT, 64));
+    }
+    said(player);
+
+    player.performCommand("spells bind haste");
+
+    assertThat(said(player)).anyMatch(line -> line.contains("Make room"));
+    assertThat(player.getEnderChest().contains(focus)).isTrue();
+  }
+
+  @Test
+  void rebindingIntoAFullInventoryReusesTheOldFocusSlot() {
+    var player = spellcaster(1);
+    player.performCommand("spells bind haste");
+    var old = focusIn(player);
+    for (var slot = 0; slot < 36; slot++) {
+      var item = player.getInventory().getItem(slot);
+      if (item == null || item.isEmpty()) {
+        player.getInventory().setItem(slot, ItemStack.of(Material.DIRT, 64));
+      }
+    }
+    said(player);
+
+    player.performCommand("spells bind haste");
+
+    assertThat(said(player)).anyMatch(line -> line.contains("haste focus is ready"));
+    assertThat(focusIn(player)).isNotEqualTo(old);
   }
 
   @Test

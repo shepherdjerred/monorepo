@@ -1,13 +1,12 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper;
 
+import com.shepherdjerred.thestorm.spells.adapter.paper.spell.Toolbox;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.Wards;
 import com.shepherdjerred.thestorm.spells.domain.geometry.Knockback;
 import com.shepherdjerred.thestorm.spells.domain.geometry.Vec3;
-import java.time.InstantSource;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
-import org.bukkit.Server;
 import org.bukkit.entity.Enemy;
 import org.bukkit.entity.Mob;
 import org.bukkit.util.Vector;
@@ -20,34 +19,21 @@ final class SpellTicker {
 
   private static final double WARD_LIFT = 0.2;
 
-  private final SpellState state;
-  private final TemporaryBlocks blocks;
-  private final Fx fx;
-  private final Clocked world;
+  private final Toolbox tools;
 
-  /**
-   * Where the ticker acts and when.
-   *
-   * @param server the server, for worlds and players
-   * @param time the clock
-   */
-  record Clocked(Server server, InstantSource time) {}
-
-  SpellTicker(SpellState state, TemporaryBlocks blocks, Fx fx, Clocked world) {
-    this.state = state;
-    this.blocks = blocks;
-    this.fx = fx;
-    this.world = world;
+  SpellTicker(Toolbox tools) {
+    this.tools = tools;
   }
 
   void tick() {
-    var now = world.time().instant();
-    blocks.sweep();
+    var state = tools.state();
+    var now = tools.time().instant();
+    tools.blocks().sweep();
     for (var ward : state.wards().active(now)) {
       hold(ward);
     }
     for (var player : state.timeShifts().expire(now)) {
-      var online = world.server().getPlayer(player);
+      var online = tools.server().getPlayer(player);
       if (online != null) {
         online.resetPlayerTime();
       }
@@ -58,26 +44,32 @@ final class SpellTicker {
     state.cooldowns().expire(now);
   }
 
-  /** Pushes every hostile monster inside {@code ward} back out. */
+  /**
+   * Pushes hostile monsters inside {@code ward} back out. Immune bosses are never pushed, nor are
+   * monsters on land where the ward's caster may not build (mob farms in someone's claim).
+   */
   private void hold(Wards.Ward ward) {
     var key = NamespacedKey.fromString(ward.world());
-    var bukkitWorld = key == null ? null : world.server().getWorld(key);
-    if (bukkitWorld == null) {
+    var world = key == null ? null : tools.server().getWorld(key);
+    if (world == null) {
       return;
     }
     var centre = ward.centre();
-    var location = new Location(bukkitWorld, centre.x(), centre.y(), centre.z());
+    var location = new Location(world, centre.x(), centre.y(), centre.z());
     for (var mob :
-        bukkitWorld.getNearbyEntitiesByType(
+        world.getNearbyEntitiesByType(
             Mob.class, location, ward.radius(), Enemy.class::isInstance)) {
       var at = mob.getLocation();
       var point = new Vec3(at.getX(), at.getY(), at.getZ());
-      if (ward.contains(ward.world(), point)) {
-        var push = Knockback.away(centre, point, ward.push(), WARD_LIFT);
-        mob.setVelocity(new Vector(push.x(), push.y(), push.z()));
-        mob.setTarget(null);
-        fx.burst(SpellKind.WARD, at.add(0, 1, 0), 3, 0.2);
+      if (!ward.contains(ward.world(), point)
+          || tools.targets().isImmune(mob)
+          || tools.guard().harmDenial(ward.owner(), location, mob).isPresent()) {
+        continue;
       }
+      var push = Knockback.away(centre, point, ward.push(), WARD_LIFT);
+      mob.setVelocity(new Vector(push.x(), push.y(), push.z()));
+      mob.setTarget(null);
+      tools.fx().burst(SpellKind.WARD, at.add(0, 1, 0), 3, 0.2);
     }
   }
 }

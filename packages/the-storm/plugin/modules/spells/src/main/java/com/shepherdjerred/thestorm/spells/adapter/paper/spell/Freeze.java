@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.adapter.paper.PaperNames;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
@@ -17,7 +18,8 @@ import org.bukkit.potion.PotionEffectType;
 
 /**
  * Freeze (III): frost locks up the creature in sight (powder-snow freezing and heavy slowness), and
- * still water around it turns to ice for a while, where the caster may build.
+ * still water around it turns to ice for a while where the caster may build. Ice never forms in a
+ * block where any creature (the target included) or hanging entity is, so nobody is encased.
  */
 final class Freeze implements Spell {
 
@@ -43,32 +45,36 @@ final class Freeze implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
+    var ticks = Magic.ticks(settings.durationSeconds());
     return Aim.creature(tools, caster, settings.range())
         .map(
             target -> {
               var water = iceable(caster, target);
+              // Freeze ticks thaw by 2 a tick outside powder snow; this keeps the target fully
+              // frozen (and taking frost damage) for the whole duration.
+              var blow =
+                  Harm.Blow.none()
+                      .withFreeze(target.getMaxFreezeTicks() + 2 * ticks)
+                      .withPotion(PotionEffectType.SLOWNESS, ticks, SLOWNESS)
+                      .then(frozen -> iceOver(water));
               return () -> {
-                // Freeze ticks thaw by 2 a tick outside powder snow; this keeps the target fully
-                // frozen (and taking frost damage) for the whole duration.
-                var ticks = Magic.ticks(settings.durationSeconds());
-                target.setFreezeTicks(target.getMaxFreezeTicks() + 2 * ticks);
-                Magic.potion(
-                    target, PotionEffectType.SLOWNESS, settings.durationSeconds(), SLOWNESS);
-                if (!water.isEmpty()) {
-                  tools
-                      .blocks()
-                      .place(
-                          water,
-                          ice.createBlockData(),
-                          Duration.ofSeconds(settings.durationSeconds()));
+                if (tools.harm().strike(caster, target, blow)) {
+                  tools.fx().line(kind(), caster.getEyeLocation(), Magic.chest(target));
+                  tools.fx().cast(kind(), Magic.chest(target));
                 }
-                tools.fx().line(kind(), caster.getEyeLocation(), Magic.chest(target));
-                tools.fx().cast(kind(), Magic.chest(target));
               };
             });
   }
 
-  /** Still water at the target's feet the caster may freeze; denied blocks are simply skipped. */
+  private void iceOver(List<Block> water) {
+    if (!water.isEmpty()) {
+      tools
+          .blocks()
+          .place(water, ice.createBlockData(), Duration.ofSeconds(settings.durationSeconds()));
+    }
+  }
+
+  /** Unoccupied still water near the target the caster may freeze; the rest is skipped. */
   private List<Block> iceable(Player caster, LivingEntity target) {
     if (settings.iceRadius() == 0) {
       return List.of();
