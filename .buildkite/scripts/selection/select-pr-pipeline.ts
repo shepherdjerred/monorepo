@@ -136,11 +136,10 @@ export function assertReviewGateRunsLast(
       `${REVIEW_GATE_KEY} must set allow_dependency_failure: true so it still reports after another step fails`,
     );
   }
-  for (const field of ["cancel_on_build_failing", "soft_fail"]) {
-    if (gate[field] !== undefined) {
-      throw new Error(`${REVIEW_GATE_KEY} must not set ${field}`);
-    }
+  if (gate["cancel_on_build_failing"] !== undefined) {
+    throw new Error(`${REVIEW_GATE_KEY} must not set cancel_on_build_failing`);
   }
+  assertGateSoftFailsOnlyOnQuota(gate["soft_fail"]);
   const dependencies = new Set(dependencyKeys(gate));
   const missing = [...available.keys()].filter(
     (key) => key !== REVIEW_GATE_KEY && !dependencies.has(key),
@@ -149,6 +148,30 @@ export function assertReviewGateRunsLast(
     throw new Error(
       `${REVIEW_GATE_KEY} must depend on every other PR step so its failure cannot cancel them; missing: ${missing.join(", ")}`,
     );
+  }
+}
+
+/**
+ * The gate may soft-fail on exactly one exit status: the one it exits with
+ * when the provider declared it could not review because of quota
+ * (`REVIEW_GATE_BLOCKED_EXIT_CODE` in `@shepherdjerred/code-review`). Any
+ * broader soft_fail would let real review findings, timeouts, or errors look
+ * green, so everything else is rejected, including an absent soft_fail.
+ */
+export const REVIEW_GATE_QUOTA_EXIT_STATUS = 42;
+
+function assertGateSoftFailsOnlyOnQuota(softFail: unknown): void {
+  const expected = `soft_fail: [{ exit_status: ${String(REVIEW_GATE_QUOTA_EXIT_STATUS)} }]`;
+  if (!Array.isArray(softFail) || softFail.length !== 1) {
+    throw new Error(`${REVIEW_GATE_KEY} must set exactly ${expected}`);
+  }
+  const entry = asRecord(softFail[0]);
+  if (
+    entry === null ||
+    Object.keys(entry).length !== 1 ||
+    entry["exit_status"] !== REVIEW_GATE_QUOTA_EXIT_STATUS
+  ) {
+    throw new Error(`${REVIEW_GATE_KEY} must set exactly ${expected}`);
   }
 }
 
