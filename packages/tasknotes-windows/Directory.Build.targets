@@ -4,10 +4,14 @@
     <TaskNotesRustProfile Condition="'$(Configuration)' == 'Release'">release</TaskNotesRustProfile>
     <TaskNotesRustProfile Condition="'$(TaskNotesRustProfile)' == ''">debug</TaskNotesRustProfile>
     <TaskNotesRustProfileArgument Condition="'$(TaskNotesRustProfile)' == 'release'">--release</TaskNotesRustProfileArgument>
-    <TaskNotesNativeFileName Condition="$([MSBuild]::IsOSPlatform('Windows'))">tasknotes_core_ffi.dll</TaskNotesNativeFileName>
-    <TaskNotesNativeFileName Condition="$([MSBuild]::IsOSPlatform('OSX'))">libtasknotes_core_ffi.dylib</TaskNotesNativeFileName>
-    <TaskNotesNativeFileName Condition="$([MSBuild]::IsOSPlatform('Linux'))">libtasknotes_core_ffi.so</TaskNotesNativeFileName>
-    <TaskNotesNativeSource>$([System.IO.Path]::Combine('$(TaskNotesCoreRoot)', 'target', '$(TaskNotesRustProfile)', '$(TaskNotesNativeFileName)'))</TaskNotesNativeSource>
+    <!-- Windows apps built on another host cross-compile the core with cargo-xwin. -->
+    <TaskNotesRustTarget Condition="'$(RuntimeIdentifier)' == 'win-x64' and !$([MSBuild]::IsOSPlatform('Windows'))">x86_64-pc-windows-msvc</TaskNotesRustTarget>
+    <TaskNotesCargoBuild Condition="'$(TaskNotesRustTarget)' != ''">cargo xwin build --target $(TaskNotesRustTarget)</TaskNotesCargoBuild>
+    <TaskNotesCargoBuild Condition="'$(TaskNotesRustTarget)' == ''">cargo build</TaskNotesCargoBuild>
+    <TaskNotesNativeFileName Condition="'$(TaskNotesRustTarget)' != '' or $([MSBuild]::IsOSPlatform('Windows'))">tasknotes_core_ffi.dll</TaskNotesNativeFileName>
+    <TaskNotesNativeFileName Condition="'$(TaskNotesNativeFileName)' == '' and $([MSBuild]::IsOSPlatform('OSX'))">libtasknotes_core_ffi.dylib</TaskNotesNativeFileName>
+    <TaskNotesNativeFileName Condition="'$(TaskNotesNativeFileName)' == '' and $([MSBuild]::IsOSPlatform('Linux'))">libtasknotes_core_ffi.so</TaskNotesNativeFileName>
+    <TaskNotesNativeSource>$([System.IO.Path]::Combine('$(TaskNotesCoreRoot)', 'target', '$(TaskNotesRustTarget)', '$(TaskNotesRustProfile)', '$(TaskNotesNativeFileName)'))</TaskNotesNativeSource>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(NeedsTaskNotesNative)' == 'true'">
@@ -21,11 +25,14 @@
   <Target Name="BuildTaskNotesNative" BeforeTargets="PrepareForBuild" Condition="'$(NeedsTaskNotesNative)' == 'true'">
     <Error Condition="'$(TaskNotesNativeFileName)' == ''" Text="TaskNotes native builds do not support this host operating system." />
     <Exec
-      Command="cargo build --package tasknotes-core-ffi --lib $(TaskNotesRustProfileArgument)"
+      Command="$(TaskNotesCargoBuild) --package tasknotes-core-ffi --lib $(TaskNotesRustProfileArgument)"
       WorkingDirectory="$(TaskNotesCoreRoot)" />
   </Target>
 
   <Target Name="CopyTaskNotesNative" AfterTargets="Build" DependsOnTargets="BuildTaskNotesNative" Condition="'$(NeedsTaskNotesNative)' == 'true'">
     <Copy SourceFiles="$(TaskNotesNativeSource)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
   </Target>
+
+  <!-- windows-cross-compiler builds the WinUI app and its MSIX on Linux. -->
+  <Import Project="$(WindowsCrossTargets)" Condition="'$(WindowsCrossTargets)' != ''" />
 </Project>

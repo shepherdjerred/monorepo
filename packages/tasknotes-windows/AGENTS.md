@@ -14,6 +14,9 @@ This is the native Windows 11 x64 client over the shared Rust core.
   through `cargo xtask` and commit every diff.
 - Linux checks use `TaskNotes.Windows.Portable.slnx`. Full Windows claims require
   `bun run windows:verify`, packaging, and runtime assertions.
+- `bun run windows:cross-package` and the `tasknotes-windows-cross` CI step
+  prove the WinUI app compiles and packages on Linux; they are not runtime
+  evidence. Fix toolchain gaps in `packages/windows-cross-compiler`.
 - Keep coverage baselines below the slowest reliable agent result with
   headroom. Test race-only guards directly.
 - Every parity claim needs a passed UIA, server, persistence, or Markdown
