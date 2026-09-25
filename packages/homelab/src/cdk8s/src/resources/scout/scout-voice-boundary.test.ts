@@ -131,10 +131,10 @@ describe("Hey Scout voice deployment boundary", () => {
    * pointing at the wrong pod. Naming both expectations explicitly means a
    * change to a stage's topology has to come here and be looked at.
    */
-  test("voice is owned by the gateway on a split stage and the backend on a combined one", () => {
-    expect(gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY.beta)).toBe(true);
-    expect(voiceWorkloadName("beta")).toBe("scout-beta-scout-gateway");
-    expect(voiceEgressPolicyName("beta")).toBe("scout-gateway-netpol");
+  test("voice is owned by the backend on a retiring stage and a combined one", () => {
+    expect(gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY.beta)).toBe(false);
+    expect(voiceWorkloadName("beta")).toBe("scout-beta-scout-backend");
+    expect(voiceEgressPolicyName("beta")).toBe("scout-egress-netpol");
 
     expect(gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY.prod)).toBe(false);
     expect(voiceWorkloadName("prod")).toBe("scout-prod-scout-backend");

@@ -83,8 +83,14 @@ function envValue(
 }
 
 describe("Scout runtime role assignment", () => {
-  test("beta's backend Deployment owns the application role", () => {
-    const backend = roleDeployment("beta", "scout-beta-scout-backend");
+  test("a split stage's backend Deployment owns the application role", () => {
+    const backend = RoleDeploymentSchema.parse(
+      findResource(
+        scoutResourcesWithGatewayTopology("beta", "split"),
+        "Deployment",
+        "scout-beta-scout-backend",
+      ).spec,
+    );
     expect(envValue(backend, "SCOUT_RUNTIME_ROLE")).toBe("application");
   });
 
@@ -137,8 +143,11 @@ describe("Scout runtime role assignment", () => {
 });
 
 describe("Scout split-topology opt-in", () => {
-  test("only beta is opted into the split today", () => {
-    expect(SCOUT_GATEWAY_TOPOLOGY).toEqual({ beta: "split", prod: "absent" });
+  test("beta is retiring the split and prod never ran it", () => {
+    expect(SCOUT_GATEWAY_TOPOLOGY).toEqual({
+      beta: "retiring",
+      prod: "absent",
+    });
   });
 });
 
