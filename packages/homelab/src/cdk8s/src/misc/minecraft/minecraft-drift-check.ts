@@ -16,7 +16,7 @@
 
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 
-type ServerName = "tsmc" | "sjerred" | "shuxin";
+type ServerName = "sjerred" | "shuxin";
 
 // The drift-check logic is maintained as a standalone POSIX shell script so it
 // can be exercised directly by minecraft-drift-check.test.ts. It is inlined

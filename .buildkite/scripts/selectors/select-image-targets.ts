@@ -84,25 +84,31 @@ const SHARED_APPLICATION_IMAGE_INPUTS = [
   "tsconfig.base.json",
 ];
 
-const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> = {
-  "scout-for-lol": [
-    "packages/scout-for-lol/scripts/contract-hash.ts",
-    "packages/scout-for-lol/tsconfig.base.json",
-  ],
-  // Temporal compiles toolkit into the worker image as an embedded CLI, but
-  // toolkit is deliberately not a runtime workspace dependency.
-  "temporal-worker": ["packages/toolkit/"],
-  "discord-plays-pokemon": ["packages/discord-plays-pokemon/"],
-  "discord-plays-mario-kart": ["packages/discord-plays-mario-kart/"],
-  infra: [
-    "packages/homelab/images/",
-    "packages/homelab/scripts/smoke-images.ts",
-    "packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts",
-    "packages/homelab/src/cdk8s/src/misc/common.ts",
-    "packages/homelab/src/cdk8s/src/misc/s3-static-site.ts",
-    "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
-  ],
-};
+export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
+  {
+    "scout-for-lol": [
+      "packages/scout-for-lol/scripts/contract-hash.ts",
+      "packages/scout-for-lol/tsconfig.base.json",
+    ],
+    // Temporal compiles toolkit into the worker image as an embedded CLI, but
+    // toolkit is deliberately not a runtime workspace dependency.
+    "temporal-worker": ["packages/toolkit/"],
+    "discord-plays-pokemon": ["packages/discord-plays-pokemon/"],
+    "discord-plays-mario-kart": ["packages/discord-plays-mario-kart/"],
+    infra: [
+      "packages/homelab/images/",
+      "packages/homelab/scripts/smoke-images.ts",
+      "packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts",
+      "packages/homelab/src/cdk8s/src/misc/common.ts",
+      "packages/homelab/src/cdk8s/src/misc/s3-static-site.ts",
+      "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
+      // the-storm-server's context is packages/the-storm, but its Dockerfile
+      // reads only these two trees: the plugin sources (TheStorm.jar) and
+      // server/ (Dockerfile, pinned jar manifest, config bundle).
+      "packages/the-storm/plugin/",
+      "packages/the-storm/server/",
+    ],
+  };
 
 const pathMatchesPrefix = (path: string, prefix: string): boolean =>
   prefix.endsWith("/") ? path.startsWith(prefix) : path === prefix;

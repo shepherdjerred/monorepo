@@ -10,6 +10,7 @@
 
 import { describe, expect, test } from "vitest";
 import { summaryLanes } from "../images/build-summary-tables.ts";
+import { TARGET_PATH_PREFIXES } from "./select-image-targets.ts";
 import {
   lanePaths as selectorLanePaths,
   selectorPathsForLane,
@@ -202,6 +203,22 @@ describe("lane↔if_changed coverage", () => {
       expect(coveredBy(path, quotaGlobs), path).toBe(quotaExpected);
       expect(coveredBy(path, taskNotesGlobs), path).toBe(taskNotesExpected);
     }
+  });
+
+  // `images` is exempt from the generic subset check above, so pin the
+  // selector's infra path prefixes (infra images such as the-storm-server
+  // build from trees outside any workspace closure) to images-pr's globs.
+  test("images-pr covers every infra image input the selector watches", async () => {
+    const steps = await loadPipelineSteps();
+    const globs = steps.get("images-pr")?.include ?? [];
+    const uncovered = (TARGET_PATH_PREFIXES["infra"] ?? [])
+      .map((prefix) =>
+        prefix.endsWith("/") ? `${prefix}nested/sample-file.ts` : prefix,
+      )
+      .filter((sample) => !coveredBy(sample, globs));
+    expect(uncovered).toEqual([]);
+    expect(coveredBy("packages/the-storm/server/Dockerfile", globs)).toBe(true);
+    expect(coveredBy("packages/the-storm/README.md", globs)).toBe(false);
   });
 
   test("build-summary's lane-decision table lists every lane", async () => {

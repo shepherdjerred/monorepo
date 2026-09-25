@@ -1,0 +1,145 @@
+{
+  "file": "/data/plugins/Essentials/config.yml",
+  "ops": [
+    {
+      "$put": {
+        "path": "$",
+        "key": "ops-name-color",
+        "value": "none"
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "nickname-prefix",
+        "value": "none"
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "change-tab-complete-name",
+        "value": true
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "change-playerlist",
+        "value": true
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "teleport-cooldown",
+        "value": 1800
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "teleport-delay",
+        "value": 7
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "teleport-invulnerability",
+        "value": 10
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "enabledSigns",
+        "value": ["color"]
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "auto-afk",
+        "value": 600
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "auto-afk-timeout",
+        "value": 1200
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "freeze-afk-players",
+        "value": true
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "disable-item-pickup-while-afk",
+        "value": true
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "afk-list-name",
+        "value": "{PLAYER} (AFK)"
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "send-info-after-death",
+        "value": true
+      }
+    },
+    {
+      "$put": {
+        "path": "$.sethome-multiple",
+        "key": "default",
+        "value": 1
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "confirm-home-overwrite",
+        "value": true
+      }
+    },
+    {
+      "$put": {
+        "path": "$.newbies",
+        "key": "announce-format",
+        "value": "&7Welcome &3{DISPLAYNAME} &7to the server!"
+      }
+    },
+    {
+      "$put": {
+        "path": "$.newbies",
+        "key": "spawnpoint",
+        "value": "none"
+      }
+    },
+    {
+      "$put": {
+        "path": "$.newbies",
+        "key": "kit",
+        "value": "starter"
+      }
+    },
+    {
+      "$put": {
+        "path": "$",
+        "key": "respawn-at-home",
+        "value": true
+      }
+    }
+  ]
+}

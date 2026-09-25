@@ -339,6 +339,19 @@ for (const caddyConfigInput of caddyConfigInputs) {
   );
 }
 
+// the-storm-server builds from these trees (infra bake group); a PR that
+// changes them must dry-run the image build.
+for (const stormImageInput of [
+  "packages/the-storm/plugin/**",
+  "packages/the-storm/server/**",
+]) {
+  requireIncludes(
+    imagesPr,
+    `- "${stormImageInput}"`,
+    `images-pr path gate is missing the-storm-server input ${stormImageInput}`,
+  );
+}
+
 const trivy = stepBlocks.get("trivy");
 validatePipelineClarity(stepBlocks);
 

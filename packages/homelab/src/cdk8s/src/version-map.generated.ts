@@ -112,6 +112,7 @@ export const VersionMapSchema = z
     "arizephoenix/phoenix": z.string(),
     "relay-server": z.string(),
     "shepherdjerred/caddy-s3proxy": z.string(),
+    "shepherdjerred/the-storm-server": z.string(),
     "shepherdjerred/tasknotes-server": z.string(),
     "shepherdjerred/obsidian-headless": z.string(),
     "temporalio/server": z.string(),
