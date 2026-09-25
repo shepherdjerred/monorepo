@@ -30,7 +30,8 @@ final class Fixtures {
             new TierRule(6, 0.2, 0.05),
             new TierRule(10, 0.3, 0.1)),
         3,
-        "<dark_aqua>Storm <tier>");
+        "<dark_aqua>Storm <tier>",
+        1000);
   }
 
   static GearTable table(List<Double> bonus, String... materials) {

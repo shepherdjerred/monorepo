@@ -18,9 +18,11 @@ drops:
     - "minecraft:overworld"
     - "minecraft:the_nether"
     - "minecraft:the_end"
-  # Mobs from these never drop shards, so spawner and egg farms yield nothing.
-  # Trial spawners stay allowed: the Breeze only comes from them.
+  # Mobs from these never drop shards: spawner and egg farms yield nothing,
+  # and raids never drop (raid farms repeat them endlessly). Trial spawners
+  # stay allowed: the Breeze only comes from them.
   excludedSpawnReasons:
+    - RAID
     - SPAWNER
     - SPAWNER_EGG
     - DISPENSE_EGG
@@ -29,8 +31,9 @@ drops:
     - CUSTOM
     - BUCKET
   # chance per kill (0.0005 = 0.05%); min/max shards per drop.
-  # v4 (2017) numbers, retuned for modern farms: anything a vanilla farm
-  # kills by the thousand sits at the common-hostile 0.05%.
+  # v4 (2017) numbers, retuned for modern farms: farmable mobs are at or
+  # below 0.05% (ghasts, slow to farm, 0.1%); raids never drop, so ravagers
+  # and evokers drop only outside raids (evokers: woodland mansions).
   mobs:
     # Bosses (the Giant is gone; the Warden takes its place)
     WARDEN: { chance: 0.5, min: 1, max: 2 }
@@ -42,8 +45,7 @@ drops:
     RAVAGER: { chance: 0.01, min: 1, max: 1 }
     EVOKER: { chance: 0.005, min: 1, max: 1 }
     BREEZE: { chance: 0.005, min: 1, max: 1 }
-    GHAST: { chance: 0.005, min: 1, max: 2 }
-    WITCH: { chance: 0.002, min: 1, max: 1 }
+    GHAST: { chance: 0.001, min: 1, max: 1 }
     BLAZE: { chance: 0.001, min: 1, max: 1 }
     # Common hostiles
     ZOMBIE: { chance: 0.0005, min: 1, max: 1 }
@@ -57,7 +59,8 @@ drops:
     SPIDER: { chance: 0.0005, min: 1, max: 1 }
     CAVE_SPIDER: { chance: 0.00025, min: 1, max: 1 }
     CREEPER: { chance: 0.0005, min: 1, max: 1 }
-    ENDERMAN: { chance: 0.0005, min: 1, max: 1 }
+    WITCH: { chance: 0.0005, min: 1, max: 1 }
+    ENDERMAN: { chance: 0.0001, min: 1, max: 1 }
     ENDERMITE: { chance: 0.0005, min: 1, max: 1 }
     SILVERFISH: { chance: 0.0002, min: 1, max: 1 }
     SLIME: { chance: 0.0002, min: 1, max: 1 }
@@ -103,12 +106,20 @@ upgrades:
     - { cost: 10, failChance: 0.3, breakChance: 0.0 }
   broadcastFromTier: 3
   loreLine: "<dark_aqua>Storm <tier>"
+  # One attempt per player per window, so one click (or a held right-click)
+  # never pays twice.
+  attemptCooldownMillis: 1000
 
 # Right-click one of these blocks in the rain, holding gear, with shards in
 # your inventory. The first is the emerald block inside the spawn windmill.
+# The block there must be `material`, or the module refuses to start.
 # PLACEHOLDER coordinates (v4's -71 74 -243): set them to the rebuilt windmill.
 altars:
-  - { world: "minecraft:overworld", x: -71, y: 74, z: -243 }
+  - world: "minecraft:overworld"
+    x: -71
+    y: 74
+    z: -243
+    material: EMERALD_BLOCK
 
 bonuses:
   # Share of every bonus that applies against players (full against mobs).

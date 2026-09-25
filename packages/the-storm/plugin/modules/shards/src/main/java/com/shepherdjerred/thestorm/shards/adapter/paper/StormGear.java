@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.Entity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.jspecify.annotations.Nullable;
@@ -20,11 +21,17 @@ import org.jspecify.annotations.Nullable;
 final class StormGear {
 
   private final NamespacedKey tierKey;
+  private final NamespacedKey gearKey;
   private final Bonuses bonuses;
   private final ShardText text;
 
-  StormGear(NamespacedKey tierKey, Bonuses bonuses, ShardText text) {
+  /**
+   * @param tierKey {@code thestorm:storm_tier}, on items and tagged projectiles
+   * @param gearKey {@code thestorm:storm_gear}, the launcher's category on tagged projectiles
+   */
+  StormGear(NamespacedKey tierKey, NamespacedKey gearKey, Bonuses bonuses, ShardText text) {
     this.tierKey = tierKey;
+    this.gearKey = gearKey;
     this.bonuses = bonuses;
     this.text = text;
   }
@@ -56,6 +63,24 @@ final class StormGear {
       return Optional.empty();
     }
     return tierOf(item).map(tier -> new StormPiece(category.get(), tier));
+  }
+
+  /** Copies the launching weapon onto a projectile that cannot remember it itself. */
+  void tagProjectile(Entity projectile, StormPiece launcher) {
+    var container = projectile.getPersistentDataContainer();
+    container.set(tierKey, PersistentDataType.INTEGER, launcher.tier().level());
+    container.set(gearKey, PersistentDataType.STRING, launcher.category().name());
+  }
+
+  /** The launching weapon tagged on {@code projectile}, or empty. Corrupt tags throw. */
+  Optional<StormPiece> projectilePiece(Entity projectile) {
+    var container = projectile.getPersistentDataContainer();
+    var level = container.get(tierKey, PersistentDataType.INTEGER);
+    var category = container.get(gearKey, PersistentDataType.STRING);
+    if (level == null || category == null) {
+      return Optional.empty();
+    }
+    return Optional.of(new StormPiece(GearCategory.valueOf(category), new StormTier(level)));
   }
 
   /** Stores {@code tier} on {@code item}, replaces its Storm lore line and adds the glint. */

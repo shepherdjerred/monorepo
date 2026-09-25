@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.text.HouseStyle;
 import com.shepherdjerred.thestorm.shards.domain.Percent;
 import com.shepherdjerred.thestorm.shards.domain.ShardMessages;
 import com.shepherdjerred.thestorm.shards.domain.StormTier;
+import io.papermc.paper.datacomponent.DataComponentTypes;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -11,6 +12,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.inventory.ItemStack;
 
 /** Renders the configured MiniMessage templates in the house style. */
 final class ShardText {
@@ -74,6 +76,17 @@ final class ShardText {
 
   void error(Audience audience, String template, TagResolver... placeholders) {
     audience.sendMessage(HouseStyle.error(LABEL, render(template, placeholders)));
+  }
+
+  /**
+   * The item's name as players see it, by vanilla's rule: an anvil name ({@code custom_name}), else
+   * the item's own {@code item_name}, else the material's translated name.
+   */
+  static TagResolver itemName(ItemStack item) {
+    var custom = item.getData(DataComponentTypes.CUSTOM_NAME);
+    var name = custom != null ? custom : item.getData(DataComponentTypes.ITEM_NAME);
+    return Placeholder.component(
+        "item", name != null ? name : Component.translatable(item.getType()));
   }
 
   static TagResolver tier(StormTier tier) {

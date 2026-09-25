@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.shards.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.shards.app.StormShards;
+import com.shepherdjerred.thestorm.shards.domain.Altars;
 import com.shepherdjerred.thestorm.shards.domain.Bonuses;
 import com.shepherdjerred.thestorm.shards.domain.ShardDrops;
 import com.shepherdjerred.thestorm.shards.domain.ShardsConfig;
@@ -27,20 +28,28 @@ public final class PaperShards {
     var plugin = context.plugin();
     var problems = PaperNames.problems(config, plugin.getServer());
     if (!problems.isEmpty()) {
+      problems.forEach(problem -> context.logger().error("shards.yml: {}", problem));
       throw new IllegalStateException("Invalid shards.yml:\n" + String.join("\n", problems));
     }
     var bonuses = new Bonuses(config.bonuses());
     var upgrades = new Upgrades(config.upgrades());
     var text = new ShardText(config.messages(), config.upgrades().loreLine());
-    var gear = new StormGear(new NamespacedKey(plugin, "storm_tier"), bonuses, text);
+    var gear =
+        new StormGear(
+            new NamespacedKey(plugin, "storm_tier"),
+            new NamespacedKey(plugin, "storm_gear"),
+            bonuses,
+            text);
     var shards = new ShardItems(new NamespacedKey(plugin, "shard"), gear, config.item());
-    var kit = new ShardKit(shards, gear, text, context.random());
+    var kit = new ShardKit(shards, gear, text, context.random(), context.time());
+    var altars = new Altars(config.altars(), config.upgrades().attemptCooldown());
     var placed = new PlacedBlocks(new NamespacedKey(plugin, "placed_sources"));
 
     List<Listener> listeners =
         List.of(
             new DropListener(new ShardDrops(config.drops()), placed, kit),
-            new AltarListener(config.altars(), upgrades, kit, context.scheduler()),
+            new AltarListener(
+                new AltarSetup(altars, upgrades, context.scheduler(), AltarSetup::paperSky), kit),
             new CombatListener(bonuses, gear),
             new CraftingGuard(shards));
     var pluginManager = plugin.getServer().getPluginManager();

@@ -1,9 +1,11 @@
 package com.shepherdjerred.thestorm.shards.adapter.paper;
 
+import com.shepherdjerred.thestorm.shards.domain.AltarLocation;
 import com.shepherdjerred.thestorm.shards.domain.ShardsConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -46,12 +48,32 @@ final class PaperNames {
             (category, table) ->
                 check(problems, "bonuses." + category, table.materials(), PaperNames::isItem));
     for (var altar : config.altars()) {
-      var key = NamespacedKey.fromString(altar.world());
-      if (key == null || server.getWorld(key) == null) {
-        problems.add("altars: world " + altar.world() + " is not loaded");
-      }
+      altarProblem(altar, server).ifPresent(problems::add);
     }
     return problems;
+  }
+
+  /**
+   * An altar must be the configured block, so a wrong or stale coordinate fails at startup instead
+   * of turning some other block into an upgrade altar. Reading the block loads its chunk, which is
+   * fine once, at enable.
+   */
+  private static Optional<String> altarProblem(AltarLocation altar, Server server) {
+    var where = altar.world() + " " + altar.x() + " " + altar.y() + " " + altar.z();
+    if (!isBlock(altar.material())) {
+      return Optional.of("altars: " + altar.material() + " at " + where + " is not a block");
+    }
+    var key = NamespacedKey.fromString(altar.world());
+    var world = key == null ? null : server.getWorld(key);
+    if (world == null) {
+      return Optional.of("altars: world " + altar.world() + " is not loaded");
+    }
+    var found = world.getBlockAt(altar.x(), altar.y(), altar.z()).getType().name();
+    if (!found.equals(altar.material())) {
+      return Optional.of(
+          "altars: expected " + altar.material() + " at " + where + " but found " + found);
+    }
+    return Optional.empty();
   }
 
   private static void check(

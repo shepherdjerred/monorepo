@@ -2,43 +2,47 @@ package com.shepherdjerred.thestorm.shards.adapter.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.shepherdjerred.thestorm.core.config.ConfigFiles;
+import com.shepherdjerred.thestorm.shards.domain.AltarLocation;
 import com.shepherdjerred.thestorm.shards.domain.DropRule;
 import com.shepherdjerred.thestorm.shards.domain.DropsConfig;
 import com.shepherdjerred.thestorm.shards.domain.ShardsConfig;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import org.bukkit.Material;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockbukkit.mockbukkit.MockBukkit;
-import org.mockbukkit.mockbukkit.ServerMock;
 
 final class PaperNamesTest {
 
-  private ServerMock server;
-  private ShardsConfig shipped;
+  /** Until the manager sets the real windmill coordinates, the placeholder altar fails. */
+  private static final String PLACEHOLDER_ALTAR =
+      "altars: expected EMERALD_BLOCK at minecraft:overworld -71 74 -243 but found AIR";
 
-  @BeforeEach
-  void setUp() {
-    server = MockBukkit.mock();
-    shipped =
-        ConfigFiles.load(
-            Path.of(Objects.requireNonNull(System.getProperty("thestorm.shards.config"))),
-            ShardsConfig.class);
-  }
+  private final Harness harness = new Harness();
+  private final ShardsConfig shipped = harness.config;
 
   @AfterEach
   void tearDown() {
-    MockBukkit.unmock();
+    harness.close();
+  }
+
+  private ShardsConfig withAltar(AltarLocation altar) {
+    return new ShardsConfig(
+        shipped.item(),
+        shipped.drops(),
+        shipped.upgrades(),
+        List.of(altar),
+        shipped.bonuses(),
+        shipped.messages());
+  }
+
+  private AltarLocation altarAt(int x, String material) {
+    return new AltarLocation(harness.world.getKey().asString(), x, 64, 0, material);
   }
 
   @Test
-  void everyShippedNameExistsInThisVersionExceptTheUnloadedWorld() {
-    assertThat(PaperNames.problems(shipped, server))
-        .containsExactly("altars: world minecraft:overworld is not loaded");
+  void everyShippedNameExistsAndOnlyThePlaceholderAltarIsMissing() {
+    assertThat(PaperNames.problems(shipped, harness.server)).containsExactly(PLACEHOLDER_ALTAR);
   }
 
   @Test
@@ -57,11 +61,36 @@ final class PaperNamesTest {
             shipped.bonuses(),
             shipped.messages());
 
-    assertThat(PaperNames.problems(broken, server))
+    assertThat(PaperNames.problems(broken, harness.server))
         .containsExactlyInAnyOrder(
             "drops.mobs: unknown name PIG_ZOMBIE",
             "drops.blocks: unknown name WOOD_SWORD",
             "drops.excludedSpawnReasons: unknown name SPAWNR",
-            "altars: world minecraft:overworld is not loaded");
+            PLACEHOLDER_ALTAR);
+  }
+
+  @Test
+  void anAltarOnTheConfiguredBlockPasses() {
+    harness.world.getBlockAt(3, 64, 0).setType(Material.EMERALD_BLOCK);
+
+    assertThat(PaperNames.problems(withAltar(altarAt(3, "EMERALD_BLOCK")), harness.server))
+        .isEmpty();
+  }
+
+  @Test
+  void anAltarOnAnyOtherBlockFailsWithItsCoordinates() {
+    harness.world.getBlockAt(3, 64, 0).setType(Material.DIRT);
+    var world = harness.world.getKey().asString();
+
+    assertThat(PaperNames.problems(withAltar(altarAt(3, "EMERALD_BLOCK")), harness.server))
+        .containsExactly("altars: expected EMERALD_BLOCK at " + world + " 3 64 0 but found DIRT");
+  }
+
+  @Test
+  void anAltarMaterialMustBeABlock() {
+    var world = harness.world.getKey().asString();
+
+    assertThat(PaperNames.problems(withAltar(altarAt(3, "DIAMOND_SWORD")), harness.server))
+        .containsExactly("altars: DIAMOND_SWORD at " + world + " 3 64 0 is not a block");
   }
 }

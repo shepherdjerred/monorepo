@@ -30,12 +30,13 @@ final class ShardsConfigTest {
     assertThat(config.item().material()).isEqualTo("PRISMARINE_SHARD");
     assertThat(config.altars())
         .first()
-        .isEqualTo(new AltarLocation("minecraft:overworld", -71, 74, -243));
+        .isEqualTo(new AltarLocation("minecraft:overworld", -71, 74, -243, "EMERALD_BLOCK"));
     assertThat(config.upgrades().tiers())
         .extracting(TierRule::cost)
         .containsExactly(1, 2, 4, 6, 10);
     assertThat(config.upgrades().tiers()).allMatch(rule -> rule.breakChance() == 0);
     assertThat(config.upgrades().broadcastFromTier()).isEqualTo(3);
+    assertThat(config.upgrades().attemptCooldownMillis()).isEqualTo(1000);
     assertThat(config.bonuses().pvpMultiplier()).isEqualTo(0.4);
   }
 
@@ -57,6 +58,9 @@ final class ShardsConfigTest {
     assertThat(mobs).containsKeys("WARDEN", "WITHER", "ENDER_DRAGON", "BREEZE", "RAVAGER");
     assertThat(mobs).containsKeys("EVOKER", "PIGLIN_BRUTE");
     assertThat(mobs).containsEntry("ZOMBIE", new DropRule(0.0005, 1, 1));
+    assertThat(mobs).containsEntry("WITCH", new DropRule(0.0005, 1, 1));
+    assertThat(mobs).containsEntry("GHAST", new DropRule(0.001, 1, 1));
+    assertThat(mobs).containsEntry("ENDERMAN", new DropRule(0.0001, 1, 1));
     assertThat(mobs).doesNotContainKeys("GIANT", "PIG_ZOMBIE");
   }
 
@@ -64,7 +68,7 @@ final class ShardsConfigTest {
   void theShippedExclusionsBlockSpawnerFarmsButNotTrialChambers() {
     var excluded = load().drops().excludedSpawnReasons();
 
-    assertThat(excluded).contains("SPAWNER", "SPAWNER_EGG").doesNotContain("TRIAL_SPAWNER");
+    assertThat(excluded).contains("RAID", "SPAWNER", "SPAWNER_EGG").doesNotContain("TRIAL_SPAWNER");
   }
 
   @Test

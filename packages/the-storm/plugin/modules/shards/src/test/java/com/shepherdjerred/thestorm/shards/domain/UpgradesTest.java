@@ -173,14 +173,19 @@ final class UpgradesTest {
   @Test
   void upgradeConfigValidatesItself() {
     var rules = Fixtures.upgrades().tiers();
-    assertThatThrownBy(() -> new UpgradeConfig(rules.subList(0, 4), 3, "Storm <tier>"))
+    assertThatThrownBy(() -> new UpgradeConfig(rules.subList(0, 4), 3, "Storm <tier>", 1000))
         .hasMessageContaining("one entry per tier");
-    assertThatThrownBy(() -> new UpgradeConfig(rules, 0, "Storm <tier>"))
+    assertThatThrownBy(() -> new UpgradeConfig(rules, 0, "Storm <tier>", 1000))
         .hasMessageContaining("broadcastFromTier");
-    assertThatThrownBy(() -> new UpgradeConfig(rules, 7, "Storm <tier>"))
+    assertThatThrownBy(() -> new UpgradeConfig(rules, 7, "Storm <tier>", 1000))
         .hasMessageContaining("broadcastFromTier");
-    assertThatThrownBy(() -> new UpgradeConfig(rules, 3, "Storm")).hasMessageContaining("<tier>");
-    assertThat(new UpgradeConfig(List.copyOf(rules), 6, "Storm <tier>").broadcastFromTier())
+    assertThatThrownBy(() -> new UpgradeConfig(rules, 3, "Storm", 1000))
+        .hasMessageContaining("<tier>");
+    assertThatThrownBy(() -> new UpgradeConfig(rules, 3, "Storm <tier>", 200))
+        .hasMessageContaining("attemptCooldownMillis");
+    assertThat(new UpgradeConfig(rules, 3, "Storm <tier>", 1500).attemptCooldown())
+        .isEqualTo(java.time.Duration.ofMillis(1500));
+    assertThat(new UpgradeConfig(List.copyOf(rules), 6, "Storm <tier>", 1000).broadcastFromTier())
         .isEqualTo(6);
   }
 

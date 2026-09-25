@@ -36,7 +36,11 @@ final class ShardItemsTest {
             ShardsConfig.class);
     var text = new ShardText(config.messages(), config.upgrades().loreLine());
     gear =
-        new StormGear(new NamespacedKey(plugin, "storm_tier"), new Bonuses(config.bonuses()), text);
+        new StormGear(
+            new NamespacedKey(plugin, "storm_tier"),
+            new NamespacedKey(plugin, "storm_gear"),
+            new Bonuses(config.bonuses()),
+            text);
     shards = new ShardItems(new NamespacedKey(plugin, "shard"), gear, config.item());
   }
 
