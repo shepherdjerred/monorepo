@@ -8,6 +8,9 @@ describe("isBumpSubject (NO_IMAGE / seed detection)", () => {
     expect(isBumpSubject("chore: bump image versions to 2.0.0-3637")).toBe(
       true,
     );
+    expect(isBumpSubject("chore: bump pending image versions (#3136)")).toBe(
+      true,
+    );
   });
 
   test("false for hand-written / feature commits (seed digest)", () => {

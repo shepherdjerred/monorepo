@@ -15,6 +15,16 @@
           "runner": "vitest",
           "args": ["src"]
         }
+      ],
+      "excludedSuites": [
+        {
+          "path": "e2e",
+          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+        },
+        {
+          "path": "integration/sqlite.integration.test.ts",
+          "reason": "Runs in its own pipeline step (test:sqlite) against a real SQLite database file."
+        }
       ]
     },
     {
@@ -197,6 +207,12 @@
           "runner": "vitest",
           "args": ["src"]
         }
+      ],
+      "excludedSuites": [
+        {
+          "path": "tests",
+          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+        }
       ]
     },
     {
@@ -280,7 +296,12 @@
             "scripts/helm/helm-set-version.test.ts",
             "scripts/helm/lint-helm.test.ts",
             "scripts/migration-smoke.test.ts",
-            "scripts/velero-backups.test.ts"
+            "scripts/velero-backups.test.ts",
+            "scripts/argocd/argocd-apply-safety.test.ts",
+            "scripts/argocd/argocd-auto-sync-policy.test.ts",
+            "scripts/argocd/argocd-child-sync-timeout.test.ts",
+            "scripts/argocd/argocd-release-result.test.ts",
+            "scripts/tofu/tofu-stack.test.ts"
           ]
         }
       ]
@@ -405,10 +426,12 @@
           "runner": "vitest",
           "args": [
             "scripts/create-minimal-png.test.ts",
-            "scripts/dev/dev-db-pull.test.ts",
-            "scripts/dev/dev-web.test.ts",
             "scripts/install-pkgs.test.ts",
-            "scripts/migration-smoke.test.ts"
+            "scripts/migration-smoke.test.ts",
+            "scripts/dev/",
+            "scripts/discord-smoke/",
+            "scripts/puuid-corpus/",
+            "scripts/puuid-migration/"
           ]
         }
       ]
@@ -421,6 +444,12 @@
           "runner": "vitest",
           "args": ["src"]
         }
+      ],
+      "excludedSuites": [
+        {
+          "path": "e2e",
+          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+        }
       ]
     },
     {
@@ -430,6 +459,12 @@
         {
           "runner": "vitest",
           "args": ["src"]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "e2e",
+          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
         }
       ]
     },
@@ -482,12 +517,29 @@
           "runner": "vitest",
           "args": ["src"]
         }
+      ],
+      "excludedSuites": [
+        {
+          "path": "e2e",
+          "reason": "Playwright suite; runs in the browser E2E lane (.buildkite/scripts/selection/playwright-targets.ts), not in Vitest reporting."
+        }
       ]
     },
     {
       "package": "@scout-for-lol/design-audit",
       "directory": "packages/scout-for-lol/packages/design-audit",
-      "steps": [{ "runner": "vitest", "args": ["src"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "tests",
+          "reason": "Playwright design audit; runs in the design-audit lane (test:e2e:ci), not in Vitest reporting."
+        }
+      ]
     },
     {
       "package": "@scout-for-lol/frontend",
@@ -558,6 +610,12 @@
         {
           "runner": "vitest",
           "args": ["test/"]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "integration",
+          "reason": "Needs real ffmpeg/ffprobe with libass, zimg and fonts, as in the streambot image; run it with test:integration there."
         }
       ]
     },
@@ -699,7 +757,10 @@
             "src/schedules",
             "src/shared",
             "src/lib",
-            "src/workflows/agent-task.test.ts"
+            "src/workflows/agent-task.test.ts",
+            "src/worker-config.test.ts",
+            "scripts/check-workflow-tracing-safety.test.ts",
+            "scripts/cli-arguments.test.ts"
           ]
         },
         {
@@ -713,6 +774,12 @@
             "src/workflows/agent-task.test.ts",
             "--no-file-parallelism"
           ]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "src/integration.test.ts",
+          "reason": "Requires a live Temporal server on localhost:7233; run it with test:integration against a dev server."
         }
       ]
     },
@@ -748,8 +815,17 @@
             "test/s3",
             "test/deployed",
             "test/screenshot",
-            "scripts"
+            "test/history",
+            "test/discord",
+            "scripts",
+            "test-integration/catalog.integration.test.ts"
           ]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "test-integration/screenshot.integration.test.ts",
+          "reason": "Drives a real PinchTab browser against a locally served site; run it with test:integration on a workstation with PinchTab."
         }
       ]
     },
@@ -765,22 +841,38 @@
     {
       "package": "@shepherdjerred/config",
       "directory": "packages/config",
-      "steps": [{ "runner": "vitest" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/feature-flags",
       "directory": "packages/feature-flags",
-      "steps": [{ "runner": "vitest" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/ops-model",
       "directory": "packages/ops-model",
-      "steps": [{ "runner": "vitest" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/ops-clients",
       "directory": "packages/ops-clients",
-      "steps": [{ "runner": "vitest" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/version-catalog",
