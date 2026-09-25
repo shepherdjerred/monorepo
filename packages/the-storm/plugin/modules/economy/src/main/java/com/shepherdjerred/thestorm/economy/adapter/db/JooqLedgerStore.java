@@ -10,8 +10,9 @@ import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.LedgerStore;
+import com.shepherdjerred.thestorm.economy.app.RankedPlayer;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
-import com.shepherdjerred.thestorm.economy.app.Wallets;
+import com.shepherdjerred.thestorm.economy.app.SeenPlayer;
 import com.shepherdjerred.thestorm.economy.domain.Accounts;
 import com.shepherdjerred.thestorm.economy.domain.Adjustments;
 import com.shepherdjerred.thestorm.economy.domain.PendingTransfer;
@@ -55,37 +56,69 @@ public final class JooqLedgerStore implements LedgerStore {
   }
 
   @Override
-  public CompletableFuture<List<Wallets.Standing>> top(int limit) {
+  public CompletableFuture<List<RankedPlayer>> top(int limit) {
     return database.read(
         dsl ->
-            dsl.select(ECONOMY_ACCOUNT.ID, ECONOMY_ACCOUNT.BALANCE)
+            dsl.select(ECONOMY_ACCOUNT.ID, ECONOMY_ACCOUNT.BALANCE, ECONOMY_PLAYER_SEEN.LAST_NAME)
                 .from(ECONOMY_ACCOUNT)
+                .leftJoin(ECONOMY_PLAYER_SEEN)
+                .on(ECONOMY_PLAYER_SEEN.PLAYER_ID.eq(ECONOMY_ACCOUNT.ID))
                 .where(ECONOMY_ACCOUNT.KIND.eq(AccountKey.PLAYER), ECONOMY_ACCOUNT.BALANCE.gt(0L))
                 .orderBy(ECONOMY_ACCOUNT.BALANCE.desc(), ECONOMY_ACCOUNT.ID.asc())
                 .limit(limit)
                 .fetch(
                     row ->
-                        new Wallets.Standing(
+                        new RankedPlayer(
                             new AccountId.Player(UUID.fromString(row.value1())),
+                            Optional.ofNullable(row.value3()),
                             new Crystals(row.value2()))));
   }
 
   @Override
-  public CompletableFuture<Optional<Receipt>> welcome(UUID player, Crystals grant, String reason) {
+  public CompletableFuture<Optional<Receipt>> welcome(
+      SeenPlayer player, Crystals grant, String reason) {
     return database.write(
         dsl -> {
-          var inserted =
-              dsl.insertInto(ECONOMY_PLAYER_SEEN)
-                  .set(ECONOMY_PLAYER_SEEN.PLAYER_ID, player.toString())
-                  .set(ECONOMY_PLAYER_SEEN.FIRST_SEEN, time.millis())
-                  .onConflictDoNothing()
-                  .execute();
-          if (inserted == 0 || grant.equals(Crystals.ZERO)) {
+          var firstJoin = remember(dsl, player);
+          if (!firstJoin || grant.equals(Crystals.ZERO)) {
             return Optional.empty();
           }
-          var transfer = new Transfer(new AccountId.Server(), new AccountId.Player(player), grant);
+          var transfer = new Transfer(new AccountId.Server(), player.account(), grant);
           return Optional.of(applyOrFail(dsl, transfer, reason));
         });
+  }
+
+  @Override
+  public CompletableFuture<Optional<SeenPlayer>> findPlayer(String name) {
+    return database.read(
+        dsl ->
+            dsl.select(ECONOMY_PLAYER_SEEN.PLAYER_ID, ECONOMY_PLAYER_SEEN.LAST_NAME)
+                .from(ECONOMY_PLAYER_SEEN)
+                .where(ECONOMY_PLAYER_SEEN.LAST_NAME.collate("NOCASE").eq(name))
+                .orderBy(ECONOMY_PLAYER_SEEN.UPDATED_AT.desc())
+                .limit(1)
+                .fetchOptional(row -> new SeenPlayer(UUID.fromString(row.value1()), row.value2())));
+  }
+
+  /** Stores {@code player}'s current name; true when this is the first time they are seen. */
+  private boolean remember(DSLContext dsl, SeenPlayer player) {
+    var id = player.uuid().toString();
+    var now = time.millis();
+    if (dsl.fetchExists(ECONOMY_PLAYER_SEEN, ECONOMY_PLAYER_SEEN.PLAYER_ID.eq(id))) {
+      dsl.update(ECONOMY_PLAYER_SEEN)
+          .set(ECONOMY_PLAYER_SEEN.LAST_NAME, player.name())
+          .set(ECONOMY_PLAYER_SEEN.UPDATED_AT, now)
+          .where(ECONOMY_PLAYER_SEEN.PLAYER_ID.eq(id))
+          .execute();
+      return false;
+    }
+    dsl.insertInto(ECONOMY_PLAYER_SEEN)
+        .set(ECONOMY_PLAYER_SEEN.PLAYER_ID, id)
+        .set(ECONOMY_PLAYER_SEEN.FIRST_SEEN, now)
+        .set(ECONOMY_PLAYER_SEEN.LAST_NAME, player.name())
+        .set(ECONOMY_PLAYER_SEEN.UPDATED_AT, now)
+        .execute();
+    return true;
   }
 
   @Override
