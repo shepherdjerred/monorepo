@@ -47,7 +47,7 @@ deaths:
       - "{player} is swimming with the fishes"
       - "{player} took a long walk off a short pier"
     fall:
-      - "{player} fell to his ultimate demise"
+      - "{player} fell to their ultimate demise"
       - "{player} hit the ground too hard"
       - "{player} perished from a brutal fall"
       - "{player} succumbed to gravity"
@@ -57,7 +57,7 @@ deaths:
       - "Attempting a high-wire stunt yet again, {player} slipped, and died"
       - "Somehow tree tops are immune to gravity. {player} is not"
       - "Nice going {player}, you've fallen. You're in a group that includes sand, and gravel - the losers of three"
-      - "We're here today to mourn the loss of {player}. He is survived by his Nyan Cat and Creeper statues"
+      - "We're here today to mourn the loss of {player}. They are survived by their Nyan Cat and Creeper statues"
       - "Like everything in life, {player} chose the most average, unexciting, unadventurous death - falling. Whoopie"
       - "Oh man that was a hard fall {player}! You ok? {player}? How many fingers dude? Um, dude? Oh sh."
       - "{player} had a whoopsie-daisy!"
@@ -74,12 +74,12 @@ deaths:
       - "{player} became a human torch. Not a very long-lasting one either"
       - "Not only did you burn up {player}, but you may have started a forest fire. Nice going"
       - "You are not a replacement for coal, {player}. I'm not sure that even death can teach you that lesson"
-      - "Taking himself out of the gene pool for us, {player} burned to death. Good job!"
+      - "Taking themselves out of the gene pool for us, {player} burned to death. Good job!"
     lava:
       - "{player} was killed by lava"
       - "{player} became obsidian"
       - "{player} took a bath in a lake of fire"
-      - "{player} lost an entire inventory to lava. He died too, but man, losing your stuff's a bummer!"
+      - "{player} lost an entire inventory to lava. They died too, but man, losing your stuff's a bummer!"
       - "I told you not to dig straight down {player}. Now look what happened"
       - "Look {player}, I'm sorry I boiled you to death. I just wanted a friend. No one likes me. - Your Best Buddy, Lava"
       - "Then {player} said 'Take my picture in front of this pit of boiling, killer lava.'"
@@ -105,7 +105,7 @@ deaths:
       - "{player} went where no player should go: past the world border"
       - "{player} tried to leave The Storm. The Storm said no"
     kill:
-      - "{player} killed himself"
+      - "{player} killed themselves"
       - "{player} ended it all. Goodbye cruel world!"
     wither:
       - "{player} died to a wither"
@@ -160,7 +160,7 @@ deaths:
       - "It was a horrible death for {player} - ravaged by a {killer}"
       - "Dinner time for {killer}. Cooked pork for the main course, {player} for dessert"
       - "{player} went off into the woods alone and shall never return. Until they respawn"
-      - "While hunting, {player} was unaware that a {killer} was hunting him. Rest in pieces"
+      - "While hunting, {player} was unaware that a {killer} was hunting them. Rest in pieces"
       - "We have unconfirmed reports that {player} was attacked by an {killer}"
       - "Look {player}, I'm sorry I killed you. I just wanted a friend. No one likes me. - Your Best Buddy, {killer}"
       - "Dear {player}, good luck finding your stuff. - {killer}"
@@ -173,7 +173,7 @@ deaths:
           - "Sorry you died {player}, a creeper's gonna creep!"
           - "{player} was testing a new creeper-proof suit. It didn't work"
           - "{player} was not involved in any explosion, nor are we able to confirm the existence of the 'creeper'. Move along"
-          - "Due to the laws of physics, the sound of a creeper explosion only reached {player} after he died from it"
+          - "Due to the laws of physics, the sound of a creeper explosion only reached {player} after they died from it"
           - "Hell hath no fury like a creeper scorned. We drink to thy untimely end, lord {player}"
           - "I'm sorry {player}, that's the only birthday gift Creepers know how to give. :("
       - types: [zombie, zombie_villager, husk, drowned]
@@ -209,7 +209,7 @@ deaths:
       - "{killer} killed {player} wielding {weapon}"
       - "You think it was {killer} who killed {player}? Nope, Chuck Testa"
       - "It was a bitter end for {player}, but {killer} won victoriously"
-      - "Embarrassingly, {player} died of fright before {killer} could even raise his weapon"
+      - "Embarrassingly, {player} died of fright before {killer} could even raise their weapon"
       - "{killer} struck the mighty blow and ended {player}"
       - "{player} never saw {killer} coming"
       - "{killer} delivered the fatal blow on {player}"
@@ -256,7 +256,7 @@ announcements:
       - "No griefing: if someone built it, leave it be. Mobs are fair game."
       - "Died a few times in a row? We stop announcing it after a while. You're welcome."
       - "Tired of tips? <#4DCCC4>/toggle-tips</#4DCCC4> turns them off. We won't take it personally."
-      - "Not interested in ads? <#4DCCC4>/toggle-ads</#4DCCC4> turns them off."
+      - "Towns grow as they gain residents, from a Settlement all the way to a Metropolis."
   ads:
     interval: PT20M
     messages: []
@@ -266,8 +266,9 @@ tab:
   footer: "<gray>Why is it always raining?</gray><newline><#4DCCC4>ts-mc.net</#4DCCC4>"
 
 commands:
-  # Labels hidden from players without the bypass permission. Namespaced
-  # forms such as /bukkit:plugins are blocked too.
-  blocked: [pl, plugins, ver, version, about, icanhasbukkit, "?"]
+  # Labels refused for players without the bypass permission. Namespaced
+  # forms such as /bukkit:plugins are blocked too, and those players' command
+  # lists show no namespaced commands at all.
+  blocked: [pl, plugins, ver, version, about, icanhasbukkit, help, "?"]
   staffBypassPermission: thestorm.messages.bypass-blocklist
   blockedMessage: "You don't have permission to do that!"

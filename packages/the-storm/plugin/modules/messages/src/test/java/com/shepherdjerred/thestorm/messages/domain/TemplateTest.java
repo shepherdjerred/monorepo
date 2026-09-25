@@ -89,9 +89,29 @@ final class TemplateTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"{victim} died", "{Player} died", "{} died", "{player died", "died}"})
+  @ValueSource(strings = {"died}", "{player died", "{Player} died", "{victim} died", "{} died"})
   void rejectsMalformedTemplates(String source) {
     assertThatThrownBy(() -> Template.parse(source)).isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "<#4DCCC4>{player}</#4DCCC4> fell",
+        "{player} <gren>fell",
+        "{player} <red>died</red>",
+        "{player} fell<newline>hard"
+      })
+  void rejectsMiniMessageTags(String source) {
+    assertThatThrownBy(() -> Template.parse(source))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("plain text");
+  }
+
+  @Test
+  void allowsAngleBracketsThatAreNotTags() {
+    assertThat(Template.parse("{player} died :( <3 > 2 < 5").source())
+        .isEqualTo("{player} died :( <3 > 2 < 5");
   }
 
   @Test

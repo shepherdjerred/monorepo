@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * A death-message template such as {@code "{player} was ravaged by a {killer}"}, split into literal
@@ -14,6 +15,9 @@ import java.util.function.Function;
  * @param segments the text and placeholders in order; never empty
  */
 public record Template(List<Segment> segments) {
+
+  /** Anything that looks like a MiniMessage tag, such as {@code <red>} or {@code </#4DCCC4>}. */
+  private static final Pattern TAG = Pattern.compile("</?[#!?a-zA-Z_][^<>]*>");
 
   /** One piece of a template. */
   public sealed interface Segment {
@@ -40,9 +44,18 @@ public record Template(List<Segment> segments) {
 
   /**
    * Parses {@code source}. Braces are reserved for placeholders: an unknown name or an unbalanced
-   * brace is rejected so a typo in the catalog fails at load, not in chat.
+   * brace is rejected so a typo in the catalog fails at load, not in chat. Templates are plain
+   * text, so anything shaped like a MiniMessage tag is rejected too.
    */
   public static Template parse(String source) {
+    var tag = TAG.matcher(source);
+    if (tag.find()) {
+      throw new IllegalArgumentException(
+          "death messages are plain text and the plugin colors the names; remove "
+              + tag.group()
+              + " from: "
+              + source);
+    }
     var segments = new ArrayList<Segment>();
     var text = new StringBuilder();
     var index = 0;

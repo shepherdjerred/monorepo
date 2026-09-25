@@ -17,6 +17,7 @@ import com.shepherdjerred.thestorm.messages.domain.Channel;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import net.kyori.adventure.text.Component;
 import org.bukkit.event.Listener;
 
@@ -89,7 +90,8 @@ public final class MessagesModule implements StormModule {
               audience));
     }
 
-    var toggles = new ToggleCommands(preferences);
+    var announced = ads.messages().isEmpty() ? Set.of(Channel.TIPS) : Set.of(Channel.values());
+    var toggles = new ToggleCommands(preferences, announced);
     context
         .lifecycle()
         .registerEventHandler(

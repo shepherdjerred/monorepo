@@ -50,7 +50,7 @@ public final class DeathMessageListener implements Listener {
    */
   public record Sources(RandomGenerator random, InstantSource time) {}
 
-  @EventHandler(priority = EventPriority.HIGH)
+  @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
   public void onDeath(PlayerDeathEvent event) {
     var victim = event.getPlayer();
     var source = event.getDamageSource();
