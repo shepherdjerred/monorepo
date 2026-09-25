@@ -1,6 +1,9 @@
 import { expect, test } from "vitest";
 
-import { appliedVerifiedReleaseResult } from "./argocd-release-result.ts";
+import {
+  appliedVerifiedReleaseResult,
+  supersededReleaseResult,
+} from "./argocd-release-result.ts";
 
 test("records applied verification separately from ArgoCD's intentional terminal state", () => {
   expect(
@@ -23,5 +26,22 @@ test("records applied verification separately from ArgoCD's intentional terminal
       { name: "apps", revision: "2.0.0-42" },
       { name: "zebra", revision: "2.0.0-42" },
     ],
+  });
+});
+
+test("records a superseded release without claiming it applied anything", () => {
+  expect(
+    supersededReleaseResult({
+      requestId: "request-id",
+      revision: "2.0.0-42",
+      supersededBy: "2.0.0-43",
+    }),
+  ).toEqual({
+    schema: "homelab-release-result/v1",
+    outcome: "superseded",
+    rootApplication: "apps",
+    requestId: "request-id",
+    revision: "2.0.0-42",
+    supersededBy: "2.0.0-43",
   });
 });
