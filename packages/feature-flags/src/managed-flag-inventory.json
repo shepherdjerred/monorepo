@@ -795,6 +795,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout_v2_postmatch_ownership_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Let the V2 pipeline own scheduled post-match discovery. Off hands each pass to v1 scoutPostMatchDiscoveryWorkflow; the rollback switch for the V2 cutover.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "llm-daily-token-budget",
       "owner": "scout",
       "namespace": "scout",

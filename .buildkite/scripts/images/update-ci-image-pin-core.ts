@@ -220,6 +220,42 @@ export async function classifyCiImageRuntimePromotion(
   );
 }
 
+export function requireMainPin(
+  mainState: CiImagePinState | undefined,
+  definition: { readonly name: string },
+): CiImagePinState {
+  if (mainState === undefined) {
+    throw new Error(
+      `${definition.name} is pinned locally but has no pin on origin/main`,
+    );
+  }
+  return mainState;
+}
+
+/**
+ * Whether a pending first pin already carries the candidate's runtime content,
+ * so replacing it would only churn the pin PR.
+ */
+export async function pendingFirstPinCoversCandidate(
+  repository: string,
+  pending: CiImagePinState | undefined,
+  candidate: CiImagePinState,
+  getRuntimeFingerprint: RuntimeFingerprintReader,
+): Promise<boolean> {
+  if (pending === undefined || pending.digest === candidate.digest) {
+    return false;
+  }
+  const outcome = await classifyCiImageRuntimePromotion(
+    {
+      repository,
+      pinnedDigest: pending.digest,
+      candidateDigest: candidate.digest,
+    },
+    getRuntimeFingerprint,
+  );
+  return outcome === "content-unchanged";
+}
+
 export function isCurrentSourceCandidate(
   candidate: CiImagePinState,
   sourceFingerprint: string,

@@ -292,6 +292,49 @@ claim and the guarded close against a real Postgres; `match-v2.test.ts` proves
 the overlap end to end, with the second discovery starting while the first is
 awaiting a child.
 
+### Which pipeline owns post-match discovery
+
+The `postmatch-discovery` Schedule always starts
+`scoutPostMatchDiscoveryV2Workflow`. That Workflow's first Activity,
+`resolvePostMatchDiscoveryOwnerV2` (`src/temporal/v2/postmatch-ownership.ts`),
+reads the `scout_v2_postmatch_ownership_enabled` Flipt flag for the stage. The
+flag is on by default, and V2 then discovers as described above. When an
+operator turns it off, the run starts v1's `scoutPostMatchDiscoveryWorkflow`
+as a child and returns its outcome. Turning the flag back on returns the next
+pass to V2, and no deploy is needed in either direction.
+
+Only one pipeline discovers at a time, because both take the same durable
+poll claim (`claimPostMatchPoll`) before discovering. V2 takes it in its scan.
+The v1 handoff takes it in the ownership Activity, before the v1 child starts,
+and passes it to the child as `pollOwner`. v1's discovery then re-presents the
+claim instead of opening the poll unconditionally, and its maintenance closes
+exactly that claim. A run that finds the claim held does nothing: V2 reports
+`skipped`, the handoff reports `defer-v1`, and both return `no-op`. So two
+overlapping handoffs (the scheduled run and an operator's), or a handoff and a
+V2 run, cannot both own a pass. If the v1 child fails, the Workflow closes the
+claim as failed (`releasePostMatchPollClaimV2`) rather than leaving it until
+the staleness bound. While the child runs, the Workflow renews the claim
+every 5 minutes (`renewPostMatchPollClaimV2`, stored in
+`BotState.pollClaimRenewedAt`). A claim goes stale only when both its start
+and its last renewal are past the 30-minute bound, so a pass that ingests a
+long backlog keeps its claim and a terminated one still frees it. A delegated
+discovery that cannot run throws instead of returning `skipped`, so v1's
+maintenance never closes a claim nothing used. This can happen even while the
+claim is held, because the worker-local polling flag is taken before the
+claim is checked. v1 runs the gate did not start carry no `pollOwner` and
+keep v1's original open and close. Match children V2 started keep running
+under `ABANDON`, and their observation owner still decides who applies each
+match. The gate is behind the `scout-v2-postmatch-ownership` patch, so a
+discovery recorded before it replays straight into V2 discovery.
+
+The recurring Flipt inventory check compares each live flag with
+`managed-flag-inventory.json`, and the inventory has no class of flag whose
+live value may differ. A rollback is therefore two changes: switch the flag off
+for the stage in Flipt, which takes effect on the next pass, and commit a
+matching `default: false` override for that environment in the inventory,
+the same way `explore_creation_enabled` records its production value. Until
+that commit lands, the check reports the flag as drift.
+
 `ScoutEffectClaim` keeps taking the top-level Prisma client, and
 `src/temporal/effect-claims.ts` carries the reason: `claimScoutEffect` is an
 insert that expects to fail and then READS the existing row back, and in
