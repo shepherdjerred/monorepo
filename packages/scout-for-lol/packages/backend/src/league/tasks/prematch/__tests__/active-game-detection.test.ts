@@ -237,6 +237,14 @@ const notCapturedByV2 = () => Promise.resolve(false);
 const { checkActiveGames } =
   await import("#src/league/tasks/prematch/active-game-detection.ts");
 
+/** An ordinary v1 pass that skips the real 2x2s sleep in the lobby retry loop. */
+async function checkWithoutRetrySleep(): Promise<void> {
+  await checkActiveGames({
+    capturedByV2: notCapturedByV2,
+    lobbyRetryDelayMs: 0,
+  });
+}
+
 describe("checkActiveGames — subsequent-match polling", () => {
   beforeEach(() => {
     mockActiveGames = [];
@@ -318,10 +326,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
     });
 
     // Pass retryDelayMs=0 to skip the real 2×2s sleep in the retry loop.
-    await checkActiveGames({
-      capturedByV2: notCapturedByV2,
-      lobbyRetryDelayMs: 0,
-    });
+    await checkWithoutRetrySleep();
 
     // Pre-start custom lobby must NOT be committed: the next 30s cron
     // tick gets a clean shot once the other players load in.
@@ -370,10 +375,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
     });
 
     // retryDelayMs=0 to skip the real 2×2s sleep in the retry loop.
-    await checkActiveGames({
-      capturedByV2: notCapturedByV2,
-      lobbyRetryDelayMs: 0,
-    });
+    await checkWithoutRetrySleep();
 
     // Matched event lobby caught mid-countdown must NOT be committed; the next
     // 30s cron tick re-evaluates once the full roster has loaded in.
