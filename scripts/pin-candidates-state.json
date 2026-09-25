@@ -78,10 +78,10 @@
       "digest": "sha256:9c6d04cdf407c3722d21caa3a7745d8e1638c32fed2cadb8f3e29d60c7bd912e"
     },
     "shepherdjerred/temporal-worker/workflows/stable": {
-      "version": "2.0.0-13290",
-      "digest": "sha256:839757bc2a1ffbdca5111843e6e78ea41771b6c73d486111ee993e2fda762fb5",
-      "buildNumber": 13290,
-      "gitSha": "f23505a7251c5029e01d8157e31800e89cec8298"
+      "version": "2.0.0-17262",
+      "digest": "sha256:9c6d04cdf407c3722d21caa3a7745d8e1638c32fed2cadb8f3e29d60c7bd912e",
+      "buildNumber": 17262,
+      "gitSha": "4bab713a81af0ce1bac2a1657faa1fbac98f868d"
     },
     "shepherdjerred/trmnl-dashboard": {
       "buildNumber": 17262,
