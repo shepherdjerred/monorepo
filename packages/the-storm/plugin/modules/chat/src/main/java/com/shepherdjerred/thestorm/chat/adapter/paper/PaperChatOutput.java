@@ -3,9 +3,11 @@ package com.shepherdjerred.thestorm.chat.adapter.paper;
 import com.shepherdjerred.thestorm.chat.app.ChatOutput;
 import com.shepherdjerred.thestorm.chat.app.ChatService;
 import com.shepherdjerred.thestorm.chat.app.OutgoingLine;
+import com.shepherdjerred.thestorm.chat.app.PrivateLine;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Server;
+import org.bukkit.entity.Player;
 
 /** Sends lines that do not come from a chat event: command one-shots and relayed messages. */
 public final class PaperChatOutput implements ChatOutput {
@@ -40,6 +42,14 @@ public final class PaperChatOutput implements ChatOutput {
       }
     }
     server.getConsoleSender().sendMessage(component);
+  }
+
+  /** Shows a private message to its sender and recipient only. */
+  void deliverPrivate(PrivateLine line, Player sender, Player recipient) {
+    requireMainThread();
+    var component = MiniMessage.miniMessage().deserialize(service.renderPrivate(line));
+    sender.sendMessage(component);
+    recipient.sendMessage(component);
   }
 
   private void requireMainThread() {

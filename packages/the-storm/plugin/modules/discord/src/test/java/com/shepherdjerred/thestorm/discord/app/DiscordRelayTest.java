@@ -121,6 +121,28 @@ final class DiscordRelayTest {
   }
 
   @Test
+  void dropsDiscordMessagesOnceStopping() {
+    relay.onDiscordMessage(new InboundMessage("bob", "queued before stop", false, 0));
+    relay.stopRelaying();
+    relay.onDiscordMessage(new InboundMessage("bob", "sent during stop", false, 0));
+
+    assertThat(mainThread).as("nothing new is scheduled once stopping").hasSize(1);
+    runMainThread();
+    assertThat(relayed).as("a hop queued before stop is dropped when it runs").isEmpty();
+  }
+
+  @Test
+  void listAnswersWithoutTheGameOnceStopping() {
+    var replies = new ArrayList<String>();
+    relay.stopRelaying();
+
+    relay.listPlayers(replies::add);
+
+    assertThat(mainThread).isEmpty();
+    assertThat(replies).containsExactly("The Storm sleeps. Join ts-mc.net to wake it.");
+  }
+
+  @Test
   void skipsBotsAndCutsLongMessages() {
     relay.onDiscordMessage(new InboundMessage("bridge", "echo", true, 0));
     relay.onDiscordMessage(new InboundMessage("bob", "x".repeat(50), false, 0));

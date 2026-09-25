@@ -15,51 +15,64 @@ import org.junit.jupiter.api.Test;
 final class MessageValidatorTest {
 
   private static final Instant NOW = Instant.parse("2017-06-01T12:00:00Z");
+  private static final String SECTION = String.valueOf((char) 0xA7);
   private static final Speaker PLAYER =
       new Speaker(UUID.fromString("00000000-0000-0000-0000-000000000001"), "Jerred", false, false);
   private static final Speaker BYPASS =
       new Speaker(UUID.fromString("00000000-0000-0000-0000-000000000002"), "Mod", true, true);
   private static final FilterSettings SETTINGS = new FilterSettings(40, 2, 30);
-  private static final ChatFacts OPEN = new ChatFacts(ChannelAccess.GRANTED, null, null);
 
   private final MessageValidator validator = MessageValidator.standard(SETTINGS);
 
-  private Result<String, List<ChatDenial>> send(Speaker speaker, String text, ChatFacts facts) {
-    return validator.validate(new ChatAttempt(speaker, ChannelKey.GLOBAL, text, NOW), facts);
+  private Result<AcceptedMessage, List<ChatDenial>> send(
+      Speaker speaker, String text, ChatFacts facts) {
+    return validator.validate(new ChatAttempt(speaker, text, NOW), facts);
   }
 
   private static ChatFacts facts(@Nullable Mute mute, @Nullable RecentMessage last) {
-    return new ChatFacts(ChannelAccess.GRANTED, mute, last);
+    return new ChatFacts(mute, last);
+  }
+
+  private static Result<AcceptedMessage, List<ChatDenial>> accepted(String text, boolean calmed) {
+    return Result.ok(new AcceptedMessage(text, NOW, calmed));
   }
 
   @Test
   void acceptsAndCleansAnOrdinaryMessage() {
-    assertThat(send(PLAYER, "  hello\n  world §c", OPEN)).isEqualTo(Result.ok("hello world"));
+    assertThat(send(PLAYER, "  hello\n  world " + SECTION + "c", ChatFacts.NONE))
+        .isEqualTo(accepted("hello world", false));
   }
 
   @Test
   void rejectsBlankMessages() {
-    assertThat(send(PLAYER, " §l ", OPEN)).isEqualTo(Result.err(List.of(new ChatDenial.Blank())));
+    assertThat(send(PLAYER, " " + SECTION + "l ", ChatFacts.NONE))
+        .isEqualTo(Result.err(List.of(new ChatDenial.Blank())));
   }
 
   @Test
   void rejectsLongMessagesByCodePoints() {
-    assertThat(send(PLAYER, "x".repeat(40), OPEN).isOk()).isTrue();
-    assertThat(send(PLAYER, "😀".repeat(40), OPEN).isOk()).isTrue();
-    assertThat(send(PLAYER, "x".repeat(41), OPEN))
+    var emoji = Character.toString(0x1F600);
+
+    assertThat(send(PLAYER, "x".repeat(40), ChatFacts.NONE).isOk()).isTrue();
+    assertThat(send(PLAYER, emoji.repeat(40), ChatFacts.NONE).isOk()).isTrue();
+    assertThat(send(PLAYER, "x".repeat(41), ChatFacts.NONE))
         .isEqualTo(Result.err(List.of(new ChatDenial.TooLong(40))));
   }
 
   @Test
-  void limitsCapsWords() {
-    assertThat(send(PLAYER, "I SAID OK then", OPEN).isOk()).isTrue();
-    assertThat(send(PLAYER, "WHY IS THIS", OPEN))
-        .isEqualTo(Result.err(List.of(new ChatDenial.TooManyCaps(2))));
-    assertThat(send(PLAYER, "A B C D E", OPEN).isOk())
+  void calmsShoutingInsteadOfBlockingIt() {
+    assertThat(send(PLAYER, "I SAID OK then", ChatFacts.NONE))
+        .as("two caps words are allowed")
+        .isEqualTo(accepted("I SAID OK then", false));
+    assertThat(send(PLAYER, "WHY IS THIS Jerred", ChatFacts.NONE))
+        .isEqualTo(accepted("why is this Jerred", true));
+    assertThat(send(PLAYER, "A B C D E", ChatFacts.NONE))
         .as("single letters are not shouting")
-        .isTrue();
-    assertThat(send(PLAYER, "LOL?! OMG!! WOW", OPEN).isOk()).isFalse();
-    assertThat(send(BYPASS, "STAFF CAN SHOUT", OPEN).isOk()).isTrue();
+        .isEqualTo(accepted("A B C D E", false));
+    assertThat(send(PLAYER, "LOL?! OMG!! WOW", ChatFacts.NONE))
+        .isEqualTo(accepted("lol?! omg!! wow", true));
+    assertThat(send(BYPASS, "STAFF CAN SHOUT", ChatFacts.NONE))
+        .isEqualTo(accepted("STAFF CAN SHOUT", false));
   }
 
   @Test
@@ -76,6 +89,13 @@ final class MessageValidatorTest {
   }
 
   @Test
+  void aCalmedRepeatIsStillARepeat() {
+    var last = RecentMessage.of("buy my stuff now please", NOW.minusSeconds(5));
+
+    assertThat(send(PLAYER, "BUY MY STUFF NOW please", facts(null, last)).isOk()).isFalse();
+  }
+
+  @Test
   void mutedPlayersCannotTalkUntilTheMuteEnds() {
     var clock = InstantSource.fixed(NOW.minusSeconds(60));
     var mute = Mute.starting(clock.instant(), Duration.ofMinutes(5), "spam", "Mod");
@@ -89,32 +109,21 @@ final class MessageValidatorTest {
   }
 
   @Test
-  void refusesChannelsThePlayerCannotUse() {
-    var facts = new ChatFacts(ChannelAccess.UNAVAILABLE, null, null);
-
-    assertThat(validator.validate(new ChatAttempt(PLAYER, ChannelKey.TOWN, "hi", NOW), facts))
-        .isEqualTo(
-            Result.err(
-                List.of(new ChatDenial.NoAccess(ChannelKey.TOWN, ChannelAccess.UNAVAILABLE))));
-    assertThatThrownBy(() -> new ChatDenial.NoAccess(ChannelKey.TOWN, ChannelAccess.GRANTED))
-        .isInstanceOf(IllegalArgumentException.class);
-  }
-
-  @Test
   void collectsEveryDenial() {
     var mute = Mute.starting(NOW, Duration.ofMinutes(1), "spam", "Mod");
-    var facts = new ChatFacts(ChannelAccess.NO_PERMISSION, mute, null);
 
-    var result =
-        validator.validate(new ChatAttempt(PLAYER, ChannelKey.STAFF, "ONE TWO THREE", NOW), facts);
-
-    assertThat(result)
+    assertThat(send(PLAYER, "x".repeat(41), facts(mute, null)))
         .isEqualTo(
             Result.err(
                 List.of(
-                    new ChatDenial.NoAccess(ChannelKey.STAFF, ChannelAccess.NO_PERMISSION),
                     new ChatDenial.Muted(Duration.ofMinutes(1), "spam"),
-                    new ChatDenial.TooManyCaps(2))));
+                    new ChatDenial.TooLong(40))));
+  }
+
+  @Test
+  void noAccessIsNeverGranted() {
+    assertThatThrownBy(() -> new ChatDenial.NoAccess(ChannelKey.TOWN, ChannelAccess.GRANTED))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -128,5 +137,12 @@ final class MessageValidatorTest {
     assertThatThrownBy(() -> new FilterSettings(10, 1, -1))
         .isInstanceOf(IllegalArgumentException.class);
     assertThat(new FilterSettings(10, 0, 0).repeatCooldown()).isEqualTo(Duration.ZERO);
+  }
+
+  @Test
+  void shoutingCountsOnlyWordsWithTwoCapitalLetters() {
+    assertThat(Shouting.capsWords("I AM OK a-B CD1 x")).isEqualTo(3);
+    assertThat(Shouting.calm("KEEP  SPACES Here", 1)).isEqualTo("keep  spaces Here");
+    assertThat(Shouting.calm("ONLY ONE", 2)).isEqualTo("ONLY ONE");
   }
 }
