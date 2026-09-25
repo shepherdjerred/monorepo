@@ -88,8 +88,8 @@ final class Guard {
   }
 
   /** The player behind an entity pressing a block, riders and lead holders included. */
-  Optional<Culprit> presser(Entity entity) {
-    return culprits.presser(entity);
+  Optional<Culprit> presser(@Nullable Entity entity) {
+    return entity == null ? Optional.empty() : culprits.presser(entity);
   }
 
   Culprits culprits() {

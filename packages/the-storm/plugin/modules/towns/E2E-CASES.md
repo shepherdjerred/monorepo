@@ -54,3 +54,28 @@ domain tests and these scenarios belong in the real-server suite
 
 - An outsider walks through a nether portal whose exit is inside a town: the
   trip is refused. The same through an end gateway.
+
+## Lesser holes (`ContactListener`, `FireListener`, `WorldListener`, `MobListener`, `BlockListener`)
+
+- An outsider picks up an item lying in a town: refused. They pick up what they
+  dropped there, and their own drops after dying there. (MockBukkit does not
+  implement `Item#getThrower` or `Item#setThrower`.)
+- An outsider walks into a town's cow or boat to push it out of its pen: it
+  does not move. A town member pushes it.
+- A TNT cannon in the wilderness lands primed TNT inside a town that allows
+  explosions: no town blocks break (the blast is judged from where the TNT was
+  lit). A creeper that spawned in the wilderness blows up inside a town: same.
+- A hopper minecart rolled in on rails from the wilderness passes under a
+  town's chest: it takes nothing. A cart a member placed in the town loads.
+- An outsider breaks the wilderness block a town's item frame or painting hangs
+  on: refused.
+- An outsider leads a sheep into a town: it does not eat the town's grass.
+- An outsider's footsteps or arrows near a town's sculk sensor do not power its
+  redstone; near its shrieker they do not summon a warden.
+- Lightning (natural or channeling) strikes a town's villager or pig: it stays
+  a villager or pig.
+- A spear charge or mace smash by an outsider unseats a town's mounted player
+  or knocks a town's animal: no knockback, and the town's animal does not turn
+  on the outsider (lastHurtByMob side effects).
+- An outsider hits another player's wolf in the wilderness: no damage (tamed
+  pets are protected from everyone but their owner, everywhere).

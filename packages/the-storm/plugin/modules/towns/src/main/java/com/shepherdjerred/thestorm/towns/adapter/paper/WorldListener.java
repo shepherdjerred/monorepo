@@ -13,6 +13,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.data.Directional;
+import org.bukkit.entity.Entity;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -72,11 +73,28 @@ final class WorldListener implements Listener {
     var from = source.getLocation();
     var to = destination.getLocation();
     // An inventory with no place in the world, such as a plugin's menu, has no land.
-    if (from != null
-        && to != null
-        && !Guard.flows(WorldEffect.ITEM_TRANSFER, guard.land(from), guard.land(to))) {
+    if (from == null || to == null) {
+      return;
+    }
+    var fromLand = guard.land(from);
+    if (!Guard.flows(WorldEffect.ITEM_TRANSFER, fromLand, guard.land(to))) {
+      event.setCancelled(true);
+      return;
+    }
+    if (!(fromLand instanceof Land.Wilderness) && !cartMayLoad(destination, fromLand)) {
       event.setCancelled(true);
     }
+  }
+
+  /**
+   * A hopper or chest minecart loading from protected land is judged by where it was placed too,
+   * not only where it stands: otherwise a cart rolled in on rails from outside fills up under a
+   * town's chest and rolls away. Outsiders cannot place carts on a town's land, so a cart placed
+   * there is the town's. Only asked when the source is protected land.
+   */
+  private boolean cartMayLoad(Inventory destination, Land fromLand) {
+    return !(destination.getHolder(false) instanceof Entity cart)
+        || Guard.flows(WorldEffect.ITEM_TRANSFER, fromLand, guard.land(Origins.of(cart)));
   }
 
   private boolean halvesMayTrade(Inventory source, Inventory destination) {

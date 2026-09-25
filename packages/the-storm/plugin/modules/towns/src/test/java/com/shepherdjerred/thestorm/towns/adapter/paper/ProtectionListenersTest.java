@@ -13,6 +13,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
@@ -25,7 +26,9 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
@@ -135,7 +138,7 @@ final class ProtectionListenersTest extends AegisServer {
    * An inventory at column {@code x}. MockBukkit's block inventories all report one fixed location,
    * so this stands in with a proxy that knows only where it is, which is all the listener asks.
    */
-  private Inventory container(int x) {
+  private Inventory container(int x, @Nullable Object holder) {
     var location = new Location(world, x, Y, Z);
     return (Inventory)
         Proxy.newProxyInstance(
@@ -144,8 +147,43 @@ final class ProtectionListenersTest extends AegisServer {
             (proxy, method, arguments) ->
                 switch (method.getName()) {
                   case "getLocation" -> location.clone();
+                  case "getHolder" -> holder;
                   default -> throw new UnsupportedOperationException(method.getName());
                 });
+  }
+
+  private Inventory container(int x) {
+    return container(x, null);
+  }
+
+  /**
+   * A cart standing at wherever it is but placed at column {@code placedAt}, as the listener sees
+   * it: only where it came from.
+   */
+  private Entity cartPlacedAt(int placedAt) {
+    var origin = new Location(world, placedAt, Y, Z);
+    return (Entity)
+        Proxy.newProxyInstance(
+            Entity.class.getClassLoader(),
+            new Class<?>[] {Entity.class, InventoryHolder.class},
+            (proxy, method, arguments) ->
+                switch (method.getName()) {
+                  case "getOrigin", "getLocation" -> origin.clone();
+                  default -> throw new UnsupportedOperationException(method.getName());
+                });
+  }
+
+  @Test
+  void aCartRolledInFromOutsideCannotLoadFromATownsChest() {
+    var chest = container(CLAIM_X + 3);
+    var outsidersCart = container(CLAIM_X + 3, cartPlacedAt(WILD_X));
+    var townsCart = container(CLAIM_X + 3, cartPlacedAt(CLAIM_X + 5));
+    var item = new ItemStack(Material.DIAMOND);
+
+    assertThat(call(new InventoryMoveItemEvent(chest, item, outsidersCart, false)).isCancelled())
+        .isTrue();
+    assertThat(call(new InventoryMoveItemEvent(chest, item, townsCart, false)).isCancelled())
+        .isFalse();
   }
 
   /** A double chest whose left half is at column {@code left} and right half at {@code right}. */
