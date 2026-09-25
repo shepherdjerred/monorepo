@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Kubernetes steps get bash from their step image; the native lanes take
-# its shell from the agent config instead (bootstrap.sh writes
-# shell="/bin/bash -e -c"). State that requirement here rather than inheriting
-# it, so a shell regression fails with this message instead of an unbound
-# BASH_SOURCE or an unknown `pipefail` option.
+# Kubernetes steps get bash from their step image; on the Mac, Woodpecker's
+# local backend runs the step's `image` as the shell, and the configuration
+# extension emits `bash` for it. State that requirement here rather than
+# inheriting it, so a shell regression fails with this message instead of an
+# unbound BASH_SOURCE or an unknown `pipefail` option.
 set -eu
 if [ -z "${BASH_VERSION:-}" ]; then
-  echo "error: macos-native-env.sh requires bash; set shell=\"/bin/bash -e -c\" in the macOS agent config" >&2
+  echo "error: macos-native-env.sh requires bash; the native lanes must run with image: bash" >&2
   exit 1
 fi
 set -o pipefail

@@ -57,6 +57,12 @@ Native steps therefore have a deliberately narrow surface:
 The PR and main variants are one lane each: the selector decides whether a lane
 runs, so there is no second step carrying a different gate.
 
+When the TaskNotes UI tests fail, their `.xcresult` bundles are copied to
+`~/.woodpecker/evidence/tasknotes-<pipeline number>/` on the Mac, because the
+local backend deletes the job's checkout when it ends and the lane holds no
+credentials to upload them anywhere. Bundles older than two weeks are pruned by
+the next failing run.
+
 Product paths select their own lane. Changes to the native pipeline,
 toolchain, preflight, or this host configuration select both. Unrelated paths
 select neither lane.
@@ -97,7 +103,8 @@ is guarded by nothing but the shared agent secret.
 
 The bootstrap:
 
-- installs `mise`, `xcodes`, XcodeGen, SwiftLint, and Tailscale with Homebrew,
+- installs `mise`, `xcodes`, XcodeGen, SwiftLint, coreutils, and Tailscale
+  with Homebrew,
   plus the pinned `woodpecker-agent` release binary into `~/.local/bin`
   (Woodpecker ships no Homebrew formula, and the agent/server gRPC protocol is
   versioned, so a silently-upgraded agent would stop claiming jobs);
@@ -244,6 +251,8 @@ connected at <https://woodpecker.sjer.red/admin/agents>; its log is at
 - the Bun and Rust versions pinned by the root `.mise.toml`, selected through `mise`;
 - both Rust standard-library targets required by TaskNotes' universal macOS XCFramework;
 - XcodeGen and SwiftLint;
+- Homebrew coreutils' `gtimeout` at `/opt/homebrew/bin/gtimeout`, which bounds
+  every generated step (macOS has no `timeout`);
 - permission for XCTest to enable Automation Mode without authentication;
 - active FileVault and the CI user as the console user;
 - at least 40 GiB free in the checkout filesystem;

@@ -77,9 +77,11 @@ fi
 # xcodes          : installs and selects the repository-pinned Xcode
 # xcodegen        : generates QuotaBar and TaskNotes Xcode projects
 # swiftlint       : strict Swift lint and analyzer checks
+# coreutils       : gtimeout, which bounds every generated step (macOS has no
+#                   timeout of its own)
 # tailscale       : tailnet membership (enrolled manually, see README)
 echo "==> Installing native CI packages"
-brew install mise xcodes xcodegen swiftlint tailscale
+brew install mise xcodes xcodegen swiftlint coreutils tailscale
 
 # Woodpecker ships no Homebrew formula, so the agent is a released binary.
 # Pinned by version rather than tracking latest: the agent and server speak a

@@ -268,7 +268,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/macos-cross-compiler",
     "scripts/release/macos-cross-compiler.ts",
     "scripts/lib/run.ts",
-    "scripts/lib/s3-static-site.ts",
+    "scripts/lib/seaweedfs.ts",
   ],
   "scout-reconcile": [
     ...workspacePaths,
@@ -326,7 +326,7 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
 
 // These lanes' images are built only from their own sources and publish
 // scripts. A rebuild costs hours of long builds (multi-platform for
-// macos-cross-compiler), so CI plumbing edits (pipeline.yml, selectors) must
+// macos-cross-compiler), so CI plumbing edits (lane definitions, selectors) must
 // not re-trigger them.
 const lanesWithoutGlobalPaths = new Set([
   "site-scout",

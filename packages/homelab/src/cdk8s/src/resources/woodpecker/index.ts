@@ -162,6 +162,15 @@ export function createWoodpeckerServer(chart: Chart) {
         // allowlist that exempts those accounts lives in the server database
         // (`approval_allowed_users`); this flag only sets the default.
         WOODPECKER_DEFAULT_APPROVAL_MODE: EnvValue.fromValue("all_events"),
+        // Woodpecker kills a whole workflow at its repository's timeout,
+        // whatever the step's own bound says; its defaults (60, capped at
+        // 120) would cut off the 240-minute macos-cross-compiler publish.
+        // Kept in step with WORKFLOW_TIMEOUT_MINUTES in the configuration
+        // extension, which checks every step fits. Like the approval mode,
+        // this applies at activation: an already-active repository keeps its
+        // stored timeout until its settings are changed.
+        WOODPECKER_DEFAULT_PIPELINE_TIMEOUT: EnvValue.fromValue("270"),
+        WOODPECKER_MAX_PIPELINE_TIMEOUT: EnvValue.fromValue("270"),
         // Woodpecker serves /metrics only when this is set, and requires the
         // scraper to present it as a bearer token. The PodMonitor in
         // resources/monitoring/woodpecker.ts reads the same secret key.

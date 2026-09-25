@@ -192,6 +192,14 @@ describe("emission", () => {
     expect(command).toContain("timeout 120s");
   });
 
+  /** macOS ships no `timeout`; the host's is Homebrew coreutils' `gtimeout`. */
+  test("bounds a host step with the Mac's GNU timeout", () => {
+    const [command] = wrapCommands(
+      step("a", { timeoutMinutes: 3, backend: "local" }),
+    );
+    expect(command).toMatch(/^\/opt\/homebrew\/bin\/gtimeout 180s /u);
+  });
+
   test("quotes commands so embedded quotes survive", () => {
     expect(shellQuote("it's fine")).toBe(String.raw`'it'\''s fine'`);
   });
