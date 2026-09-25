@@ -1,3 +1,4 @@
+import { match } from "ts-pattern";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { StaleState } from "@scout-for-lol/design-system/domain/states";
@@ -57,9 +58,10 @@ import {
 } from "@scout-for-lol/design-system/components/forms/field";
 
 function roleLabel(role: DerivedRole): string {
-  if (role === "custom") return "Custom";
-  if (role === "player") return "Player";
-  return ROLES.find((r) => r.id === role)?.label ?? role;
+  return match(role)
+    .with("custom", () => "Custom")
+    .with("player", () => "Player")
+    .otherwise((id) => ROLES.find((r) => r.id === id)?.label ?? id);
 }
 
 /**
@@ -75,8 +77,9 @@ function canDelegateSelection(
   selection: RoleSelection,
   customPermissions: readonly Permission[],
 ): boolean {
-  if (selection === "custom") return customPermissions.length > 0;
-  return canDelegateRole(permissions, selection);
+  return selection === "custom"
+    ? customPermissions.length > 0
+    : canDelegateRole(permissions, selection);
 }
 
 export function GuildAccess() {
