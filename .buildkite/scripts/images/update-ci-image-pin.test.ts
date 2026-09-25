@@ -8,6 +8,7 @@ import {
   classifyCiImageRuntimePromotion,
   isCurrentSourceCandidate,
   localPromotionDecision,
+  pendingFirstPinCoversCandidate,
   newestPinState,
   parseCiImageCandidate,
   parseCiImagePinState,
@@ -404,18 +405,25 @@ describe("Playwright candidate promotion", () => {
     expect(helperBody).toContain("await retireStalePromotion(");
     expect(helperBody).toContain("await assertMainPinUnchanged(");
 
-    // All three no-promotion exits — digest-equal, older-than-pin, and
-    // content-unchanged — route through the one funnel with a distinct reason.
+    // All three no-promotion exits against a main pin — digest-equal,
+    // older-than-pin, and content-unchanged — route through the one funnel with
+    // a distinct reason. The runtime gate reaches it through its skip callback.
     const calls = source.match(/await finalizeSkippedPromotion\(/g) ?? [];
-    expect(calls).toHaveLength(3);
+    expect(calls).toHaveLength(2);
     expect(source).toContain(
       'reason: "candidate has no runtime digest change"',
     );
     expect(source).toContain(
       'reason: "candidate is older than the committed pin"',
     );
-    expect(source).toContain(
-      'reason: "candidate runtime content is unchanged"',
+    expect(source).toMatch(
+      /skip: async \(reason\) =>\s+finalizeSkippedPromotion\(\{/,
+    );
+    const runtimeGate = await Bun.file(
+      new URL("update-ci-image-pin-runtime.ts", import.meta.url),
+    ).text();
+    expect(runtimeGate).toContain(
+      'await options.skip("candidate runtime content is unchanged")',
     );
 
     // promote() never invokes retirement or the recheck inline — only via the
@@ -539,5 +547,46 @@ describe("main-side source fingerprint", () => {
     } finally {
       await rm(repository, { recursive: true, force: true });
     }
+  });
+});
+
+const pendingRepository = "ghcr.io/example/image";
+const pendingReader =
+  (fingerprints: Record<string, string>) =>
+  async (image: string): Promise<string | undefined> =>
+    fingerprints[image.split("@")[1] ?? ""];
+
+describe("pending first pin", () => {
+  test("keeps a pending first pin whose runtime matches the rebuild", async () => {
+    await expect(
+      pendingFirstPinCoversCandidate(
+        pendingRepository,
+        state(5, "a"),
+        state(6, "b"),
+        pendingReader({ [digest("a")]: "same", [digest("b")]: "same" }),
+      ),
+    ).resolves.toBe(true);
+  });
+
+  test("replaces a pending first pin when the runtime changed", async () => {
+    await expect(
+      pendingFirstPinCoversCandidate(
+        pendingRepository,
+        state(5, "a"),
+        state(6, "b"),
+        pendingReader({ [digest("a")]: "old", [digest("b")]: "new" }),
+      ),
+    ).resolves.toBe(false);
+  });
+
+  test("promotes when there is no pending first pin", async () => {
+    await expect(
+      pendingFirstPinCoversCandidate(
+        pendingRepository,
+        undefined,
+        state(6, "b"),
+        pendingReader({}),
+      ),
+    ).resolves.toBe(false);
   });
 });
