@@ -9,11 +9,11 @@
  * in `@shepherdjerred/code-review`. This script only drives the poll loop and
  * emits structured `review-signal` observability events.
  *
- * Why not just wait for the provider's own status check? Greptile's check goes
- * green as soon as the review *completes*, regardless of whether its comments
- * were addressed; Codex posts no check at all. So we gate on resolved review
- * threads and use the provider's completion signal only as the "reviewed this
- * head?" marker.
+ * Why not just wait for the provider's own status check? Codex posts no check
+ * at all, and a check-run provider's check goes green as soon as the review
+ * *completes*, regardless of whether its comments were addressed. So we gate
+ * on resolved review threads and use the provider's completion signal only as
+ * the "reviewed this head?" marker.
  */
 
 import {

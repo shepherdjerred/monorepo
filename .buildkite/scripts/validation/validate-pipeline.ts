@@ -81,11 +81,6 @@ validateReportingPipeline(reportingPipeline);
 fixedCorpusMode(Bun.env);
 
 const bunCacheEnvironment = [
-  "env:",
-  "  # New pipelines use a coordinated subdirectory. Once the matching agent-stack",
-  "  # change removes its legacy PodSpec-level cache override, older branch",
-  "  # pipelines fall back to per-pod ephemeral caching instead of writing to the",
-  "  # shared cache without taking its lock.",
   "  BUN_INSTALL_CACHE_DIR: /buildkite/bun-cache/data",
   "  BUN_CACHE_LOCK_FILE: /buildkite/bun-cache-control/.gc.lock",
 ].join("\n");

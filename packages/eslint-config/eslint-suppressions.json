@@ -14,11 +14,6 @@
       "count": 1
     }
   },
-  "src/rules/prefer-date-fns.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 2
-    }
-  },
   "src/rules/prefer-zod-validation.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

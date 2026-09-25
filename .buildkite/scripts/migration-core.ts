@@ -29,6 +29,10 @@ const FIXED_CORPUS_LANES: ReadonlySet<string> = new Set([
   "tofu-posthog",
 ]);
 export class FixedCorpusConfigurationError extends Error {}
+/**
+ * `CI_IO_FIXED_CORPUS=true` on a manually created main build forces every lane
+ * and a full verify, so one build measures the whole CI corpus.
+ */
 export function fixedCorpusMode(
   environment: Readonly<Record<string, string | undefined>>,
 ): boolean {

@@ -6,7 +6,6 @@ export const legacyTofuPaths = [
   "packages/homelab/src/tofu/buildkite",
   "packages/homelab/src/tofu/cloudflare",
   "packages/homelab/src/tofu/github",
-  "packages/homelab/src/tofu/pagerduty",
   "packages/homelab/src/tofu/seaweedfs",
   "packages/homelab/src/tofu/tailscale",
 ] as const;
