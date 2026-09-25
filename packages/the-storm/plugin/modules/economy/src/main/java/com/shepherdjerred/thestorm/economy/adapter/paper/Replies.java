@@ -37,20 +37,29 @@ final class Replies {
   }
 
   /**
-   * Runs {@code onValue} on the main thread once {@code future} completes. A failure is logged and
-   * {@code audience} is told the ledger could not be reached.
+   * Runs {@code onValue} on the main thread once {@code future} completes. A failed future, or an
+   * exception thrown by {@code onValue}, is logged and {@code audience} is told something went
+   * wrong; no failure is dropped.
    */
   <T> void whenDone(CompletableFuture<T> future, Audience audience, Consumer<T> onValue) {
     var _ =
         future.whenCompleteAsync(
             (value, failure) -> {
-              if (failure == null) {
+              if (failure != null) {
+                fail(audience, failure);
+                return;
+              }
+              try {
                 onValue.accept(value);
-              } else {
-                logger.error("Economy operation failed", failure);
-                audience.sendMessage(error("The ledger is unavailable right now; try again."));
+              } catch (RuntimeException e) {
+                fail(audience, e);
               }
             },
             scheduler.mainThread());
+  }
+
+  private void fail(Audience audience, Throwable failure) {
+    logger.error("Economy operation failed", failure);
+    audience.sendMessage(error("The ledger is unavailable right now; try again."));
   }
 }
