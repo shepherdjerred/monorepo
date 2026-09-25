@@ -1,0 +1,56 @@
+# Owned by the repository; the plugin never writes it.
+# NPC behaviour settings. The NPCs themselves (who they are, where they live,
+# what they say, their schedules) are content under plugins/TheStorm/npcs/.
+
+movement:
+  # Blocks per tick. 0.2 looks like walking; the maximum is 0.2.
+  speed: 0.2
+  # How close counts as having arrived, in blocks (at least the speed).
+  arriveDistance: 0.3
+  # Ticks without getting closer to the next waypoint before an NPC gives up
+  # and teleports to where it was going (say, the next chunk is unloaded).
+  stuckTicks: 60
+  # Ticks to wait for the navigator to find a path before teleporting.
+  pathAttempts: 40
+  # Extra paths requested when a path ends short of the destination (paths
+  # are limited by navigator.followRange).
+  maxReplans: 3
+  # The pause between wander and patrol legs, in ticks.
+  dwellMinTicks: 60
+  dwellMaxTicks: 240
+
+animation:
+  # NPCs move only while a player is within this many blocks; the rest stand
+  # still, which keeps the cost per tick bounded by what players can see.
+  playerRadius: 48
+  # A resting NPC turns to look at a player this close.
+  lookRadius: 6
+  # How often NPCs re-check their schedule and the weather, in ticks.
+  thinkIntervalTicks: 20
+
+navigator:
+  # The hidden mob whose pathfinder plans NPC walks. It must be a passive mob
+  # (monsters do not exist in Peaceful) about the size of a player: a llama is
+  # 0.9 wide and 1.87 tall, so its paths fit a Mannequin.
+  entity: minecraft:llama
+  # The longest path planned at once, in blocks; longer walks re-plan.
+  followRange: 48
+
+markers:
+  # Shown above an NPC to one player: a quest for them, or one to hand in.
+  available: "!"
+  turnIn: "?"
+  # Blocks above the NPC's feet.
+  height: 2.3
+
+dialog:
+  # The button on a dialogue node that continues with `next`.
+  continueLabel: Continue
+  # How long a shown dialog's buttons keep working, in minutes.
+  lifetimeMinutes: 10
+  # While a player has an NPC's dialog open, the NPC stops and faces them.
+  # The server is not told when a dialog is closed with Escape, so the NPC
+  # moves on after this many seconds without a click, or once the player is
+  # further than holdRadius blocks away.
+  holdSeconds: 30
+  holdRadius: 8
