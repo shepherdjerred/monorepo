@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
+import { Database } from "bun:sqlite";
 import path from "node:path";
 import { HistoryIndex } from "#lib/history/index.ts";
 import { parseSince } from "#lib/history/query/query.ts";
@@ -975,6 +976,33 @@ function recordFromDocument(
     excerpt: null,
   };
 }
+
+describe("history index schema", () => {
+  test("rebuilds a v3 index that is missing the usage table", async () => {
+    const runtimePaths = defaultHistoryRuntimePaths(
+      path.join(fixtureRoot, "stale-v3-home"),
+    );
+    await mkdir(path.dirname(runtimePaths.indexDb), { recursive: true });
+    const stale = new Database(runtimePaths.indexDb, { create: true });
+    stale.run(
+      "CREATE TABLE documents (id INTEGER PRIMARY KEY); PRAGMA user_version = 3;",
+    );
+    stale.close();
+
+    await expect(HistoryIndex.open(runtimePaths, true)).rejects.toThrow(
+      /without the current tables/,
+    );
+
+    const index = await HistoryIndex.open(runtimePaths);
+    index.close();
+    const rebuilt = new Database(runtimePaths.indexDb, { readonly: true });
+    const tables = rebuilt
+      .query("SELECT name FROM sqlite_master WHERE type = 'table'")
+      .all();
+    rebuilt.close();
+    expect(tables).toContainEqual({ name: "usage_events" });
+  });
+});
 
 describe("history index", () => {
   test("searches, updates, deletes, and filters indexed work", async () => {
