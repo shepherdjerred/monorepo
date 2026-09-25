@@ -1,0 +1,136 @@
+# Essentials: spawn, teleports, homes, kits, the rules book and AFK.
+# Owned by the repository; the plugin never writes it. Every key is required,
+# unknown keys are errors, and durations are ISO-8601 (PT3S, PT10M, PT1H).
+
+# Where /spawn leads, where new players arrive, and where players without a bed
+# or respawn anchor respawn. Placeholder: set to the windmill spawn. The module
+# refuses to start unless this is a safe spot (solid block underfoot, two open
+# blocks above, no hazards) in a loaded world.
+spawn:
+  world: world
+  x: 0.5
+  y: 64.0
+  z: 0.5
+  yaw: 0.0
+  pitch: 0.0
+
+teleports:
+  # Stand still this long before a teleport; moving a block or taking damage
+  # cancels it.
+  warmup: PT3S
+  # How long a /tpa or /tpahere request stays open.
+  tpaTimeout: PT1M
+  # The least time between two requests from one player.
+  tpaInterval: PT10S
+  # How many places /back remembers (teleports and deaths).
+  backHistorySize: 5
+  # As in 2017's stTeleports: every use raises that kind's multiplier by
+  # multiplierGrowth, and every decayEvery without a use lowers it by
+  # multiplierDecay, between x1 and maxMultiplier. Cost and cooldown are the
+  # base values times the multiplier. Elytra, happy ghasts and lodestones are
+  # the free way to travel; teleports stay a paid convenience.
+  pricing:
+    multiplierGrowth: 0.5
+    multiplierDecay: 0.5
+    decayEvery: PT10M
+    maxMultiplier: 4.0
+    prices:
+      spawn:
+        cost: 10
+        cooldown: PT30S
+      home:
+        cost: 25
+        cooldown: PT1M
+      tpa:
+        cost: 25
+        cooldown: PT1M
+      back:
+        cost: 25
+        cooldown: PT1M
+      warp:
+        cost: 15
+        cooldown: PT30S
+
+# How many homes each player may set.
+homeLimit: 3
+
+# Idle time before a player is marked AFK.
+afkTimeout: PT5M
+
+kits:
+  # Given once to every new player on their first join.
+  starter: starter
+  kits:
+    starter:
+      once: true
+      cooldown: PT0S
+      items:
+        - material: IRON_SWORD
+          amount: 1
+          name: null
+          enchantments: {}
+        - material: STONE_PICKAXE
+          amount: 1
+          name: null
+          enchantments: {}
+        - material: STONE_AXE
+          amount: 1
+          name: null
+          enchantments: {}
+        - material: STONE_SHOVEL
+          amount: 1
+          name: null
+          enchantments: {}
+        - material: BREAD
+          amount: 16
+          name: null
+          enchantments: {}
+      books:
+        - title: Welcome to The Storm
+          author: The Storm
+          pages:
+            - |-
+              <dark_aqua><b>Welcome to The Storm</b></dark_aqua>
+
+              A survival economy server, running since 2014.
+
+              The money here is <dark_aqua>crystals</dark_aqua> (CR). Earn them from quests, the Mob Arena and trading with other players.
+            - |-
+              <dark_aqua><b>Getting around</b></dark_aqua>
+
+              /spawn returns you to the windmill.
+              /sethome and /home save a place to come back to.
+              /tpa asks to visit a friend.
+
+              Teleports cost crystals, and more if you use them often. Elytra and happy ghasts are free.
+            - |-
+              <dark_aqua><b>Before you build</b></dark_aqua>
+
+              Read /rules. Build on your own land, and lock the chests you want to keep.
+
+              Need help? Ask in chat or on our Discord.
+
+# The book /rules opens. MiniMessage; at most 100 pages. The server's official
+# rules, as given by the owner.
+rules:
+  title: The Storm Rules
+  author: The Storm Staff
+  pages:
+    - |-
+      <dark_aqua><b>The Storm Rules</b></dark_aqua>
+
+      <dark_aqua>1. No griefing.</dark_aqua> Build on your own land or with permission. Staff can roll griefing back.
+
+      <dark_aqua>2. Lock what you love.</dark_aqua> Unlocked chests are fair game; locked containers are off-limits.
+    - |-
+      <dark_aqua>3. Spare the animals.</dark_aqua> Don't kill other players' animals, pets or villagers.
+
+      <dark_aqua>4. No harassment.</dark_aqua> Not in chat, and no following, trapping or spamming anyone.
+
+      <dark_aqua>5. PvP is on.</dark_aqua> Spawn is PvP-free. Soon /pvp will switch yours off or on, once a week.
+    - |-
+      <dark_aqua>6. No hacks or bug exploits.</dark_aqua>
+
+      Arguing? Take it to War chat with <click:run_command:'/war'><u>/war</u></click>. <click:run_command:'/channels'><u>/channels</u></click> lists every channel.
+
+      What you type to NPCs may be sent to an AI provider to write their replies.
