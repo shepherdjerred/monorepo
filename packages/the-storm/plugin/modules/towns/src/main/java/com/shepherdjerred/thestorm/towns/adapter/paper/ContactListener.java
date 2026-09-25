@@ -4,15 +4,19 @@ import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.Action;
 import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
+import com.shepherdjerred.thestorm.towns.domain.world.WorldEffect;
+import io.papermc.paper.entity.Leashable;
 import io.papermc.paper.event.entity.EntityCollideWithEntityEvent;
 import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Tameable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -30,7 +34,7 @@ final class ContactListener implements Listener {
   /** How far (in blocks) a death drop spawns from where its owner died. */
   private static final double DROP_REACH = 3.0;
 
-  private static final Act TAKE = new Act(Action.OPEN_CONTAINER, Subject.ENTITY);
+  static final Act TAKE = new Act(Action.OPEN_CONTAINER, Subject.ENTITY);
 
   private final Guard guard;
   private final Server server;
@@ -55,27 +59,76 @@ final class ContactListener implements Listener {
     }
     var first = entities.get(0);
     var second = entities.get(1);
-    if ((first instanceof Player player && shoves(player, second))
-        || (second instanceof Player player2 && shoves(player2, first))) {
+    if (shoves(first, second) || shoves(second, first)) {
       event.setCancelled(true);
     }
   }
 
+  /** A boat or cart ridden or led by an outsider does not shove a town's animals either. */
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onVehicleCollide(VehicleEntityCollisionEvent event) {
-    if (event.getEntity() instanceof Player player && shoves(player, event.getVehicle())) {
+    var vehicle = event.getVehicle();
+    var entity = event.getEntity();
+    if (shoves(entity, vehicle) || shoves(vehicle, entity)) {
       event.setCancelled(true);
     }
   }
 
-  private boolean shoves(Player player, Entity pushed) {
+  /**
+   * True when {@code pusher} is answerable to a player who may not move {@code pushed}: a player,
+   * or something a player rides, leads or owns. Anything else (mobs bumping in a pen) returns
+   * before any land lookup.
+   */
+  private boolean shoves(Entity pusher, Entity pushed) {
+    if (!(pusher instanceof Player) && !isControlled(pusher)) {
+      return false;
+    }
     var subject = EntityKinds.subject(pushed);
-    if (subject.isEmpty() || EntityKinds.isPetOf(pushed, player.getUniqueId())) {
+    if (subject.isEmpty()) {
       return false;
     }
     var land = guard.land(pushed);
-    return !(land instanceof Land.Wilderness)
-        && !guard.permitsQuietly(player, new Act(Action.INTERACT_ENTITY, subject.get()), land);
+    if (land instanceof Land.Wilderness) {
+      return false;
+    }
+    var move = new Act(Action.INTERACT_ENTITY, subject.get());
+    for (var controller : guard.controllers(pusher)) {
+      if (!EntityKinds.isPetOf(pushed, controller.id())
+          && !guard.permitsQuietly(controller, move, land)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean isControlled(Entity entity) {
+    return !entity.isEmpty()
+        || (entity instanceof Leashable leashed && leashed.isLeashed())
+        || (entity instanceof Tameable pet && pet.isTamed());
+  }
+
+  /**
+   * A mob (an allay, a fox, a villager) picking up an item lying on protected land takes it for
+   * whoever controls it, who must be allowed to; a mob nobody controls must come from that land.
+   */
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onMobPickup(EntityPickupItemEvent event) {
+    var picker = event.getEntity();
+    if (picker instanceof Player) {
+      return;
+    }
+    var land = guard.land(event.getItem());
+    if (land instanceof Land.Wilderness) {
+      return;
+    }
+    var controllers = guard.controllers(picker);
+    var allowed =
+        controllers.isEmpty()
+            ? Guard.flows(WorldEffect.ITEM_TRANSFER, land, guard.land(guard.origin(picker)))
+            : guard.allPermitQuietly(controllers, TAKE, land);
+    if (!allowed) {
+      event.setCancelled(true);
+    }
   }
 
   /**

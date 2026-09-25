@@ -4,10 +4,13 @@ import com.shepherdjerred.thestorm.towns.app.TownsState;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.Actor;
+import com.shepherdjerred.thestorm.towns.domain.protection.Denial;
 import com.shepherdjerred.thestorm.towns.domain.protection.ProtectionEngine;
 import com.shepherdjerred.thestorm.towns.domain.protection.Verdict;
+import com.shepherdjerred.thestorm.towns.domain.protection.Victim;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldEffect;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldRules;
+import java.util.List;
 import java.util.Optional;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -87,9 +90,27 @@ final class Guard {
     return culprits.behind(source);
   }
 
-  /** The player behind an entity pressing a block, riders and lead holders included. */
-  Optional<Culprit> presser(@Nullable Entity entity) {
-    return entity == null ? Optional.empty() : culprits.presser(entity);
+  /**
+   * The players answerable for {@code entity}: everyone controlling it (riders, lead holders), else
+   * the player behind it (see {@link Culprits#controllers}). Empty when nobody is.
+   */
+  List<Culprit> controllers(@Nullable Entity entity) {
+    return entity == null ? List.of() : culprits.controllers(entity);
+  }
+
+  /** True when every one of {@code culprits} may do {@code act} on {@code land}; tells nobody. */
+  boolean allPermitQuietly(List<Culprit> culprits, Act act, Land land) {
+    for (var culprit : culprits) {
+      if (!permitsQuietly(culprit, act, land)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /** Where {@code entity}'s effect came from, a potion cloud's recorded origin included. */
+  Location origin(Entity entity) {
+    return culprits.origin(entity);
   }
 
   Culprits culprits() {
@@ -159,6 +180,15 @@ final class Guard {
    */
   boolean allowsUntracedHarm(Land origin, Land victimLand) {
     return engine.allowsUntracedHarm(origin, victimLand);
+  }
+
+  /** True, telling the player, when {@code entity} is a pet someone else tamed. */
+  boolean refuseOthersPet(Player player, Entity entity) {
+    if (EntityKinds.victim(entity, player.getUniqueId()) instanceof Victim.OthersPet) {
+      notices.denied(player, new Denial.NotYourPet());
+      return true;
+    }
+    return false;
   }
 
   static boolean flows(WorldEffect effect, Land from, Land to) {

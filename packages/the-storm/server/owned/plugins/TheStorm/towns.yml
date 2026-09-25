@@ -11,17 +11,26 @@ claims:
   # The most chunks one town may hold, until town levels and the plot bank
   # replace this flat cap.
   maxClaimsPerTown: 64
-  # Flags a new claim starts with. Every flag not listed is off, the most
-  # protective setting. Flags: PVP, EXPLOSIONS, FIRE_SPREAD, MOB_GRIEFING,
-  # PUBLIC_BUILD, PUBLIC_CONTAINERS, PUBLIC_SWITCHES, PUBLIC_ENTITIES.
-  defaultFlags: []
+  # Flags a new claim starts with; every flag not listed is off. Server rule:
+  # PvP is on in new claims (towns may turn it off with /claim flag pvp false);
+  # spawn stays PvP-off and the wilderness PvP-on. Flags: PVP, EXPLOSIONS,
+  # FIRE_SPREAD, MOB_GRIEFING, PUBLIC_BUILD, PUBLIC_CONTAINERS, PUBLIC_SWITCHES,
+  # PUBLIC_ENTITIES.
+  defaultFlags: [PVP]
 
 # How long before a player is told about the same refusal again.
 denialCooldownMillis: 2000
 
-# How far, in chunks on both axes, from land a player has no say over (other
-# towns' claims and admin regions) they may build a wither.
-witherBufferChunks: 8
+# How far some wide-reaching griefs are kept from land a player has no say over
+# (other towns' claims and admin regions).
+grief:
+  # Chunks, on both axes, within which a player may not build a wither.
+  witherBufferChunks: 8
+  # Blocks from a raid's centre within which such land stops the raid.
+  raidRadiusBlocks: 64
+  # Ticks a dropped item still counts as its thrower's (5 seconds); after that
+  # anyone may have moved it, so it counts as coming from where it was dropped.
+  thrownItemMemoryTicks: 100
 
 # Admin regions. Nobody can claim a chunk a region overlaps. Players may only
 # do what `allow` lists (staff with thestorm.towns.bypass may do anything but

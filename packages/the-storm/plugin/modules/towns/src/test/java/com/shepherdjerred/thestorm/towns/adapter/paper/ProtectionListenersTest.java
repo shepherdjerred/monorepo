@@ -256,12 +256,17 @@ final class ProtectionListenersTest extends AegisServer {
   }
 
   @Test
-  void pvpIsOffInClaimsAndSpawnButOnInTheWild() {
+  void pvpIsOnInNewClaimsAndTheWildButOffInSpawnAndWhereATownTurnsItOff()
+      throws InterruptedException {
     bob.teleport(new Location(world, 150, Y, Z));
     alice.teleport(new Location(world, 152, Y, Z));
     assertThat(hitAllowed(bob, alice)).isTrue();
 
     alice.teleport(new Location(world, 165, Y, Z));
+    assertThat(hitAllowed(bob, alice)).isTrue();
+
+    server.dispatchCommand(alice, "claim flag pvp false");
+    awaitLine(alice, "pvp is now off here.");
     assertThat(hitAllowed(bob, alice)).isFalse();
 
     alice.teleport(new Location(world, 5, Y, 5));
@@ -306,7 +311,7 @@ final class ProtectionListenersTest extends AegisServer {
     alice.teleport(new Location(world, 165, Y, Z));
     server.dispatchCommand(alice, "claim info");
     assertThat(awaitLine(alice, "belongs to"))
-        .anyMatch(line -> line.startsWith("[Towns]: This chunk belongs to Aegis. Flags: pvp off"));
+        .anyMatch(line -> line.startsWith("[Towns]: This chunk belongs to Aegis. Flags: pvp on"));
 
     bob.teleport(new Location(world, 0, Y, 0));
     server.dispatchCommand(bob, "claim info");
