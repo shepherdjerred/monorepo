@@ -1,0 +1,32 @@
+# The Discord bridge (replaces DiscordSRV). Owned by the repository; the
+# plugin never writes it. Every key is required.
+#
+# Secrets never live here. The token and channel id come from the environment
+# variables named below (1Password item minecraft-tsmc-discord). Without them
+# the module refuses to start, so keep it switched off in config.yml until the
+# deployment provides both.
+tokenEnv: DISCORD_BOT_TOKEN
+channelEnv: DISCORD_CHANNEL_ID
+
+# The bot's custom status. The bot is online only while the server is awake,
+# so Discord messages sent while it sleeps are not relayed.
+status: "Relaying chat while The Storm is awake"
+
+# The label Discord messages carry in game, as in [D][author]: message.
+source: D
+
+# Longest Discord message relayed into the game; longer ones are cut.
+maxInboundLength: 200
+
+# What the bot posts, in Discord markdown. {placeholders} are filled with
+# escaped text; mentions are always disabled.
+messages:
+  chat: "**{player}**: {message}"
+  join: "**{player}** joined the server"
+  leave: "**{player}** left the server"
+  death: "{message}"
+  advancement: "**{player}** has made the advancement **{advancement}**"
+  start: "The Storm has woken up"
+  stop: "The Storm sleeps. Join ts-mc.net to wake it."
+  list: "Online ({count}): {players}"
+  listEmpty: "Nobody is online. Join ts-mc.net!"
