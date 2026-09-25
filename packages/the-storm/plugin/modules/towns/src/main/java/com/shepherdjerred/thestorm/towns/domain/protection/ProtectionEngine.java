@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.towns.domain.protection;
 
+import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
 
 /**
@@ -39,6 +40,29 @@ public final class ProtectionEngine {
   public Verdict decidePvp(Actor attacker, Land attackerLand, Land victimLand) {
     var fight = new Act(Action.ATTACK_PLAYER, Subject.PLAYER);
     return decide(attacker, fight, attackerLand).and(decide(attacker, fight, victimLand));
+  }
+
+  /**
+   * Whether harm nobody can be blamed for (TNT without a lighter, a dispenser's arrows or potions,
+   * a creeper's blast) may reach a player on {@code victimLand} when it started on {@code origin}.
+   * Harm from the victim's own land's owner is theirs to allow; harm from anywhere else, the
+   * wilderness included, reaches the player only where PvP is on, so a safe zone stays safe from a
+   * cannon outside it.
+   */
+  public boolean allowsUntracedHarm(Land origin, Land victimLand) {
+    if (origin.sameOwnerAs(victimLand)) {
+      return true;
+    }
+    return pvpOn(victimLand);
+  }
+
+  private static boolean pvpOn(Land land) {
+    return switch (land) {
+      case Land.Wilderness _ -> true;
+      case Land.TownLand(var claim) -> claim.flags().has(ClaimFlag.PVP);
+      case Land.RegionLand(var region) ->
+          region.permits(new Act(Action.ATTACK_PLAYER, Subject.PLAYER));
+    };
   }
 
   /**

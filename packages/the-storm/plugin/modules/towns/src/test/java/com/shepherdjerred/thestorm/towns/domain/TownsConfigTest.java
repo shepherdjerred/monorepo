@@ -28,6 +28,7 @@ final class TownsConfigTest {
         maxClaimsPerTown: 64
         defaultFlags: [PUBLIC_SWITCHES]
       denialCooldownMillis: 2000
+      witherBufferChunks: 8
       regions:
         - id: spawn
           name: Spawn

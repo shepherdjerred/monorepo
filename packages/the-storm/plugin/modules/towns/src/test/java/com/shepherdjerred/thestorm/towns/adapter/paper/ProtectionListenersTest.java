@@ -1,27 +1,21 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
 
 import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import java.lang.reflect.Proxy;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.ExplosionResult;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
@@ -31,106 +25,16 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.plugin.PluginDescriptionFile;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 import org.mockbukkit.mockbukkit.MockBukkit;
-import org.mockbukkit.mockbukkit.ServerMock;
-import org.mockbukkit.mockbukkit.entity.LivingEntityMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
-import org.mockbukkit.mockbukkit.simulate.entity.LivingEntitySimulation;
-import org.mockbukkit.mockbukkit.world.WorldMock;
 
 /**
  * The most critical listeners on MockBukkit with the shipped {@code towns.yml} and a real SQLite
  * store. Alice founds Aegis and claims chunks (10, 10) and (11, 10), blocks x 160..191, z 160..175;
  * chunk (9, 10), blocks x 144..159, is wilderness; spawn covers chunks -4..3.
  */
-final class ProtectionListenersTest {
-
-  private static final int Y = 64;
-  private static final int Z = 165;
-
-  /** Last wilderness column before Aegis. */
-  private static final int WILD_X = 159;
-
-  /** First column of Aegis. */
-  private static final int CLAIM_X = 160;
-
-  @TempDir Path directory;
-
-  private ServerMock server;
-  private WorldMock world;
-  private TownsTestPlugin plugin;
-  private PlayerMock alice;
-  private PlayerMock bob;
-
-  @BeforeEach
-  void start() throws InterruptedException {
-    server = MockBukkit.mock();
-    world = server.addSimpleWorld("world");
-    TownsTestPlugin.directory = directory;
-    plugin = load();
-    alice = server.addPlayer("Alice");
-    bob = server.addPlayer("Bob");
-
-    assertThat(server.dispatchCommand(alice, "town create Aegis")).isTrue();
-    awaitLine(alice, "Founded Aegis");
-    alice.teleport(new Location(world, 165, Y, Z));
-    assertThat(server.dispatchCommand(alice, "claim")).isTrue();
-    awaitLine(alice, "Claimed chunk 10, 10 for Aegis.");
-    alice.teleport(new Location(world, 180, Y, Z));
-    server.dispatchCommand(alice, "claim");
-    awaitLine(alice, "Claimed chunk 11, 10 for Aegis.");
-  }
-
-  @AfterEach
-  void stop() {
-    MockBukkit.unmock();
-  }
-
-  private TownsTestPlugin load() {
-    return MockBukkit.loadWith(
-        TownsTestPlugin.class,
-        new PluginDescriptionFile("TheStorm", "test", TownsTestPlugin.class.getName()));
-  }
-
-  private Block block(int x, int y, int z) {
-    return world.getBlockAt(x, y, z);
-  }
-
-  private static String plain(Component component) {
-    return PlainTextComponentSerializer.plainText().serialize(component);
-  }
-
-  /** Ticks until {@code player} receives a line containing {@code text}; returns what they saw. */
-  private List<String> awaitLine(PlayerMock player, String text) throws InterruptedException {
-    var seen = new ArrayList<String>();
-    for (var attempt = 0; attempt < 400; attempt++) {
-      server.getScheduler().performOneTick();
-      for (var message = player.nextComponentMessage();
-          message != null;
-          message = player.nextComponentMessage()) {
-        seen.add(plain(message));
-      }
-      if (seen.stream().anyMatch(line -> line.contains(text))) {
-        return seen;
-      }
-      Thread.sleep(5);
-    }
-    return fail("%s never saw \"%s\"; saw %s", player.getName(), text, seen);
-  }
-
-  private <T extends Event> T call(T event) {
-    server.getPluginManager().callEvent(event);
-    return event;
-  }
-
-  private boolean breakAllowed(PlayerMock player, Block block) {
-    return !call(new BlockBreakEvent(block, player)).isCancelled();
-  }
+final class ProtectionListenersTest extends AegisServer {
 
   @Test
   void onlyTheTownBreaksItsBlocksAndOutsidersAreTold() throws InterruptedException {
@@ -265,12 +169,6 @@ final class ProtectionListenersTest {
         call(new BlockExplodeEvent(center, center.getState(), blocks, 1f, ExplosionResult.DESTROY));
 
     assertThat(event.blockList()).isEmpty();
-  }
-
-  /** Has MockBukkit fire the damage event for {@code attacker} hitting {@code victim}. */
-  private static boolean hitAllowed(PlayerMock attacker, Entity victim) {
-    var simulation = new LivingEntitySimulation((LivingEntityMock) victim);
-    return !simulation.simulateDamage(1.0, attacker).isCancelled();
   }
 
   @Test

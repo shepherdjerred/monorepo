@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.towns.domain.protection.DenialThrottle;
 import com.shepherdjerred.thestorm.towns.domain.protection.ProtectionEngine;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.util.List;
+import org.bukkit.NamespacedKey;
 import org.bukkit.event.Listener;
 
 /**
@@ -29,7 +30,8 @@ public final class TownsPaper {
             new DenialThrottle(config.denialCooldownMillis()),
             context.time(),
             context.scheduler());
-    var guard = new Guard(state, engine, notices);
+    var culprits = new Culprits(new NamespacedKey(context.plugin(), "wither_builder"));
+    var guard = new Guard(state, engine, notices, culprits);
     var kinds = new BlockKinds();
     List<Listener> listeners =
         List.of(
@@ -40,7 +42,8 @@ public final class TownsPaper {
             new MovementListener(guard, kinds),
             new WorldListener(guard, kinds),
             new FireListener(guard, kinds),
-            new MobListener(guard, kinds));
+            new MobListener(guard, kinds),
+            new WitherListener(state, culprits, config.witherBufferChunks()));
     for (var listener : listeners) {
       server.getPluginManager().registerEvents(listener, context.plugin());
     }
