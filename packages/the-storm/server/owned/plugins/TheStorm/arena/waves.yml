@@ -1,0 +1,1246 @@
+# Mob Arena wave table. Owned by the repository; the plugin never writes it.
+# Every key is required and unknown keys are errors.
+#
+# 72 waves, as in 2015: a boss every 10 waves, a swarm on every wave ending in
+# 5, an upgrade wave after each boss (refilling every class's consumables), and
+# a cavalry wave on every wave ending in 8. Modernized for 26.x: the Giant is a
+# zombie scaled up with the scale attribute (it keeps its AI), and the bosses
+# are the Parched King, a Breeze, an Evoker, the Creaking (break its heart),
+# a Piglin Brute, a Ravager, the Colossus and the Warden as the finale.
+#
+# Counts are for one fighter: every wave is meant to be clearable solo. Extra
+# fighters, the wave number and the arena's tier scale them (arena.yml).
+
+finalWave: 72
+
+# Mob archetypes. type: the entity type. health, damage, speed: multipliers on
+# vanilla values. scale: the scale attribute (1 is vanilla size). name: shown
+# above the mob, or null. equipment: slot to material; never dropped. rider:
+# another archetype riding this one, or null. behavior: VANILLA, CHASE (always
+# hunts the nearest fighter), KAMIKAZE (hunts and explodes with power blast)
+# or FOLLOW (harmless, trails a fighter). blast: explosion power for KAMIKAZE,
+# 0 otherwise.
+mobs:
+  zombie:
+    type: ZOMBIE
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  armored-zombie:
+    type: ZOMBIE
+    health: 1.2
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      HEAD: IRON_HELMET
+      CHEST: CHAINMAIL_CHESTPLATE
+      MAIN_HAND: IRON_SWORD
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  husk:
+    type: HUSK
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  drowned:
+    type: DROWNED
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      MAIN_HAND: TRIDENT
+    rider: null
+    behavior: CHASE
+    blast: 0
+  skeleton:
+    type: SKELETON
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      MAIN_HAND: BOW
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  stray:
+    type: STRAY
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      MAIN_HAND: BOW
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  bogged:
+    type: BOGGED
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      MAIN_HAND: BOW
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  parched:
+    type: PARCHED
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      MAIN_HAND: BOW
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  spider:
+    type: SPIDER
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: CHASE
+    blast: 0
+  cave-spider:
+    type: CAVE_SPIDER
+    health: 1.0
+    damage: 0.8
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: CHASE
+    blast: 0
+  creeper:
+    type: CREEPER
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: CHASE
+    blast: 0
+  witch:
+    type: WITCH
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  pillager:
+    type: PILLAGER
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      MAIN_HAND: CROSSBOW
+    rider: null
+    behavior: CHASE
+    blast: 0
+  vindicator:
+    type: VINDICATOR
+    health: 1.0
+    damage: 0.8
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      MAIN_HAND: IRON_AXE
+    rider: null
+    behavior: CHASE
+    blast: 0
+  evoker:
+    type: EVOKER
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  blaze:
+    type: BLAZE
+    health: 1.0
+    damage: 0.8
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: CHASE
+    blast: 0
+  wither-skeleton:
+    type: WITHER_SKELETON
+    health: 1.0
+    damage: 0.8
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      MAIN_HAND: STONE_SWORD
+    rider: null
+    behavior: CHASE
+    blast: 0
+  brute-guard:
+    type: PIGLIN_BRUTE
+    health: 0.8
+    damage: 0.6
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      MAIN_HAND: GOLDEN_AXE
+    rider: null
+    behavior: CHASE
+    blast: 0
+  # "Zombified piglin spearmen": always angry at fighters.
+  zombified-spearman:
+    type: ZOMBIFIED_PIGLIN
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      MAIN_HAND: GOLDEN_SPEAR
+    rider: null
+    behavior: CHASE
+    blast: 0
+  magma-cube:
+    type: MAGMA_CUBE
+    health: 1.0
+    damage: 0.8
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: CHASE
+    blast: 0
+  # Swarms: many and weak (swarm waves never add health for extra fighters).
+  explosive-sheep:
+    type: SHEEP
+    health: 0.5
+    damage: 1.0
+    speed: 1.3
+    scale: 1.0
+    name: Explosive Sheep
+    equipment: {}
+    rider: null
+    behavior: KAMIKAZE
+    blast: 1.5
+  silverfish:
+    type: SILVERFISH
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: CHASE
+    blast: 0
+  vex:
+    type: VEX
+    health: 0.7
+    damage: 0.6
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      MAIN_HAND: IRON_SWORD
+    rider: null
+    behavior: CHASE
+    blast: 0
+  phantom:
+    type: PHANTOM
+    health: 0.8
+    damage: 0.8
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: CHASE
+    blast: 0
+  sulfur-cube:
+    type: SULFUR_CUBE
+    health: 1.0
+    damage: 1.0
+    speed: 1.2
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: KAMIKAZE
+    blast: 2.0
+  # They do nothing but follow players (wave 65, since 2015).
+  rainbow-sheep:
+    type: SHEEP
+    health: 1.0
+    damage: 1.0
+    speed: 1.2
+    scale: 1.0
+    name: jeb_
+    equipment: {}
+    rider: null
+    behavior: FOLLOW
+    blast: 0
+  feral-wolf:
+    type: WOLF
+    health: 1.0
+    damage: 0.8
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: CHASE
+    blast: 0
+  # Cavalry: mounts carrying riders.
+  spear-zombie:
+    type: ZOMBIE
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      HEAD: CHAINMAIL_HELMET
+      MAIN_HAND: IRON_SPEAR
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  zombie-horseman:
+    type: ZOMBIE_HORSE
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: spear-zombie
+    behavior: VANILLA
+    blast: 0
+  spear-husk:
+    type: HUSK
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment:
+      MAIN_HAND: IRON_SPEAR
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  camel-husk-jockey:
+    type: CAMEL_HUSK
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: spear-husk
+    behavior: VANILLA
+    blast: 0
+  skeleton-horseman:
+    type: SKELETON_HORSE
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: skeleton
+    behavior: VANILLA
+    blast: 0
+  # Boss bodies. A boss's health is set by its entry under bosses.
+  parched-king:
+    type: PARCHED
+    health: 1.0
+    damage: 1.2
+    speed: 1.0
+    scale: 1.6
+    name: null
+    equipment:
+      HEAD: GOLDEN_HELMET
+      MAIN_HAND: BOW
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  gale-sovereign:
+    type: BREEZE
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.5
+    name: null
+    equipment: {}
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  hexmaster:
+    type: EVOKER
+    health: 1.0
+    damage: 1.0
+    speed: 1.0
+    scale: 1.3
+    name: null
+    equipment: {}
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  heartwood:
+    type: CREAKING
+    health: 1.0
+    damage: 0.8
+    speed: 1.0
+    scale: 1.4
+    name: null
+    equipment: {}
+    rider: null
+    behavior: VANILLA
+    blast: 0
+  warlord:
+    type: PIGLIN_BRUTE
+    health: 1.0
+    damage: 0.7
+    speed: 1.0
+    scale: 1.5
+    name: null
+    equipment:
+      HEAD: GOLDEN_HELMET
+      MAIN_HAND: GOLDEN_AXE
+    rider: null
+    behavior: CHASE
+    blast: 0
+  ravager:
+    type: RAVAGER
+    health: 1.0
+    damage: 0.7
+    speed: 1.0
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: CHASE
+    blast: 0
+  colossus:
+    type: ZOMBIE
+    health: 1.0
+    damage: 1.5
+    speed: 0.9
+    scale: 4.0
+    name: null
+    equipment:
+      HEAD: IRON_HELMET
+      MAIN_HAND: IRON_SWORD
+    rider: null
+    behavior: CHASE
+    blast: 0
+  warden:
+    type: WARDEN
+    health: 1.0
+    damage: 0.3
+    speed: 0.9
+    scale: 1.0
+    name: null
+    equipment: {}
+    rider: null
+    behavior: CHASE
+    blast: 0
+
+# Bosses: mob is the archetype; health is max health for one fighter on
+# Ominous I. Abilities (see AbilityType): radius in blocks; power is damage,
+# strength, seconds or a share of max health depending on the ability; count is
+# jumps, adds or heart hits. Parameters an ability does not use are 0 (null for
+# summon). The Warlord at wave 50 keeps the 2015 abilities seen in the archive:
+# Lightning Aura, Chain Lightning and Disorient Nearby.
+bosses:
+  parched-king:
+    mob: parched-king
+    name: The Parched King
+    health: 90
+    bar: YELLOW
+    abilities:
+      - type: SUMMON_ADDS
+        cooldown: PT20S
+        radius: 0
+        power: 0
+        count: 2
+        summon: bogged
+      - type: KNOCKBACK_SLAM
+        cooldown: PT12S
+        radius: 4
+        power: 1.0
+        count: 0
+        summon: null
+  gale-sovereign:
+    mob: gale-sovereign
+    name: The Gale Sovereign
+    health: 110
+    bar: WHITE
+    abilities:
+      - type: KNOCKBACK_SLAM
+        cooldown: PT10S
+        radius: 5
+        power: 1.4
+        count: 0
+        summon: null
+      - type: DISORIENT
+        cooldown: PT18S
+        radius: 6
+        power: 3
+        count: 0
+        summon: null
+  hexmaster:
+    mob: hexmaster
+    name: The Hexmaster
+    health: 150
+    bar: PURPLE
+    abilities:
+      - type: LIGHTNING_AURA
+        cooldown: PT15S
+        radius: 6
+        power: 4
+        count: 0
+        summon: null
+      - type: SUMMON_ADDS
+        cooldown: PT25S
+        radius: 0
+        power: 0
+        count: 1
+        summon: vindicator
+      - type: DISORIENT
+        cooldown: PT20S
+        radius: 5
+        power: 3
+        count: 0
+        summon: null
+  heartwood:
+    mob: heartwood
+    name: Heartwood
+    health: 200
+    bar: GREEN
+    abilities:
+      # Four hearts of five hits each; an untouched heart moves every 25 s.
+      - type: HEART
+        cooldown: PT25S
+        radius: 0
+        power: 0.25
+        count: 5
+        summon: null
+      - type: DISORIENT
+        cooldown: PT20S
+        radius: 4
+        power: 2
+        count: 0
+        summon: null
+  warlord:
+    mob: warlord
+    name: Warlord Gorrak
+    health: 230
+    bar: RED
+    abilities:
+      - type: LIGHTNING_AURA
+        cooldown: PT16S
+        radius: 5
+        power: 4
+        count: 0
+        summon: null
+      - type: CHAIN_LIGHTNING
+        cooldown: PT18S
+        radius: 8
+        power: 4
+        count: 2
+        summon: null
+      - type: DISORIENT
+        cooldown: PT22S
+        radius: 6
+        power: 3
+        count: 0
+        summon: null
+      - type: SHIELD_BREAK
+        cooldown: PT15S
+        radius: 5
+        power: 5
+        count: 0
+        summon: null
+  ravager:
+    mob: ravager
+    name: The Ravager
+    health: 280
+    bar: RED
+    abilities:
+      - type: KNOCKBACK_SLAM
+        cooldown: PT10S
+        radius: 5
+        power: 1.8
+        count: 0
+        summon: null
+      - type: SHIELD_BREAK
+        cooldown: PT14S
+        radius: 5
+        power: 6
+        count: 0
+        summon: null
+      - type: SUMMON_ADDS
+        cooldown: PT30S
+        radius: 0
+        power: 0
+        count: 2
+        summon: pillager
+  colossus:
+    mob: colossus
+    name: The Colossus
+    health: 340
+    bar: BLUE
+    abilities:
+      - type: KNOCKBACK_SLAM
+        cooldown: PT9S
+        radius: 6
+        power: 1.5
+        count: 0
+        summon: null
+      - type: SUMMON_ADDS
+        cooldown: PT20S
+        radius: 0
+        power: 0
+        count: 3
+        summon: zombie
+      - type: CHAIN_LIGHTNING
+        cooldown: PT20S
+        radius: 10
+        power: 5
+        count: 3
+        summon: null
+  warden:
+    mob: warden
+    name: The Warden
+    health: 450
+    bar: PURPLE
+    abilities:
+      - type: SHIELD_BREAK
+        cooldown: PT12S
+        radius: 6
+        power: 5
+        count: 0
+        summon: null
+      - type: DISORIENT
+        cooldown: PT20S
+        radius: 8
+        power: 3
+        count: 0
+        summon: null
+      - type: KNOCKBACK_SLAM
+        cooldown: PT15S
+        radius: 5
+        power: 1.5
+        count: 0
+        summon: null
+
+# The table. Every wave from 1 to finalWave is covered by exactly one entry.
+# count is for one fighter on the first wave of the entry; growth adds that
+# many more per wave into the entry.
+waves:
+  - from: 1
+    to: 2
+    kind: STANDARD
+    spawns:
+      - mob: zombie
+        count: 3
+        growth: 1
+    boss: null
+  - from: 3
+    to: 4
+    kind: STANDARD
+    spawns:
+      - mob: zombie
+        count: 3
+        growth: 1
+      - mob: skeleton
+        count: 1
+        growth: 1
+    boss: null
+  - from: 5
+    to: 5
+    kind: SWARM
+    spawns:
+      - mob: explosive-sheep
+        count: 6
+        growth: 0
+    boss: null
+  - from: 6
+    to: 7
+    kind: STANDARD
+    spawns:
+      - mob: zombie
+        count: 4
+        growth: 1
+      - mob: skeleton
+        count: 2
+        growth: 0.5
+      - mob: spider
+        count: 1
+        growth: 1
+    boss: null
+  - from: 8
+    to: 8
+    kind: CAVALRY
+    spawns:
+      - mob: skeleton-horseman
+        count: 2
+        growth: 0
+      - mob: zombie
+        count: 2
+        growth: 0
+    boss: null
+  - from: 9
+    to: 9
+    kind: STANDARD
+    spawns:
+      - mob: armored-zombie
+        count: 3
+        growth: 0
+      - mob: skeleton
+        count: 3
+        growth: 0
+      - mob: spider
+        count: 2
+        growth: 0
+    boss: null
+  - from: 10
+    to: 10
+    kind: BOSS
+    spawns:
+      - mob: skeleton
+        count: 2
+        growth: 0
+    boss: parched-king
+  - from: 11
+    to: 11
+    kind: UPGRADE
+    spawns:
+      - mob: zombie
+        count: 3
+        growth: 0
+    boss: null
+  - from: 12
+    to: 14
+    kind: STANDARD
+    spawns:
+      - mob: husk
+        count: 3
+        growth: 1
+      - mob: stray
+        count: 2
+        growth: 0.5
+      - mob: spider
+        count: 2
+        growth: 0.5
+    boss: null
+  - from: 15
+    to: 15
+    kind: SWARM
+    spawns:
+      - mob: silverfish
+        count: 12
+        growth: 0
+    boss: null
+  - from: 16
+    to: 17
+    kind: STANDARD
+    spawns:
+      - mob: armored-zombie
+        count: 4
+        growth: 1
+      - mob: bogged
+        count: 2
+        growth: 1
+      - mob: creeper
+        count: 1
+        growth: 0.5
+    boss: null
+  - from: 18
+    to: 18
+    kind: CAVALRY
+    spawns:
+      - mob: zombie-horseman
+        count: 3
+        growth: 0
+      - mob: skeleton
+        count: 2
+        growth: 0
+    boss: null
+  - from: 19
+    to: 19
+    kind: STANDARD
+    spawns:
+      - mob: vindicator
+        count: 2
+        growth: 0
+      - mob: pillager
+        count: 2
+        growth: 0
+      - mob: husk
+        count: 3
+        growth: 0
+    boss: null
+  - from: 20
+    to: 20
+    kind: BOSS
+    spawns: []
+    boss: gale-sovereign
+  - from: 21
+    to: 21
+    kind: UPGRADE
+    spawns:
+      - mob: zombie
+        count: 3
+        growth: 0
+      - mob: skeleton
+        count: 2
+        growth: 0
+    boss: null
+  - from: 22
+    to: 24
+    kind: STANDARD
+    spawns:
+      - mob: vindicator
+        count: 2
+        growth: 0.5
+      - mob: pillager
+        count: 3
+        growth: 0.5
+      - mob: armored-zombie
+        count: 3
+        growth: 0.5
+    boss: null
+  - from: 25
+    to: 25
+    kind: SWARM
+    spawns:
+      - mob: vex
+        count: 8
+        growth: 0
+    boss: null
+  - from: 26
+    to: 27
+    kind: STANDARD
+    spawns:
+      - mob: drowned
+        count: 4
+        growth: 1
+      - mob: witch
+        count: 1
+        growth: 0.5
+      - mob: bogged
+        count: 3
+        growth: 0.5
+    boss: null
+  - from: 28
+    to: 28
+    kind: CAVALRY
+    spawns:
+      - mob: camel-husk-jockey
+        count: 2
+        growth: 0
+      - mob: zombie-horseman
+        count: 2
+        growth: 0
+    boss: null
+  - from: 29
+    to: 29
+    kind: STANDARD
+    spawns:
+      - mob: creeper
+        count: 3
+        growth: 0
+      - mob: spider
+        count: 3
+        growth: 0
+      - mob: stray
+        count: 3
+        growth: 0
+    boss: null
+  - from: 30
+    to: 30
+    kind: BOSS
+    spawns:
+      - mob: vindicator
+        count: 1
+        growth: 0
+    boss: hexmaster
+  - from: 31
+    to: 31
+    kind: UPGRADE
+    spawns:
+      - mob: husk
+        count: 4
+        growth: 0
+    boss: null
+  - from: 32
+    to: 34
+    kind: STANDARD
+    spawns:
+      - mob: zombified-spearman
+        count: 4
+        growth: 1
+      - mob: stray
+        count: 3
+        growth: 0.5
+      - mob: witch
+        count: 1
+        growth: 0
+    boss: null
+  - from: 35
+    to: 35
+    kind: SWARM
+    spawns:
+      - mob: cave-spider
+        count: 12
+        growth: 0
+    boss: null
+  - from: 36
+    to: 37
+    kind: STANDARD
+    spawns:
+      - mob: vindicator
+        count: 3
+        growth: 0.5
+      - mob: pillager
+        count: 3
+        growth: 0.5
+      - mob: creeper
+        count: 2
+        growth: 0
+    boss: null
+  - from: 38
+    to: 38
+    kind: CAVALRY
+    spawns:
+      - mob: camel-husk-jockey
+        count: 3
+        growth: 0
+      - mob: skeleton-horseman
+        count: 2
+        growth: 0
+    boss: null
+  - from: 39
+    to: 39
+    kind: STANDARD
+    spawns:
+      - mob: armored-zombie
+        count: 5
+        growth: 0
+      - mob: bogged
+        count: 4
+        growth: 0
+      - mob: witch
+        count: 2
+        growth: 0
+    boss: null
+  - from: 40
+    to: 40
+    kind: BOSS
+    spawns: []
+    boss: heartwood
+  - from: 41
+    to: 41
+    kind: UPGRADE
+    spawns:
+      - mob: skeleton
+        count: 3
+        growth: 0
+      - mob: zombie
+        count: 3
+        growth: 0
+    boss: null
+  - from: 42
+    to: 44
+    kind: STANDARD
+    spawns:
+      - mob: zombified-spearman
+        count: 5
+        growth: 1
+      - mob: blaze
+        count: 2
+        growth: 0.5
+      - mob: wither-skeleton
+        count: 2
+        growth: 0.5
+    boss: null
+  - from: 45
+    to: 45
+    kind: SWARM
+    spawns:
+      - mob: phantom
+        count: 8
+        growth: 0
+    boss: null
+  - from: 46
+    to: 47
+    kind: STANDARD
+    spawns:
+      - mob: wither-skeleton
+        count: 3
+        growth: 0.5
+      - mob: vindicator
+        count: 3
+        growth: 0.5
+      - mob: witch
+        count: 2
+        growth: 0
+    boss: null
+  - from: 48
+    to: 48
+    kind: CAVALRY
+    spawns:
+      - mob: zombie-horseman
+        count: 4
+        growth: 0
+      - mob: camel-husk-jockey
+        count: 3
+        growth: 0
+    boss: null
+  - from: 49
+    to: 49
+    kind: STANDARD
+    spawns:
+      - mob: brute-guard
+        count: 2
+        growth: 0
+      - mob: blaze
+        count: 3
+        growth: 0
+      - mob: wither-skeleton
+        count: 3
+        growth: 0
+    boss: null
+  - from: 50
+    to: 50
+    kind: BOSS
+    spawns:
+      - mob: zombified-spearman
+        count: 2
+        growth: 0
+    boss: warlord
+  - from: 51
+    to: 51
+    kind: UPGRADE
+    spawns:
+      - mob: husk
+        count: 4
+        growth: 0
+      - mob: stray
+        count: 2
+        growth: 0
+    boss: null
+  - from: 52
+    to: 54
+    kind: STANDARD
+    spawns:
+      - mob: vindicator
+        count: 4
+        growth: 0.5
+      - mob: evoker
+        count: 1
+        growth: 0
+      - mob: pillager
+        count: 4
+        growth: 0.5
+    boss: null
+  - from: 55
+    to: 55
+    kind: SWARM
+    spawns:
+      - mob: sulfur-cube
+        count: 8
+        growth: 0
+    boss: null
+  - from: 56
+    to: 57
+    kind: STANDARD
+    spawns:
+      - mob: wither-skeleton
+        count: 4
+        growth: 0.5
+      - mob: blaze
+        count: 3
+        growth: 0.5
+      - mob: creeper
+        count: 3
+        growth: 0
+    boss: null
+  - from: 58
+    to: 58
+    kind: CAVALRY
+    spawns:
+      - mob: skeleton-horseman
+        count: 4
+        growth: 0
+      - mob: zombie-horseman
+        count: 4
+        growth: 0
+    boss: null
+  - from: 59
+    to: 59
+    kind: STANDARD
+    spawns:
+      - mob: brute-guard
+        count: 3
+        growth: 0
+      - mob: evoker
+        count: 1
+        growth: 0
+      - mob: vindicator
+        count: 4
+        growth: 0
+    boss: null
+  - from: 60
+    to: 60
+    kind: BOSS
+    spawns:
+      - mob: pillager
+        count: 3
+        growth: 0
+    boss: ravager
+  - from: 61
+    to: 61
+    kind: UPGRADE
+    spawns:
+      - mob: wither-skeleton
+        count: 3
+        growth: 0
+    boss: null
+  - from: 62
+    to: 64
+    kind: STANDARD
+    spawns:
+      - mob: armored-zombie
+        count: 6
+        growth: 1
+      - mob: wither-skeleton
+        count: 4
+        growth: 0.5
+      - mob: witch
+        count: 2
+        growth: 0
+      - mob: bogged
+        count: 4
+        growth: 0
+    boss: null
+  - from: 65
+    to: 65
+    kind: SWARM
+    spawns:
+      - mob: rainbow-sheep
+        count: 10
+        growth: 0
+      - mob: magma-cube
+        count: 6
+        growth: 0
+      - mob: feral-wolf
+        count: 4
+        growth: 0
+    boss: null
+  - from: 66
+    to: 67
+    kind: STANDARD
+    spawns:
+      - mob: evoker
+        count: 2
+        growth: 0
+      - mob: vindicator
+        count: 5
+        growth: 0.5
+      - mob: blaze
+        count: 4
+        growth: 0
+    boss: null
+  - from: 68
+    to: 68
+    kind: CAVALRY
+    spawns:
+      - mob: camel-husk-jockey
+        count: 5
+        growth: 0
+      - mob: zombie-horseman
+        count: 4
+        growth: 0
+      - mob: skeleton-horseman
+        count: 3
+        growth: 0
+    boss: null
+  - from: 69
+    to: 69
+    kind: STANDARD
+    spawns:
+      - mob: brute-guard
+        count: 4
+        growth: 0
+      - mob: wither-skeleton
+        count: 5
+        growth: 0
+      - mob: witch
+        count: 3
+        growth: 0
+    boss: null
+  - from: 70
+    to: 70
+    kind: BOSS
+    spawns:
+      - mob: zombie
+        count: 4
+        growth: 0
+    boss: colossus
+  - from: 71
+    to: 71
+    kind: UPGRADE
+    spawns: []
+    boss: null
+  - from: 72
+    to: 72
+    kind: BOSS
+    spawns: []
+    boss: warden

@@ -1,0 +1,502 @@
+# Mob Arena: the rules every arena shares. Owned by the repository; the plugin
+# never writes it. Every key is required, unknown keys are errors, durations are
+# ISO-8601 (PT10S, PT3M).
+#
+# Arenas live in arena/arenas/<id>.yml, classes in arena/classes.yml and the
+# 72-wave table in arena/waves.yml.
+#
+# Tuned for a small server (two or three players online): every wave is meant
+# to be clearable solo with a class kit, and extra players make the waves only
+# gently harder.
+
+# From everyone in the lobby being ready to the gates opening.
+countdown: PT10S
+
+waves:
+  # The pause between the gates opening and wave 1.
+  firstWave: PT5S
+  # The pause between clearing a wave and the next one.
+  between: PT8S
+  # If a wave is not cleared this long after it starts (a mob stuck in a
+  # wall), the next wave comes anyway. The final wave never times out.
+  timeout: PT3M
+  # The most arena mobs alive at once, riders and bosses included; the rest of
+  # a wave waits its turn.
+  entityCap: 40
+
+# Mob health and damage are multipliers on vanilla values. Wave 1 with one
+# fighter is the baseline; each factor grows linearly.
+scaling:
+  # +2% mob health per wave: x2.42 by wave 72.
+  healthPerWave: 0.02
+  # +1% mob damage per wave: x1.71 by wave 72.
+  damagePerWave: 0.01
+  # +20% mob health per extra fighter (swarms ignore this).
+  healthPerExtraPlayer: 0.2
+  # +40% more mobs per extra fighter.
+  countPerExtraPlayer: 0.4
+  # +35% boss health per extra fighter.
+  bossHealthPerExtraPlayer: 0.35
+
+# The ominous-trial ladder. An arena names its tier by number (1 is Ominous I).
+# Higher tiers pay more per boss, but the per-game cap below still holds.
+tiers:
+  - name: Ominous I
+    health: 1.0
+    damage: 1.0
+    count: 1.0
+    reward: 1.0
+  - name: Ominous II
+    health: 1.15
+    damage: 1.1
+    count: 1.1
+    reward: 1.2
+  - name: Ominous III
+    health: 1.3
+    damage: 1.2
+    count: 1.2
+    reward: 1.4
+  - name: Ominous IV
+    health: 1.5
+    damage: 1.35
+    count: 1.3
+    reward: 1.7
+  - name: Ominous V
+    health: 1.75
+    damage: 1.5
+    count: 1.4
+    reward: 2.0
+
+rewards:
+  # As in 2015: crystals from wave 30 on, at each cleared boss wave, at most
+  # 750 per player per game. Boss waves 30, 40, 50, 60, 70 and 72 at 125 each
+  # make exactly 750 on Ominous I, so a solo player who clears every wave
+  # earns the full cap.
+  firstWave: 30
+  perBossWave: 125
+  capPerGame: 750
+  # Vault-style bonus: clearing a milestone wave opens a vault for each fighter
+  # still standing, once per player per milestone per day (across every
+  # arena). The loot is handed out after they leave the arena.
+  vault:
+    zone: UTC
+    milestones:
+      - wave: 10
+        loot:
+          rolls: 2
+          entries:
+            - weight: 5
+              item:
+                material: IRON_INGOT
+                amount: 8
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 4
+              item:
+                material: BREAD
+                amount: 16
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 3
+              item:
+                material: EXPERIENCE_BOTTLE
+                amount: 8
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 1
+              item:
+                material: GOLDEN_APPLE
+                amount: 1
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+      - wave: 20
+        loot:
+          rolls: 2
+          entries:
+            - weight: 5
+              item:
+                material: EXPERIENCE_BOTTLE
+                amount: 16
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 4
+              item:
+                material: GOLD_INGOT
+                amount: 8
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 3
+              item:
+                material: LAPIS_BLOCK
+                amount: 2
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 2
+              item:
+                material: GOLDEN_APPLE
+                amount: 2
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+      - wave: 30
+        loot:
+          rolls: 3
+          entries:
+            - weight: 5
+              item:
+                material: EXPERIENCE_BOTTLE
+                amount: 24
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 4
+              item:
+                material: REDSTONE_BLOCK
+                amount: 4
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 3
+              item:
+                material: DIAMOND
+                amount: 2
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 1
+              item:
+                material: ANVIL
+                amount: 1
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+      - wave: 40
+        loot:
+          rolls: 3
+          entries:
+            - weight: 5
+              item:
+                material: DIAMOND
+                amount: 3
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 4
+              item:
+                material: EXPERIENCE_BOTTLE
+                amount: 32
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 2
+              item:
+                material: TRIAL_KEY
+                amount: 1
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 1
+              item:
+                material: WIND_CHARGE
+                amount: 16
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+      - wave: 50
+        loot:
+          rolls: 3
+          entries:
+            - weight: 5
+              item:
+                material: DIAMOND
+                amount: 4
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 3
+              item:
+                material: OMINOUS_TRIAL_KEY
+                amount: 1
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 3
+              item:
+                material: ENCHANTED_GOLDEN_APPLE
+                amount: 1
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 1
+              item:
+                material: TOTEM_OF_UNDYING
+                amount: 1
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+      - wave: 60
+        loot:
+          rolls: 3
+          entries:
+            - weight: 5
+              item:
+                material: DIAMOND_BLOCK
+                amount: 1
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 3
+              item:
+                material: NETHERITE_SCRAP
+                amount: 2
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 2
+              item:
+                material: HEAVY_CORE
+                amount: 1
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 2
+              item:
+                material: TOTEM_OF_UNDYING
+                amount: 1
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+      - wave: 70
+        loot:
+          rolls: 3
+          entries:
+            - weight: 4
+              item:
+                material: NETHERITE_INGOT
+                amount: 1
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 4
+              item:
+                material: DIAMOND_BLOCK
+                amount: 2
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 2
+              item:
+                material: ENCHANTED_GOLDEN_APPLE
+                amount: 2
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+      - wave: 72
+        loot:
+          rolls: 4
+          entries:
+            - weight: 4
+              item:
+                material: NETHERITE_INGOT
+                amount: 2
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 3
+              item:
+                material: ECHO_SHARD
+                amount: 8
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 2
+              item:
+                material: TOTEM_OF_UNDYING
+                amount: 1
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+            - weight: 1
+              item:
+                material: HEAVY_CORE
+                amount: 1
+                name: null
+                enchantments: {}
+                potion: null
+                slot: null
+
+# The hidden loot chests: filled when a game starts, emptied when it ends.
+# What fighters find stays in the arena (it is gone when they leave).
+lootChests:
+  rolls: 4
+  entries:
+    - weight: 6
+      item:
+        material: ARROW
+        amount: 32
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    - weight: 5
+      item:
+        material: COOKED_BEEF
+        amount: 8
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    - weight: 5
+      item:
+        material: SPLASH_POTION
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+    - weight: 4
+      item:
+        material: GOLDEN_APPLE
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    - weight: 3
+      item:
+        material: WIND_CHARGE
+        amount: 8
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    - weight: 3
+      item:
+        material: SHIELD
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    - weight: 2
+      item:
+        material: DIAMOND_SWORD
+        amount: 1
+        name: Cache Blade
+        enchantments:
+          sharpness: 2
+        potion: null
+        slot: null
+    - weight: 2
+      item:
+        material: DIAMOND_CHESTPLATE
+        amount: 1
+        name: null
+        enchantments:
+          protection: 1
+        potion: null
+        slot: null
+    - weight: 1
+      item:
+        material: ENCHANTED_GOLDEN_APPLE
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    - weight: 1
+      item:
+        material: TOTEM_OF_UNDYING
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+
+# Plain text; {placeholders} are filled in. Each message may use only the
+# placeholders listed in its comment.
+messages:
+  # {player} {arena}
+  joined: "{player} entered {arena}. Pick a class at the signs."
+  # {player}
+  left: "{player} left the arena."
+  # {arena}
+  spectating: "You are watching {arena}. Use /arena leave to stop."
+  # {class}
+  classPicked: "You are a {class}. Hit the ready block (or /arena ready) when you are set."
+  # {player}
+  ready: "{player} is ready."
+  # {seconds}
+  countdown: "Everyone is ready! The gates open in {seconds} seconds."
+  countdownCancelled: "The countdown stopped: not everyone is ready."
+  # {arena} {tier} {waves}
+  gameStarted: "The gates of {arena} open ({tier}). Survive {waves} waves!"
+  # {wave}
+  waveStarted: "Wave {wave}!"
+  # {wave}
+  swarmWave: "Wave {wave}: a swarm pours in!"
+  # {wave}
+  cavalryWave: "Wave {wave}: riders on the horizon!"
+  # {wave} {boss}
+  bossWave: "Wave {wave}: {boss} has come for you!"
+  # {wave}
+  upgradeWave: "Wave {wave}: supplies! Your kit has been refilled."
+  # {wave}
+  waveCleared: "Wave {wave} cleared."
+  # {amount} {wave}
+  reward: "You earned {amount} for clearing wave {wave}."
+  # {wave}
+  vaultOpened: "The wave {wave} vault opens for you. Its loot waits outside the arena."
+  # {wave}
+  vaultAlreadyOpened: "You have already opened the wave {wave} vault today."
+  vaultDelivered: "Your arena vault loot is in your inventory."
+  # {player} {wave}
+  died: "{player} fell on wave {wave}."
+  # {arena} {wave}
+  victory: "{arena} is conquered! All {wave} waves cleared."
+  # {arena} {wave}
+  defeat: "{arena} falls silent after wave {wave}."
+  removedWithoutClass: "The game started without you: you had not picked a class."
+  startedWithoutYou: "The game started before you got in. Use /arena spec to watch."
+  # {boss}
+  heartBroken: "A heart of {boss} shatters!"
+  # {boss}
+  bossDefeated: "{boss} is defeated!"
+  restored: "Your belongings from your last arena game are back."
