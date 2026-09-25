@@ -18,4 +18,8 @@ public enum ProtectedAction {
   INTERACT_ENTITY,
   /** Place an entity: boats, minecarts, end crystals, armor stands, paintings. */
   PLACE_ENTITY,
+  /** Arrive by teleport: homes, /back, tpa, warps, spells, pearls. */
+  TELEPORT_INTO,
+  /** Save the location as a home or other personal return point. */
+  SET_HOME,
 }
