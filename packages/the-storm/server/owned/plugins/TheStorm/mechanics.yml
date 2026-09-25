@@ -1,0 +1,259 @@
+# Mechanics: the Mechanic track's sign mechanisms (replaces CraftBook).
+# Owned by the repository; the plugin never writes it. Every key is required.
+#
+# Each feature has an on/off switch and the Mechanic track level (1-5) it
+# needs. Sign mechanisms also set useLevel: the level needed to use one
+# (0 lets everyone use it). Creating a mechanism also needs land protection's
+# build permission there; using one needs its interact permission.
+#
+# Tags go on a sign's second line and are matched ignoring case and spaces.
+# Redstone power opens bridges, doors and gates; losing it closes them.
+
+# Level I
+hiddenSwitch: # [X] on a wall sign: right-click the block from the other side
+  access: { enabled: true, level: 1, useLevel: 1 }
+
+lightSwitch: # [|]: switches the lights near the sign on or off together
+  access: { enabled: true, level: 1, useLevel: 1 }
+  radius: 8
+  maxLights: 32
+  lights:
+    - minecraft:candle
+    - minecraft:white_candle
+    - minecraft:orange_candle
+    - minecraft:magenta_candle
+    - minecraft:light_blue_candle
+    - minecraft:yellow_candle
+    - minecraft:lime_candle
+    - minecraft:pink_candle
+    - minecraft:gray_candle
+    - minecraft:light_gray_candle
+    - minecraft:cyan_candle
+    - minecraft:purple_candle
+    - minecraft:blue_candle
+    - minecraft:brown_candle
+    - minecraft:green_candle
+    - minecraft:red_candle
+    - minecraft:black_candle
+    - minecraft:candle_cake
+    - minecraft:white_candle_cake
+    - minecraft:orange_candle_cake
+    - minecraft:magenta_candle_cake
+    - minecraft:light_blue_candle_cake
+    - minecraft:yellow_candle_cake
+    - minecraft:lime_candle_cake
+    - minecraft:pink_candle_cake
+    - minecraft:gray_candle_cake
+    - minecraft:light_gray_candle_cake
+    - minecraft:cyan_candle_cake
+    - minecraft:purple_candle_cake
+    - minecraft:blue_candle_cake
+    - minecraft:brown_candle_cake
+    - minecraft:green_candle_cake
+    - minecraft:red_candle_cake
+    - minecraft:black_candle_cake
+    - minecraft:copper_bulb
+    - minecraft:exposed_copper_bulb
+    - minecraft:weathered_copper_bulb
+    - minecraft:oxidized_copper_bulb
+    - minecraft:waxed_copper_bulb
+    - minecraft:waxed_exposed_copper_bulb
+    - minecraft:waxed_weathered_copper_bulb
+    - minecraft:waxed_oxidized_copper_bulb
+
+cookingPot: # [Cook] with a fire one or two blocks below the sign
+  access: { enabled: true, level: 1, useLevel: 1 }
+  heatSources:
+    - minecraft:fire
+    - minecraft:soul_fire
+    - minecraft:campfire
+    - minecraft:soul_campfire
+    - minecraft:lava
+    - minecraft:magma_block
+  fuels: # fuel items and how many items each cooks
+    minecraft:coal: 8
+    minecraft:charcoal: 8
+    minecraft:coal_block: 80
+    minecraft:blaze_rod: 12
+    minecraft:dried_kelp_block: 20
+  maxFuel: 640
+
+blockDrops: # these drop themselves when a Mechanic breaks them by hand
+  unlock: { enabled: true, level: 1 }
+  blocks:
+    - minecraft:glass
+    - minecraft:white_stained_glass
+    - minecraft:orange_stained_glass
+    - minecraft:magenta_stained_glass
+    - minecraft:light_blue_stained_glass
+    - minecraft:yellow_stained_glass
+    - minecraft:lime_stained_glass
+    - minecraft:pink_stained_glass
+    - minecraft:gray_stained_glass
+    - minecraft:light_gray_stained_glass
+    - minecraft:cyan_stained_glass
+    - minecraft:purple_stained_glass
+    - minecraft:blue_stained_glass
+    - minecraft:brown_stained_glass
+    - minecraft:green_stained_glass
+    - minecraft:red_stained_glass
+    - minecraft:black_stained_glass
+    - minecraft:glass_pane
+    - minecraft:white_stained_glass_pane
+    - minecraft:orange_stained_glass_pane
+    - minecraft:magenta_stained_glass_pane
+    - minecraft:light_blue_stained_glass_pane
+    - minecraft:yellow_stained_glass_pane
+    - minecraft:lime_stained_glass_pane
+    - minecraft:pink_stained_glass_pane
+    - minecraft:gray_stained_glass_pane
+    - minecraft:light_gray_stained_glass_pane
+    - minecraft:cyan_stained_glass_pane
+    - minecraft:purple_stained_glass_pane
+    - minecraft:blue_stained_glass_pane
+    - minecraft:brown_stained_glass_pane
+    - minecraft:green_stained_glass_pane
+    - minecraft:red_stained_glass_pane
+    - minecraft:black_stained_glass_pane
+    - minecraft:bookshelf
+
+# Level II
+elevator: # [Lift Up], [Lift Down] and [Lift] (a stop) signs in one column
+  access: { enabled: true, level: 2, useLevel: 2 }
+  maxDistance: 128
+
+bridge: # [Bridge] at both ends; each sign's base block is above or below it
+  access: { enabled: true, level: 2, useLevel: 2 }
+  blocks:
+    - minecraft:oak_planks
+    - minecraft:spruce_planks
+    - minecraft:birch_planks
+    - minecraft:jungle_planks
+    - minecraft:acacia_planks
+    - minecraft:dark_oak_planks
+    - minecraft:mangrove_planks
+    - minecraft:cherry_planks
+    - minecraft:pale_oak_planks
+    - minecraft:bamboo_planks
+    - minecraft:crimson_planks
+    - minecraft:warped_planks
+    - minecraft:oak_slab
+    - minecraft:spruce_slab
+    - minecraft:birch_slab
+    - minecraft:jungle_slab
+    - minecraft:acacia_slab
+    - minecraft:dark_oak_slab
+    - minecraft:mangrove_slab
+    - minecraft:cherry_slab
+    - minecraft:pale_oak_slab
+    - minecraft:bamboo_slab
+    - minecraft:crimson_slab
+    - minecraft:warped_slab
+    - minecraft:stone
+    - minecraft:cobblestone
+    - minecraft:stone_bricks
+    - minecraft:smooth_stone
+    - minecraft:smooth_stone_slab
+    - minecraft:sandstone
+    - minecraft:glass
+  maxLength: 32
+  maxWidthEachSide: 2
+
+gate: # [Gate] near fence columns that drop to close and rise to open
+  access: { enabled: true, level: 2, useLevel: 2 }
+  blocks:
+    - minecraft:oak_fence
+    - minecraft:spruce_fence
+    - minecraft:birch_fence
+    - minecraft:jungle_fence
+    - minecraft:acacia_fence
+    - minecraft:dark_oak_fence
+    - minecraft:mangrove_fence
+    - minecraft:cherry_fence
+    - minecraft:pale_oak_fence
+    - minecraft:bamboo_fence
+    - minecraft:crimson_fence
+    - minecraft:warped_fence
+    - minecraft:nether_brick_fence
+    - minecraft:iron_bars
+    - minecraft:glass_pane
+  searchRadius: 3
+  maxColumns: 16
+  maxHeight: 12
+
+door: # [Door Up] under the door's base, [Door Down] over its top
+  access: { enabled: true, level: 2, useLevel: 2 }
+  blocks:
+    - minecraft:oak_planks
+    - minecraft:spruce_planks
+    - minecraft:birch_planks
+    - minecraft:jungle_planks
+    - minecraft:acacia_planks
+    - minecraft:dark_oak_planks
+    - minecraft:mangrove_planks
+    - minecraft:cherry_planks
+    - minecraft:pale_oak_planks
+    - minecraft:bamboo_planks
+    - minecraft:crimson_planks
+    - minecraft:warped_planks
+    - minecraft:oak_slab
+    - minecraft:spruce_slab
+    - minecraft:birch_slab
+    - minecraft:jungle_slab
+    - minecraft:acacia_slab
+    - minecraft:dark_oak_slab
+    - minecraft:mangrove_slab
+    - minecraft:cherry_slab
+    - minecraft:pale_oak_slab
+    - minecraft:bamboo_slab
+    - minecraft:crimson_slab
+    - minecraft:warped_slab
+    - minecraft:stone
+    - minecraft:cobblestone
+    - minecraft:stone_bricks
+    - minecraft:smooth_stone
+    - minecraft:smooth_stone_slab
+    - minecraft:sandstone
+    - minecraft:glass
+  maxLength: 12
+  maxWidthEachSide: 2
+
+# Level III
+signCopier: # punch a sign with the tool to copy it, right-click one to paste
+  unlock: { enabled: true, level: 3 }
+  tool: minecraft:feather
+
+mapChanger: # [Map] with a map id range such as 12-15 on the third line
+  access: { enabled: true, level: 3, useLevel: 3 }
+  maxRange: 64
+
+paintingSwitcher: # right-click a painting for the next picture of its size
+  unlock: { enabled: true, level: 3 }
+
+# Levels IV and V: signs touching a piston
+pistons:
+  crush: { enabled: true, level: 4 } # [Crush]: breaks the block in front
+  bounce: { enabled: true, level: 4 } # [Bounce]: launches entities
+  superSticky: { enabled: true, level: 5 } # [SuperSticky]: pulls a line in
+  superPush: { enabled: true, level: 5 } # [SuperPush]: pushes further
+  bounceForce: 1.5
+  stickyReach: 8
+  pushDistance: 4
+  maxBlocks: 12
+  # Never crushed or moved. Block entities (chests, spawners, vaults, signs)
+  # and unbreakable blocks are always refused as well.
+  blacklist:
+    - minecraft:bedrock
+    - minecraft:obsidian
+    - minecraft:crying_obsidian
+    - minecraft:reinforced_deepslate
+    - minecraft:end_portal_frame
+    - minecraft:end_portal
+    - minecraft:end_gateway
+    - minecraft:nether_portal
+    - minecraft:respawn_anchor
+    - minecraft:barrier
+    - minecraft:spawner
+    - minecraft:trial_spawner
+    - minecraft:vault
+    - minecraft:budding_amethyst
