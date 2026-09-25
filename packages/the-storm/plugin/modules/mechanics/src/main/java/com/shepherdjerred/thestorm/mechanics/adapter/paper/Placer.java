@@ -22,9 +22,17 @@ final class Placer {
 
   private Placer() {}
 
-  /** Sets {@code changes}, placing copies of the structure's template block (never waterlogged). */
+  /**
+   * Sets {@code changes}, placing copies of the structure's template block (never waterlogged).
+   * Each placed block is one item, as the stock counts it: config verification refuses any other
+   * material, and a template that is not is a broken invariant.
+   */
   static void apply(PaperGrid grid, Structure structure, List<BlockChange> changes) {
     var template = grid.block(structure.template()).getBlockData().clone();
+    if (!PaperGrid.key(template.getMaterial()).equals(structure.material())
+        || !Materials.isSingleItem(template)) {
+      throw new IllegalStateException("not a one-item template for a structure: " + template);
+    }
     if (template instanceof Waterlogged waterlogged) {
       waterlogged.setWaterlogged(false);
     }

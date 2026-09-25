@@ -71,8 +71,9 @@ final class PistonListener implements Listener {
       event.setCancelled(true);
       return;
     }
-    if (signs.containsKey(Mechanism.BOUNCE)) {
-      bounce(head, facing);
+    var bouncer = signs.get(Mechanism.BOUNCE);
+    if (bouncer != null) {
+      bounce(bouncer, head, facing);
     }
     var pusher = signs.get(Mechanism.SUPER_PUSH);
     if (pusher != null) {
@@ -96,7 +97,8 @@ final class PistonListener implements Listener {
   private boolean crush(UUID owner, Block head) {
     var grid = new PaperGrid(head.getWorld());
     var pos = PaperGrid.pos(head);
-    if (!rules.crushable(grid.cellAt(pos))
+    if (!grid.contains(pos)
+        || !rules.crushable(grid.cellAt(pos))
         || !kit.guard().check(owner, ProtectedAction.BREAK, grid, pos).isAllowed()) {
       return false;
     }
@@ -104,12 +106,27 @@ final class PistonListener implements Listener {
     return true;
   }
 
-  private void bounce(Block head, BlockFace facing) {
+  /**
+   * Launches what stands in front of the head, if the sign's creator may build there. Launching is
+   * harm: players and passive creatures go only where protection lets the creator, standing at the
+   * piston, harm them; hostile monsters always go; anything else goes only from land the creator
+   * may build on.
+   */
+  private void bounce(UUID owner, Block head, BlockFace facing) {
+    var grid = new PaperGrid(head.getWorld());
+    if (!kit.guard().check(owner, ProtectedAction.BUILD, grid, PaperGrid.pos(head)).isAllowed()) {
+      return;
+    }
     var direction = PaperGrid.direction(facing);
     var launch = Velocity.toward(direction.orElseThrow(), kit.config().pistons().bounceForce());
     var box = BoundingBox.of(head).expand(facing, 1.0);
     for (var entity : head.getWorld().getNearbyEntities(box)) {
-      entity.setVelocity(entity.getVelocity().add(new Vector(launch.x(), launch.y(), launch.z())));
+      var standing = PaperGrid.feet(entity);
+      if (grid.contains(standing)
+          && kit.guard().mayLaunch(owner, head.getRelative(facing.getOppositeFace()), entity)) {
+        entity.setVelocity(
+            entity.getVelocity().add(new Vector(launch.x(), launch.y(), launch.z())));
+      }
     }
   }
 
@@ -154,7 +171,9 @@ final class PistonListener implements Listener {
     var found = new EnumMap<Mechanism, UUID>(Mechanism.class);
     for (var face : FACES) {
       var block = piston.getRelative(face);
-      if (!Signs.isSign(block.getType()) || !(block.getState(false) instanceof Sign sign)) {
+      if (!PaperGrid.loaded(block)
+          || !Signs.isSign(block.getType())
+          || !(block.getState(false) instanceof Sign sign)) {
         continue;
       }
       var mechanism = PaperGrid.view(block, PaperGrid.frontLines(sign)).mechanism();

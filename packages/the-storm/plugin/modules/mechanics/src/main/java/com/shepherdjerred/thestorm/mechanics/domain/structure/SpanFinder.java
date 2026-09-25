@@ -194,7 +194,7 @@ public final class SpanFinder {
         cells.add(row.offset(layout.across(), offset));
       }
     }
-    return Result.ok(new Span(new Structure(material, nearBase, cells), farSign));
+    return Result.ok(new Span(new Structure(material, nearBase, cells), farSign, farBase));
   }
 
   private static int widthToward(BlockGrid grid, Pos base, Direction side, int max) {

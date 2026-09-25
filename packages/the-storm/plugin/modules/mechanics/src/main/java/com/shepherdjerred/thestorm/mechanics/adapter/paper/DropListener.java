@@ -4,15 +4,14 @@ import com.destroystokyo.paper.event.block.BlockDestroyEvent;
 import com.shepherdjerred.thestorm.mechanics.app.Gatekeeper;
 import com.shepherdjerred.thestorm.mechanics.domain.structure.Stock;
 import java.util.List;
-import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDropItemEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.inventory.ItemStack;
@@ -30,22 +29,23 @@ final class DropListener implements Listener {
     this.kit = kit;
   }
 
+  /**
+   * Replaces a broken glass block's or bookshelf's drops with the block itself, once the break has
+   * happened and only when it would not already drop itself (silk touch).
+   */
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-  void onBreakForDrops(BlockBreakEvent event) {
+  void onDropItems(BlockDropItemEvent event) {
     var config = kit.config().blockDrops();
-    var block = event.getBlock();
+    var type = event.getBlockState().getType();
     var player = event.getPlayer();
-    var tool = player.getInventory().getItemInMainHand();
     if (!config.unlock().enabled()
-        || !event.isDropItems()
-        || player.getGameMode() == GameMode.CREATIVE
-        || !config.allowed().contains(PaperGrid.key(block.getType()))
-        || tool.containsEnchantment(Enchantment.SILK_TOUCH)
-        || !Gatekeeper.hasLevel(player::hasPermission, config.unlock().level())) {
+        || !config.allowed().contains(PaperGrid.key(type))
+        || !Gatekeeper.hasLevel(player::hasPermission, config.unlock().level())
+        || event.getItems().stream().anyMatch(item -> item.getItemStack().getType() == type)) {
       return;
     }
-    event.setDropItems(false);
-    Items.drop(block.getLocation().add(0.5, 0.5, 0.5), new ItemStack(block.getType()), 1);
+    event.getItems().clear();
+    Items.drop(event.getBlock().getLocation().add(0.5, 0.5, 0.5), new ItemStack(type), 1);
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

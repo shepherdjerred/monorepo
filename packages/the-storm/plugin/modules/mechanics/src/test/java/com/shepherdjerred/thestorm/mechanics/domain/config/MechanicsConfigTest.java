@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.shepherdjerred.thestorm.core.config.Problem;
 import com.shepherdjerred.thestorm.core.config.StrictYaml;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.mechanics.domain.TestConfigs;
 import com.shepherdjerred.thestorm.mechanics.domain.sign.Feature;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -33,6 +34,8 @@ final class MechanicsConfigTest {
     assertThat(config.door().blocks()).isEqualTo(config.bridge().blocks());
     assertThat(config.cookingPot().fuels()).containsEntry("minecraft:coal", 8);
     assertThat(config.signCopier().tool()).isEqualTo("minecraft:feather");
+    assertThat(config.structureCooldownTicks()).isEqualTo(20);
+    assertThat(config.bridge().blocks()).noneMatch(block -> block.endsWith("_slab"));
   }
 
   @Test
@@ -56,6 +59,28 @@ final class MechanicsConfigTest {
     for (var feature : Feature.values()) {
       assertThat(config.access(feature).enabled()).as(feature.name()).isTrue();
     }
+  }
+
+  @Test
+  void structuresWaitAtLeastASecond() {
+    var valid = TestConfigs.mechanics();
+
+    assertThatThrownBy(
+            () ->
+                new MechanicsConfig(
+                    valid.hiddenSwitch(),
+                    valid.lightSwitch(),
+                    valid.cookingPot(),
+                    valid.blockDrops(),
+                    valid.elevator(),
+                    valid.bridge(),
+                    valid.gate(),
+                    valid.door(),
+                    valid.signCopier(),
+                    valid.paintingSwitcher(),
+                    valid.pistons(),
+                    19))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

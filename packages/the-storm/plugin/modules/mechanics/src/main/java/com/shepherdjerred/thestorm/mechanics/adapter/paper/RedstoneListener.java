@@ -1,6 +1,6 @@
 package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
-import com.shepherdjerred.thestorm.mechanics.domain.grid.Pos;
+import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.mechanics.domain.structure.Target;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -16,7 +16,8 @@ import org.bukkit.event.block.BlockRedstoneEvent;
 /**
  * Redstone opens bridges, doors and gates when power arrives and closes them when it leaves. A sign
  * is powered by redstone beside it, or beside the block a wall sign hangs on. Redstone acts with
- * the land rights of the sign's creator.
+ * the land rights of the sign's creator, who must also be allowed to use the powering block, so
+ * nobody can drive someone else's structure from outside their land.
  */
 final class RedstoneListener implements Listener {
 
@@ -44,24 +45,38 @@ final class RedstoneListener implements Listener {
     if (wasOn == isOn) {
       return;
     }
+    var source = event.getBlock();
+    var signs = poweredSigns(source);
+    if (signs.isEmpty()) {
+      return;
+    }
     var target = isOn ? Target.OPEN : Target.CLOSE;
-    for (var block : poweredSigns(event.getBlock())) {
-      trigger(block, target);
+    for (var block : signs) {
+      trigger(source, block, target);
     }
   }
 
-  /** Signs beside {@code source}, and wall signs hanging on the blocks beside it. */
+  /**
+   * Signs beside {@code source}, and wall signs hanging on the blocks beside it. Only block types
+   * of loaded chunks are read, so a redstone change with no sign nearby costs a few lookups.
+   */
   private static Set<Block> poweredSigns(Block source) {
     var signs = new LinkedHashSet<Block>();
     for (var face : FACES) {
       var neighbor = source.getRelative(face);
+      if (!PaperGrid.loaded(neighbor)) {
+        continue;
+      }
       if (Signs.isSign(neighbor.getType())) {
         signs.add(neighbor);
         continue;
       }
       for (var side : FACES) {
         var hanging = neighbor.getRelative(side);
-        if (hanging.getBlockData() instanceof WallSign wall && wall.getFacing() == side) {
+        if (PaperGrid.loaded(hanging)
+            && Signs.isSign(hanging.getType())
+            && hanging.getBlockData() instanceof WallSign wall
+            && wall.getFacing() == side) {
           signs.add(hanging);
         }
       }
@@ -69,7 +84,7 @@ final class RedstoneListener implements Listener {
     return signs;
   }
 
-  private void trigger(Block block, Target target) {
+  private void trigger(Block source, Block block, Target target) {
     if (!(block.getState(false) instanceof Sign sign)) {
       return;
     }
@@ -78,16 +93,19 @@ final class RedstoneListener implements Listener {
     if (mechanism.isEmpty() || !mechanism.orElseThrow().isStructure()) {
       return;
     }
-    var feature = mechanism.orElseThrow().feature();
     var owner = kit.signs().owner(sign);
-    if (!kit.gatekeeper().enabled(feature) || owner.isEmpty()) {
+    if (!kit.gatekeeper().enabled(mechanism.orElseThrow().feature()) || owner.isEmpty()) {
       return;
     }
-    Pos pos = PaperGrid.pos(block);
-    // Nobody to tell if it fails: the structure simply stays as it is.
-    structures.toggle(
-        owner.orElseThrow(),
-        new Structures.Use(new PaperGrid(block.getWorld()), pos, view),
-        target);
+    var grid = new PaperGrid(block.getWorld());
+    var mayUseSource =
+        kit.guard()
+            .check(owner.orElseThrow(), ProtectedAction.INTERACT, grid, PaperGrid.pos(source))
+            .isAllowed();
+    if (mayUseSource) {
+      // Nobody to tell if it fails: the structure simply stays as it is.
+      structures.toggle(
+          owner.orElseThrow(), new Structures.Use(grid, PaperGrid.pos(block), view), target);
+    }
   }
 }

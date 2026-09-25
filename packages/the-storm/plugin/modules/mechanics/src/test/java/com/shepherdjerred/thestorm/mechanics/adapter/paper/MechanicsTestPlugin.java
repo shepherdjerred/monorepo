@@ -4,6 +4,8 @@ import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.protection.Decision;
+import com.shepherdjerred.thestorm.core.protection.HarmTarget;
+import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.mechanics.MechanicsModule;
@@ -13,8 +15,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.InstantSource;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.random.RandomGenerator;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.Nullable;
 
@@ -46,9 +50,19 @@ public class MechanicsTestPlugin extends JavaPlugin {
     }
     var database = StormDatabase.open(directory.resolve("t.db"));
     this.database = database;
-    Protection protection =
-        (player, action, location) ->
-            location.getBlockX() < 0 ? new Decision.Denied(DENIED) : Decision.allowed();
+    var protection =
+        new Protection() {
+          @Override
+          public Decision check(UUID player, ProtectedAction action, Location location) {
+            return location.getBlockX() < 0 ? new Decision.Denied(DENIED) : Decision.allowed();
+          }
+
+          @Override
+          public Decision checkHarm(
+              UUID attacker, Location attackerAt, HarmTarget target, Location victimAt) {
+            return victimAt.getBlockX() < 0 ? new Decision.Denied(DENIED) : Decision.allowed();
+          }
+        };
     services.provide(Protection.class, protection);
     var context =
         new ModuleContext(

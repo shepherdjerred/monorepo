@@ -30,7 +30,8 @@ final class GateFinderTest {
   private static Structure found(TestGrid grid, int radius, int maxColumns, int maxHeight) {
     var result = GateFinder.find(grid, SIGN, TestConfigs.gate(radius, maxColumns, maxHeight));
     assertThat(result).isInstanceOf(Result.Ok.class);
-    return ((Result.Ok<Structure, StructureProblem>) result).value();
+    var gate = ((Result.Ok<Gate, StructureProblem>) result).value();
+    return GateFinder.columns(grid, gate, maxHeight);
   }
 
   @Test

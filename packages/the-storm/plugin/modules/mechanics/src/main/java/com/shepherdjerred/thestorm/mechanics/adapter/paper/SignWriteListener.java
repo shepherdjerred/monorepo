@@ -3,11 +3,15 @@ package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.mechanics.app.SignCreation;
 import com.shepherdjerred.thestorm.mechanics.app.Writer;
 import com.shepherdjerred.thestorm.mechanics.domain.sign.Feature;
 import com.shepherdjerred.thestorm.mechanics.domain.sign.SignTags;
+import java.util.Optional;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
+import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.entity.Player;
@@ -25,11 +29,14 @@ final class SignWriteListener implements Listener {
   private final SignCreation creation;
   private final Signs signs;
   private final Protection protection;
+  private final Structures structures;
 
-  SignWriteListener(SignCreation creation, Signs signs, Protection protection) {
+  SignWriteListener(
+      SignCreation creation, Signs signs, Protection protection, Structures structures) {
     this.creation = creation;
     this.signs = signs;
     this.protection = protection;
+    this.structures = structures;
   }
 
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -48,23 +55,49 @@ final class SignWriteListener implements Listener {
       return;
     }
     var grid = new PaperGrid(block.getWorld());
-    var outcome =
-        creation.create(PaperGrid.pos(block), PaperGrid.view(block, lines), grid, writer(event));
-    switch (outcome) {
-      case SignCreation.Outcome.Plain() -> {}
+    var pos = PaperGrid.pos(block);
+    var view = PaperGrid.view(block, lines);
+    switch (creation.create(pos, view, grid, writer(event))) {
+      case SignCreation.Outcome.Plain() -> record(block, Optional.empty(), Optional.empty());
       case SignCreation.Outcome.Refused(Feature feature, Component reason) -> {
         event.setCancelled(true);
         Replies.error(player, feature, reason);
       }
       case SignCreation.Outcome.Accepted(var mechanism) -> {
-        event.line(SignTags.TAG_LINE, Component.text(mechanism.tag()));
-        if (block.getState() instanceof Sign sign) {
-          signs.setOwner(sign, player.getUniqueId());
-          sign.update();
+        var binding =
+            mechanism.isStructure()
+                ? structures.prepare(player.getUniqueId(), new Structures.Use(grid, pos, view))
+                : Result.<Runnable, Component>ok(() -> {});
+        switch (binding) {
+          case Result.Err<Runnable, Component>(var reason) -> {
+            event.setCancelled(true);
+            Replies.error(player, mechanism.feature(), reason);
+          }
+          case Result.Ok<Runnable, Component>(var bind) -> {
+            event.line(SignTags.TAG_LINE, Component.text(mechanism.tag()));
+            record(block, Optional.of(player.getUniqueId()), Optional.of(bind));
+            Replies.success(player, mechanism.feature(), "Built. " + hint(mechanism.feature()));
+          }
         }
-        Replies.success(player, mechanism.feature(), "Built. " + hint(mechanism.feature()));
       }
     }
+  }
+
+  /**
+   * Stores who created the sign (if it is a mechanism) and forgets any structure it was bound to,
+   * then stores its new binding. What the sign holds is kept; it drops when the sign breaks.
+   */
+  private void record(Block block, Optional<UUID> creator, Optional<Runnable> bind) {
+    if (!(block.getState() instanceof Sign sign)) {
+      throw new IllegalStateException("a sign being written vanished at " + block);
+    }
+    if (creator.isEmpty() && !signs.hasBinding(sign)) {
+      return;
+    }
+    creator.ifPresent(player -> signs.setOwner(sign, player));
+    signs.clearBinding(sign);
+    sign.update();
+    bind.ifPresent(Runnable::run);
   }
 
   private Writer writer(SignChangeEvent event) {

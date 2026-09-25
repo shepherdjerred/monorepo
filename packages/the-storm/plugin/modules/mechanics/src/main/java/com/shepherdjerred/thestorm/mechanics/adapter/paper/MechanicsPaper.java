@@ -18,14 +18,14 @@ public final class MechanicsPaper {
     var gatekeeper = new Gatekeeper(config);
     var signs = new Signs(plugin);
     var kit = new Kit(config, gatekeeper, signs, new Guard(protection), context.scheduler());
-    var structures = new Structures(kit);
+    var structures = new Structures(kit, context.time());
     var copier = new SignCopier(kit);
     var handlers =
         new SignClickListener.Handlers(
             new Elevators(kit), structures, new CookingPots(kit), new LightSwitches(kit));
     var creation = new SignCreation(gatekeeper, CreationRules.standard(config));
     var events = plugin.getServer().getPluginManager();
-    events.registerEvents(new SignWriteListener(creation, signs, protection), plugin);
+    events.registerEvents(new SignWriteListener(creation, signs, protection, structures), plugin);
     events.registerEvents(new SignClickListener(kit, copier, handlers), plugin);
     events.registerEvents(copier, plugin);
     events.registerEvents(new HiddenSwitchListener(kit), plugin);

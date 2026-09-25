@@ -122,9 +122,13 @@ elevator: # [Lift Up], [Lift Down] and [Lift] (a stop) signs in one column
   access: { enabled: true, level: 2, useLevel: 0 }
   maxDistance: 128
 
-bridge: # [Bridge] at both ends; each sign's base block is above or below it
+# Bridges, doors and gates hold their blocks in a sign while open. Each moves
+# at most once per this many ticks (at least 20).
+structureCooldownTicks: 20
+
+bridge: # [Bridge] at both ends, base block above or below each; the second links
   access: { enabled: true, level: 2, useLevel: 0 }
-  blocks:
+  blocks: # whole blocks only, one item each
     - minecraft:oak_planks
     - minecraft:spruce_planks
     - minecraft:birch_planks
@@ -137,23 +141,10 @@ bridge: # [Bridge] at both ends; each sign's base block is above or below it
     - minecraft:bamboo_planks
     - minecraft:crimson_planks
     - minecraft:warped_planks
-    - minecraft:oak_slab
-    - minecraft:spruce_slab
-    - minecraft:birch_slab
-    - minecraft:jungle_slab
-    - minecraft:acacia_slab
-    - minecraft:dark_oak_slab
-    - minecraft:mangrove_slab
-    - minecraft:cherry_slab
-    - minecraft:pale_oak_slab
-    - minecraft:bamboo_slab
-    - minecraft:crimson_slab
-    - minecraft:warped_slab
     - minecraft:stone
     - minecraft:cobblestone
     - minecraft:stone_bricks
     - minecraft:smooth_stone
-    - minecraft:smooth_stone_slab
     - minecraft:sandstone
     - minecraft:glass
   maxLength: 32
@@ -181,7 +172,7 @@ gate: # [Gate] near fence columns that drop to close and rise to open
   maxColumns: 16
   maxHeight: 12
 
-door: # [Door Up] under the door's base, [Door Down] over its top
+door: # [Door Up] under the door's base, [Door Down] over its top; the second links
   access: { enabled: true, level: 2, useLevel: 0 }
   blocks:
     - minecraft:oak_planks
@@ -196,23 +187,10 @@ door: # [Door Up] under the door's base, [Door Down] over its top
     - minecraft:bamboo_planks
     - minecraft:crimson_planks
     - minecraft:warped_planks
-    - minecraft:oak_slab
-    - minecraft:spruce_slab
-    - minecraft:birch_slab
-    - minecraft:jungle_slab
-    - minecraft:acacia_slab
-    - minecraft:dark_oak_slab
-    - minecraft:mangrove_slab
-    - minecraft:cherry_slab
-    - minecraft:pale_oak_slab
-    - minecraft:bamboo_slab
-    - minecraft:crimson_slab
-    - minecraft:warped_slab
     - minecraft:stone
     - minecraft:cobblestone
     - minecraft:stone_bricks
     - minecraft:smooth_stone
-    - minecraft:smooth_stone_slab
     - minecraft:sandstone
     - minecraft:glass
   maxLength: 12

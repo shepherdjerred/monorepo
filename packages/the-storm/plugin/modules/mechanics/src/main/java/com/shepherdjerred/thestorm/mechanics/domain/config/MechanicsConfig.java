@@ -16,6 +16,8 @@ import com.shepherdjerred.thestorm.mechanics.domain.sign.Feature;
  * @param signCopier the sign copier tool
  * @param paintingSwitcher right-clicking a painting to change its picture
  * @param pistons the special piston signs
+ * @param structureCooldownTicks how long a bridge, door or gate waits before it moves again, in
+ *     ticks (at least 20, one second)
  */
 public record MechanicsConfig(
     HiddenSwitchConfig hiddenSwitch,
@@ -28,7 +30,16 @@ public record MechanicsConfig(
     SpanConfig door,
     SignCopierConfig signCopier,
     PaintingSwitcherConfig paintingSwitcher,
-    PistonConfig pistons) {
+    PistonConfig pistons,
+    int structureCooldownTicks) {
+
+  public static final int MIN_COOLDOWN_TICKS = 20;
+  public static final int MAX_COOLDOWN_TICKS = 1200;
+
+  public MechanicsConfig {
+    Checks.range(
+        "structureCooldownTicks", structureCooldownTicks, MIN_COOLDOWN_TICKS, MAX_COOLDOWN_TICKS);
+  }
 
   /** Who may build and use {@code feature}. */
   public Access access(Feature feature) {
