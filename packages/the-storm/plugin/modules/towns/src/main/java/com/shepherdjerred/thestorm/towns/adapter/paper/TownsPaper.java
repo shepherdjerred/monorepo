@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.towns.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.protection.SettledLand;
 import com.shepherdjerred.thestorm.towns.app.TownService;
 import com.shepherdjerred.thestorm.towns.app.TownsState;
 import com.shepherdjerred.thestorm.towns.domain.TownsConfig;
@@ -17,13 +18,21 @@ import org.bukkit.event.Listener;
 
 /**
  * Hooks towns into Paper: registers every protection listener and the commands, and returns the
- * {@link Protection} port for other modules.
+ * ports other modules call.
  */
 public final class TownsPaper {
 
   private TownsPaper() {}
 
-  public static Protection install(
+  /**
+   * The ports towns publishes.
+   *
+   * @param protection whether a player may act
+   * @param settled claim and region chunks
+   */
+  public record Installed(Protection protection, SettledLand settled) {}
+
+  public static Installed install(
       ModuleContext context, TownsState state, TownService towns, TownsConfig config) {
     var server = context.plugin().getServer();
     requireWorlds(server, config);
@@ -73,8 +82,9 @@ public final class TownsPaper {
               townCommands.register(event.registrar());
               regionCommands.register(event.registrar());
             });
-    return new PaperProtection(
-        server, guard, engine, new PaperProtection.Rendering(kinds, notices));
+    return new Installed(
+        new PaperProtection(server, guard, engine, new PaperProtection.Rendering(kinds, notices)),
+        new PaperSettledLand(state));
   }
 
   /**

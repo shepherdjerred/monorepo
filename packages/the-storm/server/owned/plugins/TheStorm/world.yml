@@ -1,0 +1,13 @@
+# Worlds the world module creates. Paper already owns world, world_nether and
+# world_the_end. Owned by the repository; the plugin never writes it.
+# sleepPercentage is the share of awake players who must be in a bed to skip
+# the night, on every overworld. Entering a bed is the only vote.
+
+sleepPercentage: 50
+worlds:
+  - name: wilds
+    preset: large_biomes
+    rtp: true
+  - name: peaks
+    preset: amplified
+    rtp: true

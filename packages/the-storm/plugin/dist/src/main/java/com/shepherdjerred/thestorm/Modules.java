@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Every module, in enable order. A module comes after every module whose ports it requires: tracks
  * needs economy; towns (the Protection provider) needs tracks and chat; essentials, shops,
- * mechanics and spells need Protection.
+ * mechanics and spells need Protection. World loads before qol, which teleports into those worlds.
  */
 final class Modules {
 
@@ -48,9 +48,9 @@ final class Modules {
         new QuestsModule(),
         new ArenaModule(),
         new MobsModule(),
-        new QolModule(),
         new SkillsModule(),
         new SeasonalModule(),
-        new WorldModule());
+        new WorldModule(),
+        new QolModule());
   }
 }
