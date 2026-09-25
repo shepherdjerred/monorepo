@@ -13,6 +13,7 @@ import com.shepherdjerred.thestorm.npcs.app.dialogue.DialogueGraph.OptionEffect;
 import com.shepherdjerred.thestorm.npcs.domain.dialogue.Conversations.Clicked;
 import com.shepherdjerred.thestorm.npcs.domain.dialogue.Screen.Button;
 import com.shepherdjerred.thestorm.npcs.domain.dialogue.Screen.Choice;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -22,6 +23,7 @@ final class ConversationsTest {
 
   private static final UUID ALICE = UUID.fromString("00000000-0000-0000-0000-00000000000a");
   private static final UUID BOB = UUID.fromString("00000000-0000-0000-0000-00000000000b");
+  private static final Instant NOON = Instant.parse("2026-09-25T12:00:00Z");
 
   private static final Screen SCREEN =
       new Screen(
@@ -34,7 +36,7 @@ final class ConversationsTest {
   @Test
   void aClickCountsOnce() {
     var conversations = new Conversations();
-    var token = conversations.show(ALICE, "stan", SCREEN);
+    var token = conversations.show(ALICE, "stan", SCREEN, NOON);
     assertThat(conversations.click(ALICE, token, 0))
         .contains(new Clicked("stan", new Choice.OpenTrainer()));
     // The Dialog API can deliver the same click again.
@@ -46,8 +48,8 @@ final class ConversationsTest {
   @Test
   void aReplacedScreenIgnoresClicksOnTheOldOne() {
     var conversations = new Conversations();
-    var first = conversations.show(ALICE, "stan", SCREEN);
-    var second = conversations.show(ALICE, "nat", SCREEN);
+    var first = conversations.show(ALICE, "stan", SCREEN, NOON);
+    var second = conversations.show(ALICE, "nat", SCREEN, NOON);
     assertThat(second).isGreaterThan(first);
     assertThat(conversations.click(ALICE, first, 1)).isEmpty();
     assertThat(conversations.click(ALICE, second, 1))
@@ -57,7 +59,7 @@ final class ConversationsTest {
   @Test
   void ignoresOutOfRangeButtonsAndOtherPlayers() {
     var conversations = new Conversations();
-    var token = conversations.show(ALICE, "stan", SCREEN);
+    var token = conversations.show(ALICE, "stan", SCREEN, NOON);
     assertThat(conversations.click(ALICE, token, 2)).isEmpty();
     assertThat(conversations.click(ALICE, token, -1)).isEmpty();
     assertThat(conversations.click(BOB, token, 0)).isEmpty();
@@ -66,9 +68,24 @@ final class ConversationsTest {
   }
 
   @Test
+  void listenersAreThePlayersWithARecentScreenFromTheNpc() {
+    var conversations = new Conversations();
+    conversations.show(BOB, "stan", SCREEN, NOON);
+    conversations.show(ALICE, "stan", SCREEN, NOON.plusSeconds(10));
+    conversations.show(
+        UUID.fromString("00000000-0000-0000-0000-00000000000c"), "nat", SCREEN, NOON);
+    assertThat(conversations.listeners("stan", NOON)).containsExactly(ALICE, BOB);
+    assertThat(conversations.listeners("stan", NOON.plusSeconds(5))).containsExactly(ALICE);
+    assertThat(conversations.listeners("thomas", NOON)).isEmpty();
+    var token = conversations.current(ALICE).orElseThrow().token();
+    conversations.click(ALICE, token, 1);
+    assertThat(conversations.listeners("stan", NOON)).containsExactly(BOB);
+  }
+
+  @Test
   void forgettingAPlayerDropsTheirScreen() {
     var conversations = new Conversations();
-    var token = conversations.show(ALICE, "stan", SCREEN);
+    var token = conversations.show(ALICE, "stan", SCREEN, NOON);
     conversations.forget(ALICE);
     assertThat(conversations.click(ALICE, token, 0)).isEmpty();
   }

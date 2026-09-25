@@ -20,8 +20,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Function;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.Location;
 import org.bukkit.Server;
@@ -75,7 +77,7 @@ final class NpcWorld {
       Server server,
       Mannequins mannequins,
       Navigators navigators,
-      ChunkTickets tickets,
+      HeldChunks tickets,
       ComponentLogger logger) {}
 
   private final Parts parts;
@@ -85,6 +87,7 @@ final class NpcWorld {
   private final Map<String, Live> live = new HashMap<>();
   private @Nullable MarkerEntities displays;
   private @Nullable MarkerService markers;
+  private Function<String, List<UUID>> listeners = npc -> List.of();
   private long tick;
 
   NpcWorld(Parts parts, NpcCatalog catalog, NpcsConfig config, PathFollower follower) {
@@ -98,6 +101,11 @@ final class NpcWorld {
   void attach(MarkerEntities markerDisplays, MarkerService markerService) {
     displays = markerDisplays;
     markers = markerService;
+  }
+
+  /** Connects conversations: an NPC someone is talking to stands still and faces them. */
+  void attachListeners(Function<String, List<UUID>> talking) {
+    listeners = talking;
   }
 
   /** Where {@code npc}'s entity stands, if it is loaded. */
@@ -275,6 +283,11 @@ final class NpcWorld {
     }
     var position = Mannequins.position(feet);
     var facing = Mannequins.facing(feet);
+    var listener = listener(entry.npc, feet);
+    if (listener.isPresent()) {
+      attend(entry, new PathFollower.At(position, facing), listener.get());
+      return;
+    }
     var walker = entry.walker;
     if (walker == null || thinkingNow(entry.npc)) {
       var decided = decide(entry.npc, walker, feet, new PathFollower.At(position, facing));
@@ -291,6 +304,29 @@ final class NpcWorld {
     var ticked = follower.tick(walker, new Observation(tick, position, facing, path, watcher));
     entry.walker = ticked.walker();
     apply(entry, ticked.moves());
+  }
+
+  /** The nearest player talking to {@code npc} who is still close enough to be waited for. */
+  private Optional<Player> listener(NpcDefinition npc, Location feet) {
+    return listeners.apply(npc.id()).stream()
+        .map(parts.server()::getPlayer)
+        .filter(Objects::nonNull)
+        .filter(player -> feetOf(player).getWorld().equals(feet.getWorld()))
+        .filter(player -> feetOf(player).distance(feet) <= config.dialog().holdRadius())
+        .min(Comparator.comparingDouble(player -> feetOf(player).distanceSquared(feet)));
+  }
+
+  /**
+   * Stops and faces {@code player} while they talk. A walk in progress is dropped, and planned
+   * afresh from here once the conversation ends, so waiting never counts as being stuck.
+   */
+  private void attend(Live entry, PathFollower.At at, Player player) {
+    var walker = entry.walker;
+    if (walker != null && walker.moving()) {
+      parts.navigators().release(entry.npc.id());
+      entry.walker = null;
+    }
+    apply(entry, PathFollower.face(at, Mannequins.position(player.getEyeLocation())));
   }
 
   private boolean thinkingNow(NpcDefinition npc) {
