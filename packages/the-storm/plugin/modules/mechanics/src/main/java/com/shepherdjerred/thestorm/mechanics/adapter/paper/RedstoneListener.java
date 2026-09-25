@@ -16,8 +16,9 @@ import org.bukkit.event.block.BlockRedstoneEvent;
 /**
  * Redstone opens bridges, doors and gates when power arrives and closes them when it leaves. A sign
  * is powered by redstone beside it, or beside the block a wall sign hangs on. Redstone acts with
- * the land rights of the sign's creator, who must also be allowed to use the powering block, so
- * nobody can drive someone else's structure from outside their land.
+ * the land rights of the sign's creator, who must also be allowed to use the powering block, and
+ * the power must come from the sign's own land (the same town, region or wilderness), so nobody can
+ * drive someone else's structure from outside it.
  */
 final class RedstoneListener implements Listener {
 
@@ -99,9 +100,10 @@ final class RedstoneListener implements Listener {
     }
     var grid = new PaperGrid(block.getWorld());
     var mayUseSource =
-        kit.guard()
-            .check(owner.orElseThrow(), ProtectedAction.INTERACT, grid, PaperGrid.pos(source))
-            .isAllowed();
+        kit.guard().sameLand(grid, PaperGrid.pos(source), PaperGrid.pos(block))
+            && kit.guard()
+                .check(owner.orElseThrow(), ProtectedAction.INTERACT, grid, PaperGrid.pos(source))
+                .isAllowed();
     if (mayUseSource) {
       // Nobody to tell if it fails: the structure simply stays as it is.
       structures.toggle(

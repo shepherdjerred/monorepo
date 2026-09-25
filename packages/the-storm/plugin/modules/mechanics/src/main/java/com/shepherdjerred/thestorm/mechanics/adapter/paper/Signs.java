@@ -114,21 +114,19 @@ final class Signs {
     }
     var bound = require(data, material);
     var at = pos(require(data, anchor));
+    var linked = Optional.ofNullable(data.get(partner, PersistentDataType.STRING)).map(Signs::pos);
+    var keeps = data.getOrDefault(keeper, PersistentDataType.BOOLEAN, false);
     return switch (type) {
-      case SPAN ->
-          Optional.of(
-              new Binding.SpanEnd(
-                  bound,
-                  at,
-                  Optional.ofNullable(data.get(partner, PersistentDataType.STRING)).map(Signs::pos),
-                  data.getOrDefault(keeper, PersistentDataType.BOOLEAN, false)));
+      case SPAN -> Optional.of(new Binding.SpanEnd(bound, at, linked, keeps));
       case GATE ->
           Optional.of(
               new Binding.GateFrame(
                   new Gate(
                       bound,
                       at,
-                      Arrays.stream(require(data, tops).split(";")).map(Signs::pos).toList())));
+                      Arrays.stream(require(data, tops).split(";")).map(Signs::pos).toList()),
+                  linked,
+                  keeps));
       default -> throw new IllegalStateException("unknown sign binding: " + type);
     };
   }
@@ -147,6 +145,8 @@ final class Signs {
       }
       case Binding.GateFrame frame -> {
         data.set(kind, PersistentDataType.STRING, GATE);
+        frame.partner().ifPresent(pos -> data.set(partner, PersistentDataType.STRING, text(pos)));
+        data.set(keeper, PersistentDataType.BOOLEAN, frame.keeper());
         data.set(anchor, PersistentDataType.STRING, text(frame.gate().anchor()));
         data.set(
             tops,

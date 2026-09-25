@@ -40,6 +40,13 @@ final class Structures {
   private final InstantSource time;
   private final Cooldowns<Key> cooldowns;
 
+  /**
+   * Set while a plan is being applied. Placing blocks fires events other plugins (and redstone)
+   * react to; a toggle started from inside one would plan against a half-moved world, so it is
+   * refused.
+   */
+  private boolean applying;
+
   /** A structure, by the world and position of the sign that keeps its stock. */
   private record Key(UUID world, Pos keeper) {}
 
@@ -72,7 +79,9 @@ final class Structures {
   /** The world's signs, read from their persistent data. */
   private SignRecords records(PaperGrid grid) {
     return pos -> {
-      if (!grid.loaded(pos) || !(grid.block(pos).getState(false) instanceof Sign sign)) {
+      if (!grid.loaded(pos)
+          || !Signs.isSign(grid.block(pos).getType())
+          || !(grid.block(pos).getState(false) instanceof Sign sign)) {
         return Optional.empty();
       }
       var view = PaperGrid.view(grid.block(pos), PaperGrid.frontLines(sign));
@@ -117,6 +126,10 @@ final class Structures {
   /** A right-click: add the held blocks if they are the structure's, otherwise toggle it. */
   void click(Player player, Use use, UUID owner) {
     var feature = use.mechanism().feature();
+    if (applying) {
+      Replies.error(player, feature, "It is already moving.");
+      return;
+    }
     var held = player.getInventory().getItemInMainHand();
     var bound = binder.resolve(use.site(records(use.grid()))).mapError(Structures::explain);
     var outcome =
@@ -142,6 +155,9 @@ final class Structures {
 
   private Result<StructurePlan, Component> toggle(
       UUID owner, Use use, StructureBinder.Bound bound, Target target) {
+    if (applying) {
+      return Result.err(Component.text("It is already moving."));
+    }
     var grid = use.grid();
     var keeper = sign(grid, bound.keeper());
     var planned =
@@ -158,10 +174,17 @@ final class Structures {
     if (!cooldowns.tryStart(new Key(grid.world().getUID(), bound.keeper()), time.instant())) {
       return Result.err(Component.text("It is still moving; try again in a moment."));
     }
-    // The stock is stored before any block moves, so even an unexpected pop cannot duplicate it.
+    // Every change is checked before anything happens, then the stock is stored before any block
+    // moves, and placing cannot fail: an unexpected pop or event can never duplicate a block.
+    var placement = Placer.check(grid, bound.structure(), plan.changes());
     kit.signs().setStock(keeper, plan.stock());
     update(keeper);
-    Placer.apply(grid, bound.structure(), plan.changes());
+    applying = true;
+    try {
+      placement.apply();
+    } finally {
+      applying = false;
+    }
     return Result.ok(plan);
   }
 

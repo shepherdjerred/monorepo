@@ -27,6 +27,11 @@ final class Guard {
     return protection.check(player, action, grid.location(pos));
   }
 
+  /** Whether {@code a} and {@code b} lie on land with the same owner. */
+  boolean sameLand(PaperGrid grid, Pos a, Pos b) {
+    return protection.sameLand(grid.location(a), grid.location(b));
+  }
+
   /**
    * Whether {@code player} may both break and build at every one of {@code cells}. The first
    * refusal wins.
