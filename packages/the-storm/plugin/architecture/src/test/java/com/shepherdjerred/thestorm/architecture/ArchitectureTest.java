@@ -47,6 +47,17 @@ final class ArchitectureTest {
           .because("domain logic must be testable without a server, database or network");
 
   @ArchTest
+  static final ArchRule DOMAIN_STAYS_INSIDE_ITS_MODULE =
+      classes()
+          .that()
+          .resideInAPackage(BASE + ".*.domain..")
+          .should(dependOnlyOnJdkCoreResultAndOwnModule())
+          .allowEmptyShould(true)
+          .because(
+              "a domain may use the JDK, core.result and its own module's domain and app value"
+                  + " types, nothing else");
+
+  @ArchTest
   static final ArchRule PAPER_ADAPTERS_NEVER_BLOCK =
       noClasses()
           .that()
@@ -104,6 +115,31 @@ final class ArchitectureTest {
             continue;
           }
           if (!targetPackage.startsWith(BASE + "." + target.get() + ".app")) {
+            events.add(SimpleConditionEvent.violated(dependency, dependency.getDescription()));
+          }
+        }
+      }
+    };
+  }
+
+  private static ArchCondition<JavaClass> dependOnlyOnJdkCoreResultAndOwnModule() {
+    return new ArchCondition<>("depend only on the JDK, core.result and its own module") {
+      @Override
+      public void check(JavaClass item, ConditionEvents events) {
+        var own = moduleOf(item.getPackageName()).orElseThrow();
+        for (var dependency : item.getDirectDependenciesFromSelf()) {
+          var target = dependency.getTargetClass();
+          if (target.isPrimitive() || target.isArray()) {
+            continue;
+          }
+          var targetPackage = target.getPackageName();
+          var allowed =
+              targetPackage.startsWith("java.")
+                  || targetPackage.startsWith("org.jspecify.")
+                  || targetPackage.startsWith(BASE + ".core.result")
+                  || targetPackage.startsWith(BASE + "." + own + ".domain")
+                  || targetPackage.startsWith(BASE + "." + own + ".app");
+          if (!allowed) {
             events.add(SimpleConditionEvent.violated(dependency, dependency.getDescription()));
           }
         }

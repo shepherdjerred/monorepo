@@ -42,12 +42,12 @@ the plugin. The repository owns that file; the plugin never writes it.
 
 Inside a module, packages are layered:
 
-| Package         | May use                                                                               |
-| --------------- | ------------------------------------------------------------------------------------- |
-| `domain`        | Only the JDK and core's `Result`. No Paper, Adventure, jOOQ, Jackson, JDBC or network |
-| `app`           | Use cases and the ports other modules may call                                        |
-| `adapter.paper` | Listeners and commands. Main thread only, so no JDBC, jOOQ, file or network I/O       |
-| `adapter.db`    | jOOQ repositories over the module's own tables                                        |
+| Package         | May use                                                                                                                                           |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `domain`        | The JDK, core's `Result`, and its own module's `domain` and `app` value types. No Paper, Adventure, jOOQ, Jackson, JDBC, network or other modules |
+| `app`           | Use cases and the ports other modules may call                                                                                                    |
+| `adapter.paper` | Listeners and commands. Main thread only, so no JDBC, jOOQ, file or network I/O                                                                   |
+| `adapter.db`    | jOOQ repositories over the module's own tables                                                                                                    |
 
 Modules reach each other only through the other module's `app` package, and
 schedule main-thread work only through `core.schedule.Scheduler`. ArchUnit

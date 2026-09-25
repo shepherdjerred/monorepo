@@ -5,7 +5,8 @@ layout, layering table and commands.
 
 - One plugin, many modules. New gameplay goes in `plugin/modules/<name>/`, never
   in `dist` or `core`. `core` holds only what several modules share.
-- Keep `domain` packages pure (JDK + `core.result`). ArchUnit fails the build
+- Keep `domain` packages pure (JDK, `core.result`, and the module's own
+  `domain`/`app` value types). ArchUnit fails the build
   otherwise; do not weaken or narrow those rules to pass.
 - Never block the main thread: no JDBC, jOOQ, file or network I/O in
   `adapter.paper`, and never `join()`/`get()` a database future there. Complete
