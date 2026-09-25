@@ -1,5 +1,6 @@
 import type { MessageCreateOptions } from "discord.js";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import { MalformedAnnouncementIntentError } from "#src/temporal/v2/notification/announcement-codecs.ts";
 import { buildDareSummaryNotificationMessageV2 } from "#src/temporal/v2/notification/dare-summary-notification.ts";
 import {
   readAttestedPrematchArtifactV2,
@@ -42,6 +43,14 @@ export async function buildAttestedMessageV2(
       return await buildSettlementNotificationMessageV2(record);
     case "dare-summary":
       return buildDareSummaryNotificationMessageV2(record);
+    case "hall-record-break":
+      // The kind exists so its rows are representable; its delivery arm lands
+      // separately and nothing mints the kind before then. Reaching here is a
+      // producer ahead of its consumer, parked as undeliverable content.
+      throw new MalformedAnnouncementIntentError({
+        intentKey: record.intent.key,
+        detail: "this build has no delivery arm for hall-record-break intents",
+      });
     case "postmatch":
       return buildPostmatchNotificationMessageV2(
         riotMatchId,

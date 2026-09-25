@@ -1,7 +1,9 @@
 import { describe, expect, test } from "vitest";
 import {
+  ANNOUNCEMENT_INTENT_KINDS,
   NotificationAttemptNonceSchema,
   NotificationFailureSchema,
+  NotificationIntentKindSchema,
   NotificationIntentSchema,
   NotificationIntentStateSchema,
   NotificationSuppressionReasonSchema,
@@ -293,7 +295,7 @@ describe("announcement kinds", () => {
     data: {},
   };
 
-  test.each(["settlement", "dare-summary"] as const)(
+  test.each(["settlement", "dare-summary", "hall-record-break"] as const)(
     "a %s intent must carry an announcement",
     (kind) => {
       expect(() =>
@@ -311,6 +313,15 @@ describe("announcement kinds", () => {
       ).toEqual(envelope);
     },
   );
+
+  test("the announcement kinds are exactly the kinds that carry a payload", () => {
+    expect([...ANNOUNCEMENT_INTENT_KINDS].sort()).toEqual([
+      "dare-summary",
+      "hall-record-break",
+      "settlement",
+    ]);
+    expect(NotificationIntentKindSchema.options).toContain("hall-record-break");
+  });
 
   test.each(["postmatch", "prematch"] as const)(
     "a %s intent must not carry one",

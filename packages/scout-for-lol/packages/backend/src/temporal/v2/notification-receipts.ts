@@ -48,6 +48,9 @@ export const SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KINDS = {
   "dare-summary": ReceiptKindSchema.parse(
     "v2-notification-render-dare-summary",
   ),
+  "hall-record-break": ReceiptKindSchema.parse(
+    "v2-notification-render-hall-record-break",
+  ),
 } as const satisfies Record<NotificationIntentKind, ReceiptKind>;
 
 /**

@@ -2857,7 +2857,7 @@ model MatchProcessingReceipt {
 model MatchNotificationIntent {
   intentKey       String  @id
   riotMatchId     String
-  kind            String // NotificationIntentKind: postmatch | prematch
+  kind            String // NotificationIntentKind: postmatch | prematch | settlement | dare-summary | hall-record-break
   originKind      String // NotificationIntentOrigin kind: live | recovery
   recoveryBatchId String? // recovery origin only: the batch whose policy governs delivery
   targetKind      String // NotificationTarget kind: channel | dm
