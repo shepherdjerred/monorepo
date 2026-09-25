@@ -2,6 +2,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
+import { asRecord, toStringRecord } from "../../../scripts/lib/json.ts";
 import {
   checkedOutSourceCommand,
   ciImagePromotionFiles,
@@ -16,11 +17,55 @@ import {
   playwrightPackageVersion,
   playwrightVersionFromDockerfile,
   PLAYWRIGHT_PACKAGE_TARGETS,
+  PLAYWRIGHT_VERSION_FILE,
   rewritePlaywrightPackage,
   serializedState,
   stateFromCandidate,
   verifyDigestFile,
 } from "./update-ci-image-pin-core.ts";
+
+const PLAYWRIGHT_CLIENTS = new Set([
+  "playwright",
+  "playwright-core",
+  "@playwright/test",
+]);
+const PINNED_SECTIONS = [
+  "dependencies",
+  "devDependencies",
+  "optionalDependencies",
+] as const;
+
+/** Every exact-semver Playwright client pin across the root workspaces. */
+async function exactPlaywrightPins(
+  repoRoot: URL,
+): Promise<{ key: string; version: string }[]> {
+  const workspaces = asRecord(
+    await Bun.file(new URL("package.json", repoRoot)).json(),
+  )?.["workspaces"];
+  if (!Array.isArray(workspaces)) {
+    throw new TypeError("root package.json has no workspaces array");
+  }
+  const pins: { key: string; version: string }[] = [];
+  for (const workspace of workspaces) {
+    const manifestPath = `${String(workspace)}/package.json`;
+    const manifest = asRecord(
+      await Bun.file(new URL(manifestPath, repoRoot)).json(),
+    );
+    if (manifest === null) {
+      throw new TypeError(`${manifestPath} is not a JSON object`);
+    }
+    for (const section of PINNED_SECTIONS) {
+      for (const [name, version] of Object.entries(
+        toStringRecord(manifest[section]),
+      )) {
+        if (PLAYWRIGHT_CLIENTS.has(name) && /^\d+\.\d+\.\d+$/.test(version)) {
+          pins.push({ key: `${manifestPath}#${section}#${name}`, version });
+        }
+      }
+    }
+  }
+  return pins;
+}
 
 const digest = (character: string): string => `sha256:${character.repeat(64)}`;
 const commit = (character: string): string => character.repeat(40);
@@ -350,6 +395,26 @@ describe("Playwright candidate promotion", () => {
     ).toThrow("missing dependencies.playwright");
   });
 
+  test("covers every exact Playwright pin in the workspace at the image version", async () => {
+    // A hand-maintained target list drifted twice (v1.62.1, v1.63.0), each
+    // time leaving a package on the old client and splitting `Page` types.
+    // Derive the expectation from the workspace itself so a new pin fails here.
+    const repoRoot = new URL("../../../", import.meta.url);
+    const activeVersion = parsePlaywrightVersionFile(
+      await Bun.file(new URL(PLAYWRIGHT_VERSION_FILE, repoRoot)).text(),
+    );
+    const pins = await exactPlaywrightPins(repoRoot);
+    const registered = PLAYWRIGHT_PACKAGE_TARGETS.map(
+      (target) => `${target.path}#${target.section}#${target.dependency}`,
+    );
+    expect(pins.map((pin) => pin.key).toSorted()).toEqual(
+      registered.toSorted(),
+    );
+    for (const pin of pins) {
+      expect(`${pin.key}@${pin.version}`).toBe(`${pin.key}@${activeVersion}`);
+    }
+  });
+
   test("stages the complete atomic package and image promotion", () => {
     expect(ciImagePromotionFiles("ci-playwright")).toEqual([
       ".buildkite/ci-playwright/DIGEST",
@@ -364,6 +429,8 @@ describe("Playwright candidate promotion", () => {
       "packages/scout-for-lol/packages/design-audit/package.json",
       "packages/scout-for-lol/packages/design-system/package.json",
       "packages/alert-dashboard/package.json",
+      "packages/scout-for-lol/packages/app/package.json",
+      "packages/scout-for-lol/packages/activity/package.json",
       "bun.lock",
     ]);
     expect(ciImagePromotionFiles("ci-base")).toEqual([
