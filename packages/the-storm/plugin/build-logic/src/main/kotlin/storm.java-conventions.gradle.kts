@@ -84,6 +84,8 @@ tasks.test {
   useJUnitPlatform()
   // sqlite-jdbc loads a native library; JDK 25 warns unless native access is granted.
   jvmArgs("--enable-native-access=ALL-UNNAMED")
+  maxHeapSize = "512m"
+  maxParallelForks = 1
   finalizedBy(noSkippedTests)
 }
 
