@@ -313,7 +313,15 @@ exactly that claim. A run that finds the claim held does nothing: V2 reports
 overlapping handoffs (the scheduled run and an operator's), or a handoff and a
 V2 run, cannot both own a pass. If the v1 child fails, the Workflow closes the
 claim as failed (`releasePostMatchPollClaimV2`) rather than leaving it until
-the staleness bound. v1 runs the gate did not start carry no `pollOwner` and
+the staleness bound. While the child runs, the Workflow renews the claim
+every 5 minutes (`renewPostMatchPollClaimV2`, stored in
+`BotState.pollClaimRenewedAt`). A claim goes stale only when both its start
+and its last renewal are past the 30-minute bound, so a pass that ingests a
+long backlog keeps its claim and a terminated one still frees it. A delegated
+discovery that cannot run throws instead of returning `skipped`, so v1's
+maintenance never closes a claim nothing used. This can happen even while the
+claim is held, because the worker-local polling flag is taken before the
+claim is checked. v1 runs the gate did not start carry no `pollOwner` and
 keep v1's original open and close. Match children V2 started keep running
 under `ABANDON`, and their observation owner still decides who applies each
 match. The gate is behind the `scout-v2-postmatch-ownership` patch, so a

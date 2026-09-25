@@ -1,6 +1,6 @@
 import { afterEach, beforeEach } from "vitest";
 import { WorkflowFailedError, type Client } from "@temporalio/client";
-import { ApplicationFailure } from "@temporalio/common";
+import { ApplicationFailure, type Duration } from "@temporalio/common";
 import { TestWorkflowEnvironment } from "@temporalio/testing";
 import { Worker } from "@temporalio/worker";
 import type { ScoutPostMatchDiscoveryOwnerV2Result } from "#src/activity-contracts-v2.ts";
@@ -20,6 +20,11 @@ import { createScoutWorkerPool } from "./worker-pool.test-fixtures.ts";
 export type ScoutV2WorkflowHarness = {
   /** The client for the environment of the test currently running. */
   client: () => Client;
+  /**
+   * Advance the time-skipping server's clock, for a test about what a
+   * Workflow does while something it waits on is still running.
+   */
+  sleep: (duration: Duration) => Promise<void>;
   /**
    * One Workflow worker and one realtime Activity worker, on the queues
    * `scoutTaskQueues("dev")` names.
@@ -73,6 +78,9 @@ export function useScoutV2WorkflowHarness(): ScoutV2WorkflowHarness {
 
   return {
     client: () => current().client,
+    sleep: async (duration) => {
+      await current().sleep(duration);
+    },
     startWorkers: async (activities) => {
       const live = current();
       await pool.start(

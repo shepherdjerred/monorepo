@@ -443,7 +443,23 @@ export type ScoutPostMatchPollReleaseV2Result = z.infer<
   typeof ScoutPostMatchPollReleaseV2ResultSchema
 >;
 
-/** The claim a delegated v1 pass ran under, released when that pass fails. */
+/**
+ * Whether renewing a delegated v1 pass's poll claim kept it live.
+ *
+ * `not-held` means the claim was already closed or taken over, so there is
+ * nothing left to keep live.
+ */
+export const ScoutPostMatchPollRenewalV2ResultSchema = z.strictObject({
+  outcome: z.enum(["renewed", "not-held"]),
+});
+export type ScoutPostMatchPollRenewalV2Result = z.infer<
+  typeof ScoutPostMatchPollRenewalV2ResultSchema
+>;
+
+/**
+ * The claim a delegated v1 pass runs under: renewed while the pass runs, and
+ * released when it fails.
+ */
 export const ScoutPostMatchPollReleaseV2InputSchema = z.strictObject({
   stage: ScoutStageSchema,
   pollOwner: IsoInstantSchema,

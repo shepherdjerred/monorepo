@@ -31,6 +31,7 @@ const POLL_OWNER = IsoInstantSchema.parse("2026-09-23T07:59:00.000Z");
 const HANDOFF_CLAIM = IsoInstantSchema.parse("2026-09-23T08:00:00.000Z");
 const SOURCE_PUUID = LeaguePuuidSchema.parse("s".repeat(78));
 const LEGACY_MATCHES = ["NA1_100", "NA1_101"];
+const SLOW_BACKLOG = ["NA1_200", "NA1_201", "NA1_202"];
 
 const DELEGATE: ScoutPostMatchDiscoveryOwnerV2Result = {
   decision: "delegate-v1",
@@ -45,7 +46,10 @@ const DELEGATE: ScoutPostMatchDiscoveryOwnerV2Result = {
 function bothPipelines(
   owner: ScoutPostMatchDiscoveryOwnerV2Result,
   calls: string[],
-  options: { failLegacyIngest?: boolean } = {},
+  options: {
+    failLegacyIngest?: boolean;
+    legacyMatches?: readonly string[];
+  } = {},
 ) {
   const store = createScoutV2MatchStore();
   return {
@@ -53,6 +57,10 @@ function bothPipelines(
     resolvePostMatchDiscoveryOwnerV2: () => {
       calls.push("resolvePostMatchDiscoveryOwnerV2");
       return owner;
+    },
+    renewPostMatchPollClaimV2: (input: { pollOwner: string }) => {
+      calls.push(`renewPostMatchPollClaimV2:${input.pollOwner}`);
+      return { outcome: "renewed" };
     },
     releasePostMatchPollClaimV2: (input: { pollOwner: string }) => {
       calls.push(`releasePostMatchPollClaimV2:${input.pollOwner}`);
@@ -78,7 +86,7 @@ function bothPipelines(
       calls.push(`discoverPostMatchIds:${input.pollOwner ?? "unclaimed"}`);
       return {
         evidenceComplete: true,
-        matches: LEGACY_MATCHES.map((matchId) => ({
+        matches: (options.legacyMatches ?? LEGACY_MATCHES).map((matchId) => ({
           matchId,
           sourcePuuid: `puuid-${matchId}`,
           region: "AMERICA_NORTH",
@@ -191,6 +199,46 @@ describe("post-match discovery ownership", () => {
     expect(settled).toBeInstanceOf(Error);
     expect(calls.at(-1)).toBe(`releasePostMatchPollClaimV2:${HANDOFF_CLAIM}`);
   }, 90_000);
+
+  test("renews the handoff's claim for as long as a long v1 pass runs", async () => {
+    // A pass ingesting a backlog can outlive the 30-minute staleness bound.
+    // The router renews the claim every 5 minutes of Workflow time while its
+    // child is open, so no other run can take the claim over mid-pass. Each
+    // match's first ingest attempt asks for a 270-second retry delay, so three
+    // matches keep the pass open for 13.5 minutes of skipped Workflow time.
+    const calls: string[] = [];
+    const attempted = new Set<string>();
+    await harness.startWorkers({
+      ...bothPipelines(DELEGATE, calls, { legacyMatches: SLOW_BACKLOG }),
+      ingestMatch: (input: { matchId: string }) => {
+        calls.push(`ingestMatch:${input.matchId}`);
+        if (attempted.has(input.matchId)) return;
+        attempted.add(input.matchId);
+        throw ApplicationFailure.create({
+          message: `slow ingest for ${input.matchId}`,
+          type: "SlowIngest",
+          nextRetryDelay: "270 seconds",
+        });
+      },
+    });
+
+    const result = await discover("ownership-v1-long");
+
+    const renewal = `renewPostMatchPollClaimV2:${HANDOFF_CLAIM}`;
+    expect(calls.filter((call) => call === renewal).length).toBe(2);
+    // Renewed while the pass was still ingesting, and never released: the
+    // pass completed and its own maintenance closed the claim.
+    expect(calls.indexOf(renewal)).toBeLessThan(
+      calls.lastIndexOf(`ingestMatch:${SLOW_BACKLOG[2] ?? ""}`),
+    );
+    expect(calls.at(-1)).toBe(`runPostMatchMaintenance:${HANDOFF_CLAIM}`);
+    expect(
+      calls.some((call) => call.startsWith("releasePostMatchPollClaimV2")),
+    ).toBe(false);
+    expect(result).toMatchObject({
+      data: { status: "completed", delegatedTo: { childrenStarted: 3 } },
+    });
+  }, 120_000);
 
   test("does nothing when v1 owns the pass but another run holds the claim", async () => {
     const calls: string[] = [];

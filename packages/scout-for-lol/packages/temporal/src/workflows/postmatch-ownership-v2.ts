@@ -1,4 +1,9 @@
-import { executeChild, patched, workflowInfo } from "@temporalio/workflow";
+import {
+  condition,
+  patched,
+  startChild,
+  workflowInfo,
+} from "@temporalio/workflow";
 import type { IsoInstant } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   scoutPostMatchDiscoveryV2ResultCodec,
@@ -21,6 +26,15 @@ import { scoutPostMatchDiscoveryWorkflow } from "./realtime.ts";
  */
 export const SCOUT_V2_POSTMATCH_OWNERSHIP_PATCH =
   "scout-v2-postmatch-ownership";
+
+/**
+ * How often the router renews its claim while the v1 child runs.
+ *
+ * Well inside the 30-minute staleness bound (`POST_MATCH_POLL_STALE_AFTER_MS`
+ * in the backend), so a few failed or delayed renewals still leave the claim
+ * live.
+ */
+export const POSTMATCH_CLAIM_RENEWAL_INTERVAL = "5 minutes";
 
 /** The v1 child's ID, derived from this run so two runs can never collide. */
 export function legacyPostMatchDiscoveryWorkflowId(parentId: string): string {
@@ -97,7 +111,7 @@ async function runDelegatedV1Pass(
   );
   let legacy: Awaited<ReturnType<typeof scoutPostMatchDiscoveryWorkflow>>;
   try {
-    legacy = await executeChild(scoutPostMatchDiscoveryWorkflow, {
+    const child = await startChild(scoutPostMatchDiscoveryWorkflow, {
       workflowId,
       workflowIdReusePolicy: "ALLOW_DUPLICATE_FAILED_ONLY",
       taskQueue: scoutTaskQueues(input.stage).workflow,
@@ -106,6 +120,7 @@ async function runDelegatedV1Pass(
       parentClosePolicy: "TERMINATE",
       args: [{ stage: input.stage, pollOwner }],
     });
+    legacy = await awaitWhileRenewing(input, pollOwner, child.result());
   } catch (error) {
     setWorkflowPhase(
       "**Phase:** v1 post-match discovery failed; releasing its poll claim",
@@ -127,4 +142,52 @@ async function runDelegatedV1Pass(
       childrenStarted: legacy.childrenStarted,
     },
   });
+}
+
+/**
+ * Wait for the v1 child, renewing the handoff's claim until it settles.
+ *
+ * The claim would otherwise go stale 30 minutes after it was taken, and a
+ * pass ingesting a long backlog can outlive that. Another run could then take
+ * the claim over and discover while this pass is still ingesting. Renewing
+ * from here, where the pass's liveness is known, keeps the claim live exactly
+ * as long as its owner is. A terminated router stops renewing, so the bound
+ * still frees a claim nothing is using.
+ */
+async function awaitWhileRenewing<T>(
+  input: ScoutPostMatchDiscoveryV2Input,
+  pollOwner: IsoInstant,
+  result: Promise<T>,
+): Promise<T> {
+  let outcome:
+    | { readonly ok: true; readonly value: T }
+    | { readonly ok: false; readonly error: unknown }
+    | undefined;
+  // Records the child's outcome instead of rejecting, so a child that fails
+  // while the loop is waiting is never an unhandled rejection.
+  const settle = async (): Promise<void> => {
+    try {
+      outcome = { ok: true, value: await result };
+    } catch (error) {
+      outcome = { ok: false, error };
+    }
+  };
+  const settling = settle();
+  while (
+    !(await condition(
+      () => outcome !== undefined,
+      POSTMATCH_CLAIM_RENEWAL_INTERVAL,
+    ))
+  ) {
+    await realtimeV2Activities(input.stage).renewPostMatchPollClaimV2({
+      stage: input.stage,
+      pollOwner,
+    });
+  }
+  await settling;
+  if (outcome === undefined) {
+    throw new Error("The v1 child settled without recording an outcome");
+  }
+  if (outcome.ok) return outcome.value;
+  throw outcome.error;
 }

@@ -1,13 +1,17 @@
 import type {
   ScoutPostMatchDiscoveryOwnerV2Result,
   ScoutPostMatchPollReleaseV2Result,
+  ScoutPostMatchPollRenewalV2Result,
 } from "@scout-for-lol/temporal/activity-contracts-v2";
+import type { PostMatchDiscoveryResult } from "@scout-for-lol/temporal/contracts";
 import { IsoInstantSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
+import { discoverPostMatchIntents } from "#src/league/tasks/postmatch/match-history-polling.ts";
 import {
   claimPostMatchPoll,
   markPostMatchPollFailed,
   PostMatchPollOwnershipError,
+  renewPostMatchPollClaim,
 } from "#src/league/tasks/recovery/app-state.ts";
 
 /**
@@ -73,4 +77,70 @@ export async function releasePostMatchPollClaimV2(input: {
     }
     throw error;
   }
+}
+
+/**
+ * A delegated v1 discovery pass that could not run.
+ *
+ * Thrown rather than returned as `skipped`, because v1's Workflow runs
+ * maintenance after every discovery and would then close the handoff's claim
+ * as a completed pass that discovered nothing. A plain Error is retryable, so
+ * the Activity retries under the same claim. If it cannot run within its
+ * retries, the v1 child fails and the router releases the claim.
+ */
+export class DelegatedPostMatchDiscoverySkippedError extends Error {
+  constructor(pollOwner: Date) {
+    super(
+      `Delegated v1 post-match discovery under the claim taken at ${pollOwner.toISOString()} could not run: another pass holds this worker's polling flag, or the claim is no longer this pass's`,
+    );
+    this.name = "DelegatedPostMatchDiscoverySkippedError";
+  }
+}
+
+/**
+ * Discover for a v1 pass the V2 ownership gate delegated, under its claim.
+ *
+ * The claim is re-presented rather than opened over, which also re-asserts it
+ * without resetting its renewal. `skipped` can still happen while the claim is
+ * held: the worker-local polling flag is taken before the durable claim is
+ * checked, so a V2 discovery that is about to be refused, running on the same
+ * worker at the same moment, makes this pass skip. It also happens if the
+ * claim was taken over. Either way the pass throws; see
+ * {@link DelegatedPostMatchDiscoverySkippedError}.
+ */
+export async function discoverDelegatedPostMatchIntents(input: {
+  pollOwner: Date;
+}): Promise<PostMatchDiscoveryResult> {
+  const discovery = await discoverPostMatchIntents({
+    ownership: "durable",
+    startedAt: input.pollOwner,
+  });
+  if (discovery.outcome === "skipped") {
+    throw new DelegatedPostMatchDiscoverySkippedError(input.pollOwner);
+  }
+  return {
+    matches: discovery.matches,
+    evidenceComplete: discovery.evidenceComplete,
+    ...(discovery.evidenceWatermark === undefined
+      ? {}
+      : { evidenceWatermark: discovery.evidenceWatermark }),
+  };
+}
+
+/**
+ * Keep a delegated v1 pass's claim live while the pass runs.
+ *
+ * The router calls this on a timer well inside the staleness bound, for as
+ * long as its v1 child is open, so a pass that ingests a long backlog cannot
+ * have its claim taken over by the next tick.
+ */
+export async function renewPostMatchPollClaimV2(input: {
+  pollOwner: Date;
+  renewedAt: Date;
+}): Promise<ScoutPostMatchPollRenewalV2Result> {
+  const renewed = await renewPostMatchPollClaim({
+    owner: { startedAt: input.pollOwner },
+    renewedAt: input.renewedAt,
+  });
+  return { outcome: renewed ? "renewed" : "not-held" };
 }

@@ -39,6 +39,18 @@ export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
           });
         },
       ),
+    renewPostMatchPollClaimV2: async (input) =>
+      await heartbeatWhile(
+        { phase: "renewing-post-match-claim-v2" },
+        async () => {
+          const { renewPostMatchPollClaimV2 } =
+            await import("#src/temporal/v2/postmatch-ownership.ts");
+          return await renewPostMatchPollClaimV2({
+            pollOwner: new Date(input.pollOwner),
+            renewedAt: new Date(),
+          });
+        },
+      ),
     releasePostMatchPollClaimV2: async (input) =>
       await heartbeatWhile(
         { phase: "releasing-post-match-claim-v2" },

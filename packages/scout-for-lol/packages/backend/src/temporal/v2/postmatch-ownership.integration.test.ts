@@ -23,8 +23,15 @@ const {
   markPostMatchPollCompleted,
   POST_MATCH_POLL_STALE_AFTER_MS,
 } = await import("#src/league/tasks/recovery/app-state.ts");
-const { releasePostMatchPollClaimV2, resolvePostMatchDiscoveryOwnerV2 } =
-  await import("#src/temporal/v2/postmatch-ownership.ts");
+const {
+  DelegatedPostMatchDiscoverySkippedError,
+  discoverDelegatedPostMatchIntents,
+  releasePostMatchPollClaimV2,
+  renewPostMatchPollClaimV2,
+  resolvePostMatchDiscoveryOwnerV2,
+} = await import("#src/temporal/v2/postmatch-ownership.ts");
+const { beginPollingRun, endPollingRun } =
+  await import("#src/league/tasks/postmatch/poll-ownership.ts");
 
 const FLAG = "scout_v2_postmatch_ownership_enabled";
 const BOT_STATE_ID = 1;
@@ -185,5 +192,55 @@ describe("releasePostMatchPollClaimV2", () => {
     const standing = await pollRow();
     expect(standing?.pollStatus).toBe("running");
     expect(standing?.pollStartedAt).toEqual(OPERATOR);
+  });
+});
+
+describe("discoverDelegatedPostMatchIntents", () => {
+  test("throws instead of skipping while this worker's polling flag is held", async () => {
+    // The claim is the handoff's, but a V2 discovery on the same worker holds
+    // the in-process flag for the moment it takes to be refused. A `skipped`
+    // answer would send v1 into maintenance, which would close the unused
+    // claim as a completed pass.
+    await claimPostMatchPoll({ startedAt: SCHEDULED });
+    expect(beginPollingRun(new Date())).toBe(true);
+    try {
+      await expect(
+        discoverDelegatedPostMatchIntents({ pollOwner: SCHEDULED }),
+      ).rejects.toBeInstanceOf(DelegatedPostMatchDiscoverySkippedError);
+    } finally {
+      endPollingRun();
+    }
+    const standing = await pollRow();
+    expect(standing?.pollStatus).toBe("running");
+    expect(standing?.pollStartedAt).toEqual(SCHEDULED);
+  });
+
+  test("throws instead of skipping when another run holds the claim", async () => {
+    await claimPostMatchPoll({ startedAt: OPERATOR });
+
+    await expect(
+      discoverDelegatedPostMatchIntents({ pollOwner: SCHEDULED }),
+    ).rejects.toBeInstanceOf(DelegatedPostMatchDiscoverySkippedError);
+    const standing = await pollRow();
+    expect(standing?.pollStartedAt).toEqual(OPERATOR);
+  });
+});
+
+describe("renewPostMatchPollClaimV2", () => {
+  test("renews the handoff's claim while it is held, and nothing after", async () => {
+    await claimPostMatchPoll({ startedAt: SCHEDULED });
+    await expect(
+      renewPostMatchPollClaimV2({ pollOwner: SCHEDULED, renewedAt: OPERATOR }),
+    ).resolves.toEqual({ outcome: "renewed" });
+    const renewed = await pollRow();
+    expect(renewed?.pollClaimRenewedAt).toEqual(OPERATOR);
+
+    await releasePostMatchPollClaimV2({
+      pollOwner: SCHEDULED,
+      releasedAt: OPERATOR,
+    });
+    await expect(
+      renewPostMatchPollClaimV2({ pollOwner: SCHEDULED, renewedAt: OPERATOR }),
+    ).resolves.toEqual({ outcome: "not-held" });
   });
 });
