@@ -61,6 +61,12 @@ Two independent gates say so, and they fail in different directions on purpose:
   image, and a branch cannot edit it into admitting itself. It is also the only
   gate in front of a cron pipeline, which Woodpecker's approval gate exempts.
 
+The repository is trusted for `volumes` and nothing else. Steps mount the
+shared CI caches as claims, which Woodpecker only allows a trusted repository;
+`network` and `security` stay untrusted, so no step can run privileged or on
+the host network. The trust is safe to grant only because every workflow comes
+from the extension, for an allowlisted account.
+
 A refusal is an error status, never `204`. To Woodpecker a `204` means "keep the
 configuration you already have", which is the branch's own committed YAML — the
 opposite of a refusal. For the same reason the server runs the extension in
