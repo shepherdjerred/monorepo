@@ -132,9 +132,9 @@ describe("CI reporting boundaries", () => {
           workspace.directory,
           excluded.path,
         );
-        // A documented exclusion must reference a real suite file so it cannot
-        // rot into a stale claim once the underlying test is renamed or removed.
-        expect(await Bun.file(suitePath).exists()).toBe(true);
+        // A documented exclusion must reference a real suite file or directory
+        // so it cannot rot into a stale claim once the test is renamed or removed.
+        expect(await Bun.file(suitePath).stat()).toBeDefined();
       }
     }
   });
@@ -741,6 +741,11 @@ describe("CI reporting manifest", () => {
           "scripts/helm/lint-helm.test.ts",
           "scripts/migration-smoke.test.ts",
           "scripts/velero-backups.test.ts",
+          "scripts/argocd/argocd-apply-safety.test.ts",
+          "scripts/argocd/argocd-auto-sync-policy.test.ts",
+          "scripts/argocd/argocd-child-sync-timeout.test.ts",
+          "scripts/argocd/argocd-release-result.test.ts",
+          "scripts/tofu/tofu-stack.test.ts",
         ],
       },
     ]);

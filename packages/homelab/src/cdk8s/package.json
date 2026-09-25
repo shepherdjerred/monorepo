@@ -49,6 +49,7 @@
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
+    "homelab": "workspace:*",
     "@temporalio/testing": "1.24.0",
     "@types/bun": "1.4.2",
     "@types/lodash": "^4.17.24",
