@@ -44,6 +44,16 @@ export const PLAYWRIGHT_PACKAGE_TARGETS = [
     section: "devDependencies",
     dependency: "@playwright/test",
   },
+  {
+    path: "packages/scout-for-lol/packages/app/package.json",
+    section: "devDependencies",
+    dependency: "@playwright/test",
+  },
+  {
+    path: "packages/scout-for-lol/packages/activity/package.json",
+    section: "devDependencies",
+    dependency: "@playwright/test",
+  },
 ] as const;
 
 export type CiImagePinState = {

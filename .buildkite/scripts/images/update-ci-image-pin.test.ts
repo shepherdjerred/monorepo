@@ -279,6 +279,54 @@ describe("CI image runtime promotion", () => {
   });
 });
 
+const PLAYWRIGHT_CLIENTS = ["playwright", "@playwright/test"] as const;
+const DEPENDENCY_SECTIONS = ["dependencies", "devDependencies"] as const;
+const EXACT_VERSION = /^\d+\.\d+\.\d+$/;
+
+function exactPlaywrightPins(
+  manifestPath: string,
+  manifest: unknown,
+): string[] {
+  if (typeof manifest !== "object" || manifest === null) return [];
+  return DEPENDENCY_SECTIONS.flatMap((section) => {
+    const deps: unknown = Reflect.get(manifest, section);
+    if (typeof deps !== "object" || deps === null) return [];
+    return PLAYWRIGHT_CLIENTS.filter((dependency) => {
+      const spec: unknown = Reflect.get(deps, dependency);
+      return typeof spec === "string" && EXACT_VERSION.test(spec);
+    }).map((dependency) => `${manifestPath}|${section}|${dependency}`);
+  });
+}
+
+describe("Playwright promotion coverage", () => {
+  // A hand-maintained list drifted twice (1.62.0 -> 1.62.1, then 1.62 ->
+  // 1.63): each unlisted exact pin was left behind by the image promotion and
+  // main failed typecheck on two incompatible playwright-core Page types.
+  // Derive the expectation from the tree so a new pin cannot be skipped.
+  test("registers every tracked manifest that pins a Playwright client exactly", async () => {
+    const repositoryRoot = path.resolve(import.meta.dirname, "../../..");
+    const tracked =
+      await Bun.$`git -C ${repositoryRoot} ls-files -- "*package.json"`.text();
+    const manifestPaths = tracked.split("\n").filter(Boolean);
+    const manifests = await Promise.all(
+      manifestPaths.map(async (manifestPath) => ({
+        manifestPath,
+        manifest: (await Bun.file(
+          path.join(repositoryRoot, manifestPath),
+        ).json()) as unknown,
+      })),
+    );
+    const exactPins = manifests.flatMap(({ manifestPath, manifest }) =>
+      exactPlaywrightPins(manifestPath, manifest),
+    );
+    expect(
+      PLAYWRIGHT_PACKAGE_TARGETS.map(
+        (target) => `${target.path}|${target.section}|${target.dependency}`,
+      ).sort(),
+    ).toEqual(exactPins.sort());
+  });
+});
+
 describe("Playwright candidate promotion", () => {
   const futureVersion = "1.63.0";
   const futureDockerfile = [
@@ -364,6 +412,8 @@ describe("Playwright candidate promotion", () => {
       "packages/scout-for-lol/packages/design-audit/package.json",
       "packages/scout-for-lol/packages/design-system/package.json",
       "packages/alert-dashboard/package.json",
+      "packages/scout-for-lol/packages/app/package.json",
+      "packages/scout-for-lol/packages/activity/package.json",
       "bun.lock",
     ]);
     expect(ciImagePromotionFiles("ci-base")).toEqual([
