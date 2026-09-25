@@ -75,6 +75,15 @@ public final class PathFollower {
     return depart(intent, 0, at, now).after(release);
   }
 
+  /**
+   * Turns an NPC standing at {@code at} to face eyes at {@code listener}, such as a player talking
+   * to it; empty when it already does.
+   */
+  public static List<Move> face(At at, Vec3 listener) {
+    var wanted = Rotation.looking(at.position().plus(new Vec3(0, EYE_HEIGHT, 0)), listener);
+    return wanted.differenceTo(at.facing()) < MIN_TURN ? List.of() : List.of(new Move.Face(wanted));
+  }
+
   /** Advances {@code walker} by one tick. */
   public Tick tick(Walker walker, Observation seen) {
     return switch (walker.phase()) {
