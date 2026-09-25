@@ -213,3 +213,68 @@ describe("recordClientMatchTerminalV2", () => {
     );
   });
 });
+
+describe("the Riot late-arrival terminal repair migration", () => {
+  const MIGRATION = `${import.meta.dir}/../../../prisma/migrations/20260925060000_riot_late_arrival_terminal_repair/migration.sql`;
+  const IN_WINDOW = IsoInstantSchema.parse("2026-09-25T05:54:13.076Z");
+  const BEFORE_WINDOW = IsoInstantSchema.parse("2026-09-25T05:52:59.999Z");
+
+  async function seedTerminal(
+    matchId: RiotMatchId,
+    recordedAt: typeof IN_WINDOW,
+  ): Promise<void> {
+    expect(
+      await recordReceipt(
+        prisma,
+        buildMatchReceipt({
+          matchId,
+          kind: SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
+          scope: { kind: "global" },
+          recordedAt,
+          evidence: scoutV2ClientMatchTerminalEvidenceCodec.serialize({
+            riotMatchId: matchId,
+          }),
+        }),
+      ),
+    ).toEqual({ outcome: "applied" });
+  }
+
+  async function applyRepair(): Promise<number> {
+    return await prisma.$executeRawUnsafe(await Bun.file(MIGRATION).text());
+  }
+
+  test("releases exactly the refused Riot matches and is idempotent", async () => {
+    const refused = RiotMatchIdSchema.parse("BR1_3285962389");
+    const observedTerminal = RiotMatchIdSchema.parse("NA1_8211");
+    const olderTerminal = RiotMatchIdSchema.parse("NA1_8212");
+    await seedTerminal(refused, IN_WINDOW);
+    // An unrelated receipt family on the refused match stays standing.
+    await seedForeignStageReceipt(refused);
+    // A terminal behind a committed observation came from a match Workflow's
+    // own failure, not from the pre-effect refusal.
+    await seedObservation(observedTerminal);
+    await seedTerminal(observedTerminal, IN_WINDOW);
+    await seedTerminal(olderTerminal, BEFORE_WINDOW);
+    await expect(
+      readMatchPipelineStateV2({ riotMatchId: refused }),
+    ).resolves.toEqual({ kind: "terminal" });
+
+    expect(await applyRepair()).toBe(1);
+
+    // The resume read no longer blocks the next discovery.
+    await expect(
+      readMatchPipelineStateV2({ riotMatchId: refused }),
+    ).resolves.toEqual({ kind: "absent" });
+    expect(await kindsOf(refused)).toEqual([
+      SCOUT_V2_MATCH_RECEIPT_KINDS.settlement,
+    ]);
+    expect(await kindsOf(observedTerminal)).toContain(
+      SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
+    );
+    await expect(
+      readMatchPipelineStateV2({ riotMatchId: olderTerminal }),
+    ).resolves.toEqual({ kind: "terminal" });
+
+    expect(await applyRepair()).toBe(0);
+  });
+});
