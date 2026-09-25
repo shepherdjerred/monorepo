@@ -19,11 +19,12 @@ import { z } from "zod";
  */
 
 /**
- * One final-inventory slot's item id; 0 is an empty slot. Defaulted so a row
- * staged before the slots existed still parses — the schema fingerprint
- * rebuilds every lake file with them, so no query reads that default.
+ * A loadout id: an item slot (0 is empty), a summoner spell, or a rune.
+ * Defaulted so a row staged before these columns existed still parses — the
+ * schema fingerprint rebuilds every lake file with them, so no query reads
+ * that default. NULL otherwise means Riot recorded none (Arena has no runes).
  */
-const ItemSlotSchema = z.number().nullable().default(null);
+const LoadoutIdSchema = z.number().nullable().default(null);
 
 export const MatchLakeRowSchema = z.object({
   // Match keys
@@ -142,13 +143,29 @@ export const MatchLakeRowSchema = z.object({
   subteam_placement: z.number().nullable(),
   player_subteam_id: z.number().nullable(),
   // Final inventory: Riot's six slots and the trinket.
-  item0: ItemSlotSchema,
-  item1: ItemSlotSchema,
-  item2: ItemSlotSchema,
-  item3: ItemSlotSchema,
-  item4: ItemSlotSchema,
-  item5: ItemSlotSchema,
-  item6: ItemSlotSchema,
+  item0: LoadoutIdSchema,
+  item1: LoadoutIdSchema,
+  item2: LoadoutIdSchema,
+  item3: LoadoutIdSchema,
+  item4: LoadoutIdSchema,
+  item5: LoadoutIdSchema,
+  item6: LoadoutIdSchema,
+  // Summoner spells, and the rune page: the primary and secondary trees, the
+  // four primary selections (perk0 is the keystone) then the two secondary
+  // ones, and the three stat shards.
+  summoner1_id: LoadoutIdSchema,
+  summoner2_id: LoadoutIdSchema,
+  perk_primary_style: LoadoutIdSchema,
+  perk_sub_style: LoadoutIdSchema,
+  perk0: LoadoutIdSchema,
+  perk1: LoadoutIdSchema,
+  perk2: LoadoutIdSchema,
+  perk3: LoadoutIdSchema,
+  perk4: LoadoutIdSchema,
+  perk5: LoadoutIdSchema,
+  stat_perk_offense: LoadoutIdSchema,
+  stat_perk_flex: LoadoutIdSchema,
+  stat_perk_defense: LoadoutIdSchema,
 });
 
 export type MatchLakeRow = z.infer<typeof MatchLakeRowSchema>;
@@ -345,9 +362,22 @@ export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
     item4: "INTEGER",
     item5: "INTEGER",
     item6: "INTEGER",
+    summoner1_id: "INTEGER",
+    summoner2_id: "INTEGER",
+    perk_primary_style: "INTEGER",
+    perk_sub_style: "INTEGER",
+    perk0: "INTEGER",
+    perk1: "INTEGER",
+    perk2: "INTEGER",
+    perk3: "INTEGER",
+    perk4: "INTEGER",
+    perk5: "INTEGER",
+    stat_perk_offense: "INTEGER",
+    stat_perk_flex: "INTEGER",
+    stat_perk_defense: "INTEGER",
   };
 
-/** The final-inventory slot columns, which only match_items reads. */
+/** The final-inventory slot columns. */
 export const ITEM_SLOT_COLUMNS = [
   "item0",
   "item1",
@@ -358,23 +388,59 @@ export const ITEM_SLOT_COLUMNS = [
   "item6",
 ] as const;
 
-const ITEM_SLOTS = new Set<string>(ITEM_SLOT_COLUMNS);
+/** Summoner spell and rune page columns. */
+export const RUNE_SPELL_COLUMNS = [
+  "summoner1_id",
+  "summoner2_id",
+  "perk_primary_style",
+  "perk_sub_style",
+  "perk0",
+  "perk1",
+  "perk2",
+  "perk3",
+  "perk4",
+  "perk5",
+  "stat_perk_offense",
+  "stat_perk_flex",
+  "stat_perk_defense",
+] as const;
 
 /**
- * The match columns every read selects: all but the inventory slots.
+ * Loadout columns: items, spells and runes. A read selects them only when
+ * a query names one (see MATCH_READ_COLUMNS).
+ */
+export const LOADOUT_COLUMNS: readonly string[] = [
+  ...ITEM_SLOT_COLUMNS,
+  ...RUNE_SPELL_COLUMNS,
+];
+
+const LOADOUT = new Set<string>(LOADOUT_COLUMNS);
+
+/**
+ * The match columns every read selects: all but the loadout columns.
  *
  * A read names its columns, and a build published before a column existed
  * fails every read that names it until the lake is rebuilt (the backend's
- * lakeSchemaFingerprint). Only match_items needs the slots, so only its reads
- * name them: a deploy that adds them leaves every other match read working
+ * lakeSchemaFingerprint). Loadout columns are read only by queries that name
+ * one, so a deploy that adds them leaves every other match read working
  * while the rebuild runs.
  */
 export const MATCH_READ_COLUMNS: Record<string, DuckDbColumnType> =
   Object.fromEntries(
+    Object.entries(MATCH_LAKE_COLUMNS).filter(([name]) => !LOADOUT.has(name)),
+  );
+
+/** MATCH_READ_COLUMNS plus the loadout columns a read names. */
+export function matchReadColumns(
+  loadout: readonly string[],
+): Record<string, DuckDbColumnType> {
+  const selected = new Set(loadout);
+  return Object.fromEntries(
     Object.entries(MATCH_LAKE_COLUMNS).filter(
-      ([name]) => !ITEM_SLOTS.has(name),
+      ([name]) => !LOADOUT.has(name) || selected.has(name),
     ),
   );
+}
 
 export const PREMATCH_LAKE_COLUMNS: Record<
   keyof PrematchLakeRow,

@@ -9,7 +9,8 @@ import {
   TIMELINE_EVENT_LAKE_COLUMNS,
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 } from "@scout-for-lol/data/model/reports/timeline-lake-columns.ts";
-import { MATCH_READ_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.ts";
+import { MATCH_LAKE_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.ts";
+import { LOADOUT_NAME_DEPENDENCIES } from "#src/reports/duckdb/loadout-sql.ts";
 
 /**
  * Which column names each ScoutQL source exposes, and the SQL each becomes.
@@ -200,6 +201,18 @@ const MATCH_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   ],
 ];
 
+/**
+ * Loadout names (keystone, spells, the final build), looked up in the facts
+ * CTE from the ids they depend on — which is what makes a scan select those
+ * ids (see loadout-sql.ts).
+ */
+const LOADOUT_NAME_BINDINGS: [string, ColumnBinding][] = [
+  ...LOADOUT_NAME_DEPENDENCIES.entries(),
+].map(([name, dependencies]) => [
+  name,
+  { sql: name, type: "text", dependencies, identity: true },
+]);
+
 /** Prematch rows have no champion_name; the dimension shows the numeric id. */
 const PREMATCH_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
   ["player", PLAYER_BINDING],
@@ -320,8 +333,9 @@ export function buildPlanColumnMap(source: PlanColumnSource): ColumnMap {
       "match",
       () =>
         new Map([
-          ...sourceColumnEntries(MATCH_READ_COLUMNS),
+          ...sourceColumnEntries(MATCH_LAKE_COLUMNS),
           ...MATCH_VIRTUAL_COLUMNS,
+          ...LOADOUT_NAME_BINDINGS,
         ]),
     )
     .with(

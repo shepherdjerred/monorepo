@@ -33,6 +33,7 @@ import {
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { resolveLakeFiles, type LakeFiles } from "#src/reports/duckdb/lake.ts";
+import type { RUNE_SPELL_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.ts";
 
 /**
  * Test helper: build a minimal report lake from simplified fact inputs.
@@ -87,6 +88,8 @@ export type TestLakeMatchFact = {
   riotIdTagline?: string;
   /** Final inventory by slot (0-6); missing slots are empty. */
   items?: number[];
+  /** Summoner spells and rune page; defaults to Flash + Ignite, Conqueror. */
+  loadout?: Partial<Pick<MatchLakeRow, (typeof RUNE_SPELL_COLUMNS)[number]>>;
   gameCreationAt: Date;
 };
 
@@ -121,6 +124,23 @@ function itemSlots(items: readonly number[] = []) {
     item6: at(6),
   };
 }
+
+/** Flash + Ignite, Precision (Conqueror) over Resolve, with common shards. */
+const DEFAULT_LOADOUT = {
+  summoner1_id: 4,
+  summoner2_id: 14,
+  perk_primary_style: 8000,
+  perk_sub_style: 8400,
+  perk0: 8010,
+  perk1: 9111,
+  perk2: 9104,
+  perk3: 8299,
+  perk4: 8444,
+  perk5: 8242,
+  stat_perk_offense: 5005,
+  stat_perk_flex: 5008,
+  stat_perk_defense: 5011,
+};
 
 function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
   const created = fact.gameCreationAt.getTime();
@@ -219,6 +239,8 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     subteam_placement: null,
     player_subteam_id: fact.playerSubteamId ?? null,
     ...itemSlots(fact.items),
+    ...DEFAULT_LOADOUT,
+    ...fact.loadout,
   };
 }
 

@@ -110,6 +110,19 @@ function matchRow(): MatchLakeRow {
     item4: 0,
     item5: 0,
     item6: 0,
+    summoner1_id: null,
+    summoner2_id: null,
+    perk_primary_style: null,
+    perk_sub_style: null,
+    perk0: null,
+    perk1: null,
+    perk2: null,
+    perk3: null,
+    perk4: null,
+    perk5: null,
+    stat_perk_offense: null,
+    stat_perk_flex: null,
+    stat_perk_defense: null,
   };
 }
 

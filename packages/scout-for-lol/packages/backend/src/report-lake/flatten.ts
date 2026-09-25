@@ -47,6 +47,38 @@ function participantEarlySurrendered(participant: RawParticipant): boolean {
   );
 }
 
+/**
+ * Summoner spells and the rune page. Riot lists the primary tree then the
+ * secondary; perk0 is the keystone. A mode without runes (Arena) records no
+ * styles, which stays NULL rather than a made-up page.
+ */
+function participantLoadout(participant: RawParticipant) {
+  const { styles, statPerks } = participant.perks;
+  const primary = styles.find((style) => style.description === "primaryStyle");
+  const sub = styles.find((style) => style.description === "subStyle");
+  const selections = [
+    ...(primary?.selections ?? []),
+    ...(sub?.selections ?? []),
+  ];
+  const perk = (index: number) => selections[index]?.perk ?? null;
+  const hasRunes = primary !== undefined;
+  return {
+    summoner1_id: participant.summoner1Id,
+    summoner2_id: participant.summoner2Id,
+    perk_primary_style: primary?.style ?? null,
+    perk_sub_style: sub?.style ?? null,
+    perk0: perk(0),
+    perk1: perk(1),
+    perk2: perk(2),
+    perk3: perk(3),
+    perk4: perk(4),
+    perk5: perk(5),
+    stat_perk_offense: hasRunes ? statPerks.offense : null,
+    stat_perk_flex: hasRunes ? statPerks.flex : null,
+    stat_perk_defense: hasRunes ? statPerks.defense : null,
+  };
+}
+
 export function flattenMatch(match: RawMatch): MatchLakeRow[] {
   const queue =
     resolveQueueTypeFromGame(
@@ -156,6 +188,7 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
     item4: participant.item4,
     item5: participant.item5,
     item6: participant.item6,
+    ...participantLoadout(participant),
   }));
 }
 
