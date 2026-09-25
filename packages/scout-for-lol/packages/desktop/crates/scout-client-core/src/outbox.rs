@@ -664,6 +664,53 @@ impl ObservationOutbox {
         )?;
         Ok(attempts)
     }
+
+    /// Every replay this device has reached a conclusion about.
+    ///
+    /// The server cannot see a machine's disk, so without this it has no idea a
+    /// replay exists until the device happens to offer it. Reporting the
+    /// inventory lets it come back for one later, once a match it could not
+    /// vouch for earlier becomes known.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OutboxError::Sqlite`] if the inventory cannot be read.
+    pub fn replay_inventory(&self, limit: u32) -> Result<Vec<ReplayInventoryRow>, OutboxError> {
+        let connection = self.connection()?;
+        let mut statement = connection.prepare(
+            "SELECT digest, game_id, 'uploaded' AS state FROM uploaded_replay
+             UNION ALL
+             SELECT digest, game_id, 'rejected' AS state FROM rejected_replay
+             UNION ALL
+             SELECT digest, game_id, 'deferred' AS state FROM deferred_replay
+             WHERE digest NOT IN (SELECT digest FROM uploaded_replay)
+               AND digest NOT IN (SELECT digest FROM rejected_replay)
+             LIMIT ?1",
+        )?;
+        let rows = statement.query_map([limit], |row| {
+            Ok(ReplayInventoryRow {
+                digest: row.get(0)?,
+                game_id: row.get(1)?,
+                state: row.get(2)?,
+            })
+        })?;
+        let mut inventory = Vec::new();
+        for row in rows {
+            inventory.push(row?);
+        }
+        Ok(inventory)
+    }
+}
+
+/// One replay this device holds, and what became of it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ReplayInventoryRow {
+    /// Content address of the file.
+    pub digest: String,
+    /// Game the replay claims to be.
+    pub game_id: String,
+    /// `uploaded`, `rejected`, or `deferred`.
+    pub state: String,
 }
 
 fn validate_game_timing(game_id: &str, timestamp_millis: i64) -> Result<(), OutboxError> {
@@ -719,6 +766,49 @@ mod tests {
 
     fn temporary_database() -> std::path::PathBuf {
         std::env::temp_dir().join(format!("scout-outbox-{}.db", Uuid::new_v4()))
+    }
+
+    #[test]
+    fn the_inventory_reports_one_state_per_replay() -> Result<(), Box<dyn std::error::Error>> {
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        outbox.mark_replay_uploaded("digest-up", "game-1")?;
+        outbox.mark_replay_rejected("digest-no", "game-2", 413)?;
+        outbox.record_replay_deferral("digest-wait", "game-3")?;
+
+        let inventory = outbox.replay_inventory(100)?;
+        let state = |digest: &str| {
+            inventory
+                .iter()
+                .find(|row| row.digest == digest)
+                .map(|row| row.state.clone())
+        };
+        assert_eq!(state("digest-up"), Some("uploaded".to_owned()));
+        assert_eq!(state("digest-no"), Some("rejected".to_owned()));
+        assert_eq!(state("digest-wait"), Some("deferred".to_owned()));
+        assert_eq!(inventory.len(), 3);
+
+        let _ = std::fs::remove_file(&path);
+        Ok(())
+    }
+
+    #[test]
+    fn a_settled_replay_is_not_also_reported_as_waiting() -> Result<(), Box<dyn std::error::Error>>
+    {
+        // A replay is deferred before it is finally accepted, so both rows
+        // exist. Reporting it twice would tell the server two different things
+        // about one file.
+        let path = temporary_database();
+        let outbox = ObservationOutbox::open(&path)?;
+        outbox.record_replay_deferral("digest-a", "game-1")?;
+        outbox.mark_replay_uploaded("digest-a", "game-1")?;
+
+        let inventory = outbox.replay_inventory(100)?;
+        assert_eq!(inventory.len(), 1);
+        assert_eq!(inventory[0].state, "uploaded");
+
+        let _ = std::fs::remove_file(&path);
+        Ok(())
     }
 
     #[test]
