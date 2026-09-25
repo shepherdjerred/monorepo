@@ -70,6 +70,7 @@ import { createAlertDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resou
 import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/media/stash.ts";
 import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
 import { createArgoCdApplicationAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/argocd-application-admission.ts";
+import { createWoodpeckerCiPodGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/ci-pod-guard.ts";
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -81,6 +82,7 @@ export async function createAppsChart(app: App) {
   createPriorityClasses(chart);
   createArgoCdApplicationAdmissionPolicies(chart);
   createPvcBackupAdmissionPolicies(chart);
+  createWoodpeckerCiPodGuard(chart);
 
   new Namespace(chart, `maintenance-namespace`, {
     metadata: {

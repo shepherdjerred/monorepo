@@ -48,46 +48,10 @@
     "reason": "Disposable OpenTofu provider archives - re-downloadable, holds no state"
   },
   {
-    "namespace": "woodpecker-ci",
-    "name": "woodpecker-codex-auth",
-    "backup": "disabled",
-    "reason": "Refreshable ChatGPT-managed Codex credential bundle"
-  },
-  {
-    "namespace": "woodpecker-ci",
-    "name": "woodpecker-trivy-db",
-    "backup": "disabled",
-    "reason": "Rebuildable vulnerability database cache"
-  },
-  {
     "namespace": "phoenix",
     "name": "pgdata-phoenix-postgresql-0",
     "backup": "enabled",
     "reason": "Phoenix users, API keys, datasets, annotations, and sampled LLM traces"
-  },
-  {
-    "namespace": "woodpecker",
-    "name": "woodpecker-bun-cache",
-    "backup": "disabled",
-    "reason": "Disposable CI package cache - rebuildable from the lockfile"
-  },
-  {
-    "namespace": "woodpecker",
-    "name": "woodpecker-bun-cache-control",
-    "backup": "disabled",
-    "reason": "Lock file only - coordination state for the bun cache collector"
-  },
-  {
-    "namespace": "woodpecker",
-    "name": "woodpecker-uv-cache",
-    "backup": "disabled",
-    "reason": "Disposable CI package cache - rebuildable from the lockfile"
-  },
-  {
-    "namespace": "woodpecker",
-    "name": "woodpecker-tofu-plugin-cache",
-    "backup": "disabled",
-    "reason": "Disposable OpenTofu provider archives - re-downloadable, holds no state"
   },
   {
     "namespace": "buildkitd",
@@ -96,13 +60,13 @@
     "reason": "Rebuildable BuildKit cache"
   },
   {
-    "namespace": "woodpecker",
+    "namespace": "woodpecker-ci",
     "name": "woodpecker-codex-auth",
     "backup": "disabled",
     "reason": "Refreshable ChatGPT-managed Codex credential bundle"
   },
   {
-    "namespace": "woodpecker",
+    "namespace": "woodpecker-ci",
     "name": "woodpecker-trivy-db",
     "backup": "disabled",
     "reason": "Rebuildable vulnerability database cache"
@@ -471,6 +435,6 @@
     "namespace": "flipt",
     "name": "flipt-data",
     "backup": "enabled",
-    "reason": "Flipt git-backed flag state \u2014 the only durable copy of every flag definition"
+    "reason": "Flipt git-backed flag state — the only durable copy of every flag definition"
   }
 ]

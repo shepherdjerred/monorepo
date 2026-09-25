@@ -1,0 +1,10 @@
+{
+  "$comment": "CI admission budget on the liskov CI node. cdk8s builds the Kueue ClusterQueue and the Woodpecker agent's workflow cap from this file, and scripts/checks/ci/check-ci-admission-budget.ts proves the generated pipeline fits it. Quotas sit below liskov's allocatable (29 CPU, ~91.5Gi) on purpose: they are a guard, not permission to consume the node to zero.",
+  "maxWorkflows": 24,
+  "maxServicesPerWorkflow": 2,
+  "quota": {
+    "cpu": "24",
+    "memory": "80Gi",
+    "ephemeral-storage": "100Gi"
+  }
+}

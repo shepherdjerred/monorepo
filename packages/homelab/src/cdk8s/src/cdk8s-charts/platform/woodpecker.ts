@@ -8,6 +8,7 @@ import { createWoodpeckerCaches } from "@shepherdjerred/homelab/cdk8s/src/resour
 import { createWoodpeckerMaintenanceWorker } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/maintenance-worker.ts";
 import { createWoodpeckerConfigExtension } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/config-extension-workload.ts";
 import { createWoodpeckerStepNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/step-network-policy.ts";
+import { createWoodpeckerCiNamespace } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/ci-namespace.ts";
 import {
   createWoodpeckerCredentialBoundaries,
   WOODPECKER_NAMESPACE,
@@ -23,9 +24,8 @@ export function createWoodpeckerChart(app: App) {
     metadata: {
       name: WOODPECKER_NAMESPACE,
       labels: {
-        // CI step pods build container images and run privileged toolchains,
-        // exactly as the Woodpecker namespace did. Restricted enforcement would
-        // reject them at admission.
+        // Unchanged from when step pods ran here. They now run in
+        // `woodpecker-ci`; this namespace holds the control plane.
         "pod-security.kubernetes.io/enforce": "privileged",
         "pod-security.kubernetes.io/audit": "privileged",
         "pod-security.kubernetes.io/warn": "privileged",
@@ -33,6 +33,7 @@ export function createWoodpeckerChart(app: App) {
     },
   });
 
+  createWoodpeckerCiNamespace(chart);
   createWoodpeckerCredentialBoundaries(chart);
   createWoodpeckerPostgreSQLDatabase(chart);
   createWoodpeckerServer(chart);

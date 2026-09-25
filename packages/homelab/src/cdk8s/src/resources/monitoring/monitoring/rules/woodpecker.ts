@@ -3,16 +3,14 @@ import { PrometheusRuleSpecGroupsRulesExpr } from "@shepherdjerred/homelab/cdk8s
 import { escapePrometheusTemplate } from "./shared.ts";
 
 /**
- * Pod names Woodpecker's Kubernetes backend generates for step pods.
+ * Pod names Woodpecker's Kubernetes backend generates for clone and step pods.
  *
- * `wp-<ULID>-<workflow index>-step-<step index>`. Crockford base32 rather than
- * a UUID, which is why this is not the Buildkite pattern with the hyphens
- * moved around. Matching on the name is what scopes every rule below to CI
- * step pods and excludes the server, the agent, and the config extension,
- * which share the namespace.
+ * `wp-<ULID>`: the step's ULID, lowercased (v3.18.1 `podName`). Crockford
+ * base32 rather than a UUID. Service pods are `wp-svc-<ULID>-<name>` and do
+ * not match. Matching on the name is what scopes every rule below to CI work
+ * and excludes the maintenance worker, which shares the CI namespace.
  */
-export const CI_JOB_POD_PATTERN =
-  "wp-[0-9a-hjkmnp-tv-z]{26}-[0-9]+-step-[0-9]+";
+export const CI_JOB_POD_PATTERN = "wp-[0-9a-hjkmnp-tv-z]{26}";
 export const CI_POD_PARENT_CGROUP_PATTERN = "/kubepods(/[^/]+)*/pod[^/]+";
 export const CI_POD_CHILD_CGROUP_PATTERN = "/kubepods(/[^/]+)*/pod[^/]+/.+";
 export const CI_POD_LIFETIME_WRITES_SEEN_24H_BUDGET_BYTES = 4_398_046_511_104;
@@ -31,6 +29,16 @@ export const CI_BUN_CACHE_PVC = "woodpecker-bun-cache";
  * reports.
  */
 export const CI_BUN_CACHE_GC_ACTIVITY = "ci-bun-cache-gc";
+
+/**
+ * How old a per-workflow workspace claim may get before it is a leak.
+ *
+ * Woodpecker deletes the claim when its workflow ends, and no workflow outlives
+ * its 270-minute timeout; six hours is comfortably past both. A leak is a
+ * Woodpecker cleanup failure (its teardown stops at the first error, before the
+ * claim), and each one holds space on the CI pool until someone deletes it.
+ */
+export const CI_WORKSPACE_LEAK_AGE_SECONDS = 6 * 60 * 60;
 export const TURBO_CACHE_CLEAN_ACTIVITY = "turbo-cache-clean";
 
 function maintenanceWorkerStaleExpression(
@@ -47,26 +55,26 @@ or (
   and on() (
     time() - max(
       temporal_worker_app_process_start_time_seconds{
-        namespace="woodpecker",
+        namespace="woodpecker-ci",
         pod=~"temporal-maintenance-worker-.*"
       }
     ) > ${String(maximumAgeSeconds)}
     or time() - max(
       kube_pod_start_time{
-        namespace="woodpecker",
+        namespace="woodpecker-ci",
         pod=~"temporal-maintenance-worker-.*"
       }
     ) > ${String(maximumAgeSeconds)}
     or on() (
       kube_deployment_status_condition{
-        namespace="woodpecker",
+        namespace="woodpecker-ci",
         deployment="temporal-maintenance-worker",
         condition="Progressing",
         status="false"
       } == 1
       or on() (
         kube_deployment_status_condition{
-          namespace="woodpecker",
+          namespace="woodpecker-ci",
           deployment="temporal-maintenance-worker",
           condition="Progressing",
           status="true",
@@ -75,19 +83,19 @@ or (
         and on() (
           absent(
             kube_deployment_status_replicas_available{
-              namespace="woodpecker",
+              namespace="woodpecker-ci",
               deployment="temporal-maintenance-worker"
             }
           )
           or max(
             kube_deployment_status_replicas_available{
-              namespace="woodpecker",
+              namespace="woodpecker-ci",
               deployment="temporal-maintenance-worker"
             }
           ) == 0
           or absent(
             up{
-              namespace="woodpecker",
+              namespace="woodpecker-ci",
               service="temporal-maintenance-worker-app-metrics"
             }
           )
@@ -150,13 +158,13 @@ function woodpeckerPodLabels(): string {
   // Defensively drop scrape-target labels before arithmetic joins so each
   // namespace/pod/metadata tuple stays unique if scrape topology changes.
   return `max by (namespace, pod, ${POD_LABEL_METADATA}) (
-  kube_pod_labels{namespace="woodpecker", label_ci_sjer_red_step_key!=""}
+  kube_pod_labels{namespace="woodpecker-ci", label_ci_sjer_red_step_key!=""}
 )`;
 }
 
 function woodpeckerPodAnnotations(): string {
   return `max by (namespace, pod, ${POD_ANNOTATION_METADATA}) (
-  kube_pod_annotations{namespace="woodpecker", annotation_ci_sjer_red_pipeline_url!=""}
+  kube_pod_annotations{namespace="woodpecker-ci", annotation_ci_sjer_red_pipeline_url!=""}
 )`;
 }
 
@@ -173,7 +181,7 @@ function withWoodpeckerPodMetadata(expression: string): string {
 function podParentCounter(metric: string): string {
   return `max by (namespace, pod, node, device) (
     ${metric}{
-      namespace="woodpecker",
+      namespace="woodpecker-ci",
       pod=~"${CI_JOB_POD_PATTERN}",
       container="",
       id=~"${CI_POD_PARENT_CGROUP_PATTERN}"
@@ -189,7 +197,7 @@ function containerCounter(metric: string): string {
   return withWoodpeckerPodMetadata(
     `max by (namespace, pod, node, container, device) (
     ${metric}{
-      namespace="woodpecker",
+      namespace="woodpecker-ci",
       pod=~"${CI_JOB_POD_PATTERN}",
       container!="",
       container!="POD",
@@ -230,7 +238,7 @@ function woodpeckerBunCacheUsageRatio(): string {
 * on (volumename) group_left(namespace, persistentvolumeclaim)
 max by (volumename, namespace, persistentvolumeclaim) (
   kube_persistentvolumeclaim_info{
-    namespace="woodpecker",
+    namespace="woodpecker-ci",
     persistentvolumeclaim="${CI_BUN_CACHE_PVC}"
   }
 )`;
@@ -342,7 +350,7 @@ export function getWoodpeckerRuleGroups(): PrometheusRuleSpecGroups[] {
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`
   max by (namespace, pod) (
     kube_pod_status_phase{
-      namespace="woodpecker",
+      namespace="woodpecker-ci",
       pod=~"${CI_JOB_POD_PATTERN}",
       phase="Running"
     } == 1
@@ -371,7 +379,7 @@ unless on (namespace, pod)
           labels: {
             severity: "info",
             category: "ci",
-            namespace: "woodpecker",
+            namespace: "woodpecker-ci",
           },
         },
         {
@@ -420,7 +428,7 @@ and on ()
           labels: {
             severity: "warning",
             category: "ci",
-            namespace: "woodpecker",
+            namespace: "woodpecker-ci",
           },
         },
         {
@@ -438,7 +446,34 @@ and on ()
           labels: {
             severity: "critical",
             category: "ci",
-            namespace: "woodpecker",
+            namespace: "woodpecker-ci",
+          },
+        },
+        {
+          alert: "WoodpeckerWorkspaceClaimLeaked",
+          annotations: {
+            summary: "A Woodpecker workspace claim outlived its workflow",
+            description: escapePrometheusTemplate(
+              "Workspace claim {{ $labels.persistentvolumeclaim }} is older than any workflow can run, so Woodpecker failed to delete it. It holds space on the CI node's pool until someone deletes the claim in woodpecker-ci, and its storage class deletes the volume with it.",
+            ),
+          },
+          expr: PrometheusRuleSpecGroupsRulesExpr.fromString(`(
+  time() - max by (namespace, persistentvolumeclaim) (
+    kube_persistentvolumeclaim_created{namespace="woodpecker-ci"}
+  )
+) > ${String(CI_WORKSPACE_LEAK_AGE_SECONDS)}
+and on (namespace, persistentvolumeclaim)
+  max by (namespace, persistentvolumeclaim) (
+    kube_persistentvolumeclaim_info{
+      namespace="woodpecker-ci",
+      storageclass="ci-workspace"
+    }
+  )`),
+          for: "10m",
+          labels: {
+            severity: "warning",
+            category: "ci",
+            namespace: "woodpecker-ci",
           },
         },
         {
@@ -456,7 +491,7 @@ and on ()
           labels: {
             severity: "warning",
             category: "ci",
-            namespace: "woodpecker",
+            namespace: "woodpecker-ci",
           },
         },
         {

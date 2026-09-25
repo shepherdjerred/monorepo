@@ -10,6 +10,7 @@ import {
   CI_POD_LIFETIME_WRITES_SEEN_24H_METRIC,
   CI_POD_PARENT_CGROUP_PATTERN,
   CI_POD_PARENT_FS_WRITES_BYTES_BY_JOB_METRIC,
+  CI_WORKSPACE_LEAK_AGE_SECONDS,
   getWoodpeckerRuleGroups,
 } from "./woodpecker.ts";
 
@@ -204,6 +205,24 @@ describe("Woodpecker CI I/O informational alerts", () => {
     );
     expect(rule.for).toBe("5m");
     expect(rule.labels?.["severity"]).toBe("info");
+  });
+
+  /**
+   * The workspace class deletes each volume with its claim, so a claim that
+   * outlives every possible workflow is one Woodpecker failed to delete --
+   * and space on the CI pool that nothing will reclaim.
+   */
+  it("flags workspace claims that outlive any workflow", () => {
+    const rule = alertRule("WoodpeckerWorkspaceClaimLeaked");
+    const expression = ruleExpression(rule);
+    expect(expression).toContain(
+      'kube_persistentvolumeclaim_created{namespace="woodpecker-ci"}',
+    );
+    expect(expression).toContain('storageclass="ci-workspace"');
+    expect(expression).toContain(`> ${String(CI_WORKSPACE_LEAK_AGE_SECONDS)}`);
+    // Past the 270-minute workflow timeout, with margin.
+    expect(CI_WORKSPACE_LEAK_AGE_SECONDS).toBeGreaterThan(270 * 60);
+    expect(rule.labels?.["severity"]).toBe("warning");
   });
 
   it("keeps the CI I/O alerts as non-paging informational telemetry", () => {

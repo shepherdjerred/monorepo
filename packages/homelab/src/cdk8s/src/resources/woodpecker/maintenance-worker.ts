@@ -1,13 +1,11 @@
 import { createHash } from "node:crypto";
-import { Size, type Chart } from "cdk8s";
+import { ApiObject, JsonPatch, Size, type Chart } from "cdk8s";
 import {
   Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
   FsGroupChangePolicy,
-  Node,
-  NodeLabelQuery,
   PersistentVolumeClaim,
   Pods,
   Probe,
@@ -30,7 +28,8 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import { temporalFeatureFlagEnvironment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/feature-flags.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
-import { WOODPECKER_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
+import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
+import { CI_MAINTENANCE_LOCAL_QUEUE } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import {
   WOODPECKER_BUN_CACHE_CLAIM,
   WOODPECKER_BUN_CACHE_CONTROL_CLAIM,
@@ -49,7 +48,12 @@ import {
  * It lives in the CI namespace rather than with the other Temporal workers
  * because the work is filesystem work: it mounts the same ReadWriteMany claims
  * the step pods do and prunes them from the inside. Nothing else can — the
- * claims are node-local NVMe on the CI node.
+ * claims are node-local NVMe on the CI node, and a claim is only mountable
+ * from its own namespace.
+ *
+ * That namespace is Kueue-managed, so this pod is admitted like any CI pod,
+ * but against its own small queue: a long-running worker holding CI quota
+ * would shrink every build's budget for good.
  *
  * Its activities are Temporal Schedules (`ci-bun-cache-gc`,
  * `ci-uv-cache-prune-weekly`, `ci-trivy-db-refresh`), not Kubernetes CronJobs,
@@ -60,7 +64,7 @@ import {
  * other recurring subprocess that needs a long-lived writable workspace, and
  * giving it a second worker would double the idle footprint on the CI node.
  */
-const NAMESPACE = WOODPECKER_NAMESPACE;
+const NAMESPACE = WOODPECKER_CI_NAMESPACE;
 const WORKER_NAME = "temporal-maintenance-worker";
 const WORKER_LABELS = {
   app: WORKER_NAME,
@@ -182,7 +186,10 @@ export function createWoodpeckerMaintenanceWorker(chart: Chart): void {
       },
     },
     podMetadata: {
-      labels: WORKER_LABELS,
+      labels: {
+        ...WORKER_LABELS,
+        "kueue.x-k8s.io/queue-name": CI_MAINTENANCE_LOCAL_QUEUE,
+      },
       annotations: {
         "sjer.red/kometa-config-sha256": createHash("sha256")
           .update(KOMETA_CONFIG)
@@ -194,10 +201,14 @@ export function createWoodpeckerMaintenanceWorker(chart: Chart): void {
       fsGroupChangePolicy: FsGroupChangePolicy.ON_ROOT_MISMATCH,
     },
   });
-  deployment.scheduling.attract(
-    Node.labeled(NodeLabelQuery.is("kubernetes.io/hostname", CI_NODE_HOSTNAME)),
-  );
   deployment.scheduling.tolerate(ciNodeTaintedNode());
+  // A nodeSelector rather than cdk8s-plus's node affinity: the CI namespace's
+  // pod guard (`ci-pod-guard.ts`) requires one on every pod created there.
+  ApiObject.of(deployment).addJsonPatch(
+    JsonPatch.add("/spec/template/spec/nodeSelector", {
+      "kubernetes.io/hostname": CI_NODE_HOSTNAME,
+    }),
+  );
 
   const bunCache = Volume.fromPersistentVolumeClaim(
     chart,
@@ -294,6 +305,11 @@ export function createWoodpeckerMaintenanceWorker(chart: Chart): void {
           request: Size.mebibytes(16),
           limit: Size.mebibytes(64),
         },
+        // cdk8s-plus renders ephemeral storage in whole gibibytes.
+        ephemeralStorage: {
+          request: Size.gibibytes(1),
+          limit: Size.gibibytes(1),
+        },
       },
       volumeMounts: [
         { path: "/etc/kometa-config", volume: kometaConfig, readOnly: true },
@@ -323,6 +339,11 @@ export function createWoodpeckerMaintenanceWorker(chart: Chart): void {
       resources: {
         cpu: { request: Cpu.millis(500), limit: Cpu.millis(2000) },
         memory: { request: Size.gibibytes(1), limit: Size.gibibytes(2) },
+        // Kometa's cache and logs live on emptyDir, which counts here.
+        ephemeralStorage: {
+          request: Size.gibibytes(1),
+          limit: Size.gibibytes(8),
+        },
       },
       startup: Probe.fromHttpGet("/healthz", { port: 9465 }),
       liveness: Probe.fromHttpGet("/healthz", { port: 9465 }),

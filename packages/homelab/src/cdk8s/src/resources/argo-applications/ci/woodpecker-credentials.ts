@@ -3,7 +3,23 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { KubeServiceAccount } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 
+/**
+ * The Woodpecker control plane: server, agent, configuration extension, and
+ * database. Never Kueue-managed, so a Kueue outage cannot stop any of them
+ * from restarting.
+ */
 export const WOODPECKER_NAMESPACE = "woodpecker";
+
+/**
+ * Where CI work runs: every step, clone, and service pod, their workspace
+ * claims, the caches they mount, and the credentials they are granted.
+ *
+ * A namespace of its own because Kueue can only scope pod admission by
+ * namespace. Every pod created here is gated until the CI quota admits it,
+ * which is exactly right for CI and exactly wrong for the control plane --
+ * see `resources/kueue-config.ts`.
+ */
+export const WOODPECKER_CI_NAMESPACE = "woodpecker-ci";
 
 /**
  * 1Password item backing the Woodpecker server itself.
@@ -124,7 +140,7 @@ export function createWoodpeckerCredentialBoundaries(chart: Chart): void {
   for (const { secretName, itemId } of CI_CREDENTIAL_ITEMS) {
     new OnePasswordItem(chart, secretName, {
       spec: { itemPath: vaultItemPath(itemId) },
-      metadata: { name: secretName, namespace: WOODPECKER_NAMESPACE },
+      metadata: { name: secretName, namespace: WOODPECKER_CI_NAMESPACE },
     });
   }
 
@@ -132,7 +148,7 @@ export function createWoodpeckerCredentialBoundaries(chart: Chart): void {
   // the Kubernetes API from inside a step, and mounting a token would hand
   // every pipeline the agent's cluster access.
   new KubeServiceAccount(chart, "woodpecker-job", {
-    metadata: { name: "woodpecker-job", namespace: WOODPECKER_NAMESPACE },
+    metadata: { name: "woodpecker-job", namespace: WOODPECKER_CI_NAMESPACE },
     automountServiceAccountToken: false,
   });
 }

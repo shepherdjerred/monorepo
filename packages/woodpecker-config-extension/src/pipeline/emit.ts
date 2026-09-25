@@ -1,5 +1,5 @@
 import { stringify } from "yaml";
-import type { CiStep } from "#src/pipeline/model.ts";
+import type { CiStep, ResourceTier } from "#src/pipeline/model.ts";
 
 /**
  * Node the CI step pods run on, and the taint they must tolerate to get there.
@@ -44,8 +44,8 @@ function agentLabels(step: CiStep): Record<string, string> {
 /**
  * Pod metadata the CI I/O telemetry attributes cgroup counters through.
  *
- * Woodpecker names step pods `wp-<ulid>-<workflow>-step-<n>`, which carries no
- * information about WHICH step ran. Buildkite's agent stack stamped a job UUID
+ * Woodpecker names step pods `wp-<ulid>`, which carries no information about
+ * WHICH step ran. Buildkite's agent stack stamped a job UUID
  * and build/job URLs; nothing equivalent exists here, so the pipeline stamps
  * its own identity instead.
  *
@@ -139,6 +139,50 @@ export function shellQuote(value: string): string {
   return `'${value.replaceAll("'", String.raw`'\''`)}'`;
 }
 
+function resources(tier: ResourceTier): Record<string, unknown> {
+  return {
+    requests: {
+      cpu: tier.cpuRequest,
+      memory: tier.memoryRequest,
+      "ephemeral-storage": tier.ephemeralStorageRequest,
+    },
+    limits: {
+      cpu: tier.cpuLimit,
+      memory: tier.memoryLimit,
+      "ephemeral-storage": tier.ephemeralStorageLimit,
+    },
+  };
+}
+
+/**
+ * Pod shape shared by a step and its services.
+ *
+ * Services are separate pods, and Woodpecker gives them nothing a step
+ * declares: without their own requests they would be invisible to Kueue and
+ * the scheduler, and without the labels, to the telemetry and network policy
+ * that select CI pods.
+ */
+function podOptions(
+  step: CiStep,
+  identity: PipelineIdentity,
+  tier: ResourceTier,
+): Record<string, unknown> {
+  return {
+    resources: resources(tier),
+    nodeSelector: CI_NODE_SELECTOR,
+    tolerations: [CI_TOLERATION],
+    serviceAccountName: STEP_SERVICE_ACCOUNT,
+    labels: {
+      [POD_STEP_KEY_LABEL]: step.key,
+      [POD_COMMIT_LABEL]: identity.commit,
+    },
+    annotations: {
+      [POD_BRANCH_ANNOTATION]: identity.branch,
+      [POD_PIPELINE_URL_ANNOTATION]: identity.linkUrl,
+    },
+  };
+}
+
 function backendOptions(
   step: CiStep,
   identity: PipelineIdentity,
@@ -151,29 +195,7 @@ function backendOptions(
 
   return {
     kubernetes: {
-      resources: {
-        requests: {
-          cpu: step.resources.cpuRequest,
-          memory: step.resources.memoryRequest,
-          "ephemeral-storage": step.resources.ephemeralStorageRequest,
-        },
-        limits: {
-          cpu: step.resources.cpuLimit,
-          memory: step.resources.memoryLimit,
-          "ephemeral-storage": step.resources.ephemeralStorageLimit,
-        },
-      },
-      nodeSelector: CI_NODE_SELECTOR,
-      tolerations: [CI_TOLERATION],
-      serviceAccountName: STEP_SERVICE_ACCOUNT,
-      labels: {
-        [POD_STEP_KEY_LABEL]: step.key,
-        [POD_COMMIT_LABEL]: identity.commit,
-      },
-      annotations: {
-        [POD_BRANCH_ANNOTATION]: identity.branch,
-        [POD_PIPELINE_URL_ANNOTATION]: identity.linkUrl,
-      },
+      ...podOptions(step, identity, step.resources),
       ...(secrets.length > 0 ? { secrets } : {}),
     },
   };
@@ -236,6 +258,10 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
             ...(service.environment === undefined
               ? {}
               : { environment: { ...service.environment } }),
+            // Services hold no grants: nothing they run needs a credential.
+            backend_options: {
+              kubernetes: podOptions(step, identity, service.resources),
+            },
           })),
         }),
     ...(step.dependsOn === undefined || step.dependsOn.length === 0

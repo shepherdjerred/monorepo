@@ -1,10 +1,9 @@
 /**
  * Kueue capacity and admission panels for CI.
  *
- * Kept when the Buildkite dashboard was removed: Kueue still admits CI work
- * and still enforces the node's CPU, memory and ephemeral-storage quotas, so
- * losing these charts would have been a real observability regression from
- * what is only a CI provider swap. The agent-health panels DID go: they read
+ * Kept when the Buildkite dashboard was removed: Kueue still admits CI work --
+ * now Woodpecker's pods, through the pod integration -- and still enforces the
+ * node's CPU, memory and ephemeral-storage quotas. The agent-health panels DID go: they read
  * the agent stack's own metrics, which have no Woodpecker counterpart.
  *
  * The I/O panels are rebuilt at the bottom of this file. They are the same
@@ -26,7 +25,7 @@ const PHYSICAL_DISK_PATTERN = "nvme[0-9]+n[0-9]+|sd[a-z]+|vd[a-z]+|xvd[a-z]+";
 // Verified against the live Kueue 0.18 metric schema: these local-queue metric
 // families expose the queue as `name`, while `local_queue` is absent.
 const CI_LOCAL_QUEUE_SELECTOR =
-  'exported_namespace="woodpecker",name="default"';
+  'exported_namespace="woodpecker-ci",name="default"';
 
 export function addCiCapacityHealthPanels(
   builder: dashboard.DashboardBuilder,
@@ -139,11 +138,11 @@ export function addCiCapacityHealthPanels(
         {
           query: `sum by (label_ci_sjer_red_step_key) (
   max by (namespace, pod) (
-    kube_pod_status_phase{namespace="woodpecker", phase="Running"} == 1
+    kube_pod_status_phase{namespace="woodpecker-ci", phase="Running"} == 1
   )
   * on (namespace, pod) group_left(label_ci_sjer_red_step_key)
   max by (namespace, pod, label_ci_sjer_red_step_key) (
-    kube_pod_labels{namespace="woodpecker", label_ci_sjer_red_step_key!=""}
+    kube_pod_labels{namespace="woodpecker-ci", label_ci_sjer_red_step_key!=""}
   )
 )`,
           legend: "{{label_ci_sjer_red_step_key}}",
@@ -200,7 +199,7 @@ node_hwmon_sensor_label{node="liskov", label="Tctl"}`;
       targets: [
         {
           query:
-            'count(kube_pod_status_phase{namespace="woodpecker",phase="Running"} == 1)',
+            'count(kube_pod_status_phase{namespace="woodpecker-ci",pod=~"wp-.*",phase="Running"} == 1)',
           legend: "running CI pods",
         },
         {
@@ -261,7 +260,7 @@ node_hwmon_sensor_label{node="liskov", label="Tctl"}`;
  * configuration extension adds.
  */
 const ACTIVE_CI_NODES =
-  'max by (node) (kube_pod_info{namespace="woodpecker"} * on (namespace, pod) group_left kube_pod_labels{namespace="woodpecker", label_ci_sjer_red_step_key!=""})';
+  'max by (node) (kube_pod_info{namespace="woodpecker-ci"} * on (namespace, pod) group_left kube_pod_labels{namespace="woodpecker-ci", label_ci_sjer_red_step_key!=""})';
 
 /**
  * CI write volume and I/O pressure.

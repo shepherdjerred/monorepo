@@ -122,7 +122,7 @@ export async function createMediaChart(app: App) {
           from: [
             {
               namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "woodpecker" },
+                matchLabels: { "kubernetes.io/metadata.name": "woodpecker-ci" },
               },
               podSelector: {
                 matchLabels: { app: "temporal-maintenance-worker" },

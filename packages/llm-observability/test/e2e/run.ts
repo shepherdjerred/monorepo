@@ -1,11 +1,15 @@
-import { waitForTempo } from "./run-core.ts";
+import { e2eEnvironment, waitForTempo } from "./run-core.ts";
 
 const root = import.meta.dir.replace(/\/test\/e2e$/, "");
 const compose = ["docker", "compose", "-f", "test/e2e/compose.yaml"];
 
-async function run(command: string[]): Promise<void> {
+async function run(
+  command: string[],
+  environment: Record<string, string> = {},
+): Promise<void> {
   const subprocess = Bun.spawn(command, {
     cwd: root,
+    env: { ...Bun.env, ...environment },
     stdout: "inherit",
     stderr: "inherit",
   });
@@ -28,16 +32,20 @@ async function main(): Promise<void> {
       return response?.ok === true;
     });
     await run([...compose, "run", "--rm", "minio-init"]);
-    await run([
-      "bun",
-      "--no-install",
-      "--bun",
-      "vitest",
-      "--config",
-      "../../vitest.config.ts",
-      "run",
-      "test/e2e",
-    ]);
+    // Compose publishes both services on localhost.
+    await run(
+      [
+        "bun",
+        "--no-install",
+        "--bun",
+        "vitest",
+        "--config",
+        "../../vitest.config.ts",
+        "run",
+        "test/e2e",
+      ],
+      e2eEnvironment({ tempo: "localhost", minio: "localhost" }),
+    );
   } catch (error) {
     try {
       await run([...compose, "logs", "tempo"]);

@@ -73,3 +73,52 @@ describe("workflow timeout", () => {
     }
   });
 });
+
+const EmittedPodOptions = z.object({
+  backend_options: z.object({
+    kubernetes: z
+      .object({
+        resources: z.object({
+          requests: z.record(z.string(), z.string()),
+          limits: z.record(z.string(), z.string()),
+        }),
+        serviceAccountName: z.string(),
+        labels: z.record(z.string(), z.string()),
+      })
+      .loose(),
+  }),
+});
+
+const EmittedServices = z.object({
+  steps: z.tuple([EmittedPodOptions.loose()]),
+  services: z.array(EmittedPodOptions.loose()).optional(),
+});
+
+describe("pod shape", () => {
+  /**
+   * Services are separate pods. Without their own requests Kueue and the
+   * scheduler cannot see them, and without the step-key label neither can
+   * the telemetry or network policy that select CI pods.
+   */
+  test("gives every step and service pod requests, limits, and CI labels", () => {
+    let services = 0;
+    for (const step of testPipelineSteps()) {
+      if (step.backend === "local") continue;
+      const emitted = EmittedServices.parse(
+        parse(substitute(emitWorkflow(step, TEST_IDENTITY))),
+      );
+      const pods = [emitted.steps[0], ...(emitted.services ?? [])];
+      services += emitted.services?.length ?? 0;
+      for (const pod of pods) {
+        const options = pod.backend_options.kubernetes;
+        for (const resource of ["cpu", "memory", "ephemeral-storage"]) {
+          expect(options.resources.requests[resource], step.key).toBeDefined();
+          expect(options.resources.limits[resource], step.key).toBeDefined();
+        }
+        expect(options.labels["ci.sjer.red/step-key"]).toBe(step.key);
+        expect(options.serviceAccountName).toBe("woodpecker-job");
+      }
+    }
+    expect(services).toBeGreaterThan(0);
+  });
+});

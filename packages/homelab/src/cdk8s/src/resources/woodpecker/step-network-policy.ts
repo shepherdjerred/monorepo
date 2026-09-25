@@ -3,18 +3,21 @@ import {
   IntOrString,
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
+import {
+  dnsEgressRule,
+  externalHttpsEgressRule,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
+import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 
 /**
- * Label every generated CI step pod carries.
+ * Label every generated CI step and service pod carries.
  *
  * Written by the configuration extension's emitter
- * (`packages/woodpecker-config-extension/src/pipeline/emit.ts`), which is the
- * only thing that generates a step pod spec — Woodpecker's own pod names
- * (`wp-<ulid>-<workflow>-step-<n>`) are not selectable and it stamps no labels
- * of its own. The value varies per step, so the policy selects on the key's
- * existence; that needs no change to the emitter and matches exactly the pods
- * it generates. macOS lanes run on the local backend and produce no pod, so
- * they are correctly outside this.
+ * (`packages/woodpecker-config-extension/src/pipeline/emit.ts`) on both a
+ * step and its services; Woodpecker's own pod names (`wp-<ulid>`) carry
+ * nothing selectable. The value varies per step, so the policy selects on the
+ * key's existence. macOS lanes run on the local backend and produce no pod,
+ * so they are correctly outside this.
  *
  * The same key is duplicated in the monitoring rules for the same reason. Do
  * not rename it in one place.
@@ -24,6 +27,13 @@ const CI_STEP_POD_LABEL = "ci.sjer.red/step-key";
 /** buildkitd's own namespace and gRPC port, which the image lanes dial. */
 const BUILDKITD_NAMESPACE = "buildkitd";
 const BUILDKITD_PORT = 1234;
+
+/** Other CI step and service pods, in this namespace only. */
+const CI_POD_PEER = {
+  podSelector: {
+    matchExpressions: [{ key: CI_STEP_POD_LABEL, operator: "Exists" }],
+  },
+};
 
 /**
  * The network boundary CI step pods are meant to sit inside.
@@ -51,29 +61,22 @@ const BUILDKITD_PORT = 1234;
  */
 export function createWoodpeckerStepNetworkPolicy(chart: Chart) {
   return new KubeNetworkPolicy(chart, "woodpecker-step-netpol", {
-    metadata: { name: "woodpecker-step-netpol" },
+    metadata: {
+      name: "woodpecker-step-netpol",
+      namespace: WOODPECKER_CI_NAMESPACE,
+    },
     spec: {
       podSelector: {
         matchExpressions: [{ key: CI_STEP_POD_LABEL, operator: "Exists" }],
       },
       policyTypes: ["Egress", "Ingress"],
-      // Nothing dials a step pod. The agent drives steps through the
-      // Kubernetes API, not the pod network, and services declared beside a
-      // step share its pod and talk over localhost.
-      ingress: [],
+      // Only a step dials its services, which are separate pods reached by
+      // hostname through the workflow's headless Service. The agent drives
+      // every pod through the Kubernetes API, not the pod network.
+      ingress: [{ from: [CI_POD_PEER] }],
       egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
+        dnsEgressRule(),
+        { to: [CI_POD_PEER] },
         {
           // The image lanes drive builds through buildkitd's plaintext gRPC
           // endpoint. It is the one in-cluster destination steps need, and the
@@ -92,16 +95,13 @@ export function createWoodpeckerStepNetworkPolicy(chart: Chart) {
             { port: IntOrString.fromNumber(BUILDKITD_PORT), protocol: "TCP" },
           ],
         },
-        {
-          // Everything else a step reaches is HTTPS: github.com and its API,
-          // ghcr.io, registry.npmjs.org, the published sites, and SeaweedFS S3
-          // — which is reached over the tailnet rather than by cluster DNS.
-          // A CIDR allowlist is not an option: GitHub's and npm's ranges
-          // change, and a rotted list would fail builds for a boundary that is
-          // not enforced anyway.
-          to: [{ ipBlock: { cidr: "0.0.0.0/0" } }],
-          ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }],
-        },
+        // Everything else a step reaches is HTTPS: github.com and its API,
+        // ghcr.io, registry.npmjs.org, the published sites, and SeaweedFS S3
+        // — which is reached over the tailnet rather than by cluster DNS.
+        // A CIDR allowlist is not an option: GitHub's and npm's ranges
+        // change, and a rotted list would fail builds for a boundary that is
+        // not enforced anyway.
+        externalHttpsEgressRule(),
       ],
     },
   });

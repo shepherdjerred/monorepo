@@ -11,6 +11,7 @@ const turboTasks = [
   "check-floating-deps",
   "check-patched-deps",
   "check-ci-env",
+  "check-ci-admission-budget",
   "check-worker-image-pins",
   "check-script-migrations",
   "check-test-standardization",
