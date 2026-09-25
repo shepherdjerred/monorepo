@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { getConfig } from "./lib/config.ts";
 import { FINANCE_VAULT_DIR } from "./lib/finance-vault.ts";
+import { sampleByMerchant } from "./lib/sampling.ts";
 import {
   initMonarch,
   fetchAllTransactions,
@@ -196,6 +197,9 @@ async function main(): Promise<void> {
   if (config.limit > 0) {
     transactions = transactions.slice(0, config.limit);
     log.info(`Limited to ${String(transactions.length)} transactions`);
+  }
+  if (config.sample > 0) {
+    transactions = sampleByMerchant(transactions, config.sample);
   }
 
   // Build category definitions for prompts

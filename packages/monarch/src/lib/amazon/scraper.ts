@@ -3,7 +3,11 @@ import { chromium } from "playwright";
 import path from "node:path";
 import { homedir } from "node:os";
 import type { AmazonOrder, AmazonItem, AmazonCharge } from "./types.ts";
-import { loadCache, saveMergedCache } from "./cache.ts";
+import {
+  loadCache,
+  loadCachedOrdersIgnoringAge,
+  saveMergedCache,
+} from "./cache.ts";
 import { scrapeTransactionHistory } from "./charges-scraper.ts";
 import { autoLogin } from "./login.ts";
 import { parseAmazonDate, parsePrice } from "./transactions-parser.ts";
@@ -53,6 +57,17 @@ export async function scrapeAmazonOrders(
   if (!forceScrape) {
     const cached = await loadCache();
     if (cached) return cached;
+  }
+
+  // Item details never change once an order is placed, so a stale cache only
+  // needs new orders re-detailed. --force-scrape means "distrust the cache
+  // entirely," so it gets an empty map and re-fetches everything.
+  let existingByOrderId = new Map<string, AmazonOrder>();
+  if (!forceScrape) {
+    const existingOrders = await loadCachedOrdersIgnoringAge();
+    existingByOrderId = new Map(
+      existingOrders.map((order) => [order.orderId, order]),
+    );
   }
 
   log.info("Launching browser...");
@@ -108,7 +123,12 @@ export async function scrapeAmazonOrders(
     }
 
     log.info(`Fetching item details for ${String(summaries.length)} orders...`);
-    const allOrders = await fetchOrderDetails(page, summaries, chargesByOrder);
+    const allOrders = await fetchOrderDetails(
+      page,
+      summaries,
+      chargesByOrder,
+      existingByOrderId,
+    );
 
     // Save state again after successful scrape
     await saveBrowserState(context);
@@ -241,15 +261,24 @@ async function fetchOrderDetails(
   page: Page,
   summaries: OrderSummary[],
   chargesByOrder: Map<string, AmazonCharge[]>,
+  existingByOrderId: Map<string, AmazonOrder>,
 ): Promise<AmazonOrder[]> {
   const orders: AmazonOrder[] = [];
+  let reused = 0;
 
   for (let i = 0; i < summaries.length; i++) {
     const summary = summaries[i];
     if (!summary) continue;
     log.progress(i + 1, summaries.length, "order details fetched");
 
-    const items = await scrapeOrderDetail(page, summary);
+    const existing = existingByOrderId.get(summary.orderId);
+    let items: AmazonItem[];
+    if (existing) {
+      items = existing.items;
+      reused++;
+    } else {
+      items = await scrapeOrderDetail(page, summary);
+    }
     orders.push({
       orderId: summary.orderId,
       date: summary.date,
@@ -257,6 +286,12 @@ async function fetchOrderDetails(
       items,
       charges: chargesByOrder.get(summary.orderId) ?? [],
     });
+  }
+
+  if (reused > 0) {
+    log.info(
+      `Reused cached item details for ${String(reused)}/${String(orders.length)} orders already scraped`,
+    );
   }
 
   // Individual orders may legitimately carry no card charges
