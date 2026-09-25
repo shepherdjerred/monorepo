@@ -1,0 +1,69 @@
+# Reynold's Supplies: the general store at spawn. In 2015 Reynold sold 16 coal
+# for 128 crystals on purpose, to cap player prices; while the server is small
+# the prices are kinder.
+#
+# Every entry states buy, sell and dailyLimit; write null for "not offered" or
+# "no limit". buy is what a player pays per trade, sell what a player is paid.
+# A sell price is never above the buy price, and no catalog pays more per item
+# than another charges.
+id: reynolds-supplies
+name: Reynold's Supplies
+greeting: >-
+  Reynold looks up from his ledger. "Coal, rope and lanterns: everything a new
+  arrival needs. The Storm doesn't wait for anyone to be ready."
+entries:
+  - item: coal
+    quantity: 16
+    buy: 48
+    sell: 16
+    dailyLimit: 512
+  - item: torch
+    quantity: 16
+    buy: 24
+    sell: null
+    dailyLimit: null
+  - item: oak_log
+    quantity: 16
+    buy: 40
+    sell: 12
+    dailyLimit: 512
+  - item: cobblestone
+    quantity: 64
+    buy: 32
+    sell: null
+    dailyLimit: null
+  - item: glass
+    quantity: 16
+    buy: 32
+    sell: null
+    dailyLimit: null
+  - item: string
+    quantity: 8
+    buy: 24
+    sell: 8
+    dailyLimit: 256
+  - item: leather
+    quantity: 4
+    buy: 32
+    sell: 12
+    dailyLimit: 128
+  - item: ladder
+    quantity: 8
+    buy: 16
+    sell: null
+    dailyLimit: null
+  - item: chest
+    quantity: 1
+    buy: 12
+    sell: null
+    dailyLimit: null
+  - item: lantern
+    quantity: 1
+    buy: 20
+    sell: null
+    dailyLimit: null
+  - item: lead
+    quantity: 1
+    buy: 30
+    sell: null
+    dailyLimit: null

@@ -1,0 +1,83 @@
+# Winston's florist, on the path to the Mob Arena. See reynolds-supplies.yml for
+# the entry format.
+id: florist
+name: Winston's Flowers
+greeting: >-
+  Winston looks up from his pots. "Every town needs a little colour. Even this
+  one."
+entries:
+  - item: dandelion
+    quantity: 4
+    buy: 8
+    sell: 2
+    dailyLimit: 256
+  - item: poppy
+    quantity: 4
+    buy: 8
+    sell: 2
+    dailyLimit: 256
+  - item: blue_orchid
+    quantity: 4
+    buy: 12
+    sell: 4
+    dailyLimit: 128
+  - item: allium
+    quantity: 4
+    buy: 12
+    sell: 4
+    dailyLimit: 128
+  - item: azure_bluet
+    quantity: 4
+    buy: 8
+    sell: 2
+    dailyLimit: 256
+  - item: cornflower
+    quantity: 4
+    buy: 8
+    sell: 2
+    dailyLimit: 256
+  - item: oxeye_daisy
+    quantity: 4
+    buy: 8
+    sell: 2
+    dailyLimit: 256
+  - item: red_tulip
+    quantity: 4
+    buy: 8
+    sell: 2
+    dailyLimit: 256
+  - item: lily_of_the_valley
+    quantity: 4
+    buy: 12
+    sell: 4
+    dailyLimit: 128
+  - item: sunflower
+    quantity: 2
+    buy: 12
+    sell: 4
+    dailyLimit: 128
+  - item: lilac
+    quantity: 2
+    buy: 12
+    sell: 4
+    dailyLimit: 128
+  - item: lily_pad
+    quantity: 4
+    buy: 12
+    sell: null
+    dailyLimit: null
+  - item: moss_block
+    quantity: 8
+    buy: 24
+    sell: null
+    dailyLimit: null
+  - item: cherry_sapling
+    quantity: 1
+    buy: 20
+    sell: null
+    dailyLimit: null
+  - item: flower_pot
+    quantity: 1
+    buy: 6
+    sell: null
+    dailyLimit: null

@@ -1,0 +1,53 @@
+# Bobert's bakery, on Walter's road. Sells baked goods and buys what goes into
+# them. See reynolds-supplies.yml for the entry format.
+id: baker
+name: Bobert's Bakery
+greeting: >-
+  The smell of fresh bread fills the room. Bobert dusts the flour off his
+  hands. "Wheat, eggs, sugar: I'll take all you can carry."
+entries:
+  - item: bread
+    quantity: 8
+    buy: 24
+    sell: null
+    dailyLimit: null
+  - item: cookie
+    quantity: 16
+    buy: 24
+    sell: null
+    dailyLimit: null
+  - item: pumpkin_pie
+    quantity: 4
+    buy: 24
+    sell: null
+    dailyLimit: null
+  - item: cake
+    quantity: 1
+    buy: 30
+    sell: null
+    dailyLimit: null
+  - item: wheat
+    quantity: 16
+    buy: null
+    sell: 12
+    dailyLimit: 640
+  - item: egg
+    quantity: 16
+    buy: null
+    sell: 12
+    dailyLimit: 256
+  - item: sugar
+    quantity: 16
+    buy: null
+    sell: 8
+    dailyLimit: 256
+  - item: cocoa_beans
+    quantity: 8
+    buy: null
+    sell: 8
+    dailyLimit: 256
+  - item: pumpkin
+    quantity: 4
+    buy: null
+    sell: 6
+    dailyLimit: 256

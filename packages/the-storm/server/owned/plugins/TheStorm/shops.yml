@@ -1,0 +1,46 @@
+# The shops module. Owned by the repository; the plugin never writes it.
+# NPC shop catalogs live in shops/<id>.yml next to this file.
+
+# Chest shops: a sign on a container, in ChestShop's format.
+#   line 1  your name (filled in for you), or the admin-shop label below
+#   line 2  items per trade
+#   line 3  prices in crystals: B 50:S 40 (either side may be left out)
+#   line 4  the item's name, or ? and then right-click the sign holding it
+chestShops:
+  # The click that buys at a shop sign; the other click sells.
+  buyClick: RIGHT
+  # The most items one sign trade may move (nine full stacks).
+  maxQuantity: 576
+  # A first line reading this (any case) makes an admin shop: unlimited
+  # stock, trading with the server account. Needs thestorm.shops.admin.
+  adminShopLabel: Admin Shop
+  # Blocks a chest shop may trade from. Shulker boxes are left out on
+  # purpose: they carry their contents when broken.
+  containers:
+    - CHEST
+    - TRAPPED_CHEST
+    - BARREL
+    - COPPER_CHEST
+    - EXPOSED_COPPER_CHEST
+    - WEATHERED_COPPER_CHEST
+    - OXIDIZED_COPPER_CHEST
+    - WAXED_COPPER_CHEST
+    - WAXED_EXPOSED_COPPER_CHEST
+    - WAXED_WEATHERED_COPPER_CHEST
+    - WAXED_OXIDIZED_COPPER_CHEST
+  # The most chest shops a player may own at each Shopkeeper level.
+  shopLimits:
+    1: 5
+    2: 10
+    3: 20
+    4: 35
+    5: 50
+  # Item lines in the "while you were away" summary on join.
+  summaryLines: 5
+
+# NPC shops.
+catalogs:
+  # Daily limits reset at midnight in this time zone.
+  dailyResetZone: UTC
+  # The most trades of one item a single menu purchase may bundle.
+  maxLots: 16
