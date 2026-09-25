@@ -75,6 +75,7 @@ test("a server-scoped query is inspected, with its servers kept out of the trace
   };
   expect(inspectExploreToolCall("run_report_query", input).rawInput).toEqual({
     queryText: "FROM matches SELECT games",
+    scope: "one server",
   });
   const result = inspectExploreToolResult("run_report_query", input, {
     ok: false,

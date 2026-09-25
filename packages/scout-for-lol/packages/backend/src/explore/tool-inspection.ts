@@ -232,11 +232,33 @@ const FEATURE_READ_TOOL_SCHEMAS = new Map<
  * the turn's own server list does.
  */
 const ExploreRunQueryInputSchema = ScoutQlQueryToolInputSchema.extend({
-  servers: QueryServersSchema,
+  // Optional here, though the tool requires it: traces recorded before the
+  // field existed must still inspect.
+  servers: QueryServersSchema.optional(),
 });
 
-function recordedQueryInput(input: unknown): { queryText: string } {
-  return { queryText: ExploreRunQueryInputSchema.parse(input).queryText };
+/**
+ * What a trace records of a query: its text, and which kind of scope it
+ * read — never which servers. The kind is what grading and debugging need:
+ * whether an answer covered every match or only a server's tracked players.
+ */
+function recordedQueryInput(input: unknown): {
+  queryText: string;
+  scope: "global" | "one server" | "several servers" | "all servers";
+} {
+  const parsed = ExploreRunQueryInputSchema.parse(input);
+  const servers = parsed.servers;
+  return {
+    queryText: parsed.queryText,
+    scope:
+      servers === null || servers === undefined
+        ? "global"
+        : servers === "all_my_servers"
+          ? "all servers"
+          : servers.length === 1
+            ? "one server"
+            : "several servers",
+  };
 }
 
 const JsonValueSchema = z.json();

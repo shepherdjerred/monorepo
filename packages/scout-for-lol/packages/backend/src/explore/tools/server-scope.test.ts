@@ -24,7 +24,7 @@ const OUTSIDE = testGuildId("819");
 
 describe("resolveTurnScope", () => {
   test("no servers is a global query, names resolving across the turn", () => {
-    expect(resolveTurnScope(undefined, [ALPHA, BETA])).toEqual({
+    expect(resolveTurnScope(null, [ALPHA, BETA])).toEqual({
       ok: true,
       scope: GLOBAL_SCOPE,
       guildIds: [ALPHA, BETA],
@@ -40,7 +40,7 @@ describe("resolveTurnScope", () => {
   });
 
   test("all is every server in the turn, merged", () => {
-    const turn = resolveTurnScope("all", [ALPHA, BETA]);
+    const turn = resolveTurnScope("all_my_servers", [ALPHA, BETA]);
     expect(turn).toEqual({
       ok: true,
       scope: { kind: "servers", serverIds: [ALPHA, BETA] },
@@ -58,7 +58,7 @@ describe("resolveTurnScope", () => {
   });
 
   test("all with no servers in the turn is refused", () => {
-    expect(resolveTurnScope("all", []).ok).toBe(false);
+    expect(resolveTurnScope("all_my_servers", []).ok).toBe(false);
   });
 });
 

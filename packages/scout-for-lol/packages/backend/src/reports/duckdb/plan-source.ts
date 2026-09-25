@@ -104,6 +104,15 @@ export function hasTrackedAccounts(input: {
 }
 
 /**
+ * A source or filter the query's scope cannot serve. Its own class so a caller
+ * that chose the scope (Explore's `servers`) can answer with a retry hint
+ * rather than a bare failure; every other error stays a bug.
+ */
+export class ScopeRefusedError extends Error {
+  override readonly name = "ScopeRefusedError";
+}
+
+/**
  * Which sources and filters a scope allows. Written as positive checks on
  * purpose: a scope kind nobody anticipated must be refused, not fall through
  * a `kind === "guild"` test and widen to the whole lake.
@@ -114,7 +123,7 @@ export function enforceScopeGuards(input: {
   readonly playerIds?: readonly number[] | undefined;
 }): void {
   if (input.scope.kind !== "guild" && input.playerIds !== undefined) {
-    throw new Error(
+    throw new ScopeRefusedError(
       "playerIds scoping requires a guild scope — player ids are per-server.",
     );
   }
@@ -126,23 +135,27 @@ export function enforceScopeGuards(input: {
     input.plan.source === "match_team_bans"
   ) {
     if (input.scope.kind !== "global") {
-      throw new Error(
+      throw new ScopeRefusedError(
         `${input.plan.source} cannot be scoped to a server: its rows carry no player identity. Query it in global scope, or use match_participants for a server's players.`,
       );
     }
     if (input.playerIds !== undefined) {
-      throw new Error(`${input.plan.source} cannot be filtered by player.`);
+      throw new ScopeRefusedError(
+        `${input.plan.source} cannot be filtered by player.`,
+      );
     }
   }
   // Rank sources threw in planSourceKind, so only the match flavor remains.
   if (input.plan.source === "competition_match_participants") {
     if (input.scope.kind !== "guild") {
-      throw new Error(
+      throw new ScopeRefusedError(
         "Competition reports need the competition's own server as their scope.",
       );
     }
     if (input.plan.competitionId === undefined) {
-      throw new Error(`${input.plan.source} requires a competition_id.`);
+      throw new ScopeRefusedError(
+        `${input.plan.source} requires a competition_id.`,
+      );
     }
   }
 }

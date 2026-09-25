@@ -19,6 +19,7 @@ import { prisma } from "#src/database/index.ts";
 import type { CreationCapability } from "#src/explore/creation/capability.ts";
 import { emptyResultReason } from "#src/explore/empty-result-reason.ts";
 import { createGatedExploreTools } from "#src/explore/gated-tools.ts";
+import { ScopeRefusedError } from "#src/reports/duckdb/plan-source.ts";
 import {
   QueryServersSchema,
   createListMyServersTool,
@@ -262,7 +263,25 @@ export function createExploreTools(options: ExploreToolsOptions) {
             source = plan.source;
             planFacts.emptyReason = emptyResultReason(plan);
           },
+        }).catch((error: unknown) => {
+          // A scope the model chose that the source cannot serve is its
+          // mistake to correct, not a failure: say how. A bare error made it
+          // retry the same call until the turn gave up.
+          if (error instanceof ScopeRefusedError) {
+            return {
+              refused: `${error.message} Run it again with servers null.`,
+            };
+          }
+          throw error;
         });
+        if ("refused" in result) {
+          return {
+            ok: false,
+            message: result.refused,
+            formattedQueryText: validation.formattedQueryText,
+            preview: null,
+          };
+        }
         const preview = reportQueryPreviewSummary(result);
         const modelPreview = ReportAiModelPreviewSummarySchema.parse(preview);
         state.lastPreview = preview;

@@ -288,6 +288,11 @@ describe("unresolved concepts", () => {
 
   test("says how to choose servers, and asks only when it cannot tell", () => {
     const instructions = exploreAgentInstructions({ bucks: null });
+    // Servers are opt-in: over-scoping answered "who has the most" from one
+    // server's handful of games and declined 16 answerable prod chips.
+    expect(instructions).toContain("Set servers to null by default");
+    expect(instructions).toContain("fewer than 10 games");
+    expect(instructions).toContain("run it again with servers null");
     expect(instructions).toContain("call list_my_servers");
     expect(instructions).toContain("if it lists one server, use it");
     expect(instructions).toContain("'all my servers'");

@@ -23,11 +23,20 @@ import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
  * or a tool description; the model asks `list_my_servers` for it.
  */
 
+/**
+ * Explore's tools run in strict JSON-schema mode, where every property is
+ * required. An optional `servers` could therefore never be left out, so
+ * "every match" was not expressible and the model sent all its servers for
+ * every question. Null is how a strict schema says "none".
+ */
 export const QueryServersSchema = z
-  .union([z.literal("all"), z.array(DiscordGuildIdSchema).min(1).max(50)])
-  .optional()
+  .union([
+    z.literal("all_my_servers"),
+    z.array(DiscordGuildIdSchema).min(1).max(50),
+  ])
+  .nullable()
   .describe(
-    "Whose players to read. Omit for every ingested match (global). A list of server ids from list_my_servers, or \"all\" for every server the user is in, reads only those servers' tracked players, labelled by their Scout names — use it for 'our', 'the server's' or 'my group's' players and for player_groups.",
+    "null for most questions: the query then reads every ingested match. Set it only for 'our', 'the server's' or 'my group's' players and for player_groups: a list of server ids from list_my_servers, or \"all_my_servers\" for every server the user is in (never for every match — use null for that). With servers the query reads only those servers' tracked players, labelled by their Scout names.",
   );
 
 export type QueryServers = z.infer<typeof QueryServersSchema>;
@@ -49,10 +58,10 @@ export function resolveTurnScope(
   const turn = turnGuildIds.map((guildId) =>
     DiscordGuildIdSchema.parse(guildId),
   );
-  if (servers === undefined) {
+  if (servers === null) {
     return { ok: true, scope: GLOBAL_SCOPE, guildIds: turn };
   }
-  const chosen = servers === "all" ? turn : servers;
+  const chosen = servers === "all_my_servers" ? turn : servers;
   const outside = chosen.filter((guildId) => !turn.includes(guildId));
   if (outside.length > 0) {
     return {
