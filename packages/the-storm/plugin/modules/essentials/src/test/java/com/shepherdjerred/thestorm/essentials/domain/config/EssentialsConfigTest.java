@@ -71,12 +71,19 @@ final class EssentialsConfigTest {
   }
 
   @Test
-  void theRulesCoverTheOldRulesAndDiscloseTheAi() throws IOException {
-    var text = String.join("\n", parsed(shipped()).rules().pages()).toLowerCase(Locale.ROOT);
+  void theRulesAreTheOfficialRulesWithTheChatPointersAndTheAiDisclosure() throws IOException {
+    var rules = parsed(shipped()).rules();
+    var text = String.join("\n", rules.pages()).toLowerCase(Locale.ROOT);
 
+    assertThat(rules.pages()).hasSizeBetween(2, 3);
     assertThat(text)
-        .contains("griefing", "raiding", "100 blocks", "hack", "death pile", "bug", "war chat")
-        .contains("respect", "spam", "advertising", "ai provider");
+        .contains("1. no griefing", "roll griefing back")
+        .contains("unlocked chests are fair game", "locked containers are off-limits")
+        .contains("animals, pets or villagers")
+        .contains("no harassment", "following, trapping")
+        .contains("pvp is on", "spawn is pvp-free", "/pvp", "once a week")
+        .contains("no hacks or bug exploits")
+        .contains("/war", "/channels", "ai provider");
   }
 
   @Test

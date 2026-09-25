@@ -3,7 +3,6 @@ package com.shepherdjerred.thestorm.essentials.testing;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
-import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
@@ -62,7 +61,7 @@ public final class PaperHarness implements AutoCloseable {
     var harness = new PaperHarness(server, database);
     var services = new Services();
     services.provide(Wallets.class, wallets);
-    services.provide(Protection.class, (player, action, location) -> Decision.allowed());
+    services.provide(Protection.class, new AllowAllProtection());
     enabling =
         plugin ->
             new EssentialsModule()
