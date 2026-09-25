@@ -4,6 +4,8 @@ import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.protection.Decision;
+import com.shepherdjerred.thestorm.core.protection.HarmTarget;
+import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.spells.SpellsModule;
@@ -13,8 +15,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.InstantSource;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.random.RandomGenerator;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Location;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.Nullable;
 
@@ -46,10 +50,7 @@ public class SpellsTestPlugin extends JavaPlugin {
     }
     var database = StormDatabase.open(directory.resolve("t.db"));
     this.database = database;
-    Protection protection =
-        (player, action, location) ->
-            location.getX() >= 1000 ? new Decision.Denied(CLAIMED) : Decision.allowed();
-    services.provide(Protection.class, protection);
+    services.provide(Protection.class, new FarClaim());
     var context =
         new ModuleContext(
             this,
@@ -62,6 +63,25 @@ public class SpellsTestPlugin extends JavaPlugin {
             RandomGenerator.getDefault(),
             getComponentLogger());
     module.enable(context);
+  }
+
+  /** Everything at x >= 1000 is someone else's PvP-off claim; the rest is open wilderness. */
+  static final class FarClaim implements Protection {
+
+    private static Decision at(Location location) {
+      return location.getX() >= 1000 ? new Decision.Denied(CLAIMED) : Decision.allowed();
+    }
+
+    @Override
+    public Decision check(UUID player, ProtectedAction action, Location location) {
+      return at(location);
+    }
+
+    @Override
+    public Decision checkHarm(
+        UUID attacker, Location attackerAt, HarmTarget target, Location victimAt) {
+      return at(attackerAt).isAllowed() ? at(victimAt) : at(attackerAt);
+    }
   }
 
   @Override

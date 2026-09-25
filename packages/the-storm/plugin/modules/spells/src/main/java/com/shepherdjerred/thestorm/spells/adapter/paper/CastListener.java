@@ -3,6 +3,9 @@ package com.shepherdjerred.thestorm.spells.adapter.paper;
 import com.shepherdjerred.thestorm.spells.domain.FocusKey;
 import com.shepherdjerred.thestorm.spells.domain.Refusal;
 import com.shepherdjerred.thestorm.spells.domain.cast.CastMode;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -15,7 +18,7 @@ import org.bukkit.inventory.EquipmentSlot;
 /**
  * Casting. Right-clicking with a focus in the main hand casts its spell (the click never opens,
  * places or uses anything else). Reading a scroll to the end casts its spell, and the scroll is
- * consumed only if the spell goes off.
+ * consumed only if the spell goes off and no other plugin cancelled the read.
  */
 final class CastListener implements Listener {
 
@@ -23,6 +26,7 @@ final class CastListener implements Listener {
   private final SpellState state;
   private final CastFlow flow;
   private final Say say;
+  private final Map<UUID, CastFlow.Prepared> pending = new HashMap<>();
 
   CastListener(SpellItems items, SpellState state, CastFlow flow, Say say) {
     this.items = items;
@@ -68,15 +72,37 @@ final class CastListener implements Listener {
     flow.cast(caster, focus.spell(), CastMode.FOCUS, item);
   }
 
+  /**
+   * Reading a scroll, first half: the gates and the spell's preparation run before the game
+   * consumes the scroll, and a refusal cancels the read so the scroll is kept.
+   */
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-  void onConsume(PlayerItemConsumeEvent event) {
+  void onRead(PlayerItemConsumeEvent event) {
     var identity = items.identify(event.getItem());
     if (identity.isEmpty()) {
       return;
     }
-    if (!(identity.get() instanceof SpellIdentity.Scroll scroll)
-        || !flow.cast(event.getPlayer(), scroll.spell(), CastMode.SCROLL, event.getItem())) {
+    var player = event.getPlayer();
+    pending.remove(player.getUniqueId());
+    if (!(identity.get() instanceof SpellIdentity.Scroll scroll)) {
       event.setCancelled(true);
+      return;
+    }
+    flow.prepare(player, scroll.spell(), CastMode.SCROLL)
+        .ifPresentOrElse(
+            prepared -> pending.put(player.getUniqueId(), prepared),
+            () -> event.setCancelled(true));
+  }
+
+  /**
+   * Reading a scroll, second half: once no other plugin has cancelled the read, the spell goes off.
+   * A cancelled read casts nothing and keeps the scroll.
+   */
+  @EventHandler(priority = EventPriority.MONITOR)
+  void onReadDone(PlayerItemConsumeEvent event) {
+    var prepared = pending.remove(event.getPlayer().getUniqueId());
+    if (prepared != null && !event.isCancelled()) {
+      flow.commit(prepared, event.getItem());
     }
   }
 }

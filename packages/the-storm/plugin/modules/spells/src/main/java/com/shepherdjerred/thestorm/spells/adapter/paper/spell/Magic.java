@@ -2,8 +2,6 @@ package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.spells.domain.geometry.Vec3;
 import org.bukkit.Location;
-import org.bukkit.damage.DamageSource;
-import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -20,22 +18,6 @@ final class Magic {
 
   static int ticks(int seconds) {
     return seconds * TICKS_PER_SECOND;
-  }
-
-  /**
-   * Magic damage caused by {@code caster}, so the server (and the towns module's PvP listener) sees
-   * who hurt whom.
-   */
-  static void hurt(LivingEntity target, double amount, Player caster) {
-    if (amount <= 0) {
-      return;
-    }
-    var source =
-        DamageSource.builder(DamageType.MAGIC)
-            .withCausingEntity(caster)
-            .withDirectEntity(caster)
-            .build();
-    target.damage(amount, source);
   }
 
   static void potion(LivingEntity target, PotionEffectType type, int seconds, int amplifier) {

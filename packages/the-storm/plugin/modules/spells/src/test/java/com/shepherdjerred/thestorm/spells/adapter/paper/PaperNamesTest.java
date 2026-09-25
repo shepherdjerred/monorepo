@@ -44,6 +44,17 @@ final class PaperNamesTest {
     assertThat(PaperNames.solid("CHEST")).isEmpty();
     assertThat(PaperNames.solid("SAND")).isEmpty();
     assertThat(PaperNames.solid("SHORT_GRASS")).isEmpty();
+    assertThat(PaperNames.solid("TINTED_GLASS")).contains(Material.TINTED_GLASS);
+  }
+
+  @Test
+  void temporaryBlocksMustNotChangeByThemselves() {
+    assertThat(PaperNames.solid("OAK_LEAVES")).isEmpty();
+    assertThat(PaperNames.solid("GRAVEL")).isEmpty();
+    assertThat(PaperNames.solid("WHITE_CONCRETE_POWDER")).isEmpty();
+    assertThat(PaperNames.solid("TNT")).isEmpty();
+    assertThat(PaperNames.solid("ICE")).isEmpty();
+    assertThat(PaperNames.solid("PACKED_ICE")).contains(Material.PACKED_ICE);
   }
 
   @Test

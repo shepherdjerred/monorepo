@@ -9,7 +9,8 @@ import org.bukkit.entity.Player;
 
 /**
  * Blink (III, learned in a quest): a short teleport to where the caster looks, onto the nearest
- * safe spot, in land they may teleport into. Never through walls: it stops at the first block.
+ * safe spot with a clear line from the caster (never through a wall), in land they may teleport
+ * into.
  */
 final class Blink implements Spell {
 
@@ -31,9 +32,10 @@ final class Blink implements Spell {
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
     var from = Magic.at(caster);
+    var eyes = caster.getEyeLocation();
     return tools
         .teleports()
-        .arrival(caster, aim(caster), SEARCH_RADIUS)
+        .arrival(caster, aim(caster), SEARCH_RADIUS, spot -> Teleports.clearPath(eyes, spot))
         .map(
             destination ->
                 () -> {

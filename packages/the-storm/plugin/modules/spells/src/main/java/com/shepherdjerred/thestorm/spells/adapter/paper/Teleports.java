@@ -10,6 +10,8 @@ import com.shepherdjerred.thestorm.spells.domain.geometry.Footing;
 import com.shepherdjerred.thestorm.spells.domain.geometry.SafeSpots;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.function.Predicate;
+import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Tag;
@@ -34,6 +36,11 @@ public final class Teleports {
           Material.POWDER_SNOW,
           Material.POINTED_DRIPSTONE,
           Material.COBWEB);
+
+  /** Where a traced path aims on a standing player: about their chest. */
+  private static final double BODY_HEIGHT = 1.0;
+
+  private static final double MIN_TRACE = 1.0e-3;
 
   private final Guard guard;
 
@@ -69,19 +76,49 @@ public final class Teleports {
    * {@code radius}, facing the way {@code wanted} faces, if the caster may enter that land.
    */
   public Result<Location, CastProblem> arrival(Player caster, Location wanted, int radius) {
+    return arrival(caster, wanted, radius, spot -> true);
+  }
+
+  /**
+   * {@link #arrival(Player, Location, int)}, choosing only among spots {@code reachable} accepts
+   * (given as the feet location of the spot, facing as {@code wanted} faces).
+   */
+  public Result<Location, CastProblem> arrival(
+      Player caster, Location wanted, int radius, Predicate<Location> reachable) {
     var world = wanted.getWorld();
     var origin = new BlockPos(wanted.getBlockX(), wanted.getBlockY(), wanted.getBlockZ());
-    var spot = SafeSpots.nearest(probe(world), origin, radius);
+    var spot =
+        SafeSpots.nearest(
+            probe(world), origin, radius, pos -> reachable.test(standing(world, pos, wanted)));
     if (spot.isEmpty()) {
       return Result.err(CastProblem.refused(new Refusal.NoSafeSpot()));
     }
-    var feet = spot.get().feet();
-    var destination =
-        new Location(world, feet.x(), feet.y(), feet.z(), wanted.getYaw(), wanted.getPitch());
+    var destination = standing(world, spot.get(), wanted);
     return guard
         .denial(caster, ProtectedAction.TELEPORT_INTO, destination)
         .<Result<Location, CastProblem>>map(reason -> Result.err(new CastProblem.Protected(reason)))
         .orElseGet(() -> Result.ok(destination));
+  }
+
+  private static Location standing(World world, BlockPos pos, Location facing) {
+    var feet = pos.feet();
+    return new Location(world, feet.x(), feet.y(), feet.z(), facing.getYaw(), facing.getPitch());
+  }
+
+  /**
+   * True when nothing solid lies between {@code from} and the body of someone standing at {@code
+   * feet}: a teleport never passes through a wall.
+   */
+  public static boolean clearPath(Location from, Location feet) {
+    var body = feet.clone().add(0, BODY_HEIGHT, 0);
+    var delta = body.toVector().subtract(from.toVector());
+    var distance = delta.length();
+    if (distance < MIN_TRACE) {
+      return true;
+    }
+    return from.getWorld()
+            .rayTraceBlocks(from, delta.normalize(), distance, FluidCollisionMode.NEVER, true)
+        == null;
   }
 
   /** Moves {@code caster} to {@code destination}, clearing any fall they had built up. */

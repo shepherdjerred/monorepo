@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
 import com.shepherdjerred.thestorm.spells.domain.geometry.Chain;
@@ -11,7 +12,7 @@ import org.bukkit.entity.Player;
 /**
  * Chain Lightning (V): lightning leaps from the caster to the creature in sight, then on to the
  * nearest creatures around it, weakening with each jump. It only jumps to creatures the caster may
- * harm.
+ * harm, and only between creatures that can see each other.
  */
 final class ChainLightning implements Spell {
 
@@ -48,17 +49,22 @@ final class ChainLightning implements Spell {
     return Chain.path(
         new Chain.Link<>(first, Magic.vec(first.getLocation())),
         candidates,
-        settings.jumpRange(),
-        settings.maxTargets());
+        new Chain.Reach(settings.jumpRange(), settings.maxTargets()),
+        LivingEntity::hasLineOfSight);
   }
 
   private void strike(Player caster, List<LivingEntity> path) {
     var from = caster.getEyeLocation();
     for (var index = 0; index < path.size(); index++) {
       var target = path.get(index);
+      var blow =
+          Harm.Blow.none().withDamage(Chain.damageAt(settings.damage(), settings.falloff(), index));
+      if (!tools.harm().strike(caster, target, blow)) {
+        // A blocked link breaks the chain.
+        break;
+      }
       var to = Magic.chest(target);
       tools.fx().line(kind(), from, to);
-      Magic.hurt(target, Chain.damageAt(settings.damage(), settings.falloff(), index), caster);
       from = to;
     }
     tools.fx().sound(kind(), Magic.at(caster));

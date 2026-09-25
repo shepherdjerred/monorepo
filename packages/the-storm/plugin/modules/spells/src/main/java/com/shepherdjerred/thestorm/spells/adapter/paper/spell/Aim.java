@@ -8,6 +8,7 @@ import java.util.List;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 
 /** Targeting shared by spells: find, then screen through protection, then refuse or proceed. */
@@ -33,10 +34,21 @@ final class Aim {
   /** Every creature around the caster the spell may affect; refuses when there are none. */
   static Result<List<LivingEntity>, CastProblem> creaturesAround(
       Toolbox tools, Player caster, double radius) {
-    var screened =
-        tools.guard().creatures(caster, tools.targets().around(caster, Magic.at(caster), radius));
+    var screened = tools.guard().creatures(caster, tools.targets().inView(caster, radius));
     return screened.isEmpty()
         ? Result.err(CastProblem.nothingAllowed(screened, "creature nearby"))
+        : Result.ok(screened.allowed());
+  }
+
+  /**
+   * The hostile monsters the caster can see around them, leaving out those on land where the caster
+   * may not build; refuses (naming {@code what}) when there are none.
+   */
+  static Result<List<Mob>, CastProblem> hostiles(
+      Toolbox tools, Player caster, double radius, String what) {
+    var screened = tools.guard().creatures(caster, tools.targets().hostilesInView(caster, radius));
+    return screened.isEmpty()
+        ? Result.err(CastProblem.nothingAllowed(screened, what))
         : Result.ok(screened.allowed());
   }
 

@@ -1,12 +1,13 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
 import com.shepherdjerred.thestorm.spells.domain.geometry.Knockback;
 import org.bukkit.entity.Player;
 
-/** Force Push (II): a gale shoves every creature around the caster away. */
+/** Force Push (II): a gale shoves every creature the caster can see around them away. */
 final class ForcePush implements Spell {
 
   private final SpellSettings.Push settings;
@@ -36,7 +37,9 @@ final class ForcePush implements Spell {
                             Magic.vec(victim.getLocation()),
                             settings.strength(),
                             settings.lift());
-                    victim.setVelocity(Magic.vector(push));
+                    tools
+                        .harm()
+                        .strike(caster, victim, Harm.Blow.none().withVelocity(Magic.vector(push)));
                   }
                   tools.fx().cast(kind(), Magic.at(caster));
                   tools.fx().ring(kind(), Magic.at(caster), settings.radius());

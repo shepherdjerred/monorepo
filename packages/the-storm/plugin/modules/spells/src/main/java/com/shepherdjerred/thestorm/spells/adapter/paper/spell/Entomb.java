@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.adapter.paper.PaperNames;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
@@ -11,9 +12,9 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
 /**
- * Entomb (IV): seals the creature in sight in a temporary tomb for a few seconds. The target must
- * be one the caster may harm (a player only where PvP is on), and the tomb fills only open space
- * where the caster may build.
+ * Entomb (IV): seals the creature in sight in a temporary tomb for a few seconds. Trapping is harm:
+ * the caster must be allowed to harm the target, and the tomb fills only open space where the
+ * caster may build.
  */
 final class Entomb implements Spell {
 
@@ -44,16 +45,23 @@ final class Entomb implements Spell {
               var shell = Aim.blocks(target.getWorld(), Shapes.tomb(feet, height));
               return Aim.buildable(tools, caster, shell, Replaceability.Mode.OPEN_SPACE)
                   .map(
-                      blocks ->
-                          () -> {
-                            tools
-                                .blocks()
-                                .place(
-                                    blocks,
-                                    material.createBlockData(),
-                                    Duration.ofSeconds(settings.durationSeconds()));
+                      blocks -> {
+                        var seal =
+                            Harm.Blow.none()
+                                .then(
+                                    entombed ->
+                                        tools
+                                            .blocks()
+                                            .place(
+                                                blocks,
+                                                material.createBlockData(),
+                                                Duration.ofSeconds(settings.durationSeconds())));
+                        return () -> {
+                          if (tools.harm().strike(caster, target, seal)) {
                             tools.fx().cast(kind(), Magic.chest(target));
-                          });
+                          }
+                        };
+                      });
             });
   }
 }

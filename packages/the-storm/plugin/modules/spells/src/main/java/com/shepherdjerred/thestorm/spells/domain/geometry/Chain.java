@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.spells.domain.geometry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 
 /**
  * Chain Lightning's path: it strikes the first target, then jumps to the nearest creature not yet
@@ -21,21 +22,40 @@ public final class Chain {
   public record Link<T>(T target, Vec3 position) {}
 
   /**
+   * How far the chain goes.
+   *
+   * @param jumpRange the longest single jump, in blocks
+   * @param maxTargets how many creatures it strikes at most, the first included
+   */
+  public record Reach(double jumpRange, int maxTargets) {
+    public Reach {
+      if (maxTargets < 1) {
+        throw new IllegalArgumentException("a chain strikes at least one target: " + maxTargets);
+      }
+    }
+  }
+
+  /**
    * The targets in strike order, starting with {@code first}. {@code candidates} are the creatures
-   * the chain may jump to; equal distances go to the earlier candidate.
+   * the chain may jump to, and {@code canJump} says whether it can leap from one creature to
+   * another (line of sight); equal distances go to the earlier candidate.
    */
   public static <T> List<T> path(
-      Link<T> first, List<Link<T>> candidates, double jumpRange, int maxTargets) {
-    if (maxTargets < 1) {
-      throw new IllegalArgumentException("a chain strikes at least one target: " + maxTargets);
-    }
+      Link<T> first, List<Link<T>> candidates, Reach reach, BiPredicate<T, T> canJump) {
     var remaining = new ArrayList<>(candidates);
     remaining.removeIf(link -> link.target().equals(first.target()));
     var struck = new ArrayList<T>();
     struck.add(first.target());
     var last = first;
-    while (struck.size() < maxTargets) {
-      var next = nearestWithin(last.position(), remaining, jumpRange);
+    while (struck.size() < reach.maxTargets()) {
+      var from = last;
+      var next =
+          nearestWithin(
+              from.position(),
+              remaining.stream()
+                  .filter(link -> canJump.test(from.target(), link.target()))
+                  .toList(),
+              reach.jumpRange());
       if (next.isEmpty()) {
         break;
       }

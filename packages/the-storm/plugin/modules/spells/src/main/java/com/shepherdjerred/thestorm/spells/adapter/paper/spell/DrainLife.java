@@ -1,12 +1,16 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
 import org.bukkit.entity.Player;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 
-/** Drain Life (III): hurts the creature in sight and heals the caster by part of the damage. */
+/**
+ * Drain Life (III): hurts the creature in sight and heals the caster by part of the damage it
+ * actually took. A blocked hit heals nothing.
+ */
 final class DrainLife implements Spell {
 
   private final SpellSettings.Drain settings;
@@ -29,7 +33,10 @@ final class DrainLife implements Spell {
             target ->
                 () -> {
                   var before = target.getHealth();
-                  Magic.hurt(target, settings.damage(), caster);
+                  var blow = Harm.Blow.none().withDamage(settings.damage());
+                  if (!tools.harm().strike(caster, target, blow)) {
+                    return;
+                  }
                   var dealt = Math.max(0, before - target.getHealth());
                   if (dealt > 0 && settings.healRatio() > 0) {
                     caster.heal(

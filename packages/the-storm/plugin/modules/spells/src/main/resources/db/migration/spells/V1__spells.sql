@@ -1,9 +1,11 @@
 -- Spells: temporary blocks awaiting revert, Marks and focus bindings.
 -- Instants are epoch milliseconds. Worlds are world keys (minecraft:overworld).
 
--- Written before a temporary block is placed and deleted after it is reverted,
--- so a crash or restart can never leave a spell's wall, tomb, ice or platform
--- behind: the plugin reverts whatever is here when it starts.
+-- Written before a temporary block is placed. After the revert the row is only
+-- marked reverted; it is deleted once the world (or its chunk) has been saved,
+-- so a crash before that save, which rolls the world back to the placed block,
+-- still finds the row and reverts again. Reverting is idempotent. The plugin
+-- re-reverts every row here when it starts.
 CREATE TABLE spells_temporary_block (
     world     TEXT   NOT NULL,
     x         INT    NOT NULL,
@@ -12,6 +14,7 @@ CREATE TABLE spells_temporary_block (
     original  TEXT   NOT NULL CHECK (length(original) > 0),
     placed    TEXT   NOT NULL CHECK (length(placed) > 0),
     revert_at BIGINT NOT NULL,
+    reverted  BOOLEAN NOT NULL DEFAULT FALSE,
     PRIMARY KEY (world, x, y, z)
 );
 

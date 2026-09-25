@@ -53,10 +53,13 @@ public final class SpellsPaper {
     var guard = new Guard(protection);
     var say = new Say(config.label());
     var waypoints = new Waypoints(store, async);
+    var targets = new Targets(immune(config));
+    var harm = new Harm(guard, state, context.time());
     var tools =
         new Toolbox(
-            new Targets(immune(config)),
+            targets,
             guard,
+            harm,
             new Teleports(guard),
             new TemporaryBlocks(store, server, context.time(), async),
             state,
@@ -71,17 +74,18 @@ public final class SpellsPaper {
     var binder = new Binder(items, state, config.spells(), new Binder.Storage(store, async));
     var plugins = server.getPluginManager();
     plugins.registerEvents(new CastListener(items, state, flow, say), context.plugin());
-    plugins.registerEvents(new SpellEffectsListener(state, context.time()), context.plugin());
+    plugins.registerEvents(harm, context.plugin());
+    plugins.registerEvents(
+        new SpellEffectsListener(state, context.time(), targets), context.plugin());
     plugins.registerEvents(new TemporaryBlockGuard(tools.blocks()), context.plugin());
+    plugins.registerEvents(new WorldSaveListener(tools.blocks()), context.plugin());
     plugins.registerEvents(new CraftingGuard(items), context.plugin());
     var command = new SpellsCommand(config, items, binder, say);
     context
         .lifecycle()
         .registerEventHandler(
             LifecycleEvents.COMMANDS, event -> command.register(event.registrar()));
-    var ticker =
-        new SpellTicker(
-            state, tools.blocks(), tools.fx(), new SpellTicker.Clocked(server, context.time()));
+    var ticker = new SpellTicker(tools);
     var repeating = context.scheduler().repeatOnMainThread(TICK, TICK, ticker::tick);
     load(store, tools, async);
     return new SpellsPaper(tools, items, repeating);

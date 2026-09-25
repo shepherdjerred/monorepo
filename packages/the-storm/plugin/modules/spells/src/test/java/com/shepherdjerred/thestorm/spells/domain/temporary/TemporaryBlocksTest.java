@@ -115,6 +115,19 @@ final class TemporaryBlocksTest {
   }
 
   @Test
+  void revertingAgainIsIdempotent() {
+    // A revert marked but not yet saved is retried after a crash, whatever the world rolled back
+    // to.
+    var wall = block(0, AIR, BRICKS, 0);
+
+    var rolledBack = RevertRule.decide(wall, BRICKS, false);
+    var alreadyReverted = RevertRule.decide(wall, AIR, true);
+
+    assertThat(rolledBack).isEqualTo(RevertRule.Action.RESTORE);
+    assertThat(alreadyReverted).isEqualTo(RevertRule.Action.LEAVE);
+  }
+
+  @Test
   void aTemporaryBlockMustChangeSomething() {
     assertThatThrownBy(() -> block(0, AIR, AIR, 1)).isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> block(0, " ", AIR, 1)).isInstanceOf(IllegalArgumentException.class);

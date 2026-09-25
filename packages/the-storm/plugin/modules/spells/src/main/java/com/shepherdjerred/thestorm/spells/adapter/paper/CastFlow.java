@@ -18,6 +18,7 @@ import com.shepherdjerred.thestorm.spells.domain.config.Spellbook;
 import java.time.Duration;
 import java.util.EnumMap;
 import java.util.Map;
+import java.util.Optional;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -47,23 +48,42 @@ final class CastFlow {
   }
 
   /**
-   * Casts {@code kind} from {@code item}; true when the spell went off (and was paid for). The
-   * item's cooldown group starts cooling down, which the client draws on every item of the group.
+   * A cast that passed every gate and whose spell is prepared: committing it pays, starts the
+   * cooldown and applies the effect.
+   *
+   * @param caster who casts
+   * @param mode focus or scroll
+   * @param terms the spell's terms
+   * @param effect the prepared effect
+   */
+  record Prepared(Player caster, CastMode mode, SpellTerms terms, Effect effect) {}
+
+  /**
+   * Casts {@code kind} from {@code item} at once; true when the spell went off (and was paid for).
    */
   boolean cast(Player caster, SpellKind kind, CastMode mode, ItemStack item) {
+    var prepared = prepare(caster, kind, mode);
+    prepared.ifPresent(cast -> commit(cast, item));
+    return prepared.isPresent();
+  }
+
+  /**
+   * Runs the gates and the spell's preparation without changing anything; tells the caster why when
+   * refused.
+   */
+  Optional<Prepared> prepare(Player caster, SpellKind kind, CastMode mode) {
     if (!tools.state().ready()) {
       tools.say().refusal(caster, new Refusal.Loading());
-      return false;
+      return Optional.empty();
     }
     var terms = book.entry(kind).terms();
-    var cooldownKey = new CooldownKey(caster.getUniqueId(), terms.cooldownGroup());
     var refusal =
         CastRules.casting().first(new CastAttempt(mode, terms, state(caster, kind, terms)));
     if (refusal.isPresent()) {
       if (!sameClick(refusal.get(), terms)) {
         tools.say().refusal(caster, refusal.get());
       }
-      return false;
+      return Optional.empty();
     }
     var spell = spells.get(kind);
     if (spell == null) {
@@ -72,18 +92,27 @@ final class CastFlow {
     return switch (spell.prepare(caster)) {
       case Result.Err<Effect, CastProblem>(var problem) -> {
         tools.say().problem(caster, problem);
-        yield false;
+        yield Optional.empty();
       }
-      case Result.Ok<Effect, CastProblem>(var effect) -> {
-        if (mode == CastMode.FOCUS) {
-          Reagents.take(caster.getInventory(), terms.cost());
-        }
-        tools.state().cooldowns().start(cooldownKey, terms.cooldown(), tools.time().instant());
-        caster.setCooldown(item, (int) (terms.cooldown().toMillis() / MILLIS_PER_TICK));
-        effect.apply();
-        yield true;
-      }
+      case Result.Ok<Effect, CastProblem>(var effect) ->
+          Optional.of(new Prepared(caster, mode, terms, effect));
     };
+  }
+
+  /**
+   * Pays for {@code cast} (reagents for a focus; a scroll is consumed by the game), starts its
+   * cooldown group (drawn by the client on every item of the group) and applies the effect.
+   */
+  void commit(Prepared cast, ItemStack item) {
+    var caster = cast.caster();
+    var terms = cast.terms();
+    if (cast.mode() == CastMode.FOCUS) {
+      Reagents.take(caster.getInventory(), terms.cost());
+    }
+    var cooldownKey = new CooldownKey(caster.getUniqueId(), terms.cooldownGroup());
+    tools.state().cooldowns().start(cooldownKey, terms.cooldown(), tools.time().instant());
+    caster.setCooldown(item, (int) (terms.cooldown().toMillis() / MILLIS_PER_TICK));
+    cast.effect().apply();
   }
 
   private CasterState state(Player caster, SpellKind kind, SpellTerms terms) {

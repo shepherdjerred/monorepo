@@ -29,6 +29,11 @@ public final class Targets {
     this.immune = Set.copyOf(immune);
   }
 
+  /** True for the configured bosses no spell (nor Ward nor Stealth) ever affects. */
+  public boolean isImmune(Entity entity) {
+    return immune.contains(entity.getType());
+  }
+
   /** True when a spell cast by {@code caster} may act on {@code entity}. */
   public boolean affectable(Player caster, Entity entity) {
     if (!(entity instanceof LivingEntity living)
@@ -85,10 +90,20 @@ public final class Targets {
         .toList();
   }
 
-  /** Every affectable hostile monster within {@code radius} of the caster, nearest first. */
-  public List<Mob> hostilesAround(Player caster, double radius) {
+  /**
+   * Every affectable creature within {@code radius} of the caster that the caster can see: area
+   * spells never reach through walls.
+   */
+  public List<LivingEntity> inView(Player caster, double radius) {
     Entity body = caster;
     return around(caster, body.getLocation(), radius).stream()
+        .filter(caster::hasLineOfSight)
+        .toList();
+  }
+
+  /** Every affectable hostile monster the caster can see within {@code radius}, nearest first. */
+  public List<Mob> hostilesInView(Player caster, double radius) {
+    return inView(caster, radius).stream()
         .filter(Enemy.class::isInstance)
         .filter(Mob.class::isInstance)
         .map(Mob.class::cast)

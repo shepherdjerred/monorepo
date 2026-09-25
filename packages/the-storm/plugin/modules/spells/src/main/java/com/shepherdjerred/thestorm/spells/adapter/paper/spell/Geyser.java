@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
 import org.bukkit.entity.Player;
@@ -27,10 +28,11 @@ final class Geyser implements Spell {
         .map(
             target ->
                 () -> {
-                  var velocity = target.getVelocity();
-                  velocity.setY(settings.lift());
-                  target.setVelocity(velocity);
-                  Magic.hurt(target, settings.damage(), caster);
+                  var launch = target.getVelocity().setY(settings.lift());
+                  var blow = Harm.Blow.none().withDamage(settings.damage()).withVelocity(launch);
+                  if (!tools.harm().strike(caster, target, blow)) {
+                    return;
+                  }
                   var base = target.getLocation();
                   for (var up = 0; up < 3; up++) {
                     tools.fx().burst(kind(), base.clone().add(0, up, 0), 12, 0.3);
