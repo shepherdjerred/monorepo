@@ -191,8 +191,9 @@ export async function getChannelsSubscribedToPlayers(
  * different processes. Its own doc calls the unfiltered fallback "more work,
  * never the wrong work", and for the polling filter it was written for that is
  * true: widening the set only costs effort. It is exactly false wherever a
- * match's already-recorded roster is being rebuilt, because there the filter
- * NARROWS, so a gateway-owning worker does less work and the wrong work.
+ * match's already-recorded roster is being rebuilt, or a detected game's
+ * audience resolved, because there the filter NARROWS, so a gateway-owning
+ * worker does less work and the wrong work.
  *
  * This lookup takes the PUUIDs as given and answers the same way in every
  * process. One entry per `Account` row, as `getAccountsWithState` also returns,

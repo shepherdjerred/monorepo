@@ -4,8 +4,12 @@ import type {
   PlayerConfigEntry,
   RawCurrentGameInfo,
 } from "@scout-for-lol/data/index.ts";
-import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
-import { getAccountsWithState, prisma } from "#src/database/index.ts";
+import { LeaguePuuidSchema, MatchIdSchema } from "@scout-for-lol/data/index.ts";
+import {
+  getAccountConfigsByPuuids,
+  getAccountsWithState,
+  prisma,
+} from "#src/database/index.ts";
 import {
   isLikelyPreStartLobby,
   rosterIsAsCompleteAsItWillGet,
@@ -252,6 +256,9 @@ export async function checkActiveGames(
   logger.info("🔍 Starting pre-match active game check");
 
   try {
+    // The live-guild filter decides WORKLOAD only: which accounts this tick
+    // spends Spectator calls on. It must never decide who a detected game's
+    // notification is about — see `trackedPlayersInGame` below.
     const accountsWithState = await getAccountsWithState(
       prisma,
       getActiveServerIds(),
@@ -304,12 +311,6 @@ export async function checkActiveGames(
     logger.info(
       `📊 ${activeGames.length.toString()} active game(s) currently tracked across ${priorGameIdByPuuid.size.toString()} player(s)`,
     );
-
-    // Build lookup of all tracked puuids for cross-referencing with game participants
-    const allTrackedPuuids = new Set(
-      accountsWithState.map((a) => a.config.league.leagueAccount.puuid),
-    );
-    const allPlayerConfigs = accountsWithState.map((a) => a.config);
 
     const currentTime = new Date();
 
@@ -390,17 +391,22 @@ export async function checkActiveGames(
           continue;
         }
 
-        // Find ALL tracked players in this game's participants.
+        // Find ALL tracked players in this game's participants — the AUDIENCE:
+        // whose channels are notified, whose Classic participation is awarded,
+        // and which PUUIDs the ActiveGame row records. Read unfiltered, not from
+        // the workload roster above: `getActiveServerIds()` fails open while the
+        // gateway is not ready but NARROWS once it is, so a guild removed
+        // mid-match would otherwise silently drop its players from a game the
+        // rest of the roster is still being told about.
         // KNOWN LIMITATION: matched by puuid only, so privacy-scrubbed players
         // (null puuid in Spectator-V5) are not matched here and are dropped from
         // the pre-match notification/image. This is accepted data loss.
         const trackedPlayersInGame: PlayerConfigEntry[] =
-          allPlayerConfigs.filter((p) =>
-            gameInfo.participants.some(
-              (participant) =>
-                participant.puuid === p.league.leagueAccount.puuid &&
-                allTrackedPuuids.has(p.league.leagueAccount.puuid),
-            ),
+          await getAccountConfigsByPuuids(
+            gameInfo.participants.flatMap((participant) => {
+              const parsed = LeaguePuuidSchema.safeParse(participant.puuid);
+              return parsed.success ? [parsed.data] : [];
+            }),
           );
 
         const trackedPuuidsInGame = trackedPlayersInGame.map(
