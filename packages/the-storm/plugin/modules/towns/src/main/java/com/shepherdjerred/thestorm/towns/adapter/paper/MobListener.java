@@ -4,7 +4,6 @@ import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.Action;
 import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
 import com.shepherdjerred.thestorm.towns.domain.world.WorldEffect;
-import org.bukkit.Material;
 import org.bukkit.entity.EnderDragon;
 import org.bukkit.entity.Enderman;
 import org.bukkit.entity.Entity;
@@ -32,6 +31,9 @@ import org.bukkit.event.raid.RaidTriggerEvent;
  */
 final class MobListener implements Listener {
 
+  private static final Act SHRIEK = new Act(Action.INTERACT, Subject.BLOCK);
+  private static final Act SENSE = new Act(Action.USE_REDSTONE, Subject.REDSTONE_COMPONENT);
+
   private final Guard guard;
   private final BlockKinds kinds;
 
@@ -50,7 +52,9 @@ final class MobListener implements Listener {
       event.setCancelled(!Guard.flows(WorldEffect.MOB_GRIEF, guard.land(entity), land));
       return;
     }
-    var culprit = guard.culprit(entity);
+    // A player behind it: the player, a pet's owner, whoever rides it or leads it on a lead, so a
+    // sheep led into a town cannot eat its grass and a rabbit cannot eat its carrots.
+    var culprit = guard.presser(entity);
     if (culprit.isPresent()) {
       var act = new Act(Action.BUILD, kinds.subject(block.getType()));
       event.setCancelled(!guard.permits(culprit.get(), act, land));
@@ -105,14 +109,23 @@ final class MobListener implements Listener {
     }
   }
 
+  /**
+   * An outsider's vibrations (steps, projectiles, thrown items) do not set off a town's shriekers
+   * or drive its sculk-sensor redstone.
+   */
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-  void onShriek(BlockReceiveGameEvent event) {
+  void onVibration(BlockReceiveGameEvent event) {
     var block = event.getBlock();
-    if (block.getType() != Material.SCULK_SHRIEKER) {
+    var use =
+        switch (block.getType()) {
+          case SCULK_SHRIEKER -> SHRIEK;
+          case SCULK_SENSOR, CALIBRATED_SCULK_SENSOR -> SENSE;
+          default -> null;
+        };
+    if (use == null) {
       return;
     }
-    var culprit = guard.culprit(event.getEntity());
-    var use = new Act(Action.INTERACT, Subject.BLOCK);
+    var culprit = guard.presser(event.getEntity());
     if (culprit.isPresent() && !guard.permitsQuietly(culprit.get(), use, guard.land(block))) {
       event.setCancelled(true);
     }

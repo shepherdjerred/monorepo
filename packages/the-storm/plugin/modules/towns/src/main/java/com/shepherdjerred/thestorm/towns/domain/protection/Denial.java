@@ -13,4 +13,7 @@ public sealed interface Denial {
 
   /** PvP is off where the attacker or the victim stands. */
   record NoPvp() implements Denial {}
+
+  /** The creature is someone else's tamed pet. */
+  record NotYourPet() implements Denial {}
 }

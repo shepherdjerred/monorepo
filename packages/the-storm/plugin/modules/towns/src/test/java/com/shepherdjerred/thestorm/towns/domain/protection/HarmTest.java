@@ -47,11 +47,12 @@ final class HarmTest {
         new Case("player from spawn into wild", other, SPAWN, WILD, false),
         new Case("player in arena", other, ARENA, ARENA, true),
         new Case("player from arena into spawn", other, ARENA, SPAWN, false),
-        // Others' pets: PvP on both sides, and the pet's land lets the attacker hurt animals.
-        new Case("pet, both wild", pet, WILD, WILD, true),
+        // Others' pets: never, anywhere.
+        new Case("pet, both wild", pet, WILD, WILD, false),
         new Case("pet in PvP claim, entities closed", pet, WILD, A_PVP, false),
-        new Case("pet in PvP claim, entities open", pet, A_PVP, A_PVP_ENTITIES, true),
+        new Case("pet in PvP claim, entities open", pet, A_PVP, A_PVP_ENTITIES, false),
         new Case("pet in safe claim, entities open", pet, WILD, A_ENTITIES, false),
+        new Case("pet in the PvP arena", pet, ARENA, ARENA, false),
         // Protected entities: the land decides.
         new Case("animal in wild", animal, SPAWN, WILD, true),
         new Case("animal in claim", animal, WILD, A_SAFE, false),
@@ -107,8 +108,10 @@ final class HarmTest {
   }
 
   @Test
-  void aPetDeniedByLandNamesTheTown() {
-    assertThat(engine.decideHarm(Actor.player(NOMAD), A_PVP, new Victim.OthersPet(), A_PVP))
-        .isEqualTo(new Verdict.Deny(new Denial.ByTown(TOWN_A, Action.DAMAGE_ENTITY)));
+  void anotherPlayersPetIsNeverTheirsToHurt() {
+    assertThat(engine.decideHarm(Actor.player(NOMAD), WILD, new Victim.OthersPet(), WILD))
+        .isEqualTo(new Verdict.Deny(new Denial.NotYourPet()));
+    assertThat(engine.decideHarm(new Actor(NOMAD, true), WILD, new Victim.OthersPet(), WILD))
+        .isEqualTo(new Verdict.Deny(new Denial.NotYourPet()));
   }
 }
