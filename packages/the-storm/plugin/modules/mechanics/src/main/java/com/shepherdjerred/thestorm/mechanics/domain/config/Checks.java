@@ -3,7 +3,7 @@ package com.shepherdjerred.thestorm.mechanics.domain.config;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Cell;
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.List;
 
 /** Invariant checks shared by the config records. */
 final class Checks {
@@ -30,7 +30,7 @@ final class Checks {
   }
 
   /** A non-empty set of distinct, well-formed material keys, in the order written. */
-  static Set<String> materials(String name, Collection<String> materials) {
+  static List<String> materials(String name, Collection<String> materials) {
     if (materials.isEmpty()) {
       throw new IllegalArgumentException(name + " must list at least one block");
     }
@@ -41,6 +41,6 @@ final class Checks {
         throw new IllegalArgumentException(name + " lists " + material + " twice");
       }
     }
-    return Set.copyOf(set);
+    return List.copyOf(set);
   }
 }

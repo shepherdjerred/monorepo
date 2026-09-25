@@ -5,7 +5,6 @@ import static com.shepherdjerred.thestorm.mechanics.domain.TestGrid.SPRUCE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.shepherdjerred.thestorm.core.result.Result;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
@@ -42,13 +41,15 @@ final class StockTest {
   }
 
   @Test
-  void mergingPoolsTheSameMaterialAndRefusesMixing() {
-    assertThat(Stock.of(PLANKS, 2).merge(Stock.of(PLANKS, 3)))
-        .isEqualTo(Result.ok(Stock.of(PLANKS, 5)));
-    assertThat(Stock.empty().merge(Stock.of(SPRUCE, 3))).isEqualTo(Result.ok(Stock.of(SPRUCE, 3)));
-    assertThat(Stock.of(PLANKS, 2).merge(Stock.empty())).isEqualTo(Result.ok(Stock.of(PLANKS, 2)));
-    assertThat(Stock.of(PLANKS, 2).merge(Stock.of(SPRUCE, 1)))
-        .isEqualTo(
-            Result.err(new StructureProblem.MixedStock(Stock.of(PLANKS, 2), Stock.of(SPRUCE, 1))));
+  void aStockHoldsAtMostMax() {
+    var full = Stock.of(PLANKS, Stock.MAX);
+
+    assertThat(full.hasRoomFor(0)).isTrue();
+    assertThat(full.hasRoomFor(1)).isFalse();
+    assertThat(Stock.of(PLANKS, 10).hasRoomFor(Stock.MAX - 10)).isTrue();
+    assertThat(Stock.of(PLANKS, 10).hasRoomFor(Long.MAX_VALUE)).isFalse();
+    assertThatThrownBy(() -> full.plus(PLANKS, 1)).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> Stock.of(PLANKS, Stock.MAX + 1))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 }

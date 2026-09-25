@@ -1,20 +1,23 @@
 package com.shepherdjerred.thestorm.mechanics.domain.structure;
 
-import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Cell;
 import java.util.Optional;
 
 /**
- * Blocks a structure's sign holds while the structure is open. Only one material at a time.
+ * Blocks a structure's sign holds while the structure is open. Only one material at a time, and
+ * never more than {@link #MAX}.
  *
  * @param material what is held, empty when nothing is
  * @param count how many
  */
-public record Stock(Optional<String> material, int count) {
+public record Stock(Optional<String> material, long count) {
+
+  /** The most blocks one sign may hold; deposits beyond it are refused. */
+  public static final long MAX = 1_000_000L;
 
   public Stock {
-    if (count < 0) {
-      throw new IllegalArgumentException("stock must not be negative: " + count);
+    if (count < 0 || count > MAX) {
+      throw new IllegalArgumentException("stock must be between 0 and " + MAX + ": " + count);
     }
     if (material.isPresent() != (count > 0)) {
       throw new IllegalArgumentException(
@@ -28,7 +31,7 @@ public record Stock(Optional<String> material, int count) {
   }
 
   /** {@code count} blocks of {@code material}; an empty stock when {@code count} is 0. */
-  public static Stock of(String material, int count) {
+  public static Stock of(String material, long count) {
     return count == 0 ? empty() : new Stock(Optional.of(material), count);
   }
 
@@ -41,31 +44,24 @@ public record Stock(Optional<String> material, int count) {
     return material.map(other::equals).orElse(true);
   }
 
+  /** Whether {@code added} more blocks still fit under {@link #MAX}. */
+  public boolean hasRoomFor(long added) {
+    return added <= MAX - count;
+  }
+
   /** This stock with {@code added} more blocks of {@code of}. */
-  public Stock plus(String of, int added) {
+  public Stock plus(String of, long added) {
     if (!accepts(of)) {
       throw new IllegalArgumentException("cannot add " + of + " to a stock of " + material);
     }
-    return of(of, count + added);
+    return of(of, Math.addExact(count, added));
   }
 
   /** This stock with {@code taken} fewer blocks. */
-  public Stock minus(int taken) {
+  public Stock minus(long taken) {
     if (taken > count) {
       throw new IllegalArgumentException("cannot take " + taken + " from " + count);
     }
     return count == taken ? empty() : new Stock(material, count - taken);
-  }
-
-  /** Both stocks pooled into one, or a problem if they hold different materials. */
-  public Result<Stock, StructureProblem> merge(Stock other) {
-    if (other.isEmpty()) {
-      return Result.ok(this);
-    }
-    var otherMaterial = other.material().orElseThrow();
-    if (!accepts(otherMaterial)) {
-      return Result.err(new StructureProblem.MixedStock(this, other));
-    }
-    return Result.ok(plus(otherMaterial, other.count()));
   }
 }

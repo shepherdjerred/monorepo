@@ -6,23 +6,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.mechanics.domain.TestConfigs;
 import com.shepherdjerred.thestorm.mechanics.domain.TestGrid;
-import com.shepherdjerred.thestorm.mechanics.domain.config.BlockDropsConfig;
-import com.shepherdjerred.thestorm.mechanics.domain.config.CookingPotConfig;
-import com.shepherdjerred.thestorm.mechanics.domain.config.ElevatorConfig;
-import com.shepherdjerred.thestorm.mechanics.domain.config.HiddenSwitchConfig;
-import com.shepherdjerred.thestorm.mechanics.domain.config.LightSwitchConfig;
 import com.shepherdjerred.thestorm.mechanics.domain.config.MechanicsConfig;
-import com.shepherdjerred.thestorm.mechanics.domain.config.PaintingSwitcherConfig;
-import com.shepherdjerred.thestorm.mechanics.domain.config.PistonConfig;
-import com.shepherdjerred.thestorm.mechanics.domain.config.SignCopierConfig;
-import com.shepherdjerred.thestorm.mechanics.domain.config.Unlock;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Direction;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Mount;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Pos;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.SignView;
 import com.shepherdjerred.thestorm.mechanics.domain.sign.Mechanism;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -32,29 +22,7 @@ final class CreationRulesTest {
 
   private static final Pos SIGN = new Pos(0, 64, 0);
 
-  private static final MechanicsConfig CONFIG =
-      new MechanicsConfig(
-          new HiddenSwitchConfig(TestConfigs.access(1)),
-          new LightSwitchConfig(TestConfigs.access(1), 8, 16, List.of("minecraft:candle")),
-          new CookingPotConfig(
-              TestConfigs.access(1), List.of("minecraft:fire"), Map.of("minecraft:coal", 8), 64),
-          new BlockDropsConfig(new Unlock(true, 1), List.of("minecraft:glass")),
-          new ElevatorConfig(TestConfigs.access(2), 64),
-          TestConfigs.span(8, 1),
-          TestConfigs.gate(3, 8, 8),
-          TestConfigs.span(8, 1),
-          new SignCopierConfig(new Unlock(true, 3), "minecraft:feather"),
-          new PaintingSwitcherConfig(new Unlock(true, 3)),
-          new PistonConfig(
-              new Unlock(true, 4),
-              new Unlock(true, 4),
-              new Unlock(true, 5),
-              new Unlock(true, 5),
-              1.5,
-              8,
-              4,
-              12,
-              List.of("minecraft:obsidian")));
+  private static final MechanicsConfig CONFIG = TestConfigs.mechanics();
 
   private static final CreationRules RULES = CreationRules.standard(CONFIG);
 
