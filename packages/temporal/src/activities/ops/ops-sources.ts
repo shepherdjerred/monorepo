@@ -9,8 +9,14 @@ import type { KubernetesClient } from "@shepherdjerred/ops-clients/kubernetes.ts
 import type { LinearClient } from "@shepherdjerred/ops-clients/linear.ts";
 import type { LokiClient } from "@shepherdjerred/ops-clients/loki.ts";
 import type { PostHogClient } from "@shepherdjerred/ops-clients/posthog.ts";
+import {
+  errorTraceQuery,
+  slowTraceQuery,
+  type TempoClient,
+} from "@shepherdjerred/ops-clients/tempo.ts";
 import type { PrometheusClient } from "@shepherdjerred/ops-clients/prometheus.ts";
 import { DEPENDENCY_DASHBOARD_TITLE } from "@shepherdjerred/ops-clients/renovate.ts";
+import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
 import {
   bugsinkIssuesUnresolved,
   githubPullRequestOldestOpenAgeSeconds,
@@ -48,6 +54,7 @@ import {
 import { mapPostHog, mapProbes, PROBE_QUERY } from "./product.ts";
 import { mapRenovate } from "./renovate.ts";
 import { mapTalos, parseMachineStatuses, parseServices } from "./talos.ts";
+import { mapTraces, TRACE_WINDOW_MS } from "./traces.ts";
 
 // Each collector does the I/O for one source, updates that source's gauges,
 // and hands the upstream data to its pure mapper.
@@ -239,6 +246,25 @@ export async function collectLogs(
     await loki.errorVolumeByNamespace(LOG_WINDOW, context.now),
     context,
   );
+}
+
+export async function collectTraces(
+  tempo: TempoClient,
+  context: OpsContext,
+): Promise<OpsCollection> {
+  const window = {
+    start: new Date(context.now.getTime() - TRACE_WINDOW_MS),
+    end: context.now,
+    limit: OPS_POLICY.traceSearchLimit,
+  };
+  const [errors, slow] = await Promise.all([
+    tempo.search({ query: errorTraceQuery(), ...window }),
+    tempo.search({
+      query: slowTraceQuery(OPS_POLICY.slowTraceSeconds),
+      ...window,
+    }),
+  ]);
+  return mapTraces(errors, slow, context);
 }
 
 export async function collectMaintenance(

@@ -280,6 +280,16 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
           ],
           ports: [{ port: IntOrString.fromNumber(3100), protocol: "TCP" }],
         },
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tempo" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(3200), protocol: "TCP" }],
+        },
       ],
     },
   });

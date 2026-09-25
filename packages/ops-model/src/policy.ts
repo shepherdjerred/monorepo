@@ -30,6 +30,13 @@ export const OPS_POLICY = {
   diskErrorRatio: 0.9,
   /** Backups older than this many hours are stale. */
   backupMaxAgeHours: 36,
+  /** Root traces slower than this are listed as slow in the last hour. */
+  slowTraceSeconds: 5,
+  /**
+   * Tempo search result cap per query. Tempo has no TraceQL metrics here,
+   * so counts come from search results; a full page is reported as "≥".
+   */
+  traceSearchLimit: 500,
   /** Hourly snapshot samples are retained this long for review trends. */
   snapshotHistoryDays: 90,
 } as const;

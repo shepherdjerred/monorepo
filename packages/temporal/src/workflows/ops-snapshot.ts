@@ -1,6 +1,7 @@
 import {
   ActivityFailure,
   isCancellation,
+  patched,
   proxyActivities,
 } from "@temporalio/workflow";
 import type { OpsActivities } from "#activities/ops/ops-activities.ts";
@@ -34,6 +35,7 @@ export const OPS_COLLECTORS: readonly (readonly [SourceId, CollectorName])[] = [
   ["posthog", "collectOpsPosthog"],
   ["probes", "collectOpsProbes"],
   ["logs", "collectOpsLogs"],
+  ["traces", "collectOpsTraces"],
   ["maintenance", "collectOpsMaintenance"],
   ["ai", "collectOpsAi"],
 ];
@@ -81,10 +83,25 @@ function failureReason(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+/**
+ * The traces collector was added after this workflow first shipped. Runs
+ * whose history predates it replay without scheduling it and report the
+ * source as not collected, which keeps their replay deterministic.
+ */
+export const OPS_TRACES_PATCH = "ops-traces-collector";
+
 export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
+  const collectTraces = patched(OPS_TRACES_PATCH);
   const outcomes = await Promise.all(
     OPS_COLLECTORS.map(
       async ([source, collector]): Promise<OpsCollectorOutcome> => {
+        if (source === "traces" && !collectTraces) {
+          return {
+            source,
+            ok: false,
+            error: "not collected by this workflow build",
+          };
+        }
         try {
           const result = await collectors[collector]();
           return { source, ok: true, result };
