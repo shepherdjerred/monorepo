@@ -10,6 +10,8 @@ import com.shepherdjerred.thestorm.arena.domain.wave.Difficulty;
 import com.shepherdjerred.thestorm.arena.domain.wave.WaveKind;
 import com.shepherdjerred.thestorm.arena.domain.wave.WaveScaling;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
@@ -135,10 +137,10 @@ final class ShippedContentTest {
     }
   }
 
-  @Test
-  void aSoloFullClearEarnsExactlyTheCapOnTheFirstTier() {
+  /** What one player earns clearing all 72 waves of an arena on tier {@code tier}. */
+  private static long fullClear(int tier) {
     var rewards = content.settings().rewards();
-    var tier = content.settings().tier(1);
+    var chosen = content.settings().tier(tier);
     var player = UUID.randomUUID();
     var ledger = RewardLedger.EMPTY;
     var total = 0L;
@@ -146,15 +148,48 @@ final class ShippedContentTest {
       var grant =
           ledger.grant(
               player,
-              rewards.waveReward(wave, content.waves().kind(wave), tier),
-              rewards.capPerGame());
+              rewards.waveReward(wave, content.waves().kind(wave), chosen),
+              rewards.capPerGame(chosen));
       ledger = grant.ledger();
       total += grant.amount();
     }
+    return total;
+  }
 
-    assertThat(rewards.capPerGame()).isEqualTo(750);
+  @Test
+  void aSoloFullClearEarnsExactlyTheCapOnTheFirstTier() {
+    var rewards = content.settings().rewards();
+
+    assertThat(rewards.capPerGame(content.settings().tier(1))).isEqualTo(750);
     assertThat(rewards.firstWave()).isEqualTo(30);
-    assertThat(total).isEqualTo(750);
+    assertThat(fullClear(1)).isEqualTo(750);
+  }
+
+  @Test
+  void harderTiersRaiseTheCapAndAFullClearReachesIt() {
+    var rewards = content.settings().rewards();
+
+    assertThat(fullClear(2)).isEqualTo(900);
+    assertThat(fullClear(3)).isEqualTo(1050);
+    assertThat(fullClear(4)).isEqualTo(1200);
+    assertThat(fullClear(5)).isEqualTo(1500);
+    for (var tier = 1; tier <= content.settings().tiers().size(); tier++) {
+      var chosen = content.settings().tier(tier);
+      assertThat(fullClear(tier)).as("tier %d", tier).isEqualTo(rewards.capPerGame(chosen));
+      assertThat(rewards.capPerGame(chosen))
+          .isEqualTo(Math.round(rewards.baseCapPerGame() * chosen.reward()));
+    }
+  }
+
+  @Test
+  void theVaultDayTurnsOverAtMidnightInLosAngeles() {
+    var vault = content.settings().rewards().vault();
+
+    assertThat(vault.zone()).isEqualTo("America/Los_Angeles");
+    assertThat(vault.day(Instant.parse("2026-09-26T06:59:00Z")))
+        .isEqualTo(LocalDate.of(2026, 9, 25));
+    assertThat(vault.day(Instant.parse("2026-09-26T07:00:00Z")))
+        .isEqualTo(LocalDate.of(2026, 9, 26));
   }
 
   @Test

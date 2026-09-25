@@ -104,7 +104,7 @@ public final class ArenaHarness implements AutoCloseable {
     services.provide(CrystalFormatter.class, wallets);
     enabling =
         plugin ->
-            new ArenaModule(p -> chunks)
+            new ArenaModule(context -> chunks)
                 .enable(
                     new ModuleContext(
                         plugin,
