@@ -1,0 +1,32 @@
+# The chat module (replaces VentureChat). Owned by the repository; the plugin
+# never writes it. Every key is required.
+
+# The channel new players talk in: global or war.
+defaultChannel: global
+
+# The 2017 chat rules. Players with thestorm.chat.bypass skip the caps and
+# repeat limits.
+filter:
+  # Longest message, in characters (Minecraft's own limit is 256).
+  maxLength: 256
+  # More all-capital words than this (two or more letters, none lowercase)
+  # blocks the message.
+  maxCapsWords: 4
+  # The same message may not be sent again within this many seconds.
+  repeatCooldownSeconds: 30
+
+# Channel formats in MiniMessage, after the 2017 style
+# `&8[&2G&8][prefix player&8]: &7message`. Every format must use <prefix>,
+# <player> and <message>. <prefix> is the player's track title (empty until
+# the tracks module provides it); <player> and <message> are escaped, so
+# players cannot inject tags.
+channels:
+  global: "<dark_gray>[<dark_green>G</dark_green>][<prefix><white><player></white>]: </dark_gray><gray><message>"
+  war: "<dark_gray>[<dark_red>W</dark_red>][<prefix><white><player></white>]: </dark_gray><gray><message>"
+  staff: "<dark_gray>[<gold>S</gold>][<prefix><white><player></white>]: </dark_gray><yellow><message>"
+  town: "<dark_gray>[<green>T</green>][<prefix><white><player></white>]: </dark_gray><green><message>"
+  nation: "<dark_gray>[<aqua>N</aqua>][<prefix><white><player></white>]: </dark_gray><aqua><message>"
+
+# Messages relayed into Global from outside the game (Discord). Uses <source>
+# (the bridge's label), <author> and <message>, all escaped.
+externalFormat: "<dark_gray>[<blue><source></blue>][<white><author></white>]: </dark_gray><gray><message>"
