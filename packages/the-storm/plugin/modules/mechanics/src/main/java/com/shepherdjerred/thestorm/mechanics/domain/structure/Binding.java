@@ -30,11 +30,20 @@ public sealed interface Binding {
   }
 
   /**
-   * A gate sign and the columns it was built with.
+   * A gate sign and the columns it was built with. A second gate sign with the same columns links
+   * to the first, like a bridge's two ends; then exactly one of the two keeps the stock.
    *
    * @param gate the column tops and material
+   * @param partner the other gate sign for the same columns, if one is linked
+   * @param keeper whether this sign holds the gate's stock (always, when it has no partner)
    */
-  record GateFrame(Gate gate) implements Binding {
+  record GateFrame(Gate gate, Optional<Pos> partner, boolean keeper) implements Binding {
+
+    public GateFrame {
+      if (partner.isEmpty() && !keeper) {
+        throw new IllegalArgumentException("a gate sign on its own keeps its stock");
+      }
+    }
 
     @Override
     public String material() {

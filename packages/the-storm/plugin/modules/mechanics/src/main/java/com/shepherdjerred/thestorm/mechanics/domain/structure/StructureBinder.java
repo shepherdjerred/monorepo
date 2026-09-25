@@ -5,12 +5,16 @@ import com.shepherdjerred.thestorm.mechanics.domain.Names;
 import com.shepherdjerred.thestorm.mechanics.domain.config.MechanicsConfig;
 import com.shepherdjerred.thestorm.mechanics.domain.config.SpanConfig;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.BlockGrid;
+import com.shepherdjerred.thestorm.mechanics.domain.grid.Box;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.Pos;
 import com.shepherdjerred.thestorm.mechanics.domain.grid.SignView;
 import com.shepherdjerred.thestorm.mechanics.domain.sign.Feature;
 import com.shepherdjerred.thestorm.mechanics.domain.sign.Mechanism;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * Binds structure signs to their structure when they are written, and checks the binding on every
@@ -21,8 +25,10 @@ import java.util.Optional;
  * living end), and links both. The first end keeps the structure's stock; the second holds none.
  * Either end toggles, and only the two linked signs are ever read or written.
  *
- * <p><b>Gates</b> bind one sign to the column tops found when it is written. Other gate signs
- * nearby are never touched; each holds only what it took out itself.
+ * <p><b>Gates</b> bind a sign to the column tops found when it is written. A second gate sign that
+ * finds exactly the same columns (a gate worked from both sides) links to the first, like a
+ * bridge's ends: the first keeps the stock and either toggles. Any other gate sign is never read
+ * for stock or written.
  *
  * <p>On use the structure must still match its binding (same partner, material and base blocks, or
  * the same column tops), or the use is refused. Writing a structure sign that holds blocks is
@@ -116,7 +122,7 @@ public final class StructureBinder {
     var gateSign = site.mechanism().feature() == Feature.GATE;
     return switch (binding.orElseThrow()) {
       case Binding.SpanEnd end when !gateSign -> resolveSpan(site, end);
-      case Binding.GateFrame frame when gateSign -> resolveGate(site, frame.gate());
+      case Binding.GateFrame frame when gateSign -> resolveGate(site, frame);
       case Binding.SpanEnd _, Binding.GateFrame _ -> Result.err(new StructureProblem.NotBound());
     };
   }
@@ -213,13 +219,59 @@ public final class StructureBinder {
                   structure.cells().stream()
                       .filter(pos -> site.grid().cellAt(pos).is(gate.material()))
                       .toList();
+              // The creator must be allowed to change the tops too: they anchor the gate.
+              var cells = new ArrayList<>(structure.cells());
+              cells.addAll(gate.tops());
               return StructureToggle.movable(standing, site.grid())
-                  .map(
-                      ok ->
-                          new Bind(
-                              List.of(new Write(site.sign(), new Binding.GateFrame(gate))),
-                              structure.cells()));
+                  .map(ok -> new Bind(gateWrites(site, gate), cells));
             });
+  }
+
+  /** Links to a gate sign that already frames the same columns, else binds this sign alone. */
+  private List<Write> gateWrites(Site site, Gate gate) {
+    var radius = 2 * config.gate().searchRadius();
+    var twin =
+        Box.around(site.sign(), radius).stream()
+            .filter(pos -> !pos.equals(site.sign()))
+            .filter(pos -> isFreeTwin(site, pos, gate))
+            .min(
+                Comparator.<Pos>comparingLong(pos -> pos.distanceSquared(site.sign()))
+                    .thenComparing(Pos.ORDER));
+    if (twin.isEmpty()) {
+      return List.of(new Write(site.sign(), new Binding.GateFrame(gate, Optional.empty(), true)));
+    }
+    var keeper = twin.orElseThrow();
+    var other = site.records().at(keeper).flatMap(SignRecord::gateFrame).orElseThrow();
+    return List.of(
+        new Write(site.sign(), new Binding.GateFrame(gate, Optional.of(keeper), false)),
+        new Write(keeper, new Binding.GateFrame(other.gate(), Optional.of(site.sign()), true)));
+  }
+
+  /** A gate sign framing {@code gate}'s columns and not linked to another living gate sign. */
+  private static boolean isFreeTwin(Site site, Pos pos, Gate gate) {
+    var frame = site.records().at(pos).flatMap(SignRecord::gateFrame);
+    if (frame.isEmpty() || !sameColumns(frame.orElseThrow().gate(), gate)) {
+      return false;
+    }
+    var partner = frame.orElseThrow().partner();
+    return partner.isEmpty()
+        || partner.orElseThrow().equals(site.sign())
+        || !gateLinksBack(site, partner.orElseThrow(), pos);
+  }
+
+  private static boolean sameColumns(Gate first, Gate second) {
+    return first.material().equals(second.material())
+        && Set.copyOf(first.tops()).equals(Set.copyOf(second.tops()));
+  }
+
+  /** Whether the gate sign at {@code partner} is linked to the one at {@code sign}. */
+  private static boolean gateLinksBack(Site site, Pos partner, Pos sign) {
+    return site.records()
+        .at(partner)
+        .flatMap(SignRecord::gateFrame)
+        .flatMap(Binding.GateFrame::partner)
+        .filter(sign::equals)
+        .isPresent();
   }
 
   private Result<Bound, StructureProblem> resolveSpan(Site site, Binding.SpanEnd end) {
@@ -261,7 +313,26 @@ public final class StructureBinder {
             });
   }
 
-  private Result<Bound, StructureProblem> resolveGate(Site site, Gate gate) {
+  private Result<Bound, StructureProblem> resolveGate(Site site, Binding.GateFrame frame) {
+    var gate = frame.gate();
+    var keeper = site.sign();
+    if (frame.partner().isPresent()) {
+      var partner = frame.partner().orElseThrow();
+      var other =
+          site.records()
+              .at(partner)
+              .flatMap(SignRecord::gateFrame)
+              .filter(twin -> twin.partner().filter(site.sign()::equals).isPresent())
+              .filter(twin -> sameColumns(twin.gate(), gate));
+      if (other.isEmpty()) {
+        return Result.err(new StructureProblem.PartnerMissing(partner));
+      }
+      if (other.orElseThrow().keeper() == frame.keeper()) {
+        throw new IllegalStateException(
+            "exactly one gate sign keeps the stock: " + site.sign() + " and " + partner);
+      }
+      keeper = frame.keeper() ? site.sign() : partner;
+    }
     for (var top : gate.tops()) {
       if (!GateFinder.isTop(site.grid(), top, gate.material())) {
         return Result.err(
@@ -269,6 +340,6 @@ public final class StructureBinder {
       }
     }
     var structure = GateFinder.columns(site.grid(), gate, config.gate().maxHeight());
-    return Result.ok(new Bound(structure, site.sign()));
+    return Result.ok(new Bound(structure, keeper));
   }
 }

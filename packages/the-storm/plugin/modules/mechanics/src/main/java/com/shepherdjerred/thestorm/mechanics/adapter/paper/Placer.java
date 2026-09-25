@@ -8,6 +8,7 @@ import java.util.List;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.MultipleFacing;
 import org.bukkit.block.data.Waterlogged;
 
@@ -23,11 +24,36 @@ final class Placer {
   private Placer() {}
 
   /**
-   * Sets {@code changes}, placing copies of the structure's template block (never waterlogged).
-   * Each placed block is one item, as the stock counts it: config verification refuses any other
-   * material, and a template that is not is a broken invariant.
+   * A checked set of structure changes, ready to place.
+   *
+   * @param grid the world
+   * @param template the block data placed blocks copy
+   * @param changes what to set
    */
-  static void apply(PaperGrid grid, Structure structure, List<BlockChange> changes) {
+  record Placement(PaperGrid grid, BlockData template, List<BlockChange> changes) {
+
+    /** Sets every change. Everything was checked beforehand; nothing here can fail. */
+    void apply() {
+      var placed = new ArrayList<Block>();
+      for (var change : changes) {
+        var block = grid.block(change.pos());
+        if (change.isRemoval()) {
+          block.setType(Material.AIR, true);
+        } else {
+          block.setBlockData(template.clone(), true);
+          placed.add(block);
+        }
+      }
+      placed.forEach(Placer::connect);
+    }
+  }
+
+  /**
+   * Checks every change before any block is touched: each still finds the block its plan saw, and
+   * the template is the structure's material in a one-item form (config verification refuses any
+   * other, so a failure here is a broken invariant). Placed copies are never waterlogged.
+   */
+  static Placement check(PaperGrid grid, Structure structure, List<BlockChange> changes) {
     var template = grid.block(structure.template()).getBlockData().clone();
     if (!PaperGrid.key(template.getMaterial()).equals(structure.material())
         || !Materials.isSingleItem(template)) {
@@ -36,22 +62,14 @@ final class Placer {
     if (template instanceof Waterlogged waterlogged) {
       waterlogged.setWaterlogged(false);
     }
-    var placed = new ArrayList<Block>();
     for (var change : changes) {
-      var block = grid.block(change.pos());
-      var found = PaperGrid.key(block.getType());
+      var found = PaperGrid.key(grid.block(change.pos()).getType());
       if (!found.equals(change.from())) {
         throw new IllegalStateException(
             "plan expected " + change.from() + " at " + change.pos() + " but found " + found);
       }
-      if (change.isRemoval()) {
-        block.setType(Material.AIR, true);
-      } else {
-        block.setBlockData(template.clone(), true);
-        placed.add(block);
-      }
     }
-    placed.forEach(Placer::connect);
+    return new Placement(grid, template, changes);
   }
 
   /**

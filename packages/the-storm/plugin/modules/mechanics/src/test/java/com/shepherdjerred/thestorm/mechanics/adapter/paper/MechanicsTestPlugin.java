@@ -62,6 +62,11 @@ public class MechanicsTestPlugin extends JavaPlugin {
               UUID attacker, Location attackerAt, HarmTarget target, Location victimAt) {
             return victimAt.getBlockX() < 0 ? new Decision.Denied(DENIED) : Decision.allowed();
           }
+
+          @Override
+          public boolean sameLand(Location a, Location b) {
+            return (a.getBlockX() < 0) == (b.getBlockX() < 0);
+          }
         };
     services.provide(Protection.class, protection);
     var context =

@@ -102,6 +102,25 @@ final class GateFinderTest {
   }
 
   @Test
+  void aPostWithNoRoomBelowIsNotAColumn() {
+    // A lone fence post on the ground beside the sign, and a real column further away.
+    var grid = closedGate(0).solid(new Pos(0, 61, -1), FENCE);
+    grid.fill(new Pos(2, 61, 2), new Pos(2, 66, 2), FENCE);
+
+    var result = GateFinder.find(grid, SIGN, TestConfigs.gate(3, 16, 12));
+
+    assertThat(result.map(Gate::tops)).isEqualTo(Result.ok(java.util.List.of(new Pos(2, 66, 2))));
+  }
+
+  @Test
+  void onlyPostsMeansNoGate() {
+    var grid = closedGate(0).solid(new Pos(0, 61, -1), FENCE).solid(new Pos(1, 61, 1), FENCE);
+
+    assertThat(GateFinder.find(grid, SIGN, TestConfigs.gate(3, 16, 12)))
+        .isEqualTo(Result.err(new StructureProblem.NoGate(3)));
+  }
+
+  @Test
   void aColumnStopsAtAnotherColumnsTop() {
     // Two separate fence runs in one column: 61-62 and 65-66, with air between.
     var grid = new TestGrid().fill(new Pos(-4, 60, -4), new Pos(4, 60, 4), STONE);
@@ -111,9 +130,9 @@ final class GateFinderTest {
 
     var gate = found(grid, 3, 16, 12);
 
+    // The upper column stops one block above the lower column's top, so they never merge.
     assertThat(gate.cells())
-        .containsExactlyInAnyOrder(
-            new Pos(0, 65, 1), new Pos(0, 64, 1), new Pos(0, 63, 1), new Pos(0, 61, 1));
+        .containsExactlyInAnyOrder(new Pos(0, 65, 1), new Pos(0, 64, 1), new Pos(0, 61, 1));
   }
 
   @Test

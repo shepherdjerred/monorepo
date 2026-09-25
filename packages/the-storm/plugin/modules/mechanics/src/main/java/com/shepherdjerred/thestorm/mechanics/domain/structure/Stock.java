@@ -13,7 +13,7 @@ import java.util.Optional;
 public record Stock(Optional<String> material, long count) {
 
   /** The most blocks one sign may hold; deposits beyond it are refused. */
-  public static final long MAX = 1_000_000L;
+  public static final long MAX = 4096L;
 
   public Stock {
     if (count < 0 || count > MAX) {
