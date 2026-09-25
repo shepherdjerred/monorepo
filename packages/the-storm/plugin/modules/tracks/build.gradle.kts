@@ -1,6 +1,10 @@
-plugins { id("storm.module-conventions") }
+plugins { id("storm.jooq-conventions") }
 
 val libs = the<VersionCatalogsExtension>().named("libs")
 
-// LuckPerms is on the server; tracks grant levels as LuckPerms groups.
-dependencies { compileOnly(libs.findLibrary("luckperms-api").get()) }
+dependencies {
+  // Purchases are paid through the economy's Wallets port.
+  implementation(project(":economy"))
+  // LuckPerms is on the server; tracks grant levels as LuckPerms groups.
+  compileOnly(libs.findLibrary("luckperms-api").get())
+}

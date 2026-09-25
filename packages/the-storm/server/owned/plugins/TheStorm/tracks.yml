@@ -1,0 +1,140 @@
+# Owned by the repository; the plugin never writes it.
+# Progression tracks: players buy levels I-V in each track with crystals.
+# The first track a player buys is their primary; no other track may pass its
+# level. Changing the primary takes an admin reset (/perks admin reset).
+#
+# The LuckPerms groups storm-<track>-<level> are managed by the plugin: it
+# creates them and sets every player's membership from its own records. Do not
+# assign them in LuckPerms; use /perks admin set <player> <track> <level>.
+# If the server dies between charging a purchase and saving its level, the
+# ledger shows a track:<track>:<level> payment with no level; grant it with
+# /perks admin set.
+
+pricing:
+  # The price of levels I to V before the multiplier.
+  baseCosts: [1000, 2500, 5000, 10000, 20000]
+  # The multiplier for the 1st (primary) to 5th track a player starts, in the
+  # order they first bought them. Prices round half up to whole crystals.
+  orderMultipliers: [1, 1.5, 2, 3, 4]
+
+# The wait after buying a level before buying another, in any track.
+# 1440 minutes is 24 hours; 0 disables it.
+purchaseCooldownMinutes: 1440
+
+# /perks buy and /perks admin reset must be run again within this many seconds
+# to confirm.
+confirmSeconds: 30
+
+tracks:
+  shopkeeper:
+    displayName: Shopkeeper
+    color: "#E0B040"
+    summary: Run a business. Sell from chest shops, trade at the spawn market and bring customers to your door.
+    levels:
+      - title: Stallholder
+        unlocks:
+          - Create chest shops to sell and buy items.
+      - title: Trader
+        unlocks:
+          - Rent a market plot in the spawn market.
+          - A higher chest shop limit.
+      - title: Merchant
+        unlocks:
+          - Post shop ads that other players see.
+          - A higher chest shop limit.
+      - title: Proprietor
+        unlocks:
+          - Set a shop warp so anyone can travel to your shop.
+          - A higher chest shop limit.
+      - title: Magnate
+        unlocks:
+          - The highest chest shop limit.
+          - First pick of market plots when they open up.
+  mechanic:
+    displayName: Mechanic
+    color: "#D9822B"
+    summary: Build The Storm's mechanisms, from switches and cooking pots to elevators, bridges and special pistons.
+    levels:
+      - title: Apprentice
+        unlocks:
+          - Build switches.
+          - Cook with the cooking pot.
+          - Glass and bookshelves drop themselves when you break them.
+      - title: Tinkerer
+        unlocks:
+          - Build elevators between floors.
+          - Build retracting bridges.
+          - Mechanisms only work where you are allowed to build.
+      - title: Mechanic
+        unlocks:
+          - Build gates.
+          - Build hidden doors.
+      - title: Artificer
+        unlocks:
+          - Copy signs with the sign copier.
+          - Build map and painting switchers.
+      - title: Master Mechanic
+        unlocks:
+          - Build special pistons that move what vanilla pistons cannot.
+  engineer:
+    displayName: Engineer
+    color: "#3FB27F"
+    summary: Automate what vanilla can't. Permit farms, turn their output into crystals and link machines across chunks.
+    levels:
+      - title: Surveyor
+        unlocks:
+          - Hold a farm permit for a crop farm.
+      - title: Builder
+        unlocks:
+          - Hold a breeding permit for an animal farm.
+          - Feed farm output into crystals.
+      - title: Engineer
+        unlocks:
+          - Build logistics networks that move items between chunks.
+      - title: Chief Engineer
+        unlocks:
+          - Larger logistics networks with more linked containers.
+          - More farm and breeding permits.
+      - title: Architect
+        unlocks:
+          - Lead machine-built community projects.
+  spellcaster:
+    displayName: Spellcaster
+    color: "#A070E0"
+    summary: Cast spells bound to items, with cooldowns you can see. Storm and weather magic, wards and a ghast-themed Carpet.
+    levels:
+      - title: Initiate
+        unlocks:
+          - Cast tier I spells.
+      - title: Adept
+        unlocks:
+          - Cast tier II spells, including wards.
+      - title: Conjurer
+        unlocks:
+          - Cast tier III spells, including the Carpet.
+      - title: Stormcaller
+        unlocks:
+          - Cast tier IV spells, including storm and weather magic.
+      - title: Archmage
+        unlocks:
+          - Cast tier V spells, the strongest storm magic.
+  governor:
+    displayName: Governor
+    color: "#4A7FD9"
+    summary: Found and grow a town. Each level adds to your town's plot bank and raises the level it can reach.
+    levels:
+      - title: Founder
+        unlocks:
+          - Found a town.
+      - title: Mayor
+        unlocks:
+          - More chunks your town can claim.
+      - title: Governor
+        unlocks:
+          - More chunks your town can claim.
+      - title: Chancellor
+        unlocks:
+          - More chunks your town can claim.
+      - title: Sovereign
+        unlocks:
+          - The most chunks a town can claim.
