@@ -252,6 +252,12 @@
         "e2e/**/*.ts"
       ]
     },
+    // Vitest configs and global setup reached only through the test:e2e
+    // script, whose `bun --no-install --bun vitest ... --config` form knip
+    // cannot parse.
+    "packages/the-storm": {
+      "entry": ["vitest.e2e.config.ts", "tests/e2e/global-setup.ts"]
+    },
     "packages/temporal": {
       "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
