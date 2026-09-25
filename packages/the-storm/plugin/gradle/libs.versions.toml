@@ -20,6 +20,8 @@ archunit = "1.5.0"
 mockbukkit = "4.116.1"
 mockito = "5.24.0"
 jda = "6.7.0"
+luckperms = "5.5"
+bluemap = "2.8.1"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
@@ -43,6 +45,8 @@ archunit = { module = "com.tngtech.archunit:archunit-junit5", version.ref = "arc
 mockbukkit = { module = "org.mockbukkit.mockbukkit:mockbukkit-v26.2", version.ref = "mockbukkit" }
 mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 jda = { module = "net.dv8tion:JDA", version.ref = "jda" }
+luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms" }
+bluemap-api = { module = "de.bluecolored:bluemap-api", version.ref = "bluemap" }
 
 [plugins]
 errorprone = { id = "net.ltgt.errorprone", version = "5.1.1" }

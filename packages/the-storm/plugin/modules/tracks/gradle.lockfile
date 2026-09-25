@@ -46,6 +46,7 @@ net.kyori:adventure-text-serializer-json:5.2.0=compileClasspath,mainPmdAuxClassp
 net.kyori:adventure-text-serializer-legacy:5.2.0=compileClasspath,mainPmdAuxClasspath,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
 net.kyori:adventure-text-serializer-plain:5.2.0=compileClasspath,mainPmdAuxClasspath,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
 net.kyori:option:1.1.0=compileClasspath,mainPmdAuxClasspath,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
+net.luckperms:api:5.5=compileClasspath,mainPmdAuxClasspath
 net.md-5:bungeecord-chat:1.21-R0.2-deprecated+build.21=compileClasspath,mainPmdAuxClasspath,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
 net.sf.saxon:Saxon-HE:12.10=pmd
 net.sourceforge.pmd:pmd-ant:7.27.0=pmd

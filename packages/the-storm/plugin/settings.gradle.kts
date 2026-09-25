@@ -6,6 +6,10 @@ dependencyResolutionManagement {
     mavenCentral()
     // Paper API and its Mojang/md_5 dependencies.
     maven("https://repo.papermc.io/repository/maven-public/")
+    // BlueMap API (town claim markers).
+    maven("https://repo.bluecolored.de/releases") {
+      content { includeGroup("de.bluecolored") }
+    }
   }
 }
 
