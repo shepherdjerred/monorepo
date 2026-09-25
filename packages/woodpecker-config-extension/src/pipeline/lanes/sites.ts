@@ -50,6 +50,11 @@ const SOURCE_BUILT_SITES = [
   },
   { lane: "site-stocks", site: "stocks-sjer-red", filter: "stocks-sjer-red" },
   {
+    lane: "site-macos-cross",
+    site: "macos-cross-site",
+    filter: "'@shepherdjerred/macos-cross-site'",
+  },
+  {
     lane: "site-better-skill-capped",
     site: "better-skill-capped",
     filter: "better-skill-capped",

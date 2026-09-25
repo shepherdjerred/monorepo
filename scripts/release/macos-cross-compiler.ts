@@ -17,8 +17,9 @@
  * never pinned into the version catalog.
  *
  * Environment:
- *   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY  SeaweedFS (CI: deploy identity)
- *   BUILDKITE_COMMIT                          commit the images are built from
+ *   AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY  SeaweedFS. CI uses a read-only identity
+ *                                            scoped to the SDK bucket; `upload` needs write.
+ *   CI_COMMIT_SHA                            commit the images are built from
  */
 
 import { mkdir, rm } from "node:fs/promises";
@@ -200,7 +201,7 @@ async function main(): Promise<void> {
     }
     case "smoke":
     case "push": {
-      const gitSha = requireEnv("BUILDKITE_COMMIT");
+      const gitSha = requireEnv("CI_COMMIT_SHA");
       await ensureBuilder();
       for (const sdk of await loadSdks()) {
         await fetchStage(sdk);
