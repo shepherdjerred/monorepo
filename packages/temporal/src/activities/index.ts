@@ -16,6 +16,7 @@ import { dataDragonActivities } from "./data-dragon/data-dragon.ts";
 import { lanePriorActivities } from "./lane-prior-refresh.ts";
 import { scoutSeasonRefreshActivities } from "./scout/scout-season-refresh.ts";
 import { veleroOrphanAuditActivities } from "./homelab/velero-orphan-audit.ts";
+import { veleroR2OrphanAuditActivities } from "./homelab/velero-r2-orphan-audit.ts";
 import { outcomeActivities } from "./outcome.ts";
 import { cancelBuildkiteBuildsActivities } from "./cancel-buildkite-builds.ts";
 import { checkPrMergeConflictsActivities } from "./maintenance/check-pr-merge-conflicts.ts";
@@ -69,6 +70,7 @@ export const infraActivities = {
   ...zfsMaintenanceActivities,
   ...bugsinkHousekeepingActivities,
   ...veleroOrphanAuditActivities,
+  ...veleroR2OrphanAuditActivities,
   ...homelabCrdImportsRefreshActivities,
   ...tasknotesCanaryActivities,
   ...golinkClusterActivities,

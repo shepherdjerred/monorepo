@@ -54,9 +54,7 @@ toolkit prom query 'velero_orphan_local_snapshots_total'
 Also confirm the workflow itself ran recently:
 
 ```bash
-kubectl exec -n temporal deploy/temporal-temporal-server -- \
-  temporal --address temporal-temporal-server-service:7233 \
-  schedule describe --schedule-id velero-orphan-audit
+toolkit temporal schedule describe --schedule-id velero-orphan-audit
 ```
 
 If the workflow hasn't run in > 36h, the metric is stale — investigate the workflow first, not the orphans.
@@ -124,7 +122,7 @@ than the 24-hour fence, and is not protected by live Velero metadata or a
 | Check                   | What to verify                                                                  | If unexpected                                                             |
 | ----------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | Live Backup CRs         | `velero backup get \| wc -l` matches recent expectation (e.g. 25–35 backups)    | Investigate before pruning — Velero state may be the problem, not orphans |
-| Workflow last-run       | `temporal schedule describe ...` shows recent successful runs                   | The metric may be stale                                                   |
+| Workflow last-run       | `toolkit temporal schedule describe ...` shows recent successful runs           | The metric may be stale                                                   |
 | Newest orphan timestamp | All orphans should pre-date the last legitimate Velero re-deploy / install date | If orphans are recent, investigate why                                    |
 | Dataset live count      | Each dataset's live snapshot count ≥ matches its expected schedule subscription | If 0 live, the volume may have lost backup labels                         |
 
@@ -251,9 +249,7 @@ op run -- bun run r2:orphans -- inspect --manifest /tmp/r2-postcheck.json
 Both should report 0. The next workflow run will confirm:
 
 ```bash
-kubectl exec -n temporal deploy/temporal-temporal-server -- \
-  temporal --address temporal-temporal-server-service:7233 \
-  schedule trigger --schedule-id velero-orphan-audit
+toolkit temporal schedule trigger --schedule-id velero-orphan-audit
 ```
 
 Wait a few minutes, then re-query the metrics:
