@@ -1,0 +1,5 @@
+plugin/**/.gradle/
+plugin/**/build/
+plugin/.kotlin/
+plugin/build-logic/.kotlin/
+plugin/dist/run/
