@@ -1,7 +1,5 @@
-import {
-  COMPETITIVE_PROGRESSION_CATALOG,
-  queuesWithoutPostMatchData,
-} from "@scout-for-lol/data";
+import { queuesWithoutPostMatchData } from "@scout-for-lol/data";
+import { challengeFacts, hallOfFameFacts } from "#src/explore/product-facts.ts";
 import {
   LAKE_COVERAGE_RULE,
   LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH,
@@ -59,22 +57,13 @@ import {
  * kept per queue family and never per role.
  */
 function hallOfFameSection(canReadBoard: boolean): readonly string[] {
-  const { records, queueFamilies } = COMPETITIVE_PROGRESSION_CATALOG.hall;
-  const recordLabels = records.map((record) => record.label).join("; ");
-  const familyLabels = queueFamilies
-    .map(
-      (family) =>
-        `${family.label}${family.defaultEnabled ? " (on by default)" : ""}`,
-    )
-    .join("; ");
   return [
     "## The Hall of Fame",
     // No count: a number stated only here reaches answers as a figure no
     // query or tool produced, and the judge rightly calls it unsupported.
-    `Scout's Hall of Fame is a per-server board of single-game records. It holds these records and no others: ${recordLabels}.`,
-    `Each record is kept separately for every queue family the server has switched on: ${familyLabels}. Records are split by queue family, never by role, position or champion — there are no 'support records', only records that support players may hold.`,
-    "A game counts only if it finished normally, lasted at least five minutes, did not end in an early surrender, was not a custom game, and ended after the server started tracking.",
-    "Anything else — KDA, kill participation, longest or fastest game, multi-kill counts, a role's board — is not a Hall record. Say so in one sentence and answer with the nearest real record instead of declining.",
+    // The facts themselves are shared with the replay judge.
+    ...hallOfFameFacts(),
+    "Asked for something that is not a Hall record, say so in one sentence and answer with the nearest real record instead of declining.",
     "'Who is in the Hall of Fame?' and 'show all records' mean every record's current holder, for the default-on families unless the user names one. Answer that; never ask which record they meant.",
     "It is not Riot's Hall of Legends, not an esports hall of fame, and not a player.",
     ...(canReadBoard
@@ -126,10 +115,11 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
           // No end date exists anywhere: ChallengeRun has only a start, and
           // the contract schema has no window. "Challenges ending soon" was
           // declined as unqueryable when the true answer is that none end.
-          "Scout challenges have no end date: a challenge run stays active until it is completed or archived. Asked what is ending soon, say that plainly.",
+          ...challengeFacts(),
+          "Asked what is ending soon, say plainly that challenges do not end.",
           // Nor any reward: nothing in the challenge model pays out, so
           // "highest reward" has one true answer, not a missing column.
-          "Scout challenges carry no reward, prize or Bryan Bucks payout. Asked which pays most, say so plainly, and offer the hardest or least-completed challenges instead.",
+          "Asked which pays most, say plainly that challenges carry no reward, and offer the hardest or least-completed challenges instead.",
           "Challenges can be read as well as drafted: list_my_challenge_runs for the user's own runs and progress, list_challenge_catalog for what is available and how often players here complete each one, challenge_leaderboard for who has completed the most.",
         ]
       : [
@@ -186,7 +176,7 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     // declining, across two sweeps. The referent was never ambiguous to a
     // reader: it is the people this server tracks.
     "Set servers to null by default. Most questions — about champions, roles, objectives, the game, or 'who has the most' among players — are about every match Scout has ingested, and are answered with servers null.",
-    "Use servers only when the question is about the user's own people: 'our', 'we', 'us', 'my team', 'my group' or 'the server'. If that query finds fewer than 10 games, say how few, then also answer across every ingested match and label it as that. If a source refuses servers (match_teams, match_team_bans), run it again with servers null and say it covers every match.",
+    "Use servers only when the question is about the user's own people: 'our', 'we', 'us', 'my team', 'my group' or 'the server'. If that query finds fewer than 10 games, say how few, then also answer across every ingested match and label it as that. Before saying a server has no games of some kind, count them with a plain COUNT(DISTINCT match_id) and no HAVING: a thresholded query that returns nothing does not show the server has none. If a source refuses servers (match_teams, match_team_bans), run it again with servers null and say it covers every match.",
     "'our', 'we', 'us', 'my team' and 'the server' mean the players the user's servers track. Choose the servers this way: call list_my_servers; if it lists one server, use it; if the user named servers, use those; 'all my servers' or 'across my servers' is \"all_my_servers\"; keep the servers the conversation already chose; otherwise ask which server in one short question naming a few. Answer for the players of the servers you chose and say which servers you covered. Do not ask which players they meant, and do not ask the user to name themselves, unless the question needs one specific person (like 'my best duo partner') and no name has been given.",
     // "Late night", "newly released", "our top two players" and "the
     // leaderboard" each sent turns into a clarifying question — six across the

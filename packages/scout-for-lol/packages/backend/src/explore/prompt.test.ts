@@ -301,6 +301,7 @@ describe("unresolved concepts", () => {
     expect(instructions).toContain("Set servers to null by default");
     expect(instructions).toContain("fewer than 10 games");
     expect(instructions).toContain("run it again with servers null");
+    expect(instructions).toContain("a thresholded query that returns nothing");
     expect(instructions).toContain("call list_my_servers");
     expect(instructions).toContain("if it lists one server, use it");
     expect(instructions).toContain("'all my servers'");

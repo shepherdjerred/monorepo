@@ -1,3 +1,4 @@
+import { challengeFacts, hallOfFameFacts } from "#src/explore/product-facts.ts";
 import { describe, expect, test } from "vitest";
 import {
   JUDGE_FAILURES,
@@ -384,6 +385,16 @@ describe("judgeEvidenceFromTrace", () => {
       { queryText: "first", rowsReturned: 25, scope: null },
       { queryText: "second", rowsReturned: 1, scope: "one server" },
     ]);
+  });
+
+  test("gives the judge the product facts Explore is told", () => {
+    // Explore repeats them ("multi-kills are not a Hall record"), and a judge
+    // that never saw them graded them as figures no query produced.
+    const prompt = judgeSystemPrompt();
+    expect(prompt).toContain("SCOUT PRODUCT FACTS");
+    for (const fact of [...hallOfFameFacts(), ...challengeFacts()]) {
+      expect(prompt).toContain(fact);
+    }
   });
 
   test("tells the judge what a zero-row query does and does not show", () => {

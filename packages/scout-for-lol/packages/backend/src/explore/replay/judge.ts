@@ -3,6 +3,7 @@ import { numericClaims } from "#src/explore/replay/diff.ts";
 import { describeThrown } from "#src/explore/replay/describe-thrown.ts";
 import type { ChipExpectation } from "#src/explore/replay/profiles.ts";
 import { LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH } from "#src/explore/lake-coverage.ts";
+import { challengeFacts, hallOfFameFacts } from "#src/explore/product-facts.ts";
 
 /**
  * Grading a replayed answer on quality, which no other number here measures.
@@ -384,7 +385,8 @@ const JUDGE_SYSTEM_PROMPT = [
   "     - a number the user wrote in the question and the answer repeats (listed below as FIGURES THE QUESTION CONTAINS);",
   "     - a parameter the answer proposes for something it is drafting or offering to run — a deadline, a stake, a game floor, a time window;",
   "     - an example inside a clarifying question or an offer, such as 'did you mean 10 PM to 5 AM?';",
-  "     - the period the answer says it covered.",
+  "     - the period the answer says it covered;",
+  "     - a fact about how Scout's own features work, listed below as SCOUT PRODUCT FACTS. Explore is told these; repeating one needs no query.",
   "   A query that returned zero rows is evidence that nothing matched it, in its scope. It supports 'none of your server's games matched' when that is what the query asked, and nothing broader: a zero-row query with a HAVING threshold or a narrow filter does not show the data has none at all.",
   "   'unsupported' when the answer reports findings and there is no query and no tool output, or the findings go beyond what the queries could show, or they contradict the evidence.",
   "   'not_applicable' when the answer reports no findings.",
@@ -400,6 +402,9 @@ const JUDGE_SYSTEM_PROMPT = [
   "4. refusalKind — if a feature is switched off for this guild, was the gating the stated reason?",
   "   'wrong_reason' when it refused a gated feature by blaming missing data instead.",
   "   'not_applicable' when nothing relevant was gated off, or it did not refuse.",
+  "",
+  "SCOUT PRODUCT FACTS — true without any query:",
+  ...[...hallOfFameFacts(), ...challengeFacts()].map((fact) => `  - ${fact}`),
   "",
   "Answer only with the structured observation. Keep notes under 60 words.",
 ].join("\n");
