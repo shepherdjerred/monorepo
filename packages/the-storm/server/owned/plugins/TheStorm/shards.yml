@@ -1,0 +1,227 @@
+# Storm Shards. Owned by the repository; the plugin never writes it.
+# Every key is required. Unknown keys, unknown materials/entities and broken
+# invariants stop the module at startup. Text is MiniMessage.
+
+item:
+  material: PRISMARINE_SHARD
+  name: "<dark_aqua>Storm Shard"
+  lore:
+    - "<gray>The shard glows of an <dark_aqua>ancient</dark_aqua> power."
+    - "<gray>Use <dark_aqua>/shards</dark_aqua> for info."
+  # Vanilla model until the server resource pack ships thestorm:storm_shard.
+  itemModel: "minecraft:prismarine_shard"
+  glint: true
+
+drops:
+  # World keys, not folder names. Arena and event worlds stay out.
+  worlds:
+    - "minecraft:overworld"
+    - "minecraft:the_nether"
+    - "minecraft:the_end"
+  # Mobs from these never drop shards, so spawner and egg farms yield nothing.
+  # Trial spawners stay allowed: the Breeze only comes from them.
+  excludedSpawnReasons:
+    - SPAWNER
+    - SPAWNER_EGG
+    - DISPENSE_EGG
+    - EGG
+    - COMMAND
+    - CUSTOM
+    - BUCKET
+  # chance per kill (0.0005 = 0.05%); min/max shards per drop.
+  # v4 (2017) numbers, retuned for modern farms: anything a vanilla farm
+  # kills by the thousand sits at the common-hostile 0.05%.
+  mobs:
+    # Bosses (the Giant is gone; the Warden takes its place)
+    WARDEN: { chance: 0.5, min: 1, max: 2 }
+    ENDER_DRAGON: { chance: 0.5, min: 1, max: 3 }
+    WITHER: { chance: 0.05, min: 1, max: 3 }
+    ELDER_GUARDIAN: { chance: 0.25, min: 1, max: 2 }
+    # Rare fights
+    PIGLIN_BRUTE: { chance: 0.02, min: 1, max: 1 }
+    RAVAGER: { chance: 0.01, min: 1, max: 1 }
+    EVOKER: { chance: 0.005, min: 1, max: 1 }
+    BREEZE: { chance: 0.005, min: 1, max: 1 }
+    GHAST: { chance: 0.005, min: 1, max: 2 }
+    WITCH: { chance: 0.002, min: 1, max: 1 }
+    BLAZE: { chance: 0.001, min: 1, max: 1 }
+    # Common hostiles
+    ZOMBIE: { chance: 0.0005, min: 1, max: 1 }
+    ZOMBIE_VILLAGER: { chance: 0.0005, min: 1, max: 1 }
+    HUSK: { chance: 0.0005, min: 1, max: 1 }
+    DROWNED: { chance: 0.0005, min: 1, max: 1 }
+    SKELETON: { chance: 0.0005, min: 1, max: 1 }
+    STRAY: { chance: 0.0005, min: 1, max: 1 }
+    BOGGED: { chance: 0.0005, min: 1, max: 1 }
+    PARCHED: { chance: 0.0005, min: 1, max: 1 }
+    SPIDER: { chance: 0.0005, min: 1, max: 1 }
+    CAVE_SPIDER: { chance: 0.00025, min: 1, max: 1 }
+    CREEPER: { chance: 0.0005, min: 1, max: 1 }
+    ENDERMAN: { chance: 0.0005, min: 1, max: 1 }
+    ENDERMITE: { chance: 0.0005, min: 1, max: 1 }
+    SILVERFISH: { chance: 0.0002, min: 1, max: 1 }
+    SLIME: { chance: 0.0002, min: 1, max: 1 }
+    MAGMA_CUBE: { chance: 0.0002, min: 1, max: 1 }
+    GUARDIAN: { chance: 0.0005, min: 1, max: 1 }
+    PHANTOM: { chance: 0.0005, min: 1, max: 1 }
+    PILLAGER: { chance: 0.0005, min: 1, max: 1 }
+    VINDICATOR: { chance: 0.0005, min: 1, max: 1 }
+    WITHER_SKELETON: { chance: 0.0005, min: 1, max: 1 }
+  # chance per naturally generated block broken by a player with the right
+  # tool and without Silk Touch. Player-placed (and piston-moved) ore never
+  # drops. Stone and obsidian are gone: fluid generators make them endlessly.
+  blocks:
+    EMERALD_ORE: { chance: 0.01, min: 1, max: 2 }
+    DEEPSLATE_EMERALD_ORE: { chance: 0.01, min: 1, max: 2 }
+    DIAMOND_ORE: { chance: 0.0075, min: 1, max: 2 }
+    DEEPSLATE_DIAMOND_ORE: { chance: 0.0075, min: 1, max: 2 }
+    ANCIENT_DEBRIS: { chance: 0.0075, min: 1, max: 2 }
+    LAPIS_ORE: { chance: 0.0025, min: 1, max: 1 }
+    DEEPSLATE_LAPIS_ORE: { chance: 0.0025, min: 1, max: 1 }
+    GOLD_ORE: { chance: 0.0005, min: 1, max: 1 }
+    DEEPSLATE_GOLD_ORE: { chance: 0.0005, min: 1, max: 1 }
+    NETHER_GOLD_ORE: { chance: 0.0002, min: 1, max: 1 }
+    IRON_ORE: { chance: 0.00025, min: 1, max: 1 }
+    DEEPSLATE_IRON_ORE: { chance: 0.00025, min: 1, max: 1 }
+    COPPER_ORE: { chance: 0.000125, min: 1, max: 1 }
+    DEEPSLATE_COPPER_ORE: { chance: 0.000125, min: 1, max: 1 }
+    COAL_ORE: { chance: 0.000125, min: 1, max: 1 }
+    DEEPSLATE_COAL_ORE: { chance: 0.000125, min: 1, max: 1 }
+    REDSTONE_ORE: { chance: 0.000125, min: 1, max: 1 }
+    DEEPSLATE_REDSTONE_ORE: { chance: 0.000125, min: 1, max: 1 }
+    NETHER_QUARTZ_ORE: { chance: 0.000125, min: 1, max: 1 }
+    DEEPSLATE: { chance: 0.000075, min: 1, max: 1 }
+
+upgrades:
+  # Storm I..V in order. Every attempt spends `cost` shards. A fail keeps the
+  # item as it was; a break destroys it (off by default, for fairness).
+  tiers:
+    - { cost: 1, failChance: 0.0, breakChance: 0.0 }
+    - { cost: 2, failChance: 0.1, breakChance: 0.0 }
+    - { cost: 4, failChance: 0.1, breakChance: 0.0 }
+    - { cost: 6, failChance: 0.2, breakChance: 0.0 }
+    - { cost: 10, failChance: 0.3, breakChance: 0.0 }
+  broadcastFromTier: 3
+  loreLine: "<dark_aqua>Storm <tier>"
+
+# Right-click one of these blocks in the rain, holding gear, with shards in
+# your inventory. The first is the emerald block inside the spawn windmill.
+# PLACEHOLDER coordinates (v4's -71 74 -243): set them to the rebuilt windmill.
+altars:
+  - { world: "minecraft:overworld", x: -71, y: 74, z: -243 }
+
+bonuses:
+  # Share of every bonus that applies against players (full against mobs).
+  pvpMultiplier: 0.4
+  # Most damage a full Storm armor set can take away (tier V sums to 23%).
+  maxTotalReduction: 0.2
+  # Extra damage dealt per tier (Storm I..V). Half of v4's +10..50%: the 1.9
+  # attack cooldown, sweeping, crits and enchantments already stack on top.
+  weapons:
+    sword:
+      materials:
+        - WOODEN_SWORD
+        - STONE_SWORD
+        - COPPER_SWORD
+        - GOLDEN_SWORD
+        - IRON_SWORD
+        - DIAMOND_SWORD
+        - NETHERITE_SWORD
+      bonus: [0.05, 0.10, 0.15, 0.20, 0.25]
+    axe:
+      materials:
+        - WOODEN_AXE
+        - STONE_AXE
+        - COPPER_AXE
+        - GOLDEN_AXE
+        - IRON_AXE
+        - DIAMOND_AXE
+        - NETHERITE_AXE
+      bonus: [0.05, 0.10, 0.15, 0.20, 0.25]
+    # The mace's smash already scales with fall height; keep its share small.
+    mace:
+      materials: [MACE]
+      bonus: [0.03, 0.06, 0.09, 0.12, 0.15]
+    spear:
+      materials:
+        - WOODEN_SPEAR
+        - STONE_SPEAR
+        - COPPER_SPEAR
+        - GOLDEN_SPEAR
+        - IRON_SPEAR
+        - DIAMOND_SPEAR
+        - NETHERITE_SPEAR
+      bonus: [0.05, 0.10, 0.15, 0.20, 0.25]
+    trident:
+      materials: [TRIDENT]
+      bonus: [0.05, 0.10, 0.15, 0.20, 0.25]
+    bow:
+      materials: [BOW]
+      bonus: [0.05, 0.10, 0.15, 0.20, 0.25]
+    crossbow:
+      materials: [CROSSBOW]
+      bonus: [0.05, 0.10, 0.15, 0.20, 0.25]
+  # Damage taken away per tier, per worn piece (v4's table).
+  armor:
+    helmet:
+      materials:
+        - LEATHER_HELMET
+        - COPPER_HELMET
+        - CHAINMAIL_HELMET
+        - GOLDEN_HELMET
+        - IRON_HELMET
+        - DIAMOND_HELMET
+        - NETHERITE_HELMET
+        - TURTLE_HELMET
+      bonus: [0.01, 0.02, 0.03, 0.04, 0.05]
+    chestplate:
+      materials:
+        - LEATHER_CHESTPLATE
+        - COPPER_CHESTPLATE
+        - CHAINMAIL_CHESTPLATE
+        - GOLDEN_CHESTPLATE
+        - IRON_CHESTPLATE
+        - DIAMOND_CHESTPLATE
+        - NETHERITE_CHESTPLATE
+      bonus: [0.03, 0.04, 0.05, 0.06, 0.07]
+    leggings:
+      materials:
+        - LEATHER_LEGGINGS
+        - COPPER_LEGGINGS
+        - CHAINMAIL_LEGGINGS
+        - GOLDEN_LEGGINGS
+        - IRON_LEGGINGS
+        - DIAMOND_LEGGINGS
+        - NETHERITE_LEGGINGS
+      bonus: [0.02, 0.03, 0.04, 0.05, 0.06]
+    boots:
+      materials:
+        - LEATHER_BOOTS
+        - COPPER_BOOTS
+        - CHAINMAIL_BOOTS
+        - GOLDEN_BOOTS
+        - IRON_BOOTS
+        - DIAMOND_BOOTS
+        - NETHERITE_BOOTS
+      bonus: [0.01, 0.02, 0.03, 0.04, 0.05]
+
+messages:
+  found: "The storm leaves <dark_aqua><amount> Storm Shard(s)</dark_aqua> behind."
+  noStorm: "The windmill only turns in the storm."
+  notUpgradeable: "Hold a weapon or a piece of armor to call the storm into it."
+  atMaxTier: "This already holds all the storm it can: Storm V."
+  notEnoughShards: "Storm <tier> takes <dark_aqua><needed></dark_aqua> shards; you carry <held>."
+  upgraded: "The storm answers. Your <item> is now <dark_aqua>Storm <tier></dark_aqua>."
+  failed: "The storm passes over. The shards are spent, and your <item> is unchanged (Storm <tier> failed)."
+  shattered: "The storm was too much. Your <item> shattered reaching Storm <tier>."
+  broadcast: "<dark_aqua><player></dark_aqua> called the storm into their <item>: <dark_aqua>Storm <tier></dark_aqua>!"
+  infoUnupgraded: "Not yet touched by the storm. Storm I takes <dark_aqua><cost></dark_aqua> shard(s) at the windmill, in the rain."
+  infoWeapon: "<dark_aqua>Storm <tier></dark_aqua>: +<pve> damage against mobs, +<pvp> against players."
+  infoArmor: "<dark_aqua>Storm <tier></dark_aqua>: -<pve> damage from mobs, -<pvp> from players (full sets cap out)."
+  infoNotUpgradeable: "The storm can't hold on to that. Weapons, bows, tridents and armor only."
+  given: "Gave <amount> Storm Shard(s) to <player>."
+  received: "You received <dark_aqua><amount> Storm Shard(s)</dark_aqua>."
+  help:
+    - "<dark_aqua>Storm Shards</dark_aqua> are extremely rare: mine ore or defeat mobs and bosses to find them."
+    - "Bring them to the emerald block in the spawn windmill <dark_aqua>while it rains</dark_aqua>, hold a weapon or armor, and right-click it."
+    - "Each tier, Storm I to Storm V, adds damage to weapons or takes damage off armor. <dark_aqua>/shards info</dark_aqua> shows the item in your hand."
