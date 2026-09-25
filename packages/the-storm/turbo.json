@@ -6,6 +6,12 @@
     // outside turbo's concern; no task declares outputs. Turbo's win is the
     // cached log/exit replay keyed on source hash. MISE_DATA_DIR and JAVA_HOME
     // must pass through or strict env mode hides the mise-managed JDK/Gradle.
+    //
+    // Every task is a separate Gradle process on the same project directory,
+    // and concurrent Gradle builds overwrite each other's class files (CI build
+    // 17316: "bad class file ... NoSuchFileException"). The tasks are chained
+    // so turbo never runs two of them at once: build → typecheck → lint →
+    // test / test:ci. Gradle's up-to-date checks keep the later steps cheap.
     "build": {
       "inputs": [
         "plugin/**/*.java",
@@ -29,6 +35,7 @@
       ]
     },
     "test": {
+      "dependsOn": ["lint"],
       "inputs": [
         "plugin/**/*.java",
         "plugin/**/*.kts",
@@ -51,6 +58,7 @@
       ]
     },
     "test:ci": {
+      "dependsOn": ["lint"],
       "inputs": [
         "plugin/**/*.java",
         "plugin/**/*.kts",
@@ -73,6 +81,7 @@
       ]
     },
     "lint": {
+      "dependsOn": ["typecheck"],
       "inputs": [
         "plugin/**/*.java",
         "plugin/**/*.kts",
@@ -92,6 +101,7 @@
       ]
     },
     "typecheck": {
+      "dependsOn": ["build"],
       "inputs": [
         "plugin/**/*.java",
         "plugin/**/*.kts",
