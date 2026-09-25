@@ -7,6 +7,8 @@ import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.ModuleRegistry;
 import com.shepherdjerred.thestorm.core.module.Services;
 import com.shepherdjerred.thestorm.core.module.StormModule;
+import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
+import com.shepherdjerred.thestorm.core.players.SqlPlayerDirectory;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import java.io.IOException;
@@ -45,6 +47,14 @@ public final class TheStormPlugin extends JavaPlugin {
     }
     var db = StormDatabase.open(getDataPath().resolve("the-storm.db"));
     database = db;
+    db.migrate("core", getClass().getClassLoader());
+    var players = new SqlPlayerDirectory(db);
+    services.provide(PlayerDirectory.class, players);
+    getServer()
+        .getPluginManager()
+        .registerEvents(
+            new PlayerDirectoryListener(players, InstantSource.system(), getComponentLogger()),
+            this);
     var context =
         new ModuleContext(
             this,
