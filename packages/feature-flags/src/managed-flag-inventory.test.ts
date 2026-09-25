@@ -334,3 +334,16 @@ describe("Scout V2 post-match ownership", () => {
     }
   });
 });
+
+describe("Scout V2 prematch ownership", () => {
+  test("leaves prematch detection with v1 in every environment", () => {
+    // A cutover switch that ramps per stage, not a rollback: merging it must
+    // change nothing, so both environments resolve the v1 ownership that
+    // already runs, and each ramp records its own environment override.
+    for (const environment of ["beta", "prod"]) {
+      expect(
+        scoutPolicyFlag(environment, "scout_v2_prematch_ownership_enabled"),
+      ).toMatchObject({ default: false, rollouts: [] });
+    }
+  });
+});

@@ -10,17 +10,17 @@ import {
   scoutPostMatchDiscoveryV2InputCodec,
   scoutPostMatchDiscoveryV2ResultCodec,
 } from "#src/workflow-contracts-v2.ts";
-import { scoutPostMatchDiscoveryV2Workflow } from "./index.ts";
+import { scoutPostMatchDiscoveryV2Workflow } from "#src/workflows/index.ts";
 import {
   createScoutV2MatchStore,
   scoutV2MatchActivityStubs,
   MATCH_ID,
-} from "./match-v2.test-fixtures.ts";
+} from "#src/workflows/match-v2.test-fixtures.ts";
 import { legacyPostMatchDiscoveryWorkflowId } from "./postmatch-ownership-v2.ts";
 import {
   settleWorkflow,
   useScoutV2WorkflowHarness,
-} from "./workflow-harness.test-fixtures.ts";
+} from "#src/workflows/workflow-harness.test-fixtures.ts";
 
 const harness = useScoutV2WorkflowHarness();
 

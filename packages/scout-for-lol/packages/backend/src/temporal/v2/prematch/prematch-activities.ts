@@ -1,11 +1,13 @@
+import { Context } from "@temporalio/activity";
 import type { ScoutTemporalV2Activities } from "@scout-for-lol/temporal/activities";
 import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
 
 /**
- * The three Activities of the V2 prematch path, as the Activity Worker sees
- * them.
+ * The Activities of the V2 prematch path, as the Activity Worker sees them:
+ * the three that detect and capture live games, and the three the prematch
+ * ownership router takes, renews and releases its pass claim through.
  *
- * All three are declared `realtime` in `SCOUT_V2_ACTIVITY_QUEUE_CLASSES`, and
+ * All six are declared `realtime` in `SCOUT_V2_ACTIVITY_QUEUE_CLASSES`, and
  * that is the product decision showing through: a game-start notification is
  * worth nothing after the game, so a spectator read must never queue behind a
  * render or a lake projection.
@@ -23,10 +25,57 @@ export type ScoutV2PrematchActivities = Pick<
   | "discoverPrematchGamesV2"
   | "archivePrematchSnapshotV2"
   | "planPrematchFanOutV2"
+  | "resolvePrematchPassOwnerV2"
+  | "renewPrematchPassClaimV2"
+  | "releasePrematchPassClaimV2"
 >;
 
 export function createScoutV2PrematchActivities(): ScoutV2PrematchActivities {
   return {
+    resolvePrematchPassOwnerV2: async () =>
+      await heartbeatWhile(
+        { phase: "resolving-prematch-owner-v2" },
+        async () => {
+          const { resolvePrematchPassOwnerV2 } =
+            await import("#src/temporal/v2/ownership/prematch-ownership.ts");
+          const info = Context.current().info;
+          // The run ID is the one identity every attempt of this Activity, and
+          // the renewal and release after it, agree on; the first-scheduled
+          // timestamp is the one claim instant they agree on.
+          const run = info.workflowExecution;
+          if (run === undefined) {
+            throw new Error(
+              "resolvePrematchPassOwnerV2 ran outside a Workflow, so no run can hold the prematch pass claim",
+            );
+          }
+          return await resolvePrematchPassOwnerV2({
+            holder: run.runId,
+            claimedAt: new Date(info.scheduledTimestampMs),
+            now: new Date(),
+          });
+        },
+      ),
+    renewPrematchPassClaimV2: async (input) =>
+      await heartbeatWhile(
+        { phase: "renewing-prematch-claim-v2" },
+        async () => {
+          const { renewPrematchPassClaimV2 } =
+            await import("#src/temporal/v2/ownership/prematch-ownership.ts");
+          return await renewPrematchPassClaimV2({
+            holder: input.holder,
+            renewedAt: new Date(),
+          });
+        },
+      ),
+    releasePrematchPassClaimV2: async (input) =>
+      await heartbeatWhile(
+        { phase: "releasing-prematch-claim-v2" },
+        async () => {
+          const { releasePrematchPassClaimV2 } =
+            await import("#src/temporal/v2/ownership/prematch-ownership.ts");
+          return await releasePrematchPassClaimV2({ holder: input.holder });
+        },
+      ),
     discoverPrematchGamesV2: async () =>
       await heartbeatWhile({ phase: "discovering-prematch-v2" }, async () => {
         const { discoverPrematchGamesV2 } =

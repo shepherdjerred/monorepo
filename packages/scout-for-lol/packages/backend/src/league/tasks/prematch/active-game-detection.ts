@@ -234,18 +234,34 @@ function shouldSkipCheck(): boolean {
 }
 
 /**
+ * Whether the V2 prematch path already took one game, asked before v1
+ * announces a game it has not tracked. V2 writes no `ActiveGame` row, so
+ * without this a flip from V2 back to v1 mid-game would announce the game a
+ * second time and open its markets after the fact.
+ */
+export type PrematchV2CaptureCheck = (game: {
+  platformId: string;
+  gameId: number;
+  puuid: LeaguePuuid;
+}) => Promise<boolean>;
+
+/**
  * Main function to check for active games across all tracked players.
  *
  * Detects when tracked players enter a game and sends a single notification
  * per game, listing all tracked players in that game.
  *
- * @param lobbyRetryDelayMs - Override the retry delay for pre-start lobby
- *   refetch attempts. Defaults to LOBBY_RETRY_DELAY_MS (2000ms).
+ * @param options.capturedByV2 - Asked for each game this pass has not
+ *   tracked; a game V2 already took is skipped.
+ * @param options.lobbyRetryDelayMs - Override the retry delay for pre-start
+ *   lobby refetch attempts. Defaults to LOBBY_RETRY_DELAY_MS (2000ms).
  *   Pass 0 in tests to skip the real-time sleep.
  */
-export async function checkActiveGames(
-  lobbyRetryDelayMs: number = LOBBY_RETRY_DELAY_MS,
-): Promise<void> {
+export async function checkActiveGames(options: {
+  capturedByV2: PrematchV2CaptureCheck;
+  lobbyRetryDelayMs?: number;
+}): Promise<void> {
+  const lobbyRetryDelayMs = options.lobbyRetryDelayMs ?? LOBBY_RETRY_DELAY_MS;
   if (shouldSkipCheck()) {
     return;
   }
@@ -388,6 +404,21 @@ export async function checkActiveGames(
           trackedLegacyGameIds.has(gameInfo.gameId)
         ) {
           prematchDetectionsTotal.inc({ status: "already_tracked" });
+          continue;
+        }
+
+        if (
+          await options.capturedByV2({
+            platformId: gameInfo.platformId,
+            gameId: gameInfo.gameId,
+            puuid,
+          })
+        ) {
+          logger.info(
+            `[${player.alias}] ⏭️  Skipping ${matchId} — the V2 prematch path already captured it`,
+          );
+          prematchDetectionsTotal.inc({ status: "owned_by_v2" });
+          trackedMatchIds.add(matchId);
           continue;
         }
 
