@@ -7,7 +7,7 @@ import type { MessageCreateOptions } from "discord.js";
 import type {
   SubscribedChannel,
   SubscribedChannelSubscription,
-} from "#src/database/index.ts";
+} from "#src/database/subscribed-channels.ts";
 import type { ChannelDeliveryEvent } from "#src/durable/match/delivery-intents.ts";
 
 const sentMessages: MessageCreateOptions[] = [];

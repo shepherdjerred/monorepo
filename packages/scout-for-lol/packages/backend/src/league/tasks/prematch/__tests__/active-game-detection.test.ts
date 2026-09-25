@@ -11,7 +11,7 @@ import {
   MatchIdSchema,
 } from "@scout-for-lol/data/index.ts";
 import type { ActiveGameRecord } from "#src/league/tasks/prematch/active-game-queries.ts";
-import type { PlayerAccountWithState } from "#src/database/index.ts";
+import type { PlayerAccountWithState } from "#src/database/player-accounts.ts";
 import type { SpectatorResult } from "#src/league/api/spectator.ts";
 import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";
 
@@ -138,7 +138,7 @@ const reportStoreCalls: { gameId: number }[] = [];
 // isolation we need.
 //
 // Sibling files in this directory (e.g. prematch-notification.integration.test.ts)
-// also call `vi.doMock("#src/database/index.ts", ...)`. Bun mocks are
+// also call `vi.doMock` on the `#src/database/` modules. Bun mocks are
 // process-global, so we have to provide every database export any sibling
 // test file mocks — otherwise sibling tests that ran first leave a partial
 // mock in place that hides exports our SUT needs.
@@ -147,6 +147,8 @@ const reportStoreCalls: { gameId: number }[] = [];
 // the guild set it is handed, `getAccountConfigsByPuuids` never does.
 await vi.doMock("#src/database/index.ts", () => ({
   prisma: {},
+}));
+await vi.doMock("#src/database/player-accounts.ts", () => ({
   getAccountsWithState: (_client: unknown, activeServerIds?: Set<string>) =>
     Promise.resolve(
       activeServerIds === undefined
@@ -163,6 +165,8 @@ await vi.doMock("#src/database/index.ts", () => ({
         )
         .map((account) => account.config),
     ),
+}));
+await vi.doMock("#src/database/subscribed-channels.ts", () => ({
   getChannelsSubscribedToPlayers: () => Promise.resolve([]),
 }));
 

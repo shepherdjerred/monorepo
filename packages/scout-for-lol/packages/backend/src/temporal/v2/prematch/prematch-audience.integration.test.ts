@@ -53,7 +53,7 @@ vi.mock("#src/league/api/spectator.ts", () => ({
 }));
 
 const { getChannelsSubscribedToPlayers } =
-  await import("#src/database/index.ts");
+  await import("#src/database/subscribed-channels.ts");
 const {
   prematchContextFrom,
   resolveScoutV2PrematchContext,
