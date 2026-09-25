@@ -22,7 +22,11 @@ import com.shepherdjerred.thestorm.tracks.TracksModule;
 import com.shepherdjerred.thestorm.world.WorldModule;
 import java.util.List;
 
-/** Every module, in enable order. Foundational modules come before the modules that use them. */
+/**
+ * Every module, in enable order. A module comes after every module whose ports it requires: tracks
+ * needs economy; towns (the Protection provider) needs tracks and chat; essentials, shops,
+ * mechanics and spells need Protection.
+ */
 final class Modules {
 
   private Modules() {}
@@ -33,11 +37,11 @@ final class Modules {
         new MessagesModule(),
         new ChatModule(),
         new DiscordModule(),
+        new TracksModule(),
+        new TownsModule(),
         new EssentialsModule(),
         new ShopsModule(),
         new ShardsModule(),
-        new TownsModule(),
-        new TracksModule(),
         new MechanicsModule(),
         new SpellsModule(),
         new NpcsModule(),
