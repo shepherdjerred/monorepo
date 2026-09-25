@@ -179,6 +179,7 @@ export type FlagName =
   | "scoutql_relational_enabled"
   | "scout-consumer-player-profiles-enabled"
   | "scout_v2_postmatch_ownership_enabled"
+  | "scout_v2_prematch_ownership_enabled"
   | "voice_assistant_enabled";
 
 /**
@@ -450,6 +451,24 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
    */
   scout_v2_postmatch_ownership_enabled: {
     default: true,
+    overrides: [],
+  },
+  /**
+   * Whether V2 owns scheduled prematch detection.
+   *
+   * The cutover switch for prematch. The `prematch-poll` Schedule always
+   * starts `scoutRealtimePollWorkflow`; each prematch run reads this first
+   * and, when it is on, runs `scoutPrematchDiscoveryV2Workflow` as a child
+   * for live-game detection and keeps only v1's prematch maintenance. Off
+   * here and in Flipt, because v1 is what runs today and an unreachable
+   * provider must not move detection to the other pipeline. Deliberately
+   * absent from `PRODUCTION_HARD_DISABLED_FLAGS`: it ramps per stage, beta
+   * first. Every ramp or rollback flips it in Flipt and records the same
+   * value as an environment override in `managed-flag-inventory.json`, or the
+   * inventory check reports drift.
+   */
+  scout_v2_prematch_ownership_enabled: {
+    default: false,
     overrides: [],
   },
   initial_match_history_import_enabled: {

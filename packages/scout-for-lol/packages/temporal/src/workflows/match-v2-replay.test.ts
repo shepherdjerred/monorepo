@@ -15,7 +15,7 @@ import {
   scoutPostMatchDiscoveryV2Workflow,
 } from "./index.ts";
 import { SCOUT_V2_MATCH_MINT_INTENTS_PATCH } from "./match-v2.ts";
-import { SCOUT_V2_POSTMATCH_OWNERSHIP_PATCH } from "./postmatch-ownership-v2.ts";
+import { SCOUT_V2_POSTMATCH_OWNERSHIP_PATCH } from "./ownership/postmatch-ownership-v2.ts";
 import {
   createScoutV2MatchStore,
   scoutV2MatchActivityStubs,

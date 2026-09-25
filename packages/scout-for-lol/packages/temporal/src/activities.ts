@@ -66,6 +66,9 @@ import type {
   ScoutPostMatchPollRenewalV2Result,
   ScoutPostMatchScanV2Result,
   ScoutPrematchArchiveV2Result,
+  ScoutPrematchPassClaimV2Input,
+  ScoutPrematchPassClaimV2Result,
+  ScoutPrematchPassOwnerV2Result,
   ScoutPrematchScanV2Result,
   ScoutReceiptsV2Result,
   ScoutReconciliationScanV2Result,
@@ -162,6 +165,15 @@ export type ScoutTemporalV2Activities = {
   discoverPrematchGamesV2: (
     input: ScoutPrematchDiscoveryV2Input,
   ) => Promise<ScoutPrematchScanV2Result>;
+  resolvePrematchPassOwnerV2: (
+    input: ScoutPrematchDiscoveryV2Input,
+  ) => Promise<ScoutPrematchPassOwnerV2Result>;
+  renewPrematchPassClaimV2: (
+    input: ScoutPrematchPassClaimV2Input,
+  ) => Promise<ScoutPrematchPassClaimV2Result>;
+  releasePrematchPassClaimV2: (
+    input: ScoutPrematchPassClaimV2Input,
+  ) => Promise<ScoutPrematchPassClaimV2Result>;
 
   // Resume points — one aggregate read per machine, realtime except recovery.
   readMatchPipelineStateV2: (

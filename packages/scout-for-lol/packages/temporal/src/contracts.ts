@@ -45,6 +45,15 @@ export const ScoutRealtimePollInputSchema = z.object({
   kind: z.enum(["prematch", "tournament-lobbies"]),
   scheduledStartAt: IsoInstantSchema.optional(),
   maximumAgeSeconds: z.number().int().positive(),
+  /**
+   * Set to `v2` only by the prematch ownership router, when V2 owns the
+   * pass: `scoutPrematchDiscoveryV2Workflow` has already detected this
+   * pass's live games, so `pollRealtime` runs v1's prematch maintenance
+   * (betting windows, Dare expiry, parlay activation) without v1's
+   * active-game detection. Absent on every other run, including every run
+   * recorded before the router, which keeps v1's whole pass unchanged.
+   */
+  activeGameDetectionOwner: z.literal("v2").optional(),
 });
 export type ScoutRealtimePollInput = z.infer<
   typeof ScoutRealtimePollInputSchema

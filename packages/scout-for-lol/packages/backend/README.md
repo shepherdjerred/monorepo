@@ -296,7 +296,7 @@ awaiting a child.
 
 The `postmatch-discovery` Schedule always starts
 `scoutPostMatchDiscoveryV2Workflow`. That Workflow's first Activity,
-`resolvePostMatchDiscoveryOwnerV2` (`src/temporal/v2/postmatch-ownership.ts`),
+`resolvePostMatchDiscoveryOwnerV2` (`src/temporal/v2/ownership/postmatch-ownership.ts`),
 reads the `scout_v2_postmatch_ownership_enabled` Flipt flag for the stage. The
 flag is on by default, and V2 then discovers as described above. When an
 operator turns it off, the run starts v1's `scoutPostMatchDiscoveryWorkflow`
@@ -357,6 +357,83 @@ door (below), the lake projection's inside `archivePrematchSnapshotV2`. There
 are also no V2 stage receipts here: those exist so a resumed run can gate a
 phase whose evidence it cannot reconstruct, and the two evidence-bearing
 receipts this path writes already answer exactly the question it asks.
+
+### Which pipeline owns prematch detection
+
+The `prematch-poll` Schedule always starts `scoutRealtimePollWorkflow`, every
+30 seconds, in every stage. Schedules deploy separately from each stage's
+image, so the cutover never changes the Schedule's Workflow Type. The prematch
+arm of that Workflow, behind the `scout-v2-prematch-ownership` patch, first
+runs `resolvePrematchPassOwnerV2`
+(`src/temporal/v2/ownership/prematch-ownership.ts`). It reads the
+`scout_v2_prematch_ownership_enabled` Flipt flag for the stage and claims the
+pass. The flag is off by default. With it off, the run calls v1's
+`pollRealtime` with its own input, unchanged. With it on, the run starts
+`scoutPrematchDiscoveryV2Workflow` as a child under the stage's singleton ID
+and waits for it. It then calls `pollRealtime` with
+`activeGameDetectionOwner: "v2"`, so v1's prematch maintenance still runs
+(betting and parlay windows, Dare expiry, parlay activation, `ActiveGame`
+expiry) without v1 detecting games. Tournament-lobby polls are not routed and
+record no marker. A poll recorded before the patch replays straight into
+`pollRealtime`.
+
+Only one pipeline detects at a time, because every pass takes the same durable
+claim on `BotState` (`prematchPassHolder`, `prematchPassClaimedAt`,
+`prematchPassRenewedAt`) before it does anything. The holder is the router's
+Temporal run ID. The claim is one guarded statement, so of two overlapping
+passes (the scheduled run and an operator's, or the last v1 pass and the
+first V2 pass after a flip), one proceeds and the other returns `no-op`. The
+router renews the claim every minute while the pass runs and releases it when
+the pass ends, whether it succeeded or failed. A claim whose start and last
+renewal are both older than 5 minutes may be taken over, so a terminated
+router blocks detection for at most that long.
+
+The two pipelines also refuse each other's games, because their dedup records
+differ. v1 deduplicates on its `ActiveGame` row. V2 deduplicates on the
+per-game Workflow ID `scout-<stage>-prematch-game-v2-<platform>_<gameId>`.
+
+- Before v1 announces a game it has not tracked, it describes that V2
+  Workflow ID. A running or completed capture means V2 took the game, and v1
+  skips it (`prematch_detections_total{status="owned_by_v2"}`). A failed,
+  cancelled, terminated or timed-out capture does not count. Those are the
+  statuses V2 itself would replace.
+- V2 discovery drops any game with a live `ActiveGame` row, because v1 writes
+  that row before it announces. The game stays v1's for the rest of its life.
+
+Notification intents share one key, `prematch-discord:<matchId>:<channelId>`,
+in both pipelines, and a delivered or `unknown-delivery` intent is never
+redriven. Betting pools are unique per match and guild, so a second open is a
+no-op. Neither pipeline therefore announces a game twice or opens its markets
+twice across a flip.
+
+Before ramping, know what V2 prematch does not yet do:
+
+- `scoutPrematchGameV2Workflow` mints notification intents but starts no
+  notification children (SJ-205). Only the pipeline reconciliation sweep
+  drives them, and no Schedule starts that sweep. With the flag on and nothing
+  driving intents, game-start announcements are not sent.
+- The V2 prematch send opens no Bryan Bucks markets. This matters in beta
+  only, because production hard-disables betting.
+
+The ramp procedure:
+
+1. Confirm that something delivers V2 prematch intents in the stage: the
+   SJ-205 start loop, or a scheduled `scoutPipelineReconciliationV2Workflow`.
+2. Switch `scout_v2_prematch_ownership_enabled` on for `beta` in Flipt. It
+   takes effect on the next 30-second pass. Commit a matching `beta`
+   `default: true` override in `managed-flag-inventory.json`, or the inventory
+   check reports drift.
+3. Soak in beta for at least a day of real games. Check that
+   `scout-beta-prematch-discovery-v2` runs each pass. Check that
+   `scout-beta-prematch-game-v2-*` captures complete. Check that one
+   announcement arrives per game and channel. Check that `prematch-poll` runs
+   return `completed`, not a steady `no-op`.
+4. Repeat steps 2 and 3 for `prod`.
+
+A rollback is the same two changes with the value `false`. The next pass runs
+v1 again, and v1 skips every game V2 already captured, even one whose
+announcement V2 has not delivered yet. The choice is deliberate: a game
+announced late or not at all is better than a game announced twice.
 
 ### Durable state before live state
 

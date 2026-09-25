@@ -927,6 +927,13 @@ model BotState {
   pollEvidenceComplete      Boolean?
   pollFailureReason         String?
   pollStatus                String    @default("never")
+  // The durable prematch pass claim. One `scoutRealtimePollWorkflow` run
+  // holds it at a time, named by its Temporal run ID, whichever pipeline owns
+  // the pass. NULL `prematchPassHolder` means the pass is free. A claim goes
+  // stale only when both its start and its last renewal are past the bound.
+  prematchPassHolder        String?
+  prematchPassClaimedAt     DateTime?
+  prematchPassRenewedAt     DateTime?
   updatedAt                 DateTime  @updatedAt
 }
 

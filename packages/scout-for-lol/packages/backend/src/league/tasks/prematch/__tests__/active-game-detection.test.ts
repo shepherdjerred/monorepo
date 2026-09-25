@@ -230,9 +230,20 @@ await vi.doMock("#src/league/clash/sighting.ts", () => ({
   recordClashPrematchSightings: () => Promise.resolve(),
 }));
 
+/** The ordinary v1 pass: no game has been taken by the V2 prematch path. */
+const notCapturedByV2 = () => Promise.resolve(false);
+
 // Import AFTER mocks so the function under test wires up to the mocked deps
 const { checkActiveGames } =
   await import("#src/league/tasks/prematch/active-game-detection.ts");
+
+/** An ordinary v1 pass that skips the real 2x2s sleep in the lobby retry loop. */
+async function checkWithoutRetrySleep(): Promise<void> {
+  await checkActiveGames({
+    capturedByV2: notCapturedByV2,
+    lobbyRetryDelayMs: 0,
+  });
+}
 
 describe("checkActiveGames — subsequent-match polling", () => {
   beforeEach(() => {
@@ -267,7 +278,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
       game: mkGameInfo(G2, P1),
     });
 
-    await checkActiveGames();
+    await checkActiveGames({ capturedByV2: notCapturedByV2 });
 
     // Pre-fix: P1 was filtered out by the per-PUUID skip-list → no upsert,
     // no notification. Post-fix: P1 is polled, G2 is detected, both fire.
@@ -315,7 +326,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
     });
 
     // Pass retryDelayMs=0 to skip the real 2×2s sleep in the retry loop.
-    await checkActiveGames(0);
+    await checkWithoutRetrySleep();
 
     // Pre-start custom lobby must NOT be committed: the next 30s cron
     // tick gets a clean shot once the other players load in.
@@ -364,7 +375,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
     });
 
     // retryDelayMs=0 to skip the real 2×2s sleep in the retry loop.
-    await checkActiveGames(0);
+    await checkWithoutRetrySleep();
 
     // Matched event lobby caught mid-countdown must NOT be committed; the next
     // 30s cron tick re-evaluates once the full roster has loaded in.
@@ -382,7 +393,7 @@ describe("checkActiveGames — subsequent-match polling", () => {
       game: mkGameInfo(G1, P1),
     });
 
-    await checkActiveGames();
+    await checkActiveGames({ capturedByV2: notCapturedByV2 });
 
     // gameId-based dedup at line 181 must prevent a duplicate notification
     expect(upsertCalls).toHaveLength(0);
@@ -400,10 +411,34 @@ describe("checkActiveGames — subsequent-match polling", () => {
       game: mkGameInfo(G1, P1),
     });
 
-    await checkActiveGames();
+    await checkActiveGames({ capturedByV2: notCapturedByV2 });
 
     expect(upsertCalls).toHaveLength(1);
     expect(notificationCalls).toHaveLength(1);
+  });
+
+  test("skips a game the V2 prematch path already captured, and asks about it once", async () => {
+    // After a flip from V2 back to v1 mid-game, V2 has captured the game and
+    // minted its intents but written no ActiveGame row. Announcing it here
+    // would tell the channel twice and open its markets after the fact.
+    mockAccounts = [mkAccount(P1)];
+    mockSpectatorResponses.set(P1, {
+      kind: "in-game" as const,
+      game: mkGameInfo(G1, P1),
+    });
+    const asked: { platformId: string; gameId: number; puuid: string }[] = [];
+
+    await checkActiveGames({
+      capturedByV2: (game) => {
+        asked.push(game);
+        return Promise.resolve(true);
+      },
+    });
+
+    expect(asked).toEqual([{ platformId: "NA1", gameId: G1, puuid: P1 }]);
+    expect(upsertCalls).toHaveLength(0);
+    expect(reportStoreCalls).toHaveLength(0);
+    expect(notificationCalls).toHaveLength(0);
   });
 });
 
@@ -430,7 +465,7 @@ describe("checkActiveGames — workload and audience", () => {
       game: mkGameInfo(G1, P1, [P2]),
     });
 
-    await checkActiveGames();
+    await checkActiveGames({ capturedByV2: notCapturedByV2 });
 
     // Workload: only the live-guild account spent a Spectator call.
     expect(spectatorCalls).toEqual([P1]);
@@ -456,7 +491,7 @@ describe("checkActiveGames — workload and audience", () => {
       dropped.map((puuid) => [puuid, REMOVED_GUILD]),
     );
 
-    await checkActiveGames();
+    await checkActiveGames({ capturedByV2: notCapturedByV2 });
 
     expect(spectatorCalls).toHaveLength(MAX_PLAYERS_PER_RUN);
     expect(spectatorCalls.some((puuid) => dropped.includes(puuid))).toBe(false);
