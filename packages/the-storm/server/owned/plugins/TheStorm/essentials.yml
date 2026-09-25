@@ -106,11 +106,12 @@ kits:
             - |-
               <dark_aqua><b>Before you build</b></dark_aqua>
 
-              Read /rules. Leave 100 blocks between you and other players' builds unless they say yes.
+              Read /rules. Build on your own land, and lock the chests you want to keep.
 
               Need help? Ask in chat or on our Discord.
 
-# The book /rules opens. MiniMessage; at most 100 pages.
+# The book /rules opens. MiniMessage; at most 100 pages. The server's official
+# rules, as given by the owner.
 rules:
   title: The Storm Rules
   author: The Storm Staff
@@ -118,36 +119,18 @@ rules:
     - |-
       <dark_aqua><b>The Storm Rules</b></dark_aqua>
 
-      Play fair, build big and keep the peace. Staff decide how a rule applies.
+      <dark_aqua>1. No griefing.</dark_aqua> Build on your own land or with permission. Staff can roll griefing back.
 
-      Breaking a rule earns a warning, then a kick or a ban.
+      <dark_aqua>2. Lock what you love.</dark_aqua> Unlocked chests are fair game; locked containers are off-limits.
     - |-
-      <dark_aqua>1. No griefing or raiding.</dark_aqua>
-      Don't break, take or change what other players built.
+      <dark_aqua>3. Spare the animals.</dark_aqua> Don't kill other players' animals, pets or villagers.
 
-      <dark_aqua>2. Give others room.</dark_aqua>
-      Don't build within 100 blocks of someone else's build without their permission.
+      <dark_aqua>4. No harassment.</dark_aqua> Not in chat, and no following, trapping or spamming anyone.
+
+      <dark_aqua>5. PvP is on.</dark_aqua> Spawn is PvP-free. Soon /pvp will switch yours off or on, once a week.
     - |-
-      <dark_aqua>3. No PvP killing.</dark_aqua>
-      No killing players outside the arena, no traps, and no taking another player's death pile.
+      <dark_aqua>6. No hacks or bug exploits.</dark_aqua>
 
-      <dark_aqua>4. No hacks.</dark_aqua>
-      No hacked clients, x-ray or other unfair mods.
-    - |-
-      <dark_aqua>5. No bug or glitch abuse.</dark_aqua>
-      Report exploits and duplication bugs to staff instead of using them.
+      Arguing? Take it to War chat with <click:run_command:'/war'><u>/war</u></click>. <click:run_command:'/channels'><u>/channels</u></click> lists every channel.
 
-      <dark_aqua>6. Respect players and staff.</dark_aqua>
-      No racist, sexist or hateful remarks, and no harassment.
-    - |-
-      <dark_aqua>7. Keep chat friendly.</dark_aqua>
-      No spam, no excessive swearing, no advertising other servers, and no begging for ranks or items.
-
-      <dark_aqua>8. Argue in War chat.</dark_aqua>
-      Take arguments out of global chat and into War chat with <click:run_command:'/war'><u>/war</u></click>. <click:run_command:'/channels'><u>/channels</u></click> lists every channel.
-    - |-
-      <dark_aqua><b>Talking to NPCs</b></dark_aqua>
-
-      When you type to an NPC, your message may be sent to an AI provider to write the NPC's reply. Don't share personal information with NPCs.
-
-      Questions? Ask staff in game or on Discord.
+      What you type to NPCs may be sent to an AI provider to write their replies.
