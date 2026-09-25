@@ -95,7 +95,7 @@
     "@typescript/native": "npm:typescript@7.0.2",
     "@vitest/coverage-istanbul": "5.0.1",
     "ajv": "^8.20.0",
-    "eslint": "^10.3.0",
+    "eslint": "^10.7.0",
     "prettier": "^3.9.9",
     "storybook": "^10.6.0",
     "typescript": "^6.0.3",

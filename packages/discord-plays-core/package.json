@@ -39,13 +39,13 @@
     "xstate": "^5.32.4"
   },
   "devDependencies": {
-    "@shepherdjerred/eslint-config": "file:../eslint-config",
+    "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "1.4.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.1",
     "@types/node": "^26.1.1",
     "@typescript-eslint/utils": "^8.70.1",
-    "eslint": "^10.3.0",
+    "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",

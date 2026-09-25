@@ -37,7 +37,7 @@
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "1.4.2",
     "@typescript/native": "npm:typescript@7.0.2",
-    "eslint": "^10.3.0",
+    "eslint": "^10.7.0",
     "typescript": "^6.0.3",
     "vitest": "5.0.1",
     "@vitest/coverage-istanbul": "5.0.1"

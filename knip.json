@@ -454,7 +454,6 @@
     "swiftlint",
     "tflint",
     "uv",
-    "uvx",
     "velero",
     "xcodegen"
   ]
