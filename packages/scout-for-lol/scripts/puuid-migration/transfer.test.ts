@@ -142,6 +142,8 @@ test("import does not carry appliedAt, which is a fact about the target", async 
   await db.close();
 });
 
+// 2,002 upserts against a real SQLite file: milliseconds locally, but about 12
+// seconds on a CI runner's disk, past Vitest's 5-second default.
 test("import batches new rows and remains resumable across batch boundaries", async () => {
   const db = await open();
   const { importMap } = await import("./transfer.ts");
@@ -168,7 +170,7 @@ test("import batches new rows and remains resumable across batch boundaries", as
   );
   expect(Number(rows[0]?.["n"])).toBe(1001);
   await db.close();
-});
+}, 60_000);
 
 test("import accepts PostgreSQL Date values from unrelated applied rows", async () => {
   const db = await open();
