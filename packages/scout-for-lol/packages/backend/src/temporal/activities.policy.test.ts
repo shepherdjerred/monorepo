@@ -6,6 +6,7 @@ describe("Scout Temporal production policy", () => {
   test.each([
     ["custom-nights-expiry", "custom_nights_enabled"],
     ["progression-outbox", null],
+    ["notification-intent-expiry", null],
     ["bucks-reconciliation", "betting_enabled"],
     ["weekly-bucks-leaderboard", "betting_enabled"],
     ["competition-refresh", null],

@@ -1,7 +1,8 @@
 import type { Db } from "#src/database/index.ts";
-import type {
-  NotificationIntentKey,
-  RiotMatchId,
+import {
+  NotificationIntentKeySchema,
+  type NotificationIntentKey,
+  type RiotMatchId,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import type { NotificationIntent } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { NotificationTransitionResult } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
@@ -94,6 +95,45 @@ export async function listIntentsForMatch(
     orderBy: { intentKey: "asc" },
   });
   return rows.map((row) => matchNotificationIntentRowToRecord(row));
+}
+
+/**
+ * The states an intent can be expired from: work never attempted.
+ *
+ * `sending` and `unknown-delivery` are deliberately absent. Both name an
+ * attempt whose outcome is not yet known, and the domain's `expire` refuses
+ * them (`send-in-flight`, `unknown-delivery-requires-operator`); selecting
+ * them would spend the batch on rows the sweep can never move and would
+ * starve the ones it can.
+ */
+const EXPIRABLE_INTENT_STATES = [
+  "pending",
+  "ready",
+] as const satisfies readonly NotificationIntent["state"]["kind"][];
+
+/**
+ * Keys of unattempted intents whose freshness deadline passed before `now`,
+ * the most overdue first.
+ *
+ * Strictly before, because `beginSend` refuses only a start strictly after
+ * the deadline: an intent AT its deadline can still be sent. Rides the
+ * `(state, freshnessDeadline)` index; the key breaks ties because intents
+ * minted for one match share a deadline to the millisecond.
+ */
+export async function listOverdueIntentKeys(
+  db: Db,
+  args: { now: Date; limit: number },
+): Promise<NotificationIntentKey[]> {
+  const rows = await db.matchNotificationIntent.findMany({
+    where: {
+      state: { in: [...EXPIRABLE_INTENT_STATES] },
+      freshnessDeadline: { lt: args.now },
+    },
+    select: { intentKey: true },
+    orderBy: [{ freshnessDeadline: "asc" }, { intentKey: "asc" }],
+    take: args.limit,
+  });
+  return rows.map((row) => NotificationIntentKeySchema.parse(row.intentKey));
 }
 
 function observedAttemptNonce(intent: NotificationIntent): string | null {
