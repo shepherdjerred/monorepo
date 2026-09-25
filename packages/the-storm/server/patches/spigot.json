@@ -1,0 +1,143 @@
+{
+  "file": "/data/spigot.yml",
+  "ops": [
+    {
+      "$set": {
+        "path": "$.settings.restart-on-crash",
+        "value": false
+      }
+    },
+    {
+      "$set": {
+        "path": "$.settings.attribute.maxHealth.max",
+        "value": 2048.0
+      }
+    },
+    {
+      "$set": {
+        "path": "$.settings.attribute.movementSpeed.max",
+        "value": 2048.0
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.entity-activation-range.animals",
+        "value": 64
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.entity-activation-range.monsters",
+        "value": 64
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.entity-activation-range.raiders",
+        "value": 128
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.entity-activation-range.misc",
+        "value": 64
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.entity-tracking-range.players",
+        "value": 64
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.entity-tracking-range.animals",
+        "value": 64
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.entity-tracking-range.monsters",
+        "value": 128
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.entity-tracking-range.misc",
+        "value": 64
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.entity-tracking-range.other",
+        "value": 128
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.merge-radius.exp",
+        "value": 1.5
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.hunger.jump-walk-exhaustion",
+        "value": 0.075
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.hunger.jump-sprint-exhaustion",
+        "value": 0.3
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.hunger.combat-exhaustion",
+        "value": 0.2
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.hunger.regen-exhaustion",
+        "value": 5.0
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.hunger.swim-multiplier",
+        "value": 0.04
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.hunger.sprint-multiplier",
+        "value": 0.2
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.item-despawn-rate",
+        "value": 18000
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.view-distance",
+        "value": 15
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.simulation-distance",
+        "value": 15
+      }
+    },
+    {
+      "$set": {
+        "path": "$.world-settings.default.thunder-chance",
+        "value": 10000
+      }
+    }
+  ]
+}

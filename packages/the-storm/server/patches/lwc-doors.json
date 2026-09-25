@@ -1,0 +1,17 @@
+{
+  "file": "/data/plugins/LWC/doors.yml",
+  "ops": [
+    {
+      "$set": {
+        "path": "$.doors.enabled",
+        "value": true
+      }
+    },
+    {
+      "$set": {
+        "path": "$.doors.doubleDoors",
+        "value": true
+      }
+    }
+  ]
+}

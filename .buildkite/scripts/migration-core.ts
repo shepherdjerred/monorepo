@@ -14,6 +14,7 @@ const infrastructureTargets = [
   "caddy-s3proxy",
   "obsidian-headless",
   "redlib",
+  "the-storm-server",
 ] as const;
 // Keep full-image and fallback builds on the same target universe as the
 // closure selector. A second hand-maintained list previously omitted

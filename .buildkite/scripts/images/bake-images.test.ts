@@ -341,6 +341,7 @@ test("preserves exhausted GHCR transport and server failures as transient", asyn
 
 test("expands the infra group into invokable targets", () => {
   expect(expandTargets(["infra"])).toContain("caddy-s3proxy");
+  expect(expandTargets(["infra"])).toContain("the-storm-server");
   expect(expandTargets(["infra"])).not.toContain("infra");
 });
 

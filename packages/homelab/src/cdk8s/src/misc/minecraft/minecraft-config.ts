@@ -109,12 +109,13 @@ async function loadServerConfigs(
 }
 
 // Pre-load all server configs at module import time
-// This ensures configs are loaded synchronously when the module is used
-const serverNames = ["tsmc", "sjerred", "shuxin"] as const;
+// This ensures configs are loaded synchronously when the module is used.
+// minecraft-tsmc is not here: its image (packages/the-storm/server) carries
+// its plugins and config.
+const serverNames = ["sjerred", "shuxin"] as const;
 type ServerName = (typeof serverNames)[number];
 
 const loadedConfigs: Record<ServerName, Record<string, string>> = {
-  tsmc: {},
   sjerred: {},
   shuxin: {},
 };

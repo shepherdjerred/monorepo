@@ -1,0 +1,11 @@
+{
+  "file": "/data/plugins/LWC/magnet.yml",
+  "ops": [
+    {
+      "$set": {
+        "path": "$.magnet.enabled",
+        "value": true
+      }
+    }
+  ]
+}
