@@ -1,4 +1,4 @@
-/** The small mechanisms: light switches, cooking pots, map changers and painting switchers. */
+/** The small mechanisms: light switches, cooking pots and painting switchers. */
 @NullMarked
 package com.shepherdjerred.thestorm.mechanics.domain.tools;
 

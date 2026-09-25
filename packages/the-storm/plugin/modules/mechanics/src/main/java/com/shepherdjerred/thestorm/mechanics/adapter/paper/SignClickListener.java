@@ -31,8 +31,7 @@ final class SignClickListener implements Listener {
       Elevators elevators,
       Structures structures,
       CookingPots cookingPots,
-      LightSwitches lightSwitches,
-      MapChangers mapChangers) {}
+      LightSwitches lightSwitches) {}
 
   SignClickListener(Kit kit, SignCopier copier, Handlers handlers) {
     this.kit = kit;
@@ -111,7 +110,6 @@ final class SignClickListener implements Listener {
           handlers.structures().click(player, new Structures.Use(grid, pos, view), click.owner());
       case COOKING_POT -> handlers.cookingPots().click(player, grid, pos, snapshot(block));
       case LIGHT_SWITCH -> handlers.lightSwitches().flip(player, grid, pos);
-      case MAP_CHANGER -> handlers.mapChangers().click(player, grid, pos, view);
       case HIDDEN_SWITCH,
           BLOCK_DROPS,
           SIGN_COPIER,

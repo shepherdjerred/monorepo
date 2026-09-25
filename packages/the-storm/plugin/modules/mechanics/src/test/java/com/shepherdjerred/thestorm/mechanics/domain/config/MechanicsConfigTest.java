@@ -48,7 +48,6 @@ final class MechanicsConfigTest {
     assertThat(config.access(Feature.GATE).level()).isEqualTo(2);
     assertThat(config.access(Feature.DOOR).level()).isEqualTo(2);
     assertThat(config.access(Feature.SIGN_COPIER).level()).isEqualTo(3);
-    assertThat(config.access(Feature.MAP_CHANGER).level()).isEqualTo(3);
     assertThat(config.access(Feature.PAINTING_SWITCHER).level()).isEqualTo(3);
     assertThat(config.access(Feature.CRUSH).level()).isEqualTo(4);
     assertThat(config.access(Feature.BOUNCE).level()).isEqualTo(4);
@@ -82,8 +81,6 @@ final class MechanicsConfigTest {
     assertThatThrownBy(() -> new GateConfig(access, planks, 0, 4, 4))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new ElevatorConfig(access, 1))
-        .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new MapChangerConfig(access, 1))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

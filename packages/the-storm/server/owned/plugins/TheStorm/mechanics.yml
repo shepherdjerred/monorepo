@@ -119,11 +119,11 @@ blockDrops: # these drop themselves when a Mechanic breaks them by hand
 
 # Level II
 elevator: # [Lift Up], [Lift Down] and [Lift] (a stop) signs in one column
-  access: { enabled: true, level: 2, useLevel: 2 }
+  access: { enabled: true, level: 2, useLevel: 0 }
   maxDistance: 128
 
 bridge: # [Bridge] at both ends; each sign's base block is above or below it
-  access: { enabled: true, level: 2, useLevel: 2 }
+  access: { enabled: true, level: 2, useLevel: 0 }
   blocks:
     - minecraft:oak_planks
     - minecraft:spruce_planks
@@ -160,7 +160,7 @@ bridge: # [Bridge] at both ends; each sign's base block is above or below it
   maxWidthEachSide: 2
 
 gate: # [Gate] near fence columns that drop to close and rise to open
-  access: { enabled: true, level: 2, useLevel: 2 }
+  access: { enabled: true, level: 2, useLevel: 0 }
   blocks:
     - minecraft:oak_fence
     - minecraft:spruce_fence
@@ -182,7 +182,7 @@ gate: # [Gate] near fence columns that drop to close and rise to open
   maxHeight: 12
 
 door: # [Door Up] under the door's base, [Door Down] over its top
-  access: { enabled: true, level: 2, useLevel: 2 }
+  access: { enabled: true, level: 2, useLevel: 0 }
   blocks:
     - minecraft:oak_planks
     - minecraft:spruce_planks
@@ -222,10 +222,6 @@ door: # [Door Up] under the door's base, [Door Down] over its top
 signCopier: # punch a sign with the tool to copy it, right-click one to paste
   unlock: { enabled: true, level: 3 }
   tool: minecraft:feather
-
-mapChanger: # [Map] with a map id range such as 12-15 on the third line
-  access: { enabled: true, level: 3, useLevel: 3 }
-  maxRange: 64
 
 paintingSwitcher: # right-click a painting for the next picture of its size
   unlock: { enabled: true, level: 3 }

@@ -2,7 +2,6 @@ package com.shepherdjerred.thestorm.mechanics.domain.tools;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.mechanics.domain.TestGrid;
 import com.shepherdjerred.thestorm.mechanics.domain.config.Access;
 import com.shepherdjerred.thestorm.mechanics.domain.config.CookingPotConfig;
@@ -39,31 +38,6 @@ final class ToolsTest {
       assertThat(Cycle.step(List.of("a"), "a", true)).isEmpty();
       assertThat(Cycle.step(List.<String>of(), "a", true)).isEmpty();
       assertThat(Cycle.step(List.of("a"), "z", true)).contains("a");
-    }
-  }
-
-  @Nested
-  final class MapRanges {
-
-    @Test
-    void readsARange() {
-      assertThat(MapRange.parse("12-15", 64)).isEqualTo(Result.ok(new MapRange(12, 15)));
-      assertThat(MapRange.parse(" 0 - 3 ", 64)).isEqualTo(Result.ok(new MapRange(0, 3)));
-      assertThat(new MapRange(12, 15).ids()).containsExactly(12, 13, 14, 15);
-    }
-
-    @Test
-    void refusesBadRanges() {
-      assertThat(MapRange.parse("", 64)).isInstanceOf(Result.Err.class);
-      assertThat(MapRange.parse("12", 64)).isInstanceOf(Result.Err.class);
-      assertThat(MapRange.parse("-3-4", 64)).isInstanceOf(Result.Err.class);
-      assertThat(MapRange.parse("15-12", 64))
-          .isEqualTo(Result.err("The second map id must be higher than the first."));
-      assertThat(MapRange.parse("5-5", 64)).isInstanceOf(Result.Err.class);
-      assertThat(MapRange.parse("0-64", 64))
-          .isEqualTo(Result.err("A map changer cycles at most 64 maps."));
-      assertThat(MapRange.parse("0-63", 64)).isInstanceOf(Result.Ok.class);
-      assertThat(MapRange.parse("999999999-1000000000", 64)).isInstanceOf(Result.Err.class);
     }
   }
 

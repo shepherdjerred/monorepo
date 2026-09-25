@@ -91,7 +91,6 @@ final class SignWriteListener implements Listener {
       case ELEVATOR -> "Right-click it to ride to the next floor.";
       case BRIDGE, DOOR, GATE ->
           "Right-click it or power it with redstone to open; holding its block adds more.";
-      case MAP_CHANGER -> "Right-click it to change the maps in the frames beside it.";
       case CRUSH, BOUNCE, SUPER_STICKY, SUPER_PUSH -> "The piston beside it now works this way.";
       case BLOCK_DROPS, SIGN_COPIER, PAINTING_SWITCHER -> "";
     };
