@@ -148,7 +148,7 @@ Mutations use the local Monarch GraphQL client with cookie/CSRF session authenti
 
 Split by what it costs to recreate:
 
-- **The finance vault** (`~/Documents/Main Vault/Finances/`) holds source documents and anything expensive enough that losing it hurts: the Amazon order cache (hours of headed scraping) and the email-match checkpoint (dollars of model judgments). It is backed up with everything else.
+- **The finance vault** (`~/Sync/Sync/Finances/`) holds source documents and anything expensive enough that losing it hurts: the Amazon order cache (hours of headed scraping) and the email-match checkpoint (dollars of model judgments). It is synced by Syncthing with everything else in that folder.
 - **`~/.monarch-cache/`** holds cheap regenerable scratch: the transaction cache, email index, merchant knowledge base, and tier-2 checkpoints.
 
 Caches that moved to the vault keep a one-time read of their old location, so an existing cache survives the move. Nothing financial is ever committed to the repository.
