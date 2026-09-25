@@ -9,6 +9,7 @@ import {
   createFliptDeployment,
   FLIPT_PORT,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/flipt/index.ts";
+import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 /**
  * Namespaces allowed to evaluate flags.
@@ -26,6 +27,8 @@ const CONSUMER_NAMESPACES = [
   "birmel",
   "temporal",
   "trmnl-dashboard",
+  // The ops dashboard gates the digest email on `ops-digest-email-enabled`.
+  "alert-dashboard",
   // streambot is deployed inside the `media` chart, not its own namespace.
   "media",
   // The Buildkite maintenance worker runs the shared temporal-worker image
@@ -95,20 +98,7 @@ export function createFliptChart(app: App) {
     spec: {
       podSelector: {},
       policyTypes: ["Egress"],
-      egress: [
-        {
-          to: [
-            {
-              namespaceSelector: {},
-              podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-            },
-          ],
-          ports: [
-            { port: IntOrString.fromNumber(53), protocol: "UDP" },
-            { port: IntOrString.fromNumber(53), protocol: "TCP" },
-          ],
-        },
-      ],
+      egress: [dnsEgressRule()],
     },
   });
 }

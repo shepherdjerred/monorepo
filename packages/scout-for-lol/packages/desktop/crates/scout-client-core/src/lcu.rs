@@ -384,6 +384,13 @@ mod tests {
     }
 
     #[test]
+    fn authorizes_as_riot_basic_credentials() -> Result<(), Box<dyn std::error::Error>> {
+        let lockfile = LeagueLockfile::parse("LeagueClient:123:4567:secret:https")?;
+        assert_eq!(lockfile.authorization(), "Basic cmlvdDpzZWNyZXQ=");
+        Ok(())
+    }
+
+    #[test]
     fn rejects_non_https_lockfile() {
         assert!(LeagueLockfile::parse("LeagueClient:123:4567:secret:http").is_err());
     }

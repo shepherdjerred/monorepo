@@ -1,12 +1,11 @@
 import type { Chart } from "cdk8s";
-import { Duration, Size } from "cdk8s";
-import { Cpu, Job, ServiceAccount } from "cdk8s-plus-31";
+import { Duration } from "cdk8s";
+import { Job, ServiceAccount } from "cdk8s-plus-31";
 import {
   KubeRole,
   KubeRoleBinding,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
-import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
-import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { kubectlScriptContainer } from "@shepherdjerred/homelab/cdk8s/src/misc/kubectl-script-container.ts";
 
 const BACKUP_SCHEDULE_NAME = "6hourly-backup";
 const MAXIMUM_BACKUP_AGE_SECONDS = 7 * 60 * 60;
@@ -257,22 +256,7 @@ export function createTemporalBackupPreflightJob(chart: Chart) {
   });
 
   job.addContainer(
-    withCommonProps({
-      name: "backup-preflight",
-      image: `bitnamilegacy/kubectl:${versions["bitnamilegacy/kubectl"]}`,
-      command: ["/bin/bash", "-c"],
-      args: [BACKUP_PREFLIGHT_SCRIPT],
-      securityContext: {
-        user: 1001,
-        group: 1001,
-        ensureNonRoot: true,
-        readOnlyRootFilesystem: true,
-      },
-      resources: {
-        cpu: { request: Cpu.millis(10), limit: Cpu.millis(100) },
-        memory: { request: Size.mebibytes(32), limit: Size.mebibytes(128) },
-      },
-    }),
+    kubectlScriptContainer("backup-preflight", BACKUP_PREFLIGHT_SCRIPT),
   );
 
   return job;

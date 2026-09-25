@@ -225,8 +225,7 @@ export function bindDareV2Deadline(
   spec: DareDeadlineSpecV2,
   activationAt: Date,
 ): Date {
-  if (spec.kind === "relative") {
-    return new Date(activationAt.getTime() + spec.days * 24 * 60 * 60 * 1000);
-  }
-  return new Date(spec.deadlineAt);
+  return spec.kind === "relative"
+    ? new Date(activationAt.getTime() + spec.days * 24 * 60 * 60 * 1000)
+    : new Date(spec.deadlineAt);
 }

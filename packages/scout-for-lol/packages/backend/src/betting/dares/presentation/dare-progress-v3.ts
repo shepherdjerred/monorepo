@@ -191,10 +191,11 @@ function conditionRegressed(
   condition: ProgressCondition,
   prior: ProgressCondition | undefined,
 ): boolean {
-  return typeof prior?.current === "number" &&
-    typeof condition.current === "number"
-    ? condition.current < prior.current
-    : false;
+  return (
+    typeof prior?.current === "number" &&
+    typeof condition.current === "number" &&
+    condition.current < prior.current
+  );
 }
 
 function rankDelta(evidence: ParsedEvidence | null): number {

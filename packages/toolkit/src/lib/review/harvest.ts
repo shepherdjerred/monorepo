@@ -144,8 +144,7 @@ export function harvestVerdict(input: {
     };
   }
   const jobId = jobIdFromTargetUrl(input.gate.targetUrl);
-  if (jobId === null) {
-    return { retryable: false, reason: "gate status names no Buildkite job" };
-  }
-  return { retryable: true, jobId };
+  return jobId === null
+    ? { retryable: false, reason: "gate status names no Buildkite job" }
+    : { retryable: true, jobId };
 }

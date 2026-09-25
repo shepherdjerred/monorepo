@@ -56,11 +56,18 @@ case "${MISE_TOOLCHAIN_SCOPE:-full}" in
     mise_ci reshim
     ;;
   postgres)
-    # The Playwright image intentionally carries only browsers and Bun. The
-    # design-audit lane needs the same pinned Postgres binaries as backend
-    # tests, but not the complete CI toolchain (which includes Rust/Cargo
-    # tools that cannot build in that image).
-    mise_ci install --yes 'ubi:theseus-rs/postgresql-binaries'
+    # The Playwright image carries browsers and Bun, but its refresh is
+    # main-only: a PR that bumps .mise.toml would otherwise run E2E under a
+    # stale Bun. Resolve the repo-pinned Bun at runtime (mise shims precede
+    # /usr/local/bin on PATH, so the pin wins; a no-op on a fresh image).
+    # Postgres binaries and the Temporal CLI ride along because this scope
+    # skips the complete CI toolchain (which includes Rust/Cargo tools that
+    # cannot build in that image). The Temporal CLI is a prebuilt aqua binary,
+    # not a build, so it costs nothing extra here; the nightly Scout design
+    # audit boots the real backend via scripts/dev/dev-web.ts, which spawns
+    # `temporal server start-dev` unconditionally (dev-web-temporal.ts) and
+    # has no way to run without it.
+    mise_ci install --yes bun 'ubi:theseus-rs/postgresql-binaries' 'aqua:temporalio/cli'
     mise_ci reshim
     expose_postgres_tools
     ;;

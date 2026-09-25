@@ -51,8 +51,7 @@ function admissionExecutor(
 ): CommandExecutor {
   return async (command) => {
     if (command[1] === "ls-remote") return lsRemote();
-    if (command[1] === "fetch") return commandResult();
-    return commandResult(0, catalog);
+    return command[1] === "fetch" ? commandResult() : commandResult(0, catalog);
   };
 }
 

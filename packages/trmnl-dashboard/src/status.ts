@@ -1,33 +1,22 @@
-export type Status = "ok" | "warning" | "error" | "unknown";
+import {
+  worstSeverity,
+  type Severity,
+} from "@shepherdjerred/ops-model/severity.ts";
 
-const rank: Record<Status, number> = {
-  ok: 0,
-  unknown: 1,
-  warning: 2,
-  error: 3,
-};
+/**
+ * The TRMNL templates render four states. `info` is healthy on an e-ink glance,
+ * so it folds into `ok`; ranking otherwise follows the ops model.
+ */
+export type Status = Exclude<Severity, "info">;
 
-export function worstStatus(statuses: readonly Status[]): Status {
-  if (statuses.length === 0) {
-    return "unknown";
-  }
-  return statuses.reduce((worst, status) =>
-    rank[status] > rank[worst] ? status : worst,
-  );
+export function statusFromSeverity(severity: Severity): Status {
+  return severity === "info" ? "ok" : severity;
 }
 
-export function statusFromCount(
-  count: number,
-  warningThreshold: number,
-  errorThreshold: number,
-): Status {
-  if (count >= errorThreshold) {
-    return "error";
-  }
-  if (count >= warningThreshold) {
-    return "warning";
-  }
-  return "ok";
+export function worstStatus(statuses: readonly Status[]): Status {
+  return statuses.length === 0
+    ? "unknown"
+    : statusFromSeverity(worstSeverity(statuses));
 }
 
 export function isUnavailableState(state: string): boolean {

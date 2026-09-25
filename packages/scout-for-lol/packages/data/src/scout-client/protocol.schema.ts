@@ -64,8 +64,9 @@ function jsonBoundaryError(value: unknown, depth = 0): string | null {
       : "payload string exceeds 16 KiB";
   }
   if (Array.isArray(value)) return arrayBoundaryError(value, depth);
-  if (typeof value === "object") return objectBoundaryError(value, depth);
-  return "payload is not JSON";
+  return typeof value === "object"
+    ? objectBoundaryError(value, depth)
+    : "payload is not JSON";
 }
 
 const BoundedJsonSchema = z

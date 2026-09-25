@@ -126,3 +126,52 @@ model EmailOutbox {
 
   @@index([sentAtNs, canceledAtNs, sendingAtNs, nextAttemptAtNs])
 }
+
+model OpsSnapshot {
+  id            String @id
+  generatedAtNs BigInt
+  receivedAtNs  BigInt
+  severity      String
+  payload       Json
+
+  @@index([generatedAtNs])
+}
+
+model ChangeEvent {
+  id           String  @id
+  source       String
+  externalId   String
+  service      String?
+  kind         String
+  title        String
+  occurredAtNs BigInt
+  severity     String
+  url          String?
+  receivedAtNs BigInt
+
+  @@unique([source, externalId])
+  @@index([occurredAtNs])
+  @@index([service, occurredAtNs])
+}
+
+model ViewerCursor {
+  consumer      String @id
+  lastSeenAtNs  BigInt
+  seenSignalIds Json
+}
+
+model DigestRun {
+  id           String  @id
+  kind         String
+  periodKey    String
+  status       String
+  createdAtNs  BigInt
+  claimedAtNs  BigInt?
+  sentAtNs     BigInt?
+  attemptCount Int     @default(0)
+  messageId    String  @unique
+  subject      String?
+  lastError    String?
+
+  @@unique([kind, periodKey])
+}

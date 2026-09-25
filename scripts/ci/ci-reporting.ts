@@ -372,10 +372,9 @@ export function cargoTestJUnit(
       const match = /^test (.+) \.\.\. (ok|FAILED|ignored(?:, .*)?)$/.exec(
         line.trim(),
       );
-      if (match?.[1] === undefined || match[2] === undefined) {
-        return [];
-      }
-      return [{ name: match[1], status: match[2] }];
+      return match?.[1] === undefined || match[2] === undefined
+        ? []
+        : [{ name: match[1], status: match[2] }];
     });
   if (exitCode === 0 && testCases.length === 0) {
     throw new Error("cargo test succeeded without reporting any test cases");

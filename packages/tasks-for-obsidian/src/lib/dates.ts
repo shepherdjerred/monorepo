@@ -13,14 +13,13 @@ function toStartOfDay(date: Date): Date {
  */
 export function parseLocalDate(dateStr: string): Date {
   const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
-  if (dateOnly) {
-    return new Date(
-      Number(dateOnly[1]),
-      Number(dateOnly[2]) - 1,
-      Number(dateOnly[3]),
-    );
-  }
-  return new Date(dateStr);
+  return dateOnly
+    ? new Date(
+        Number(dateOnly[1]),
+        Number(dateOnly[2]) - 1,
+        Number(dateOnly[3]),
+      )
+    : new Date(dateStr);
 }
 
 /** Compare task date values by their parsed instant, not their raw spelling. */
@@ -112,8 +111,9 @@ export function getDateGroup(dateStr: string): string {
   if (date.getTime() < today.getTime()) return "Overdue";
   if (date.getTime() === today.getTime()) return "Today";
   if (date.getTime() === tomorrow.getTime()) return "Tomorrow";
-  if (date.getTime() <= endOfWeek.getTime()) return "This Week";
-  return formatDate(dateStr);
+  return date.getTime() <= endOfWeek.getTime()
+    ? "This Week"
+    : formatDate(dateStr);
 }
 
 /**
@@ -139,8 +139,7 @@ export function formatAgendaDayHeading(
   });
 
   if (diffDays === 0) return `Today · ${absolute}`;
-  if (diffDays === 1) return `Tomorrow · ${absolute}`;
-  return absolute;
+  return diffDays === 1 ? `Tomorrow · ${absolute}` : absolute;
 }
 
 export function formatRelativeDate(
@@ -156,8 +155,7 @@ export function formatRelativeDate(
   if (diffDays === -1) return "Yesterday";
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Tomorrow";
-  if (diffDays <= 7) return `In ${diffDays}d`;
-  return formatDate(dateStr);
+  return diffDays <= 7 ? `In ${diffDays}d` : formatDate(dateStr);
 }
 
 export function formatDate(dateStr: string): string {

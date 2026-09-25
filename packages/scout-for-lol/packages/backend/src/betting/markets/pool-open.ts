@@ -52,12 +52,11 @@ export function computeClosesAt(input: {
   gameStartTime: number;
 }): Date {
   const fromDetection = input.detectedAt.getTime() + BETTING_WINDOW_MS;
-  if (input.gameStartTime <= 0) {
-    return new Date(fromDetection);
-  }
-  return new Date(
-    Math.min(fromDetection, input.gameStartTime + BETTING_WINDOW_MS),
-  );
+  return input.gameStartTime <= 0
+    ? new Date(fromDetection)
+    : new Date(
+        Math.min(fromDetection, input.gameStartTime + BETTING_WINDOW_MS),
+      );
 }
 
 /** Resolve the game's start even while Spectator reports a zero timestamp.
@@ -67,10 +66,9 @@ export function computeGameStartAt(input: {
   gameStartTime: number;
   gameLength: number;
 }): Date {
-  if (input.gameStartTime > 0) {
-    return new Date(input.gameStartTime);
-  }
-  return new Date(input.detectedAt.getTime() - input.gameLength * 1000);
+  return input.gameStartTime > 0
+    ? new Date(input.gameStartTime)
+    : new Date(input.detectedAt.getTime() - input.gameLength * 1000);
 }
 
 // Peek is retired and this value is never read by current code. It is still

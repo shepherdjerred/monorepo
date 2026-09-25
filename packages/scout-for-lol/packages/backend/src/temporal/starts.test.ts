@@ -27,8 +27,9 @@ function fakeStarter(failWith?: () => Error) {
     workflow: {
       start: (workflowType, options) => {
         starts.push({ workflowType, options });
-        if (failWith !== undefined) return Promise.reject(failWith());
-        return Promise.resolve(undefined);
+        return failWith === undefined
+          ? Promise.resolve(undefined)
+          : Promise.reject(failWith());
       },
     },
   };

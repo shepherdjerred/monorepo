@@ -55,11 +55,22 @@ final class InspectorEditingUITests: XCTestCase {
             element(AccessibilityIdentifier.Inspector.recurrenceSheet, in: app)
                 .waitForExistence(timeout: 5)
         )
-        element(
+        // Existence is the only gate the tap needs: the click resolves its
+        // coordinates at tap time. A hittability gate was tried here and
+        // removed — build 16990's screen recording proved the "Not hittable"
+        // failures were a macOS Continuity Camera onboarding dialog covering
+        // the sheet, not the app. Hittability asserts the environment, so a
+        // gate on it fails permanently while the dialog is up and adds
+        // nothing once it is answered.
+        let weekly = element(
             AccessibilityIdentifier.Inspector.recurrenceFrequencyOption("weekly"),
             in: app
-        ).click()
-        element(AccessibilityIdentifier.Inspector.recurrenceApply, in: app).click()
+        )
+        XCTAssertTrue(weekly.waitForExistence(timeout: 5))
+        weekly.click()
+        let apply = element(AccessibilityIdentifier.Inspector.recurrenceApply, in: app)
+        XCTAssertTrue(apply.waitForExistence(timeout: 5))
+        apply.click()
         try waitForVault(server, containing: "recurrence: DTSTART:")
         try waitForVault(server, containing: ";FREQ=WEEKLY;BYDAY=")
         try waitForVault(server, containing: "recurrence_anchor: scheduled")
@@ -128,6 +139,20 @@ final class InspectorEditingUITests: XCTestCase {
         let nativeRow = app.outlines[AccessibilityIdentifier.TaskList.list]
             .outlineRows.containing(.staticText, identifier: title).firstMatch
         XCTAssertTrue(nativeRow.waitForExistence(timeout: 5), "missing native row \(title)")
+        // A row matched during an outline reload can vanish before the tap
+        // resolves its query. Stability waits out the reload; hittability is
+        // deliberately not required first, because the tap scrolls a
+        // below-fold row into view itself and a hittability gate would forbid
+        // taps that succeed.
+        if !waitForStableFrame(nativeRow, timeout: 10) {
+            let rows = app.outlines[AccessibilityIdentifier.TaskList.list]
+                .outlineRows.containing(.staticText, identifier: title)
+            XCTFail(
+                "row never settled \(title): \(rows.count) matches, "
+                    + "frame \(nativeRow.frame), outline: "
+                    + app.outlines[AccessibilityIdentifier.TaskList.list].debugDescription
+            )
+        }
         // `XCUIElement.click()` chooses the trailing edge of this outline row,
         // where the hover actions live. The leading cell inset is owned by the
         // native table and therefore exercises selection directly.
@@ -170,6 +195,41 @@ final class InspectorEditingUITests: XCTestCase {
 
     private func element(_ identifier: String, in app: XCUIApplication) -> XCUIElement {
         app.descendants(matching: .any)[identifier]
+    }
+
+    /// Poll until the element's frame stops changing, or give up.
+    ///
+    /// An outline row can exist while its outline is still reloading: each
+    /// access re-resolves the query, so existence alone cannot tell a settled
+    /// row from one that will vanish before the tap resolves. A stable frame
+    /// across consecutive samples means the reload finished. This deliberately
+    /// does not require hittability — the tap scrolls a below-fold row into
+    /// view itself.
+    private func waitForStableFrame(
+        _ element: XCUIElement,
+        samples: Int = 3,
+        interval: TimeInterval = 0.2,
+        timeout: TimeInterval = 10
+    ) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        var stable = 0
+        var previous = CGRect.null
+        while Date() < deadline {
+            let frame = element.frame
+            if frame.isNull || frame.isEmpty {
+                stable = 0
+            } else if frame == previous {
+                stable += 1
+                if stable >= samples {
+                    return true
+                }
+            } else {
+                stable = 1
+            }
+            previous = frame
+            RunLoop.current.run(until: Date().addingTimeInterval(interval))
+        }
+        return false
     }
 
     private func waitForVault(

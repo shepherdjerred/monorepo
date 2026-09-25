@@ -98,17 +98,13 @@ function isFloorCall(expr: ScoutQlExprAst): boolean {
  * the compiler never has to refuse a plan it was handed.
  */
 function isBucketExpression(expr: ScoutQlExprAst): boolean {
-  if (containsNow(expr)) {
-    return false;
-  }
-  if (isFloorCall(expr)) {
-    return true;
-  }
   return (
-    expr.kind === "binary" &&
-    expr.op === "*" &&
-    ((isFloorCall(expr.left) && expr.right.kind === "number") ||
-      (isFloorCall(expr.right) && expr.left.kind === "number"))
+    !containsNow(expr) &&
+    (isFloorCall(expr) ||
+      (expr.kind === "binary" &&
+        expr.op === "*" &&
+        ((isFloorCall(expr.left) && expr.right.kind === "number") ||
+          (isFloorCall(expr.right) && expr.left.kind === "number"))))
   );
 }
 

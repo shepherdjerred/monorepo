@@ -187,16 +187,14 @@ function formatDuration(ms: number): string {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   if (hours > 0) return `${String(hours)}h${String(minutes)}m`;
-  if (minutes > 0) return `${String(minutes)}m`;
-  return `${String(totalSeconds)}s`;
+  return minutes > 0 ? `${String(minutes)}m` : `${String(totalSeconds)}s`;
 }
 
 /** "4h32m ago" for an ISO timestamp, or "?" if absent/unparseable. */
 function ageSince(iso: string | null | undefined): string {
   if (!iso) return "?";
   const then = Date.parse(iso);
-  if (Number.isNaN(then)) return "?";
-  return `${formatDuration(Date.now() - then)} ago`;
+  return Number.isNaN(then) ? "?" : `${formatDuration(Date.now() - then)} ago`;
 }
 
 /** A glyph that reads at a glance for a completion/progress state. */

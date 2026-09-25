@@ -38,10 +38,9 @@ export function serializeEmbedding(value: unknown): string | null {
 }
 
 export function deserializeEmbedding(value: unknown): number[] | null {
-  if (value === null) {
-    return null;
-  }
-  return MemoryEmbeddingSchema.parse(parseJson(value)).map((component) =>
-    Object.is(component, -0) ? 0 : component,
-  );
+  return value === null
+    ? null
+    : MemoryEmbeddingSchema.parse(parseJson(value)).map((component) =>
+        Object.is(component, -0) ? 0 : component,
+      );
 }

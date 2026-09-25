@@ -44,10 +44,9 @@ function mapExploreOutcome(
   if (outcome === "stopped") {
     return { status: "cancelled", partialOutputAvailable };
   }
-  if (outcome === "interrupted") {
-    return { status: "interrupted", partialOutputAvailable };
-  }
-  return { status: "failed", partialOutputAvailable };
+  return outcome === "interrupted"
+    ? { status: "interrupted", partialOutputAvailable }
+    : { status: "failed", partialOutputAvailable };
 }
 
 async function salvageAmbiguousExploreRun(input: {
@@ -396,10 +395,9 @@ export async function runScoutInteractiveActivity(
     );
   }
 
-  if (input.kind === "report-ai") {
-    return await runReportAiActivity(run, database);
-  }
-  return await runExploreActivity(run, database);
+  return input.kind === "report-ai"
+    ? await runReportAiActivity(run, database)
+    : await runExploreActivity(run, database);
 }
 
 export async function persistScoutInteractiveOutcome(

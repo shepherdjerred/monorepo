@@ -34,6 +34,7 @@ export function isCuratedRecurrenceRule(rule: string): boolean {
 }
 
 export function recurrenceRuleLabel(rule: string): string {
-  if (rule.length === 0) return "Does not repeat";
-  return recurrenceOptionForRule(rule)?.label ?? "Custom rule";
+  return rule.length === 0
+    ? "Does not repeat"
+    : (recurrenceOptionForRule(rule)?.label ?? "Custom rule");
 }

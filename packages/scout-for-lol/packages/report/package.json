@@ -31,7 +31,7 @@
     "@scout-for-lol/design-system": "workspace:*",
     "chroma-js": "^3.2.0",
     "echarts": "^6.0.0",
-    "react": "19.2.8",
+    "react": "19.3.0",
     "remeda": "^2.21.2",
     "satori": "^0.33.0",
     "ts-pattern": "^5.7.0",
@@ -40,13 +40,13 @@
   },
   "devDependencies": {
     "@types/chroma-js": "^3.1.2",
-    "@types/react": "^19.2.18",
-    "bun-types": "1.4.0",
+    "@types/react": "^19.3.0",
+    "bun-types": "1.4.2",
     "eslint": "^10.3.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "4.1.10",
-    "@vitest/coverage-istanbul": "4.1.10"
+    "vitest": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.1"
   },
   "description": "Generate report images for League of Legends",
   "keywords": [

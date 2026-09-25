@@ -38,8 +38,7 @@ import { ExploreNavigationSection } from "#src/components/explore/explore-naviga
 function getActiveConversationId(pathname: string): string | null {
   const match = /^\/(?:app\/)?explore\/([^/]+)/.exec(pathname);
   if (!match) return null;
-  if (match[1] === "s") return null;
-  return match[1] ?? null;
+  return match[1] === "s" ? null : (match[1] ?? null);
 }
 
 function guildNavIcon(to: string) {
@@ -83,10 +82,9 @@ function ToolNavIcon(props: { to: string }) {
   if (props.to.startsWith("/halls")) {
     return <Trophy className="size-4 shrink-0 text-scout-subtle" />;
   }
-  if (props.to.startsWith("/operations")) {
-    return <Wrench className="size-4 shrink-0 text-scout-subtle" />;
-  }
-  return null;
+  return props.to.startsWith("/operations") ? (
+    <Wrench className="size-4 shrink-0 text-scout-subtle" />
+  ) : null;
 }
 
 function ToolsNavigationSection(props: {

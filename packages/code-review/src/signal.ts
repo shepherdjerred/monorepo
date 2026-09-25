@@ -67,6 +67,11 @@ export const ReviewSignalEventSchema = z.object({
    * the gate.
    */
   stale_reaction: z.boolean(),
+  /**
+   * Provider-side block slug (e.g. `"usage-limited"`) when the review cannot
+   * run, else null. Set alongside `review_state: "errored"`.
+   */
+  blocked_reason: z.string().nullable(),
   /** Terminal gate decision, when this event is a decision (else null). */
   decision: z.enum(["waiting", "passed", "failed"]).nullable(),
   /**
@@ -100,8 +105,7 @@ function findingKey(level: number | null): keyof FindingCounts {
   if (level === 0) return "p0";
   if (level === 1) return "p1";
   if (level === 2) return "p2";
-  if (level === 3) return "p3";
-  return "unknown";
+  return level === 3 ? "p3" : "unknown";
 }
 
 /**

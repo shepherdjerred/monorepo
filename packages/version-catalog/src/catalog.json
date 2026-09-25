@@ -24,7 +24,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v0.11.0@sha256:4ac6d7f35ff30665b6c3b2634c2ba830488b2ee38783acc2ce953b652cb1c973"
+      "value": "v0.12.0@sha256:ad4163685598187f6d645c8873b16760001b0d94c6055e2306738c5098f7b512"
     },
     {
       "name": "connect",
@@ -48,7 +48,7 @@
         "registryUrl": "https://argoproj.github.io/argo-helm",
         "versioning": "semver"
       },
-      "value": "10.4.0"
+      "value": "10.9.2"
     },
     {
       "name": "cert-manager",
@@ -60,7 +60,7 @@
         "registryUrl": "https://charts.jetstack.io",
         "versioning": "semver-coerced"
       },
-      "value": "v1.21.1"
+      "value": "v1.21.2"
     },
     {
       "name": "intel-device-plugins-operator",
@@ -72,7 +72,7 @@
         "registryUrl": "https://intel.github.io/helm-charts/",
         "versioning": "semver"
       },
-      "value": "0.36.0"
+      "value": "0.37.0"
     },
     {
       "name": "node-feature-discovery",
@@ -96,7 +96,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "88.5.3"
+      "value": "91.5.1"
     },
     {
       "name": "prometheus-adapter",
@@ -120,7 +120,7 @@
         "registryUrl": "https://prometheus-community.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "11.17.2"
+      "value": "11.18.0"
     },
     {
       "name": "tailscale-operator",
@@ -132,7 +132,7 @@
         "registryUrl": "https://pkgs.tailscale.com/helmcharts",
         "versioning": "semver"
       },
-      "value": "1.102.3"
+      "value": "1.102.4"
     },
     {
       "name": "adyanth/cloudflare-operator",
@@ -152,7 +152,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16919@sha256:a9d246383d51c8b40dc940e672f6c72261a8d96d876902103a9902723439c7ce",
+      "value": "2.0.0-17149@sha256:541efcdc9d708b328bcbeb874d22fedb702412304fef79440260a7c66fbe587e",
       "notes": [
         "not managed by renovate — built from packages/streambot; CI's version commit-back fills the",
         "real tag@digest after the first image push. Seed digest is a placeholder until then."
@@ -165,7 +165,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-11934@sha256:14e5061b1138b294489221836b8a4f0fcf4ccd511729bd155bf386e53353d651",
+      "value": "2.0.0-16936@sha256:69e47978784b9099ac63e52f8d378b08fc0c2323dc7ae8c1740dae562c7c86db",
       "notes": [
         "not managed by renovate — built from upstream redlib's glibc Dockerfile.ubuntu",
         "at REDLIB_SOURCE_REF (pinned in the since-removed CI pipeline). The published image is",
@@ -185,7 +185,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "2026.8.2-java25@sha256:efa878ddb49cf5251b2e5f2ad71b08fd2f7236c1f7907433f6697258b31d2ce4",
+      "value": "2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749",
       "notes": [
         "java25 variant: Paper 26.2 (pinned below) requires Java 25+; the java21",
         "image crashes every server at startup (\"Minecraft 26.1 and newer requires",
@@ -204,7 +204,7 @@
         "versioning": "docker",
         "packageName": "itzg/minecraft-server"
       },
-      "value": "2026.8.2-java8@sha256:baf543e7ac35bd1cd06c3e2d8c546884e77a70ea1468f25a16c0981d84f5f72f",
+      "value": "2026.9.1-java8@sha256:aea37afb200728b004c41cbdc1b79e088955f32d22f5dac7f44cd94e5eaac0fe",
       "notes": [
         "Java 8 variant for the Forge 1.12.2 RLCraft server; keep separate from",
         "the Java 25 Paper image used by the other Minecraft servers."
@@ -220,7 +220,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "loose"
       },
-      "value": "1.43.3.10896-cb3ebc72d-amd64@sha256:c708587e4874617961a1bc24db9cffa2413653ff422f1b05dfec013339e6824d"
+      "value": "1.43.4.10903-e5521bd8c-amd64@sha256:dbb879bf58c3fc56635f21ac48c32aa6853aaa23d4a57b102033b6dc6d2d9cee"
     },
     {
       "name": "linuxserver/tautulli",
@@ -232,7 +232,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "2.17.2@sha256:91dac75429c459756e7ef81cefa26a751b314086562a641aebb2c03ddfd52d94"
+      "value": "2.18.1@sha256:e35570d636471f8aabfac7044057712679f954844a763ba735baa9659ea142b5"
     },
     {
       "name": "linuxserver/bazarr",
@@ -244,7 +244,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "1.6.0@sha256:ac284d3fda9ee7da8b15197dc51f0d7a2a1da98549bee99a3d924d3e94a5e7ed"
+      "value": "1.6.1@sha256:762f802274598da27255b2e5778f262b2b71b355a23e3812d9ee1520f8dbe37c"
     },
     {
       "name": "seerr-team/seerr",
@@ -268,7 +268,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "v2.4.8@sha256:c58f6d4af511613f218b6dafbfc84078af4e5a6089790c1fdba58fd7c5dad70a"
+      "value": "v2.5.1@sha256:20388de48f0e088ad9feb9904f6a452fd9ef933a79c7b2bf186e388224e8f437"
     },
     {
       "name": "linuxserver/prowlarr",
@@ -280,7 +280,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.5.2@sha256:1295cff29d10b486c0d8324d1559a552140a5932bf8b3d87e398654414f63f92"
+      "value": "2.6.5@sha256:f2b26429893d4c4cb71941b7ee50b1bdecd9d5f9f9e02d5410615e9f4f7c8d95"
     },
     {
       "name": "qdm12/gluetun",
@@ -304,7 +304,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "5.2.3@sha256:304b19cf94bf4fda534e0b086cab9c5f1a9e139a8180c05c0ad7d2ba1526fa99",
+      "value": "5.2.3@sha256:457e4eec2ee3f5e4ef59f237ad51f6143deba9f7445ab48bb5204a98888ef9aa",
       "notes": [
         "Keep this on qBittorrent app versions only. LinuxServer also publishes",
         "stale OS-style tags like 20.04.1 that resolve to old app builds."
@@ -320,7 +320,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "6.3.0@sha256:a45b5ab0f850f39edb4cc9c95bbd967b52ddc3d4574a4dfb45561177db6c88f4"
+      "value": "6.4.4@sha256:adb6c09d6b729ea5e642c99cea35af72702ef476bf4763f153299ac5db9f0b4f"
     },
     {
       "name": "linuxserver/sonarr",
@@ -332,7 +332,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "4.0.19@sha256:c19aa4ecdf03d73e1d5c901da33744cb7eb4d921f89bafed1ca264601d7fa224"
+      "value": "4.0.20@sha256:a5c1a5fecbef946927ab90ad68df319ac5fe644057e5fc18cd993f01ac07b2b2"
     },
     {
       "name": "timothyjmiller/cloudflare-ddns",
@@ -344,7 +344,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:e78ef9df27d82edafbcce232681be398e6faf7c1f158b80b091b8c6a5b1b8879"
+      "value": "latest@sha256:5f2471be9efd9f0c95f973645cc87f05d501020ded94d380a2120fbfdf812d3d"
     },
     {
       "name": "cloudflare/cloudflared",
@@ -356,7 +356,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2026.8.2@sha256:0aa26e284f05e6c77ae375b8c9c11d9eb6a448fb7bcd8d40f31cb6176189eb38"
+      "value": "2026.9.3@sha256:072c067d25ccbe61d46e18f0d0723255f2bb5304f7317caa95b27031520ff92c"
     },
     {
       "name": "tailscale/golink",
@@ -380,7 +380,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "2026.8.3@sha256:14931c6b13756317849f46da1d01b45937a1150db66c081cfe529d48215943fe"
+      "value": "2026.9.3@sha256:d8922685169707fd91e8b9729902d975f06157d005e422874d201e0261dda196"
     },
     {
       "name": "bropat/eufy-security-ws",
@@ -404,7 +404,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "11.22.3@sha256:14d018bb689eecce4029229764d2191d9b8d8f211106fcabaef421e7b0f8cf9c"
+      "value": "11.24.1@sha256:00abebce88205b47c3b611e983bbc692753170e3603c691bc5765f82265cafa4"
     },
     {
       "name": "koush/scrypted",
@@ -416,7 +416,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "docker"
       },
-      "value": "v0.144.1-noble-full@sha256:8bb29091d17b141ed6c2ae3d5cfaafbbb91420ff77e5bafd341518e205c91731"
+      "value": "v0.147.0-noble-full@sha256:e78b4fcecdd6c61acaaf22b50ccef303c738da58cc0be57afdb116521df52296"
     },
     {
       "name": "fuatakgun/eufy_security",
@@ -427,7 +427,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v8.2.4"
+      "value": "v8.2.5"
     },
     {
       "name": "basnijholt/adaptive-lighting",
@@ -438,7 +438,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v1.31.0"
+      "value": "v1.32.0"
     },
     {
       "name": "JeffSteinbok/hass-dreo",
@@ -449,7 +449,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v1.11.7"
+      "value": "v1.11.9"
     },
     {
       "name": "magico13/ha-emporia-vue",
@@ -504,7 +504,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v3.12.2"
+      "value": "v3.13.1"
     },
     {
       "name": "elax46/custom-brand-icons",
@@ -527,7 +527,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "2.1.3@sha256:9e9b931bf48a8a08bffaaa7e2fc2b7d0126b02def2bf1d3395d9b531817f9af3"
+      "value": "2.1.5@sha256:455bb8427106eb8522f9133a43d4e6ca799d4983c1b53e77a2bc6f7290855483"
     },
     {
       "name": "dotdc/grafana-dashboards-kubernetes",
@@ -538,7 +538,7 @@
         "datasource": "github-releases",
         "versioning": "semver-coerced"
       },
-      "value": "v3.0.6"
+      "value": "v3.0.8"
     },
     {
       "name": "chartmuseum",
@@ -562,7 +562,7 @@
         "registryUrl": "https://itzg.github.io/minecraft-server-charts",
         "versioning": "semver"
       },
-      "value": "5.1.3"
+      "value": "5.2.0"
     },
     {
       "name": "mc-router",
@@ -634,7 +634,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "2.2.1"
+      "value": "2.3.1"
     },
     {
       "name": "alloy",
@@ -646,7 +646,7 @@
         "registryUrl": "https://grafana.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "1.11.1"
+      "value": "1.12.1"
     },
     {
       "name": "openebs",
@@ -658,7 +658,7 @@
         "registryUrl": "https://openebs.github.io/openebs",
         "versioning": "semver"
       },
-      "value": "4.5.1"
+      "value": "4.6.1"
     },
     {
       "name": "shepherdjerred/scout-for-lol/beta",
@@ -667,178 +667,8 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16933@sha256:a408ea432e42c580636179469e54258c2da73a1d0c6e6cc9e61b641eed51664e",
-      "notes": [
-        "not managed by renovate — beta updated by version-commit-back",
-        "database contract: postgresql sha256:109e4f21f5f3c25527807827bf0074430644147e1832db3eb9e10abfb0b15a4f",
-        "database contract: postgresql sha256:edf75ad84ac0e6054bc89c287f5bb77f6476e1edd5ce772c45c9fae7cf0817b6",
-        "database contract: postgresql sha256:85e51719ae707a14cc9a0615990b0b7d5fdd65b956adca1209cb53ad786b8c4c",
-        "database contract: postgresql sha256:6b62a43c3f9fc344c74bbb909f1163dd2c7d3318f0a0990d83182c355aaaef34",
-        "database contract: postgresql sha256:6b62a43c3f9fc344c74bbb909f1163dd2c7d3318f0a0990d83182c355aaaef34",
-        "database contract: postgresql sha256:15c27e4ed6b60d3f6278c2ce83a0df05a8872723269d5d7ae250f1ff9878c2fc",
-        "database contract: postgresql sha256:37d0db242ed69d2e10cb307a43221b606f3881740389be4f2abd8d5a10d0db79",
-        "database contract: postgresql sha256:8fbf476fad2c1717519451f6623cc5c0a74bf7abaddc1b4adb320d00b137f385",
-        "database contract: postgresql sha256:261f526f5f8488dfd89d5f11c889c660e19c0b1ac5bb8b9aec3fe04e06f7dbf8",
-        "database contract: postgresql sha256:10e6f912dbe794e4d089a22bd2b2c37de8b753d54af99a39b57634ed40b065df",
-        "database contract: postgresql sha256:4d6c923551bdc3cc84a3e28288d1072d3f141bada9e525820be5ee8252b983b3",
-        "database contract: postgresql sha256:efc771b0f92731d5940a73ff2c0fd4c299adb15c361621b8248d202a03a61490",
-        "database contract: postgresql sha256:efc771b0f92731d5940a73ff2c0fd4c299adb15c361621b8248d202a03a61490",
-        "database contract: postgresql sha256:9632591b99d4e51dfe82556130afcbe71746717ed2d7ff3c19572f5f5a7b885f",
-        "database contract: postgresql sha256:452d2192c31b5e2f0f2bcbff77d54617388ed1ec2af943f21661b6ac644fad1b",
-        "database contract: postgresql sha256:fb7cf7ca30042b85adc9069783e8111256f50f65dd9c95dc3cd3e8139687daf4",
-        "database contract: postgresql sha256:5f97bece4260c4f130033481ea3af209f3b369cd4f57f3481263cf23bc271450",
-        "database contract: postgresql sha256:e8077a038c6e5ace1a2e2d44d24c42553cc07d1251235534ec174b23a93863f7",
-        "database contract: postgresql sha256:d5a39cc5731c1d572e8ed24f09d7716d179ed7eae80f0eb9f3f89c023f971a9a",
-        "database contract: postgresql sha256:1da9f3ed3d2ee6fb8830fc2ae4c71ba360be898bd00e568c436700ee717c7b2b",
-        "database contract: postgresql sha256:8a3b456465c6965562455f39589f896cec96fb0bf20880630dcebcfb8b52517a",
-        "database contract: postgresql sha256:5083e97545d11a05eb9300d2a64e53f5f85c7e9c30200bccc422df327addf419",
-        "database contract: postgresql sha256:48b0690488d8888e113babeffe5b59c734179db6c75ddee3f7026b20b42657d1",
-        "database contract: postgresql sha256:48b0690488d8888e113babeffe5b59c734179db6c75ddee3f7026b20b42657d1",
-        "database contract: postgresql sha256:ef2ca2f9186a074fcde5d15654b7c068269b540c338cb832379061a4faaefffd",
-        "database contract: postgresql sha256:ef2ca2f9186a074fcde5d15654b7c068269b540c338cb832379061a4faaefffd",
-        "database contract: postgresql sha256:ef2ca2f9186a074fcde5d15654b7c068269b540c338cb832379061a4faaefffd",
-        "database contract: postgresql sha256:a9441393f7815c115974711c87adf52fbcaf71d5ce5551e5f6fd1b9fb58834bb",
-        "database contract: postgresql sha256:a9441393f7815c115974711c87adf52fbcaf71d5ce5551e5f6fd1b9fb58834bb",
-        "database contract: postgresql sha256:58b4b3fcc48f1970adbda4f043a226d97b5d5d06c224fe7d6f7c2d8c77b5204f",
-        "database contract: postgresql sha256:d174159842f6bfa9fa305a82377b67131bc7a13c09eacf61f339ee6486e855ad",
-        "database contract: postgresql sha256:c013e18a543e7036d48d056a7452df3038fe3bf9328f3dafc17f0ad8d8ed526a",
-        "database contract: postgresql sha256:24e21d48c820863c6d35d0fb6bb66bd4ca233247ad7d72eb93b17ed601c9470e",
-        "database contract: postgresql sha256:0cbe9488a2d19a211a3b8c2c86a824fa78fce9db71ff74ac60d11ffabbc97687",
-        "database contract: postgresql sha256:90b6c9d4989505e1374e8b9b0c457acb536083de1fd9c0a4ba51e67c82aeacf4",
-        "database contract: postgresql sha256:90b6c9d4989505e1374e8b9b0c457acb536083de1fd9c0a4ba51e67c82aeacf4",
-        "database contract: postgresql sha256:9acbf285a1fbe164deea3e2fe0a16a000a442cc0d269e74b2e4850f49e4946db",
-        "database contract: postgresql sha256:9acbf285a1fbe164deea3e2fe0a16a000a442cc0d269e74b2e4850f49e4946db",
-        "database contract: postgresql sha256:49a122c90e44b387042ac491613cfcbcc94f6587e3fa82fcfceea2734128f750",
-        "database contract: postgresql sha256:ca92a0c42a12fd3e436eed99eb60393a6b21c1fb66c1c26237bc4ebca1b3fc82",
-        "database contract: postgresql sha256:e9d7e67ce60c98eee811a341cf925da165ec1876401bd030a0b21c7979ba64cc",
-        "database contract: postgresql sha256:ea1a01ff306b2d9d184f511dfac5db492b8531d509cf2bcc49dff5fbe4bd06ac",
-        "database contract: postgresql sha256:23e11f8835aab768c37869fc00366a11c7866e07bf990b0a5856f6b858a9d6a3",
-        "database contract: postgresql sha256:f0ab572acd02c57ac7b2464aec1a60bbf9e852d956f53cba2e7ea87d9b23d480",
-        "database contract: postgresql sha256:146077c0658715f5f15493d33e58923a1dd31ff65a97976b12359c39ffabb1d7",
-        "database contract: postgresql sha256:45c69df29cbc9b77fb9c578d31a902a6c404a56cbf029e727f3f6e323ba3e798",
-        "database contract: postgresql sha256:45c69df29cbc9b77fb9c578d31a902a6c404a56cbf029e727f3f6e323ba3e798",
-        "database contract: postgresql sha256:14598e23735ce95e95790c4279bff5d487956be1285df2ec68ac2e58b83ac30a",
-        "database contract: postgresql sha256:14598e23735ce95e95790c4279bff5d487956be1285df2ec68ac2e58b83ac30a",
-        "database contract: postgresql sha256:14598e23735ce95e95790c4279bff5d487956be1285df2ec68ac2e58b83ac30a",
-        "database contract: postgresql sha256:14598e23735ce95e95790c4279bff5d487956be1285df2ec68ac2e58b83ac30a",
-        "database contract: postgresql sha256:9185d1a9e0045164f222b0f440d863ceafcf6a251e7d767d16ab420f95c541f4",
-        "database contract: postgresql sha256:b43b0081d47ee6cde0b903813d2011c690f1563f368752314d9246fc5e25a13a",
-        "database contract: postgresql sha256:b43b0081d47ee6cde0b903813d2011c690f1563f368752314d9246fc5e25a13a",
-        "database contract: postgresql sha256:499b9141d713e998fa870e18cdad69794cf59e8909a1ef909f4c878ca92162ba",
-        "database contract: postgresql sha256:499b9141d713e998fa870e18cdad69794cf59e8909a1ef909f4c878ca92162ba",
-        "database contract: postgresql sha256:9378658a9d8c125cc221df62e1fa49f33ec724ff77d330ef2d970f9c584f6160",
-        "database contract: postgresql sha256:d0901d1000e9010212a37baed1a016c4ebdaeef8a5a3c4111e509739aed8aae5",
-        "database contract: postgresql sha256:63092770261ffe4f834692eceb512e726c0b1ca248dae29d2b0ba54de598f837",
-        "database contract: postgresql sha256:9e08c1b66540ce369b68e5076e16110e0aac2a4eeecadf75201348a21304db2b",
-        "database contract: postgresql sha256:864a6082cd5619abbe7b306bde184a8a28caca1ed4b6d9187eeed72fcd9c6b13",
-        "database contract: postgresql sha256:be25d11ac10b412b0b1875114d03af91b82073d995e6a277d3b2a2e3467324cd",
-        "database contract: postgresql sha256:9610e919a1a9c4fccd104679b858b5cca65295442703549d46f4d312dbce0d04",
-        "database contract: postgresql sha256:9610e919a1a9c4fccd104679b858b5cca65295442703549d46f4d312dbce0d04",
-        "database contract: postgresql sha256:9610e919a1a9c4fccd104679b858b5cca65295442703549d46f4d312dbce0d04",
-        "database contract: postgresql sha256:acd6d530560a1d152682e59433eae8995892b8b425ed56b4241758e1571f3d6c",
-        "database contract: postgresql sha256:726326cea87b960e786928f2af4bc43e9f57391f55aa2a17d4d41b47a99e6195",
-        "database contract: postgresql sha256:699c008b5eb3b441efb790a38efde1a5f79424d49d40186fa11edea93974a120",
-        "database contract: postgresql sha256:3c36cc59757b7bfe5316e3709cdc921cf5c0fc52fe19fa70c75ceb1edc3528f4",
-        "database contract: postgresql sha256:9d158b08fd464ccb03e1641ef22f0db7c3946b45d1c6930dc4a3a4232f89dd79",
-        "database contract: postgresql sha256:180cc4071abb089b5d8eb7415225dd0ae23e6947d70f381191cc43381318bded",
-        "database contract: postgresql sha256:79c6ffe06b57d91e721ef26b358e7237fd48e0b9ab5c55d4ebfa4852578ef552",
-        "database contract: postgresql sha256:3fc78c43bbdc52ecf5fa0b27996d638a5432da5e591d94eda56a6b4580b7724f",
-        "database contract: postgresql sha256:3fc78c43bbdc52ecf5fa0b27996d638a5432da5e591d94eda56a6b4580b7724f",
-        "database contract: postgresql sha256:1d59b574b7ff9df1aaad8e52bafccc75dba7c2e67eb5ebb499f2d6bb100ee8b8",
-        "database contract: postgresql sha256:c24f65a2c5bacd42f190f8b2f4fdd02d7a279262f6593542450fbdff489e231e",
-        "database contract: postgresql sha256:68c5a90928400a441a4c4a631addfe0ce043f69479df4508e2dfa8289bb16024",
-        "database contract: postgresql sha256:0321dda87e9a823c0fac4b28b854f704d0f20f96565a06fc2aeadfa611d095cb",
-        "database contract: postgresql sha256:890f2b8f4b7a8a461bf1eeb9f50b593361f1125e8f3a7fa42e64b3d33e925600",
-        "database contract: postgresql sha256:c195a5fd932681d9d276a31a5d03ea09ee9dca6458c9a0536d0bb6a1f03d90be",
-        "database contract: postgresql sha256:353ef1eeae0e50985f393469dfb35e985327d6ea5d797b0e36b8d05e40da3854",
-        "database contract: postgresql sha256:7852089d700969a81c8ab113e26dc1eceaee6e29632fd5d08ebeaa6ecd1cf2d7",
-        "database contract: postgresql sha256:cb00baf12602ba4769d0a235f5ce9daca0295a54a700eb75dae7f1f8de1fc4aa",
-        "database contract: postgresql sha256:3aafef064b4c1ec28e83636a73f9d96d082356dcd6e426fc440cc79b1c5cd843",
-        "database contract: postgresql sha256:d6adbd10e81d647207c3e83fbd83cf7cfc762421591dd26a40cb1cb0a150f1ad",
-        "database contract: postgresql sha256:1af851f161966b8fa3fe269cd57ed08a7c7fc976995a03ef541d1f1ef2efd559",
-        "database contract: postgresql sha256:6b23e0ddd9289b140be2be1a701b95186f00a5764b4ee4e7c62e94f01c832185",
-        "database contract: postgresql sha256:c22ec5e283c58c0ccaf9d8ef1a4e6accc9eb88d466b05743293c349b557c1b6a",
-        "database contract: postgresql sha256:1a349dcddf371960773be33f9fc523559861b126abb38ecbf3a710e45f83dc30",
-        "database contract: postgresql sha256:22630805aba8e398f2cb438abebb7ed714099ba0ebf604c80e0744a64c69ea1a",
-        "database contract: postgresql sha256:22630805aba8e398f2cb438abebb7ed714099ba0ebf604c80e0744a64c69ea1a",
-        "database contract: postgresql sha256:bb7b381a8f3a7bee50701de8d79e93afb8a0303e0c015f5155beb4b89f0184d6",
-        "database contract: postgresql sha256:e1394342f61b17b7573b4c89fad4e4fdf9fa3d774e90721d968364640e6265c4",
-        "database contract: postgresql sha256:2652b0fffd7d305b47dc7896d6ee28130e0f5e446380c4f1aedbada9bafedc13",
-        "database contract: postgresql sha256:b6fb3044af7e4b101d240459c717bb3cecb7010a45cb0d5e006752c9eddcee5d",
-        "database contract: postgresql sha256:dad9694a845a095abf4708f55d77d36f5162264b9ef72a48bd11f4fc6d9f3236",
-        "database contract: postgresql sha256:583a95dbc6f8957acd05dde926f55e2524698f29e31a858f5bdec0bca97b7bb3",
-        "database contract: postgresql sha256:2143cbc2f1ebb9679896e57906d38282d414cdc053ca66e2258b8d201db49de6",
-        "database contract: postgresql sha256:2f7a2a46796b3ac4e938f1cf5d82ff346a0325ab0b69e2bf564ed7e2809ef18a",
-        "database contract: postgresql sha256:c98f6cb89c2c572c8eca60765dd13ce1ac1e3d09e6bf22815e088e58387f3492",
-        "database contract: postgresql sha256:5e007f95b32be2025cb0869f4dc8740428b54e8b530ae55ad9fdec0cff7a3bdb",
-        "database contract: postgresql sha256:9484e4dc8553f5b01b34c9da95863b362e7e7c75c6d543a99cb912d8f02d7e1e",
-        "database contract: postgresql sha256:666edeb9704ae8668741077f793792ca274d8e9d2af3631b8ae0d2e1f62d90b6",
-        "database contract: postgresql sha256:666edeb9704ae8668741077f793792ca274d8e9d2af3631b8ae0d2e1f62d90b6",
-        "database contract: postgresql sha256:8722f2fcb68f79bb92e44773cd8de2c7f3db8e69cb8ad34f49d763383d9b9808",
-        "database contract: postgresql sha256:6683d636bbe606afe6c8289c90d51d90509fd0a61a78108bd987ede15c2ee33c",
-        "database contract: postgresql sha256:9c297e3db92cbc190db42000da5c3d87f9f21357a82e91137e620f372bd8c8b3",
-        "database contract: postgresql sha256:95e9476c20197ec5802ba60310b365fa5896479c385acb6221c0972b4fc3f52a",
-        "database contract: postgresql sha256:7020be20a6bbebbe8bdfef2462c0264d1c8602b3cc546c9d4c3cfeb3a41c6553",
-        "database contract: postgresql sha256:fda354773714796f2fcf1ea42025dee331b652daa5ffa0884020e5889973d183",
-        "database contract: postgresql sha256:5e7df63247213a83dcd25d8c14ddffde718433b650c331a580131ac5cc1229fb",
-        "database contract: postgresql sha256:b3f52944cf703ee85e74c8d494aa368399c16fb372af737c837e9277689b553a",
-        "database contract: postgresql sha256:374861e7736e44d06b8c1f61973f914bc601c5a41555098c649ba9829bc378ab",
-        "database contract: postgresql sha256:797c78cf257e9863380a7b1e90dccf100d34566160dfac9bba0c88d225c4e974",
-        "database contract: postgresql sha256:95358b813bbc8fdef697b9f6b5307d58bbafa3c8ca21dee02ee9662574c06555",
-        "database contract: postgresql sha256:0e36976adae676728bd9e0835f10aaf5617571ae59cf59c2feb07cddcfe0ee6e",
-        "database contract: postgresql sha256:67734835bb0d8f7f4674fba0ec026aa64777c8b6f46061d834c1eb8437a9bc3e",
-        "database contract: postgresql sha256:4f9420eb0a85e4a6adcc3612b6fb1e1bf4183ddae59015978c08378c451dbe63",
-        "database contract: postgresql sha256:e60bae0284c744a7d16f436d58bd06cc7b1822f16be0ece3c140434191124eeb",
-        "database contract: postgresql sha256:20cd8d89c847766761b218131079de6ca53235516fd099d456c20a22fa33f256",
-        "database contract: postgresql sha256:9c61899ac377c23eaeff76370ba89727595a27f1c8367554150c87df67fe9bb5",
-        "database contract: postgresql sha256:38c20124b8febf4cfc5cfa9603a6edcccb8f08e0a09b06e73cd35d004b0b87e1",
-        "database contract: postgresql sha256:38c20124b8febf4cfc5cfa9603a6edcccb8f08e0a09b06e73cd35d004b0b87e1",
-        "database contract: postgresql sha256:35397a700e859854cd6baf954fcd42dc23228eb980e876094adb7c7244422614",
-        "database contract: postgresql sha256:19470c82b102a18757ea4d11bbe9cf1a2471a8b180a573ffbafde6cfc42ad288",
-        "database contract: postgresql sha256:01aee1bb4db8ef7be74453ced4c6465bd3702ee87663598f2011a0e6bad4dc2a",
-        "database contract: postgresql sha256:d1d32eb9008e092aa6972cff85ede3d6d2f5c2696557b587d1585155b3505ad7",
-        "database contract: postgresql sha256:5b14225455b0d2b4353ce6ca1d03104e7bedea15f19a860b95520015ad0bf9ab",
-        "database contract: postgresql sha256:14e13c9f3d9ed5559d9dd7c8360a552212da49e0f266325e6a464bc6e5a22e93",
-        "database contract: postgresql sha256:2588ad0fa9a696edd055db6bdb41c7cf7b4ce9b67e47869d803af46997eb81ed",
-        "database contract: postgresql sha256:2588ad0fa9a696edd055db6bdb41c7cf7b4ce9b67e47869d803af46997eb81ed",
-        "database contract: postgresql sha256:a4290247d0b2bd8eb55f1a2202e7f109e26210a44aa6a845eba2993145b5932d",
-        "database contract: postgresql sha256:d5800a19d483e82f1f36973ffb4b13566b81d215a04d88ca17caaf9ffe3c0086",
-        "database contract: postgresql sha256:542e923a38732c7a1824cee0c8e0df32bc38410452044c9fe3460bd4f01b6e2c",
-        "database contract: postgresql sha256:5538c27741cac54ed191fa89a58098e638201c33be685d41a810605574e815e4",
-        "database contract: postgresql sha256:a1a0e4bef9128e3462931e85842a6289b9fb49c73563a78e0492f7f58b559726",
-        "database contract: postgresql sha256:8723ced2eafbc71de1327d82ef8e95e7a86f7270e27a08928afb68fff469dcf7",
-        "database contract: postgresql sha256:8756b768aeb478a06e4071f5e0a0be4072129e8cb7f319201c9907e74d429d17",
-        "database contract: postgresql sha256:100b2f6037f86a4b6487ccc8d11ea4e0be1ec135287676772fde46aea704331b",
-        "database contract: postgresql sha256:925ca782ae8688ee6ef046c12d13c70db42fcb86e52501fb004da0763ec14bed",
-        "database contract: postgresql sha256:5bad66e82a8ef37c05c23b6829e3ea5c4a64ec0c118be2fce563453e3e172cf6",
-        "database contract: postgresql sha256:22bc4a3c06b101533f21f525ec12b31c0426eb823a8c6fc520e936ab56eab1b0",
-        "database contract: postgresql sha256:dff66e01c9e1e8addb305b17bc20ca71ec2de1059fa3fcdeaab3ab3d72b144f6",
-        "database contract: postgresql sha256:57583edbf7ea74bb250ac30cca8628bb9480a01b8157462001dfa9a415d755bc",
-        "database contract: postgresql sha256:59e38ffe0a0d450090c4981d76792a9e1325cd711af7bceaa3d4c16a15a38229",
-        "database contract: postgresql sha256:243d3fc71546588837e431d9612fe7c0b3d45bf5e8af09661efaf264ff82f341",
-        "database contract: postgresql sha256:6b5c7cd06d698c7d1bd4a904e0106b4e15118705b4ef2544caf49be1394554fc",
-        "database contract: postgresql sha256:6b5c7cd06d698c7d1bd4a904e0106b4e15118705b4ef2544caf49be1394554fc",
-        "database contract: postgresql sha256:f9546139956ffe48cf1873fab7a58818cd24905a42cddbe247e5a3cd6d197b0a",
-        "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd",
-        "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd",
-        "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd",
-        "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd",
-        "database contract: postgresql sha256:e88c76d775249b440b7d9f8e6eaeaf3fcebdaebdfcad5154b6b64ce823d455cd",
-        "database contract: postgresql sha256:bc24c9d6c46c2d2c343a26493b55d5e3408aabab58c54a51c89e85b59001e99c",
-        "database contract: postgresql sha256:d6f1de94543542e0572a008dac99fbd5cef15f65499124a545c41405f73e9ab9",
-        "database contract: postgresql sha256:295e7af1cdf933de7597e883e2db8905109e3227410bb87534e1ae9fb46ad752",
-        "database contract: postgresql sha256:cb81789547c64a7da10cc9ae4a70178dc90c904e1bbbf1c555d0b10d8e55c128",
-        "database contract: postgresql sha256:5e3548e3012ca58364369fff2ab16b711f8f7cafc88618131bafbca4f2267610",
-        "database contract: postgresql sha256:83d3776e58a004d24172af38def91164c0c7102c5eeed3ebfde7340709b19126",
-        "database contract: postgresql sha256:d7a2551840dcbecaf7823c490379e95abda9c8a8a63d17b9e2f3b071f99bbc3a",
-        "database contract: postgresql sha256:d77322bd6f49ba83c7f70584f5107776e44c3695ef8e3eb16b11ee50eb27429c",
-        "database contract: postgresql sha256:e5a3abcc96364172c607ad5e64bd4a599e9b28cdc161c9ea088c038f7c92770c",
-        "database contract: postgresql sha256:eca1ae22b33023c36ee2d89454815e9b0bd7c93b6047bd2b068a8f8c24711e9d",
-        "database contract: postgresql sha256:12045cbf74bc7524b73d7ee678428fc043831cb193fb13c3042858106dc0b243",
-        "database contract: postgresql sha256:b7118fd3148a74a7b8cdc43e18aaa0aadb52e18074736e2eeaf472cab31815fb",
-        "database contract: postgresql sha256:cd8f183cb95ab7bf2e79759e3ec4fee06a743dba08aae066696140b0f642f2f3",
-        "database contract: postgresql sha256:a408ea432e42c580636179469e54258c2da73a1d0c6e6cc9e61b641eed51664e"
-      ]
+      "value": "2.0.0-17149@sha256:31e5f992f5c33a63726e1032feefd36f10991de351df0b1bdb56108181a01d4f",
+      "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
       "name": "shepherdjerred/scout-for-lol/prod",
@@ -851,7 +681,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/scout-for-lol"
       },
-      "value": "2.0.0-16136@sha256:925ca782ae8688ee6ef046c12d13c70db42fcb86e52501fb004da0763ec14bed",
+      "value": "2.0.0-17149@sha256:31e5f992f5c33a63726e1032feefd36f10991de351df0b1bdb56108181a01d4f",
       "notes": [
         "Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>",
         "tag is minted by the scout-tag-release CI step only after site version",
@@ -921,7 +751,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16919@sha256:b04eec41f15679d46026ce0ae353d6196f65899ff95ab3f27146069030fa64dd",
+      "value": "2.0.0-17149@sha256:8ab2255c7febbbb8eb8438553e10fd88ab36440f558b6af2574970e178bfa8cf",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -935,7 +765,7 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/starlight-karma-bot"
       },
-      "value": "2.0.0-16009@sha256:dc7e81105fca37a6ddcdb739d0bf7e219ea241f444e9005f061c3d91d7998555"
+      "value": "2.0.0-16579@sha256:4d7c5ad9dd5b52b011aa60f3e4bed0a9343ccd98273fe3eddace718bad30a498"
     },
     {
       "name": "shepherdjerred/birmel",
@@ -944,7 +774,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16933@sha256:c5441dbd32cb61b9b7cb685b8bfb9b600c283ed88d35f7fb1294fade7a38ac39",
+      "value": "2.0.0-17149@sha256:2de0be9722bc6ef4cc4748a0c9173fe4e6e732d4b7746934d92a6b5ce44e0211",
       "notes": ["not managed by renovate"]
     },
     {
@@ -954,7 +784,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16919@sha256:c7cf5fa559c551af7fd79505c1abfcfac775448114ed7ee6112398dd56344ce4",
+      "value": "2.0.0-17149@sha256:84b7ef35dff0c637e17b0412cdf272de2685e30ad74801577745a5bb4788ef4f",
       "notes": [
         "not managed by renovate — CI version-commit-back replaces this after each",
         "image push."
@@ -967,7 +797,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16919@sha256:e4f3f5b43ba1b69e2d0791f13ccecf29b870c9d943c02944b2f6de639d5ed21f",
+      "value": "2.0.0-17149@sha256:26203e35f579c7dbe6d7ac4dc3c1ecea6a2b50f8018675d11e6c7cae517c271c",
       "notes": [
         "not managed by renovate — pre-first-publish placeholder. The main image",
         "release injects the built digest into chart synthesis and version",
@@ -981,7 +811,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16919@sha256:2044c830f0f1cf0d5574f77c184ab7993b6228de180f5ec79207c81f97eba448",
+      "value": "2.0.0-17149@sha256:73e4e2c896aa671ac31d28c9ca81516715ac1e79bbdd812976f00f16d140b929",
       "notes": ["not managed by renovate"]
     },
     {
@@ -991,7 +821,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16919@sha256:5b56766f22bda32635940e07d8aa4778bf3a6131a72ca707093a3ca823581286",
+      "value": "2.0.0-17149@sha256:8d67a58941f0d45edf6ae64b68a82fdcc9605e363b4c8cb5312fd8598352ea48",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful image push."
@@ -1007,7 +837,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.29.1@sha256:ab6b363102ccdbc39f6a62db926f567c61a5289bf25ba460f1c34423d8cc1a4d"
+      "value": "1.30.0@sha256:258b8edfc8a76a61f60d2d6a14d8f8d12495d78abf38646a2137612dfa264a21"
     },
     {
       "name": "oven/bun",
@@ -1019,7 +849,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.4.0-slim@sha256:e0ee68d16ccb9927bf02aa7dd8fd4bf3369ee6d46da04faa72b05ce8bfd135f6"
+      "value": "1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61"
     },
     {
       "name": "pinchtab/pinchtab",
@@ -1031,7 +861,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "0.15.1@sha256:114e5a1ba54f4c542d0c00c3a1d20e1962db2b04b1da04a465255143e1801a0b"
+      "value": "0.15.2@sha256:a2205fc99765e42ce566dae3c8ff9fc3e3338cf44decb816ddb3d54d8d4bc05d"
     },
     {
       "name": "agent-stack-k8s",
@@ -1044,7 +874,7 @@
         "versioning": "semver",
         "packageName": "agent-stack-k8s"
       },
-      "value": "0.48.0@sha256:cf79363dc08db9b0d2e849a484a25e95a4c63765779fd9ecbe38be927545d417"
+      "value": "0.50.0@sha256:9d0d052f73362fe28143faa9b0a5ee3fdefedc93e2d7ad9ab8f65b15d50ca4bd"
     },
     {
       "name": "ducktors/turborepo-remote-cache",
@@ -1056,7 +886,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.12.0@sha256:d5cd81fc2f289b6c37ad8f3361a9abab5c359577d7809981ece045cefc21756f",
+      "value": "2.14.1@sha256:8aa1c158d885757149fa953e92c0c8da544cf4a1e9a19b7feb684e59cf7b4bb0",
       "notes": [
         "Self-hosted Turborepo remote cache backing the workspace task graph."
       ]
@@ -1072,7 +902,23 @@
         "versioning": "semver",
         "packageName": "kueue/charts/kueue"
       },
-      "value": "0.19.2@sha256:ab436c33ef6c6b9b9e95b633e618bca0e0e436d6581d3b27bd12fc8a8026ab34"
+      "value": "0.19.6@sha256:f74af5397ba326b94b4d2808f5fb6eac4996ab0f20a3358af0afd3a7a1e12c1a"
+    },
+    {
+      "name": "tonistiigi/binfmt",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "regex:^qemu-v(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)$"
+      },
+      "value": "qemu-v10.2.3@sha256:400a4873b838d1b89194d982c45e5fb3cda4593fbfd7e08a02e76b03b21166f0",
+      "notes": [
+        "Registers QEMU binfmt_misc handlers on the CI node from buildkitd's init",
+        "container, so BuildKit builds linux/arm64 images (macos-cross-compiler)."
+      ]
     },
     {
       "name": "moby/buildkit",
@@ -1084,7 +930,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "v0.32.2@sha256:28a898719c18a33f4e8000685287fa36fd0dd9560c6440227d3a732d79bb41d8",
+      "value": "v0.33.0@sha256:6c2fa84a6b61ccd72899dde4239f8d5717f05f9a8ca6f3cad185fb1a95a94de3",
       "notes": [
         "Persistent BuildKit daemon backing CI image builds (bounded-GC cache on a",
         "compressed ZFS PVC, replacing the per-run throwaway builder inside dind —",
@@ -1101,7 +947,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "3.14-alpine@sha256:05b2b8b732ecd268fee8727a369f936f022d1321b59befd13c30ede22769dcdc"
+      "value": "3.14-alpine@sha256:9e9fde4d32eedce0b661d9ab91e826b62dddf28e928c230ec55f1866cac66b01"
     },
     {
       "name": "bitnamilegacy/kubectl",
@@ -1125,7 +971,7 @@
         "registryUrl": "https://vmware-tanzu.github.io/helm-charts",
         "versioning": "semver"
       },
-      "value": "12.1.0"
+      "value": "12.2.0"
     },
     {
       "name": "velero/velero-plugin-for-aws",
@@ -1216,7 +1062,7 @@
         "registryUrl": "https://ghcr.io/recyclarr",
         "versioning": "docker"
       },
-      "value": "8.7.1@sha256:73303ba5ee647b6492fee917d3a781c6e59b6cab08f9dfce9482a950846f564f"
+      "value": "8.7.2@sha256:6e69e009e1cd7493ff6093e8e187b5d3788c75b4a2c0c5127b6a1beda1c19728"
     },
     {
       "name": "siderolabs/talos",
@@ -1251,7 +1097,7 @@
         "registryUrl": "https://ghcr.io",
         "versioning": "semver"
       },
-      "value": "0.10.45@sha256:b4a84f04163099d9f41c648e78a8402d8e6dfe1ece07ccdb3d439543aec5f378"
+      "value": "0.10.47@sha256:a0307e9c131b45b0d2039417f291b7ef44580d9d9e303bb5a6083aaf82691044"
     },
     {
       "name": "esanchezm/prometheus-qbittorrent-exporter",
@@ -1299,7 +1145,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "28.0.10"
+      "value": "28.2.3"
     },
     {
       "name": "seaweedfs",
@@ -1311,7 +1157,7 @@
         "registryUrl": "https://seaweedfs.github.io/seaweedfs/helm",
         "versioning": "semver"
       },
-      "value": "4.44.0"
+      "value": "4.47.0"
     },
     {
       "name": "mariadb",
@@ -1323,7 +1169,7 @@
         "registryUrl": "https://charts.bitnami.com/bitnami",
         "versioning": "semver"
       },
-      "value": "27.0.7"
+      "value": "28.0.2"
     },
     {
       "name": "bitnami/mariadb",
@@ -1335,7 +1181,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:d8ad094dc757d2270a880f3a3aff73ef5998a64538f3c05ff93edaf5056b7852"
+      "value": "latest@sha256:c12340aa3504ba0df3e198a5d2375528761e7ddcaa1935f28d34d844f5e14f75"
     },
     {
       "name": "bitnami/mysqld-exporter",
@@ -1347,7 +1193,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:e40cf454094ad1d6bd6a625ad1614ea317a26e5fb7f77d1b8fa122ad89f70292"
+      "value": "latest@sha256:0ede898447e52b6de75642db8c49dd053577fb97c3b06b74939e3accf7a13fe8"
     },
     {
       "name": "postalserver/postal",
@@ -1371,7 +1217,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "11.8@sha256:24e76fcec8c003a0362d0dd53f4806e7e79458d7fdeaf47437760e19496f5a9c"
+      "value": "11.8@sha256:79d59758afc91b89b120b0a8904d637f5a3b3e1c4900f29b740d6d46c72fef68"
     },
     {
       "name": "boky/postfix",
@@ -1395,7 +1241,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616"
+      "value": "latest@sha256:fd7dc98638c8e305f4dc34e979f1c0fdfdcaeb0fbf8fcff77ae834b6da3d7e6e"
     },
     {
       "name": "mikefarah/yq",
@@ -1424,7 +1270,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "latest@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b"
+      "value": "latest@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6"
     },
     {
       "name": "alpine/git",
@@ -1436,7 +1282,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "2.54.0@sha256:4f9488b7295baec153a9953479690f835ad4699b1d9f11e3897a4485c224fc3e",
+      "value": "2.54.0@sha256:ae0f6f4bce38d2b8c40becc0d6241a08d9f57186ea03029de2189a2b5e722d94",
       "notes": [
         "Initializes Flipt's local storage as committed normal Git repositories."
       ]
@@ -1463,7 +1309,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "bookworm-slim@sha256:abd67ffcfa541b485a3dff59865ab629aa048a6c613e639d36e7456b0b229241"
+      "value": "bookworm-slim@sha256:3783cc01769c7b2b1b83a5c5ad96c815348e28ed7da68e2e3687004faa906251"
     },
     {
       "name": "library/nginx",
@@ -1475,7 +1321,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "docker"
       },
-      "value": "1.31.3-alpine@sha256:4a73073bd557c65b759505da037898b61f1be6cbcc3c2c3aeac22d2a470c1752"
+      "value": "1.31.6-alpine@sha256:d10753d9289b8e3f884386351f73554ce72b631378949deddd75e83ee296c427"
     },
     {
       "name": "bugsink/bugsink",
@@ -1487,7 +1333,23 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.5.0@sha256:b697016950d8aa7d94020def15bc2727e8fc40148f079884ae4cdacf7ea1e9a3"
+      "value": "2.6.0@sha256:46fc01ffbd6054f2d493a25fd9de6efbddd9092d0fef363bfdb8117cf9ac61f5"
+    },
+    {
+      "name": "arizephoenix/phoenix",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "regex:^version-(?<major>[0-9]+)[.](?<minor>[0-9]+)[.](?<patch>[0-9]+)-nonroot$"
+      },
+      "value": "version-20.16.0-nonroot@sha256:e4a41a209b07289581a5d48167a11051c12704ac48983056fe0989b6f13b467a",
+      "notes": [
+        "Phoenix publishes semver releases only under version-X.Y.Z tags; the nonroot",
+        "variant runs as UID 65532 and is the one the upstream Helm chart deploys."
+      ]
     },
     {
       "name": "relay-server",
@@ -1509,7 +1371,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-13290@sha256:43e365cf4bf93338cc39012e1b7c0e3068643ec78e0823f40bd5d487951d5350",
+      "value": "2.0.0-16936@sha256:b8317dbeb9baeaf705b76ad6c2153ac850dcc8f3e7ed19b8d221a0069704afea",
       "notes": [
         "Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3",
         "not managed by renovate"
@@ -1522,7 +1384,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16919@sha256:120bda7f20cae1574c2529ff50921423d86e5e133a62281c88e41236797e15cb",
+      "value": "2.0.0-17149@sha256:bd77b0bde95eb0412aea6f85469f6bad5d0f4c6b5738850ca1b9b41a71bf1f2d",
       "notes": [
         "Custom tasknotes-server image - TaskNotes API server for mobile app",
         "not managed by renovate"
@@ -1535,7 +1397,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-10760@sha256:891314c04eb09776f7ae1693de8e66a4b092a46578becbe70954e86b4532cad7",
+      "value": "2.0.0-16936@sha256:985e6499b130f9f4927de45ae54cb13299a363409941717737c8d0433a45bbbe",
       "notes": [
         "Custom obsidian-headless image - Official Obsidian Headless CLI for vault sync",
         "not managed by renovate"
@@ -1551,7 +1413,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.30.6@sha256:c8ade0075f9d9da43c206de2b255c80be49db384045bd1ff76bd58d0f408a314"
+      "value": "1.32.0@sha256:c3e752127759616bb1615e0f9ba0e21635aeb5fdeb922de4f371c350955f46ae"
     },
     {
       "name": "temporalio/ui",
@@ -1563,7 +1425,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "2.53.3@sha256:eef301146e60fad34b47adaecfae4149016e34b2d44ba94fca5fd8e5441f182a"
+      "value": "2.54.1@sha256:ff0943fe532b8e33c46cd28b29e81e0ce0b6f55b9ee50a38ef1b437cc4de3fa5"
     },
     {
       "name": "temporalio/admin-tools",
@@ -1575,7 +1437,7 @@
         "registryUrl": "https://docker.io",
         "versioning": "semver"
       },
-      "value": "1.30.6@sha256:d6218349ac4468ea97877dedaa5351b16364983946dbde49811d93011da649c6"
+      "value": "1.32.0@sha256:a9f84fb9a374b2374fe2e67c8efc0468ff3f1c66c8a0b14597ec86e349e62bca"
     },
     {
       "name": "shepherdjerred/temporal-worker",
@@ -1584,7 +1446,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16933@sha256:9267658e3660fe7c045501bea6687455592f146964f39d9a46f25efc4f78fbba",
+      "value": "2.0.0-17149@sha256:a3a8eb7bb20be9366fe534bfb518be5a23158eab75c7fd84b544d7e353de8b13",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1597,7 +1459,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-13792@sha256:9d65ed0bb72513ac998aa82f0e32cda50f9ca9553cb7ae30ac51660d0a737a26",
+      "value": "2.0.0-13290@sha256:839757bc2a1ffbdca5111843e6e78ea41771b6c73d486111ee993e2fda762fb5",
       "notes": [
         "Candidate central Workflow Worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1623,7 +1485,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-16919@sha256:781f86f145e4c1e50307a52b62d167574d1b40bdbc432182cfad5321673d4473",
+      "value": "2.0.0-17149@sha256:469faf938581f1bbc6df279412d1677ada0e4c57e2ad1b06498bac383bbd15d8",
       "notes": [
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"
@@ -1640,10 +1502,10 @@
         "versioning": "semver",
         "packageName": "flipt/flipt"
       },
-      "value": "v2.11.0@sha256:d20384874048ef6ac326f4937cee64f1db175a1878a87db32916cc8db46c740e",
+      "value": "v2.13.0@sha256:d96f7cbe499dfa2cb1e626ce0230a9d5e068896975a855000a7a8645826862e4",
       "notes": [
         "Feature flag server. Fair Core License; the free tier covers the UI, local git storage, and evaluation.",
-        "A bump requires re-capturing packages/feature-flags/fixtures/flipt-snapshot.default.json,",
+        "A bump requires re-capturing packages/feature-flags/src/providers/fixtures/flipt-snapshot.default.json,",
         "because the provider fetches the internal /internal/v1/evaluation/snapshot API."
       ]
     }

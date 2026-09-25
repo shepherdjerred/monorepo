@@ -36,10 +36,10 @@ export function isClashPlayerPollWindow(
       return false;
     }
     const registration = toClashEpochMs(phase.registrationTime);
-    if (registration > 0 && nowMs + WEEK_MS < registration) {
-      return false;
-    }
-    return nowMs <= start + WEEK_MS;
+    return (
+      !(registration > 0 && nowMs + WEEK_MS < registration) &&
+      nowMs <= start + WEEK_MS
+    );
   });
 }
 
@@ -67,8 +67,7 @@ export function clashScheduleSightingWindow(
       startMs === undefined ? windowStart : Math.min(startMs, windowStart);
     endMs = endMs === undefined ? windowEnd : Math.max(endMs, windowEnd);
   }
-  if (startMs === undefined || endMs === undefined) {
-    return undefined;
-  }
-  return { startMs, endMs };
+  return startMs === undefined || endMs === undefined
+    ? undefined
+    : { startMs, endMs };
 }

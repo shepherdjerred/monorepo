@@ -163,8 +163,9 @@ function targetKeyFromFunction(
   const constant = objectValue(child["value"]);
   if (constant === null) return null;
   const type = objectValue(constant["type"]);
-  if (type === null || stringValue(type["id"]) !== "VARCHAR") return null;
-  return stringValue(constant["value"]);
+  return type === null || stringValue(type["id"]) !== "VARCHAR"
+    ? null
+    : stringValue(constant["value"]);
 }
 
 function physicalTableName(object: Record<string, JsonValue>): string | null {

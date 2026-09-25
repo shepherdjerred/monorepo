@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { items } from "@scout-for-lol/data";
+import {
+  getPatchChangeset,
+  getPatchChangesets,
+  items,
+} from "@scout-for-lol/data";
 import {
   comparePatchChangesText,
   lookupItemText,
@@ -68,10 +72,22 @@ describe("League reference tools", () => {
   });
 
   test("compares the current patch with its immediate predecessor", () => {
+    // Derived from the bundled history so a Data Dragon bump does not
+    // invalidate the expectation; the history is ordered newest first.
+    const history = getPatchChangesets();
+    const current = getPatchChangeset()?.patch;
+    const currentIndex = history.findIndex((patch) => patch.patch === current);
+    const previous = history[currentIndex + 1]?.patch;
+    if (current === undefined || previous === undefined) {
+      throw new Error(
+        "Bundled patch history needs a current and previous patch",
+      );
+    }
+
     const result = comparePatchChangesText({});
-    expect(result).toContain("Comparing patch 26.17 to 26.18");
-    expect(result).toContain("Patch 26.17:");
-    expect(result).toContain("Patch 26.18:");
+    expect(result).toContain(`Comparing patch ${previous} to ${current}`);
+    expect(result).toContain(`Patch ${previous}:`);
+    expect(result).toContain(`Patch ${current}:`);
   });
 });
 

@@ -56,10 +56,9 @@ export function buildCaptureSuggestions(
   if (lastToken.startsWith("@") && lastToken.length > 1) {
     return makeTokenSuggestions("@", contexts, lastToken.slice(1));
   }
-  if (lastToken.startsWith("#") && lastToken.length > 1) {
-    return makeTokenSuggestions("#", tags, lastToken.slice(1));
-  }
-  return [];
+  return lastToken.startsWith("#") && lastToken.length > 1
+    ? makeTokenSuggestions("#", tags, lastToken.slice(1))
+    : [];
 }
 
 export function applyCaptureSuggestion(
@@ -67,14 +66,14 @@ export function applyCaptureSuggestion(
   suggestion: CaptureSuggestion,
 ): string {
   const lastToken = trailingToken(value);
-  if (lastToken === undefined) return `${suggestion.token} `;
-  return `${value.slice(0, lastToken.start)}${suggestion.token} `;
+  return lastToken === undefined
+    ? `${suggestion.token} `
+    : `${value.slice(0, lastToken.start)}${suggestion.token} `;
 }
 
 function trailingToken(
   input: string,
 ): { readonly text: string; readonly start: number } | undefined {
   const match = /\S+$/.exec(input);
-  if (match === null) return undefined;
-  return { text: match[0], start: match.index };
+  return match === null ? undefined : { text: match[0], start: match.index };
 }

@@ -196,10 +196,9 @@ export async function listMatchesFromS3(
 
           // Cache the result (store dates as ISO strings for serialization)
           const cacheableData = matches.map((m) => {
-            if (m.lastModified) {
-              return { key: m.key, lastModified: m.lastModified.toISOString() };
-            }
-            return { key: m.key };
+            return m.lastModified
+              ? { key: m.key, lastModified: m.lastModified.toISOString() }
+              : { key: m.key };
           });
           await setCachedData("r2-list", cacheParams, cacheableData, cacheTTL);
         }

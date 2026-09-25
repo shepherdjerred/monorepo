@@ -19,6 +19,7 @@ export function resolvePermissionQueryError(params: {
   listError: QueryError | null;
   fallbackError: QueryError | null;
 }): QueryError | null {
-  if (params.hasListEntry || params.fallbackSucceeded) return null;
-  return params.fallbackError ?? params.listError;
+  return params.hasListEntry || params.fallbackSucceeded
+    ? null
+    : (params.fallbackError ?? params.listError);
 }

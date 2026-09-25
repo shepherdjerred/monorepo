@@ -22,7 +22,7 @@
 # Arch: the production cluster is amd64; local builds are arm64. Every download
 # is arch-guarded (`dpkg --print-architecture`) so both build with native
 # binaries — no QEMU fallback needed.
-FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
+FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
 # ── deps: full install (dev deps) — feeds the artifact builds below ─────────
@@ -56,6 +56,9 @@ COPY --parents \
   packages/scout-for-lol/packages/data \
   packages/seaweedfs-backup \
   packages/toolkit \
+  packages/config \
+  packages/ops-model \
+  packages/ops-clients \
   ./
 # Home Assistant is published with a dist-based export. Build it in the
 # artifact stage so the runtime image does not resolve the workspace link to a
@@ -128,13 +131,13 @@ ARG TRIVY_VERSION=0.72.0
 # renovate: datasource=github-releases depName=lycheeverse/lychee versioning=loose
 ARG LYCHEE_VERSION=lychee-v0.24.2
 # renovate: datasource=github-releases depName=Kometa-Team/Kometa
-ARG KOMETA_VERSION=2.4.5
+ARG KOMETA_VERSION=2.5.1
 # Shared local/CI Postgres pin — keep in lockstep with .mise.toml's
 # "ubi:theseus-rs/postgresql-binaries" entry: the bot-clone backend tests must
 # run against the same server binaries here as on dev/CI machines.
 # renovate: datasource=github-releases depName=theseus-rs/postgresql-binaries
 ARG POSTGRESQL_BINARIES_VERSION=16.15.0
-ARG KOMETA_COMMIT=4ea818399a458f9e791ca04b4a02458751cf2a46
+ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
 
 # --- Base system deps: ca-certificates, curl, git, libxml2, and the pod-local agent firewall ---
 # libxml2 is for the postgresql-binaries `postgres` server below: only that one
@@ -424,6 +427,8 @@ COPY --parents \
   packages/scout-for-lol/packages/data \
   packages/scout-for-lol/packages/temporal \
   packages/seaweedfs-backup \
+  packages/ops-model \
+  packages/ops-clients \
   ./
 
 # Built artifacts from the build stage.

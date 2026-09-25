@@ -72,14 +72,17 @@ describe("Hall settings persistence", () => {
     });
 
     const requests = await Promise.all(
-      [1, 2].map(
-        async () =>
-          await requestFullHallBaseline(db, {
-            guildId: GUILD_ID,
-            actorDiscordId: ACTOR_ID,
-            stage: "beta",
-          }),
-      ),
+      [1, 2].map(async () => {
+        const request = await requestFullHallBaseline(db, {
+          guildId: GUILD_ID,
+          actorDiscordId: ACTOR_ID,
+          stage: "beta",
+        });
+        if (request === null) {
+          throw new Error("expected a baseline request for enabled cells");
+        }
+        return request;
+      }),
     );
 
     expect(new Set(requests.map((request) => request.workflowId)).size).toBe(1);
@@ -170,5 +173,27 @@ describe("Hall settings persistence", () => {
         where: { guildId: GUILD_ID, baselineRevision: 3 },
       }),
     ).toBe(2);
+  });
+
+  test("returns null instead of throwing when no cells are enabled", async () => {
+    await updateHallSettings(db, {
+      settings: HallSettingsSchema.parse({
+        guildId: GUILD_ID,
+        catalogVersion: COMPETITIVE_PROGRESSION_CATALOG_VERSION,
+        channelId: null,
+        enabledQueueFamilies: [],
+        enabledRecords: [],
+      }),
+      actorDiscordId: ACTOR_ID,
+      stage: "beta",
+    });
+
+    const request = await requestFullHallBaseline(db, {
+      guildId: GUILD_ID,
+      actorDiscordId: ACTOR_ID,
+      stage: "beta",
+    });
+
+    expect(request).toBeNull();
   });
 });

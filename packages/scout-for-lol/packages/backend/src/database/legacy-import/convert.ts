@@ -157,8 +157,7 @@ export function normalizeForDigest(record: Record<string, unknown>): string {
     .map(([key, value]): [string, unknown] => {
       if (value instanceof Date) return [key, value.getTime()];
       if (typeof value === "boolean") return [key, value ? 1 : 0];
-      if (typeof value === "bigint") return [key, value.toString()];
-      return [key, value];
+      return typeof value === "bigint" ? [key, value.toString()] : [key, value];
     })
     .sort(([a], [b]) => (a < b ? -1 : 1));
   return JSON.stringify(entries);

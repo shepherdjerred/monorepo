@@ -125,8 +125,9 @@ function workloadFinding(
 ): Finding | undefined {
   if (workload.kind === "Pod") return podFinding(workload);
   if (workload.kind === "Deployment") return deploymentFinding(workload);
-  if (workload.kind === "StatefulSet") return statefulSetFinding(workload);
-  return daemonSetFinding(workload);
+  return workload.kind === "StatefulSet"
+    ? statefulSetFinding(workload)
+    : daemonSetFinding(workload);
 }
 
 export function interpretKubernetesWorkloads(

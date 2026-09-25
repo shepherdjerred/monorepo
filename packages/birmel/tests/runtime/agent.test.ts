@@ -1,5 +1,13 @@
 import { describe, expect, test } from "vitest";
-import { summarizeToolResultForSession } from "@shepherdjerred/birmel/agent-runtime/agent.ts";
+import { NoObjectGeneratedError } from "ai";
+import {
+  summarizeStepsForSession,
+  summarizeToolResultForSession,
+} from "@shepherdjerred/birmel/agent-runtime/agent.ts";
+import {
+  recoverTurnAnswer,
+  repairTurnAnswer,
+} from "@shepherdjerred/birmel/agent-runtime/turn-answer-recovery.ts";
 import {
   AGENT_INSTRUCTIONS,
   CORE_SYSTEM_POLICY,
@@ -697,5 +705,127 @@ describe("summarizeToolResultForSession: untrusted tools keep only listed keys",
 
     expect(event.resultSummary).toContain("pinchtab");
     expect(event.resultSummary).not.toContain(unlistedValue);
+  });
+});
+
+describe("repairTurnAnswer", () => {
+  test("accepts a valid turn answer as-is", () => {
+    expect(
+      repairTurnAnswer('{"answer": "Done.", "disposition": "supported"}'),
+    ).toEqual({ answer: "Done.", disposition: "supported" });
+  });
+
+  test("strips markdown fences around the JSON", () => {
+    expect(
+      repairTurnAnswer(
+        '```json\n{"answer": "Done.", "disposition": "conversation"}\n```',
+      ),
+    ).toEqual({ answer: "Done.", disposition: "conversation" });
+  });
+
+  test("rejects prose and schema-invalid JSON", () => {
+    expect(repairTurnAnswer("Just some words.")).toBeNull();
+    expect(repairTurnAnswer('{"answer": "No disposition."}')).toBeNull();
+  });
+});
+
+function objectError(text: string | undefined): NoObjectGeneratedError {
+  return new NoObjectGeneratedError({
+    message: "No object generated",
+    ...(text === undefined ? {} : { text }),
+    response: {
+      id: "test-response",
+      timestamp: new Date("2026-09-15T21:22:25.000Z"),
+      modelId: "test-model",
+    },
+    usage: {
+      inputTokens: 100,
+      inputTokenDetails: {
+        noCacheTokens: 100,
+        cacheReadTokens: undefined,
+        cacheWriteTokens: undefined,
+      },
+      outputTokens: 20,
+      outputTokenDetails: {
+        textTokens: 20,
+        reasoningTokens: undefined,
+      },
+      totalTokens: 120,
+    },
+    finishReason: "stop",
+  });
+}
+
+describe("recoverTurnAnswer", () => {
+  test("recovers the repaired answer with usage intact", () => {
+    const recovered = recoverTurnAnswer(
+      objectError(
+        '```json\n{"answer": "Hi.", "disposition": "supported"}\n```',
+      ),
+    );
+    expect(recovered).toEqual({
+      answer: { answer: "Hi.", disposition: "supported" },
+      inputTokens: 100,
+      outputTokens: 20,
+      finishReason: "stop",
+    });
+  });
+
+  test("delivers unrepairable prose as a conversation answer", () => {
+    const recovered = recoverTurnAnswer(objectError("Just some words."));
+    expect(recovered?.answer).toEqual({
+      answer: "Just some words.",
+      disposition: "conversation",
+    });
+  });
+
+  test("returns null for non-object errors and empty text", () => {
+    expect(recoverTurnAnswer(new Error("boom"))).toBeNull();
+    expect(recoverTurnAnswer(objectError(undefined))).toBeNull();
+    expect(recoverTurnAnswer(objectError(""))).toBeNull();
+  });
+});
+
+describe("summarizeStepsForSession", () => {
+  test("flattens tool results across steps in order", () => {
+    const events = summarizeStepsForSession(
+      [
+        {
+          toolResults: [
+            {
+              toolCallId: "call-1",
+              toolName: "manage-message",
+              input: { channelId: "123" },
+              output: { success: true, message: "Message sent" },
+            },
+          ],
+        },
+        // The answering step calls no tool; it contributes no event.
+        { toolResults: [] },
+        {
+          toolResults: [
+            {
+              toolCallId: "call-2",
+              toolName: "manage-message",
+              input: { channelId: "456" },
+              output: { success: false, message: "Send failed" },
+            },
+          ],
+        },
+      ],
+      registeredToolIds,
+    );
+    expect(events.map((event) => event.toolCallId)).toEqual([
+      "call-1",
+      "call-2",
+    ]);
+    expect(events[1]?.success).toBe(false);
+  });
+
+  test("returns no events when no step ran a tool", () => {
+    expect(summarizeStepsForSession([], registeredToolIds)).toEqual([]);
+    expect(
+      summarizeStepsForSession([{ toolResults: [] }], registeredToolIds),
+    ).toEqual([]);
   });
 });

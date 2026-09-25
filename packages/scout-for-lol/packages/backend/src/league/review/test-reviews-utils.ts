@@ -53,10 +53,9 @@ Environment:
 }
 
 function parseMatchType(nextArg: string | undefined): MatchType | undefined {
-  if (nextArg === undefined || nextArg.length === 0) {
-    return undefined;
-  }
-  return MATCH_TYPES.find((t) => t === nextArg);
+  return nextArg === undefined || nextArg.length === 0
+    ? undefined
+    : MATCH_TYPES.find((t) => t === nextArg);
 }
 
 export function parseArgs(): TestOptions {
@@ -125,16 +124,14 @@ export function parseArgs(): TestOptions {
 export function getMatchSummary(match: CompletedMatch | ArenaMatch): string {
   if (match.queueType === "arena") {
     const arenaPlayer = match.players[0];
-    if (!arenaPlayer) {
-      return "Unknown";
-    }
-    return `${arenaPlayer.playerConfig.alias} | ${arenaPlayer.champion.championName} | ${String(arenaPlayer.placement)}${getOrdinalSuffix(arenaPlayer.placement)} place | ${String(arenaPlayer.champion.kills)}/${String(arenaPlayer.champion.deaths)}/${String(arenaPlayer.champion.assists)} KDA`;
+    return arenaPlayer
+      ? `${arenaPlayer.playerConfig.alias} | ${arenaPlayer.champion.championName} | ${String(arenaPlayer.placement)}${getOrdinalSuffix(arenaPlayer.placement)} place | ${String(arenaPlayer.champion.kills)}/${String(arenaPlayer.champion.deaths)}/${String(arenaPlayer.champion.assists)} KDA`
+      : "Unknown";
   } else {
     const player = match.players[0];
-    if (!player) {
-      return "Unknown";
-    }
-    return `${player.playerConfig.alias} | ${player.champion.championName} | ${player.lane ?? "unknown"} | ${player.outcome} | ${String(player.champion.kills)}/${String(player.champion.deaths)}/${String(player.champion.assists)} KDA`;
+    return player
+      ? `${player.playerConfig.alias} | ${player.champion.championName} | ${player.lane ?? "unknown"} | ${player.outcome} | ${String(player.champion.kills)}/${String(player.champion.deaths)}/${String(player.champion.assists)} KDA`
+      : "Unknown";
   }
 }
 

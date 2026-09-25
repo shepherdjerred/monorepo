@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { parseAgentStreamChunk } from "#src/utils/agent-stream-chunk.ts";
+import {
+  agentStreamErrorMessage,
+  parseAgentStreamChunk,
+} from "#src/utils/agent-stream-chunk.ts";
 
 describe("parseAgentStreamChunk", () => {
   test("renames tool-input-start's `id` to a call id", () => {
@@ -49,5 +52,32 @@ describe("parseAgentStreamChunk", () => {
     expect(() =>
       parseAgentStreamChunk({ type: "error", error: new Error("upstream") }),
     ).toThrow("upstream");
+  });
+});
+
+describe("agentStreamErrorMessage", () => {
+  test("serializes object payloads instead of [object Object]", () => {
+    expect(agentStreamErrorMessage({ code: 429, message: "slow down" })).toBe(
+      '{"code":429,"message":"slow down"}',
+    );
+    expect(() =>
+      parseAgentStreamChunk({
+        type: "error",
+        error: { code: 429, message: "slow down" },
+      }),
+    ).toThrow('{"code":429,"message":"slow down"}');
+  });
+
+  test("keeps Error messages and plain strings as-is", () => {
+    expect(agentStreamErrorMessage(new Error("boom"))).toBe("boom");
+    expect(agentStreamErrorMessage("plain failure")).toBe("plain failure");
+  });
+
+  test("falls back for values JSON cannot serialize", () => {
+    const circular: Record<string, unknown> = {};
+    circular["self"] = circular;
+    expect(agentStreamErrorMessage(circular)).toBe(
+      "[unserializable error object]",
+    );
   });
 });

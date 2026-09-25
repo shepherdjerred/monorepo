@@ -17,10 +17,10 @@ export const STANDARD_PARTICIPANT_COUNT = 10;
  * is not custom-only — matched event modes routinely arrive with 2-4 of 10.
  */
 export function isLikelyPreStartLobby(gameInfo: RawCurrentGameInfo): boolean {
-  if (isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode)) {
-    return false;
-  }
-  return gameInfo.participants.length < STANDARD_PARTICIPANT_COUNT;
+  return (
+    !isArenaQueueOrMode(gameInfo.gameQueueConfigId, gameInfo.gameMode) &&
+    gameInfo.participants.length < STANDARD_PARTICIPANT_COUNT
+  );
 }
 
 /**

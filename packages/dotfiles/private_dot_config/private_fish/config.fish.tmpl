@@ -30,7 +30,6 @@ abbr less ov
 abbr ping gping
 abbr oc opencode
 abbr claude "env -u (string join \"\" ANTHROPIC _API_KEY) -u (string join \"\" OPENAI _API_KEY) -u (string join \"\" CODEX _API_KEY) claude --allow-dangerously-skip-permissions"
-abbr agy "agy --dangerously-skip-permissions"
 abbr finder "open -a Finder"
 abbr gs git-spice
 
@@ -106,7 +105,9 @@ if status is-interactive
   # Keep provider API keys available to ordinary tools, but coding-agent
   # wrappers explicitly remove direct API credentials. Claude and Codex
   # therefore use their subscription/auth-file flows; OpenCode uses its
-  # configured provider. These wrappers are intentionally interactive-only;
+  # configured provider. Claude Code and Codex get the agent git/GitHub
+  # identity from their own configs; the other agents get it from
+  # __agent_exec. These wrappers are intentionally interactive-only;
   # launches that bypass fish (Raycast, scripts) must scrub their environment
   # explicitly.
   function codex --wraps codex -d "Run Codex without direct provider API keys"
@@ -119,9 +120,13 @@ if status is-interactive
           -u (string join "" ANTHROPIC _API_KEY) \
           (command -s codex) $argv
   end
-  function opencode --wraps opencode
-      if not command -q opencode
-          echo "opencode is not installed or not on PATH" >&2
+  # Run a coding agent with the agent environment: no direct provider API
+  # keys, plain editor/pager defaults, and the derrej GitHub identity
+  # (~/.config/agent/gitconfig for commits and pushes, ~/.config/gh-agent for gh
+  # and git-spice's CLI auth).
+  function __agent_exec -d "Run a coding agent with the agent environment"
+      if not command -q $argv[1]
+          echo "$argv[1] is not installed or not on PATH" >&2
           return 127
       end
       env -u (string join "" ANTHROPIC _API_KEY) \
@@ -129,7 +134,20 @@ if status is-interactive
           -u (string join "" CODEX _API_KEY) \
           EDITOR=true VISUAL=true GIT_EDITOR=true PAGER=cat GIT_PAGER=cat \
           GIT_CONFIG_GLOBAL="$HOME/.config/agent/gitconfig" \
-          (command -s opencode) --auto $argv
+          GH_CONFIG_DIR="$HOME/.config/gh-agent" \
+          (command -s $argv[1]) $argv[2..-1]
+  end
+  function opencode --wraps opencode
+      __agent_exec opencode --auto $argv
+  end
+  function agy --wraps agy
+      __agent_exec agy --dangerously-skip-permissions $argv
+  end
+  function grok --wraps grok
+      __agent_exec grok $argv
+  end
+  function muse --wraps muse
+      __agent_exec muse --yolo --disable-sandbox $argv
   end
   fish_vi_key_bindings
 

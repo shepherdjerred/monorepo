@@ -14,5 +14,5 @@ export function formatDuration(seconds: number) {
 }
 
 export function filterDisplayAugments(augs: Augment[]) {
-  return augs.filter((a) => (a.type === "full" ? true : a.id > 0));
+  return augs.filter((a) => a.type === "full" || a.id > 0);
 }

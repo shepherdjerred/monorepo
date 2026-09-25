@@ -36,10 +36,7 @@ function bearerToken(header: string | undefined): string | undefined {
     return undefined;
   }
   const prefix = "Bearer ";
-  if (!header.startsWith(prefix)) {
-    return undefined;
-  }
-  return header.slice(prefix.length);
+  return header.startsWith(prefix) ? header.slice(prefix.length) : undefined;
 }
 
 function bearerMatches(
@@ -51,10 +48,7 @@ function bearerMatches(
   }
   const a = Buffer.from(presented);
   const b = Buffer.from(expected);
-  if (a.length !== b.length) {
-    return false;
-  }
-  return timingSafeEqual(a, b);
+  return a.length === b.length && timingSafeEqual(a, b);
 }
 
 export function buildAgentTaskApiApp(

@@ -1,7 +1,7 @@
 {
   "type": "champion",
   "format": "standAloneComplex",
-  "version": "16.18.1",
+  "version": "16.19.1",
   "data": {
     "Aatrox": {
       "id": "Aatrox",
@@ -411,8 +411,8 @@
             ]
           },
           "maxrank": 5,
-          "cooldown": [20, 18, 16, 14, 12],
-          "cooldownBurn": "20/18/16/14/12",
+          "cooldown": [18, 16.5, 15, 13.5, 12],
+          "cooldownBurn": "18/16.5/15/13.5/12",
           "cost": [0, 0, 0, 0, 0],
           "costBurn": "0",
           "datavalues": {},

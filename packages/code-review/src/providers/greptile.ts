@@ -26,6 +26,7 @@ export const greptileProvider: ReviewProvider = {
   parseFindingTitle: null,
   findingKey: null,
   completion: { kind: "check-run", namePattern: /greptile/iu },
+  detectBlocked: null,
   detectSkip: {
     marker: "<!-- greptile-status -->",
     reasons: [

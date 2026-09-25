@@ -93,14 +93,7 @@ if (import.meta.main) {
     }
   }
   const buildExitCode = await retryTransientBuildx(() =>
-    execute(
-      ciImageBuildCommand(
-        definition.repository,
-        definition.dockerfile,
-        sourceFingerprint,
-        metadataFile,
-      ),
-    ),
+    execute(ciImageBuildCommand(definition, sourceFingerprint, metadataFile)),
   );
   if (buildExitCode === 34) process.exit(buildExitCode);
   if (buildExitCode !== 0) {

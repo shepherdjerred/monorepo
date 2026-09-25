@@ -45,8 +45,7 @@ export function generateSeriesPalette(count: number): string[] {
   if (count <= 0) {
     return [];
   }
-  if (count === 1) {
-    return [palette.gold.bright];
-  }
-  return chroma.scale(SERIES_ANCHORS).mode("lch").colors(count);
+  return count === 1
+    ? [palette.gold.bright]
+    : chroma.scale(SERIES_ANCHORS).mode("lch").colors(count);
 }

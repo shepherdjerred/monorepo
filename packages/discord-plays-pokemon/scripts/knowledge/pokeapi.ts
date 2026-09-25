@@ -194,8 +194,7 @@ function rarityTag(
   isMythical: "0" | "1",
 ): "legendary" | "mythical" | "ordinary" {
   if (isLegendary === "1") return "legendary";
-  if (isMythical === "1") return "mythical";
-  return "ordinary";
+  return isMythical === "1" ? "mythical" : "ordinary";
 }
 
 export const CONFIRMED_FRLG_ONLY_ITEM_IDENTIFIERS = [

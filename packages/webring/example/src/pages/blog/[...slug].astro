@@ -52,12 +52,10 @@ export const result: Result = await run(config);
   <Content />
   <h2>Posts from blogs I read</h2>
   <ul>
-    {
-      result.map((post) => (
-        <li>
-          <a href={post.url}>{post.title}</a>: {post.preview}
-        </li>
-      ))
-    }
+    {result.map((post) => (
+      <li>
+        <a href={post.url}>{post.title}</a>: {post.preview}
+      </li>
+    ))}
   </ul>
 </BlogPost>

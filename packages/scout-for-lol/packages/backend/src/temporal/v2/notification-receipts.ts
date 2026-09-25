@@ -192,10 +192,9 @@ export async function readNotificationArtifactV2(
   const rendered = receipts.find(
     (record) => record.receipt.kind === receiptKind,
   );
-  if (rendered?.evidence == null) {
-    return null;
-  }
-  return scoutV2NotificationRenderEvidenceCodec.parse(
-    JSON.parse(rendered.evidence),
-  );
+  return rendered?.evidence == null
+    ? null
+    : scoutV2NotificationRenderEvidenceCodec.parse(
+        JSON.parse(rendered.evidence),
+      );
 }

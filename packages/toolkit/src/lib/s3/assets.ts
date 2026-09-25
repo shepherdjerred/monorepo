@@ -113,10 +113,9 @@ export function markdownForAsset(filename: string, url: string): string {
   if (contentType.startsWith("text/html")) {
     return `[${name} (demo)](${url})`;
   }
-  if (contentType === "application/pdf") {
-    return `[${name} (pdf)](${url})`;
-  }
-  return `[${name}](${url})`;
+  return contentType === "application/pdf"
+    ? `[${name} (pdf)](${url})`
+    : `[${name}](${url})`;
 }
 
 export type KeyedUpload = {

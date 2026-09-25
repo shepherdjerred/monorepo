@@ -1,0 +1,472 @@
+---
+import { Icon } from "astro-icon/components";
+import Layout from "../layouts/Layout.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+import FeatureCard from "../components/FeatureCard.astro";
+import Footer from "../components/Footer.astro";
+import ProcessStep from "../components/ProcessStep.astro";
+import SectionHeader from "../components/SectionHeader.astro";
+
+const sourceUrl =
+  "https://github.com/shepherdjerred/monorepo/tree/main/packages/macos-cross-compiler";
+const imageUrl =
+  "https://github.com/users/shepherdjerred/packages/container/package/macos-cross-compiler";
+const image = "ghcr.io/shepherdjerred/macos-cross-compiler:27";
+const run = `docker run --rm -v "$PWD:/workspace" \\\n  ${image} \\\n`;
+
+const heroCode = `${run}  arm64-apple-macos-clang hello.c -o hello`;
+
+const quickStarts = [
+  {
+    label: "C",
+    title: "A C program",
+    code: heroCode,
+  },
+  {
+    label: "SwiftPM",
+    title: "A Swift package",
+    code: `${run}  swift build --triple arm64-apple-macosx15.0 --sdk /opt/apple/sdks/MacOSX.sdk -c release`,
+  },
+  {
+    label: "applebuild",
+    title: "A SwiftUI app from an XcodeGen project.yml, as a signed .app",
+    code: `${run}  applebuild project.yml --target MyApp --output out`,
+  },
+  {
+    label: "Rust",
+    title: "A Rust crate",
+    code: `${run}  cargo build --release --target aarch64-apple-darwin`,
+  },
+];
+
+const features = [
+  {
+    icon: "heroicons:swatch",
+    title: "Swift & SwiftUI",
+    description:
+      "The swift.org Linux toolchain compiles Swift against Apple's SDKs, including SwiftUI and its macros.",
+  },
+  {
+    icon: "heroicons:cube",
+    title: "SwiftPM",
+    description:
+      "Swift Build, the open-source engine inside Xcode, builds packages the way Xcode does.",
+  },
+  {
+    icon: "heroicons:code-bracket",
+    title: "C, C++, Objective-C",
+    description:
+      "Target-prefixed clang wrappers, or plain clang with --target=arm64-apple-macos15.",
+  },
+  {
+    icon: "heroicons:wrench-screwdriver",
+    title: "Rust",
+    description:
+      "cargo build --target aarch64-apple-darwin produces native macOS binaries, linked by Apple's ld64.",
+  },
+  {
+    icon: "heroicons:device-phone-mobile",
+    title: "iOS & Mac Catalyst",
+    description:
+      "arm64-apple-ios-* and <arch>-apple-ios-macabi-* wrappers for clang, clang++, and swiftc.",
+  },
+  {
+    icon: "heroicons:server-stack",
+    title: "amd64 & arm64 hosts",
+    description:
+      "Images for linux/amd64 and linux/arm64, so it runs on CI runners and ARM servers alike.",
+  },
+  {
+    icon: "heroicons:document-check",
+    title: "Xcode-identical output",
+    description:
+      "Bundle layout, Info.plists, load commands, and LC_BUILD_VERSION match xcodebuild, checked by a comparison script.",
+  },
+  {
+    icon: "heroicons:shield-check",
+    title: "Code signing",
+    description:
+      "rcodesign signs .app bundles, ad-hoc or with a real signing identity.",
+  },
+];
+
+const proofPoints = [
+  { label: "Compiles", detail: "Swift, C, C++, Obj-C, Rust" },
+  { label: "Links", detail: "Apple's ld64 and libtapi" },
+  { label: "Bundles", detail: "Xcode-layout .app output" },
+  { label: "Signs", detail: "ad-hoc or real identity" },
+];
+
+const wrappers = [
+  "<arch>-apple-macos-clang | clang++ | swiftc",
+  "arm64-apple-ios-clang | clang++ | swiftc",
+  "<arch>-apple-ios-macabi-*",
+  "clang --target=arm64-apple-macos15",
+];
+
+const tags = [
+  {
+    tag: ":27",
+    xcode: "Xcode 27",
+    swift: "Swift 6.4",
+    note: "also :latest",
+    soon: false,
+  },
+  { tag: ":26", xcode: "Xcode 26", swift: "Swift 6.2", note: "", soon: true },
+  {
+    tag: ":15",
+    xcode: "Xcode 16.4 SDK",
+    swift: "Swift 6.2",
+    note: "",
+    soon: true,
+  },
+];
+
+const differences = [
+  {
+    title: "Asset catalogs and Icon Composer icons",
+    body: "Compiling .xcassets and .icon files needs Apple's actool, which only runs on a Mac. Pass the precompiled output instead.",
+  },
+  {
+    title: "Storyboards and .xcodeproj projects",
+    body: "ibtool storyboards and .xcodeproj projects are not supported yet. Describe apps with an XcodeGen project.yml.",
+  },
+  {
+    title: "Apple SDK licensing",
+    body: "The image contains Apple's SDKs, which are subject to Apple's Xcode license terms. You are responsible for your own compliance.",
+  },
+];
+---
+
+<Layout>
+  <header class="border-b border-stone-200 dark:border-stone-800">
+    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+      <a
+        href="/"
+        class="flex min-w-0 items-center gap-2 font-mono text-sm font-semibold text-stone-900 dark:text-white"
+      >
+        <img
+          src="/favicon.svg"
+          alt=""
+          width="24"
+          height="24"
+          class="shrink-0"
+        />
+        <span class="truncate">macos-cross-compiler</span>
+      </a>
+      <nav aria-label="Primary" class="flex items-center gap-5 text-sm">
+        <a
+          href="#quick-start"
+          class="hidden text-stone-600 hover:text-stone-900 sm:inline dark:text-stone-400 dark:hover:text-white"
+        >
+          Quick start
+        </a>
+        <a
+          href="#how-it-works"
+          class="hidden text-stone-600 hover:text-stone-900 sm:inline dark:text-stone-400 dark:hover:text-white"
+        >
+          How it works
+        </a>
+        <a
+          href={sourceUrl}
+          class="inline-flex items-center gap-1.5 text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white"
+        >
+          <Icon
+            name="heroicons:code-bracket"
+            class="h-4 w-4"
+            aria-hidden="true"
+          />
+          GitHub
+        </a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section
+      aria-labelledby="hero-title"
+      class="relative overflow-hidden border-b border-stone-200 dark:border-stone-800"
+    >
+      <div
+        class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--color-sky-100),transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top,rgb(14_165_233/0.12),transparent_60%)]"
+        aria-hidden="true"
+      ></div>
+      <div class="relative mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-16 sm:px-6 sm:pt-24 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+        <div class="min-w-0">
+          <p class="inline-flex items-center gap-2 rounded-full border border-stone-300 px-3 py-1 font-mono text-xs text-stone-600 dark:border-stone-700 dark:text-stone-400">
+            <span
+              class="h-1.5 w-1.5 rounded-full bg-sky-500"
+              aria-hidden="true"
+            ></span>
+            Docker image &middot; no Mac required
+          </p>
+          <h1
+            id="hero-title"
+            class="mt-6 text-4xl font-semibold tracking-tight text-stone-900 sm:text-6xl dark:text-white"
+          >
+            Build macOS and iOS apps on Linux.
+          </h1>
+          <p class="mt-6 max-w-xl text-lg leading-relaxed text-stone-600 dark:text-stone-400">
+            <code class="text-[0.9em] text-stone-800 dark:text-stone-200">
+              macos-cross-compiler
+            </code>{" "}
+            compiles, links, and signs macOS, iOS, and Mac Catalyst software in
+            a Linux container: Swift and SwiftUI apps, SwiftPM packages, C, C++,
+            Objective-C, and Rust. The output matches Xcode's.
+          </p>
+          <div class="mt-8 flex flex-wrap items-center gap-3">
+            <a
+              href={sourceUrl}
+              class="inline-flex items-center gap-2 rounded-lg bg-stone-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200"
+            >
+              <Icon
+                name="heroicons:code-bracket"
+                class="h-4 w-4"
+                aria-hidden="true"
+              />
+              View on GitHub
+            </a>
+            <a
+              href="#quick-start"
+              class="inline-flex items-center gap-2 rounded-lg border border-stone-300 px-5 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-900"
+            >
+              More examples
+            </a>
+          </div>
+        </div>
+        <div class="min-w-0">
+          <CodeBlock code={heroCode} label="hello.c → Mach-O arm64" />
+          <p class="mt-3 font-mono text-xs text-stone-500 dark:text-stone-400">
+            Runs on linux/amd64 and linux/arm64.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section
+      aria-labelledby="proof-title"
+      class="border-b border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900/40"
+    >
+      <div class="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+        <h2
+          id="proof-title"
+          class="text-sm font-semibold text-stone-900 dark:text-white"
+        >
+          Built on Linux, runs on your Mac.
+        </h2>
+        <ul class="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
+          {proofPoints.map((point) => (
+            <li>
+              <p class="font-mono text-xs font-semibold uppercase tracking-wider text-sky-700 dark:text-sky-400">
+                {point.label}
+              </p>
+              <p class="mt-1 text-sm text-stone-600 dark:text-stone-400">
+                {point.detail}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <section
+      aria-labelledby="features"
+      class="mx-auto max-w-6xl px-4 py-20 sm:px-6"
+    >
+      <SectionHeader
+        id="features"
+        eyebrow="What it builds"
+        title="The Apple toolchain, in a container"
+        subtitle="Everything you would otherwise need a Mac runner for, from a single docker run."
+      />
+      <ul class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {features.map((feature) => (
+          <FeatureCard {...feature} />
+        ))}
+      </ul>
+    </section>
+
+    <section
+      aria-labelledby="quick-start"
+      class="border-y border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900/40"
+    >
+      <div class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <SectionHeader
+          id="quick-start"
+          eyebrow="Quick start"
+          title="Mount your project and build"
+          subtitle="Each image carries one macOS SDK. Default deployment targets are macOS 15.0 and iOS 18.0; override them with MACOSX_DEPLOYMENT_TARGET and IPHONEOS_DEPLOYMENT_TARGET."
+        />
+        <div class="mt-12 grid gap-8 lg:grid-cols-2">
+          {quickStarts.map((example) => (
+            <div class="min-w-0">
+              <h3 class="mb-3 text-sm font-semibold text-stone-900 dark:text-white">
+                {example.title}
+              </h3>
+              <CodeBlock code={example.code} label={example.label} />
+            </div>
+          ))}
+        </div>
+        <div class="mt-12">
+          <h3 class="text-sm font-semibold text-stone-900 dark:text-white">
+            Compiler wrappers
+          </h3>
+          <ul class="mt-3 flex flex-wrap gap-2">
+            {wrappers.map((wrapper) => (
+              <li>
+                <code class="block rounded-md border border-stone-200 bg-white px-2.5 py-1 text-xs text-stone-800 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-200">
+                  {wrapper}
+                </code>
+              </li>
+            ))}
+          </ul>
+          <p class="mt-3 text-sm text-stone-600 dark:text-stone-400">
+            <code class="text-stone-800 dark:text-stone-200">&lt;arch&gt;</code>{" "}
+            is
+            <code class="text-stone-800 dark:text-stone-200">arm64</code> or
+            <code class="text-stone-800 dark:text-stone-200">x86_64</code>.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section
+      aria-labelledby="how-it-works"
+      class="mx-auto max-w-6xl px-4 py-20 sm:px-6"
+    >
+      <SectionHeader
+        id="how-it-works"
+        eyebrow="How it works"
+        title="Apple's own tools, wherever they are open"
+        subtitle="Instead of reimplementing Xcode, the image assembles the pieces Apple and the Swift project publish, and fills the gaps where Xcode ships closed binaries."
+      />
+      <ol class="mt-12 grid gap-8 lg:grid-cols-2">
+        <ProcessStep step={1} title="The real Swift toolchain">
+          The swift.org Linux build of Swift, compiling against Apple's macOS
+          and iOS SDKs.
+        </ProcessStep>
+        <ProcessStep step={2} title="Apple's linker">
+          Apple's open-source ld64 linker from cctools-port, with Apple's
+          libtapi to read the SDK's .tbd stubs.
+        </ProcessStep>
+        <ProcessStep step={3} title="Swift Build">
+          The build engine inside Xcode, now open source, builds SwiftPM
+          packages exactly as Xcode would.
+        </ProcessStep>
+        <ProcessStep step={4} title="SwiftUI macros on Linux">
+          Linux implementations of the macros Xcode ships only as closed macOS
+          binaries (@State, @Entry, #Preview), checked expansion-for-expansion
+          against Xcode's own.
+        </ProcessStep>
+        <ProcessStep step={5} title="applebuild">
+          An xcodebuild stand-in that builds XcodeGen project.yml app targets
+          into .app bundles, signed with rcodesign ad-hoc or with a real
+          identity.
+        </ProcessStep>
+      </ol>
+    </section>
+
+    <section
+      aria-labelledby="tags"
+      class="border-y border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900/40"
+    >
+      <div class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <SectionHeader
+          id="tags"
+          eyebrow="Images"
+          title="One image per macOS SDK"
+          subtitle={`Pull ghcr.io/shepherdjerred/macos-cross-compiler with the tag for the SDK you target.`}
+        />
+        <div class="mt-10 overflow-x-auto rounded-xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="border-b border-stone-200 text-stone-600 dark:border-stone-800 dark:text-stone-400">
+              <tr>
+                <th scope="col" class="px-3 py-3 sm:px-4 font-medium">
+                  Tag
+                </th>
+                <th scope="col" class="px-3 py-3 sm:px-4 font-medium">
+                  SDK
+                </th>
+                <th scope="col" class="px-3 py-3 sm:px-4 font-medium">
+                  Swift
+                </th>
+                <th scope="col" class="px-3 py-3 sm:px-4 font-medium">
+                  Status
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-200 dark:divide-stone-800">
+              {tags.map((row) => (
+                <tr>
+                  <th
+                    scope="row"
+                    class="whitespace-nowrap px-3 py-3 sm:px-4 font-mono font-medium text-stone-900 dark:text-white"
+                  >
+                    {row.tag}
+                    {row.note && (
+                      <span class="block font-sans text-xs sm:ml-2 sm:inline font-normal text-stone-500 dark:text-stone-400">
+                        {row.note}
+                      </span>
+                    )}
+                  </th>
+                  <td class="px-3 py-3 sm:px-4 text-stone-700 dark:text-stone-300">
+                    {row.xcode}
+                  </td>
+                  <td class="px-3 py-3 sm:px-4 text-stone-700 dark:text-stone-300">
+                    {row.swift}
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-3 sm:px-4">
+                    {row.soon ? (
+                      <span class="rounded-full bg-stone-100 px-2 py-0.5 text-xs text-stone-600 dark:bg-stone-800 dark:text-stone-300">
+                        Coming soon
+                      </span>
+                    ) : (
+                      <span class="rounded-full bg-sky-100 px-2 py-0.5 text-xs text-sky-800 dark:bg-sky-950 dark:text-sky-300">
+                        Available
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-4 text-sm text-stone-600 dark:text-stone-400">
+          Every tag is published for linux/amd64 and linux/arm64.
+        </p>
+      </div>
+    </section>
+
+    <section
+      aria-labelledby="differences"
+      class="mx-auto max-w-6xl px-4 py-20 sm:px-6"
+    >
+      <SectionHeader
+        id="differences"
+        eyebrow="Known differences"
+        title="What it does not do (yet)"
+      />
+      <ul class="mt-10 grid gap-4 md:grid-cols-3">
+        {differences.map((item) => (
+          <li class="rounded-xl border border-stone-200 p-5 dark:border-stone-800">
+            <div class="flex items-center gap-2">
+              <Icon
+                name="heroicons:exclamation-triangle"
+                class="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
+                aria-hidden="true"
+              />
+              <h3 class="text-sm font-semibold text-stone-900 dark:text-white">
+                {item.title}
+              </h3>
+            </div>
+            <p class="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-400">
+              {item.body}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </main>
+
+  <Footer sourceUrl={sourceUrl} imageUrl={imageUrl} />
+</Layout>

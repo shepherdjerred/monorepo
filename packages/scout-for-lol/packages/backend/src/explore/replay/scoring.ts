@@ -90,10 +90,12 @@ export function queryFailedUnrecovered(
   const lastFailure = queries.findLastIndex(
     (entry) => entry.status === "failed",
   );
-  if (lastFailure === -1) return false;
-  return !queries
-    .slice(lastFailure + 1)
-    .some((entry) => entry.status === "succeeded");
+  return (
+    lastFailure !== -1 &&
+    !queries
+      .slice(lastFailure + 1)
+      .some((entry) => entry.status === "succeeded")
+  );
 }
 
 /**
@@ -113,8 +115,9 @@ function baselineRowsReturned(
     return input.comparison.baseline.rowsReturned;
   }
   const delta = diff?.rows.returnedDelta ?? null;
-  if (delta === null || input.rowsReturned === null) return null;
-  return input.rowsReturned - delta;
+  return delta === null || input.rowsReturned === null
+    ? null
+    : input.rowsReturned - delta;
 }
 
 export function scoreCase(input: ScorableCase): CaseScore {

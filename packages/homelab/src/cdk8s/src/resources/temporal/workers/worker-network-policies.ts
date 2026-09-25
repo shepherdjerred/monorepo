@@ -4,6 +4,7 @@ import {
   KubeNetworkPolicy,
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTemporalScoutBetaNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/scout-beta-network.ts";
+import { dnsEgressRule } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 
 function metricsIngress(ports: readonly number[]) {
   return [
@@ -21,21 +22,6 @@ function metricsIngress(ports: readonly number[]) {
       })),
     },
   ];
-}
-
-export function createDnsEgressRule() {
-  return {
-    to: [
-      {
-        namespaceSelector: {},
-        podSelector: { matchLabels: { "k8s-app": "kube-dns" } },
-      },
-    ],
-    ports: [
-      { port: IntOrString.fromNumber(53), protocol: "UDP" },
-      { port: IntOrString.fromNumber(53), protocol: "TCP" },
-    ],
-  };
 }
 
 function temporalServerEgress() {
@@ -111,7 +97,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
       policyTypes: ["Ingress", "Egress"],
       ingress: metricsIngress([9464, 9465]),
       egress: [
-        createDnsEgressRule(),
+        dnsEgressRule(),
         temporalServerEgress(),
         fliptEgress(),
         {
@@ -147,7 +133,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         policyTypes: ["Ingress", "Egress"],
         ingress: metricsIngress([9464, 9465]),
         egress: [
-          createDnsEgressRule(),
+          dnsEgressRule(),
           temporalServerEgress(),
           { ports: [{ port: IntOrString.fromNumber(443), protocol: "TCP" }] },
           { ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }] },
@@ -262,6 +248,9 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     },
   });
 
+  // Kubernetes API, Prometheus, and the alert/ops dashboard for the audit
+  // collectors; Alertmanager and Loki for the ops-snapshot collector. Linear,
+  // PostHog, GitHub, Buildkite, and Bugsink ride the shared 443 rule.
   new KubeNetworkPolicy(chart, "temporal-infra-api-netpol", {
     metadata: { name: "temporal-infra-api-netpol" },
     spec: {
@@ -271,6 +260,26 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
         { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
         { ports: [{ port: IntOrString.fromNumber(9090), protocol: "TCP" }] },
         { ports: [{ port: IntOrString.fromNumber(7341), protocol: "TCP" }] },
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(9093), protocol: "TCP" }],
+        },
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "loki" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(3100), protocol: "TCP" }],
+        },
       ],
     },
   });

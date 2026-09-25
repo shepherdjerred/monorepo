@@ -145,9 +145,5 @@ export function classifyLlmProviderIssue(
     return "quota";
   }
 
-  if (isRateLimitIssue(status, lowerMessage)) {
-    return "rate_limit";
-  }
-
-  return null;
+  return isRateLimitIssue(status, lowerMessage) ? "rate_limit" : null;
 }

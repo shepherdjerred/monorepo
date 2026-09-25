@@ -25,8 +25,9 @@ function formatRelative(epochMs: number): string {
   const days = Math.floor((Date.now() - epochMs) / 86_400_000);
   if (days <= 0) return "today";
   if (days === 1) return "yesterday";
-  if (days < 30) return `${days.toString()}d ago`;
-  return new Date(epochMs).toLocaleDateString();
+  return days < 30
+    ? `${days.toString()}d ago`
+    : new Date(epochMs).toLocaleDateString();
 }
 
 export function RankCard(props: { label: string; rank: Rank | undefined }) {

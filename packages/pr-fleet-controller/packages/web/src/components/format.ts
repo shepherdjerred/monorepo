@@ -269,14 +269,11 @@ function describeEvent(event: RecordedRunEvent): Descriptor {
   if (k.startsWith("worker.")) {
     return describeWorker(k, p);
   }
-  if (
-    k === "environment.result" ||
+  return k === "environment.result" ||
     k.startsWith("tool.") ||
     k.startsWith("command.")
-  ) {
-    return describeToolCommand(k, p);
-  }
-  return { category: "muted", icon: "·", title: k, body: p };
+    ? describeToolCommand(k, p)
+    : { category: "muted", icon: "·", title: k, body: p };
 }
 
 function describeSpan(span: SpanRecord): Descriptor {

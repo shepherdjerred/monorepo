@@ -149,10 +149,9 @@ function evidenceLabel(queryText: string | null, traceLength: number): string {
   if (queryText !== null && traceLength > 0) {
     return `ScoutQL query & Steps (${String(traceLength)})`;
   }
-  if (queryText === null) {
-    return `Steps (${String(traceLength)})`;
-  }
-  return "ScoutQL query";
+  return queryText === null
+    ? `Steps (${String(traceLength)})`
+    : "ScoutQL query";
 }
 
 function AssistantTurnEvidence(props: {

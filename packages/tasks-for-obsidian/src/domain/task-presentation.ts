@@ -371,8 +371,7 @@ function dateRelation(date: Date, referenceDate: Date): TaskDateRelation {
   const difference = localDayIndex(date) - localDayIndex(referenceDate);
   if (difference < 0) return "overdue";
   if (difference === 0) return "today";
-  if (difference === 1) return "tomorrow";
-  return "absolute";
+  return difference === 1 ? "tomorrow" : "absolute";
 }
 
 function localDayIndex(date: Date): number {

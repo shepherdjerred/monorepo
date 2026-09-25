@@ -2,6 +2,10 @@ import { describe, expect, test } from "vitest";
 import { App } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
+import {
+  TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS,
+  TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS,
+} from "@shepherdjerred/homelab/cdk8s/src/temporal-release-budgets.ts";
 import { createTemporalChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 
 const ResourceSchema = z
@@ -228,7 +232,7 @@ describe("Temporal server lifecycle", () => {
     const container = firstContainer(job.spec, "Schema migration");
     const command = container.args?.join("\n") ?? "";
 
-    expect(container.image).toContain("temporalio/admin-tools:1.30.6@sha256:");
+    expect(container.image).toContain("temporalio/admin-tools:1.32.0@sha256:");
     expect(command).toContain(
       "update-schema -d /etc/temporal/schema/postgresql/v12/temporal/versioned",
     );
@@ -319,7 +323,7 @@ describe("Temporal server lifecycle", () => {
     const deployment = findResource("Deployment", "temporal-temporal-server");
     const container = firstContainer(deployment.spec, "Temporal server");
 
-    expect(container.image).toContain("temporalio/server:1.30.6@sha256:");
+    expect(container.image).toContain("temporalio/server:1.32.0@sha256:");
     expect(container.args?.join(" ") ?? "").not.toContain("autosetup");
     expect(container.securityContext.readOnlyRootFilesystem).toBe(true);
     expect(container.volumeMounts).toEqual(
@@ -363,5 +367,25 @@ describe("Temporal server lifecycle", () => {
     expect(serialized).toContain('"port":53');
     expect(serialized).toContain('"port":5432');
     expect(serialized).not.toContain('"port":7233');
+  });
+});
+
+describe("Temporal release budgets", () => {
+  test("keeps the schema migration inside the release sync budget", () => {
+    // The release waiter must outlast this hook. Raising the deadline without
+    // raising the floor reintroduces the builds 16963/16977 failure, where CI
+    // timed out a still-running migration and the next build replaced the
+    // in-flight hook mid-DDL.
+    expect(TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS).toBeGreaterThan(
+      TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS,
+    );
+    const job = findResource("Job", "temporal-schema-migration");
+    const spec = z
+      .object({ activeDeadlineSeconds: z.number() })
+      .loose()
+      .parse(job.spec);
+    expect(spec.activeDeadlineSeconds).toBe(
+      TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS,
+    );
   });
 });

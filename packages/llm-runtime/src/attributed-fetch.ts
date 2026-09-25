@@ -194,8 +194,7 @@ function requestEndpoint(
   }
   if (pathname.endsWith("/chat/completions")) return "language";
   if (pathname.endsWith("/embeddings")) return "embedding";
-  if (pathname.endsWith("/images/generations")) return "image";
-  return "unknown";
+  return pathname.endsWith("/images/generations") ? "image" : "unknown";
 }
 
 export function createAttributedFetch(

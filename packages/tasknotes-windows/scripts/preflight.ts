@@ -15,8 +15,7 @@ function run(command: string[], cwd = process.cwd()): string {
     );
     return "";
   }
-  if (result.exitCode !== 0) return "";
-  return decoder.decode(result.stdout).trim();
+  return result.exitCode === 0 ? decoder.decode(result.stdout).trim() : "";
 }
 
 function requireValue(value: string, message: string): void {

@@ -95,8 +95,7 @@ export function durationBucket(seconds: number): DurationBucket {
   if (seconds < 900) return 10;
   if (seconds < 1500) return 20;
   if (seconds < 2100) return 30;
-  if (seconds < 2700) return 40;
-  return 50;
+  return seconds < 2700 ? 40 : 50;
 }
 
 function quantile(sorted: readonly number[], probability: number): number {
@@ -324,10 +323,9 @@ export async function fetchPopulationFrame(options: {
     }
   }
 
-  if (overall === undefined) {
-    return undefined;
-  }
-  return { overall, byBucket, byLaneAndBucket };
+  return overall === undefined
+    ? undefined
+    : { overall, byBucket, byLaneAndBucket };
 }
 
 /**

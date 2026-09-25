@@ -233,10 +233,9 @@ async function executeMemoryAction(input: MemoryToolInput) {
   if (input.action === "query") {
     return await queryMemory(input, request);
   }
-  if (input.action === "remember") {
-    return await rememberMemory(input, request);
-  }
-  return await inspectOrMutateMemory(input, request);
+  return input.action === "remember"
+    ? await rememberMemory(input, request)
+    : await inspectOrMutateMemory(input, request);
 }
 
 export const manageMemoryTool = createTool({

@@ -56,10 +56,9 @@ export const noRedundantZodParse = createRule({
     }
 
     function getValueName(node: TSESTree.Node): string {
-      if (node.type === AST_NODE_TYPES.Identifier) {
-        return node.name;
-      }
-      return context.sourceCode.getText(node);
+      return node.type === AST_NODE_TYPES.Identifier
+        ? node.name
+        : context.sourceCode.getText(node);
     }
 
     function isUnknownOrAny(typeString: string): boolean {

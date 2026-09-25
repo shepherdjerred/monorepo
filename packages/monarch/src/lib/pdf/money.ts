@@ -73,6 +73,7 @@ export function moneyAtColumn(
 // MM/DD/YYYY as printed on US statements.
 export function parseUsDate(raw: string): string | undefined {
   const match = /(\d{2})\/(\d{2})\/(\d{4})/.exec(raw);
-  if (match === null) return undefined;
-  return `${match[3] ?? ""}-${match[1] ?? ""}-${match[2] ?? ""}`;
+  return match === null
+    ? undefined
+    : `${match[3] ?? ""}-${match[1] ?? ""}-${match[2] ?? ""}`;
 }

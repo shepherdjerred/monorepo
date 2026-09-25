@@ -183,14 +183,11 @@ export function selectedHasVideoStream(info: YtdlpInfo): boolean | undefined {
     // Only an explicit `"none"` on EVERY entry is a denial. A merge whose entries left `vcodec`
     // unset says nothing, and answering `false` there would be the tri-state collapse described
     // above — with the video transport as the casualty.
-    return requested.every((format) => isAbsentCodec(format.vcodec))
-      ? false
-      : undefined;
+    return (
+      !requested.every((format) => isAbsentCodec(format.vcodec)) && undefined
+    );
   }
-  if (isRealCodec(info.vcodec)) {
-    return true;
-  }
-  return isAbsentCodec(info.vcodec) ? false : undefined;
+  return isRealCodec(info.vcodec) || (!isAbsentCodec(info.vcodec) && undefined);
 }
 
 /**

@@ -140,10 +140,9 @@ function ownOutcomeLine(
   if (position.outcome === "refunded") {
     return `• ${side} — ${formatInteger(position.matchedStake)} BB matched and refunded.${returnedSuffix(position)}`;
   }
-  if (position.outcome === "won") {
-    return `• ${side} — ${formatInteger(position.submittedStake)} BB → won **${formatInteger(position.winnings)} BB**.${returnedSuffix(position)}`;
-  }
-  return `• ${side} — ${formatInteger(position.submittedStake)} BB → lost ${formatInteger(position.matchedStake)} BB.${returnedSuffix(position)}`;
+  return position.outcome === "won"
+    ? `• ${side} — ${formatInteger(position.submittedStake)} BB → won **${formatInteger(position.winnings)} BB**.${returnedSuffix(position)}`
+    : `• ${side} — ${formatInteger(position.submittedStake)} BB → lost ${formatInteger(position.matchedStake)} BB.${returnedSuffix(position)}`;
 }
 
 function teamOutcomeLine(
@@ -158,20 +157,18 @@ function teamOutcomeLine(
   if (position.outcome === "refunded") {
     return `• ${bettor} bet ${direction} your team and received a ${formatInteger(position.matchedStake)} BB refund.${returnedSuffix(position)}`;
   }
-  if (position.outcome === "won") {
-    return `• ${bettor} bet ${direction} your team and won ${formatInteger(position.winnings)} BB.${returnedSuffix(position)}`;
-  }
-  return `• ${bettor} bet ${direction} your team and lost ${formatInteger(position.matchedStake)} BB.${returnedSuffix(position)}`;
+  return position.outcome === "won"
+    ? `• ${bettor} bet ${direction} your team and won ${formatInteger(position.winnings)} BB.${returnedSuffix(position)}`
+    : `• ${bettor} bet ${direction} your team and lost ${formatInteger(position.matchedStake)} BB.${returnedSuffix(position)}`;
 }
 
 function ownParlayLine(bet: ParlaySettlementSummary["bets"][number]): string {
   if (bet.outcome === "won") {
     return `• Parlay ${bet.side} — ${formatInteger(bet.stake)} BB → won **${formatInteger(bet.payout - bet.stake)} BB**.`;
   }
-  if (bet.outcome === "refunded") {
-    return `• Parlay ${bet.side} — ${formatInteger(bet.stake)} BB was refunded.`;
-  }
-  return `• Parlay ${bet.side} — ${formatInteger(bet.stake)} BB → lost ${formatInteger(bet.stake)} BB.`;
+  return bet.outcome === "refunded"
+    ? `• Parlay ${bet.side} — ${formatInteger(bet.stake)} BB was refunded.`
+    : `• Parlay ${bet.side} — ${formatInteger(bet.stake)} BB → lost ${formatInteger(bet.stake)} BB.`;
 }
 
 function draftFor(

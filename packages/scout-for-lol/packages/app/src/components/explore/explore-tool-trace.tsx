@@ -287,10 +287,7 @@ function toolLabel(toolName: string): string {
   if (toolName === "query_bucks_ledger") {
     return "Query Bryan Bucks ledger";
   }
-  if (toolName === "query_bucks_bets") {
-    return "Query Bryan Bucks bets";
-  }
-  return toolName;
+  return toolName === "query_bucks_bets" ? "Query Bryan Bucks bets" : toolName;
 }
 
 function statusLabel(status: ExploreTraceStatus): string {
@@ -300,10 +297,7 @@ function statusLabel(status: ExploreTraceStatus): string {
   if (status === "succeeded") {
     return "Completed";
   }
-  if (status === "failed") {
-    return "Failed";
-  }
-  return "Interrupted";
+  return status === "failed" ? "Failed" : "Interrupted";
 }
 
 function formatBytes(byteLength: number): string {

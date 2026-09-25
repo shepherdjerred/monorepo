@@ -68,10 +68,9 @@ function formatBadgesLine(snapshot: GameSnapshot): string {
   }
   const count = earned.length;
   const total = BADGES.length;
-  if (count === 0) {
-    return `Badges (0/${String(total)}): none`;
-  }
-  return `Badges (${String(count)}/${String(total)}): ${earned.join(", ")}`;
+  return count === 0
+    ? `Badges (0/${String(total)}): none`
+    : `Badges (${String(count)}/${String(total)}): ${earned.join(", ")}`;
 }
 
 function formatDexLine(snapshot: GameSnapshot): string {
@@ -157,8 +156,9 @@ function titleCase(value: string): string {
     .split(/\s+/)
     .map((word) => {
       const first = word[0];
-      if (first === undefined) return word;
-      return `${first.toUpperCase()}${word.slice(1)}`;
+      return first === undefined
+        ? word
+        : `${first.toUpperCase()}${word.slice(1)}`;
     })
     .join(" ");
 }

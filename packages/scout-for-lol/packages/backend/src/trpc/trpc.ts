@@ -24,8 +24,9 @@ function findMissingPermission(error: unknown, depth = 0): Permission | null {
   if (error === null || typeof error !== "object" || depth > 6) return null;
   const parsed = PermissionDeniedCauseSchema.safeParse(error);
   if (parsed.success) return parsed.data.missingPermission;
-  if ("cause" in error) return findMissingPermission(error.cause, depth + 1);
-  return null;
+  return "cause" in error
+    ? findMissingPermission(error.cause, depth + 1)
+    : null;
 }
 
 const t = initTRPC.context<Context>().create({

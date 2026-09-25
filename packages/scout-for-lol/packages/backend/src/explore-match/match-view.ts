@@ -222,3 +222,52 @@ export function assertEligibleExploreMatchCardRequests(input: {
     }
   }
 }
+
+/** Highest participant id on the first side of a two-team 5v5 game. */
+const FIVE_V_FIVE_SIDE_SIZE = 5;
+
+function distinctTeamIds(
+  rows: readonly Pick<LakeMatchParticipantRow, "team_id">[],
+): Set<number> {
+  return new Set(rows.map((row) => row.team_id));
+}
+
+/**
+ * Attribute a timeline frame to a team when its participant has no match
+ * row. Observed in the lake: Swiftplay matches with 6 stored participant
+ * rows but 10 timeline frame participants, which used to throw out of the
+ * gold chart entirely.
+ *
+ * Applies Riot's 5v5 participant-id convention (1-5 one team, 6-10 the
+ * other) only after the stored rows confirm it: exactly two teams
+ * overall, one team on each side of the split. Returns undefined when the
+ * rows do not confirm the convention, so the caller fails typed instead
+ * of guessing a team.
+ */
+export function inferFrameTeamId(
+  rows: readonly Pick<LakeMatchParticipantRow, "participant_id" | "team_id">[],
+  participantId: number,
+): number | undefined {
+  if (
+    participantId < 1 ||
+    participantId > FIVE_V_FIVE_SIDE_SIZE * 2 ||
+    distinctTeamIds(rows).size !== 2
+  ) {
+    return undefined;
+  }
+  const lowTeams = distinctTeamIds(
+    rows.filter((row) => row.participant_id <= FIVE_V_FIVE_SIDE_SIZE),
+  );
+  const highTeams = distinctTeamIds(
+    rows.filter((row) => row.participant_id > FIVE_V_FIVE_SIDE_SIZE),
+  );
+  if (lowTeams.size !== 1 || highTeams.size !== 1) {
+    return undefined;
+  }
+  const [lowTeam] = [...lowTeams];
+  const [highTeam] = [...highTeams];
+  if (lowTeam === undefined || highTeam === undefined || lowTeam === highTeam) {
+    return undefined;
+  }
+  return participantId <= FIVE_V_FIVE_SIDE_SIZE ? lowTeam : highTeam;
+}

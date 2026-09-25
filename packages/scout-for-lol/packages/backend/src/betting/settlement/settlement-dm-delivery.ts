@@ -142,10 +142,9 @@ async function playerRecipientsForRoster(input: {
   prismaClient: ExtendedPrismaClient;
 }): Promise<TeamRecipient[]> {
   const trackedParticipants = input.roster.flatMap((participant) => {
-    if (participant.puuid === null || participant.trackedAlias === undefined) {
-      return [];
-    }
-    return [{ puuid: participant.puuid, teamId: participant.teamId }];
+    return participant.puuid === null || participant.trackedAlias === undefined
+      ? []
+      : [{ puuid: participant.puuid, teamId: participant.teamId }];
   });
   if (trackedParticipants.length === 0) {
     return [];

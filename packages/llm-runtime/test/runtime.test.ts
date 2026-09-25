@@ -104,7 +104,11 @@ function createResponseSequenceRuntime(
         if (response === undefined) throw new Error("unexpected request");
         return response;
       },
-      { preconnect: (url: string | URL) => void url },
+      {
+        preconnect: (_url: string | URL) => {
+          // No preconnect in tests.
+        },
+      },
     ),
   });
 }
@@ -527,7 +531,11 @@ describe("generateValidatedObject", () => {
             ),
           );
         },
-        { preconnect: (url: string | URL) => void url },
+        {
+          preconnect: (_url: string | URL) => {
+            // No preconnect in tests.
+          },
+        },
       ),
     });
 
@@ -553,15 +561,14 @@ describe("generateValidatedObject retries", () => {
       appName: "test",
       fetch: (_input, _init) => {
         requestCount += 1;
-        if (requestCount < 3) {
-          return Promise.resolve(
-            Response.json(
-              { error: { code: 503, message: "provider unavailable" } },
-              { status: 503, headers: { "Retry-After": "0" } },
-            ),
-          );
-        }
-        return Promise.resolve(openRouterResponse('{"count":3}'));
+        return requestCount < 3
+          ? Promise.resolve(
+              Response.json(
+                { error: { code: 503, message: "provider unavailable" } },
+                { status: 503, headers: { "Retry-After": "0" } },
+              ),
+            )
+          : Promise.resolve(openRouterResponse('{"count":3}'));
       },
     });
 

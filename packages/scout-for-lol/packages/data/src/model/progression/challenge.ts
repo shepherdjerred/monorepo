@@ -225,13 +225,10 @@ function predicateMatchesAny(
   test: (predicate: ChallengeMatchPredicate) => boolean,
 ): boolean {
   if (test(predicate)) return true;
-  if (predicate.kind === "not") {
-    return predicateMatchesAny(predicate.predicate, test);
-  }
-  return (
-    (predicate.kind === "all" || predicate.kind === "any") &&
-    predicate.predicates.some((child) => predicateMatchesAny(child, test))
-  );
+  return predicate.kind === "not"
+    ? predicateMatchesAny(predicate.predicate, test)
+    : (predicate.kind === "all" || predicate.kind === "any") &&
+        predicate.predicates.some((child) => predicateMatchesAny(child, test));
 }
 
 export function challengeNeedsTimeline(
@@ -270,8 +267,10 @@ export function evaluateChallengePredicate(
       return predicate.roles.includes(match.role);
     case "numeric": {
       const value = match[predicate.field];
-      if (value === null) return false;
-      return compare(value, predicate.operator, predicate.threshold);
+      return (
+        value !== null &&
+        compare(value, predicate.operator, predicate.threshold)
+      );
     }
     case "timeline_event_count":
       return compare(
@@ -288,13 +287,12 @@ export function evaluateChallengePredicate(
         evaluateChallengePredicate(child, match),
       );
     case "not":
-      if (
-        match.placement === null &&
-        challengeNeedsPlacement(predicate.predicate)
-      ) {
-        return false;
-      }
-      return !evaluateChallengePredicate(predicate.predicate, match);
+      return (
+        !(
+          match.placement === null &&
+          challengeNeedsPlacement(predicate.predicate)
+        ) && !evaluateChallengePredicate(predicate.predicate, match)
+      );
   }
 }
 
@@ -305,10 +303,9 @@ function distinctMatchValue(
   if (goal.dimension === "champions" || goal.explicitField === "champion") {
     return match.championId.toString();
   }
-  if (goal.dimension === "roles" || goal.explicitField === "role") {
-    return match.role;
-  }
-  return match.queue;
+  return goal.dimension === "roles" || goal.explicitField === "role"
+    ? match.role
+    : match.queue;
 }
 
 function longestTrueStreak(matches: readonly boolean[]): number {
@@ -413,11 +410,9 @@ function evaluateGoal(
     };
   }
 
-  if (goal.kind === "distinct") {
-    return evaluateDistinctGoal(goal, matches, matched);
-  }
-
-  return evaluateScalarGoal(goal, matches, matched);
+  return goal.kind === "distinct"
+    ? evaluateDistinctGoal(goal, matches, matched)
+    : evaluateScalarGoal(goal, matches, matched);
 }
 
 export function evaluateChallengeContract(

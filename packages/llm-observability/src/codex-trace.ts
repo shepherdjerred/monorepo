@@ -494,13 +494,11 @@ function collapseCommand(record: Record<string, unknown>): string {
 // un-snipped command (callers snippet where needed).
 function commandToString(raw: unknown): string {
   if (typeof raw === "string") return raw;
-  if (Array.isArray(raw)) return raw.map(String).join(" ");
-  return "<unknown>";
+  return Array.isArray(raw) ? raw.map(String).join(" ") : "<unknown>";
 }
 
 function snippet(value: string): string {
-  if (value.length <= 200) return value;
-  return `${value.slice(0, 200)}…`;
+  return value.length <= 200 ? value : `${value.slice(0, 200)}…`;
 }
 
 // Cap archived/logged tool bodies so a pathological pokemonctl dump can't blow
@@ -508,8 +506,9 @@ function snippet(value: string): string {
 const TOOL_BODY_MAX = 16_384;
 
 function bodyForArchive(value: string): string {
-  if (value.length <= TOOL_BODY_MAX) return value;
-  return `${value.slice(0, TOOL_BODY_MAX)}…`;
+  return value.length <= TOOL_BODY_MAX
+    ? value
+    : `${value.slice(0, TOOL_BODY_MAX)}…`;
 }
 
 function stringifyError(error: unknown): string {

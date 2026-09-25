@@ -45,9 +45,9 @@ function parseStatementDate(text: string): string | undefined {
   const match = /Statement Date:\s*(\d{2})\/(\d{2})\/(\d{4})/.exec(text);
   if (!match) return undefined;
   const [, month, day, year] = match;
-  if (month === undefined || day === undefined || year === undefined)
-    return undefined;
-  return `${year}-${month}-${day}`;
+  return month === undefined || day === undefined || year === undefined
+    ? undefined
+    : `${year}-${month}-${day}`;
 }
 
 function parseDraftDate(
@@ -81,8 +81,9 @@ function parseDraftAmount(text: string): number | undefined {
     /Draft Amount on \w{3}\.\s*\d{1,2}\s*(?:st|nd|rd|th)\s+\$?([\d,]+\.\d{2})/.exec(
       text,
     );
-  if (match?.[1] === undefined) return undefined;
-  return Number.parseFloat(match[1].replaceAll(",", ""));
+  return match?.[1] === undefined
+    ? undefined
+    : Number.parseFloat(match[1].replaceAll(",", ""));
 }
 
 function parseAutoAmount(text: string): number | undefined {
@@ -91,8 +92,9 @@ function parseAutoAmount(text: string): number | undefined {
     /WA Auto 7101\s+\d{2}\/\d{2}\/\d{2}\s+to\s+\d{2}\/\d{2}\/\d{2}\s+[\d,]+\.\d{2}\s+([\d,]+\.\d{2})/.exec(
       text,
     );
-  if (match?.[1] === undefined) return undefined;
-  return Number.parseFloat(match[1].replaceAll(",", ""));
+  return match?.[1] === undefined
+    ? undefined
+    : Number.parseFloat(match[1].replaceAll(",", ""));
 }
 
 function parseRentersAmount(text: string): number | undefined {
@@ -101,8 +103,9 @@ function parseRentersAmount(text: string): number | undefined {
     /WA Renters Insurance 001\s+\d{2}\/\d{2}\/\d{2}\s+to\s+\d{2}\/\d{2}\/\d{2}\s+[\d,]+\.\d{2}\s+([\d,]+\.\d{2})/.exec(
       text,
     );
-  if (match?.[1] === undefined) return undefined;
-  return Number.parseFloat(match[1].replaceAll(",", ""));
+  return match?.[1] === undefined
+    ? undefined
+    : Number.parseFloat(match[1].replaceAll(",", ""));
 }
 
 async function parsePdf(filePath: string): Promise<UsaaStatement> {

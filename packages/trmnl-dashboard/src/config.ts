@@ -19,15 +19,8 @@ export type AppConfig = {
     security: ConfiguredEntity[];
     climate: ConfiguredEntity[];
   };
-  homelab: {
-    prometheusUrl: string;
-    alertDashboardUrl: string;
-    bugsinkUrl: string;
-    bugsinkToken?: string;
-    kubernetesUrl: string;
-    kubernetesTokenPath: string;
-    kubernetesCaPath: string;
-  };
+  /** The ops dashboard (deployed as alert-dashboard): snapshot and alerts. */
+  opsDashboardUrl: string;
 };
 
 const EnvSchema = z.object({
@@ -51,30 +44,12 @@ const EnvSchema = z.object({
   HA_PRESENCE_ENTITIES: z.string().default(""),
   HA_SECURITY_ENTITIES: z.string().default(""),
   HA_CLIMATE_ENTITIES: z.string().default(""),
-  PROMETHEUS_URL: z
-    .string()
-    .pipe(z.url())
-    .default("http://prometheus-kube-prometheus-prometheus.prometheus:9090"),
-  ALERT_DASHBOARD_URL: z
+  OPS_DASHBOARD_URL: z
     .string()
     .pipe(z.url())
     .default(
       "http://alert-dashboard-alert-dashboard-service.alert-dashboard:7341",
     ),
-  BUGSINK_URL: z
-    .string()
-    .pipe(z.url())
-    .default("http://bugsink-bugsink-service.bugsink:8000/api/canonical/0"),
-  BUGSINK_TOKEN: z.string().optional(),
-  KUBERNETES_SERVICE_HOST: z.string().optional(),
-  KUBERNETES_SERVICE_PORT: z.string().optional(),
-  KUBERNETES_API_URL: z.string().pipe(z.url()).optional(),
-  KUBERNETES_TOKEN_PATH: z
-    .string()
-    .default("/var/run/secrets/kubernetes.io/serviceaccount/token"),
-  KUBERNETES_CA_PATH: z
-    .string()
-    .default("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"),
 });
 
 // Portable speakers, TVs, and companion diagnostics are often unavailable
@@ -99,11 +74,6 @@ export const UNAVAILABLE_IGNORED_ENTITY_GLOBS = [
 
 export function loadConfig(env: Record<string, string | undefined>): AppConfig {
   const parsed = EnvSchema.parse(env);
-  const kubernetesUrl =
-    parsed.KUBERNETES_API_URL ??
-    `https://${parsed.KUBERNETES_SERVICE_HOST ?? "kubernetes.default.svc"}:${
-      parsed.KUBERNETES_SERVICE_PORT ?? "443"
-    }`;
 
   return {
     port: parsed.PORT,
@@ -121,17 +91,7 @@ export function loadConfig(env: Record<string, string | undefined>): AppConfig {
       security: parseEntities(parsed.HA_SECURITY_ENTITIES),
       climate: parseEntities(parsed.HA_CLIMATE_ENTITIES),
     },
-    homelab: {
-      prometheusUrl: parsed.PROMETHEUS_URL,
-      alertDashboardUrl: parsed.ALERT_DASHBOARD_URL,
-      bugsinkUrl: parsed.BUGSINK_URL,
-      ...(parsed.BUGSINK_TOKEN == null
-        ? {}
-        : { bugsinkToken: parsed.BUGSINK_TOKEN }),
-      kubernetesUrl,
-      kubernetesTokenPath: parsed.KUBERNETES_TOKEN_PATH,
-      kubernetesCaPath: parsed.KUBERNETES_CA_PATH,
-    },
+    opsDashboardUrl: parsed.OPS_DASHBOARD_URL,
   };
 }
 
@@ -155,10 +115,10 @@ export function isExpectedUnavailable(
   ignoredGlobs: readonly string[],
 ): boolean {
   const domain = entityId.split(".", 1)[0] ?? "";
-  if (ignoredDomains.includes(domain)) {
-    return true;
-  }
-  return ignoredGlobs.some((glob) => entityIdMatchesGlob(entityId, glob));
+  return (
+    ignoredDomains.includes(domain) ||
+    ignoredGlobs.some((glob) => entityIdMatchesGlob(entityId, glob))
+  );
 }
 
 export function parseEntities(value: string): ConfiguredEntity[] {

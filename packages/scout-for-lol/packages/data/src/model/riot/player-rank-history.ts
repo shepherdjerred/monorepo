@@ -169,8 +169,9 @@ function finishQueue(queue: QueueAccumulator): QueueRankHistory {
     }))
     .toSorted((left, right) => {
       if (left.splitId === EARLIER_RANKED_SPLIT_ID) return 1;
-      if (right.splitId === EARLIER_RANKED_SPLIT_ID) return -1;
-      return right.splitId.localeCompare(left.splitId);
+      return right.splitId === EARLIER_RANKED_SPLIT_ID
+        ? -1
+        : right.splitId.localeCompare(left.splitId);
     });
   return { series, previous };
 }

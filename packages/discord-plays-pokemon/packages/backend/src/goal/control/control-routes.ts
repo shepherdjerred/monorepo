@@ -195,21 +195,21 @@ async function writeResponse(
 }
 
 function formatList(entries: readonly FsEntry[]): string {
-  if (entries.length === 0) {
-    return "(empty)";
-  }
-  return entries
-    .map((entry) => `${entry.kind === "dir" ? "dir " : "file"}  ${entry.path}`)
-    .join("\n");
+  return entries.length === 0
+    ? "(empty)"
+    : entries
+        .map(
+          (entry) => `${entry.kind === "dir" ? "dir " : "file"}  ${entry.path}`,
+        )
+        .join("\n");
 }
 
 function formatGrep(matches: readonly GrepMatch[], query: string): string {
-  if (matches.length === 0) {
-    return `No matches for "${query}".`;
-  }
-  return matches
-    .map((match) => `${match.path}:${String(match.line)}: ${match.text}`)
-    .join("\n");
+  return matches.length === 0
+    ? `No matches for "${query}".`
+    : matches
+        .map((match) => `${match.path}:${String(match.line)}: ${match.text}`)
+        .join("\n");
 }
 
 async function screenshotResponse(

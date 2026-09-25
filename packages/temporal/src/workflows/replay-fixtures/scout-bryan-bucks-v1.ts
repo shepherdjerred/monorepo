@@ -18,8 +18,7 @@ const { syncScoutBryanBucksAnalytics: syncEmbeddedScoutBryanBucksAnalytics } =
   });
 
 export async function runScoutBryanBucksAnalyticsWorkflow(): Promise<Result> {
-  if (patched("scout-bryan-bucks-embedded-activity-v1")) {
-    return await syncEmbeddedScoutBryanBucksAnalytics();
-  }
-  return await syncScoutBryanBucksAnalytics();
+  return patched("scout-bryan-bucks-embedded-activity-v1")
+    ? await syncEmbeddedScoutBryanBucksAnalytics()
+    : await syncScoutBryanBucksAnalytics();
 }

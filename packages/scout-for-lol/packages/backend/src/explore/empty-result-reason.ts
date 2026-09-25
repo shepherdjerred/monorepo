@@ -62,14 +62,14 @@ function intersect(
   right: QueueConstraint,
 ): QueueConstraint {
   if (left === null) return right;
-  if (right === null) return left;
-  return new Set([...left].filter((queue) => right.has(queue)));
+  return right === null
+    ? left
+    : new Set([...left].filter((queue) => right.has(queue)));
 }
 
 function union(left: QueueConstraint, right: QueueConstraint): QueueConstraint {
   // One unconstrained branch is enough to admit any queue.
-  if (left === null || right === null) return null;
-  return new Set([...left, ...right]);
+  return left === null || right === null ? null : new Set([...left, ...right]);
 }
 
 export function queueConstraintOf(

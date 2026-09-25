@@ -45,8 +45,7 @@ export function buildScheduleState(
       ? { paused: true }
       : { paused: true, note: previous.note };
   }
-  if (previous === undefined && schedule.initialPauseNote !== undefined) {
-    return { paused: true, note: schedule.initialPauseNote };
-  }
-  return { paused: false };
+  return previous === undefined && schedule.initialPauseNote !== undefined
+    ? { paused: true, note: schedule.initialPauseNote }
+    : { paused: false };
 }

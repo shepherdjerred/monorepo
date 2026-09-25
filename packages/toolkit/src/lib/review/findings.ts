@@ -95,7 +95,11 @@ export async function reviewStateFor(input: {
   token: string;
   head: string;
   provider?: ReviewProvider;
-}): Promise<{ reviewedAtHead: boolean; completionSignal: string }> {
+}): Promise<{
+  reviewedAtHead: boolean;
+  completionSignal: string;
+  blockedReason: string | null;
+}> {
   const provider = input.provider ?? resolveRequiredReviewProvider();
   const state = await resolveReviewState({
     provider,
@@ -113,6 +117,7 @@ export async function reviewStateFor(input: {
   return {
     reviewedAtHead: state.reviewedCommit === input.head,
     completionSignal: state.completionSignal,
+    blockedReason: state.blockedReason,
   };
 }
 
@@ -131,8 +136,9 @@ export async function reviewStateFor(input: {
  */
 export function fallbackKey(thread: ReviewThread, index: number): string {
   if (thread.threadId !== null) return `thread:${thread.threadId}`;
-  if (thread.commentId !== null) return `comment:${String(thread.commentId)}`;
-  return `#${String(index + 1)}`;
+  return thread.commentId === null
+    ? `#${String(index + 1)}`
+    : `comment:${String(thread.commentId)}`;
 }
 
 function toFinding(

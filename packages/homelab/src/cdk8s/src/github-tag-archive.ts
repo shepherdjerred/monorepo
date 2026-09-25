@@ -84,10 +84,9 @@ function readStringProperty(
 }
 
 function readCause(value: unknown): unknown {
-  if (typeof value !== "object" || value === null || !("cause" in value)) {
-    return undefined;
-  }
-  return value.cause;
+  return typeof value !== "object" || value === null || !("cause" in value)
+    ? undefined
+    : value.cause;
 }
 
 export function isRetryableGithubArchiveError(error: unknown): boolean {
@@ -119,10 +118,7 @@ export function isRetryableGithubArchiveError(error: unknown): boolean {
 }
 
 function describeError(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return String(error);
+  return error instanceof Error ? error.message : String(error);
 }
 
 export function githubTagArchiveUrl(repo: string, version: string): string {

@@ -87,7 +87,6 @@ and does not add a toolkit command.
 | llm-catalog-refresh | Mon 09:00   | deterministic                    | PR or [durable alert](/explanation/temporal/workflow-families/#repo-upkeep) |
 | homelab-crd-imports | daily 05:30 | deterministic                    | PR                                                                          |
 | pokeemerald-data    | daily 04:30 | deterministic                    | PR                                                                          |
-| CI I/O impact       | daily 09:00 | deterministic                    | heartbeat email                                                             |
 | protobufjs v8 watch | Mon 09:00   | deterministic                    | heartbeat email                                                             |
 
 Ordinary LLM summaries use the shared OpenRouter runtime. The deterministic
@@ -140,6 +139,7 @@ Only corpus capture and context-refresh are scheduled.
 | buildkite-uv-cache-prune-weekly | Sun 03:15     | deterministic | uv cache prune                           |
 | bugsink-housekeeping            | daily 03:00   | deterministic | DB cleanup                               |
 | velero-orphan-audit             | daily 03:30   | deterministic | metrics only                             |
+| velero-r2-orphan-audit          | daily 04:00   | deterministic | metrics only                             |
 | kometa-daily                    | daily 04:30   | deterministic | Plex metadata sync                       |
 | buildkite-bun-cache-gc          | every 5 min   | deterministic | Bun cache GC                             |
 | buildkite-trivy-db-refresh      | every 6 hours | deterministic | Trivy database refresh                   |
@@ -147,7 +147,7 @@ Only corpus capture and context-refresh are scheduled.
 | golink-sync                     | daily 05:00   | deterministic | golink reconcile                         |
 | temporal-failure-watch          | every 5 min   | deterministic | durable alert occurrence                 |
 | report-freshness-monitor        | every 15 min  | deterministic | metrics + durable alert                  |
-| TaskNotes canary                | daily 09:00   | deterministic | heartbeat email                          |
+| TaskNotes canary                | Mon 09:00     | deterministic | heartbeat email                          |
 | main-vuln-scan                  | Sun 05:00     | deterministic | report email + durable alert on CRITICAL |
 
 ## Home automation

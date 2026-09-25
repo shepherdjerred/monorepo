@@ -222,13 +222,10 @@ export const consumerPlayerRouter = router({
       if (scope.kind === "forbidden") {
         return { state: scope.reason } as const;
       }
-      if (
-        input?.guildId !== undefined &&
+      return input?.guildId !== undefined &&
         !scope.guilds.some((guild) => guild.id === input.guildId)
-      ) {
-        return { state: "feature_disabled" } as const;
-      }
-      return { state: "available", guildCount: scope.guilds.length } as const;
+        ? ({ state: "feature_disabled" } as const)
+        : ({ state: "available", guildCount: scope.guilds.length } as const);
     }),
 
   home: protectedProcedure.query(async ({ ctx }) => {

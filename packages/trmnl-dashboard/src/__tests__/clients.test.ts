@@ -1,7 +1,8 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { BugsinkClient } from "../clients/bugsink.ts";
 import { HomeStatusClient } from "../clients/home-assistant.ts";
 import { AlertsClient } from "../clients/alerts.ts";
+import { OpsSnapshotClient } from "../clients/ops.ts";
+import { homelabSnapshot } from "./ops-snapshot-fixture.ts";
 
 const originalFetch = globalThis.fetch;
 
@@ -20,10 +21,7 @@ function requestUrl(input: Parameters<typeof fetch>[0]): string {
   if (typeof input === "string") {
     return input;
   }
-  if (input instanceof URL) {
-    return input.href;
-  }
-  return input.url;
+  return input instanceof URL ? input.href : input.url;
 }
 
 afterEach(() => {
@@ -119,77 +117,50 @@ describe("HomeStatusClient", () => {
   });
 });
 
-describe("BugsinkClient", () => {
-  it("uses the configured base URL, paginates issues, and filters unresolved locally", async () => {
+describe("OpsSnapshotClient", () => {
+  it("validates the snapshot and drops the dashboard's read-time fields", async () => {
+    const snapshot = homelabSnapshot(new Date("2026-09-24T12:00:00.000Z"));
     const requestedUrls: string[] = [];
     setFetchMock(async (input) => {
-      const url = requestUrl(input);
-      requestedUrls.push(url);
-
-      if (url === "http://bugsink.local/api/canonical/0/projects/") {
-        return Response.json({
-          results: [{ id: 1, name: "api" }],
-        });
-      }
-
-      if (url === "http://bugsink.local/api/canonical/0/issues/?project=1") {
-        return Response.json({
-          next: "http://bugsink.local/api/canonical/0/issues/?project=1&cursor=next",
-          results: [{ is_resolved: false }, { is_resolved: true }],
-        });
-      }
-
-      if (
-        url ===
-        "http://bugsink.local/api/canonical/0/issues/?project=1&cursor=next"
-      ) {
-        return Response.json({
-          next: null,
-          results: [{ is_resolved: false }],
-        });
-      }
-
-      return new Response("", { status: 404 });
+      requestedUrls.push(requestUrl(input));
+      return Response.json({
+        ...snapshot,
+        stale: false,
+        ageMs: 1000,
+        receivedAt: "2026-09-24T12:00:01.000Z",
+        newSignalIds: [],
+      });
     });
 
-    const client = new BugsinkClient(
-      "http://bugsink.local/api/canonical/0",
-      "token",
-    );
+    const client = new OpsSnapshotClient("http://ops.local:7341");
 
-    await expect(client.getProjectSummaries()).resolves.toEqual([
-      { name: "api", unresolved: 2 },
+    await expect(client.getSnapshot()).resolves.toEqual(snapshot);
+    expect(requestedUrls).toEqual([
+      "http://ops.local:7341/api/v1/ops/snapshot",
     ]);
-    expect(requestedUrls).not.toContain(
-      "http://bugsink.local/api/canonical/0/issues/?project=1&status=unresolved",
-    );
+  });
+
+  it("rejects a body that breaks the snapshot contract", async () => {
+    setFetchMock(async () => Response.json({ schemaVersion: 99 }));
+    const client = new OpsSnapshotClient("http://ops.local:7341");
+
+    await expect(client.getSnapshot()).rejects.toThrow();
   });
 
   it("throws on non-2xx responses", async () => {
-    setFetchMock(async () => new Response("", { status: 400 }));
-    const client = new BugsinkClient(
-      "http://bugsink.local/api/canonical/0",
-      "token",
-    );
+    setFetchMock(async () => new Response("", { status: 503 }));
+    const client = new OpsSnapshotClient("http://ops.local:7341");
 
-    await expect(client.getProjectSummaries()).rejects.toThrow(
-      "Bugsink request failed: 400",
+    await expect(client.getSnapshot()).rejects.toThrow(
+      "Ops snapshot request failed: 503",
     );
   });
 });
 
 describe("AlertsClient", () => {
-  it("reads the summary and open occurrences", async () => {
+  it("reads open occurrences", async () => {
     setFetchMock(async (input) => {
       const url = requestUrl(input);
-      if (url === "https://alerts.local/api/v1/summary")
-        return Response.json({
-          open: 2,
-          resolved: 4,
-          critical: 1,
-          warning: 1,
-          info: 0,
-        });
       if (
         url === "https://alerts.local/api/v1/alerts?lifecycleState=open&limit=6"
       )
@@ -209,12 +180,6 @@ describe("AlertsClient", () => {
 
     const client = new AlertsClient("https://alerts.local");
 
-    await expect(client.getSummary()).resolves.toEqual({
-      open: 2,
-      critical: 1,
-      warning: 1,
-      info: 0,
-    });
     await expect(client.listOpen()).resolves.toHaveLength(1);
   });
 
@@ -222,7 +187,7 @@ describe("AlertsClient", () => {
     setFetchMock(async () => new Response("", { status: 401 }));
     const client = new AlertsClient("https://alerts.local");
 
-    await expect(client.getSummary()).rejects.toThrow(
+    await expect(client.listOpen()).rejects.toThrow(
       "Alerts request failed: 401",
     );
   });

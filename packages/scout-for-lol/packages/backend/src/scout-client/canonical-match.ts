@@ -64,17 +64,14 @@ export function parseLocalCanonicalMatch(
       ? infoMatch.data
       : null;
   if (match === null) return null;
-  if (
-    match.metadata.matchId !== riotMatchId ||
+  return match.metadata.matchId !== riotMatchId ||
     match.info.platformId.toUpperCase() !== platform ||
     candidate.platformId?.toUpperCase() !== platform ||
     `${platform}_${match.info.gameId.toString()}` !== riotMatchId ||
     candidate.localPuuid === null ||
     !match.metadata.participants.includes(candidate.localPuuid)
-  ) {
-    return null;
-  }
-  return match;
+    ? null
+    : match;
 }
 
 /** Read the already-fixed local source without selecting a new one. */

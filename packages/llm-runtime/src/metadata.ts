@@ -257,10 +257,9 @@ function catalogCost(
       ? undefined
       : pricing.perImage * body.data.length;
   }
-  if (tokens.total === 0 && tokens.input === 0 && tokens.output === 0) {
-    return undefined;
-  }
-  return costForTextUsage(requestedModel, textUsageForPricing(pricing, tokens));
+  return tokens.total === 0 && tokens.input === 0 && tokens.output === 0
+    ? undefined
+    : costForTextUsage(requestedModel, textUsageForPricing(pricing, tokens));
 }
 
 function costFields(

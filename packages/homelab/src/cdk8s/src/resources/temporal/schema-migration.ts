@@ -1,6 +1,7 @@
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
 import { Cpu, EnvValue, Job, Secret, Volume } from "cdk8s-plus-31";
+import { TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS } from "@shepherdjerred/homelab/cdk8s/src/temporal-release-budgets.ts";
 import { withCommonProps } from "@shepherdjerred/homelab/cdk8s/src/misc/common.ts";
 import {
   TEMPORAL_POSTGRES_TLS_CA_FILE,
@@ -107,7 +108,9 @@ export function createTemporalSchemaMigrationJob(chart: Chart) {
     },
     automountServiceAccountToken: false,
     backoffLimit: 1,
-    activeDeadline: Duration.seconds(900),
+    activeDeadline: Duration.seconds(
+      TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS,
+    ),
     podMetadata: { labels: { app: "temporal-schema-migration" } },
   });
 

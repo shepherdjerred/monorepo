@@ -49,16 +49,14 @@ export async function challengeMatchNeedsTimeline(
       ChallengeContractV1Schema,
     );
     const revision = run.revisions[0];
-    if (
-      revision === undefined ||
-      !challengeNeedsTimeline(contract.matchPredicate)
-    ) {
-      return false;
-    }
-    return parseProgressionJson(
-      revision.selectedAccountsJson,
-      ChallengeSelectedAccountsSchema,
-    ).some((account) => participants.has(account.puuid));
+    return (
+      revision !== undefined &&
+      challengeNeedsTimeline(contract.matchPredicate) &&
+      parseProgressionJson(
+        revision.selectedAccountsJson,
+        ChallengeSelectedAccountsSchema,
+      ).some((account) => participants.has(account.puuid))
+    );
   });
 }
 

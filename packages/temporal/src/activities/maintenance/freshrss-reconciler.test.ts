@@ -71,16 +71,16 @@ class MockFreshRssApi {
     }
     if (url.pathname.endsWith("/token")) return new Response("test-token");
     if (url.pathname.endsWith("/subscription/list")) {
-      if (this.malformedList) return Response.json({ wrong: [] });
-      return Response.json({ subscriptions: this.subscriptions });
+      return this.malformedList
+        ? Response.json({ wrong: [] })
+        : Response.json({ subscriptions: this.subscriptions });
     }
     if (url.pathname.endsWith("/subscription/export")) {
       return this.#export();
     }
-    if (url.pathname.endsWith("/subscription/edit")) {
-      return this.#edit(url, init);
-    }
-    return new Response("Not Found", { status: 404 });
+    return url.pathname.endsWith("/subscription/edit")
+      ? this.#edit(url, init)
+      : new Response("Not Found", { status: 404 });
   };
 
   #export(): Response {

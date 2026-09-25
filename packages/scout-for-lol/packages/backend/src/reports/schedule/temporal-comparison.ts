@@ -126,10 +126,11 @@ function orderedPatchKeys(
   rows: PlanAggregateRow[],
   context: TemporalContext,
 ): string[] {
-  if (context.bucket !== "patch") return [];
-  return [...new Set(rows.map((row) => temporalKey(row, context)))].toSorted(
-    comparePatchLabels,
-  );
+  return context.bucket === "patch"
+    ? [...new Set(rows.map((row) => temporalKey(row, context)))].toSorted(
+        comparePatchLabels,
+      )
+    : [];
 }
 
 function offsetMap(
@@ -243,8 +244,9 @@ function emptyEvidence(
   kind: ScoutQlPlan["outputs"][number]["evidence"]["kind"],
 ): PlanAggregateRow["outputs"][number]["evidence"] {
   if (kind === "rate") return { kind: "rate", successes: 0, trials: 0 };
-  if (kind === "ratio") return { kind: "ratio", numerator: 0, denominator: 0 };
-  return { kind: "sample", sampleCount: 0 };
+  return kind === "ratio"
+    ? { kind: "ratio", numerator: 0, denominator: 0 }
+    : { kind: "sample", sampleCount: 0 };
 }
 
 /**

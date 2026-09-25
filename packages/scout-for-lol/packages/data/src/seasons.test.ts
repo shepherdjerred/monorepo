@@ -136,7 +136,7 @@ describe("seasons", () => {
     });
 
     test("includes a season through its exact end boundary", () => {
-      const choices = getSeasonChoices(new Date("2026-09-22T23:59:59-07:00"));
+      const choices = getSeasonChoices(new Date("2026-10-20T23:59:59-07:00"));
 
       expect(choices).toEqual([
         {
@@ -147,7 +147,7 @@ describe("seasons", () => {
     });
 
     test("returns no choices after every bundled season has ended", () => {
-      expect(getSeasonChoices(new Date("2026-09-23T00:00:00-07:00"))).toEqual(
+      expect(getSeasonChoices(new Date("2026-10-21T00:00:00-07:00"))).toEqual(
         [],
       );
     });
@@ -162,6 +162,20 @@ describe("seasons", () => {
           expect(getSeasonById(parsed.data)?.displayName).toBe(choice.name);
         }
       }
+    });
+  });
+
+  describe("season catalog coverage", () => {
+    test("covers the coming fortnight so the next act lands before expiry", () => {
+      // The catalog is hand-maintained and everything season-based keys off
+      // it: when the last bundled act ends with no successor, the rank
+      // preset vanishes and CI fails obscurely (build 16987). Failing here,
+      // fourteen days early with the fix in the message, beats that outage.
+      const horizon = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+      expect(
+        getSeasonChoices(horizon).length,
+        `no season covers ${horizon.toISOString().slice(0, 10)} — add the next act to SEASONS before the catalog expires`,
+      ).toBeGreaterThan(0);
     });
   });
 
@@ -182,7 +196,7 @@ describe("seasons", () => {
       const dates = getSeasonDates("2026_SEASON_3_ACT_1");
       expect(dates).toEqual({
         startDate: new Date("2026-07-29T12:00:00-07:00"),
-        endDate: new Date("2026-09-22T23:59:59-07:00"),
+        endDate: new Date("2026-10-20T23:59:59-07:00"),
       });
     });
   });
@@ -219,7 +233,7 @@ describe("ranked splits", () => {
       id: "2026_SEASON_3",
       displayName: "2026 Season 3",
       startDate: new Date("2026-07-29T12:00:00-07:00"),
-      endDate: new Date("2026-09-22T23:59:59-07:00"),
+      endDate: new Date("2026-10-20T23:59:59-07:00"),
     });
   });
 

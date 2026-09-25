@@ -260,8 +260,7 @@ describe("applyMissingManagedFlags", () => {
 
 function requestUrl(input: string | URL | Request): string {
   if (typeof input === "string") return input;
-  if (input instanceof URL) return input.href;
-  return input.url;
+  return input instanceof URL ? input.href : input.url;
 }
 
 function requestBody(init: RequestInit | undefined): string {

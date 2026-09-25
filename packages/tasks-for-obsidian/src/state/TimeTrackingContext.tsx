@@ -61,8 +61,9 @@ export function TimeTrackingProvider({
 
   const getTaskTime = useCallback(
     async (taskId: TaskId): Promise<Result<TaskTime, AppError>> => {
-      if (!client) return err(new ConnectionError("API URL not configured"));
-      return client.getTaskTime(taskId);
+      return client
+        ? client.getTaskTime(taskId)
+        : err(new ConnectionError("API URL not configured"));
     },
     [client],
   );

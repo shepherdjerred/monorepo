@@ -32,8 +32,9 @@ export function useDiscordNames(ids: (string | null)[]): {
   );
   return {
     resolve: (id) => {
-      if (id === null || query.data === undefined) return null;
-      return query.data[id] ?? null;
+      return id === null || query.data === undefined
+        ? null
+        : (query.data[id] ?? null);
     },
   };
 }

@@ -79,13 +79,12 @@ function probabilityScore(
   lane: Lane,
 ): number {
   const probability = probabilities?.[lane];
-  if (probability === undefined) {
-    return 0;
-  }
-  return Math.log(
-    (probability + PRIOR_SMOOTHING) /
-      (LANE_BASELINE_PROBABILITY + PRIOR_SMOOTHING),
-  );
+  return probability === undefined
+    ? 0
+    : Math.log(
+        (probability + PRIOR_SMOOTHING) /
+          (LANE_BASELINE_PROBABILITY + PRIOR_SMOOTHING),
+      );
 }
 
 function scoreAssignment(

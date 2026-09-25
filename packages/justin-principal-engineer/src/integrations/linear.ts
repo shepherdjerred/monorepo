@@ -91,7 +91,6 @@ export class LinearClient {
       "--json",
     ]);
     const selected = selectIssue(QuerySchema.parse(JSON.parse(output)).nodes);
-    if (selected === null) return null;
     return selected;
   }
 

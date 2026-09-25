@@ -152,17 +152,20 @@ export function searchLibrary(
   limit = 25,
 ): LibraryEntry[] {
   const trimmed = query.trim();
-  if (trimmed.length === 0) {
-    return [];
-  }
-  return entries
-    .map((entry) => ({ entry, score: scoreLibraryTitle(entry.title, trimmed) }))
-    .filter((scored) => scored.score >= 45)
-    .toSorted(
-      (a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title),
-    )
-    .slice(0, limit)
-    .map((scored) => scored.entry);
+  return trimmed.length === 0
+    ? []
+    : entries
+        .map((entry) => ({
+          entry,
+          score: scoreLibraryTitle(entry.title, trimmed),
+        }))
+        .filter((scored) => scored.score >= 45)
+        .toSorted(
+          (a, b) =>
+            b.score - a.score || a.entry.title.localeCompare(b.entry.title),
+        )
+        .slice(0, limit)
+        .map((scored) => scored.entry);
 }
 
 /** Find the single best library match for a query, or null. */

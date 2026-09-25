@@ -156,10 +156,10 @@ function recognizedConjunctIndex(
   timeColumn: string,
 ): number {
   return conjuncts.findIndex((conjunct) => {
-    if (recognizeRelativeWindow(conjunct, timeColumn) !== undefined) {
-      return true;
-    }
-    return recognizeCalendarWindow(conjunct, timeColumn, [])?.kind === "window";
+    return (
+      recognizeRelativeWindow(conjunct, timeColumn) !== undefined ||
+      recognizeCalendarWindow(conjunct, timeColumn, [])?.kind === "window"
+    );
   });
 }
 

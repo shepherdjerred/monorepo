@@ -158,8 +158,6 @@ brew "watch"
 brew "watchman"
 # Internet file retriever
 brew "wget"
-# Network analyzer and capture tool - without graphical user interface
-brew "wireshark"
 # Generate your Xcode project from a spec file and your folder structure
 brew "xcodegen"
 # Process YAML, JSON, XML, CSV and properties documents from the CLI
@@ -274,8 +272,6 @@ cask "tailscale-app"
 cask "utm"
 # Open-source code editor
 cask "visual-studio-code"
-# Network protocol analyzer
-cask "wireshark-app"
 # Multiplayer code editor
 cask "zed"
 vscode "catppuccin.catppuccin-vsc"

@@ -243,9 +243,9 @@ function DareDetailPage(props: { guildId: string; dareId: number }) {
       {
         refetchInterval: (query) => {
           const state = query.state.data?.state;
-          return state === undefined || isNonterminalDareState(state)
-            ? 30_000
-            : false;
+          return (
+            (state === undefined || isNonterminalDareState(state)) && 30_000
+          );
         },
       },
     ),

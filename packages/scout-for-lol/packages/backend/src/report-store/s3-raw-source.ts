@@ -43,10 +43,9 @@ export function classifyRawObjectKey(key: string): RawObjectKind {
   if (key.startsWith(MATCH_PREFIX) && key.endsWith("/timeline.json")) {
     return "timeline";
   }
-  if (key.startsWith(PREMATCH_PREFIX) && key.endsWith("/spectator-data.json")) {
-    return "prematch";
-  }
-  return "ignored";
+  return key.startsWith(PREMATCH_PREFIX) && key.endsWith("/spectator-data.json")
+    ? "prematch"
+    : "ignored";
 }
 
 // --- Deterministic key builders (must match storage/s3-helpers.ts +
@@ -276,13 +275,11 @@ const S3ErrorShapeSchema = z.object({
 
 function isNotFoundError(error: unknown): boolean {
   const parsed = S3ErrorShapeSchema.safeParse(error);
-  if (!parsed.success) {
-    return false;
-  }
   return (
-    parsed.data.name === "NotFound" ||
-    parsed.data.name === "NoSuchKey" ||
-    parsed.data.$metadata?.httpStatusCode === 404
+    parsed.success &&
+    (parsed.data.name === "NotFound" ||
+      parsed.data.name === "NoSuchKey" ||
+      parsed.data.$metadata?.httpStatusCode === 404)
   );
 }
 

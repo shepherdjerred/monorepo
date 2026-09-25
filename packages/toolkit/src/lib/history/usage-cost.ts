@@ -137,10 +137,9 @@ export function optionalUsageNumber(
   location: UsageFieldLocation,
 ): number {
   const value = usage[key];
-  if (value === undefined) {
-    return 0;
-  }
-  return validatedUsageNumber(source, value, key, location);
+  return value === undefined
+    ? 0
+    : validatedUsageNumber(source, value, key, location);
 }
 
 // Requires an absolute RFC 3339 instant (explicit "Z" or numeric offset),

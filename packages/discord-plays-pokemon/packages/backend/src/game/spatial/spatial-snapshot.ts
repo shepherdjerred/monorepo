@@ -146,8 +146,7 @@ function describeMovementMode(flags: number): string {
   if ((flags & PA_FLAG_UNDERWATER) !== 0) return "diving";
   if ((flags & PA_FLAG_MACH_BIKE) !== 0) return "mach bike";
   if ((flags & PA_FLAG_ACRO_BIKE) !== 0) return "acro bike";
-  if ((flags & PA_FLAG_DASH) !== 0) return "running";
-  return "on foot";
+  return (flags & PA_FLAG_DASH) === 0 ? "on foot" : "running";
 }
 
 // Distinctive graphics IDs for actionable objects (the AI cares about these).

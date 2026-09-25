@@ -1,0 +1,49 @@
+[
+  {
+    "provider": "claude-code",
+    "accountLabel": null,
+    "windows": [
+      {
+        "id": "five-hour",
+        "label": "5-hour",
+        "kind": { "rolling": { "durationSeconds": 18000 } },
+        "usedPercent": 42,
+        "resetAt": 800000000,
+        "sourceTimestamp": 799990000
+      },
+      {
+        "id": "weekly",
+        "label": "Weekly",
+        "kind": { "weekly": {} },
+        "usedPercent": 10.5,
+        "resetAt": 800500000,
+        "sourceTimestamp": 799990000
+      },
+      {
+        "id": "provider-example",
+        "label": "Provider quota",
+        "kind": { "providerDefined": {} },
+        "usedPercent": null,
+        "resetAt": null,
+        "sourceTimestamp": 799990000
+      }
+    ],
+    "resets": [],
+    "notes": [],
+    "sourceTimestamp": 799990000,
+    "freshness": { "current": {} }
+  },
+  {
+    "provider": "antigravity",
+    "windows": [
+      {
+        "id": "antigravity-gemini-5h",
+        "label": "Gemini 5h",
+        "kind": { "modelScoped": { "model": "Gemini" } },
+        "usedPercent": 100,
+        "sourceTimestamp": 799980000
+      }
+    ],
+    "sourceTimestamp": 799980000
+  }
+]

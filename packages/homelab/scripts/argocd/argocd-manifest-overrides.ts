@@ -237,10 +237,7 @@ export function completedOperationIdentity(
   const operation =
     ApplicationOperationSchema.parse(application).status?.operationState
       ?.operation;
-  if (operation === undefined) {
-    return null;
-  }
-  return canonicalJson(operation);
+  return operation === undefined ? null : canonicalJson(operation);
 }
 
 function operationInfoValue(

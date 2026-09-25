@@ -71,10 +71,7 @@ export function settlementHouseCut(input: {
   matchedProfit: BucksStake | BucksAmount;
   isHouse: boolean;
 }): BucksAmount {
-  if (input.isHouse) {
-    return ZERO_BUCKS;
-  }
-  return houseCutRoundedDown(input.matchedProfit);
+  return input.isHouse ? ZERO_BUCKS : houseCutRoundedDown(input.matchedProfit);
 }
 
 /** A voluntary cancellation returns the offer less the rounded fee. */

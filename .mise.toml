@@ -5,19 +5,19 @@
 
 [tools]
 # renovate: datasource=github-releases depName=oven-sh/bun
-bun = "1.4.0"
+bun = "1.4.2"
 # Temporal's real workflow-worker tests need Node runtime primitives that Bun
 # 1.4 does not implement. Keep the sole exception on the current LTS line.
-node = "24.19.0"
+node = "24.21.0"
 # renovate: datasource=github-releases depName=temporalio/cli
 # The short `temporal` registry alias still targets the archived
 # temporalio/temporal release layout, which has no Darwin arm64 artifact.
-"aqua:temporalio/cli" = "1.8.1"
-rust = "1.98.0"
+"aqua:temporalio/cli" = "1.9.1"
+rust = "1.98.1"
 # renovate: datasource=crate depName=cargo-packager
 "cargo:cargo-packager" = "0.11.8"
 # renovate: datasource=dotnet-sdk depName=dotnet-sdk
-dotnet = "10.0.302"
+dotnet = "10.0.303"
 # The C# UniFFI generator is built by tasknotes-core's xtask from its
 # source-controlled 0.32 retarget. It is not a global tool: the generated
 # bindings must match the core's exact UniFFI ABI.
@@ -26,7 +26,7 @@ dotnet = "10.0.302"
 # renovate: datasource=crate depName=cargo-mutants
 "cargo:cargo-mutants" = "27.1.0"
 # renovate: datasource=crate depName=cargo-llvm-cov
-"cargo:cargo-llvm-cov" = "0.9.0"
+"cargo:cargo-llvm-cov" = "0.9.1"
 # tasknotes-core's `deny` script (supply-chain + license + build-script bans).
 # No mise registry entry exists, so this names the backend explicitly; `github:`
 # fetches the release binary and verifies its artifact attestation and SLSA
@@ -41,7 +41,7 @@ shellcheck = "0.11"
 # renovate: datasource=github-releases depName=hadolint/hadolint
 hadolint = "2.15.1"
 # Native-family shims
-go = "1.27.0"
+go = "1.27.1"
 golangci-lint = "2"
 # Release automation (cooklang publish, release commit-backs) shells out to gh
 gh = "2"

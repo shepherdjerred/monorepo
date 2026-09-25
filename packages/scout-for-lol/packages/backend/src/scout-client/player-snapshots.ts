@@ -25,10 +25,9 @@ export function parseLocalMasterySnapshot(
   puuid: LeaguePuuid,
 ): readonly LocalMasteryRow[] | null {
   const parsed = LocalMasteryPayloadSchema.safeParse(payload);
-  if (!parsed.success || parsed.data.data.some((row) => row.puuid !== puuid)) {
-    return null;
-  }
-  return parsed.data.data;
+  return !parsed.success || parsed.data.data.some((row) => row.puuid !== puuid)
+    ? null
+    : parsed.data.data;
 }
 
 export async function readLocalMasterySnapshot(puuid: LeaguePuuid): Promise<{

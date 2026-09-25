@@ -121,10 +121,7 @@ function parseUtcDate(dateString: string): number {
 }
 
 function windowCoversDate(window: QueueWindow, date: string): boolean {
-  if (date < window.start) {
-    return false;
-  }
-  return window.end === null || date <= window.end;
+  return date >= window.start && (window.end === null || date <= window.end);
 }
 
 function appendNote(existing: string | undefined, addition: string): string {
@@ -133,23 +130,25 @@ function appendNote(existing: string | undefined, addition: string): string {
     : `${existing}; ${addition}`;
 }
 
+/** Structural equality of two windows (field-by-field). */
+function windowEquals(a: QueueWindow, b: QueueWindow): boolean {
+  return (
+    a.start === b.start &&
+    a.end === b.end &&
+    a.source === b.source &&
+    a.note === b.note
+  );
+}
+
 /** Structural equality of two window histories (field-by-field, in order). */
 function windowsEqual(a: QueueWindow[], b: QueueWindow[]): boolean {
-  if (a.length !== b.length) {
-    return false;
-  }
-  return a.every((window, index) => {
-    const other = b[index];
-    if (other === undefined) {
-      return false;
-    }
-    return (
-      window.start === other.start &&
-      window.end === other.end &&
-      window.source === other.source &&
-      window.note === other.note
-    );
-  });
+  return (
+    a.length === b.length &&
+    a.every((window, index) => {
+      const other = b[index];
+      return other !== undefined && windowEquals(window, other);
+    })
+  );
 }
 
 /** A processing unit: one limited queue, or the Doom Bots trio in lockstep. */
@@ -300,8 +299,8 @@ function tryOpenOrReopen(input: OpenInput): UnitChange | undefined {
   // closed window; counting them would make a just-closed window's own stale
   // volume satisfy the open thresholds and reopen it on the next daily run
   // (the reopen gap would even be negative — always within the limit).
-  const newObs = [...unitObs.entries()].filter(([date]) =>
-    priorEnd == null ? true : date > priorEnd,
+  const newObs = [...unitObs.entries()].filter(
+    ([date]) => priorEnd == null || date > priorEnd,
   );
   const observedDates = newObs
     .map(([date]) => date)

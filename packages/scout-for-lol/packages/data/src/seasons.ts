@@ -86,7 +86,7 @@ export const SEASONS: Record<SeasonId, SeasonData> = {
     id: "2026_SEASON_3_ACT_1",
     displayName: "Classic (Act 1)",
     startDate: new Date("2026-07-29T12:00:00-07:00"),
-    endDate: new Date("2026-09-22T23:59:59-07:00"),
+    endDate: new Date("2026-10-20T23:59:59-07:00"),
   },
 };
 
@@ -97,10 +97,7 @@ export const SEASONS: Record<SeasonId, SeasonData> = {
  */
 export function getSeasonById(seasonId: string): SeasonData | undefined {
   const result = SeasonIdSchema.safeParse(seasonId);
-  if (!result.success) {
-    return undefined;
-  }
-  return SEASONS[result.data];
+  return result.success ? SEASONS[result.data] : undefined;
 }
 
 /**
@@ -170,10 +167,7 @@ export function hasSeasonEnded(
   now: Date = new Date(),
 ): boolean | undefined {
   const season = getSeasonById(seasonId);
-  if (!season) {
-    return undefined;
-  }
-  return isAfter(now, season.endDate);
+  return season ? isAfter(now, season.endDate) : undefined;
 }
 
 /**
@@ -287,8 +281,5 @@ export function rankedSplitForTimestamp(at: Date): RankedSplitRef {
   const started = splits.find(
     (split) => split.startDate.getTime() <= at.getTime(),
   );
-  if (started !== undefined) {
-    return started;
-  }
-  return { id: EARLIER_RANKED_SPLIT_ID, displayName: "Earlier" };
+  return started ?? { id: EARLIER_RANKED_SPLIT_ID, displayName: "Earlier" };
 }

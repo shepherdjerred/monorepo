@@ -118,3 +118,142 @@ export function queryUsage(
   );
   return { total, bySource };
 }
+
+/**
+ * One usage event as the metrics export ledger sees it: the index row plus
+ * the owning document's source id, which is what keeps two sessions' identical
+ * events distinct. Never carries prompts, paths, or workspace names.
+ */
+export type ExportableUsageEvent = {
+  readonly source: HistorySourceName;
+  readonly sourceId: string;
+  readonly occurredAt: string;
+  readonly model: string;
+  readonly inputTokens: number;
+  readonly outputTokens: number;
+  readonly cacheReadTokens: number;
+  readonly cacheCreationTokens: number;
+  readonly cachedInputTokens: number;
+  readonly reasoningTokens: number;
+  readonly costUsd: number | null;
+  readonly costComplete: boolean;
+};
+
+/**
+ * A cheap per-document digest of its usage rows. Ingest rewrites every
+ * document of a changed source, so row ids churn; this aggregate only changes
+ * when the document's events do, which lets the export ledger skip hashing
+ * documents it has already seen.
+ */
+export type UsageDocumentFingerprint = {
+  readonly documentId: number;
+  readonly source: HistorySourceName;
+  readonly sourceId: string;
+  readonly fingerprint: string;
+};
+
+const FingerprintRowSchema = z.object({
+  document_id: z.number(),
+  source: z.string(),
+  source_id: z.string(),
+  events: z.number(),
+  input_tokens: z.number(),
+  output_tokens: z.number(),
+  cache_read_tokens: z.number(),
+  cache_creation_tokens: z.number(),
+  cached_input_tokens: z.number(),
+  reasoning_tokens: z.number(),
+  first_at: z.string(),
+  last_at: z.string(),
+  models: z.number(),
+});
+
+export function queryUsageFingerprints(
+  database: Database,
+): UsageDocumentFingerprint[] {
+  return database
+    .prepare(
+      `SELECT d.id AS document_id, d.source, d.source_id,
+              count(*) AS events,
+              sum(u.input_tokens) AS input_tokens,
+              sum(u.output_tokens) AS output_tokens,
+              sum(u.cache_read_tokens) AS cache_read_tokens,
+              sum(u.cache_creation_tokens) AS cache_creation_tokens,
+              sum(u.cached_input_tokens) AS cached_input_tokens,
+              sum(u.reasoning_tokens) AS reasoning_tokens,
+              min(u.occurred_at) AS first_at,
+              max(u.occurred_at) AS last_at,
+              count(DISTINCT u.model) AS models
+         FROM usage_events u
+         JOIN documents d ON d.id = u.document_id
+        GROUP BY d.id
+        ORDER BY d.id`,
+    )
+    .all()
+    .map((row: unknown) => FingerprintRowSchema.parse(row))
+    .map((row) => ({
+      documentId: row.document_id,
+      source: parseHistorySourceName(row.source, "in usage export"),
+      sourceId: row.source_id,
+      fingerprint: JSON.stringify([
+        row.events,
+        row.input_tokens,
+        row.output_tokens,
+        row.cache_read_tokens,
+        row.cache_creation_tokens,
+        row.cached_input_tokens,
+        row.reasoning_tokens,
+        row.first_at,
+        row.last_at,
+        row.models,
+      ]),
+    }));
+}
+
+const ExportEventRowSchema = z.object({
+  source: z.string(),
+  source_id: z.string(),
+  occurred_at: z.string(),
+  model: z.string(),
+  input_tokens: z.number(),
+  output_tokens: z.number(),
+  cache_read_tokens: z.number(),
+  cache_creation_tokens: z.number(),
+  cached_input_tokens: z.number(),
+  reasoning_tokens: z.number(),
+  cost_usd: z.number().nullable(),
+  cost_complete: z.number(),
+});
+
+export function queryUsageEventsForDocument(
+  database: Database,
+  documentId: number,
+): ExportableUsageEvent[] {
+  return database
+    .prepare(
+      `SELECT d.source, d.source_id, u.occurred_at, u.model,
+              u.input_tokens, u.output_tokens, u.cache_read_tokens,
+              u.cache_creation_tokens, u.cached_input_tokens,
+              u.reasoning_tokens, u.cost_usd, u.cost_complete
+         FROM usage_events u
+         JOIN documents d ON d.id = u.document_id
+        WHERE u.document_id = ?
+        ORDER BY u.rowid`,
+    )
+    .all(documentId)
+    .map((row: unknown) => ExportEventRowSchema.parse(row))
+    .map((row) => ({
+      source: parseHistorySourceName(row.source, "in usage export"),
+      sourceId: row.source_id,
+      occurredAt: row.occurred_at,
+      model: row.model,
+      inputTokens: row.input_tokens,
+      outputTokens: row.output_tokens,
+      cacheReadTokens: row.cache_read_tokens,
+      cacheCreationTokens: row.cache_creation_tokens,
+      cachedInputTokens: row.cached_input_tokens,
+      reasoningTokens: row.reasoning_tokens,
+      costUsd: row.cost_usd,
+      costComplete: row.cost_complete === 1,
+    }));
+}

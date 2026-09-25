@@ -461,6 +461,7 @@ export function tooltipText(
     return scatterTooltipText(snapshot, first, dataIndexValue);
   }
   const point = categoryPoints(snapshot)[dataIndexValue];
-  if (point === undefined) return "";
-  return pointTooltipText(snapshot, point, snapshot.series);
+  return point === undefined
+    ? ""
+    : pointTooltipText(snapshot, point, snapshot.series);
 }

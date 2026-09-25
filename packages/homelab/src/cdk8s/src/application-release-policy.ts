@@ -107,10 +107,9 @@ function applicationSyncWave(name: string): string {
   if (name === "kueue") {
     return APPLICATION_SYNC_WAVES.kueue;
   }
-  if (name === "buildkite") {
-    return APPLICATION_SYNC_WAVES.buildkite;
-  }
-  return APPLICATION_SYNC_WAVES.leaf;
+  return name === "buildkite"
+    ? APPLICATION_SYNC_WAVES.buildkite
+    : APPLICATION_SYNC_WAVES.leaf;
 }
 
 function rootResourceSyncWave(resource: ApiObject): string {
@@ -140,22 +139,18 @@ function rootResourceSyncWave(resource: ApiObject): string {
       return APPLICATION_SYNC_WAVES.clusterIssuer;
     }
     if (resource.kind === "Certificate") {
-      if (certificateIsCa(resource)) {
-        return APPLICATION_SYNC_WAVES.certificateAuthority;
-      }
-      return APPLICATION_SYNC_WAVES.certificate;
+      return certificateIsCa(resource)
+        ? APPLICATION_SYNC_WAVES.certificateAuthority
+        : APPLICATION_SYNC_WAVES.certificate;
     }
     return APPLICATION_SYNC_WAVES.certificateIssuer;
   }
-  if (
-    resource.apiGroup === "kueue.x-k8s.io" ||
+  return resource.apiGroup === "kueue.x-k8s.io" ||
     resource.apiGroup === "monitoring.coreos.com" ||
     resource.apiGroup === "networking.cfargotunnel.com" ||
     (resource.apiGroup === "tailscale.com" && resource.kind === "ProxyClass")
-  ) {
-    return APPLICATION_SYNC_WAVES.dependentConfiguration;
-  }
-  return APPLICATION_SYNC_WAVES.structural;
+    ? APPLICATION_SYNC_WAVES.dependentConfiguration
+    : APPLICATION_SYNC_WAVES.structural;
 }
 
 function applyResourceReleasePolicy(

@@ -20,6 +20,8 @@
     "scripts/argocd/argocd-auto-sync-policy.test.ts",
     "scripts/argocd/argocd-manifest-overrides.ts",
     "scripts/argocd/argocd-manifest-overrides.test.ts",
+    "scripts/argocd/argocd-child-sync-timeout.ts",
+    "scripts/argocd/argocd-child-sync-timeout.test.ts",
     "scripts/helm/helm-set-version.ts",
     "scripts/helm/helm-set-version.test.ts",
     "scripts/helm/helm-release-core.ts",

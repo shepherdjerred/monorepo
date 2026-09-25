@@ -343,10 +343,9 @@ for (const [frameIndex, luma] of lumaFrames.entries()) {
     lumaAt: (sourceX, sourceY) => {
       const x = Math.floor((sourceX * outputSize.width) / WIDTH);
       const y = Math.floor((sourceY * outputSize.height) / HEIGHT);
-      if (x < 0 || y < 0 || x >= outputSize.width || y >= outputSize.height) {
-        return 0;
-      }
-      return luma[y * outputSize.width + x] ?? 0;
+      return x < 0 || y < 0 || x >= outputSize.width || y >= outputSize.height
+        ? 0
+        : (luma[y * outputSize.width + x] ?? 0);
     },
   };
   const clock = decodeHudClock(sampler);

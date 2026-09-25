@@ -103,10 +103,7 @@ export function decodeLeaderboardButtonId(
     return null;
   }
   const page = Number(rawPage);
-  if (!Number.isInteger(page) || page < 0) {
-    return null;
-  }
-  return { kind, period, page };
+  return !Number.isInteger(page) || page < 0 ? null : { kind, period, page };
 }
 
 const MODAL_PREFIX = "karma-give";
@@ -134,8 +131,7 @@ export function decodeModalId(
   if (messageId === undefined || messageId === "") {
     return null;
   }
-  if (authorId === undefined || authorId === "") {
-    return null;
-  }
-  return { messageId, authorId };
+  return authorId === undefined || authorId === ""
+    ? null
+    : { messageId, authorId };
 }

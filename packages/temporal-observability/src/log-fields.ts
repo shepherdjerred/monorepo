@@ -37,10 +37,11 @@ export function isSensitiveTemporalLogField(field: string): boolean {
 export function sanitizeTemporalLogFields(
   fields: Readonly<Record<string, unknown>> | undefined,
 ): Record<string, unknown> {
-  if (fields === undefined) return {};
-  return Object.fromEntries(
-    Object.entries(fields).filter(
-      ([field]) => !isSensitiveTemporalLogField(field),
-    ),
-  );
+  return fields === undefined
+    ? {}
+    : Object.fromEntries(
+        Object.entries(fields).filter(
+          ([field]) => !isSensitiveTemporalLogField(field),
+        ),
+      );
 }

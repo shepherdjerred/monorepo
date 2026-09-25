@@ -18,6 +18,18 @@
     "reason": "Bugsink PostgreSQL database"
   },
   {
+    "namespace": "woodpecker",
+    "name": "pgdata-woodpecker-postgresql-0",
+    "backup": "enabled",
+    "reason": "Woodpecker CI database - pipeline history and the last-green-main record the release lanes read back"
+  },
+  {
+    "namespace": "phoenix",
+    "name": "pgdata-phoenix-postgresql-0",
+    "backup": "enabled",
+    "reason": "Phoenix users, API keys, datasets, annotations, and sampled LLM traces"
+  },
+  {
     "namespace": "buildkitd",
     "name": "buildkitd-cache-liskov",
     "backup": "disabled",

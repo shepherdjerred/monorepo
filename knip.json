@@ -231,6 +231,10 @@
       "entry": ["src/**/*.astro"],
       "project": ["src/**/*.{ts,tsx,astro,css}", "*.ts"]
     },
+    "packages/macos-cross-site": {
+      "entry": ["src/**/*.astro"],
+      "project": ["src/**/*.{ts,tsx,astro,css}", "*.ts"]
+    },
     "packages/monarch": {
       "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"]
@@ -261,8 +265,8 @@
       "project": ["src/**/*.ts"]
     },
     "packages/toolkit": {
-      "entry": ["src/**/*.ts"],
-      "project": ["src/**/*.ts"]
+      "entry": ["src/**/*.ts", "src/**/*.tsx"],
+      "project": ["src/**/*.ts", "src/**/*.tsx"]
     },
     "packages/tasknotes-macos": {
       "entry": ["scripts/*.ts"],

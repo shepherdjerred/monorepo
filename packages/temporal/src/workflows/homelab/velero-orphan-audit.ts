@@ -27,6 +27,8 @@ export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
     totalSnapshotCount: result.totalSnapshotCount,
     totalOrphanCount: result.totalOrphanCount,
     totalOrphanBytes: result.totalOrphanBytes,
+    orphanBackupCrCount: result.orphanBackupCrCount,
+    blockedBackupCrCount: result.blockedBackupCrCount,
     orphanDatasetCount: result.datasets.filter(
       (dataset) => dataset.orphanCount > 0,
     ).length,
@@ -38,6 +40,14 @@ export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
       `Velero orphan audit: ${String(result.totalOrphanCount)} orphan snapshots ` +
         `(${String(Math.round(result.totalOrphanBytes / 1024 / 1024))} MiB) across ` +
         `${String(result.datasets.filter((d) => d.orphanCount > 0).length)} datasets. ` +
+        `Run remediation runbook: packages/temporal/runbooks/velero-orphan-snapshot-remediation.md`,
+    );
+  }
+
+  if (result.orphanBackupCrCount > 0) {
+    log.warn(
+      `Velero orphan audit: ${String(result.orphanBackupCrCount)} orphan ZFSBackup CRs ` +
+        `(oldest ${String(Math.round(result.orphanBackupCrOldestAgeSeconds / 3600))}h). ` +
         `Run remediation runbook: packages/temporal/runbooks/velero-orphan-snapshot-remediation.md`,
     );
   }

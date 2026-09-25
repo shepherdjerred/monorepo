@@ -41,8 +41,9 @@ const ScoutThemeContext = createContext<ScoutThemeContextValue | null>(null);
 export function systemColorSchemeMediaQuery(
   matchMedia: typeof globalThis.matchMedia | undefined,
 ): MediaQueryList | null {
-  if (typeof matchMedia !== "function") return null;
-  return matchMedia("(prefers-color-scheme: dark)");
+  return typeof matchMedia === "function"
+    ? matchMedia("(prefers-color-scheme: dark)")
+    : null;
 }
 
 function systemPrefersDark(): boolean {

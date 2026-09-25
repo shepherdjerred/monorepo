@@ -615,10 +615,9 @@ test("selects affected image targets from the merge base", async () => {
   const commands: string[][] = [];
   const executor: CommandExecutor = async (command) => {
     commands.push([...command]);
-    if (command.includes("merge-base")) {
-      return commandResult(0, "base-commit\n");
-    }
-    return commandResult(0, '["birmel"]\n');
+    return command.includes("merge-base")
+      ? commandResult(0, "base-commit\n")
+      : commandResult(0, '["birmel"]\n');
   };
 
   expect(

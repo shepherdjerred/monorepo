@@ -17,10 +17,9 @@ const themes = [
 ] as const;
 
 const themeTokens = (theme: (typeof themes)[number]) => {
-  if (theme.skin === "modern") {
-    return scoutThemes["modern-dark"];
-  }
-  return scoutThemes["classic-light"];
+  return theme.skin === "modern"
+    ? scoutThemes["modern-dark"]
+    : scoutThemes["classic-light"];
 };
 
 for (const story of stories) {

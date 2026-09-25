@@ -9,8 +9,10 @@ export type DiscordOpusContainer = {
 };
 
 function matchesMagic(bytes: Uint8Array): boolean {
-  if (bytes.byteLength < MAGIC.byteLength) return false;
-  return MAGIC.every((value, index) => bytes[index] === value);
+  return (
+    bytes.byteLength >= MAGIC.byteLength &&
+    MAGIC.every((value, index) => bytes[index] === value)
+  );
 }
 
 export function encodeDiscordOpusContainer(

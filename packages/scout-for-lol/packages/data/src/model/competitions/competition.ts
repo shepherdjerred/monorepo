@@ -278,14 +278,14 @@ export function criteriaMatchesGameVariant(
   criteria: CompetitionCriteria,
   gameVariant: CompetitionGameVariant,
 ): boolean {
-  if (
-    gameVariant === "CLASSIC" &&
-    (criteria.type === "HIGHEST_RANK" || criteria.type === "MOST_RANK_CLIMB")
-  ) {
-    return false;
-  }
-  return criteria.queues.every(
-    (queue) => queue === "ALL" || queueMatchesGameVariant(queue, gameVariant),
+  return (
+    !(
+      gameVariant === "CLASSIC" &&
+      (criteria.type === "HIGHEST_RANK" || criteria.type === "MOST_RANK_CLIMB")
+    ) &&
+    criteria.queues.every(
+      (queue) => queue === "ALL" || queueMatchesGameVariant(queue, gameVariant),
+    )
   );
 }
 

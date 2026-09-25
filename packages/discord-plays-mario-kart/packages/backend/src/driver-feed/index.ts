@@ -271,8 +271,7 @@ function rawDataText(data: RawData): string | undefined {
   if (data instanceof ArrayBuffer) {
     return Buffer.from(data).toString("utf8");
   }
-  if (Array.isArray(data)) return Buffer.concat(data).toString("utf8");
-  return undefined;
+  return Array.isArray(data) ? Buffer.concat(data).toString("utf8") : undefined;
 }
 
 /** Browser clients must originate from the host serving the controller page. */

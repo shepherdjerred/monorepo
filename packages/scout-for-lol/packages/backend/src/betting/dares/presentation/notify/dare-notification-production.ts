@@ -18,8 +18,7 @@ type ProgressNotificationKind =
 
 function terminalKind(resolution: TerminalResolution) {
   if (resolution === "achieved") return "achieved" as const;
-  if (resolution === "voided") return "voided" as const;
-  return "failed" as const;
+  return resolution === "voided" ? ("voided" as const) : ("failed" as const);
 }
 
 function terminalSummary(
@@ -29,10 +28,9 @@ function terminalSummary(
   if (resolution === "achieved") {
     return `Dare achieved; the ${potTotal.toString()} Bryan Bucks pot was paid out.`;
   }
-  if (resolution === "voided") {
-    return `Dare voided because required evidence was incomplete; the ${potTotal.toString()} Bryan Bucks pot was refunded.`;
-  }
-  return "The Dare ended without being achieved.";
+  return resolution === "voided"
+    ? `Dare voided because required evidence was incomplete; the ${potTotal.toString()} Bryan Bucks pot was refunded.`
+    : "The Dare ended without being achieved.";
 }
 
 export async function enqueueTerminalDareNotification(
@@ -134,8 +132,7 @@ function specializedProgressKind(
     .map((gameSet) => gameSet.name)
     .join(" ");
   if (names.includes("streak")) return "streak_changed";
-  if (names.includes("sequence")) return "sequence_changed";
-  return null;
+  return names.includes("sequence") ? "sequence_changed" : null;
 }
 
 export async function enqueueMaterialDareProgressNotificationV3(

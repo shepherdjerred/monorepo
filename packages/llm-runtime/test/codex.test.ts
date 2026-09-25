@@ -22,6 +22,17 @@ describe("OpenRouter Codex SDK configuration", () => {
         baseUrl: OPENROUTER_API_BASE_URL,
         env: { PATH: "/usr/bin" },
       },
+      providerConfig: {
+        model_provider: "openrouter",
+        model_providers: {
+          openrouter: {
+            name: "OpenRouter",
+            base_url: OPENROUTER_API_BASE_URL,
+            wire_api: "responses",
+            env_key: "CODEX_API_KEY",
+          },
+        },
+      },
     });
   });
 

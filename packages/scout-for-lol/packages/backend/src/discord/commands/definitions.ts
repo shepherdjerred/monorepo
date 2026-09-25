@@ -91,8 +91,9 @@ async function scoutGuildCommandPayload(
   guildId: string,
 ): Promise<RESTPostAPIApplicationCommandsJSONBody[]> {
   const features = await scoutGuildFeatures(guildId);
-  if (!features.ask && !features.voice) return [];
-  return [buildScoutGuildCommand(features).toJSON()];
+  return !features.ask && !features.voice
+    ? []
+    : [buildScoutGuildCommand(features).toJSON()];
 }
 
 export const guildScopedCommandGroups: GuildScopedCommandGroup[] = [

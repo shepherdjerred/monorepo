@@ -93,10 +93,9 @@ async function runRaw(
     .nothrow()
     .quiet()
     .env(pinchtabEnv(sessionToken));
-  if (result.exitCode !== 0) {
-    return wrapError(result.exitCode, result.stderr.toString());
-  }
-  return { success: true, data: result.stdout.toString().trim() };
+  return result.exitCode === 0
+    ? { success: true, data: result.stdout.toString().trim() }
+    : wrapError(result.exitCode, result.stderr.toString());
 }
 
 const SessionSchema = z.object({

@@ -84,10 +84,7 @@ function hasEnv(names: readonly string[]): boolean {
 
 function truncateToolOutput(value: string): string {
   const trimmed = value.trim();
-  if (trimmed.length <= 500) {
-    return trimmed;
-  }
-  return `${trimmed.slice(0, 500)}...`;
+  return trimmed.length <= 500 ? trimmed : `${trimmed.slice(0, 500)}...`;
 }
 
 async function runCommandCheck(

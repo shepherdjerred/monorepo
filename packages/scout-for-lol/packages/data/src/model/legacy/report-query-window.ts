@@ -62,13 +62,12 @@ export function reportQueryWindowDays(
   window: ReportQueryWindow,
 ): number | null {
   if (window.kind === "relative") return window.days;
-  if (window.kind === "all_time") return null;
-  return (
-    differenceInCalendarDays(
-      parseISO(window.endDate),
-      parseISO(window.startDate),
-    ) + 1
-  );
+  return window.kind === "all_time"
+    ? null
+    : differenceInCalendarDays(
+        parseISO(window.endDate),
+        parseISO(window.startDate),
+      ) + 1;
 }
 
 const DURING_PATTERN =

@@ -17,9 +17,11 @@ const CARD_WIDTH = 320;
 const CARD_HEIGHT = 560;
 
 function formatMasteryPoints(points: number): string {
-  if (points >= 1_000_000) return `${(points / 1_000_000).toFixed(1)}M`;
-  if (points >= 1000) return `${Math.round(points / 1000).toString()}K`;
-  return points.toString();
+  return points >= 1_000_000
+    ? `${(points / 1_000_000).toFixed(1)}M`
+    : points >= 1000
+      ? `${Math.round(points / 1000).toString()}K`
+      : points.toString();
 }
 
 function ClassicSpell({ spellId }: { spellId: number }) {

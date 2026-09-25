@@ -347,7 +347,54 @@ and on(schedule) (max(velero_backup_success_total{schedule!="",schedule=~"${sche
       ],
     },
     getVeleroOrphanSnapshotRuleGroup(),
+    getVeleroOrphanBackupCrRuleGroup(),
   ];
+}
+
+// Detection layer for orphan ZFSBackup CRs (parent Velero Backup gone, CR
+// left behind), populated by the same velero-orphan-audit daily run. Only the
+// CRs older than the 24h fence count, so normal TTL-expiry reaping (minutes)
+// never trips these. Audit freshness is already covered by
+// VeleroOrphanAuditNotRunning in the snapshot group.
+function getVeleroOrphanBackupCrRuleGroup(): PrometheusRuleSpecGroups {
+  return {
+    name: "velero-orphan-backup-crs",
+    rules: [
+      {
+        alert: "VeleroOrphanBackupCRs",
+        annotations: {
+          summary: "Velero orphan ZFSBackup CRs detected",
+          message: escapePrometheusTemplate(
+            "Velero orphan ZFSBackup CRs present: {{ $value }} CR(s) cluster-wide have no matching live Velero Backup CR and are older than 24h. Unpruned CRs bloat etcd; run the CR-prune section of packages/temporal/runbooks/velero-orphan-snapshot-remediation.md.",
+          ),
+        },
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          "velero_orphan_backup_crs_total > 0",
+        ),
+        for: "24h",
+        labels: {
+          severity: "warning",
+        },
+      },
+      {
+        alert: "VeleroOrphanBackupCRsExcessive",
+        annotations: {
+          summary: "Velero orphan ZFSBackup CRs accumulating",
+          message: escapePrometheusTemplate(
+            "Velero orphan ZFSBackup CRs at {{ $value }} cluster-wide (more than ~2 full backup sets of ~48 volumes). A completed prune should return this to 0; investigate why TTL expiry stopped reaping CRs.",
+          ),
+        },
+        // ~2 full backup sets; the 2026-09 incident reached 1,797.
+        expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
+          "velero_orphan_backup_crs_total > 100",
+        ),
+        for: "24h",
+        labels: {
+          severity: "warning",
+        },
+      },
+    ],
+  };
 }
 
 // Detection layer for the Velero orphan-snapshot pathology, populated by the

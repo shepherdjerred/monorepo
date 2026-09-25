@@ -12,6 +12,13 @@
   },
   "buckets": [
     {
+      "name": "apple-sdks",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Apple SDK tarballs; re-staging needs a Mac with that Xcode"
+    },
+    {
       "name": "better-skill-capped",
       "mode": "excluded",
       "cadences": [],
@@ -76,6 +83,13 @@
     },
     {
       "name": "cook",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
+      "name": "macos-cross",
       "mode": "excluded",
       "cadences": [],
       "excludeSuffixes": [],

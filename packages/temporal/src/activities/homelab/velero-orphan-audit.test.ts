@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { parseZfsInventory, selectZfsNodePods } from "./velero-orphan-audit.ts";
+import {
+  parseZfsInventory,
+  selectOrphanZfsBackupCrs,
+  selectZfsNodePods,
+} from "./velero-orphan-audit.ts";
 
 describe("selectZfsNodePods", () => {
   it("returns one Running and Ready pod per node in stable order", () => {
@@ -142,5 +146,94 @@ describe("parseZfsInventory", () => {
         [],
       ),
     ).toThrow("has no dataset row");
+  });
+});
+
+describe("selectOrphanZfsBackupCrs", () => {
+  const NOW = Date.parse("2026-09-24T20:00:00Z");
+
+  it("reports only old CRs whose backup is gone, in stable order", () => {
+    expect(
+      selectOrphanZfsBackupCrs(
+        [
+          {
+            name: "pvc-b.backup-removed",
+            creationTimestamp: "2026-09-20T20:00:00Z",
+          },
+          {
+            name: "pvc-a.backup-live",
+            creationTimestamp: "2026-09-24T19:00:00Z",
+          },
+          {
+            name: "pvc-a.backup-removed",
+            creationTimestamp: "2026-09-23T19:00:00Z",
+          },
+        ],
+        ["backup-live"],
+        NOW,
+      ),
+    ).toEqual({
+      orphan: [
+        { name: "pvc-a.backup-removed", ageSeconds: 25 * 3600 },
+        { name: "pvc-b.backup-removed", ageSeconds: 4 * 24 * 3600 },
+      ],
+      blocked: [],
+      liveAttached: 1,
+    });
+  });
+
+  it("fails closed on young, unparseable, and timestamp-less CRs", () => {
+    expect(
+      selectOrphanZfsBackupCrs(
+        [
+          // Young orphan: inside the 24h fence.
+          {
+            name: "pvc-a.backup-removed",
+            creationTimestamp: "2026-09-24T19:00:00Z",
+          },
+          // Exactly at the fence: still blocked.
+          {
+            name: "pvc-b.backup-removed",
+            creationTimestamp: "2026-09-23T20:00:00Z",
+          },
+          {
+            name: "no-dot-separator",
+            creationTimestamp: "2026-06-01T00:00:00Z",
+          },
+          { name: "too.many.dots", creationTimestamp: "2026-06-01T00:00:00Z" },
+          {
+            name: ".backup-removed",
+            creationTimestamp: "2026-06-01T00:00:00Z",
+          },
+          { name: "pvc-c.backup-removed", creationTimestamp: undefined },
+          {
+            name: "pvc-d.backup-removed",
+            creationTimestamp: "not-a-timestamp",
+          },
+        ],
+        ["backup-live"],
+        NOW,
+      ),
+    ).toEqual({
+      orphan: [],
+      blocked: [
+        ".backup-removed",
+        "no-dot-separator",
+        "pvc-a.backup-removed",
+        "pvc-b.backup-removed",
+        "pvc-c.backup-removed",
+        "pvc-d.backup-removed",
+        "too.many.dots",
+      ],
+      liveAttached: 0,
+    });
+  });
+
+  it("handles an empty cluster", () => {
+    expect(selectOrphanZfsBackupCrs([], [], NOW)).toEqual({
+      orphan: [],
+      blocked: [],
+      liveAttached: 0,
+    });
   });
 });

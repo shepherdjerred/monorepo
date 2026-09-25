@@ -85,8 +85,9 @@ async function readArchivedMatch(
     riotMatchId,
     "match",
   );
-  if (descriptor === null) return null;
-  return await readArchivedMatchPayload(descriptor, riotMatchId);
+  return descriptor === null
+    ? null
+    : await readArchivedMatchPayload(descriptor, riotMatchId);
 }
 
 /**
@@ -142,6 +143,7 @@ export async function resolveReplayProvenance(
   device: AuthenticatedScoutClient,
 ): Promise<ReplayProvenance | null> {
   const observed = await observedProvenance(claim, device);
-  if (observed !== null) return observed;
-  return await archivedProvenance(claim, await ownerAccounts(device));
+  return (
+    observed ?? (await archivedProvenance(claim, await ownerAccounts(device)))
+  );
 }

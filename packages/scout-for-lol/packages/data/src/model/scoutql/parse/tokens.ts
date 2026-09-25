@@ -251,16 +251,13 @@ export function tokenizeScoutQl(text: string): ScoutQlLexResult {
  */
 export function tokenSpan(token: IToken): ScoutQlSpan | null {
   const { startOffset, endOffset } = token;
-  if (
-    endOffset === undefined ||
+  return endOffset === undefined ||
     startOffset < 0 ||
     endOffset < startOffset ||
     !Number.isFinite(startOffset) ||
     !Number.isFinite(endOffset)
-  ) {
-    return null;
-  }
-  return { start: startOffset, end: endOffset + 1 };
+    ? null
+    : { start: startOffset, end: endOffset + 1 };
 }
 
 /**

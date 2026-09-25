@@ -33,12 +33,13 @@ export type MatchBettingOutcome =
  * against. A duration floor only misreads those as remakes.
  */
 export function isRemakeMatch(matchData: RawMatch): boolean {
-  if (matchData.info.endOfGameResult !== "GameComplete") {
-    return true;
-  }
-  return matchData.info.participants.some(
-    (participant) =>
-      participant.gameEndedInEarlySurrender || participant.teamEarlySurrendered,
+  return (
+    matchData.info.endOfGameResult !== "GameComplete" ||
+    matchData.info.participants.some(
+      (participant) =>
+        participant.gameEndedInEarlySurrender ||
+        participant.teamEarlySurrendered,
+    )
   );
 }
 
@@ -61,10 +62,9 @@ function findWinningTeamId(matchData: RawMatch): number | undefined {
     return undefined;
   }
   const winningTeamId = winners[0]?.teamId;
-  if (winningTeamId !== BLUE_TEAM_ID && winningTeamId !== RED_TEAM_ID) {
-    return undefined;
-  }
-  return winningTeamId;
+  return winningTeamId !== BLUE_TEAM_ID && winningTeamId !== RED_TEAM_ID
+    ? undefined
+    : winningTeamId;
 }
 
 export function classifyMatchForBetting(
@@ -85,9 +85,7 @@ export function classifyMatchForBetting(
   // Shape before remake: a payload we cannot even read a winner from is not
   // "a remake", and labelling it one would put a misleading reason in the
   // ledger.
-  if (isRemakeMatch(matchData)) {
-    return { kind: "void", reason: "remake" };
-  }
-
-  return { kind: "decided", winningTeamId };
+  return isRemakeMatch(matchData)
+    ? { kind: "void", reason: "remake" }
+    : { kind: "decided", winningTeamId };
 }

@@ -34,10 +34,11 @@ const DOWNLOAD_TIMEOUT_MS = 10_000; // 10 seconds
 export function isImageAttachment(
   attachment: Pick<Attachment, "contentType">,
 ): boolean {
-  if (attachment.contentType == null || attachment.contentType.length === 0) {
-    return false;
-  }
-  return SUPPORTED_IMAGE_TYPES.has(attachment.contentType.toLowerCase());
+  return (
+    attachment.contentType != null &&
+    attachment.contentType.length > 0 &&
+    SUPPORTED_IMAGE_TYPES.has(attachment.contentType.toLowerCase())
+  );
 }
 
 /**
@@ -109,10 +110,7 @@ function sniffImageContentType(buffer: Buffer): string | undefined {
   if (isGif(buffer)) {
     return "image/gif";
   }
-  if (isWebp(buffer)) {
-    return "image/webp";
-  }
-  return undefined;
+  return isWebp(buffer) ? "image/webp" : undefined;
 }
 
 function validateImageSize(size: number): void {
@@ -170,10 +168,7 @@ async function readBoundedStream(
 }
 
 function getAbortMessage(reason: unknown): string {
-  if (reason instanceof Error) {
-    return reason.message;
-  }
-  return "Operation aborted";
+  return reason instanceof Error ? reason.message : "Operation aborted";
 }
 
 const MAX_REDIRECTS = 5;

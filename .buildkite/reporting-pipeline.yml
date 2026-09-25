@@ -18,6 +18,7 @@ steps:
     key: playwright-reporting
     timeout_in_minutes: 30
     command: |
+      MISE_TOOLCHAIN_SCOPE=postgres . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile --filter sjer.red --filter '@shepherdjerred/docs-wiki' --filter '@shepherdjerred/monorepo' --filter '@shepherdjerred/root-scripts'
       export CI_REPORTING_BUILD_ID="$$BUILDKITE_BUILD_ID"
       bun x --no-install turbo run build lint test test:e2e --filter=sjer.red --filter='@shepherdjerred/docs-wiki' --concurrency=2
@@ -34,7 +35,7 @@ steps:
     artifact_paths:
       - ".ci-reports/**/*"
     plugins:
-      - test-collector#v1.11.0:
+      - test-collector#v1.12.0:
           files: ".ci-reports/junit/**/*.xml"
           format: junit
           missing-error: 1
@@ -62,6 +63,11 @@ steps:
                 securityContext:
                   allowPrivilegeEscalation: false
                 env:
+                  - name: GITHUB_DOWNLOAD_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        name: buildkite-github-credentials
+                        key: GITHUB_DOWNLOAD_TOKEN
                   - name: BUILDKITE_ANALYTICS_TOKEN
                     valueFrom:
                       secretKeyRef:
@@ -98,6 +104,7 @@ steps:
     soft_fail:
       - exit_status: 1
     command: |
+      MISE_TOOLCHAIN_SCOPE=postgres . .buildkite/scripts/toolchain.sh
       bun install --frozen-lockfile
       bun x --no-install turbo run build --filter='@scout-for-lol/app' --filter='@scout-for-lol/frontend' --filter='@scout-for-lol/docs-site' --filter='@scout-for-lol/design-audit' --filter='@scout-for-lol/design-system' --concurrency=2
       bun --no-install run --cwd packages/scout-for-lol/packages/design-audit check:tokens
@@ -119,7 +126,7 @@ steps:
     artifact_paths:
       - ".ci-reports/**/*"
     plugins:
-      - test-collector#v1.11.0:
+      - test-collector#v1.12.0:
           files: ".ci-reports/junit/scout-for-lol__design-audit/*.xml"
           format: junit
           missing-error: 1
@@ -147,6 +154,11 @@ steps:
                 securityContext:
                   allowPrivilegeEscalation: false
                 env:
+                  - name: GITHUB_DOWNLOAD_TOKEN
+                    valueFrom:
+                      secretKeyRef:
+                        name: buildkite-github-credentials
+                        key: GITHUB_DOWNLOAD_TOKEN
                   - name: BUILDKITE_ANALYTICS_TOKEN
                     valueFrom:
                       secretKeyRef:
@@ -199,7 +211,7 @@ steps:
     artifact_paths:
       - ".ci-reports/**/*"
     plugins:
-      - test-collector#v1.11.0:
+      - test-collector#v1.12.0:
           files: ".ci-reports/junit/**/*.xml"
           format: junit
           missing-error: 1

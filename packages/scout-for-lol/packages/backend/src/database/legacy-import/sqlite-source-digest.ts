@@ -6,8 +6,7 @@ function quoteIdentifier(identifier: string): string {
 
 function sqliteDigestValue(value: unknown): unknown {
   if (typeof value === "bigint") return value.toString();
-  if (value instanceof Uint8Array) return [...value];
-  return value;
+  return value instanceof Uint8Array ? [...value] : value;
 }
 
 function sqliteDigestRow(row: unknown): string {

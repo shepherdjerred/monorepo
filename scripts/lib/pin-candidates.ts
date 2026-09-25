@@ -3,11 +3,8 @@ import { format } from "prettier";
 import {
   parseVersionCatalogText,
   serializeVersionCatalog,
-  SCOUT_POSTGRES_IMAGE_NOTE,
   type VersionCatalog,
 } from "@shepherdjerred/version-catalog";
-
-const SCOUT_BETA_IMAGE_KEY = "shepherdjerred/scout-for-lol/beta";
 
 const DigestSchema = z
   .string()
@@ -227,16 +224,6 @@ export async function rewriteVersionCatalogSource(
         : {
             ...entry,
             value: `${pin.version}@${pin.digest}`,
-            ...(entry.name === SCOUT_BETA_IMAGE_KEY
-              ? {
-                  notes: [
-                    ...(entry.notes ?? []).filter(
-                      (note) => note !== SCOUT_POSTGRES_IMAGE_NOTE,
-                    ),
-                    `${SCOUT_POSTGRES_IMAGE_NOTE} ${pin.digest}`,
-                  ],
-                }
-              : {}),
           };
     }),
   };

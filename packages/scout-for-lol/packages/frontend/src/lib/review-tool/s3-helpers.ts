@@ -18,10 +18,7 @@ export function getOutcome(
   if (participant.win) {
     return "Victory";
   }
-  if (participant.gameEndedInSurrender) {
-    return "Surrender";
-  }
-  return "Defeat";
+  return participant.gameEndedInSurrender ? "Surrender" : "Defeat";
 }
 
 /**

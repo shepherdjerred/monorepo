@@ -73,10 +73,7 @@ export function nomineeLabel(
 }
 
 function truncate(text: string, max: number): string {
-  if (text.length <= max) {
-    return text;
-  }
-  return `${text.slice(0, max - 1)}…`;
+  return text.length <= max ? text : `${text.slice(0, max - 1)}…`;
 }
 
 type NomineeBucket = {
@@ -161,10 +158,7 @@ export function formatMvpTallyDescription(
     ...(blue.length > 0 && red.length > 0 ? [""] : []),
     ...red,
   ];
-  if (sections.length === 0) {
-    return MVP_TALLY_EMPTY;
-  }
-  return fitTallyLines(sections);
+  return sections.length === 0 ? MVP_TALLY_EMPTY : fitTallyLines(sections);
 }
 
 function isReasonLine(line: string): boolean {
@@ -183,13 +177,10 @@ function fitTallyLines(sections: readonly string[]): string {
   const compact = sections.filter((line) => !isReasonLine(line));
   const compactText = joinLines(compact);
   if (compactText.length <= TALLY_DESCRIPTION_BUDGET) {
-    if (
-      compact.length === sections.length ||
+    return compact.length === sections.length ||
       compactText.length + 2 > TALLY_DESCRIPTION_BUDGET
-    ) {
-      return compactText;
-    }
-    return `${compactText}\n…`;
+      ? compactText
+      : `${compactText}\n…`;
   }
   const kept: string[] = [];
   let used = 0;
@@ -218,8 +209,7 @@ export function mvpTallyEmbed(input: {
       input.aliases,
     ),
   });
-  if (input.footerText !== undefined && input.footerText.length > 0) {
-    return embed.setFooter({ text: input.footerText });
-  }
-  return embed;
+  return input.footerText !== undefined && input.footerText.length > 0
+    ? embed.setFooter({ text: input.footerText })
+    : embed;
 }

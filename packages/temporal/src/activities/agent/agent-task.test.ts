@@ -282,9 +282,9 @@ describe("agent task runtime support", () => {
 
     const caught = await captureRunFailure(activities);
     expect(caught).toBeInstanceOf(ApplicationFailure);
-    expect(
-      caught instanceof ApplicationFailure ? caught.nonRetryable : false,
-    ).toBe(true);
+    expect(caught instanceof ApplicationFailure && caught.nonRetryable).toBe(
+      true,
+    );
     expect(caught instanceof Error ? caught.message : "").toContain(
       "hit max turns",
     );
@@ -297,9 +297,9 @@ describe("agent task runtime support", () => {
 
     const caught = await captureRunFailure(activities);
     expect(caught).toBeInstanceOf(ApplicationFailure);
-    expect(
-      caught instanceof ApplicationFailure ? caught.nonRetryable : false,
-    ).toBe(true);
+    expect(caught instanceof ApplicationFailure && caught.nonRetryable).toBe(
+      true,
+    );
     expect(caught instanceof ApplicationFailure ? caught.type : undefined).toBe(
       "AgentSdkOutputContractFailure",
     );

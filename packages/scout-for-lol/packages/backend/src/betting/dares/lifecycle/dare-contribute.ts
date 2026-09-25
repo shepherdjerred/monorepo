@@ -130,13 +130,10 @@ export async function contributeToDare(
           select: { dareState: true, potTotal: true },
         });
         const freshState = BucksDareStateSchema.parse(fresh.dareState);
-        if (
-          OPEN_BUCKS_DARE_STATES.includes(freshState) &&
+        return OPEN_BUCKS_DARE_STATES.includes(freshState) &&
           fresh.potTotal + amount > BUCKS_INT32_MAX
-        ) {
-          return { kind: "pot_full", potTotal: fresh.potTotal } as const;
-        }
-        return { kind: "too_late", dareState: freshState } as const;
+          ? ({ kind: "pot_full", potTotal: fresh.potTotal } as const)
+          : ({ kind: "too_late", dareState: freshState } as const);
       }
       const balance = await stakeDareContributionInTransaction(tx, {
         facts: {

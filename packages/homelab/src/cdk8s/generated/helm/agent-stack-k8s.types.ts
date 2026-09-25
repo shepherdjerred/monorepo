@@ -21,6 +21,10 @@ export type Agentstackk8sHelmValuesConfig = {
    */
   "enable-completion-watcher"?: boolean;
   /**
+   * @default true
+   */
+  "enable-job-acquisition-tokens"?: boolean;
+  /**
    * @default "15m"
    */
   "pod-pending-timeout"?: string;
@@ -150,6 +154,7 @@ export type Agentstackk8sHelmParameters = {
   "config.prometheus-port"?: string;
   "config.reservation-expiry-seconds"?: string;
   "config.enable-completion-watcher"?: string;
+  "config.enable-job-acquisition-tokens"?: string;
   "config.pod-pending-timeout"?: string;
   "config.image"?: string;
   "resources.requests.cpu"?: string;

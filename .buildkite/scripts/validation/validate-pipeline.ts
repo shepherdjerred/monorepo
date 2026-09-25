@@ -31,6 +31,7 @@ import { validateCaddySmokeContracts } from "./validate-pipeline-caddy.ts";
 import { validateImageMigrationContracts } from "./validate-image-migration.ts";
 import { validateReleasePipelineContracts } from "./validate-pipeline-release.ts";
 import { validatePlaywrightLanes } from "./validate-pipeline-playwright.ts";
+import { validateCiImageRefreshContracts } from "./validate-pipeline-ci-image-refresh.ts";
 import { validatePipelineResourceContracts } from "./validate-pipeline-resources.ts";
 import { validateTrmnlPipeline } from "./validate-pipeline-trmnl.ts";
 import { validatePipelineClarity } from "./validate-pipeline-clarity.ts";
@@ -180,24 +181,7 @@ requireIncludes(
 
 validatePlaywrightLanes(stepBlocks);
 
-for (const [key, lane, candidate] of [
-  ["ci-base-refresh", "ci-base", "ci-base-candidate.json"],
-  ["ci-playwright-refresh", "ci-playwright", "ci-playwright-candidate.json"],
-] satisfies readonly (readonly [string, string, string])[]) {
-  const block = stepBlocks.get(key);
-  for (const required of [
-    `ci-changed.ts ${lane}`,
-    `build-ci-image.ts --image ${lane} --candidate-out ${candidate}`,
-    `update-ci-image-pin.ts --candidate ${candidate}`,
-    "concurrency: 1",
-  ]) {
-    requireIncludes(
-      block,
-      required,
-      `${key} is missing content-addressed promotion contract ${required}`,
-    );
-  }
-}
+validateCiImageRefreshContracts(stepBlocks);
 
 // The merged PR dry-run lane owns the helm-types drift gate and print-only
 // deploy rehearsals. OpenTofu plans are separate per-stack jobs so each can
@@ -506,7 +490,7 @@ await assertPackageTokens([
   ["scripts/package.json", ['"bunx --no-install eslint']],
   [
     "packages/release-tools/package.json",
-    ['"release-please": "17.11.1"', '"release-please": "release-please"'],
+    ['"release-please": "17.11.2"', '"release-please": "release-please"'],
   ],
 ]);
 

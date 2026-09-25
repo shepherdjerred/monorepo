@@ -54,9 +54,8 @@ function reportExecutionIsStale(
   report: ScoutReportRecord,
   input: ScoutReportActivityInput,
 ): boolean {
-  if (report === null) return true;
   return (
-    report.revision !== input.revision ||
+    report?.revision !== input.revision ||
     (input.source === "schedule" && !report.isEnabled)
   );
 }

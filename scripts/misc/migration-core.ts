@@ -1,5 +1,5 @@
 // renovate: datasource=npm depName=pyright
-export const PYRIGHT_VERSION = "1.1.413";
+export const PYRIGHT_VERSION = "1.1.414";
 
 export function deckCommand(deck: string): string[] {
   return [
@@ -58,10 +58,10 @@ export function packageFiles(name: string): Readonly<Record<string, string>> {
           "@shepherdjerred/eslint-config": "workspace:*",
           "@types/bun": "1.4.0",
           "@typescript/native": "npm:typescript@7.0.2",
-          "@vitest/coverage-istanbul": "4.1.9",
+          "@vitest/coverage-istanbul": "5.0.1",
           eslint: "^10.7.0",
           typescript: "^6.0.3",
-          vitest: "4.1.9",
+          vitest: "5.0.1",
         },
       },
       undefined,
@@ -127,18 +127,15 @@ const environmentVariableExcludedPaths = new Set([
 ]);
 
 export function isSearchableEnvironmentVariablePath(path: string): boolean {
-  if (
-    path.startsWith("sandbox/archive/") ||
-    path.startsWith("sandbox/practice/") ||
-    path.startsWith(".build/") ||
-    path.includes("/generated/")
-  ) {
-    return false;
-  }
   return (
+    !path.startsWith("sandbox/archive/") &&
+    !path.startsWith("sandbox/practice/") &&
+    !path.startsWith(".build/") &&
+    !path.includes("/generated/") &&
     environmentVariableSearchExtensions.some((extension) =>
       path.endsWith(extension),
-    ) && !environmentVariableExcludedPaths.has(path)
+    ) &&
+    !environmentVariableExcludedPaths.has(path)
   );
 }
 

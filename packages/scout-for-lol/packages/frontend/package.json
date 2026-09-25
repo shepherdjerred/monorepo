@@ -1,8 +1,8 @@
 {
   "dependencies": {
     "@sentry/browser": "^10.0.0",
-    "@astrojs/mdx": "^7.0.5",
-    "@astrojs/react": "^6.0.2",
+    "@astrojs/mdx": "^8.0.2",
+    "@astrojs/react": "^7.0.0",
     "@astrojs/sitemap": "^3.7.2",
     "@aws-sdk/client-s3": "^3.1001.0",
     "@iconify-json/heroicons": "^1.2.1",
@@ -23,9 +23,9 @@
     "date-fns": "^4.1.0",
     "fuse.js": "^7.1.0",
     "lucide-react": "^1.14.0",
-    "ai": "^7.0.77",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
+    "ai": "^7.0.114",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.0.0",
     "zod": "^4.4.3"
@@ -50,14 +50,14 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
     "@shepherdjerred/architecture": "workspace:*",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.1.9",
-    "bun-types": "1.4.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "bun-types": "1.4.2",
     "eslint": "^10.3.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "4.1.10",
-    "@vitest/coverage-istanbul": "4.1.10"
+    "vitest": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.1"
   },
   "description": "Web frontend for Scout for League of Legends",
   "keywords": [

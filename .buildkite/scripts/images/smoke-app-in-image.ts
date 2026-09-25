@@ -95,10 +95,13 @@ const commands: Record<
         "smoke-test-token-with-at-least-32-characters",
       DATABASE_URL: "file:/tmp/alert-dashboard-smoke.db",
       EMAIL_ENABLED: "false",
+      FEATURE_FLAGS_MODE: "disabled",
       GRAFANA_API_KEY: "smoke-viewer-token",
       GRAFANA_URL: "http://127.0.0.1:13000",
       HOST: "127.0.0.1",
+      OPS_INGEST_TOKEN: "smoke-ops-ingest-token-with-at-least-32-characters",
       PORT: "17341",
+      PROMETHEUS_URL: "http://127.0.0.1:19090",
     },
   },
   "openrouter-broadcast-ingest": {

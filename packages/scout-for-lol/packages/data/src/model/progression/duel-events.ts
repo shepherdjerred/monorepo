@@ -21,18 +21,17 @@ export function seedDuelEntrants(
   randomSeed: string,
 ): string[] {
   if (method === "manual") return [...entrantIds];
-  if (method === "random") {
-    return entrantIds.toSorted(
-      (left, right) =>
-        stableSeedValue(randomSeed, left) -
-          stableSeedValue(randomSeed, right) || left.localeCompare(right),
-    );
-  }
-  return entrantIds.toSorted(
-    (left, right) =>
-      (rollingWins[right] ?? 0) - (rollingWins[left] ?? 0) ||
-      left.localeCompare(right),
-  );
+  return method === "random"
+    ? entrantIds.toSorted(
+        (left, right) =>
+          stableSeedValue(randomSeed, left) -
+            stableSeedValue(randomSeed, right) || left.localeCompare(right),
+      )
+    : entrantIds.toSorted(
+        (left, right) =>
+          (rollingWins[right] ?? 0) - (rollingWins[left] ?? 0) ||
+          left.localeCompare(right),
+      );
 }
 
 function nextPowerOfTwo(value: number): number {

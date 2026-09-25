@@ -162,10 +162,9 @@ function referencedColumnNames(plan: ScoutQlPlan): Set<string> {
 }
 
 function flattenConjuncts(pred: ScoutQlPredicate): ScoutQlPredicate[] {
-  if (pred.kind === "and") {
-    return pred.operands.flatMap((operand) => flattenConjuncts(operand));
-  }
-  return [pred];
+  return pred.kind === "and"
+    ? pred.operands.flatMap((operand) => flattenConjuncts(operand))
+    : [pred];
 }
 
 type SourceKind = {

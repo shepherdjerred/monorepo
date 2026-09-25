@@ -407,6 +407,17 @@ for (const [component, minimum] of Object.entries(
 }
 
 function componentForSource(relative: string): string | undefined {
+  // Build manifests are tracked source but coverage can never instrument
+  // them: a dependency-only update (NuGet lockfiles, MSBuild project files)
+  // must not read as untested changes.
+  if (
+    relative.endsWith("/packages.lock.json") ||
+    relative.endsWith(".csproj") ||
+    relative.endsWith(".props") ||
+    relative.endsWith(".targets")
+  ) {
+    return undefined;
+  }
   if (
     relative.includes("/src/TaskNotes.Windows.Host/") ||
     relative.startsWith(
@@ -423,15 +434,12 @@ function componentForSource(relative: string): string | undefined {
   ) {
     return "TaskNotes.Windows.Presentation";
   }
-  if (
-    relative.endsWith("/src/TaskNotes.Windows.App/HotkeyBinding.cs") ||
+  return relative.endsWith("/src/TaskNotes.Windows.App/HotkeyBinding.cs") ||
     relative.endsWith("/src/TaskNotes.Windows.App/ShellPreferencesCodec.cs") ||
     relative.endsWith("/src/TaskNotes.Windows.App/UiOperationQueue.cs") ||
     relative.endsWith("/src/TaskNotes.Windows.App/WinUiDispatcher.cs")
-  ) {
-    return "TaskNotes.Windows.AppAdapters";
-  }
-  return undefined;
+    ? "TaskNotes.Windows.AppAdapters"
+    : undefined;
 }
 
 function requireNondecreasingBaselines(

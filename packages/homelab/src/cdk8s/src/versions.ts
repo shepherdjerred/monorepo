@@ -5,10 +5,7 @@ import {
   versionCatalogMap,
 } from "@shepherdjerred/version-catalog";
 import { VersionMapSchema } from "./version-map.generated.ts";
-import {
-  applyCurrentBuildImageOverrides,
-  catalogScoutPostgresImageDigests,
-} from "./release-configuration.ts";
+import { applyCurrentBuildImageOverrides } from "./release-configuration.ts";
 
 const catalogOverride = Bun.env["HOMELAB_VERSION_CATALOG_JSON"];
 export const versionCatalog =
@@ -17,10 +14,9 @@ export const versionCatalog =
     : parseVersionCatalogText(catalogOverride);
 const versions = VersionMapSchema.parse(versionCatalogMap(versionCatalog));
 
-export const postgresImageDigests = new Set([
-  ...catalogScoutPostgresImageDigests(versionCatalog),
-  ...applyCurrentBuildImageOverrides(versions),
-]);
+// Overlays the current build's image digests onto the catalog pins in place.
+// Scout is PostgreSQL-only, so no per-image database contract is derived here.
+applyCurrentBuildImageOverrides(versions);
 
 /**
  * SHA-256 of the GitHub release tarball for `fuatakgun/eufy_security`, pinned
@@ -40,7 +36,7 @@ export const postgresImageDigests = new Set([
  *   curl -fSL "https://codeload.github.com/fuatakgun/eufy_security/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const EUFY_TARBALL_SHA256 =
-  "b744aac0ce03a8a75de5100c672957504173c20cbe2ac0fc4d09d5bc75c59411";
+  "b581e07c34c2cb6c2c19bbc7f4b733f19ad4d5703aea91d0c5d4cd1a29b9a98c";
 
 /**
  * SHA-256 of the GitHub release tarball for `basnijholt/adaptive-lighting`,
@@ -51,7 +47,7 @@ export const EUFY_TARBALL_SHA256 =
  *   curl -fSL "https://codeload.github.com/basnijholt/adaptive-lighting/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const ADAPTIVE_LIGHTING_TARBALL_SHA256 =
-  "9c390346e022651778aaed613946a5275a503966274dfa399b966e0eb90f7ca4";
+  "ac29d5e76cb8461e882f0f13c60fd438b83fdce0e23e18690f50ed3f10a07934";
 
 /**
  * SHA-256 of the GitHub release tarball for `JeffSteinbok/hass-dreo`, pinned
@@ -62,7 +58,7 @@ export const ADAPTIVE_LIGHTING_TARBALL_SHA256 =
  *   curl -fSL "https://codeload.github.com/JeffSteinbok/hass-dreo/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const DREO_TARBALL_SHA256 =
-  "813efd3661734ed1f8320f633706c781cd284d7edb76313466e787dff3367f79";
+  "aa0bd0a653c06d838412a119e8e70f678555a8ff2d04cd866b558ffa9814d5b2";
 
 /**
  * SHA-256 of the GitHub release tarball for `magico13/ha-emporia-vue`,
@@ -121,7 +117,7 @@ export const PETLIBRO_TARBALL_SHA256 =
  *   curl -fSL "https://codeload.github.com/AlexxIT/SonoffLAN/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const SONOFF_TARBALL_SHA256 =
-  "ce8fde8033260a191f498f71e37ac91ccef83f2388c1552d0d671c1fa718d0dc";
+  "4d2ee5ef9fb1a497b26379dd7d774ec5aec31f2c5a3bfd82766bc3f745d05d14";
 
 /**
  * SHA-256 of the GitHub release tarball for `elax46/custom-brand-icons`

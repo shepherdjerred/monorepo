@@ -187,10 +187,9 @@ export async function loadMvpVoteLeaderboard(
     existing.matchIds.add(vote.matchId);
   }
   const ranked = [...byNominee.entries()].toSorted((left, right) => {
-    if (right[1].voteCount !== left[1].voteCount) {
-      return right[1].voteCount - left[1].voteCount;
-    }
-    return left[0].localeCompare(right[0]);
+    return right[1].voteCount === left[1].voteCount
+      ? left[0].localeCompare(right[0])
+      : right[1].voteCount - left[1].voteCount;
   });
   const truncated = ranked.length > parsed.limit;
   const top = ranked.slice(0, parsed.limit);

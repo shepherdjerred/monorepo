@@ -107,10 +107,9 @@ function mutate(text: string, random: () => number): string {
   }
   const char =
     MUTATION_CHARS[Math.floor(random() * MUTATION_CHARS.length)] ?? "@";
-  if (choice === 2) {
-    return text.slice(0, cut) + char + text.slice(cut);
-  }
-  return text.slice(0, cut) + char + text.slice(cut + 1);
+  return choice === 2
+    ? text.slice(0, cut) + char + text.slice(cut)
+    : text.slice(0, cut) + char + text.slice(cut + 1);
 }
 
 describe("malformed input", () => {

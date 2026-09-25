@@ -337,6 +337,15 @@ resource "cloudflare_dns_record" "sjer_red_cname_cook" {
   proxied = true
 }
 
+resource "cloudflare_dns_record" "sjer_red_cname_macos_cross" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "macos-cross"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
 resource "cloudflare_dns_record" "sjer_red_cname_stocks" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
@@ -368,6 +377,19 @@ resource "cloudflare_dns_record" "sjer_red_cname_trmnl" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
   name    = "trmnl"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
+# GitHub must reach Woodpecker for webhooks and the OAuth callback, so the web
+# surface is public. Access control is WOODPECKER_OPEN=false plus the admin
+# allowlist, not network reachability — and the agent gRPC endpoint is
+# deliberately NOT here: it is reachable only over the tailnet.
+resource "cloudflare_dns_record" "sjer_red_cname_woodpecker" {
+  zone_id = cloudflare_zone.sjer_red.id
+  ttl     = 1
+  name    = "woodpecker"
   type    = "CNAME"
   content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
   proxied = true

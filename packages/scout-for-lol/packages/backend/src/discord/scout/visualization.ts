@@ -174,10 +174,9 @@ function truncateLines(description: string, available: number): string {
     length = nextLength;
   }
   const prefix = lines.join("\n");
-  if (prefix.length === 0) {
-    return truncateNativeCell(description, available);
-  }
-  return prefix;
+  return prefix.length === 0
+    ? truncateNativeCell(description, available)
+    : prefix;
 }
 
 function formatKpi(snapshot: VisualizationSnapshot): string {
@@ -419,10 +418,9 @@ function nativeRowSource(
     snapshot.display.rollingWindow !== null ||
     snapshot.display.cumulative ||
     snapshot.display.stack === "percent";
-  if (hasTransformedValues || preview === null || snapshot.temporal !== null) {
-    return { rows: snapshotRows, preview: null, snapshotRows };
-  }
-  return { rows: previewRows(preview), preview, snapshotRows };
+  return hasTransformedValues || preview === null || snapshot.temporal !== null
+    ? { rows: snapshotRows, preview: null, snapshotRows }
+    : { rows: previewRows(preview), preview, snapshotRows };
 }
 
 function previewOverflowNotice(

@@ -88,19 +88,17 @@ export function joinItem(
     return undefined;
   }
   const slice = tokens.slice(start, end);
-  if (slice.length === 0) {
-    return undefined;
-  }
-  return { value: sliceText(slice), span: sliceSpan(tokens, start, end) };
+  return slice.length === 0
+    ? undefined
+    : { value: sliceText(slice), span: sliceSpan(tokens, start, end) };
 }
 
 export function tokenItem(
   token: IToken | undefined,
 ): ReportQueryItem | undefined {
-  if (token === undefined) {
-    return undefined;
-  }
-  return { value: normalize(token.image), span: tokenSpan(token) };
+  return token === undefined
+    ? undefined
+    : { value: normalize(token.image), span: tokenSpan(token) };
 }
 
 export function sliceText(slice: IToken[]): string {
@@ -114,19 +112,17 @@ export function sliceSpan(
 ): ReportQuerySpan {
   const first = tokens[start];
   const last = tokens[end - 1];
-  if (first === undefined || last === undefined) {
-    return { start: 0, end: 0 };
-  }
-  return { start: first.startOffset, end: tokenSpan(last).end };
+  return first === undefined || last === undefined
+    ? { start: 0, end: 0 }
+    : { start: first.startOffset, end: tokenSpan(last).end };
 }
 
 export function wholeSpan(text: string, tokens: IToken[]): ReportQuerySpan {
   const first = tokens[0];
   const last = tokens.at(-1);
-  if (first === undefined || last === undefined) {
-    return { start: 0, end: text.length };
-  }
-  return { start: first.startOffset, end: tokenSpan(last).end };
+  return first === undefined || last === undefined
+    ? { start: 0, end: text.length }
+    : { start: first.startOffset, end: tokenSpan(last).end };
 }
 
 export function normalize(value: string): string {
@@ -137,11 +133,8 @@ export function normalizeQueueValue(value: string): string {
   const trimmed = value.trim();
   const first = trimmed.at(0);
   const last = trimmed.at(-1);
-  if (
-    trimmed.length >= 2 &&
+  return trimmed.length >= 2 &&
     ((first === "'" && last === "'") || (first === '"' && last === '"'))
-  ) {
-    return parseReportStringLiteral(trimmed).toLowerCase();
-  }
-  return normalize(trimmed);
+    ? parseReportStringLiteral(trimmed).toLowerCase()
+    : normalize(trimmed);
 }

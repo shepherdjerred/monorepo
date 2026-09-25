@@ -17,11 +17,7 @@ function getCounterValue(
         entry.includes(`status="${status}"`),
     );
 
-  if (line === undefined) {
-    return 0;
-  }
-
-  return Number(line.slice(line.lastIndexOf(" ") + 1));
+  return line === undefined ? 0 : Number(line.slice(line.lastIndexOf(" ") + 1));
 }
 
 describe("savePrematchDataToS3 without S3 bucket", () => {

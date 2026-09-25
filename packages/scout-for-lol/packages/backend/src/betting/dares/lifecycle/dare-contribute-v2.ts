@@ -68,14 +68,11 @@ export async function contributeToDareV2InTransaction(
     const beforeDeadline =
       state !== "active" ||
       (current.deadlineAt !== null && current.deadlineAt > input.now);
-    if (
-      beforeDeadline &&
+    return beforeDeadline &&
       OPEN_DARE_STATES.has(state) &&
       current.potTotal + input.amount > BUCKS_INT32_MAX
-    ) {
-      return { kind: "pot_full", potTotal: current.potTotal } as const;
-    }
-    return { kind: "too_late", dareState: state } as const;
+      ? ({ kind: "pot_full", potTotal: current.potTotal } as const)
+      : ({ kind: "too_late", dareState: state } as const);
   }
   const [targets, revision] = await Promise.all([
     tx.bucksDareV2Target.findMany({

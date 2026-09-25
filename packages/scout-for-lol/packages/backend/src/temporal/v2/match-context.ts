@@ -74,8 +74,9 @@ async function readArchivedCanonicalMatch(
     riotMatchId,
     "match",
   );
-  if (descriptor === null) return null;
-  return await readArchivedMatchPayload(descriptor, riotMatchId);
+  return descriptor === null
+    ? null
+    : await readArchivedMatchPayload(descriptor, riotMatchId);
 }
 
 /**

@@ -96,14 +96,15 @@ function shouldRetryActivityRefresh(error: unknown): boolean {
   if (error instanceof ActivityAuthRequestError) {
     return error.status >= 500 || error.status === 408 || error.status === 429;
   }
-  if (error instanceof Error) {
-    return !(
+  const isErrorInstance = error instanceof Error;
+  return (
+    !isErrorInstance ||
+    !(
       error.message === "Discord identity changed during Activity refresh" ||
       error.message ===
         "Scout Customs was updated while this Activity was open. Close and reopen it."
-    );
-  }
-  return true;
+    )
+  );
 }
 
 const ACTIVITY_REFRESH_RETRY_INITIAL_DELAY = 30_000;

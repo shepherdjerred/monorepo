@@ -70,19 +70,14 @@ export function isAdditiveReportExpression(
       isAdditiveReportExpression(expression.right)
     );
   }
-  if (expression.operator === "*") {
-    return (
-      (isAdditiveReportExpression(expression.left) &&
+  return expression.operator === "*"
+    ? (isAdditiveReportExpression(expression.left) &&
         expression.right.kind === "number") ||
-      (expression.left.kind === "number" &&
-        isAdditiveReportExpression(expression.right))
-    );
-  }
-  return (
-    isAdditiveReportExpression(expression.left) &&
-    expression.right.kind === "number" &&
-    expression.right.value !== 0
-  );
+        (expression.left.kind === "number" &&
+          isAdditiveReportExpression(expression.right))
+    : isAdditiveReportExpression(expression.left) &&
+        expression.right.kind === "number" &&
+        expression.right.value !== 0;
 }
 
 export function formatReportExpression(expression: ReportExpression): string {

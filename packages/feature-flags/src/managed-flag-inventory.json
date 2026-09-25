@@ -30,6 +30,11 @@
       "key": "temporal",
       "name": "Temporal",
       "description": "Shared Temporal platform feature flags."
+    },
+    {
+      "key": "alert-dashboard",
+      "name": "Alert Dashboard",
+      "description": "Ops dashboard (alert-dashboard) feature flags."
     }
   ],
   "flags": [
@@ -1114,6 +1119,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "ops-digest-email-enabled",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "alert-dashboard",
+      "purpose": "Send the daily and weekly ops digest email through Postal after deployment verification.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-assistant-v2-enabled",
       "owner": "streambot",
       "namespace": "streambot",
@@ -1654,6 +1671,14 @@
               "result": true
             }
           ]
+        },
+        {
+          "key": "pet-dashboard-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
         }
       ]
     }

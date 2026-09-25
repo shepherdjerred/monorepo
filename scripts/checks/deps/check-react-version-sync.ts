@@ -143,8 +143,7 @@ function parseNameVersion(
   id: string,
 ): { name: string; version: string } | null {
   const at = id.lastIndexOf("@");
-  if (at <= 0) return null;
-  return { name: id.slice(0, at), version: id.slice(at + 1) };
+  return at <= 0 ? null : { name: id.slice(0, at), version: id.slice(at + 1) };
 }
 
 function major(version: string): string {

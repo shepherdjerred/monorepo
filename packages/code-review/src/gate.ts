@@ -23,16 +23,13 @@ export function reviewGateSkipReasonForAuthor(input: {
   provider: ReviewProvider;
 }): "bot-author" | null {
   if (input.author.type !== "Bot") return null;
-  if (
-    input.provider.botAuthoredPullRequestPolicy === "review" &&
+  return input.provider.botAuthoredPullRequestPolicy === "review" &&
     (input.provider.botAuthorAllowlist === undefined ||
       input.provider.botAuthorAllowlist.some(
         (login) => login.toLowerCase() === input.author.login.toLowerCase(),
       ))
-  ) {
-    return null;
-  }
-  return "bot-author";
+    ? null
+    : "bot-author";
 }
 
 /**
@@ -95,9 +92,9 @@ function lowSeverityBlocks(
   thread: ReviewThread,
   policy: LowSeverityPolicy,
 ): boolean {
-  if (policy === "always") return true;
-  if (thread.raisedInReview === null) return true;
   return (
+    policy === "always" ||
+    thread.raisedInReview === null ||
     thread.raisedInReview.ordinal === 1 ||
     thread.raisedInReview.hadBlockingSeverity
   );
@@ -115,12 +112,15 @@ export function isBlocking(
   provider: ReviewProvider,
   policy: BlockingPolicy,
 ): boolean {
-  if (!isProviderAuthor(provider, thread.authorLogin)) return false;
-  if (thread.isResolved || thread.isOutdated) return false;
-  if (thread.priority === null) return false;
-  if (thread.priority > policy.maxBlockingPriority) return false;
-  if (thread.priority <= policy.alwaysBlockingPriority) return true;
-  return lowSeverityBlocks(thread, policy.lowSeverity);
+  return (
+    isProviderAuthor(provider, thread.authorLogin) &&
+    !thread.isResolved &&
+    !thread.isOutdated &&
+    thread.priority !== null &&
+    thread.priority <= policy.maxBlockingPriority &&
+    (thread.priority <= policy.alwaysBlockingPriority ||
+      lowSeverityBlocks(thread, policy.lowSeverity))
+  );
 }
 
 /**
@@ -192,6 +192,8 @@ export function evaluateGate(input: {
   policy: BlockingPolicy;
   /** Provider skip reason (e.g. "no-reviewable-files"), or null. */
   skipReason?: string | null;
+  /** Provider-side block slug (e.g. "usage-limited"), or null. */
+  blockedReason?: string | null;
 }): GateDecision {
   const { head, provider, reviewState, threads, policy } = input;
   const skipReason = input.skipReason ?? null;
@@ -205,10 +207,23 @@ export function evaluateGate(input: {
   }
 
   if (reviewState === "errored") {
+    const blocked = input.blockedReason ?? null;
+    const strategy = provider.detectBlocked;
+    // A recognised block names the operator's real next action (adding
+    // credits, not re-triggering a review that quota will reject again).
+    if (blocked !== null && strategy !== null && blocked === strategy.reason) {
+      return {
+        state: "failed",
+        message:
+          `${name}'s review of ${head} is blocked (${blocked}): ` +
+          `${strategy.remediation}, then re-run this step.`,
+      };
+    }
+    const unrecognised = blocked === null ? "" : ` (block reason: ${blocked})`;
     return {
       state: "failed",
       message:
-        `${name}'s review of ${head} did not complete successfully. ` +
+        `${name}'s review of ${head} did not complete successfully${unrecognised}. ` +
         `Re-trigger ${name}, then re-run this step.`,
     };
   }

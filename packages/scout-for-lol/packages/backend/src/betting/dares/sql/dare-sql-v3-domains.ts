@@ -31,10 +31,9 @@ const AstLiteralSchema = z.union([z.string(), z.number(), z.boolean()]);
 /** A COLUMN_REF's dotted name parts, or null for any other node. */
 function columnRefNames(value: JsonValue | undefined): JsonValue[] | null {
   const object = objectValue(value);
-  if (object === null || stringValue(object["class"]) !== "COLUMN_REF") {
-    return null;
-  }
-  return arrayValue(object["column_names"]);
+  return object === null || stringValue(object["class"]) !== "COLUMN_REF"
+    ? null
+    : arrayValue(object["column_names"]);
 }
 
 /**

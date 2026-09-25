@@ -50,8 +50,9 @@ function actionPayload(parsed: Extract<DareV2CustomId, { kind: "prepare" }>) {
     };
   }
   if (parsed.action === "accept") return { kind: "dare_accept" as const };
-  if (parsed.action === "decline") return { kind: "dare_decline" as const };
-  return { kind: "dare_cancel" as const };
+  return parsed.action === "decline"
+    ? { kind: "dare_decline" as const }
+    : { kind: "dare_cancel" as const };
 }
 
 type DareV2DiscordContext = {

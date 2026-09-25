@@ -30,11 +30,6 @@ vi.mock("#src/database/index.ts", () => ({
   prisma: {},
   getAccountsWithState: mocks.getAccountsWithState,
 }));
-vi.mock("#src/discord/utils/guild-membership.ts", () => ({
-  // Unused: the account read it feeds is mocked above.
-  getActiveServerIds: () => new Set<string>(),
-}));
-
 const { resolveScoutV2PrematchContext } =
   await import("#src/temporal/v2/prematch/prematch-context.ts");
 

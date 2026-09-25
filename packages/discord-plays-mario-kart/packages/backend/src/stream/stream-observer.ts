@@ -61,8 +61,9 @@ export function parseTimemarkSeconds(timemark?: string): number | undefined {
   const h = Number(parts[0]);
   const m = Number(parts[1]);
   const s = Number(parts[2]);
-  if (![h, m, s].every((n) => Number.isFinite(n))) return undefined;
-  return sign * (h * 3600 + m * 60 + s);
+  return [h, m, s].every((n) => Number.isFinite(n))
+    ? sign * (h * 3600 + m * 60 + s)
+    : undefined;
 }
 
 /** Whether the ffmpeg command line engaged the VAAPI hardware ENCODER. */

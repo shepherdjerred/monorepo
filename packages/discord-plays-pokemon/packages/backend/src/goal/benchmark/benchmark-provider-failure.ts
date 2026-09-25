@@ -138,14 +138,11 @@ function failureMessage(
     return direct.trim();
   }
   const nested = ErrorRecordSchema.safeParse(record["error"]);
-  if (
-    nested.success &&
+  return nested.success &&
     nested.data.message !== undefined &&
     nested.data.message.trim().length > 0
-  ) {
-    return nested.data.message.trim();
-  }
-  return `Codex emitted ${eventType}`;
+    ? nested.data.message.trim()
+    : `Codex emitted ${eventType}`;
 }
 
 function recognizedProviderKind(
@@ -155,8 +152,7 @@ function recognizedProviderKind(
   "quota" | "authentication"
 > | null {
   if (QUOTA_PATTERN.test(message)) return "quota";
-  if (AUTHENTICATION_PATTERN.test(message)) return "authentication";
-  return null;
+  return AUTHENTICATION_PATTERN.test(message) ? "authentication" : null;
 }
 
 function classifiedKind(

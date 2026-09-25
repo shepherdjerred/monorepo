@@ -11,6 +11,7 @@ import { RouterProvider } from "react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import * as Sentry from "@sentry/react";
 import { TRPCProvider, trpcClient } from "#src/lib/query/trpc.ts";
+import { filterScoutAppSentryEvent } from "#src/lib/sentry-filters.ts";
 import { queryClient } from "#src/lib/query/query-client.ts";
 import { createAppRouter } from "#src/router.tsx";
 import { initAnalytics, track } from "#src/lib/analytics.ts";
@@ -28,6 +29,9 @@ Sentry.init({
   dsn: "https://337945d2208840dca4a573be311a1bbb@bugsink.sjer.red/1",
   release: sentryRelease,
   environment: import.meta.env.MODE,
+  // Local dev shares this DSN with production; never report from `vite dev`.
+  enabled: import.meta.env.PROD,
+  beforeSend: filterScoutAppSentryEvent,
   // Bugsink is Sentry-compatible but does not support performance tracing.
   tracesSampleRate: 0,
   // Monaco/VS Code CancellationError on unmount/nav — not app bugs.

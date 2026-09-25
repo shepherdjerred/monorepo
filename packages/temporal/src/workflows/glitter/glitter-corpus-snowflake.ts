@@ -1,18 +1,16 @@
 export function smallestSnowflake(ids: readonly string[]): string | undefined {
   return ids.toSorted((left, right) => {
-    if (left.length !== right.length) {
-      return left.length - right.length;
-    }
-    return left.localeCompare(right);
+    return left.length === right.length
+      ? left.localeCompare(right)
+      : left.length - right.length;
   })[0];
 }
 
 export function largestSnowflake(ids: readonly string[]): string | undefined {
   return ids.toSorted((left, right) => {
-    if (left.length !== right.length) {
-      return right.length - left.length;
-    }
-    return right.localeCompare(left);
+    return left.length === right.length
+      ? right.localeCompare(left)
+      : right.length - left.length;
   })[0];
 }
 

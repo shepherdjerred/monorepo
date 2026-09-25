@@ -6,6 +6,7 @@ import {
   type WorkflowFailureWatchCheckpoint,
 } from "./workflow-failure-watch-checkpoint.ts";
 import { MAX_DETAILED_FAILURE_ALERTS } from "./workflow-failure-watch-overflow.ts";
+import { withWorkflowFailureRpcTimeout } from "./workflow-failure-watch-timeout.ts";
 
 const ALERT_BATCH_SIZE = 25;
 const VISIBILITY_PAGE_SIZE = 100;
@@ -15,6 +16,7 @@ type FailureStatusName = (typeof FAILURE_STATUS_NAMES)[number];
 type ScanWorkflowFailureVisibilityOptions = {
   namespace: TemporalNamespace;
   query: string;
+  rpcTimeoutMs: number;
   checkpoint: WorkflowFailureWatchCheckpoint | undefined;
   detailedAlertsConsumed: number;
   onDetailBatch: (
@@ -58,10 +60,12 @@ function isAfterVisibilityCursor(
   if (cursor === undefined) return true;
   const executionCloseTimeMs = execution.closeTime.getTime();
   const checkpointCloseTimeMs = cursor.closeTime.getTime();
-  if (executionCloseTimeMs < checkpointCloseTimeMs) return true;
-  if (executionCloseTimeMs > checkpointCloseTimeMs) return false;
-  return !(cursor.processedExecutionKeys ?? []).includes(
-    workflowExecutionKey(execution.workflowId, execution.runId),
+  return (
+    executionCloseTimeMs <= checkpointCloseTimeMs &&
+    (executionCloseTimeMs < checkpointCloseTimeMs ||
+      !(cursor.processedExecutionKeys ?? []).includes(
+        workflowExecutionKey(execution.workflowId, execution.runId),
+      ))
   );
 }
 
@@ -106,10 +110,27 @@ export async function scanWorkflowFailureVisibility(
     overflowed: false,
   };
   try {
-    for await (const info of client.workflow.list({
-      query: options.query,
-      pageSize: VISIBILITY_PAGE_SIZE,
-    })) {
+    // Manual iteration (not `for await`) so each page fetch races a timeout:
+    // a hung visibility read becomes a listing error — retried from the
+    // streamed checkpoint — instead of burning the activity attempt.
+    const iterator = client.workflow
+      .list({
+        query: options.query,
+        pageSize: VISIBILITY_PAGE_SIZE,
+      })
+      [Symbol.asyncIterator]();
+    let scanComplete = false;
+    while (!scanComplete) {
+      const next = await withWorkflowFailureRpcTimeout(
+        iterator.next(),
+        "visibility-list-next",
+        options.rpcTimeoutMs,
+      );
+      if (next.done === true) {
+        scanComplete = true;
+        continue;
+      }
+      const info = next.value;
       const status = toFailureStatusName(info.status.name);
       if (status === undefined || info.closeTime === undefined) continue;
       const execution = {

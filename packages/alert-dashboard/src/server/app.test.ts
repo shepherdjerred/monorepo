@@ -4,7 +4,6 @@ import { z } from "zod";
 
 import { AlertService } from "#application/alert-service";
 import type {
-  AlertLedgerRepository,
   AlertmanagerPort,
   PostalPort,
   PreviewPort,
@@ -12,31 +11,13 @@ import type {
 import { createApp } from "#server/app";
 import { ChangeBus } from "#server/change-bus";
 import { Metrics } from "#server/metrics";
+import { readinessOnlyLedger, unexpected } from "#test-fixtures/alert-ledger";
+import { createOpsFixture } from "#test-fixtures/ops-services";
 
 const ErrorResponseSchema = z.object({ error: z.string() });
 
-function unexpected(): Promise<never> {
-  return Promise.reject(new Error("unexpected service call"));
-}
-
 function createTestService(): AlertService {
-  const repository: AlertLedgerRepository = {
-    ingestWebhook: unexpected,
-    reconcileSnapshot: unexpected,
-    recordSnapshotFailure: unexpected,
-    listAlerts: unexpected,
-    getAlert: unexpected,
-    listEvents: unexpected,
-    summary: unexpected,
-    checkDatabase: () => Promise.resolve(),
-    systemStatus: unexpected,
-    pendingEmails: unexpected,
-    claimPendingEmails: unexpected,
-    markEmailSent: unexpected,
-    markEmailFailed: unexpected,
-    purgeExpiredRawPayloads: unexpected,
-    disconnect: unexpected,
-  };
+  const repository = readinessOnlyLedger();
   const alertmanager: AlertmanagerPort = { activeAlerts: unexpected };
   const postal: PostalPort = { send: unexpected };
   const previews: PreviewPort = {
@@ -55,6 +36,17 @@ function createTestService(): AlertService {
   });
 }
 
+function opsOptions() {
+  const fixture = createOpsFixture({
+    now: () => Temporal.Instant.from("2026-08-08T12:00:00Z"),
+  });
+  return {
+    ops: fixture.ops,
+    digests: fixture.digests,
+    opsIngestToken: "test-ops-ingest-token",
+  };
+}
+
 describe("REST request validation", () => {
   it("checks only database readiness on the readiness route", async () => {
     const app = createApp({
@@ -62,6 +54,7 @@ describe("REST request validation", () => {
       changes: new ChangeBus(),
       metrics: new Metrics(),
       webhookToken: "test-webhook-token",
+      ...opsOptions(),
     });
 
     const response = await app.request("/readyz");
@@ -76,6 +69,7 @@ describe("REST request validation", () => {
       changes: new ChangeBus(),
       metrics: new Metrics(),
       webhookToken: "test-webhook-token",
+      ...opsOptions(),
     });
 
     const response = await app.request("/api/v1/alerts?label=severity");
@@ -92,6 +86,7 @@ describe("REST request validation", () => {
       changes: new ChangeBus(),
       metrics: new Metrics(),
       webhookToken: "test-webhook-token",
+      ...opsOptions(),
     });
 
     const response = await app.request("/internal/v1/alertmanager/events", {
@@ -114,6 +109,7 @@ describe("REST request validation", () => {
         changes: new ChangeBus(),
         metrics: new Metrics(),
         webhookToken: "test-webhook-token",
+        ...opsOptions(),
       });
 
       const response = await app.request(path);
@@ -134,6 +130,7 @@ describe("REST request validation", () => {
       changes: new ChangeBus(),
       metrics: new Metrics(),
       webhookToken: "test-webhook-token",
+      ...opsOptions(),
     });
 
     const response = await app.request("/trpc/not.real");

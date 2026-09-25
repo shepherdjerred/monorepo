@@ -27,6 +27,9 @@ remain the direct US PostHog endpoints for server-to-server transport, while
 captures, replay, feature flags, and other browser requests. Never commit a
 `phx_` personal API key. The registry check deliberately fails while the
 placeholder token is present.
+The [operations overview](/explanation/homelab/operations-overview/) reads
+traffic with a read-scoped personal key. That key lives only in 1Password and
+the Temporal infra worker's environment.
 
 The proxy record is managed by OpenTofu. Its `j.sjer.red` Cloudflare CNAME is
 deliberately unproxied (gray cloud), and browser traffic must use it only after

@@ -65,30 +65,22 @@ export function clashIsoWeekKey(dateOnly: string): string {
 }
 
 function cupAllowsPlatform(cup: ClashCup, platform: PlatformRoute): boolean {
-  if (cup.shards === undefined) {
-    return true;
-  }
-  return cup.shards.includes(platform);
+  return cup.shards === undefined || cup.shards.includes(platform);
 }
 
 function cupDayForDate(cup: ClashCup, date: string): ClashCupDay | undefined {
-  if (date === cup.saturday) {
-    return "day_1";
-  }
-  if (cup.sunday !== null && date === cup.sunday) {
-    return "day_2";
-  }
-  return undefined;
+  return date === cup.saturday
+    ? "day_1"
+    : cup.sunday !== null && date === cup.sunday
+      ? "day_2"
+      : undefined;
 }
 
 export function clashQueueFromQueueType(
   queue: QueueType,
 ): ClashCupQueue | undefined {
   const parsed = ClashCupQueueSchema.safeParse(queue);
-  if (!parsed.success) {
-    return undefined;
-  }
-  return parsed.data;
+  return parsed.success ? parsed.data : undefined;
 }
 
 /**

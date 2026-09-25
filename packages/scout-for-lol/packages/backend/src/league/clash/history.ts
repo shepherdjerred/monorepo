@@ -264,19 +264,11 @@ function membershipForSighting(
   sighting: SightingRow,
 ): MembershipRow | undefined {
   return memberships.find((membership) => {
-    if (membership.puuid !== sighting.puuid) {
-      return false;
-    }
-    if (membership.platform !== sighting.platform) {
-      return false;
-    }
-    if (
-      sighting.teamRiotId !== null &&
-      membership.teamRiotId !== sighting.teamRiotId
-    ) {
-      return false;
-    }
     return (
+      membership.puuid === sighting.puuid &&
+      membership.platform === sighting.platform &&
+      (sighting.teamRiotId === null ||
+        membership.teamRiotId === sighting.teamRiotId) &&
       sighting.observedAt >= membership.windowStartAt &&
       sighting.observedAt <= membership.windowEndAt
     );
@@ -299,10 +291,9 @@ function clashHistoryThemeLabel(
   if (cupKey === null || cupKey.length === 0) {
     return "Clash";
   }
-  if (cupDay === null || cupDay.length === 0) {
-    return formatClashThemeLabel(cupKey, "weekend");
-  }
-  return formatClashThemeLabel(cupKey, cupDay);
+  return cupDay === null || cupDay.length === 0
+    ? formatClashThemeLabel(cupKey, "weekend")
+    : formatClashThemeLabel(cupKey, cupDay);
 }
 
 function cupSortKey(cup: ClashHistoryCup): string {

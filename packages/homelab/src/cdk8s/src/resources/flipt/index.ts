@@ -30,7 +30,7 @@ export const FLIPT_PORT = 8080;
 
 // The image declares no ENTRYPOINT and `CMD ["/flipt","server"]`, so Kubernetes
 // `args` alone would try to exec the flag as a binary. The full command is
-// restated here. Verified against flipt/flipt:v2.11.0.
+// restated here. Verified against flipt/flipt:v2.13.0.
 const FLIPT_COMMAND = [
   "/flipt",
   "server",

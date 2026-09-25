@@ -15,7 +15,7 @@ export function validateReportingPipeline(pipeline: string): void {
     "run script-coverage",
     "write-coverage-summary.ts --require-complete",
     'artifact_paths:\n      - ".ci-reports/**/*"',
-    "test-collector#v1.11.0",
+    "test-collector#v1.12.0",
     "missing-error: 1",
     '"scope=full"',
     "serviceAccountName: buildkite-job",

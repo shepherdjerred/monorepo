@@ -76,6 +76,7 @@ const LANE_TO_STEP: Record<string, string | readonly string[] | null> = {
   images: null,
   "ci-base": null,
   "ci-playwright": null,
+  "windows-cross-compiler": "windows-cross-compiler-pr",
   "helm-types": "pr-dryrun",
   tofu: [
     "tofu-plan-seaweedfs",
@@ -95,6 +96,8 @@ const LANE_TO_STEP: Record<string, string | readonly string[] | null> = {
   "site-webring": "pr-dryrun",
   "site-cooklang": "pr-dryrun",
   "site-stocks": "pr-dryrun",
+  "site-macos-cross": "pr-dryrun",
+  "macos-cross-compiler": "macos-cross-compiler-pr",
   "site-wiki": "pr-dryrun",
   "site-better-skill-capped": "pr-dryrun",
   "site-glitter": "pr-dryrun",
@@ -113,10 +116,9 @@ const LANE_TO_STEP: Record<string, string | readonly string[] | null> = {
  */
 async function samplePaths(entry: string): Promise<string[]> {
   const isFile = await Bun.file(`${REPO_ROOT}/${entry}`).exists();
-  if (isFile) {
-    return [entry];
-  }
-  return [`${entry}/sample-file.ts`, `${entry}/nested/dir/sample-file.ts`];
+  return isFile
+    ? [entry]
+    : [`${entry}/sample-file.ts`, `${entry}/nested/dir/sample-file.ts`];
 }
 
 function coveredBy(path: string, globs: readonly string[]): boolean {

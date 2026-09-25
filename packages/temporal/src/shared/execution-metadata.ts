@@ -85,13 +85,15 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   // TASK_QUEUES.INFRA
   runBugsinkHousekeepingWorkflow: "infra",
   runVeleroOrphanAuditWorkflow: "infra",
+  runVeleroR2OrphanAuditWorkflow: "infra",
   runZfsMaintenanceWorkflow: "infra",
   syncGolinks: "infra",
   runTasknotesCanary: "infra",
-  runCiIoImpact: "infra",
   runDnsAudit: "infra",
   runHomelabCrdImportsRefresh: "infra",
   runHomelabAuditWorkflow: "infra",
+  runOpsSnapshot: "infra",
+  runOpsDigest: "infra",
 
   // TASK_QUEUES.REPO_AUTOMATION
   runLlmCatalogRefresh: "repo",
@@ -173,8 +175,7 @@ export function executionEnvironmentForTaskQueue(
   fallback: ExecutionEnvironment,
 ): ExecutionEnvironment {
   if (taskQueue === TASK_QUEUES.SCOUT_BETA) return "beta";
-  if (taskQueue === TASK_QUEUES.SCOUT_PROD) return "prod";
-  return fallback;
+  return taskQueue === TASK_QUEUES.SCOUT_PROD ? "prod" : fallback;
 }
 
 export function buildExecutionMetadata(input: {

@@ -8,13 +8,10 @@ export function fail(message: string): never {
 
 export function scalar(value: string): string {
   const trimmed = value.trim();
-  if (
-    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+  return (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
     (trimmed.startsWith("'") && trimmed.endsWith("'"))
-  ) {
-    return trimmed.slice(1, -1);
-  }
-  return trimmed;
+    ? trimmed.slice(1, -1)
+    : trimmed;
 }
 
 export function hasTrimmedLine(

@@ -18,7 +18,7 @@
     "test:report": "CI_TEST_COVERAGE=1 bun ../../scripts/ci/run-ci-test.ts"
   },
   "dependencies": {
-    "@sentry/bun": "^10.70.0",
+    "@sentry/bun": "^10.75.3",
     "hono": "^4.12.18",
     "prom-client": "^15.1.3",
     "tasknotes-types": "workspace:*",
@@ -27,14 +27,14 @@
   "devDependencies": {
     "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
-    "@types/bun": "1.4.0",
-    "@typescript-eslint/utils": "^8.67.0",
+    "@types/bun": "1.4.2",
+    "@typescript-eslint/utils": "^8.70.1",
     "eslint": "^10.3.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.67.0",
+    "typescript-eslint": "^8.70.1",
     "@typescript/native": "npm:typescript@7.0.2",
-    "vitest": "4.1.10",
-    "@vitest/coverage-istanbul": "4.1.10"
+    "vitest": "5.0.1",
+    "@vitest/coverage-istanbul": "5.0.1"
   }
 }

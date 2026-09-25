@@ -99,10 +99,7 @@ for (const key of Object.keys(queueWindowsFile.queues)) {
 }
 
 function isWithinWindow(window: QueueAvailabilityWindow, now: Date): boolean {
-  if (now < window.start) {
-    return false;
-  }
-  return window.end === null || now <= window.end;
+  return now >= window.start && (window.end === null || now <= window.end);
 }
 
 export function isQueueCurrentlyAvailable(
@@ -110,10 +107,10 @@ export function isQueueCurrentlyAvailable(
   now: Date = new Date(),
 ): boolean {
   const availability = QUEUE_AVAILABILITY[queue];
-  if (availability.kind === "permanent") {
-    return true;
-  }
-  return availability.windows.some((window) => isWithinWindow(window, now));
+  return (
+    availability.kind === "permanent" ||
+    availability.windows.some((window) => isWithinWindow(window, now))
+  );
 }
 
 /**
@@ -125,13 +122,10 @@ export function queueAvailabilityNote(
   now: Date = new Date(),
 ): string | undefined {
   const availability = QUEUE_AVAILABILITY[queue];
-  if (
-    availability.kind === "permanent" ||
+  return availability.kind === "permanent" ||
     isQueueCurrentlyAvailable(queue, now)
-  ) {
-    return undefined;
-  }
-  return "Limited-time mode — not currently live";
+    ? undefined
+    : "Limited-time mode — not currently live";
 }
 
 /**
@@ -143,8 +137,5 @@ export function isCompetitionQueueCurrentlyAvailable(
   queue: CompetitionQueueType,
   now: Date = new Date(),
 ): boolean {
-  if (queue === "ALL") {
-    return true;
-  }
-  return isQueueCurrentlyAvailable(queue, now);
+  return queue === "ALL" || isQueueCurrentlyAvailable(queue, now);
 }

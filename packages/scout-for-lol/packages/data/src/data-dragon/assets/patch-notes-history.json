@@ -1,5 +1,202 @@
 [
   {
+    "patch": "26.19",
+    "title": "League of Legends Patch 26.19 Notes",
+    "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-19-notes",
+    "date": "2026 09 24",
+    "overview": "Patch 26.19 is the pre-Worlds warm-up: Riot buffs a batch of fringe pro picks (Aatrox, Aphelios, Elise, Kha'Zix, Lillia, Volibear) while knocking down the year's meta staples (Vi, Nocturne, Poppy, Ryze, Rumble) and nerfing Nasus's early stacking. Support starter items shift health into health regen for melee supports, and top lane gets faster Teleport cooldowns via the role quest. Arena gets a huge Augment drop plus Guests of Honor, and Classic adds Fizz, Graves, Nami, and Nautilus.",
+    "themes": [
+      "Pre-Worlds champion tuning",
+      "Jungle meta shakeup",
+      "Top lane Teleport buffs",
+      "Arena Augment expansion"
+    ],
+    "summary": [
+      "Jungle meta staples take hits: Vi loses base AD and shield strength, Nocturne's Paranoia cooldown is up 20s, and Poppy's Q monster damage cap is reverted, while Elise, Kha'Zix, and Lillia get buffed back into relevance.",
+      "Nasus Q bonus damage drops by 10 at every rank, so early stacking and lane sustain are noticeably weaker — and Ryze's Q Flux bonus damage plus E mana cost both got worse.",
+      "Aphelios gets buffs across nearly every gun, Aatrox, Aurora, Draven, Fiora, and Volibear all get power back, and Lucian's Vigilance passive is gutted while his Q base damage rises.",
+      "World Atlas and Runic Compass trade flat health for health regen, favoring melee supports in extended laning, and top lane's role quest Teleport cooldowns drop by 30s."
+    ],
+    "changelogHighlights": [
+      "League Classic adds Fizz, Graves, Nami, and Nautilus, plus the returning items Cloak and Dagger, Moonflair Spellblade, and Zz'Rot Portal.",
+      "Arena adds 13 new Augments (including Hellbent, Shark Bait, Surge Field, Titan's Resolve, Death Dealer, and Got That Dog In Em) and three new Guests of Honor: Ivern, Senna, and Thresh."
+    ],
+    "champions": [
+      {
+        "direction": "buff",
+        "magnitude": "moderate",
+        "summary": "W cooldown smoothed early and E healing scaling up.",
+        "details": "Infernal Chains' early cooldown drops from 20s to 18s and Umbral Dash heals 1.3% per 100 bonus health instead of 1.1%, so Aatrox sustains harder in extended fights after the Sundered Sky nerfs.",
+        "name": "Aatrox"
+      },
+      {
+        "direction": "buff",
+        "magnitude": "moderate",
+        "summary": "Buffs across Calibrum, Severum, Gravitum, Infernum, and Crescendum.",
+        "details": "Calibrum Moonshot gains 10 base damage, Severum heals more, Gravitum's slow decays to 15% instead of 10%, Duskwave's cooldown drops by 1s, and mini-chakrams start at 16% AD, making every weapon rotation stronger.",
+        "name": "Aphelios"
+      },
+      {
+        "direction": "buff",
+        "magnitude": "moderate",
+        "summary": "E damage up 10 per rank and R rift lasts longer at early ranks.",
+        "details": "The Weirding gains 10 base damage at every rank and Between Worlds' rift now lasts 2.25s at rank 1 instead of 1.75s, improving her waveclear and giving more room to outplay with the return portal.",
+        "name": "Aurora"
+      },
+      {
+        "direction": "buff",
+        "magnitude": "minor",
+        "summary": "Base AD up from 62 to 64.",
+        "details": "Two extra base attack damage sharpens his early trades and axe pressure now that role quest gold income has diluted his Adoration advantage.",
+        "name": "Draven"
+      },
+      {
+        "direction": "buff",
+        "magnitude": "moderate",
+        "summary": "Passive on-hit damage and W attack speed both up.",
+        "details": "Spider Queen deals 2 more magic damage per rank and Skittering Frenzy grants 10% more bonus attack speed at every rank, meaning faster clears and stronger spider-form damage.",
+        "name": "Elise"
+      },
+      {
+        "direction": "buff",
+        "magnitude": "moderate",
+        "summary": "More health growth and a much stronger ultimate heal.",
+        "details": "Health growth rises to 105 and Grand Challenge's heal gains range (600), higher per-tick values, and a 350% bonus AD max scaling, rewarding her for actually landing the full execute.",
+        "name": "Fiora"
+      },
+      {
+        "direction": "buff",
+        "magnitude": "moderate",
+        "summary": "Passive damage up and Evolved Leap range increased to +300.",
+        "details": "Unseen Threat gains 5 flat damage, Evolved W slow lasts 2.25s, and Evolved E adds 300 range instead of 200, making his weaker evolve paths actually worth taking.",
+        "name": "Kha'Zix"
+      },
+      {
+        "direction": "buff",
+        "magnitude": "moderate",
+        "summary": "Base armor up and R sleep duration extended to 2.5s.",
+        "details": "Armor rises from 22 to 24 and Lilting Lullaby puts enemies to sleep for half a second longer, letting her survive the dives her kit demands and set up bigger plays.",
+        "name": "Lillia"
+      },
+      {
+        "direction": "adjustment",
+        "magnitude": "moderate",
+        "summary": "Vigilance passive gutted, Q base damage raised.",
+        "details": "Empowered on-hit damage falls from 15 (+20% AD) to 5 (+15% AD) while Piercing Light gains 30 base damage at max rank, shifting power from bot-lane duo synergy to solo-lane Lucian.",
+        "name": "Lucian"
+      },
+      {
+        "direction": "buff",
+        "magnitude": "minor",
+        "summary": "Q cooldown refund no longer scales down with Ability Haste.",
+        "details": "Alpha Strike now always refunds a flat 1 second on hit, which barely matters on Summoner's Rift but is a real buff in high-haste modes like Arena and ARAM Mayhem.",
+        "name": "Master Yi"
+      },
+      {
+        "direction": "nerf",
+        "magnitude": "moderate",
+        "summary": "Q bonus damage down 10 at every rank.",
+        "details": "Siphoning Strike now deals 30/50/70/90/110 bonus damage instead of 40-120, delaying his stacking curve and cutting the lifesteal sustain he leans on in lane.",
+        "name": "Nasus"
+      },
+      {
+        "direction": "nerf",
+        "magnitude": "moderate",
+        "summary": "R cooldown increased by 10-20 seconds.",
+        "details": "Paranoia now costs 160/130/100 seconds instead of 140/115/90, meaning far fewer global dives and less frequent dueling pressure across the map.",
+        "name": "Nocturne"
+      },
+      {
+        "direction": "nerf",
+        "magnitude": "moderate",
+        "summary": "Q minion/monster damage cap reverted downward.",
+        "details": "Hammer Shock's max health damage cap on minions and monsters drops to 70/105/140/175/210, directly slowing her jungle clear and shrinking her flex-pick power.",
+        "name": "Poppy"
+      },
+      {
+        "direction": "adjustment",
+        "magnitude": "moderate",
+        "summary": "Overheat attack speed slashed, jungle monster cap raised.",
+        "details": "Junkyard Titan's Overheat attack speed falls from 50-130% to 30-100% while the monster damage cap climbs to 90-175, hitting elite Rumble's fight dominance while keeping jungle Rumble clearing fine.",
+        "name": "Rumble"
+      },
+      {
+        "direction": "nerf",
+        "magnitude": "moderate",
+        "summary": "Q Flux bonus damage and E mana cost worsened, armor growth up.",
+        "details": "Overload's Flux-empowered damage bonus drops 10% at every rank and Spell Flux costs 5 more mana, while armor growth rises to 4.7 to soften bad solo queue matchups — net less burst and roam pressure.",
+        "name": "Ryze"
+      },
+      {
+        "direction": "nerf",
+        "magnitude": "moderate",
+        "summary": "Base AD lowered and passive shield reduced to 10% max health.",
+        "details": "Attack damage becomes 61 + 3.9/level instead of 63 + 3.5/level and Blast Shield drops from 12% to 10% max health, making her early clear and dive durability noticeably riskier.",
+        "name": "Vi"
+      },
+      {
+        "direction": "buff",
+        "magnitude": "moderate",
+        "summary": "Passive gains AP attack speed scaling and a bonus AD damage ratio.",
+        "details": "The Relentless Storm now grants 4% attack speed per 100 AP per stack and its lightning on-hit adds 20% bonus AD scaling, buffing both the core AP build and the fringe AD build simultaneously.",
+        "name": "Volibear"
+      }
+    ],
+    "items": [
+      {
+        "direction": "adjustment",
+        "magnitude": "moderate",
+        "summary": "Flat health traded for health regeneration on support starters.",
+        "details": "World Atlas and Runic Compass now give 0/60/200 health but 50%/75%/75% health regen, which favors high-base-regen melee supports who want to grind out sustained laning instead of only roaming and all-inning.",
+        "name": "World Atlas"
+      },
+      {
+        "direction": "adjustment",
+        "magnitude": "moderate",
+        "summary": "Same health-to-regen shift as World Atlas.",
+        "details": "Runic Compass loses flat health in exchange for stronger health regen scaling, rewarding melee supports who stay in lane rather than relying purely on roams.",
+        "name": "Runic Compass"
+      }
+    ],
+    "systems": [
+      {
+        "direction": "buff",
+        "magnitude": "moderate",
+        "summary": "Top lane role quest Teleport cooldowns reduced by 30 seconds.",
+        "details": "The free role quest Teleport drops from 420s to 390s and the upgraded Unleashed Teleport goes from 330-240s to 300-210s (non-top Unleashed unchanged), giving top laners much more split-push and map influence.",
+        "area": "Top lane"
+      },
+      {
+        "direction": "nerf",
+        "magnitude": "minor",
+        "summary": "High Roller drop rate reduced again.",
+        "details": "High Roller is now rarer in ARAM: Mayhem, cutting down on early-game snowballing from an overtuned Augment.",
+        "area": "ARAM: Mayhem"
+      },
+      {
+        "direction": "new",
+        "magnitude": "major",
+        "summary": "13 new Augments, three Guests of Honor, and champion balance across Arena.",
+        "details": "Arena adds Augments like Hellbent, Shark Bait, Surge Field, Titan's Resolve, Rite of Ascension, Death Dealer, and Got That Dog In Em, introduces Ivern, Senna, and Thresh as Guests of Honor, raises missing-health energy regen to 400%, and retunes champions including Bel'Veth, Zed, Veigar, Sion, and Aphelios.",
+        "area": "Arena"
+      },
+      {
+        "direction": "new",
+        "magnitude": "major",
+        "summary": "Fizz, Graves, Nami, and Nautilus join Classic alongside three revived items.",
+        "details": "The water-themed champion drop adds pre-rework Fizz, Graves, Nami, and Nautilus, while Cloak and Dagger, Moonflair Spellblade, and Zz'Rot Portal return from the community Council vote, plus balance swings on Fiora (nerfed), Galio, Kassadin, Akali, Shyvana (buffed), Morgana, and Twisted Fate (nerfed).",
+        "area": "League Classic"
+      },
+      {
+        "direction": "adjustment",
+        "magnitude": "minor",
+        "summary": "Team Voice rollout postponed.",
+        "details": "The planned expansion of voice chat to your full team in North America and Oceania has been delayed past Patch 26.20 with no target patch, so you're still stuck with pings and chat.",
+        "area": "Client"
+      }
+    ]
+  },
+  {
     "patch": "26.18",
     "title": "League of Legends Patch 26.18 Notes",
     "url": "https://www.leagueoflegends.com/en-us/news/game-updates/league-of-legends-patch-26-18-notes",

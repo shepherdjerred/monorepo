@@ -17,8 +17,16 @@ Protected endpoints require `x-api-key` to match `TRMNL_API_KEY`.
 
 ## Backing clients
 
-Payloads are assembled from five clients in `src/clients/`: `alerts`,
-`bugsink`, `home-assistant`, `kubernetes`, and `prometheus`.
+Payloads are assembled from the clients in `src/clients/`: `home-assistant`
+and `pet-care` for the home and pet screens, `alerts` for pet-care alerts, and
+`ops` for the homelab screen.
+
+`/api/homelab` renders from the ops snapshot
+(`GET /api/v1/ops/snapshot` on the ops dashboard). The snapshot
+is validated with `@shepherdjerred/ops-model` and aged with its freshness
+policy, so a stale snapshot or a failed source renders `unknown`, never green.
+The Temporal `ops-snapshot` workflow owns collection from Prometheus,
+Kubernetes, Bugsink, and Alertmanager.
 
 Pet-care collection reads ordinary PetLibro and Roborock entities plus a
 strictly validated Whisker diagnostics payload for LR5 and hopper data. It
@@ -44,10 +52,8 @@ screen is enabled.
   `UNAVAILABLE_IGNORED_ENTITY_GLOBS` in source. Named presence/security/climate
   tiles still warn if those entities are unavailable. The home unavailable
   list only includes unexpected gaps.
-- Homelab: `PROMETHEUS_URL`, `ALERT_DASHBOARD_URL`, `BUGSINK_URL`,
-  `BUGSINK_TOKEN` (optional), and Kubernetes API access via
-  `KUBERNETES_API_URL` (or in-cluster `KUBERNETES_SERVICE_HOST`/`PORT`) plus
-  `KUBERNETES_TOKEN_PATH` / `KUBERNETES_CA_PATH`
+- Ops dashboard: `OPS_DASHBOARD_URL`, the in-cluster ops dashboard Service
+  that serves the snapshot and open alerts
 
 ## Commands
 

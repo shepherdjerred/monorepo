@@ -4,6 +4,7 @@ import {
   builtImageDigest,
   ciImageBuildCommand,
   ciImageDefinition,
+  ciImageSelftestCommand,
   ciImageSourceFingerprint,
   ciImageTags,
 } from "./build-ci-image-core.ts";
@@ -24,8 +25,7 @@ test("uses the remote builder for production pushes", () => {
     "tcp://buildkitd-buildkitd-service.buildkitd.svc.cluster.local:1234",
   );
   const command = ciImageBuildCommand(
-    "ghcr.io/shepherdjerred/ci-playwright",
-    ".buildkite/ci-playwright/Dockerfile",
+    ciImageDefinition("ci-playwright"),
     "abc",
     "/tmp/metadata.json",
   );
@@ -37,6 +37,8 @@ test("uses the remote builder for production pushes", () => {
   expect(command).toContain("/tmp/metadata.json");
   expect(command).toContain("--push");
   expect(command).not.toContain("latest");
+  expect(command).not.toContain("--target");
+  expect(command).not.toContain("--platform");
 });
 
 test("defines CI images independently", () => {
@@ -83,4 +85,73 @@ test("fingerprints only the selected CI image source files", async () => {
       missingSource,
     ),
   ).rejects.toThrow("source file is missing");
+});
+
+test("publishes each windows-cross-compiler image from its stage for amd64", () => {
+  const base = ciImageDefinition("windows-cross-compiler");
+  const winui = ciImageDefinition("windows-cross-compiler-winui");
+  expect(base.target).toBe("base");
+  expect(winui.target).toBe("winui");
+  for (const definition of [base, winui]) {
+    expect(definition.platform).toBe("linux/amd64");
+    expect(definition.dockerfile).toBe(
+      "packages/windows-cross-compiler/Dockerfile",
+    );
+    expect(definition.digestFile).toBe(
+      `packages/windows-cross-compiler/images/${definition.name}/DIGEST`,
+    );
+    expect(definition.sourceFiles).toContain(
+      "packages/windows-cross-compiler/msbuild/WindowsCross.targets",
+    );
+    expect(definition.sourceFiles).toContain(
+      "packages/windows-cross-compiler/wine-patches/0001-shcore-forward-PathIsNetworkPathW.patch",
+    );
+  }
+  expect(ciImageBuildCommand(winui, "abc", "/tmp/metadata.json")).toEqual(
+    expect.arrayContaining(["--target", "winui", "--platform", "linux/amd64"]),
+  );
+  expect(ciImageBuildCommand(base, "abc", "/tmp/metadata.json")).toEqual(
+    expect.arrayContaining(["--target", "base", "--platform", "linux/amd64"]),
+  );
+});
+
+test("self-tests read both image caches without pushing", () => {
+  const definitions = [
+    ciImageDefinition("windows-cross-compiler"),
+    ciImageDefinition("windows-cross-compiler-winui"),
+  ];
+  const command = ciImageSelftestCommand(
+    definitions,
+    "selftest-report",
+    "windows-cross-compiler-selftest",
+  );
+  expect(command).toEqual(
+    expect.arrayContaining([
+      "--target",
+      "selftest-report",
+      "type=local,dest=windows-cross-compiler-selftest",
+      "type=registry,ref=ghcr.io/shepherdjerred/windows-cross-compiler:buildcache",
+      "type=registry,ref=ghcr.io/shepherdjerred/windows-cross-compiler-winui:buildcache",
+    ]),
+  );
+  expect(command).not.toContain("--push");
+  expect(command.some((argument) => argument.startsWith("--cache-to"))).toBe(
+    false,
+  );
+});
+
+test("self-tests reject images from different Dockerfiles", () => {
+  expect(() =>
+    ciImageSelftestCommand(
+      [
+        ciImageDefinition("windows-cross-compiler"),
+        ciImageDefinition("ci-base"),
+      ],
+      "selftest-report",
+      "out",
+    ),
+  ).toThrow("does not share");
+  expect(() => ciImageSelftestCommand([], "selftest-report", "out")).toThrow(
+    "at least one image definition",
+  );
 });

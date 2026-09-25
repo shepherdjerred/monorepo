@@ -19,10 +19,9 @@ export const queryClient = new QueryClient({
       // failures (4xx) won't succeed on retry.
       retry: (failureCount, error) => {
         const parsed = HttpStatusErrorSchema.safeParse(error);
-        if (parsed.success && parsed.data.data.httpStatus < 500) {
-          return false;
-        }
-        return failureCount < 1;
+        const isClientError =
+          parsed.success && parsed.data.data.httpStatus < 500;
+        return !isClientError && failureCount < 1;
       },
       staleTime: 30_000,
     },

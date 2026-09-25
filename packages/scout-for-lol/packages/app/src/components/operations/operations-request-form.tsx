@@ -158,10 +158,9 @@ function DraftFields(props: {
   if (props.draft.kind === "ops_suppress_stale_notification") {
     return <SuppressFields draft={props.draft} onChange={props.onChange} />;
   }
-  if (props.draft.kind === "ops_resolve_unknown_delivery") {
-    return <DeliveryFields draft={props.draft} onChange={props.onChange} />;
-  }
-  return null;
+  return props.draft.kind === "ops_resolve_unknown_delivery" ? (
+    <DeliveryFields draft={props.draft} onChange={props.onChange} />
+  ) : null;
 }
 
 export function OperationsRequestForm(props: {

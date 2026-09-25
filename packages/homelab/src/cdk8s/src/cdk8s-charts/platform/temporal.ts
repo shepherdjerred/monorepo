@@ -54,6 +54,32 @@ function scoutBackendIngress(): NetworkPolicyIngressRule {
   };
 }
 
+/**
+ * The `gateway` runtime role's Temporal client.
+ *
+ * A separate identity because the split gave the role its own pod and its own
+ * `app` label, and the rules above match `app: scout-backend` exactly. The role
+ * runs no Activity worker at all — `runtime/plan.ts` still pushes `temporal-core`
+ * unconditionally, because Discord commands start Workflows they do not execute,
+ * so a blocked client here is every slash command failing to dispatch rather
+ * than a worker going idle.
+ *
+ * Beta only, matching the stage that actually renders the split topology.
+ */
+function scoutGatewayClientIngress(): NetworkPolicyIngressRule {
+  return {
+    from: [
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "scout-beta" },
+        },
+        podSelector: { matchLabels: { app: "scout-gateway" } },
+      },
+    ],
+    ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+  };
+}
+
 function scoutWorkflowWorkerIngress(): NetworkPolicyIngressRule {
   return {
     from: ["scout-beta", "scout-prod"].map((namespace) => ({
@@ -222,6 +248,7 @@ export function createTemporalChart(app: App) {
         },
         scoutBackendIngress(),
         scoutWorkflowWorkerIngress(),
+        scoutGatewayClientIngress(),
         {
           // Allow Prometheus scraping metrics
           from: [

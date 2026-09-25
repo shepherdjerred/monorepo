@@ -215,13 +215,10 @@ function logicalContradictionIssues(parlay: GeneratedParlay): string[] {
       if (condition.kind === "team_boolean") {
         return [condition.expected];
       }
-      if (
-        condition.kind === "participant_boolean" &&
+      return condition.kind === "participant_boolean" &&
         condition.field === "win"
-      ) {
-        return [condition.expected];
-      }
-      return [];
+        ? [condition.expected]
+        : [];
     }),
   );
   if (winExpectations.size > 1) {

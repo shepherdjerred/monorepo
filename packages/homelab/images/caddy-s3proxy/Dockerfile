@@ -12,7 +12,7 @@
 # locally to flush Caddy's deferred response headers before streaming S3 data.
 
 # renovate: datasource=docker depName=caddy
-FROM caddy:2.11.4-builder-alpine@sha256:7bac9be4072f7c4db2ccc7350750e0705004bf02da2ac7d96b1469ca4f28bb7c AS builder
+FROM caddy:2.11.4-builder-alpine@sha256:2b9f32cbba6045e79212bb253f595588d20be8f7d1edf61582c519e124e0d2d8 AS builder
 
 # xcaddy --with module for the S3 proxy plugin. The fork keeps the upstream
 # import path and adds HEAD support, the 304-on-index fix, and 206/Accept-Ranges
@@ -27,7 +27,7 @@ RUN git init /tmp/caddy-s3-proxy \
   && xcaddy build --with github.com/lindenlab/caddy-s3-proxy=/tmp/caddy-s3-proxy
 
 # renovate: datasource=docker depName=caddy
-FROM caddy:2.11.4-alpine@sha256:5f5c8640aae01df9654968d946d8f1a56c497f1dd5c5cda4cf95ab7c14d58648 AS runtime
+FROM caddy:2.11.4-alpine@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b AS runtime
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 

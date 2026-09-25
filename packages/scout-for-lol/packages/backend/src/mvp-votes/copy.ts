@@ -34,8 +34,7 @@ export function voteConfirmation(input: {
     input.category === "ally"
       ? `Voted **${input.nomineeLabel}** as my team MVP.`
       : `Voted **${input.nomineeLabel}** as the enemy MVP.`;
-  if (input.justification === null) {
-    return heading;
-  }
-  return `${heading}\n> ${input.justification}`;
+  return input.justification === null
+    ? heading
+    : `${heading}\n> ${input.justification}`;
 }

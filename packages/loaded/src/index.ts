@@ -100,13 +100,15 @@ export type LoadedData<T extends LoadedRecord> = {
  * with {@link QueryData} is immune to that, because an indexed access
  * distributes over the union rather than racing its members.
  */
+declare const defined: unique symbol;
+
 /**
- * Everything except `null` and `undefined`. Spelled through `NonNullable`
- * rather than as a bare `{}` so it reads as the intent — "a value is
- * present" — instead of the empty-object type, which is also what
- * `no-empty-object-type` is there to discourage.
+ * Everything except `null` and `undefined`. The symbol key keeps string-keyed
+ * property access on the intersection exactly the data's own (a primitive
+ * union member would surface e.g. `String.match` on data with a `match`
+ * property), and the member keeps the type from resolving to `{}`.
  */
-type Defined = NonNullable<unknown>;
+type Defined = { readonly [defined]?: never };
 
 export type QueryLike = {
   readonly data: unknown;
@@ -116,13 +118,11 @@ export type QueryLike = {
 
 /**
  * The renderable data type behind a query result: its `data`, minus absence.
- *
- * Written as an intersection rather than `Exclude<Q["data"], undefined>` on
- * purpose. Both describe the same set, but this one is *definitionally* what
- * TypeScript produces when it narrows `query.data !== undefined`, so the guard
- * inside `fromQuery` proves the return type on its own. With `Exclude` the
- * checker cannot relate the two over an unresolved generic and the projection
- * needs a type assertion; this way it needs none.
+ * Spelled as `Exclude` (rather than an intersection with a "defined" union)
+ * so object data keeps exactly its own properties — a primitive member in
+ * such a union would surface e.g. `String.match` on any data with a `match`
+ * property. The `hasData` predicate below is what relates the guard to this
+ * projection without a type assertion.
  */
 export type QueryData<Q extends QueryLike> = Q["data"] & (Defined | null);
 
@@ -447,8 +447,7 @@ function match<T, R>(value: Loaded<T>, matchers: LoadedMatchers<T, R>): R {
  */
 function messageOf(error: unknown): string {
   if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return String(error);
+  return typeof error === "string" ? error : String(error);
 }
 
 /**
@@ -515,10 +514,9 @@ function fromQuery<Q extends QueryLike>(
           data,
         };
   }
-  if (errors !== undefined) {
-    return { status: "error", fetching: query.isFetching, errors };
-  }
-  return { status: "loading", fetching: query.isFetching };
+  return errors === undefined
+    ? { status: "loading", fetching: query.isFetching }
+    : { status: "error", fetching: query.isFetching, errors };
 }
 
 /**

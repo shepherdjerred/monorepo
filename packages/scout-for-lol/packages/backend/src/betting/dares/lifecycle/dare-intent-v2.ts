@@ -52,8 +52,7 @@ function actorAuthorized(
   if (action === "fund" || action === "cancel") {
     return dare.challengerDiscordId === actor;
   }
-  if (action === "accept" || action === "decline") return target;
-  return !target;
+  return action === "accept" || action === "decline" ? target : !target;
 }
 
 export async function createDareV2ConfirmationIntent(

@@ -83,16 +83,13 @@ export function cstSpan(node: CstNode, fallback: ScoutQlSpan): ScoutQlSpan {
     return fallback;
   }
   const { startOffset, endOffset } = location;
-  if (
-    endOffset === undefined ||
+  return endOffset === undefined ||
     startOffset < 0 ||
     endOffset < startOffset ||
     !Number.isFinite(startOffset) ||
     !Number.isFinite(endOffset)
-  ) {
-    return fallback;
-  }
-  return { start: startOffset, end: endOffset + 1 };
+    ? fallback
+    : { start: startOffset, end: endOffset + 1 };
 }
 
 /** Depth guard for structural descents; reports "expression-too-deep" once. */

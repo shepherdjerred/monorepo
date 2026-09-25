@@ -99,6 +99,5 @@ const LABELS: Partial<Record<number, string>> = {
 
 export function describeMetatileBehavior(raw: number): string {
   const label = LABELS[raw];
-  if (label !== undefined) return label;
-  return "normal floor";
+  return label ?? "normal floor";
 }

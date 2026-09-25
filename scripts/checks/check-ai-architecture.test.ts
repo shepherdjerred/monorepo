@@ -150,6 +150,11 @@ describe("AI architecture compatibility exceptions", () => {
           contents: 'const blocked = ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"]',
         },
         {
+          path: "packages/toolkit/src/lib/brim/fish.ts",
+          contents:
+            'scrubEnv: ["ANTHROPIC_API_KEY", "OPENAI_API_KEY", "CODEX_API_KEY"]',
+        },
+        {
           path: "packages/app/src/provider.test.ts",
           contents: "expect(environment.OPENAI_API_KEY).toBeUndefined()",
         },

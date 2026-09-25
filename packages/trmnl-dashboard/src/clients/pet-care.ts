@@ -241,8 +241,7 @@ function classifyHopper(
   if (combined.includes("low")) {
     return { health: "low", label };
   }
-  if (combined.includes("ready")) {
-    return { health: "ready", label };
-  }
-  return { health: "unknown", label };
+  return combined.includes("ready")
+    ? { health: "ready", label }
+    : { health: "unknown", label };
 }

@@ -82,10 +82,9 @@ async function performFakePageAction(request: Request): Promise<Response> {
   if (!body.success) {
     return jsonResponse({ error: "invalid page action request" }, 400);
   }
-  if (body.data.action === "type" && body.data.selector === "input[name='q']") {
-    return jsonResponse({ error: "selector not found" }, 422);
-  }
-  return jsonResponse({ completed: true });
+  return body.data.action === "type" && body.data.selector === "input[name='q']"
+    ? jsonResponse({ error: "selector not found" }, 422)
+    : jsonResponse({ completed: true });
 }
 
 async function prepareTestEnvironment(

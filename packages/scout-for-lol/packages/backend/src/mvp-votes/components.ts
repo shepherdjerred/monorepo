@@ -30,10 +30,9 @@ import { displayNameFor, emptyMvpTallyEmbed } from "#src/mvp-votes/tally.ts";
 const SELECT_LABEL_MAX = 100;
 
 function truncateLabel(label: string): string {
-  if (label.length <= SELECT_LABEL_MAX) {
-    return label;
-  }
-  return `${label.slice(0, SELECT_LABEL_MAX - 1)}…`;
+  return label.length <= SELECT_LABEL_MAX
+    ? label
+    : `${label.slice(0, SELECT_LABEL_MAX - 1)}…`;
 }
 
 export function mvpVoteButtonRow(

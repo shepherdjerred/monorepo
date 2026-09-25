@@ -43,26 +43,20 @@ function imageFor(fileName: string): ImageMetadata {
 }
 ---
 
-{
-  shown.map((sample) => (
-    <section>
-      <h3 id={sample.kind}>
-        <code>{sample.kind}</code>
-      </h3>
-      <Code code={sample.query} lang="scoutql" />
-      {sample.image === null ? (
-        <Code
-          code={sample.content ?? ""}
-          lang="text"
-          title="Posted to Discord"
-        />
-      ) : (
-        <Image
-          src={imageFor(sample.image)}
-          alt={`A ${sample.kind.replaceAll("_", " ")} rendered by Scout: ${sample.title}.`}
-          loading="lazy"
-        />
-      )}
-    </section>
-  ))
-}
+{shown.map((sample) => (
+  <section>
+    <h3 id={sample.kind}>
+      <code>{sample.kind}</code>
+    </h3>
+    <Code code={sample.query} lang="scoutql" />
+    {sample.image === null ? (
+      <Code code={sample.content ?? ""} lang="text" title="Posted to Discord" />
+    ) : (
+      <Image
+        src={imageFor(sample.image)}
+        alt={`A ${sample.kind.replaceAll("_", " ")} rendered by Scout: ${sample.title}.`}
+        loading="lazy"
+      />
+    )}
+  </section>
+))}

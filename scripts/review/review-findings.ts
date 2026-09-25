@@ -107,10 +107,9 @@ export function resolveThreadOutcome(payload: unknown): string | null {
   if (parsed.errors !== undefined && parsed.errors.length > 0) {
     return parsed.errors.map((error) => error.message).join("; ");
   }
-  if (parsed.data?.resolveReviewThread?.thread.isResolved !== true) {
-    return "the mutation returned no confirmation that the thread is resolved";
-  }
-  return null;
+  return parsed.data?.resolveReviewThread?.thread.isResolved === true
+    ? null
+    : "the mutation returned no confirmation that the thread is resolved";
 }
 
 /**

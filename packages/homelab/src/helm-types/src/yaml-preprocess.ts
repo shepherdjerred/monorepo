@@ -53,11 +53,9 @@ function prevLineHasBlockScalar(lines: string[], i: number): boolean {
  * Check if a line is still in a block scalar (indented content)
  */
 function isBlockScalarContent(line: string, trimmed: string): boolean {
-  if (trimmed.length === 0) {
-    return false;
-  }
   return (
-    line.startsWith("  ") || line.startsWith("\t") || /^#\s{2,}/.test(line)
+    trimmed.length > 0 &&
+    (line.startsWith("  ") || line.startsWith("\t") || /^#\s{2,}/.test(line))
   );
 }
 
@@ -140,10 +138,7 @@ function updateConsecutiveCount(
   if (prevIsCommentedKey) {
     return current + 1;
   }
-  if (!prevIsBlank) {
-    return 0;
-  }
-  return current;
+  return prevIsBlank ? current : 0;
 }
 
 /**
@@ -192,11 +187,9 @@ function tryUncommentLine(
       Math.abs(keyIndent - state.lastRealKeyIndent) <= 4 ||
       newConsecutive >= 2);
 
-  if (shouldUncomment) {
-    return { uncommented: `${indent}${keyValue}`, newConsecutive };
-  }
-
-  return { uncommented: null, newConsecutive };
+  return shouldUncomment
+    ? { uncommented: `${indent}${keyValue}`, newConsecutive }
+    : { uncommented: null, newConsecutive };
 }
 
 export function preprocessYAMLComments(yamlContent: string): string {

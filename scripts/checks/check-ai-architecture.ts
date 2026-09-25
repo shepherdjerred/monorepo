@@ -91,6 +91,9 @@ const CREDENTIAL_SANITIZER_PATHS = new Set([
   "packages/temporal/src/activities/agent/agent-task-env.ts",
   "packages/temporal/src/shared/agent/provider-credentials.ts",
   "scripts/lib/release-refiner.ts",
+  // Brim's fish launcher scrubs provider keys from spawned agent sessions
+  // (mirroring the user's fish wrappers). It never reads the credentials.
+  "packages/toolkit/src/lib/brim/fish.ts",
 ]);
 const POKEMON_CODEX_SUBSCRIPTION_PATHS = new Set([
   "packages/discord-plays-pokemon/config.example.toml",
@@ -110,6 +113,13 @@ const DURABLE_AGENT_CREDENTIAL_PATHS = new Set([
 const DURABLE_AGENT_CLAUDE_SDK_PATHS = new Set([
   "packages/temporal/package.json",
   "packages/temporal/src/lib/agent-runner/claude.ts",
+]);
+// The shared Codex-through-OpenRouter config factory. The Codex CLI mandates
+// the CODEX_API_KEY env var name for custom providers (`env_key`), and the
+// value routed through it is the OpenRouter key — not a native OpenAI
+// credential. Only this factory may name it outside the reviewed adapters.
+const CODEX_OPENROUTER_CONFIG_PATHS = new Set([
+  "packages/llm-runtime/src/codex.ts",
 ]);
 
 // These homelab files describe provider-specific OpenTofu resources and their
@@ -202,6 +212,7 @@ function isAllowedViolation(
       CREDENTIAL_SANITIZER_PATHS.has(filePath) ||
       POKEMON_CODEX_SUBSCRIPTION_PATHS.has(filePath) ||
       DURABLE_AGENT_CREDENTIAL_PATHS.has(filePath) ||
+      CODEX_OPENROUTER_CONFIG_PATHS.has(filePath) ||
       HOMELAB_PLATFORM_METADATA_PATHS.has(filePath) ||
       filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
       OPENAI_NATIVE_REALTIME_PATHS.has(filePath)
@@ -222,22 +233,17 @@ function isAllowedViolation(
   }
 
   if (rule.id === "direct-provider-endpoint") {
-    if (filePath === BRIM_API_BILLING_ENDPOINTS) {
-      return brimBillingLineIsAllowed(source);
-    }
-    return (
-      filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
-      filePath === SUBSCRIPTION_QUOTA_ENDPOINTS ||
-      filePath === OPENAI_BILLING_RECONCILIATION_PATH ||
-      OPENAI_NATIVE_VOICE_AUDIO_PATHS.has(filePath)
-    );
+    return filePath === BRIM_API_BILLING_ENDPOINTS
+      ? brimBillingLineIsAllowed(source)
+      : filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
+          filePath === SUBSCRIPTION_QUOTA_ENDPOINTS ||
+          filePath === OPENAI_BILLING_RECONCILIATION_PATH ||
+          OPENAI_NATIVE_VOICE_AUDIO_PATHS.has(filePath);
   }
 
-  if (rule.id === "agent-cli-dependency") {
-    return filePath === NATIVE_SDK_CONTRACT_TEST;
-  }
-
-  return false;
+  return (
+    rule.id === "agent-cli-dependency" && filePath === NATIVE_SDK_CONTRACT_TEST
+  );
 }
 
 export function findAiArchitectureViolations(
@@ -303,17 +309,18 @@ function isActiveRuntimePath(
   filePath: string,
   workspaceRoots: readonly string[],
 ): boolean {
-  if (filePath === "package.json" || filePath.startsWith(".buildkite/")) {
-    return true;
-  }
-  if (filePath.startsWith("packages/docs/")) return false;
-  if (filePath.startsWith("packages/dotfiles/dot_agents/skills/")) return false;
-  if (filePath.includes("/node_modules/") || filePath.includes("/dist/")) {
-    return false;
-  }
-  return workspaceRoots.some(
-    (workspaceRoot) =>
-      filePath === workspaceRoot || filePath.startsWith(`${workspaceRoot}/`),
+  return (
+    filePath === "package.json" ||
+    filePath.startsWith(".buildkite/") ||
+    (!filePath.startsWith("packages/docs/") &&
+      !filePath.startsWith("packages/dotfiles/dot_agents/skills/") &&
+      !filePath.includes("/node_modules/") &&
+      !filePath.includes("/dist/") &&
+      workspaceRoots.some(
+        (workspaceRoot) =>
+          filePath === workspaceRoot ||
+          filePath.startsWith(`${workspaceRoot}/`),
+      ))
   );
 }
 

@@ -94,6 +94,7 @@ describe("ManagedFlagInventorySchema", () => {
       "starlight-karma-bot",
       "trmnl-dashboard",
       "temporal",
+      "alert-dashboard",
     ]);
     expect(
       materializeManagedNamespaceEnvironment(
@@ -286,5 +287,38 @@ describe("ManagedFlagInventorySchema", () => {
     ).text();
     const expected = await generateFlagTypesSource();
     expect(generatedOnDisk).toBe(expected);
+  });
+});
+
+describe("pet dashboard rollout", () => {
+  test("keeps the pet dashboard off by default and in beta while prod stays rolled out", () => {
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === "pet-dashboard-enabled",
+    );
+    expect(declared?.default).toBe(false);
+
+    const betaFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "beta",
+      "trmnl-dashboard",
+    ).find((candidate) => candidate.key === "pet-dashboard-enabled");
+    expect(betaFlag).toMatchObject({
+      default: false,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
+
+    const prodFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "prod",
+      "trmnl-dashboard",
+    ).find((candidate) => candidate.key === "pet-dashboard-enabled");
+    expect(prodFlag).toMatchObject({
+      default: true,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
   });
 });

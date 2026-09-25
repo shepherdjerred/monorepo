@@ -100,6 +100,12 @@ describe("collectErrors against the real repo", () => {
       `${dir}/packages/demo/dist/patches/generated@1.0.0.patch`,
       "",
     );
+    // Rust build output: cargo temp archives under target/ must never trip
+    // the orphan check, even for bun-style filenames.
+    await Bun.write(
+      `${dir}/packages/demo/target/release/deps/vanishing@1.0.0.patch`,
+      "",
+    );
     await Bun.write(`${dir}/packages/demo/patches/dead@1.0.0.patch`, "");
 
     try {

@@ -182,7 +182,7 @@ export function ReportScheduleFields(props: {
             autoCapitalize="none"
             spellCheck={false}
             required
-            aria-invalid={props.cron.error === undefined ? undefined : true}
+            aria-invalid={props.cron.error !== undefined || undefined}
             aria-describedby={
               props.cron.error === undefined
                 ? "report-schedule-cron-description"

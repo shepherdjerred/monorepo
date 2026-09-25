@@ -171,10 +171,9 @@ function hasViewerRole(
   role: "challenger" | "target" | "contributor" | "involved" | undefined,
 ): boolean {
   if (role === undefined) return true;
-  if (role === "involved") {
-    return item.viewerRoles.some((candidate) => candidate !== "member");
-  }
-  return item.viewerRoles.includes(role);
+  return role === "involved"
+    ? item.viewerRoles.some((candidate) => candidate !== "member")
+    : item.viewerRoles.includes(role);
 }
 
 function sortVisibleDares(
@@ -192,8 +191,9 @@ function sortVisibleDares(
       const rightDeadline = right.deadlineAt ?? right.acceptDeadline;
       if (leftDeadline !== rightDeadline) {
         if (leftDeadline === null) return 1;
-        if (rightDeadline === null) return -1;
-        return leftDeadline.localeCompare(rightDeadline);
+        return rightDeadline === null
+          ? -1
+          : leftDeadline.localeCompare(rightDeadline);
       }
     }
     const updated = right.updatedAt.localeCompare(left.updatedAt);

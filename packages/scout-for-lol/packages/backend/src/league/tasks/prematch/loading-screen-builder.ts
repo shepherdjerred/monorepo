@@ -131,10 +131,9 @@ function resolveTeam(
   layout: LoadingScreenLayout,
 ): LoadingScreenTeam {
   if (layout === "arena") {
-    if (participant.playerSubteamId === undefined) {
-      return { arenaTeam: null };
-    }
-    return { arenaTeam: ArenaTeamIdSchema.parse(participant.playerSubteamId) };
+    return participant.playerSubteamId === undefined
+      ? { arenaTeam: null }
+      : { arenaTeam: ArenaTeamIdSchema.parse(participant.playerSubteamId) };
   }
   const team = parseTeam(participant.teamId);
   if (team === undefined) {

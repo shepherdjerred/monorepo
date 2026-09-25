@@ -275,15 +275,12 @@ function formatComparisonGameBasis(
   series: TemporalSeries,
   point: TemporalSeries["points"][number],
 ): string {
-  if (
-    series.metric === "games" ||
+  return series.metric === "games" ||
     series.metric === "rank_position" ||
     point.comparisonEvidence === undefined ||
     point.comparisonEvidence === null
-  ) {
-    return "";
-  }
-  return ` (Based on ${evidenceGames(point.comparisonEvidence).toString()} games)`;
+    ? ""
+    : ` (Based on ${evidenceGames(point.comparisonEvidence).toString()} games)`;
 }
 
 export function requireNumericRowValue(

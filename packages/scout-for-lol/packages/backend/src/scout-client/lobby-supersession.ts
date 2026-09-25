@@ -50,12 +50,14 @@ export async function lobbyWasSuperseded(
   eventCapturedAt: Date,
 ): Promise<boolean> {
   const sourceCapturedAt = await boundLobbyCapturedAt(candidate);
-  if (sourceCapturedAt > eventCapturedAt) return true;
-  return await hasDifferentLobbyAfter(
-    candidate,
-    participantPuuids,
-    sourceCapturedAt,
-    eventCapturedAt,
+  return (
+    sourceCapturedAt > eventCapturedAt ||
+    (await hasDifferentLobbyAfter(
+      candidate,
+      participantPuuids,
+      sourceCapturedAt,
+      eventCapturedAt,
+    ))
   );
 }
 
@@ -66,12 +68,14 @@ export async function lobbyWasRecreatedBefore(
   eventCapturedAt: Date,
 ): Promise<boolean> {
   const sourceCapturedAt = await boundLobbyCapturedAt(candidate);
-  if (sourceCapturedAt > eventCapturedAt) return false;
-  return await hasDifferentLobbyAfter(
-    candidate,
-    participantPuuids,
-    sourceCapturedAt,
-    eventCapturedAt,
+  return (
+    sourceCapturedAt <= eventCapturedAt &&
+    (await hasDifferentLobbyAfter(
+      candidate,
+      participantPuuids,
+      sourceCapturedAt,
+      eventCapturedAt,
+    ))
   );
 }
 

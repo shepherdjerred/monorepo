@@ -90,10 +90,9 @@ export function classifyRedactedCommandFailure(
   ) {
     return "network";
   }
-  if (/stale info|non-fast-forward/i.test(output)) {
-    return "remote-lease-rejected";
-  }
-  return "unknown";
+  return /stale info|non-fast-forward/i.test(output)
+    ? "remote-lease-rejected"
+    : "unknown";
 }
 
 export async function writeGitAskpass(tempDir: string): Promise<string> {
@@ -159,10 +158,10 @@ export function isGeneratedAtOnlyDiff(diff: string): boolean {
         !line.startsWith("+++") &&
         !line.startsWith("---"),
     );
-  if (changedLines.length === 0) {
-    return false;
-  }
-  return changedLines.every((line) => line.includes('"generatedAt":'));
+  return (
+    changedLines.length > 0 &&
+    changedLines.every((line) => line.includes('"generatedAt":'))
+  );
 }
 
 /**

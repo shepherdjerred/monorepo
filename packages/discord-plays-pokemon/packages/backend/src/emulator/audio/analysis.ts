@@ -232,8 +232,7 @@ export function cosineSimilarity(a: Float64Array, b: Float64Array): number {
     na += av * av;
     nb += bv * bv;
   }
-  if (na === 0 || nb === 0) return 0;
-  return dot / (Math.sqrt(na) * Math.sqrt(nb));
+  return na === 0 || nb === 0 ? 0 : dot / (Math.sqrt(na) * Math.sqrt(nb));
 }
 
 /** Mean cosine similarity between two equal-length sequences of feature
@@ -290,6 +289,5 @@ export function bandEnergyRatio(
     total += e;
     if (hz >= lowHz && hz <= highHz) inBand += e;
   }
-  if (total === 0) return 0;
-  return inBand / total;
+  return total === 0 ? 0 : inBand / total;
 }

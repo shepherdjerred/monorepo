@@ -29,8 +29,5 @@ export function requireEnv(name: string, description: string): string {
  */
 export function optionalEnv(name: string): string | undefined {
   const value = Bun.env[name];
-  if (value == null || value.length === 0) {
-    return undefined;
-  }
-  return value;
+  return value == null || value.length === 0 ? undefined : value;
 }

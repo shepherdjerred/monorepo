@@ -59,10 +59,9 @@ function durationToMilliseconds(value: string): number | null {
   if (["day", "days", "d"].includes(unit)) {
     return amount * 24 * 60 * 60 * 1000;
   }
-  if (["week", "weeks", "w"].includes(unit)) {
-    return amount * 7 * 24 * 60 * 60 * 1000;
-  }
-  return null;
+  return ["week", "weeks", "w"].includes(unit)
+    ? amount * 7 * 24 * 60 * 60 * 1000
+    : null;
 }
 
 export function inferAgentJobScheduleKind(value: string): AgentJobScheduleKind {
@@ -70,10 +69,9 @@ export function inferAgentJobScheduleKind(value: string): AgentJobScheduleKind {
   if (/^[\d\s*,/-]+$/.test(trimmed) && trimmed.split(/\s+/).length === 5) {
     return "cron";
   }
-  if (/^every\s+/i.test(trimmed) || /^\d+\s*[smhdw]$/i.test(trimmed)) {
-    return "every";
-  }
-  return "at";
+  return /^every\s+/i.test(trimmed) || /^\d+\s*[smhdw]$/i.test(trimmed)
+    ? "every"
+    : "at";
 }
 
 export function resolveAgentJobSchedule(options: {

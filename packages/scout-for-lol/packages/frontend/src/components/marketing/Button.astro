@@ -103,9 +103,7 @@ const externalProps = external
   class={cn(baseClasses, variantClasses, sizeClasses, className)}
 >
   <slot />
-  {
-    variant === "text" && !className.includes("inline-flex") && (
-      <span aria-hidden="true">→</span>
-    )
-  }
+  {variant === "text" && !className.includes("inline-flex") && (
+    <span aria-hidden="true">→</span>
+  )}
 </a>

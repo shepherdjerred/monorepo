@@ -103,10 +103,9 @@ function valueSql(value: DareValueV2, gameSet: DareGameSetV2): string {
   if (value.kind === "related_participant_count") {
     return relatedParticipantSql(value);
   }
-  if (value.kind === "arithmetic") {
-    return arithmeticSql(value, gameSet);
-  }
-  return timelineEventCountSql(value);
+  return value.kind === "arithmetic"
+    ? arithmeticSql(value, gameSet)
+    : timelineEventCountSql(value);
 }
 
 function predicateSql(

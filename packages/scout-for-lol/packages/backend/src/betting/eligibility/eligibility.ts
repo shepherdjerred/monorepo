@@ -22,10 +22,7 @@ import {
  */
 
 export function isBettableQueue(queueType: QueueType | undefined): boolean {
-  if (queueType === undefined) {
-    return false;
-  }
-  return BUCKS_EARNING_QUEUES.includes(queueType);
+  return queueType !== undefined && BUCKS_EARNING_QUEUES.includes(queueType);
 }
 
 /**

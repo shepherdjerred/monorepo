@@ -70,10 +70,9 @@ export function resolveHallTo(
   if (activeHallGuild !== undefined) {
     return `/halls/${activeHallGuild.id}`;
   }
-  if (hallGuilds.length === 1 && hallGuilds[0] !== undefined) {
-    return `/halls/${hallGuilds[0].id}`;
-  }
-  return "/halls";
+  return hallGuilds.length === 1 && hallGuilds[0] !== undefined
+    ? `/halls/${hallGuilds[0].id}`
+    : "/halls";
 }
 
 export type GuildNavigationItem = {
@@ -182,15 +181,12 @@ export function resolveAppShellMode(
   signedIn: boolean,
 ): AppShellMode {
   if (!signedIn) return "focused";
-  if (
-    pathname === "/welcome" ||
+  return pathname === "/welcome" ||
     pathname === "/installed" ||
     pathname === "/login" ||
     pathname.startsWith("/explore/s/")
-  ) {
-    return "focused";
-  }
-  return "workspace";
+    ? "focused"
+    : "workspace";
 }
 
 export function guildIdFromAppPath(pathname: string): string | undefined {

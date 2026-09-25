@@ -118,11 +118,12 @@ async function handlePairingRoute(
     const input = ScoutClientCreatePairingSchema.safeParse(
       await boundedJson(request),
     );
-    if (!input.success) return jsonResponse({ error: "invalid_request" }, 400);
-    return jsonResponse(
-      await createPairing(input.data satisfies PairingInput),
-      201,
-    );
+    return input.success
+      ? jsonResponse(
+          await createPairing(input.data satisfies PairingInput),
+          201,
+        )
+      : jsonResponse({ error: "invalid_request" }, 400);
   }
 
   const exchangeMatch = EXCHANGE_PATH.exec(pathname);
@@ -198,8 +199,9 @@ async function handleAuthenticatedRoute(
     const offer = ReplayOfferRequestSchema.safeParse(
       await boundedJson(request),
     );
-    if (!offer.success) return jsonResponse({ error: "invalid_request" }, 400);
-    return jsonResponse(await decideReplayOffer(gameId, offer.data, device));
+    return offer.success
+      ? jsonResponse(await decideReplayOffer(gameId, offer.data, device))
+      : jsonResponse({ error: "invalid_request" }, 400);
   }
 
   if (pathname === `${API_PREFIX}/check-ins`) {
@@ -227,8 +229,7 @@ function requestMethodAllowed(
   method: string,
   replayMatch: RegExpExecArray | null,
 ): boolean {
-  if (method === "POST") return true;
-  return method === "PUT" && replayMatch !== null;
+  return method === "POST" || (method === "PUT" && replayMatch !== null);
 }
 
 export async function handleScoutClientRoute(

@@ -44,8 +44,10 @@ function isSkippedSegment(name: string): boolean {
  * the watcher dropped).
  */
 export function isVaultMarkdownPath(relPath: string): boolean {
-  if (!relPath.endsWith(".md")) return false;
-  return !relPath.split("/").some((seg) => isSkippedSegment(seg));
+  return (
+    relPath.endsWith(".md") &&
+    !relPath.split("/").some((seg) => isSkippedSegment(seg))
+  );
 }
 
 /**

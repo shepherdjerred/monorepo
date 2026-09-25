@@ -53,7 +53,7 @@ export function E2EConfigHandler() {
     // Also handle the case where the config link launched the app.
     void (async () => {
       const initialUrl = await Linking.getInitialURL();
-      if (initialUrl !== null) await applyConfig(initialUrl);
+      if (initialUrl) await applyConfig(initialUrl);
     })();
 
     return () => {

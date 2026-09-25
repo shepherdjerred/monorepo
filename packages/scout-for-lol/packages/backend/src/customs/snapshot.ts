@@ -176,7 +176,7 @@ export async function buildCustomNightSnapshot(
 ): Promise<CustomNightSnapshot | undefined> {
   const now = options instanceof Date ? options : (options.now ?? new Date());
   const viewerAdministrator =
-    options instanceof Date ? false : (options.viewerAdministrator ?? false);
+    !(options instanceof Date) && (options.viewerAdministrator ?? false);
   const night = await loadNight(client, nightId);
   if (night === null) return undefined;
 

@@ -75,20 +75,20 @@ describe("buildPlayerRankHistory", () => {
 
   test("extends the current split window past the last bundled act end", () => {
     const history = buildPlayerRankHistory({
-      now: new Date("2026-09-23T12:00:00-07:00"),
+      now: new Date("2026-10-21T12:00:00-07:00"),
       accounts: ACCOUNTS.slice(0, 1),
       observations: [
         {
           puuid: MAIN,
           queue: "flex",
-          at: new Date("2026-09-23T08:00:00-07:00"),
+          at: new Date("2026-10-21T08:00:00-07:00"),
           rank: rank("gold", 2, 5),
         },
       ],
     });
     expect(history.currentSplit.id).toBe("2026_SEASON_3");
     expect(history.currentSplit.end.getTime()).toBe(
-      new Date("2026-09-23T12:00:00-07:00").getTime(),
+      new Date("2026-10-21T12:00:00-07:00").getTime(),
     );
     expect(history.queues.flex.series[0]?.points).toHaveLength(1);
   });

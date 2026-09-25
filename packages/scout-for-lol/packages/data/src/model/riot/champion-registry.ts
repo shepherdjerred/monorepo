@@ -170,9 +170,7 @@ export function normalizeChampionName(championName: string): string {
   }
 
   const byName = championByName.get(normalizeSearchTerm(decoded));
-  if (byName) return byName.key;
-
-  return decoded;
+  return byName ? byName.key : decoded;
 }
 
 /**
@@ -209,9 +207,9 @@ export function searchChampions(
 
     const aStarts = aSearch.startsWith(normalizedQuery) ? 1 : 0;
     const bStarts = bSearch.startsWith(normalizedQuery) ? 1 : 0;
-    if (aStarts !== bStarts) return bStarts - aStarts;
-
-    return a.name.localeCompare(b.name);
+    return aStarts === bStarts
+      ? a.name.localeCompare(b.name)
+      : bStarts - aStarts;
   });
 
   return sorted.slice(0, limit).map((c) => ({

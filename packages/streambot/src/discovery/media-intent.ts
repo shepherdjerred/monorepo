@@ -51,8 +51,9 @@ function verbMode(verb: string | undefined): MediaMode | undefined {
   if (verb === undefined) return undefined;
   const normalized = verb.trim().toLocaleLowerCase("en-US");
   if (normalized === "watch") return "video";
-  if (normalized === "listen to" || normalized === "put on") return "music";
-  return undefined;
+  return normalized === "listen to" || normalized === "put on"
+    ? "music"
+    : undefined;
 }
 
 /** Turn the compact command surface into a structured, provider-neutral search intent. */

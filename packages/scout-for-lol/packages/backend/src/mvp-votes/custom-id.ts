@@ -151,10 +151,9 @@ export function parseVoteCustomId(raw: string): VoteCustomId | undefined {
   if (segments.length === 4) {
     const category = categoryFromWire(segments[2] ?? "");
     const matchId = MatchIdSchema.safeParse(segments[3]);
-    if (category === undefined || !matchId.success) {
-      return undefined;
-    }
-    return { kind: "button", category, matchId: matchId.data };
+    return category === undefined || !matchId.success
+      ? undefined
+      : { kind: "button", category, matchId: matchId.data };
   }
   if (segments.length === 5) {
     const kindWire = segments[2];

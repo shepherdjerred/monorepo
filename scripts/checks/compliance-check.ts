@@ -338,9 +338,11 @@ packages/tasknotes-fixtures:typecheck
 packages/tasknotes-macos:build
 packages/tasknotes-macos:test
 packages/tasknotes-macos:typecheck
+packages/windows-cross-compiler:build
 packages/code-review:build
 packages/architecture:build
 packages/cooklang-rich-preview:test
+packages/macos-cross-site:test
 packages/stocks-sjer-red:test
 packages/discord-video-stream:lint
 packages/discord-plays-mario-kart/packages/common:test
@@ -358,6 +360,10 @@ packages/home-assistant:build
 packages/hkctl:build
 packages/hkctl:test
 packages/hkctl:typecheck
+packages/macos-cross-compiler:build
+packages/macos-cross-compiler:test
+packages/macos-cross-compiler:lint
+packages/macos-cross-compiler:typecheck
 packages/sjer.red:test
 packages/release-tools:build
 packages/release-tools:lint

@@ -56,8 +56,9 @@ export function CompletedTasksModal({
         return a.title.localeCompare(b.title);
       }
       if (a.completedDate === undefined) return 1;
-      if (b.completedDate === undefined) return -1;
-      return b.completedDate.localeCompare(a.completedDate);
+      return b.completedDate === undefined
+        ? -1
+        : b.completedDate.localeCompare(a.completedDate);
     });
   }, [query, tasks]);
 

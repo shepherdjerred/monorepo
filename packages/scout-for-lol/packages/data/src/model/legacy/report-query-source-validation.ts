@@ -17,10 +17,9 @@ export function validateSourceFilters(
   ]);
   for (const filter of filters) {
     const valid =
-      source === "rank_current" || source === "competition_rank"
-        ? false
-        : source !== "prematch_participants" ||
-          prematchFields.has(filter.field);
+      source !== "rank_current" &&
+      source !== "competition_rank" &&
+      (source !== "prematch_participants" || prematchFields.has(filter.field));
     if (!valid) {
       throw new Error(`Filter ${filter.field} is not available for ${source}.`);
     }

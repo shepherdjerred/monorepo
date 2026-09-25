@@ -162,8 +162,9 @@ function resolveJsonPath(value: unknown, path: readonly string[]): unknown[] {
       }
       return current.flatMap((item) => {
         const record = z.record(z.string(), z.unknown()).safeParse(item);
-        if (!record.success || !(segment in record.data)) return [];
-        return [record.data[segment]];
+        return !record.success || !(segment in record.data)
+          ? []
+          : [record.data[segment]];
       });
     },
     [value],
@@ -185,8 +186,7 @@ function compareJsonValue(
   if (typeof actual !== "number" || typeof expected !== "number") return false;
   if (operator === "gt") return actual > expected;
   if (operator === "gte") return actual >= expected;
-  if (operator === "lt") return actual < expected;
-  return actual <= expected;
+  return operator === "lt" ? actual < expected : actual <= expected;
 }
 
 function prometheusValues(
@@ -214,8 +214,7 @@ function comparePrometheusValue(
   if (operator === "eq") return value === threshold;
   if (operator === "gt") return value > threshold;
   if (operator === "gte") return value >= threshold;
-  if (operator === "lt") return value < threshold;
-  return value <= threshold;
+  return operator === "lt" ? value < threshold : value <= threshold;
 }
 
 function prometheusSemanticStatus(

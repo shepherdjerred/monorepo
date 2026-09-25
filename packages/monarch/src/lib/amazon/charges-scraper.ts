@@ -132,6 +132,7 @@ async function extractRows(page: Page): Promise<TransactionRow[]> {
 
 async function textOrEmpty(scope: Locator, selector: string): Promise<string> {
   const target = scope.locator(selector).first();
-  if ((await target.count()) === 0) return "";
-  return (await target.textContent()) ?? "";
+  return (await target.count()) === 0
+    ? ""
+    : ((await target.textContent()) ?? "");
 }

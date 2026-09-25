@@ -191,37 +191,38 @@ const DirectPropertySchema = z.enum([
 ]);
 
 function isEmptyValue(value: unknown): boolean {
-  if (value === undefined || value === null) return true;
-  if (typeof value === "string") return value.length === 0;
-  if (Array.isArray(value)) return value.length === 0;
-  return false;
+  return (
+    value === undefined ||
+    value === null ||
+    (typeof value === "string"
+      ? value.length === 0
+      : Array.isArray(value) && value.length === 0)
+  );
 }
 
 function scalarToString(value: unknown): string {
   if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") {
-    return String(value);
-  }
-  return "";
+  return typeof value === "number" || typeof value === "boolean"
+    ? String(value)
+    : "";
 }
 
 function asStrings(value: unknown): string[] {
   if (Array.isArray(value)) return value.map((v) => scalarToString(v));
-  if (value === undefined || value === null) return [];
-  return [scalarToString(value)];
+  return value === undefined || value === null ? [] : [scalarToString(value)];
 }
 
 /** Compare on the date part only, lexically — dates are ISO strings. */
 function datePart(value: unknown): string | null {
-  if (typeof value !== "string" || value.length < 10) return null;
-  return value.slice(0, 10);
+  return typeof value !== "string" || value.length < 10
+    ? null
+    : value.slice(0, 10);
 }
 
 function matchesIs(actual: unknown, expected: unknown): boolean {
-  if (Array.isArray(actual)) {
-    return asStrings(expected).every((v) => asStrings(actual).includes(v));
-  }
-  return asStrings(actual)[0] === asStrings(expected)[0];
+  return Array.isArray(actual)
+    ? asStrings(expected).every((v) => asStrings(actual).includes(v))
+    : asStrings(actual)[0] === asStrings(expected)[0];
 }
 
 function matchesContains(actual: unknown, expected: unknown): boolean {
@@ -347,7 +348,6 @@ function sortTasks(
     if (ra === undefined) return 1; // undefined sorts last either direction
     if (rb === undefined) return -1;
     if (ra < rb) return -1 * dir;
-    if (ra > rb) return 1 * dir;
-    return 0;
+    return ra > rb ? 1 * dir : 0;
   });
 }

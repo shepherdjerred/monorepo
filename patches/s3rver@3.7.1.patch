@@ -1,0 +1,192 @@
+diff --git a/lib/controllers/object.js b/lib/controllers/object.js
+--- a/lib/controllers/object.js
++++ b/lib/controllers/object.js
+@@ -2,7 +2,7 @@
+ 
+ const Busboy = require('busboy');
+ const crypto = require('crypto');
+-const xmlParser = require('fast-xml-parser');
++const { XMLParser, XMLValidator } = require('fast-xml-parser');
+ const he = require('he');
+ const { URL } = require('url');
+ 
+@@ -21,16 +21,18 @@
+     req.on('end', () => resolve(payload));
+     req.on('error', reject);
+   });
+-  if (xmlParser.validate(xmlString) !== true) {
++  if (XMLValidator.validate(xmlString) !== true) {
+     throw new S3Error(
+       'MalformedXML',
+       'The XML you provided was not well-formed or did not validate against ' +
+         'our published schema.',
+     );
+   }
+-  ctx.request.body = xmlParser.parse(xmlString, {
+-    tagValueProcessor: a => he.decode(a),
+-  });
++  ctx.request.body = new XMLParser({
++    ignoreAttributes: true,
++    parseTagValue: true,
++    tagValueProcessor: (tagName, tagValue) => he.decode(tagValue),
++  }).parse(xmlString);
+ }
+ 
+ function triggerS3Event(ctx, eventData) {
+diff --git a/lib/models/config.js b/lib/models/config.js
+--- a/lib/models/config.js
++++ b/lib/models/config.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const xmlParser = require('fast-xml-parser');
++const { XMLParser, XMLValidator, XMLBuilder } = require('fast-xml-parser');
+ const { escapeRegExp } = require('lodash');
+ const he = require('he');
+ 
+@@ -38,11 +38,11 @@
+       throw new Error('Cannot create an instance of an abstract class');
+     }
+     this.type = type;
+-    this.rawConfig = xmlParser.parse(config, {
++    this.rawConfig = new XMLParser({
+       ignoreAttributes: false,
+-      parseNodeValue: true,
+-      tagValueProcessor: he.decode,
+-    });
++      parseTagValue: true,
++      tagValueProcessor: (tagName, tagValue) => he.decode(tagValue),
++    }).parse(config);
+   }
+ 
+   toJSON() {
+@@ -50,18 +50,19 @@
+   }
+ 
+   toXML(space) {
+-    const parser = new xmlParser.j2xParser({
++    const parser = new XMLBuilder({
+       ignoreAttributes: false,
++      attributeNamePrefix: '@_',
+       format: typeof space === 'number',
+       indentBy: ' '.repeat(space),
+     });
+-    return parser.parse(this.rawConfig);
++    return parser.build(this.rawConfig);
+   }
+ }
+ 
+ class S3CorsConfiguration extends S3ConfigBase {
+   static validate(xml) {
+-    if (xmlParser.validate(xml) !== true) {
++    if (XMLValidator.validate(xml) !== true) {
+       throw new S3Error(
+         'MalformedXML',
+         'The XML you provided was not well-formed or did not validate ' +
+@@ -153,7 +154,7 @@
+ 
+ class S3WebsiteConfiguration extends S3ConfigBase {
+   static validate(xml) {
+-    if (xmlParser.validate(xml) !== true) {
++    if (XMLValidator.validate(xml) !== true) {
+       throw new S3Error(
+         'MalformedXML',
+         'The XML you provided was not well-formed or did not validate ' +
+@@ -347,7 +348,7 @@
+ 
+ class TaggingConfiguration extends S3ConfigBase {
+   static validate(xml) {
+-    if (xmlParser.validate(xml) !== true) {
++    if (XMLValidator.validate(xml) !== true) {
+       throw new S3Error(
+         'MalformedXML',
+         'The XML you provided was not well-formed or did not validate ' +
+diff --git a/lib/models/error.js b/lib/models/error.js
+--- a/lib/models/error.js
++++ b/lib/models/error.js
+@@ -1,7 +1,7 @@
+ 'use strict';
+ 
+ const { mapKeys, omit } = require('lodash');
+-const { j2xParser } = require('fast-xml-parser');
++const { XMLBuilder } = require('fast-xml-parser');
+ const he = require('he');
+ 
+ class S3Error extends Error {
+@@ -32,13 +32,13 @@
+   }
+ 
+   toXML() {
+-    const parser = new j2xParser({
+-      tagValueProcessor: a =>
+-        he.encode(a.toString(), { useNamedReferences: true }),
++    const parser = new XMLBuilder({
++      tagValueProcessor: (tagName, tagValue) =>
++        he.encode(tagValue.toString(), { useNamedReferences: true }),
+     });
+     return [
+       '<?xml version="1.0" encoding="UTF-8"?>',
+-      parser.parse({
++      parser.build({
+         Error: {
+           Code: this.code,
+           Message: this.message,
+diff --git a/lib/s3rver.js b/lib/s3rver.js
+--- a/lib/s3rver.js
++++ b/lib/s3rver.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-const xmlParser = require('fast-xml-parser');
++const { XMLBuilder } = require('fast-xml-parser');
+ const Koa = require('koa');
+ const { defaults, isPlainObject } = require('lodash');
+ const he = require('he');
+@@ -44,17 +44,17 @@
+ 
+     try {
+       // encode object responses as XML
+-      const parser = new xmlParser.j2xParser({
++      const parser = new XMLBuilder({
+         ignoreAttributes: false,
+-        attrNodeName: '@',
+-        tagValueProcessor: a => he.escape(a.toString()),
++        attributeNamePrefix: '@',
++        tagValueProcessor: (tagName, tagValue) => he.escape(tagValue.toString()),
+       });
+       this.use(async (ctx, next) => {
+         await next();
+         if (isPlainObject(ctx.body)) {
+           ctx.type = 'application/xml';
+           ctx.body =
+-            '<?xml version="1.0" encoding="UTF-8"?>\n' + parser.parse(ctx.body);
++            '<?xml version="1.0" encoding="UTF-8"?>\n' + parser.build(ctx.body);
+         }
+       });
+ 
+diff --git a/lib/utils.js b/lib/utils.js
+--- a/lib/utils.js
++++ b/lib/utils.js
+@@ -1,7 +1,7 @@
+ 'use strict';
+ 
+ const crypto = require('crypto');
+-const xmlParser = require('fast-xml-parser');
++const { XMLParser } = require('fast-xml-parser');
+ const fs = require('fs-extra');
+ const path = require('path');
+ const { PassThrough } = require('stream');
+@@ -74,9 +74,10 @@
+ };
+ 
+ exports.getXmlRootTag = function(xml) {
+-  const traversal = xmlParser.getTraversalObj(xml.toString());
+-  const [[root]] = Object.values(traversal.child);
+-  return root && root.tagname;
++  const parsed = new XMLParser({ ignoreAttributes: true }).parse(
++    xml.toString(),
++  );
++  return Object.keys(parsed)[0];
+ };
+ 
+ exports.randomBase64String = function(length) {

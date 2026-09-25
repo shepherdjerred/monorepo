@@ -222,8 +222,7 @@ async function cleanCreatedChannels(
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return "Unknown voice operation failure";
+  return typeof error === "string" ? error : "Unknown voice operation failure";
 }
 
 async function recordVoiceFailure(input: {

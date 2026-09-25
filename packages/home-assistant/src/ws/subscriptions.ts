@@ -67,10 +67,9 @@ export class SubscriptionRegistry {
 
   public getByServerId(serverId: number): Subscription | undefined {
     const clientKey = this.serverIdToClientKey.get(serverId);
-    if (clientKey === undefined) {
-      return undefined;
-    }
-    return this.byClientKey.get(clientKey);
+    return clientKey === undefined
+      ? undefined
+      : this.byClientKey.get(clientKey);
   }
 
   public clearServerIds(): void {

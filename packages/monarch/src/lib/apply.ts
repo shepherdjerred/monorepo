@@ -26,8 +26,7 @@ async function promptInteractive(
     ? new TextDecoder().decode(value).trim().toLowerCase()
     : "s";
   if (input === "a" || input === "apply") return "apply";
-  if (input === "q" || input === "quit") return "quit";
-  return "skip";
+  return input === "q" || input === "quit" ? "quit" : "skip";
 }
 
 async function applySingleChange(change: ProposedChange): Promise<boolean> {

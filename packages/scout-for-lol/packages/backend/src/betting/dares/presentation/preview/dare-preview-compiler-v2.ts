@@ -88,8 +88,7 @@ function operator(value: "eq" | "neq" | "gte" | "lte" | "gt" | "lt") {
   if (value === "neq") return "<>";
   if (value === "gte") return ">=";
   if (value === "lte") return "<=";
-  if (value === "gt") return ">";
-  return "<";
+  return value === "gt" ? ">" : "<";
 }
 
 function targetAlias(gameSet: DareGameSetV2, targetKey: string): string {
@@ -187,14 +186,13 @@ function valueFragment(
         `(${alias}.creep_score * 60.0 / NULLIF(${alias}.time_played, 0))`,
       );
     }
-    if (value.field === "damage_per_minute") {
-      return frag(
-        `(${alias}.total_damage_dealt_to_champions * 60.0 / NULLIF(${alias}.time_played, 0))`,
-      );
-    }
-    return frag(
-      `((${alias}.kills + ${alias}.assists) * 1.0 / GREATEST(${alias}.deaths, 1))`,
-    );
+    return value.field === "damage_per_minute"
+      ? frag(
+          `(${alias}.total_damage_dealt_to_champions * 60.0 / NULLIF(${alias}.time_played, 0))`,
+        )
+      : frag(
+          `((${alias}.kills + ${alias}.assists) * 1.0 / GREATEST(${alias}.deaths, 1))`,
+        );
   }
   if (value.kind === "game") {
     return frag(

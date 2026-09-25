@@ -72,16 +72,12 @@ export function formatCostLine(
   const totalIn = usage.inputTokens;
   const totalOut = usage.outputTokens + usage.reasoningOutputTokens;
   const tokens = `Tokens: ${totalIn.toLocaleString("en-US")} in / ${totalOut.toLocaleString("en-US")} out`;
-  if (cost === null) {
-    return `${tokens} (no list price on file for ${model})`;
-  }
-  return `Cost: ${formatDollars(cost)} (${tokens})`;
+  return cost === null
+    ? `${tokens} (no list price on file for ${model})`
+    : `Cost: ${formatDollars(cost)} (${tokens})`;
 }
 
 function formatDollars(cost: number): string {
   // Sub-cent values get more precision so a $0.0023 run isn't reported as $0.00.
-  if (cost < 0.01) {
-    return `$${cost.toFixed(4)}`;
-  }
-  return `$${cost.toFixed(2)}`;
+  return cost < 0.01 ? `$${cost.toFixed(4)}` : `$${cost.toFixed(2)}`;
 }

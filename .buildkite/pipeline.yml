@@ -779,7 +779,7 @@ steps:
       - "packages/homelab/src/cdk8s/dist/*"
     retry: *retry
     plugins:
-      - test-collector#v1.11.0:
+      - test-collector#v1.12.0:
           files: ".ci-reports/junit/**/*.xml"
           format: junit
           missing-error: 0 # selector skips are reportless; executed runs validate above
@@ -1037,7 +1037,10 @@ steps:
       cd ../..
       bun --no-install run --cwd packages/tasknotes-macos mac:verify
       bun --no-install run --cwd packages/tasknotes-macos mac:analyze
-      bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci
+      if ! bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci; then
+        buildkite-agent artifact upload "packages/tasknotes-macos/.build/xcode/Logs/Test/*.xcresult/**/*" || echo "xcresult upload failed"
+        exit 1
+      fi
     retry: *retry
     agents:
       queue: macos
@@ -1060,7 +1063,10 @@ steps:
       cd ../..
       bun --no-install run --cwd packages/tasknotes-macos mac:verify
       bun --no-install run --cwd packages/tasknotes-macos mac:analyze
-      bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci
+      if ! bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci; then
+        buildkite-agent artifact upload "packages/tasknotes-macos/.build/xcode/Logs/Test/*.xcresult/**/*" || echo "xcresult upload failed"
+        exit 1
+      fi
     retry: *retry
     agents:
       queue: macos
@@ -1079,6 +1085,10 @@ steps:
         - "package.json"
         - "packages/alert-dashboard/**"
         - "packages/eslint-config/**"
+        - "packages/config/**"
+        - "packages/feature-flags/**"
+        - "packages/ops-model/**"
+        - "packages/ops-clients/**"
     cancel_on_build_failing: true
     command: |
       MISE_TOOLCHAIN_SCOPE=runtime . .buildkite/scripts/toolchain.sh
@@ -1161,6 +1171,8 @@ steps:
         - "packages/llm-models/**"
         - "packages/llm-observability/**"
         - "packages/llm-runtime/**"
+        - "packages/ops-clients/**"
+        - "packages/ops-model/**"
         - "packages/release-tools/**"
         - "packages/s3-signed-request/**"
         - "packages/temporal-observability/**"
@@ -1211,7 +1223,7 @@ steps:
       - "playwright-selection-report.json"
     retry: *retry
     plugins:
-      - test-collector#v1.11.0:
+      - test-collector#v1.12.0:
           files: ".ci-reports/junit/**/*.xml"
           format: junit
           missing-error: 0 # cache hits are reportless and recorded in the selection artifact
@@ -1305,7 +1317,7 @@ steps:
       - "packages/docs/wiki/dist/*"
     retry: *retry
     plugins:
-      - test-collector#v1.11.0:
+      - test-collector#v1.12.0:
           files: ".ci-reports/junit/**/*.xml"
           format: junit
           missing-error: 0 # selector skips are reportless; executed runs validate above
@@ -2044,10 +2056,45 @@ steps:
   # This budget stays above wait-for-review.ts's own deadline plus its install,
   # so the script always reports which provider and head it gave up on rather
   # than Buildkite killing the pod first.
+  #
+  # The gate runs LAST. Its failure (for example Codex out of quota) still
+  # fails the build, but only after every other PR step has finished, so it can
+  # never flip the build to "failing" while a `cancel_on_build_failing` sibling
+  # is still running and get that sibling canceled. `allow_dependency_failure`
+  # keeps the gate reporting its review verdict when another step failed.
+  # select-pr-pipeline.ts treats these edges as ordering only: it keeps the
+  # selected ones and never pulls an unselected lane into the build, and it
+  # rejects a PR step that is missing from this list.
   - label: ":robot_face: Codex review gate (required)"
     key: codex-review-gate
     timeout_in_minutes: 90
     if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    depends_on:
+      - verify
+      - macos-native-dispatch
+      - quotabar-macos-pr
+      - hkctl-native-pr
+      - tasknotes-native-pr
+      - alert-dashboard-sqlite
+      - playwright-e2e-pr
+      - resume-build-pr
+      - trmnl-validate-pr
+      - docker-e2e-pr
+      - trivy
+      - semgrep
+      - pr-dryrun
+      - tofu-plan-seaweedfs
+      - tofu-plan-tailscale
+      - tofu-plan-buildkite
+      - tofu-plan-arr
+      - tofu-plan-github
+      - tofu-plan-cloudflare
+      - tofu-platforms-validate
+      - tofu-posthog-plan
+      - images-pr
+      - windows-cross-compiler-pr
+      - macos-cross-compiler-pr
+    allow_dependency_failure: true
     env:
       REVIEW_PROVIDER: codex
     command: |
@@ -2140,6 +2187,7 @@ steps:
         - "packages/loaded/**"
         - "packages/cooklang-rich-preview/**"
         - "packages/stocks-sjer-red/**"
+        - "packages/macos-cross-site/**"
         - "packages/docs/wiki/**"
         - "packages/better-skill-capped/**"
         - "packages/glitter/**"
@@ -2168,7 +2216,7 @@ steps:
       fi
       # Print-only rehearsals (seconds each): sites catalog, the versioned
       # scout release path, helm chart push, and release-please.
-      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red wiki better-skill-capped glitter scout-design-system; do
+      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red macos-cross-site wiki better-skill-capped glitter scout-design-system; do
         bun --no-install scripts/release/deploy-site.ts "$$site" --dry-run
       done
       scout_backend=$$(bun --no-install scripts/release/scout-site-release.ts resolve-backend-digest)
@@ -2602,6 +2650,8 @@ steps:
         - "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts"
         - "packages/llm-models/**"
         - "packages/llm-observability/**"
+        - "packages/ops-clients/**"
+        - "packages/ops-model/**"
         - "packages/s3-signed-request/**"
         - "packages/scout-for-lol/packages/backend/**"
         - "packages/scout-for-lol/packages/data/**"
@@ -2634,6 +2684,49 @@ steps:
           metadata:
             labels:
               ci.sjer.red/step-key: images-pr
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_github_packages
+
+  - label: ":window: windows-cross-compiler self-test"
+    key: windows-cross-compiler-pr
+    timeout_in_minutes: 90
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - "packages/windows-cross-compiler/**"
+        - ".buildkite/scripts/images/application-image-runtime.ts"
+        - ".buildkite/scripts/images/bake-retry.ts"
+        - ".buildkite/scripts/images/build-ci-image-core.ts"
+        - ".buildkite/scripts/images/build-ci-image.ts"
+        - ".buildkite/scripts/images/selftest-ci-image.ts"
+        - ".buildkite/scripts/images/update-ci-image-pin-core.ts"
+        - ".buildkite/scripts/images/update-ci-image-pin-github.ts"
+        - ".buildkite/scripts/images/update-ci-image-pin.ts"
+        - ".buildkite/scripts/reporting/buildkit-env.ts"
+        - "scripts/lib/transient-error.ts"
+    depends_on: verify
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      bun --no-install .buildkite/scripts/reporting/buildkit-env.ts
+      # Builds the samples inside the base and winui images; no push, no cache write.
+      bun --no-install .buildkite/scripts/images/selftest-ci-image.ts
+    artifact_paths:
+      - "windows-cross-compiler-selftest/*.log"
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_buildkit_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: windows-cross-compiler-pr
           podSpecPatch:
             <<: *pod_buildkit_pod_spec
             containers:
@@ -2712,6 +2805,78 @@ steps:
                   - *grant_github_packages
                   - *grant_buildkite_read
 
+  # ── macos-cross-compiler: the public Apple toolchain images ──────────────
+  # A product rather than a cluster workload, so it has its own path: the SDK
+  # tarballs come from the private apple-sdks bucket (sha256-pinned in
+  # sdks.json), and main publishes the moving tags users pull (:<sdk>,
+  # :<sdk>-<sha>, :latest) for linux/amd64 and linux/arm64. See
+  # scripts/release/macos-cross-compiler.ts.
+  - label: ":apple: macos-cross-compiler — smoke (PR)"
+    key: macos-cross-compiler-pr
+    timeout_in_minutes: 120
+    if: build.pull_request.id != null
+    if_changed:
+      include:
+        - "packages/macos-cross-compiler/**"
+        - "scripts/release/macos-cross-compiler.ts"
+        - "scripts/lib/run.ts"
+        - "scripts/lib/s3-static-site.ts"
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts'
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"
+      bun --no-install scripts/release/macos-cross-compiler.ts smoke
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_buildkit_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: macos-cross-compiler-pr
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_seaweedfs_deploy_access
+                  - *grant_seaweedfs_deploy_secret
+
+  - label: ":apple: macos-cross-compiler — build, smoke, publish"
+    key: macos-cross-compiler
+    timeout_in_minutes: 240
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/macos-cross-compiler-push
+    command: |
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts macos-cross-compiler; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts'
+      export AWS_ACCESS_KEY_ID="$$SEAWEEDFS_DEPLOY_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$$SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY"
+      bun --no-install scripts/release/macos-cross-compiler.ts push
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_buildkit_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: macos-cross-compiler
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_github_packages
+                  - *grant_seaweedfs_deploy_access
+                  - *grant_seaweedfs_deploy_secret
+
   # ── Main-only: static sites ───────────────────────────────────────────────
   - label: ":rocket: deploy sites"
     key: sites
@@ -2735,7 +2900,7 @@ steps:
         # result is discarded (all of them are unaffected by construction);
         # only the recorded decision matters here.
         for site_lane in site-sjer-red site-resume site-webring site-cooklang \
-          site-stocks site-wiki site-better-skill-capped site-glitter \
+          site-stocks site-macos-cross site-wiki site-better-skill-capped site-glitter \
           site-scout-design-system; do
           if bun --no-install .buildkite/scripts/selectors/ci-changed.ts "$$site_lane"; then :; fi
         done
@@ -2749,6 +2914,7 @@ steps:
       site_better_skill_capped=false
       site_cooklang=false
       site_stocks=false
+      site_macos_cross=false
       site_wiki=false
       site_glitter=false
       site_scout_design_system=false
@@ -2765,6 +2931,10 @@ steps:
       if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-stocks; then
         site_stocks=true
         filters+=(--filter stocks-sjer-red)
+      fi
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-macos-cross; then
+        site_macos_cross=true
+        filters+=(--filter '@shepherdjerred/macos-cross-site')
       fi
       if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-wiki; then
         site_wiki=true
@@ -2808,6 +2978,7 @@ steps:
       if $$site_better_skill_capped; then bun --no-install scripts/release/deploy-site.ts better-skill-capped; fi
       if $$site_cooklang; then bun --no-install scripts/release/deploy-site.ts cooklang-rich-preview; fi
       if $$site_stocks; then bun --no-install scripts/release/deploy-site.ts stocks-sjer-red; fi
+      if $$site_macos_cross; then bun --no-install scripts/release/deploy-site.ts macos-cross-site; fi
       if $$site_wiki; then
         buildkite-agent artifact download "packages/docs/wiki/dist/**/*" . --step playwright-e2e-main
         buildkite-agent artifact download "packages/docs/wiki/dist/*" . --step playwright-e2e-main
@@ -3876,6 +4047,42 @@ steps:
                   - *grant_github_app_installation_id
                   - *grant_github_app_private_key
 
+  - label: ":window: windows-cross-compiler candidates"
+    key: windows-cross-compiler-refresh
+    timeout_in_minutes: 120
+    if: build.branch == pipeline.default_branch
+    depends_on: verify
+    cancel_on_build_failing: true
+    concurrency: 1
+    concurrency_group: monorepo/windows-cross-compiler-refresh
+    command: |
+      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts windows-cross-compiler; then exit 0; fi
+      . .buildkite/scripts/toolchain.sh
+      bun --no-install .buildkite/scripts/reporting/buildkit-env.ts
+      bun --no-install .buildkite/scripts/images/build-ci-image.ts --image windows-cross-compiler --candidate-out windows-cross-compiler-candidate.json
+      bun --no-install .buildkite/scripts/images/update-ci-image-pin.ts --candidate windows-cross-compiler-candidate.json
+      bun --no-install .buildkite/scripts/images/build-ci-image.ts --image windows-cross-compiler-winui --candidate-out windows-cross-compiler-winui-candidate.json
+      bun --no-install .buildkite/scripts/images/update-ci-image-pin.ts --candidate windows-cross-compiler-winui-candidate.json
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_buildkit_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: windows-cross-compiler-refresh
+          podSpecPatch:
+            <<: *pod_buildkit_pod_spec
+            containers:
+              - *checkout_container
+              - <<: *pod_buildkit_container
+                env:
+                  - *env_buildkite_shell
+                  - *grant_github_download
+                  - *grant_github_packages
+                  - *grant_github_app_id
+                  - *grant_github_app_installation_id
+                  - *grant_github_app_private_key
+
   # ── Main-only: build summary annotation (runs even when deploys fail) ─────
   - label: ":memo: build summary"
     key: build-summary
@@ -3892,6 +4099,7 @@ steps:
       - docker-e2e-main
       - images
       - sites
+      - macos-cross-compiler
       - homelab-release-admission
       - helm-push
       - tofu-apply-seaweedfs
@@ -3915,6 +4123,7 @@ steps:
       - version-commit-back
       - ci-base-refresh
       - ci-playwright-refresh
+      - windows-cross-compiler-refresh
     allow_dependency_failure: true
     command: bun --no-install .buildkite/scripts/reporting/annotate-build-summary.ts
     plugins:

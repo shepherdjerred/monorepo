@@ -3,7 +3,6 @@ import type { ReportEnvelopeV1 } from "./report.ts";
 
 export const TAILORED_REPORT_TYPES = [
   "agent-task",
-  "ci-io-impact",
   "dependency-summary",
   "homelab-audit",
   "link-rot-scan",
@@ -54,8 +53,7 @@ type SubjectPolicy = (report: ReportEnvelopeV1) => string;
 
 function subjectFromCopy(report: ReportEnvelopeV1, copy: SubjectCopy): string {
   if (report.execution === "failed") return copy.failed;
-  if (report.execution === "partial") return copy.partial;
-  return copy[report.verdict];
+  return report.execution === "partial" ? copy.partial : copy[report.verdict];
 }
 
 function agentTaskTitle(title: string): string {
@@ -72,22 +70,13 @@ function agentTaskSubject(report: ReportEnvelopeV1): string {
   ) {
     return `${title} could not finish`;
   }
-  if (report.verdict === "attention") return `Action needed: ${title}`;
-  return `${title}: report ready`;
+  return report.verdict === "attention"
+    ? `Action needed: ${title}`
+    : `${title}: report ready`;
 }
 
 const SUBJECT_POLICIES = {
   "agent-task": agentTaskSubject,
-  "ci-io-impact": (report) =>
-    subjectFromCopy(report, {
-      clear: "CI I/O report is ready",
-      changed: "CI I/O report is ready",
-      attention: "Action needed: CI I/O target missed",
-      pending: "CI I/O report is still pending",
-      inconclusive: "CI I/O report could not finish",
-      partial: "CI I/O report could not finish",
-      failed: "CI I/O report failed",
-    }),
   "dependency-summary": (report) =>
     subjectFromCopy(report, {
       clear: "Dependencies are up to date",
@@ -199,8 +188,9 @@ function genericSubject(report: ReportEnvelopeV1): string {
     return `Action needed: ${report.title}`;
   }
   if (report.verdict === "pending") return `${report.title} is still pending`;
-  if (report.verdict === "changed") return `${report.title}: changes found`;
-  return `${report.title}: no action needed`;
+  return report.verdict === "changed"
+    ? `${report.title}: changes found`
+    : `${report.title}: no action needed`;
 }
 
 export function hasTailoredReportPresentation(reportType: string): boolean {
@@ -226,10 +216,7 @@ function presentationTone(
   ) {
     return "incomplete";
   }
-  if (report.verdict === "attention" || actionCount > 0) {
-    return "review";
-  }
-  return "ok";
+  return report.verdict === "attention" || actionCount > 0 ? "review" : "ok";
 }
 
 function checkStatus(

@@ -73,8 +73,10 @@ function icoFromPngs(images: { size: number; png: Uint8Array }[]): Uint8Array {
 }
 
 function sameBytes(left: Uint8Array, right: Uint8Array): boolean {
-  if (left.byteLength !== right.byteLength) return false;
-  return left.every((value, index) => value === right[index]);
+  return (
+    left.byteLength === right.byteLength &&
+    left.every((value, index) => value === right[index])
+  );
 }
 
 async function emit(

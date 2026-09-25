@@ -396,8 +396,7 @@ function clashThemeLabel(
     | Awaited<ReturnType<typeof prisma.clashTournament.findMany>>[number]
     | undefined,
 ): string {
-  if (tournament === undefined) {
-    return "Clash";
-  }
-  return formatClashThemeLabel(tournament.nameKey, tournament.nameKeySecondary);
+  return tournament === undefined
+    ? "Clash"
+    : formatClashThemeLabel(tournament.nameKey, tournament.nameKeySecondary);
 }

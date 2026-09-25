@@ -181,10 +181,9 @@ function retryAfterDelayMs(value: string, nowMs: number): number | undefined {
     return Math.ceil(seconds * 1000);
   }
   const deadlineMs = Date.parse(value);
-  if (Number.isFinite(deadlineMs)) {
-    return Math.max(0, deadlineMs - nowMs);
-  }
-  return undefined;
+  return Number.isFinite(deadlineMs)
+    ? Math.max(0, deadlineMs - nowMs)
+    : undefined;
 }
 
 function retryDelayMs(

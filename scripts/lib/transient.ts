@@ -54,14 +54,11 @@ function hasTransientErrorCode(error: unknown): boolean {
   if (typeof error !== "object" || error === null) {
     return false;
   }
-  if (
+  const transient =
     "code" in error &&
     typeof error.code === "string" &&
-    TRANSIENT_ERROR_CODES.has(error.code)
-  ) {
-    return true;
-  }
-  return "cause" in error && hasTransientErrorCode(error.cause);
+    TRANSIENT_ERROR_CODES.has(error.code);
+  return transient || ("cause" in error && hasTransientErrorCode(error.cause));
 }
 
 /**

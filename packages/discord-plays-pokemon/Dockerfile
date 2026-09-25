@@ -23,7 +23,7 @@
 # uses clang wasm32-unknown-unknown + wasm-ld (LLVM, NOT emscripten): trixie's
 # clang-19 produces a Bun-loadable binary (bookworm's clang-14 does not).
 # ---------------------------------------------------------------------------
-FROM debian:trixie-slim@sha256:3a39a0592364683e6bab97937b72cad5a8fa6dcbbee90edb3bb48c7f8e94f258 AS wasm-builder
+FROM debian:trixie-slim@sha256:a99cfc517144bc59b1978475ec53b46ecabec7e43635402ee5b77cc54cd1b20a AS wasm-builder
 
 # Pinned commit of ottohg/pokeemerald-wasm. Kept in sync with the OTTOHG_SHA in
 # packages/discord-plays-pokemon/scripts/build-wasm.ts (the single source of
@@ -36,7 +36,7 @@ ENV OTTOHG_SHA=c101be5ac2ae53c5d18ee063f16eeeda751639f8
 # decomp host tools, libpng/zlib + pkg-config for gbagfx, python3 + uv for the
 # sound-data tooling.
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.12.5
+ARG UV_VERSION=0.12.18
 # Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
 # archive, so an exact `pkg=version` pin turns every upstream security respin
 # into a build failure here. Reproducibility would need a snapshot archive, not
@@ -83,7 +83,7 @@ RUN WASM_CC=clang WASM_LD=wasm-ld make wasm \
 # ---------------------------------------------------------------------------
 # Bun stages.
 # ---------------------------------------------------------------------------
-FROM oven/bun:1.4.0@sha256:5ff609364c049b54eb0ff560ec96319729a972078ef2c755d758f0c6ef89c2d6 AS base
+FROM oven/bun:1.4.2@sha256:9114c058aeae42162ee16dd5084b95fe9473970bb6bcb5b232ab1630f0546895 AS base
 WORKDIR /app
 
 # ── deps: full install (dev deps) — feeds the artifact builds below ─────────

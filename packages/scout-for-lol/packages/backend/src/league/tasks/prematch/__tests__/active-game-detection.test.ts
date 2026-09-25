@@ -143,10 +143,9 @@ await vi.doMock("#src/league/tasks/prematch/active-game-queries.ts", () => ({
 await vi.doMock("#src/league/api/spectator.ts", () => ({
   getActiveGame: (puuid: LeaguePuuid) => {
     const response = mockSpectatorResponses.get(puuid);
-    if (response === undefined) {
-      return Promise.resolve({ kind: "not-in-game" as const });
-    }
-    return Promise.resolve(response);
+    return response === undefined
+      ? Promise.resolve({ kind: "not-in-game" as const })
+      : Promise.resolve(response);
   },
 }));
 

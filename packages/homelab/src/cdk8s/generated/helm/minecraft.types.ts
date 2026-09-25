@@ -189,7 +189,7 @@ export type MinecraftHelmValuesMinecraftServer = {
   /**
    * One of: peaceful, easy, normal, and hard
    *
-   * @default "easy"
+   * @default "default"
    */
   difficulty?: string;
   whitelist?: unknown;
@@ -285,9 +285,9 @@ export type MinecraftHelmValuesMinecraftServer = {
   viewDistance?: number | "default";
   levelSeed?: unknown;
   /**
-   * @default "survival"
+   * @default "default"
    */
-  gameMode?: string;
+  gameMode?: string | number | boolean;
   /**
    * Message of the Day
    *
@@ -303,9 +303,9 @@ export type MinecraftHelmValuesMinecraftServer = {
   /**
    * One of: DEFAULT, FLAT, LARGEBIOMES, AMPLIFIED, CUSTOMIZED
    *
-   * @default "DEFAULT"
+   * @default "default"
    */
-  levelType?: string;
+  levelType?: string | number | boolean;
   generatorSettings?: unknown;
   /**
    * @default "world"

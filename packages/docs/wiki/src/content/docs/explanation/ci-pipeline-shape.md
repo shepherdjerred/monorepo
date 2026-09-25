@@ -46,6 +46,14 @@ any two of them would lose information the pipeline is built to preserve.
   the immutable tag, then reconcile the production `versions.ts` pin. They are
   three stages of one release, not three independent Scout test suites. The
   `scout-*` steps are ordered in [`pipeline.yml`](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml).
+- **Toolchain image candidates** rebuild the images other steps run inside:
+  `ci-base`, `ci-playwright`, and the two
+  [`windows-cross-compiler`](https://github.com/shepherdjerred/monorepo/tree/main/packages/windows-cross-compiler)
+  images. Main builds publish a content-addressed candidate and open a pull
+  request that moves the committed digest, so a consumer changes toolchains
+  only when that pull request's CI passes on the new image. The
+  windows-cross-compiler images also run their sample self-tests on pull
+  requests, because their consumers do not exercise every compiler they ship.
 
 ## Native Apple checks are a separate execution surface
 
@@ -94,6 +102,18 @@ optional provider, but is not required by Buildkite for now. The gate is
 Binding to the head commit is the whole point. A review comment from an earlier
 push is evidence about code that is no longer proposed, and accepting it would
 make the gate approve unreviewed changes.
+
+The gate runs after every other PR step. Any failed job marks a Buildkite build
+as failing, and most PR steps set `cancel_on_build_failing`, so a gate that ran
+beside them would cancel the whole build whenever Codex was out of quota. The
+gate therefore depends on every other PR step with `allow_dependency_failure`,
+still fails the build when the review fails, and still reports its verdict when
+another step failed. It does not run when a dependency was canceled, per
+Buildkite's
+[dependency rules](https://buildkite.com/docs/pipelines/configure/dependencies).
+The PR selector, `select-pr-pipeline.ts`, treats those edges as ordering only:
+it keeps the selected lanes, never schedules an unselected one, and rejects a
+PR step that is missing from the gate's list.
 
 ## Main builds upload only the steps they need
 

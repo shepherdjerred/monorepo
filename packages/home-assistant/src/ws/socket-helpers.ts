@@ -92,8 +92,7 @@ export function buildWsUrl(baseUrl: string): string {
   if (normalized.startsWith("https://")) {
     return `${normalized.replace(/^https:\/\//u, "wss://")}/api/websocket`;
   }
-  if (normalized.startsWith("http://")) {
-    return `${normalized.replace(/^http:\/\//u, "ws://")}/api/websocket`;
-  }
-  return `${normalized}/api/websocket`;
+  return normalized.startsWith("http://")
+    ? `${normalized.replace(/^http:\/\//u, "ws://")}/api/websocket`
+    : `${normalized}/api/websocket`;
 }

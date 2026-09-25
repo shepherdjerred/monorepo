@@ -490,8 +490,7 @@ async function baseFile(
   });
   const stdout = await new Response(proc.stdout).text();
   const exitCode = await proc.exited;
-  if (exitCode !== 0) return null;
-  return stdout;
+  return exitCode === 0 ? stdout : null;
 }
 
 async function changedFilePair(base: string, path: string): Promise<FilePair> {

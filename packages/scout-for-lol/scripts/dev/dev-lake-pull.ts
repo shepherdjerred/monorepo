@@ -159,12 +159,11 @@ async function extractEntry(input: EntryPull): Promise<void> {
  */
 async function localFileCount(dir: string): Promise<number> {
   let total = 0;
-  for await (const entry of new Bun.Glob("**/*").scan({
+  for await (const _entry of new Bun.Glob("**/*").scan({
     cwd: dir,
     onlyFiles: true,
     dot: true,
   })) {
-    void entry;
     total += 1;
   }
   return total;

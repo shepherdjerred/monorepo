@@ -180,10 +180,9 @@ function sortDiagnostics(
     if (left.span.start !== right.span.start) {
       return left.span.start - right.span.start;
     }
-    if (left.span.end !== right.span.end) {
-      return left.span.end - right.span.end;
-    }
-    return left.code.localeCompare(right.code);
+    return left.span.end === right.span.end
+      ? left.code.localeCompare(right.code)
+      : left.span.end - right.span.end;
   });
 }
 

@@ -173,18 +173,16 @@ export function deriveCheckpointPath(
   outputPath: string | undefined,
 ): string | undefined {
   if (outputPath === undefined || outputPath === "") return undefined;
-  if (outputPath.endsWith(".json")) {
-    return `${outputPath.slice(0, -".json".length)}.checkpoint.json`;
-  }
-  return `${outputPath}.checkpoint.json`;
+  return outputPath.endsWith(".json")
+    ? `${outputPath.slice(0, -".json".length)}.checkpoint.json`
+    : `${outputPath}.checkpoint.json`;
 }
 
 export function resolveCheckpointFile(
   checkpointFile: string | undefined,
   outputPath: string | undefined,
 ): string | undefined {
-  if (checkpointFile !== undefined && checkpointFile !== "") {
-    return checkpointFile;
-  }
-  return deriveCheckpointPath(outputPath);
+  return checkpointFile !== undefined && checkpointFile !== ""
+    ? checkpointFile
+    : deriveCheckpointPath(outputPath);
 }

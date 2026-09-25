@@ -45,44 +45,36 @@ const descClass =
         >
           {title}
         </h2>
-        {
-          description && (
-            <p class={`mx-auto mt-6 max-w-xl text-lg/8 ${descClass}`}>
-              {description}
-            </p>
-          )
-        }
-        {
-          buttons.length > 0 && (
-            <div class="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-              {buttons.map((button) =>
-                button.trackingEvent === undefined ? (
-                  <Button
-                    href={button.href}
-                    variant={
-                      button.variant === "secondary" ? "text" : "primary"
-                    }
-                    color={variant === "indigo" ? "white" : "indigo"}
-                  >
-                    {button.text}
-                  </Button>
-                ) : (
-                  <Button
-                    href={button.href}
-                    variant={
-                      button.variant === "secondary" ? "text" : "primary"
-                    }
-                    color={variant === "indigo" ? "white" : "indigo"}
-                    trackingEvent={button.trackingEvent}
-                    trackingLocation={button.trackingLocation}
-                  >
-                    {button.text}
-                  </Button>
-                ),
-              )}
-            </div>
-          )
-        }
+        {description && (
+          <p class={`mx-auto mt-6 max-w-xl text-lg/8 ${descClass}`}>
+            {description}
+          </p>
+        )}
+        {buttons.length > 0 && (
+          <div class="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
+            {buttons.map((button) =>
+              button.trackingEvent === undefined ? (
+                <Button
+                  href={button.href}
+                  variant={button.variant === "secondary" ? "text" : "primary"}
+                  color={variant === "indigo" ? "white" : "indigo"}
+                >
+                  {button.text}
+                </Button>
+              ) : (
+                <Button
+                  href={button.href}
+                  variant={button.variant === "secondary" ? "text" : "primary"}
+                  color={variant === "indigo" ? "white" : "indigo"}
+                  trackingEvent={button.trackingEvent}
+                  trackingLocation={button.trackingLocation}
+                >
+                  {button.text}
+                </Button>
+              ),
+            )}
+          </div>
+        )}
       </div>
     </div>
   </div>

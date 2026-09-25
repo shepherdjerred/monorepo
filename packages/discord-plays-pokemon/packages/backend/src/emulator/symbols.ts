@@ -26,10 +26,9 @@ function resolveAddress(
   // WebAssembly.Global#value is typed `any`; route through `unknown` and
   // narrow rather than asserting.
   const address: unknown = value.value;
-  if (typeof address !== "number" || !Number.isInteger(address)) {
-    return undefined;
-  }
-  return address;
+  return typeof address !== "number" || !Number.isInteger(address)
+    ? undefined
+    : address;
 }
 
 export function createGameSymbols(

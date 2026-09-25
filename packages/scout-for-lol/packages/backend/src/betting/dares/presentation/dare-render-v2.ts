@@ -93,9 +93,9 @@ function predicateText(
 function relationshipText(gameSet: DareGameSetV2): string {
   if (gameSet.relationship === "independent") return "in one game";
   if (gameSet.relationship === "same_match") return "together in one game";
-  if (gameSet.relationship === "same_team")
-    return "together on the same team in one game";
-  return "against each other in one game";
+  return gameSet.relationship === "same_team"
+    ? "together on the same team in one game"
+    : "against each other in one game";
 }
 
 function gameSetText(

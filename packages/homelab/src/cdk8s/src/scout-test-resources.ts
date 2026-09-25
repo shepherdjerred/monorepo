@@ -3,6 +3,7 @@ import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createScoutChart } from "./cdk8s-charts/scout.ts";
 import { createTemporalChart } from "./cdk8s-charts/platform/temporal.ts";
+import type { ScoutGatewayTopology } from "./resources/scout/topology.ts";
 
 export const ScoutTestResourceSchema = z
   .object({
@@ -40,6 +41,23 @@ export function findResource(
 export function scoutResources(stage: "beta" | "prod"): ScoutTestResource[] {
   const app = new App();
   createScoutChart(app, stage);
+  return resourcesFor(app);
+}
+
+/**
+ * Render a stage as though its SCOUT_GATEWAY_TOPOLOGY entry said `topology`.
+ *
+ * The retirement path is the rollback the whole `retiring` state exists for, so
+ * it is proven by rendering the real chart through the real code rather than by
+ * mocking the module that decides the topology — a mocked decision would only
+ * prove the mock.
+ */
+export function scoutResourcesWithGatewayTopology(
+  stage: "beta" | "prod",
+  topology: ScoutGatewayTopology,
+): ScoutTestResource[] {
+  const app = new App();
+  createScoutChart(app, stage, undefined, topology);
   return resourcesFor(app);
 }
 

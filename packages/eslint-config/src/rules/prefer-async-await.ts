@@ -40,15 +40,11 @@ export const preferAsyncAwait = createRule<[], MessageIds>({
       }
 
       const methodName = node.callee.property.name;
-      if (
-        methodName === "then" ||
+      return methodName === "then" ||
         methodName === "catch" ||
         methodName === "finally"
-      ) {
-        return { method: methodName, callee: node.callee };
-      }
-
-      return null;
+        ? { method: methodName, callee: node.callee }
+        : null;
     }
 
     function isAllowedPattern(node: TSESTree.CallExpression): boolean {

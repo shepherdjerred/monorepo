@@ -92,9 +92,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const submitted = (submission: BucksBetSubmission) => {
+const submitted = (_submission: BucksBetSubmission) => {
   // The real surface hands this to `bucks.placeBet`; the story just absorbs it.
-  void submission;
 };
 
 export const BetForm: Story = {

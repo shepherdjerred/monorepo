@@ -145,13 +145,12 @@ export class GoalManager {
    * for accuracy; we never persist more than that.
    */
   getHistory(limit: number): CompletedGoal[] {
-    if (limit <= 0) return [];
-    return this.history.slice(0, limit);
+    return limit <= 0 ? [] : this.history.slice(0, limit);
   }
-
   beginControlRequest(token: string, goalId: string): (() => void) | undefined {
-    if (token !== this.controlToken) return undefined;
-    return this.controlGate.begin(goalId);
+    return token === this.controlToken
+      ? this.controlGate.begin(goalId)
+      : undefined;
   }
 
   async startGoal(input: StartGoalInput): Promise<StartGoalResult> {
@@ -342,9 +341,10 @@ export class GoalManager {
     source: "agent" | "milestone" = "agent",
   ): Promise<boolean> {
     const active = this.active;
-    if (active === undefined) return false;
-    return active.reporter.publishProgress(active, message, source, () =>
-      this.persistState(active.state),
+    return (
+      active?.reporter.publishProgress(active, message, source, () =>
+        this.persistState(active.state),
+      ) ?? false
     );
   }
 

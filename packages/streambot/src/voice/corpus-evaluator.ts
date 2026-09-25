@@ -230,8 +230,9 @@ function confusion(
 }
 
 function recall(results: readonly ClipEvaluation[]): number {
-  if (results.length === 0) return 1;
-  return results.filter((result) => result.activated).length / results.length;
+  return results.length === 0
+    ? 1
+    : results.filter((result) => result.activated).length / results.length;
 }
 
 async function negativeSoak(

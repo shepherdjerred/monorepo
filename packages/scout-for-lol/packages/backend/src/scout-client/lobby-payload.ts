@@ -58,14 +58,11 @@ export function observedGameState(
         ? GameflowSessionSchema.safeParse(data).data?.phase
         : null;
   if (phase === "InProgress") return "PLAYING";
-  if (
-    phase === "PreEndOfGame" ||
+  return phase === "PreEndOfGame" ||
     phase === "WaitingForStats" ||
     phase === "EndOfGame"
-  ) {
-    return "RESULT_PENDING";
-  }
-  return null;
+    ? "RESULT_PENDING"
+    : null;
 }
 
 function collectPuuids(value: unknown, into: Set<string>): void {
@@ -140,8 +137,11 @@ export function observedLobbyMatchesCustomTeams(
   if (observed === null) return false;
   const blue = expected.filter((participant) => participant.side === "BLUE");
   const red = expected.filter((participant) => participant.side === "RED");
-  if (blue.length + red.length !== expected.length) return false;
-  return sameRoster(observed.blue, blue) && sameRoster(observed.red, red);
+  return (
+    blue.length + red.length === expected.length &&
+    sameRoster(observed.blue, blue) &&
+    sameRoster(observed.red, red)
+  );
 }
 
 /** Require each duel competitor to remain intact on one opposing lobby side. */
@@ -151,19 +151,18 @@ export function observedLobbyMatchesDuelTeams(
   competitorTwo: readonly { readonly puuid: string }[],
 ): boolean {
   const observed = observedLobbyTeams(payload);
-  if (observed === null) return false;
   return (
-    (sameRoster(observed.blue, competitorOne) &&
+    observed !== null &&
+    ((sameRoster(observed.blue, competitorOne) &&
       sameRoster(observed.red, competitorTwo)) ||
-    (sameRoster(observed.blue, competitorTwo) &&
-      sameRoster(observed.red, competitorOne))
+      (sameRoster(observed.blue, competitorTwo) &&
+        sameRoster(observed.red, competitorOne)))
   );
 }
 
 function customMapId(map: string): number | null {
   if (map === "SUMMONERS_RIFT") return 11;
-  if (map === "HOWLING_ABYSS") return 12;
-  return null;
+  return map === "HOWLING_ABYSS" ? 12 : null;
 }
 
 function normalizedPickMode(value: string): string {

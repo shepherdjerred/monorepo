@@ -173,10 +173,9 @@ function buildFriendsContext(
   }
 
   const lastFriend = friendDescriptions.pop();
-  if (lastFriend === undefined) {
-    return "";
-  }
-  return `Their friends ${friendDescriptions.join(", ")} and ${lastFriend} were also in this match.`;
+  return lastFriend === undefined
+    ? ""
+    : `Their friends ${friendDescriptions.join(", ")} and ${lastFriend} were also in this match.`;
 }
 
 /**
@@ -211,10 +210,9 @@ function buildFlexQueueContext(
     if (lastFriend === undefined) {
       return "";
     }
-    if (friendDescriptions.length === 0) {
-      return `This is a full 5-player premade team. Their teammate is ${lastFriend}.`;
-    }
-    return `This is a full 5-player premade team. Their teammates are ${friendDescriptions.join(", ")} and ${lastFriend}.`;
+    return friendDescriptions.length === 0
+      ? `This is a full 5-player premade team. Their teammate is ${lastFriend}.`
+      : `This is a full 5-player premade team. Their teammates are ${friendDescriptions.join(", ")} and ${lastFriend}.`;
   }
 
   // 4 friends (likely 4-stack with 1 random)
@@ -223,10 +221,9 @@ function buildFlexQueueContext(
     if (lastFriend === undefined) {
       return "";
     }
-    if (friendDescriptions.length === 0) {
-      return `This is a 4-player premade group with one random matchmade player. Their teammates are ${lastFriend}.`;
-    }
-    return `This is a 4-player premade group with one random matchmade player. Their teammates are ${friendDescriptions.join(", ")} and ${lastFriend}.`;
+    return friendDescriptions.length === 0
+      ? `This is a 4-player premade group with one random matchmade player. Their teammates are ${lastFriend}.`
+      : `This is a 4-player premade group with one random matchmade player. Their teammates are ${friendDescriptions.join(", ")} and ${lastFriend}.`;
   }
 
   // Other flex cases (2-3 players)
@@ -243,10 +240,9 @@ function buildFlexQueueContext(
   }
 
   const lastFriend = friendDescriptions.pop();
-  if (lastFriend === undefined) {
-    return "";
-  }
-  return `Their friends ${friendDescriptions.join(", ")} and ${lastFriend} were also in this flex queue match.`;
+  return lastFriend === undefined
+    ? ""
+    : `Their friends ${friendDescriptions.join(", ")} and ${lastFriend} were also in this flex queue match.`;
 }
 
 /**
@@ -332,11 +328,7 @@ function buildRankContext(match: CompletedMatch | ArenaMatch): string {
     }
   }
 
-  if (rankInfo.length === 0) {
-    return "";
-  }
-
-  return rankInfo.join(" ");
+  return rankInfo.length === 0 ? "" : rankInfo.join(" ");
 }
 
 export function buildPromptVariables(params: {

@@ -72,10 +72,10 @@ export function clashLakeRowsMissingFromSightings(
         puuid: row.puuid,
       }),
     );
-    if (existingSource === undefined) {
-      return true;
-    }
-    return existingSource === "prematch" && row.source === "match";
+    return (
+      existingSource === undefined ||
+      (existingSource === "prematch" && row.source === "match")
+    );
   });
 }
 

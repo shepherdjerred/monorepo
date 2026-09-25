@@ -20,6 +20,7 @@ export type HistoryPaths = {
 export type HistoryRuntimePaths = {
   readonly historyDir: string;
   readonly indexDb: string;
+  readonly usageExportDb: string;
   readonly socket: string;
   readonly state: string;
   readonly logsDir: string;
@@ -66,6 +67,7 @@ export function defaultHistoryRuntimePaths(
   return {
     historyDir,
     indexDb: path.join(historyDir, "index.sqlite"),
+    usageExportDb: path.join(historyDir, "usage-export.sqlite"),
     socket: path.join(historyDir, "daemon.sock"),
     state: path.join(historyDir, "state.json"),
     logsDir: path.join(historyDir, "logs"),

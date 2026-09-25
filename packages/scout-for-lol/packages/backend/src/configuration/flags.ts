@@ -180,14 +180,15 @@ export type FlagName =
   | "scout-consumer-player-profiles-enabled"
   | "voice_assistant_enabled";
 
-const _assertFlagNameSubset: FlagName extends ScoutBooleanFlagKey
-  ? true
-  : never = true;
-void _assertFlagNameSubset;
+/**
+ * Compile-time proof that every local flag name remains a Flipt boolean flag:
+ * adding a name here that Flipt does not know fails typecheck at this line.
+ */
+type AssertFlagNameSubset<T extends ScoutBooleanFlagKey> = T;
 
 /** Flipt is authoritative when available. The registry remains a fail-closed
  * compatibility seed and test fixture for provider-unavailable evaluations. */
-export type PolicyFlagName = FlagName;
+export type PolicyFlagName = AssertFlagNameSubset<FlagName>;
 
 /**
  * Product surfaces that are permanently excluded from production. This policy
@@ -232,10 +233,9 @@ export function isFeatureHardDisabled(name: FlagName): boolean {
  * production decision moves to Flipt rather than arriving with the deploy.
  */
 function applicableOverrides(config: FlagConfig): FlagOverride[] {
-  if (resolveEnvironment() !== "prod") {
-    return config.overrides;
-  }
-  return config.overrides.filter((override) => override.betaOnly !== true);
+  return resolveEnvironment() === "prod"
+    ? config.overrides.filter((override) => override.betaOnly !== true)
+    : config.overrides;
 }
 
 /**

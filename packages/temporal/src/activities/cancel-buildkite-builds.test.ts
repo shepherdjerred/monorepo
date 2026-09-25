@@ -69,10 +69,9 @@ function listBody(numbers: number[]): Response {
  */
 function stubFetch(builds: number[], putStatus: number): FetchFn {
   return (_url, init) => {
-    if (init?.method === "PUT") {
-      return Promise.resolve(new Response("x", { status: putStatus }));
-    }
-    return Promise.resolve(listBody(builds));
+    return init?.method === "PUT"
+      ? Promise.resolve(new Response("x", { status: putStatus }))
+      : Promise.resolve(listBody(builds));
   };
 }
 
@@ -81,10 +80,9 @@ describe("cancelBuildkiteBuildsForBranchImpl", () => {
     const calls: { url: string; method: string }[] = [];
     const fetchFn: FetchFn = (url, init) => {
       calls.push({ url, method: init?.method ?? "GET" });
-      if (init?.method === "PUT") {
-        return Promise.resolve(new Response("{}", { status: 200 }));
-      }
-      return Promise.resolve(listBody([101, 102]));
+      return init?.method === "PUT"
+        ? Promise.resolve(new Response("{}", { status: 200 }))
+        : Promise.resolve(listBody([101, 102]));
     };
 
     const result = await cancelBuildkiteBuildsForBranchImpl(INPUT, fetchFn);

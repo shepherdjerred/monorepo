@@ -56,12 +56,9 @@ test("preflight validates both identities, guild/channel access, app, and profil
         response({ id: fixture.channelId, guild_id: fixture.guildId }),
       );
     }
-    if (url.includes("/members/")) {
-      return Promise.resolve(
-        response({ user: { id: fixture.recipientUserId } }),
-      );
-    }
-    return Promise.resolve(response({ id: fixture.applicationId }));
+    return url.includes("/members/")
+      ? Promise.resolve(response({ user: { id: fixture.recipientUserId } }))
+      : Promise.resolve(response({ id: fixture.applicationId }));
   });
   const verifyPinchTabProfile = vi.fn(() => Promise.resolve());
 

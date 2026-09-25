@@ -4,20 +4,21 @@ import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports
 import { Namespace } from "cdk8s-plus-31";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
 
-// Braintrust ingests whole LLM traces per project; the project is selected by
-// the x-bt-parent header on the exporter, and projects are created implicitly
-// on first write — a typo here silently creates a stray project.
+// Phoenix ingests whole LLM traces per project; the project is selected by
+// the x-project-name header on the exporter, and projects are created
+// implicitly on first write — a typo here silently creates a stray project.
 //
 // Routing is an explicit allowlist: each branch's filter processor DROPS every
 // span matching one of its `drop` conditions, so a branch's conditions are the
 // negation of "this span belongs to the project". A service listed nowhere
 // (openrouter-broadcast-ingest's payloads especially) reaches no project by
-// construction — that exclusion is the byte-budget guard, so there must never
-// be a catch-all branch.
-type BraintrustBranch = {
-  // Exact Braintrust project name.
+// construction — that exclusion bounds Phoenix's database growth, so there
+// must never be a catch-all branch.
+type PhoenixBranch = {
+  // Exact Phoenix project name.
   project: string;
   // River component suffix; must be a valid River identifier (no hyphens).
   river: string;
@@ -30,31 +31,36 @@ type BraintrustBranch = {
 };
 
 const SERVICE_NAME = 'resource.attributes["service.name"]';
+
+// otlphttp appends /v1/traces. Its default encoding is protobuf, which is the
+// only body Phoenix's OTLP route accepts (JSON gets a 415) — keep it, even
+// though several producers POST OTLP JSON to this gateway.
+const PHOENIX_ENDPOINT = "http://phoenix.phoenix.svc.cluster.local:6006";
 const DEPLOY_ENV = 'resource.attributes["deployment.environment.name"]';
 
-const BRAINTRUST_BRANCHES: BraintrustBranch[] = [
+const PHOENIX_BRANCHES: PhoenixBranch[] = [
   {
     project: "scout-beta",
-    river: "bt_scout_beta",
+    river: "px_scout_beta",
     drop: [
       `not(${SERVICE_NAME} == "scout-backend" and ${DEPLOY_ENV} == "beta")`,
     ],
   },
   {
     project: "scout-prod",
-    river: "bt_scout_prod",
+    river: "px_scout_prod",
     drop: [
       `not(${SERVICE_NAME} == "scout-backend" and ${DEPLOY_ENV} == "prod")`,
     ],
   },
   {
     project: "birmel",
-    river: "bt_birmel",
+    river: "px_birmel",
     drop: [`${SERVICE_NAME} != "birmel"`],
   },
   {
     project: "temporal",
-    river: "bt_temporal",
+    river: "px_temporal",
     drop: [
       `${SERVICE_NAME} == nil`,
       `not(IsMatch(${SERVICE_NAME}, "^temporal-"))`,
@@ -62,14 +68,14 @@ const BRAINTRUST_BRANCHES: BraintrustBranch[] = [
   },
   {
     project: "discord-plays",
-    river: "bt_discord_plays",
+    river: "px_discord_plays",
     drop: [
       `not(${SERVICE_NAME} == "discord-plays-pokemon" or ${SERVICE_NAME} == "discord-plays-mario-kart")`,
     ],
   },
   {
     project: "misc",
-    river: "bt_misc",
+    river: "px_misc",
     drop: [
       `not(${SERVICE_NAME} == "streambot" or ${SERVICE_NAME} == "alert-dashboard")`,
     ],
@@ -83,7 +89,7 @@ function riverString(value: string): string {
     .replaceAll('"', String.raw`\"`)}"`;
 }
 
-function renderBraintrustBranch(branch: BraintrustBranch): string {
+function renderPhoenixBranch(branch: PhoenixBranch): string {
   const conditions = branch.drop
     .map((condition) => `      ${riverString(condition)},`)
     .join("\n");
@@ -103,18 +109,80 @@ ${conditions}
 
 otelcol.exporter.otlphttp "${branch.river}" {
   client {
-    endpoint = "https://api.braintrust.dev/otel"
-    auth     = otelcol.auth.bearer.braintrust.handler
+    endpoint = "${PHOENIX_ENDPOINT}"
+    auth     = otelcol.auth.bearer.phoenix.handler
     headers  = {
-      "x-bt-parent" = "project_name:${branch.project}",
+      "x-project-name" = "${branch.project}",
     }
   }
 }`;
 }
 
+/** OTLP/HTTP metrics port published on the tailnet as `otlp-metrics`. */
+export const TAILNET_METRICS_PORT = 4319;
+
+/**
+ * Metric-name prefixes the tailnet receiver admits. The toolkit history
+ * daemon on Jerred's Mac pushes AI usage and subscription quota; nothing else
+ * may write into cluster Prometheus through this door.
+ */
+export const TAILNET_METRIC_NAME_PATTERN = "^(ai_usage_|ai_subscription_)";
+
+// Metrics-only OTLP/HTTP receiver for workstation pushes arriving over the
+// Tailscale ingress. It is a separate receiver on its own port so the tailnet
+// can reach metrics without exposing the trace receiver on 4318, and so a
+// tailnet client can never inject spans into Tempo or Phoenix.
+//
+// The Tailscale ingress is unauthenticated beyond tailnet ACLs, so the filter
+// is the allowlist: anything whose name does not match the prefix is dropped
+// before it reaches Prometheus. Metric names arrive already in their final
+// Prometheus spelling, so suffixes stay off. `service.name` and
+// `service.instance.id` map to `job` and `instance` by the exporter itself;
+// target_info and scope labels would only add noise series and labels.
+const TAILNET_METRICS_CONFIG = `otelcol.receiver.otlp "tailnet_metrics" {
+  http {
+    endpoint = "0.0.0.0:${String(TAILNET_METRICS_PORT)}"
+  }
+
+  output {
+    metrics = [otelcol.processor.filter.tailnet_metrics.input]
+  }
+}
+
+otelcol.processor.filter "tailnet_metrics" {
+  metrics {
+    metric = [
+      ${riverString(`not IsMatch(name, "${TAILNET_METRIC_NAME_PATTERN}")`)},
+    ]
+  }
+
+  output {
+    metrics = [otelcol.processor.batch.tailnet_metrics.input]
+  }
+}
+
+otelcol.processor.batch "tailnet_metrics" {
+  output {
+    metrics = [otelcol.exporter.prometheus.tailnet.input]
+  }
+}
+
+otelcol.exporter.prometheus "tailnet" {
+  add_metric_suffixes  = false
+  include_target_info  = false
+  include_scope_labels = false
+  forward_to           = [prometheus.remote_write.cluster.receiver]
+}
+
+prometheus.remote_write "cluster" {
+  endpoint {
+    url = "http://prometheus-operated.prometheus:9090/api/v1/write"
+  }
+}`;
+
 // Grafana Alloy River config: receive OTLP/HTTP from every in-cluster trace
 // producer, forward ALL spans to Tempo unconditionally, and tail-sample whole
-// traces containing LLM spans into per-service-stage Braintrust projects.
+// traces containing LLM spans into per-service-stage Phoenix projects.
 // Producers only ever know the gateway URL.
 //
 // Every producer in the repo speaks OTLP/HTTP on 4318 (several POST OTLP JSON
@@ -123,13 +191,13 @@ otelcol.exporter.otlphttp "${branch.river}" {
 // the per-request cap must never be the smaller limit; the otelcol default of
 // 20MiB is too low.
 //
-// Tail sampling holds a trace for decision_wait before deciding, because
-// Braintrust's logs UI only renders traces that include a root span — sampling
-// whole traces is the point. The sampled decision cache forwards spans of
+// Tail sampling holds a trace for decision_wait before deciding, so Phoenix
+// receives whole traces with their root span rather than orphaned LLM
+// children — reading the full trajectory is the point. The sampled decision cache forwards spans of
 // long agent traces that arrive after the decision immediately;
 // non_sampled_cache_size must stay 0 (unset) so "drop" windows are
 // re-evaluated when late LLM spans arrive. The kill switch for a runaway
-// byte budget is removing a branch from tail_sampling's output list — the
+// producer is removing a branch from tail_sampling's output list — the
 // config-reloader applies that without recreating the pod.
 export const ALLOY_GATEWAY_CONFIG = `
 otelcol.receiver.otlp "gateway" {
@@ -181,18 +249,20 @@ otelcol.processor.tail_sampling "llm" {
 
   output {
     traces = [
-${BRAINTRUST_BRANCHES.map(
+${PHOENIX_BRANCHES.map(
   (branch) => `      otelcol.processor.filter.${branch.river}.input,`,
 ).join("\n")}
     ]
   }
 }
 
-otelcol.auth.bearer "braintrust" {
-  token = sys.env("BRAINTRUST_API_KEY")
+otelcol.auth.bearer "phoenix" {
+  token = sys.env("PHOENIX_API_KEY")
 }
 
-${BRAINTRUST_BRANCHES.map((branch) => renderBraintrustBranch(branch)).join("\n\n")}
+${PHOENIX_BRANCHES.map((branch) => renderPhoenixBranch(branch)).join("\n\n")}
+
+${TAILNET_METRICS_CONFIG}
 `;
 
 /**
@@ -201,8 +271,8 @@ ${BRAINTRUST_BRANCHES.map((branch) => renderBraintrustBranch(branch)).join("\n\n
  * This is a second Alloy release, deliberately separate from the `alloy` app:
  * that one is a privileged hostPID eBPF profiling DaemonSet whose security
  * boundary is "no ingress, pushes only to Pyroscope". A trace gateway needs
- * the opposite shape — network ingress, external egress (later phases), no
- * host access — so it gets its own namespace, Deployment, and Service instead
+ * the opposite shape — network ingress, egress to Tempo, Phoenix, and
+ * Prometheus, no host access — so it gets its own namespace, Deployment, and Service instead
  * of widening the profiler's boundary. Both releases share the `versions.alloy`
  * chart pin and move together on chart bumps.
  */
@@ -218,15 +288,26 @@ export function createAlloyGatewayApp(chart: Chart) {
     },
   });
 
-  // Single org-wide Braintrust API key, shared by every per-project exporter.
-  new OnePasswordItem(chart, "alloy-gateway-braintrust-1p", {
+  // One Phoenix system API key, shared by every per-project exporter.
+  new OnePasswordItem(chart, "alloy-gateway-phoenix-1p", {
     metadata: {
-      name: "braintrust",
+      name: "phoenix-ingest",
       namespace: "alloy-gateway",
     },
     spec: {
-      itemPath: vaultItemPath("braintrust"),
+      itemPath: vaultItemPath("phoenix-ingest"),
     },
+  });
+
+  // Only the metrics port is published on the tailnet; the trace receiver on
+  // 4318 stays cluster-internal. The OTLP receiver answers 404/405 on "/",
+  // so the probe checks the TCP listener instead.
+  createIngress(chart, "alloy-gateway-otlp-metrics-ingress", {
+    namespace: "alloy-gateway",
+    service: "alloy-gateway",
+    port: TAILNET_METRICS_PORT,
+    hosts: ["otlp-metrics"],
+    probeModule: "tcp_connect",
   });
 
   const alloyGatewayValues: HelmValuesForChart<"alloy"> = {
@@ -268,11 +349,11 @@ export function createAlloyGatewayApp(chart: Chart) {
       // rather than exporting unauthenticated.
       extraEnv: [
         {
-          name: "BRAINTRUST_API_KEY",
+          name: "PHOENIX_API_KEY",
           valueFrom: {
             secretKeyRef: {
-              name: "braintrust",
-              key: "BRAINTRUST_API_KEY",
+              name: "phoenix-ingest",
+              key: "PHOENIX_API_KEY",
             },
           },
         },
@@ -286,6 +367,12 @@ export function createAlloyGatewayApp(chart: Chart) {
           targetPort: 4318,
           protocol: "TCP",
         },
+        {
+          name: "otlp-metrics",
+          port: TAILNET_METRICS_PORT,
+          targetPort: TAILNET_METRICS_PORT,
+          protocol: "TCP",
+        },
       ],
       // Tail sampling buffers decision_wait's worth of spans in memory; at
       // homelab span volume that is a few MB, well inside this request.
@@ -297,8 +384,8 @@ export function createAlloyGatewayApp(chart: Chart) {
         },
       },
     },
-    // otelcol_* receiver/exporter metrics feed the byte-budget and failure
-    // checks for the Braintrust branch. Prometheus only discovers
+    // otelcol_* receiver/exporter metrics feed the delivery and failure
+    // checks for the Phoenix branches. Prometheus only discovers
     // ServiceMonitors carrying release: prometheus (same convention the shared
     // createServiceMonitor helper enforces).
     serviceMonitor: {

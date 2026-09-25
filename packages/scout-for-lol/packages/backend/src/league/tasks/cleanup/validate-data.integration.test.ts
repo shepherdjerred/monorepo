@@ -133,12 +133,11 @@ function dependencies(input: {
     // has to be confirmed against Discord one at a time.
     installedAmong: () => Promise.resolve(new Set()),
     isInstalled: (guildId) => {
-      if (input.unreachable?.includes(guildId) === true) {
-        return Promise.reject(
-          new DiscordUpstreamError("http_error", "Discord is down", 503),
-        );
-      }
-      return Promise.resolve(input.present?.includes(guildId) === true);
+      return input.unreachable?.includes(guildId) === true
+        ? Promise.reject(
+            new DiscordUpstreamError("http_error", "Discord is down", 503),
+          )
+        : Promise.resolve(input.present?.includes(guildId) === true);
     },
     readChannel: () => Promise.resolve(liveChannel),
   };
