@@ -3,3 +3,6 @@ plugin/**/build/
 plugin/.kotlin/
 plugin/build-logic/.kotlin/
 plugin/dist/run/
+# The repository root ignores dist/; this dist is the plugin assembly project.
+!plugin/dist/
+plugin/dist/build/

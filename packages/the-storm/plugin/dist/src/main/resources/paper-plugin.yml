@@ -1,0 +1,7 @@
+name: TheStorm
+version: '${version}'
+main: com.shepherdjerred.thestorm.TheStormPlugin
+api-version: '26.2'
+description: The Storm (ts-mc.net) gameplay
+authors: [ShepherdJerred]
+website: https://ts-mc.net
