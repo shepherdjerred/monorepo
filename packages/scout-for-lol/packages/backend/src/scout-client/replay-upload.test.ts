@@ -9,6 +9,10 @@ const mocks = vi.hoisted(() => ({
   executeRaw: vi.fn(),
   findMany: vi.fn(),
   findUnique: vi.fn(),
+  accountFindMany: vi.fn(),
+  archiveDescriptor: vi.fn(),
+  archivedMatch: vi.fn(),
+  selectedLocalMatch: vi.fn(),
   updateMany: vi.fn(),
   send: vi.fn(),
 }));
@@ -30,6 +34,7 @@ vi.mock("#src/database/index.ts", () => ({
         },
       }),
     scoutClientObservation: { findMany: mocks.findMany },
+    account: { findMany: mocks.accountFindMany },
     scoutClientReplayArtifact: {
       aggregate: mocks.aggregate,
       create: mocks.create,
@@ -41,6 +46,18 @@ vi.mock("#src/database/index.ts", () => ({
 
 vi.mock("#src/storage/s3-client.ts", () => ({
   createS3Client: () => ({ send: mocks.send }),
+}));
+
+vi.mock("#src/report-lake/durable-receipts.ts", () => ({
+  storedRawArchiveDescriptor: mocks.archiveDescriptor,
+}));
+
+vi.mock("#src/report-lake/receipted-archive.ts", () => ({
+  readArchivedMatchPayload: mocks.archivedMatch,
+}));
+
+vi.mock("./canonical-match.ts", () => ({
+  readSelectedLocalCanonicalMatch: mocks.selectedLocalMatch,
 }));
 
 const { MAX_OWNER_REPLAYS_PER_DAY, uploadReplay } =
@@ -95,6 +112,8 @@ beforeEach(() => {
     _sum: { bytes: null },
   });
   mocks.executeRaw.mockResolvedValue(1);
+  // Prisma answers null, not undefined, for a row that is not there.
+  mocks.findUnique.mockResolvedValue(null);
   mocks.findMany.mockResolvedValue([
     {
       localPuuid: LOCAL_PUUID,
@@ -108,6 +127,13 @@ beforeEach(() => {
   mocks.create.mockResolvedValue({ id: "artifact-id" });
   mocks.updateMany.mockResolvedValue({ count: 1 });
   mocks.send.mockResolvedValue({});
+  // By default the owner has one registered account and the server holds no
+  // archived match, so the observation path is the only evidence.
+  mocks.accountFindMany.mockResolvedValue([
+    { puuid: LOCAL_PUUID, region: "AMERICA_NORTH" },
+  ]);
+  mocks.archiveDescriptor.mockResolvedValue(null);
+  mocks.selectedLocalMatch.mockResolvedValue(null);
 });
 
 function replayFixture(
@@ -238,6 +264,125 @@ test("keeps a replay retryable until its post-game observation arrives", async (
     status: 409,
   });
   expect(mocks.create).not.toHaveBeenCalled();
+});
+
+/**
+ * The handful of fields `replayProvenanceFromMatch` reads off a canonical
+ * match. The archive reader is mocked, so the rest of `RawMatch` never has to
+ * exist for this path.
+ */
+function archivedMatchFor(puuid: string) {
+  return {
+    metadata: { dataVersion: "2", matchId: "NA1_123", participants: [puuid] },
+    info: {
+      gameId: 123,
+      gameVersion: LEAGUE_PATCH,
+      gameDuration: MATCH_HISTORY.gameDuration,
+      participants: [
+        {
+          puuid,
+          teamId: MATCH_HISTORY.participants[0].teamId,
+          kills: MATCH_STATS.kills,
+          deaths: MATCH_STATS.deaths,
+          assists: MATCH_STATS.assists,
+          goldEarned: MATCH_STATS.goldEarned,
+          goldSpent: MATCH_STATS.goldSpent,
+          totalDamageDealtToChampions: MATCH_STATS.totalDamageDealtToChampions,
+          totalMinionsKilled: MATCH_STATS.totalMinionsKilled,
+          visionScore: MATCH_STATS.visionScore,
+          wardsPlaced: MATCH_STATS.wardsPlaced,
+          wardsKilled: MATCH_STATS.wardsKilled,
+          champLevel: MATCH_STATS.champLevel,
+          // Riot spells the outcome as a boolean where the replay says "Win".
+          win: true,
+          item0: MATCH_STATS.item0,
+          item1: MATCH_STATS.item1,
+          item2: MATCH_STATS.item2,
+          item3: MATCH_STATS.item3,
+          item4: MATCH_STATS.item4,
+          item5: MATCH_STATS.item5,
+          item6: MATCH_STATS.item6,
+        },
+      ],
+    },
+  };
+}
+
+test("accepts a replay vouched for by Riot when no client observed the game", async () => {
+  // The case that matters: a replay on disk from before this device was ever
+  // paired. No client evidence exists and none ever will, but the server
+  // archived the match from Riot and that is enough to vouch for the file.
+  mocks.findMany.mockResolvedValue([]);
+  mocks.archiveDescriptor.mockResolvedValue({ key: "raw/NA1_123.json" });
+  mocks.archivedMatch.mockResolvedValue(archivedMatchFor(LOCAL_PUUID));
+  const body = replayFixture();
+  const digest = new Bun.CryptoHasher("sha256").update(body).digest("hex");
+
+  await expect(
+    uploadReplay(replayRequest(body), "123", DEVICE),
+  ).resolves.toEqual({
+    outcome: "accepted",
+    digest,
+    bytes: body.byteLength,
+  });
+});
+
+test("accepts evidence from another device belonging to the same owner", async () => {
+  // Owner scope, not device scope: a second machine or a reinstall must still
+  // be able to hand over a replay its owner is entitled to.
+  await expect(
+    uploadReplay(replayRequest(replayFixture()), "123", DEVICE),
+  ).resolves.toMatchObject({ outcome: "accepted" });
+  expect(mocks.findMany).toHaveBeenCalledWith(
+    expect.objectContaining({
+      where: expect.objectContaining({
+        device: { ownerId: DEVICE.ownerId },
+      }),
+    }),
+  );
+});
+
+test("refuses a Riot match none of the owner's accounts played", async () => {
+  mocks.findMany.mockResolvedValue([]);
+  mocks.archiveDescriptor.mockResolvedValue({ key: "raw/NA1_123.json" });
+  mocks.archivedMatch.mockResolvedValue(archivedMatchFor("q".repeat(78)));
+
+  await expect(
+    uploadReplay(replayRequest(replayFixture()), "123", DEVICE),
+  ).rejects.toMatchObject({ status: 409 });
+  expect(mocks.create).not.toHaveBeenCalled();
+});
+
+test("consumes the upload it refuses before the body is read", async () => {
+  // This rejection happens three database round-trips before the first body
+  // byte. Answering while the client is still sending leaves the reverse proxy
+  // with an upstream close on a request it cannot replay, which reached the
+  // desktop client as `502 Bad Gateway` rather than this 409.
+  mocks.findMany.mockResolvedValue([]);
+  const request = replayRequest(replayFixture());
+
+  await expect(uploadReplay(request, "123", DEVICE)).rejects.toMatchObject({
+    status: 409,
+  });
+  expect(request.bodyUsed).toBe(true);
+});
+
+test("consumes the upload a duplicate digest makes unnecessary", async () => {
+  const body = replayFixture();
+  const digest = new Bun.CryptoHasher("sha256").update(body).digest("hex");
+  mocks.findUnique.mockResolvedValue({
+    uploadState: "COMPLETED",
+    gameId: "123",
+    digest,
+    bytes: BigInt(body.byteLength),
+    updatedAt: new Date(),
+  });
+  const request = replayRequest(body);
+
+  await expect(uploadReplay(request, "123", DEVICE)).resolves.toMatchObject({
+    outcome: "already_accepted",
+  });
+  expect(request.bodyUsed).toBe(true);
 });
 
 test("requires the post-game payload to name the requested game", async () => {

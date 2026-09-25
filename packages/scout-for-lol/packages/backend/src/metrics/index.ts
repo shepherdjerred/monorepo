@@ -218,6 +218,9 @@ export const prematchDetectionsTotal = new Counter({
   name: "prematch_detections_total",
   help: "Total pre-match game detections",
   // Status values: "detected", "already_tracked", "deferred_custom_prestart"
+  // (roster still filling during the loading screen) and
+  // "deferred_undersized_roster" (the game has started, so this is the roster
+  // Riot will report — notably, bots are never listed at all)
   labelNames: ["status"] as const,
   registers: [registry],
 });
