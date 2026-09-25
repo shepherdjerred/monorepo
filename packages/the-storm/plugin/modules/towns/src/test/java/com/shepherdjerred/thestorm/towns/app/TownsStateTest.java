@@ -107,6 +107,20 @@ final class TownsStateTest {
   }
 
   @Test
+  void reloadingReplacesEverything() {
+    state.addClaim(claim(TOWN_A, 11, 10));
+
+    state.reload(new TownsSnapshot(List.of(Fixtures.townB()), List.of(claim(TOWN_B, 20, 20))));
+
+    assertThat(state.townOf(OWNER)).isEmpty();
+    assertThat(state.named("Aegis")).isEmpty();
+    assertThat(state.claimAt(Fixtures.chunk(10, 10))).isEmpty();
+    assertThat(state.claimCount(TOWN_A)).isZero();
+    assertThat(state.claimCount(TOWN_B)).isEqualTo(1);
+    assertThat(state.townOf(OTHER_TOWN_OWNER)).contains(Fixtures.townB());
+  }
+
+  @Test
   void invariantsAreEnforced() {
     assertThatThrownBy(() -> state.addClaim(claim(TOWN_B, 10, 10)))
         .isInstanceOf(IllegalStateException.class);

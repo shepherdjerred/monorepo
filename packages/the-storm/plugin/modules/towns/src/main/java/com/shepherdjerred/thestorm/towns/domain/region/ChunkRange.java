@@ -1,6 +1,5 @@
 package com.shepherdjerred.thestorm.towns.domain.region;
 
-import com.shepherdjerred.thestorm.towns.domain.land.BlockPos;
 import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,12 +24,18 @@ public record ChunkRange(String world, ChunkCorner from, ChunkCorner to) impleme
   }
 
   @Override
-  public boolean contains(BlockPos block) {
-    return covers(block.chunk());
+  public boolean contains(String world, int x, int y, int z) {
+    var chunkX = x >> 4;
+    var chunkZ = z >> 4;
+    return this.world.equals(world)
+        && chunkX >= from.x()
+        && chunkX <= to.x()
+        && chunkZ >= from.z()
+        && chunkZ <= to.z();
   }
 
-  /** True when {@code chunk} is one of this range's chunks. */
-  public boolean covers(ChunkPos chunk) {
+  @Override
+  public boolean footprintContains(ChunkPos chunk) {
     return world.equals(chunk.world())
         && chunk.x() >= from.x()
         && chunk.x() <= to.x()

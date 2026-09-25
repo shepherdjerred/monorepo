@@ -21,7 +21,7 @@ final class TownLandRule {
           ? Verdict.allow()
           : new Verdict.Deny(new Denial.NoPvp());
     }
-    return switch (trust.trustOf(actor.player(), claim.townId())) {
+    return switch (trust.trustOf(actor.player(), claim, act)) {
       case OWNER, TRUSTED -> Verdict.allow();
       case OUTSIDER -> outsider(act, claim);
     };

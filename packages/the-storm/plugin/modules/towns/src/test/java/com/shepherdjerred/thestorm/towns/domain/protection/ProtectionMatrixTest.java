@@ -291,8 +291,8 @@ final class ProtectionMatrixTest {
     var asked = new java.util.ArrayList<UUID>();
     var engine =
         new ProtectionEngine(
-            (player, town) -> {
-              asked.add(town);
+            (player, claim, act) -> {
+              asked.add(claim.townId());
               return TrustLevel.OUTSIDER;
             });
 
@@ -306,7 +306,7 @@ final class ProtectionMatrixTest {
   void bypassSkipsTheTrustLookup() {
     var engine =
         new ProtectionEngine(
-            (player, town) -> {
+            (player, claim, act) -> {
               throw new AssertionError("bypass must not consult trust");
             });
 

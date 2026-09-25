@@ -8,6 +8,7 @@ import static com.shepherdjerred.thestorm.towns.domain.Fixtures.TOWN_B;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.chunk;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.claim;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.towns.domain.Fixtures;
@@ -212,6 +213,21 @@ final class ClaimingTest {
 
     assertThat(problems(claimAs(OWNER, Fixtures.townA(), chunk(5, 0))))
         .containsExactly(new ClaimProblem.LimitReached(5));
+  }
+
+  @Test
+  void theLimitComesFromThePort() {
+    var limits = new Claiming(POLICY, town -> town.name().equals("Aegis") ? 1 : 100);
+    hold(claim(TOWN_A, 0, 0));
+
+    assertThat(problems(limits.claim(new ClaimAttempt(OWNER, Fixtures.townA(), chunk(1, 0), map))))
+        .containsExactly(new ClaimProblem.LimitReached(1));
+  }
+
+  @Test
+  void aFlatLimitMustAllowAClaim() {
+    assertThatThrownBy(() -> ClaimLimits.flat(0)).isInstanceOf(IllegalArgumentException.class);
+    assertThat(ClaimLimits.flat(3).maxClaims(Fixtures.townA())).isEqualTo(3);
   }
 
   @Test

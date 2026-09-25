@@ -9,7 +9,9 @@ import com.shepherdjerred.thestorm.towns.domain.protection.DenialThrottle;
 import com.shepherdjerred.thestorm.towns.domain.protection.ProtectionEngine;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.util.List;
+import java.util.TreeSet;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Server;
 import org.bukkit.event.Listener;
 
 /**
@@ -23,6 +25,7 @@ public final class TownsPaper {
   public static Protection install(
       ModuleContext context, TownsState state, TownService towns, TownsConfig config) {
     var server = context.plugin().getServer();
+    requireWorlds(server, config);
     var engine = new ProtectionEngine(state);
     var notices =
         new Notices(
@@ -61,5 +64,21 @@ public final class TownsPaper {
             });
     return new PaperProtection(
         server, guard, engine, new PaperProtection.Rendering(kinds, notices));
+  }
+
+  /**
+   * Every world {@code towns.yml} names must be loaded: a misspelt world would leave its claims or
+   * regions silently unprotected.
+   */
+  static void requireWorlds(Server server, TownsConfig config) {
+    var named = new TreeSet<String>(config.claims().worlds());
+    config
+        .regions()
+        .forEach(region -> region.areas().all().forEach(area -> named.add(area.world())));
+    var missing = named.stream().filter(world -> server.getWorld(world) == null).toList();
+    if (!missing.isEmpty()) {
+      throw new IllegalStateException(
+          "towns.yml names worlds the server has not loaded: " + String.join(", ", missing));
+    }
   }
 }

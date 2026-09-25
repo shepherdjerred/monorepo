@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.protection.Decision;
+import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
@@ -15,7 +16,8 @@ import org.bukkit.Server;
 
 /**
  * The {@link Protection} port other modules call: the same engine and land as the listeners. An
- * offline player never has bypass.
+ * offline player never has bypass. Main thread only, like the state it reads: a call from another
+ * thread is a bug in the caller and throws.
  */
 final class PaperProtection implements Protection {
 
@@ -41,10 +43,50 @@ final class PaperProtection implements Protection {
 
   @Override
   public Decision check(UUID player, ProtectedAction action, Location location) {
-    var online = server.getPlayer(player);
-    var bypass = online != null && online.hasPermission(Guard.BYPASS_PERMISSION);
+    requireMainThread();
     var act = new Act(actionOf(action), subjectOf(action, location));
-    return switch (engine.decide(new Actor(player, bypass), act, guard.land(location))) {
+    return decision(engine.decide(actor(player), act, guard.land(location)));
+  }
+
+  /**
+   * Players: PvP must be on where the attacker stands and where the victim stands. Everything else
+   * passive: the victim's land must let the attacker hurt animals; a pet's owner is the calling
+   * module's concern, since the port is not told who owns the creature.
+   */
+  @Override
+  public Decision checkHarm(
+      UUID attacker, Location attackerAt, HarmTarget target, Location victimAt) {
+    requireMainThread();
+    var actor = actor(attacker);
+    return decision(
+        switch (target) {
+          case PLAYER -> engine.decidePvp(actor, guard.land(attackerAt), guard.land(victimAt));
+          case PASSIVE ->
+              engine.decide(
+                  actor, new Act(Action.DAMAGE_ENTITY, Subject.ANIMAL), guard.land(victimAt));
+        });
+  }
+
+  @Override
+  public boolean sameLand(Location a, Location b) {
+    requireMainThread();
+    return guard.land(a).sameOwnerAs(guard.land(b));
+  }
+
+  private void requireMainThread() {
+    if (!server.isPrimaryThread()) {
+      throw new IllegalStateException(
+          "Protection is main-thread only; it was called from " + Thread.currentThread().getName());
+    }
+  }
+
+  private Actor actor(UUID player) {
+    var online = server.getPlayer(player);
+    return new Actor(player, online != null && online.hasPermission(Guard.BYPASS_PERMISSION));
+  }
+
+  private Decision decision(Verdict verdict) {
+    return switch (verdict) {
       case Verdict.Allow _ -> Decision.allowed();
       case Verdict.Deny(var denial) -> new Decision.Denied(rendering.notices().render(denial));
     };

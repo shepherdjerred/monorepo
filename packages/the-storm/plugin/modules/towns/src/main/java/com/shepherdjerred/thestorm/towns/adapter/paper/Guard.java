@@ -115,6 +115,11 @@ final class Guard {
     return tell(culprit, engine.decide(culprit.actor(), act, land));
   }
 
+  /** As {@link #permitsQuietly(Culprit, Act, Land)} for an actor built once for many checks. */
+  boolean permitsQuietly(Actor actor, Act act, Land land) {
+    return engine.decide(actor, act, land).isAllowed();
+  }
+
   boolean permitsQuietly(Culprit culprit, Act act, Land land) {
     return engine.decide(culprit.actor(), act, land).isAllowed();
   }

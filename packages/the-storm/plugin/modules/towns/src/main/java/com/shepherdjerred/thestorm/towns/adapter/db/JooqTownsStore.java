@@ -38,9 +38,14 @@ public final class JooqTownsStore implements TownsStore {
     this.database = database;
   }
 
+  /**
+   * Reads everything on the writer thread, in one transaction, so the snapshot includes every write
+   * queued before it and none queued after: a reload after a failed save never misses a save that
+   * was still in flight.
+   */
   @Override
   public CompletableFuture<TownsSnapshot> loadAll() {
-    return database.read(dsl -> dsl.transactionResult(config -> load(config.dsl())));
+    return database.write(JooqTownsStore::load);
   }
 
   private static TownsSnapshot load(DSLContext dsl) {

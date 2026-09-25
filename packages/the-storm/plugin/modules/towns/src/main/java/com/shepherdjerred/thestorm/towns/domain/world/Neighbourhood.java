@@ -3,6 +3,9 @@ package com.shepherdjerred.thestorm.towns.domain.world;
 import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimMap;
 import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
 import com.shepherdjerred.thestorm.towns.domain.land.Owner;
+import com.shepherdjerred.thestorm.towns.domain.protection.Act;
+import com.shepherdjerred.thestorm.towns.domain.protection.Action;
+import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
 import com.shepherdjerred.thestorm.towns.domain.protection.TrustLevel;
 import com.shepherdjerred.thestorm.towns.domain.protection.TrustLookup;
 import java.util.Optional;
@@ -13,6 +16,8 @@ import java.util.UUID;
  * wither, may not be made within reach of other people's land.
  */
 public final class Neighbourhood {
+
+  private static final Act BUILD = new Act(Action.BUILD, Subject.BLOCK);
 
   private final ClaimMap map;
   private final TrustLookup trust;
@@ -33,7 +38,7 @@ public final class Neighbourhood {
         return Optional.of(region.get().owner());
       }
       var claim = map.claimAt(chunk);
-      if (claim.isPresent() && trust.trustOf(player, claim.get().townId()) == TrustLevel.OUTSIDER) {
+      if (claim.isPresent() && trust.trustOf(player, claim.get(), BUILD) == TrustLevel.OUTSIDER) {
         return Optional.of(claim.get().owner());
       }
     }
