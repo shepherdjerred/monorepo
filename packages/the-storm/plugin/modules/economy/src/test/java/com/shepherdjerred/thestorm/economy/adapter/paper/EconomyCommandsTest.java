@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
+import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.nio.file.Path;
@@ -97,6 +98,15 @@ final class EconomyCommandsTest {
     var player = server.addPlayer(name);
     awaitLine(player, WELCOME);
     return player;
+  }
+
+  @Test
+  void theModulePublishesTheFormatterWithTheShippedCurrency() {
+    var formatter = plugin.services.require(CrystalFormatter.class);
+
+    assertThat(formatter.words(Crystals.of(1))).isEqualTo("1 crystal");
+    assertThat(formatter.words(Crystals.of(1250))).isEqualTo("1,250 crystals");
+    assertThat(formatter.symbol(Crystals.of(1250))).isEqualTo("1,250 CR");
   }
 
   @Test
