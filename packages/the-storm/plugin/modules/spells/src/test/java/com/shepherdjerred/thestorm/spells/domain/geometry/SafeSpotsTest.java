@@ -72,6 +72,19 @@ final class SafeSpotsTest {
   }
 
   @Test
+  void anUnreachableSpotIsSkippedForTheNextSafeOne() {
+    // Blink aims at x=0 but a wall stands between the caster and x >= 0: only x < 0 is reachable.
+    var spot = SafeSpots.nearest(Grid.flat(), STAND, 2, pos -> pos.x() < 0);
+
+    assertThat(spot).contains(new BlockPos(-1, 64, 0));
+  }
+
+  @Test
+  void noReachableSpotMeansNoArrival() {
+    assertThat(SafeSpots.nearest(Grid.flat(), STAND, 2, pos -> false)).isEmpty();
+  }
+
+  @Test
   void theSearchIsDeterministic() {
     var grid = Grid.flat().set(0, 63, 0, Footing.HAZARD);
 

@@ -1,15 +1,18 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.protection.Decision;
+import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.spells.domain.Screening;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Enemy;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -18,9 +21,12 @@ import org.bukkit.entity.Player;
  * their caster: a spell may do in a claim exactly what the caster could do there by hand, and admin
  * regions refuse whatever their rules refuse.
  *
- * <p>Hostile monsters are fair game everywhere, as they are for a sword. Every other creature
- * (animals, villagers, NPCs, players) is checked with {@link ProtectedAction#DAMAGE_ENTITY} at its
- * position, which for a player is the claim's PvP decision.
+ * <p>Any effect on a creature (damage, fire, potions, knockback, freezing, trapping, silencing,
+ * disarming, teleporting next to it) is harm. Harming a player asks {@link HarmTarget#PLAYER},
+ * which needs PvP on both the caster's and the victim's land; harming a pet, animal, villager or
+ * NPC asks {@link HarmTarget#PASSIVE}. Hostile monsters are not protected by the port, but a spell
+ * still leaves alone monsters standing on land where its caster may not build, so mob farms and
+ * curing cells inside claims are safe.
  */
 public final class Guard {
 
@@ -37,10 +43,26 @@ public final class Guard {
 
   /** Why {@code caster}'s spell may not affect {@code target}, or empty when allowed. */
   public Optional<Component> harmDenial(Player caster, LivingEntity target) {
-    if (target instanceof Enemy && !(target instanceof Player)) {
-      return Optional.empty();
+    Entity body = caster;
+    return harmDenial(caster.getUniqueId(), body.getLocation(), target);
+  }
+
+  /**
+   * Why a spell cast by {@code caster} (standing at {@code casterAt}, possibly offline, as for a
+   * Ward) may not affect {@code target}.
+   */
+  public Optional<Component> harmDenial(UUID caster, Location casterAt, LivingEntity target) {
+    var victimAt = target.getLocation();
+    if (isHostile(target)) {
+      return reason(protection.check(caster, ProtectedAction.BUILD, victimAt));
     }
-    return denial(caster, ProtectedAction.DAMAGE_ENTITY, target.getLocation());
+    var kind = target instanceof Player ? HarmTarget.PLAYER : HarmTarget.PASSIVE;
+    return reason(protection.checkHarm(caster, casterAt, kind, victimAt));
+  }
+
+  /** Hostile monsters: never protected creatures, only protected land. */
+  static boolean isHostile(Entity entity) {
+    return entity instanceof Enemy && !(entity instanceof Player);
   }
 
   /** {@code blocks} split by whether {@code caster} may do {@code action} to each. */

@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
 import com.shepherdjerred.thestorm.spells.domain.geometry.StormSky;
@@ -43,7 +44,13 @@ final class StormCall implements Spell {
       return Result.ok(() -> flash(where));
     }
     var victims =
-        tools.guard().creatures(caster, tools.targets().around(caster, where, settings.radius()));
+        tools
+            .guard()
+            .creatures(
+                caster,
+                tools.targets().around(caster, where, settings.radius()).stream()
+                    .filter(caster::hasLineOfSight)
+                    .toList());
     return Result.ok(
         () -> {
           flash(where);
@@ -75,13 +82,16 @@ final class StormCall implements Spell {
   }
 
   private void strike(Player caster, List<LivingEntity> victims) {
-    var fireTicks = Magic.ticks(settings.fireSeconds());
-    for (var victim : victims) {
-      Magic.hurt(victim, settings.damage(), caster);
-      victim.setFireTicks(Math.max(victim.getFireTicks(), fireTicks));
-      if (victim instanceof Creeper creeper) {
-        creeper.setPowered(true);
-      }
-    }
+    var bolt =
+        Harm.Blow.none()
+            .withDamage(settings.damage())
+            .withFire(Magic.ticks(settings.fireSeconds()))
+            .then(
+                victim -> {
+                  if (victim instanceof Creeper creeper) {
+                    creeper.setPowered(true);
+                  }
+                });
+    victims.forEach(victim -> tools.harm().strike(caster, victim, bolt));
   }
 }

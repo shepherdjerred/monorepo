@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.spells.domain.geometry;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * Where a teleported player can arrive: solid, harmless ground under their feet and open, harmless
@@ -24,6 +25,15 @@ public final class SafeSpots {
    * cave below it.
    */
   public static Optional<BlockPos> nearest(BlockProbe probe, BlockPos origin, int radius) {
+    return nearest(probe, origin, radius, pos -> true);
+  }
+
+  /**
+   * The nearest safe spot that is also {@code reachable} (for example, with nothing solid between
+   * it and the caster), or empty.
+   */
+  public static Optional<BlockPos> nearest(
+      BlockProbe probe, BlockPos origin, int radius, Predicate<BlockPos> reachable) {
     if (radius < 0) {
       throw new IllegalArgumentException("radius cannot be negative: " + radius);
     }
@@ -34,6 +44,7 @@ public final class SafeSpots {
                 .thenComparingInt(BlockPos::x)
                 .thenComparingInt(BlockPos::z))
         .filter(pos -> isSafe(probe, pos))
+        .filter(reachable)
         .findFirst();
   }
 }

@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.spells.adapter.paper.Fx;
 import com.shepherdjerred.thestorm.spells.adapter.paper.Guard;
+import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.adapter.paper.Say;
 import com.shepherdjerred.thestorm.spells.adapter.paper.SpellState;
 import com.shepherdjerred.thestorm.spells.adapter.paper.Targets;
@@ -19,6 +20,7 @@ import org.bukkit.Server;
 public record Toolbox(
     Targets targets,
     Guard guard,
+    Harm harm,
     Teleports teleports,
     TemporaryBlocks blocks,
     SpellState state,

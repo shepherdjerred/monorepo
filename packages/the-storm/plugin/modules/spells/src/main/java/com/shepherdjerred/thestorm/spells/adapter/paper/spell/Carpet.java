@@ -7,9 +7,12 @@ import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
 import com.shepherdjerred.thestorm.spells.domain.geometry.Shapes;
 import com.shepherdjerred.thestorm.spells.domain.temporary.Replaceability;
 import java.time.Duration;
+import java.util.List;
 import org.bukkit.Material;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
 
 /**
  * Carpet (III, learned in a quest): a small cloud, like a happy ghast's back, forms under the
@@ -40,25 +43,35 @@ final class Carpet implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
+    return cloud(caster).map(blocks -> () -> weave(caster));
+  }
+
+  /** The open air under the caster's feet they may build in, or why there is none. */
+  private Result<List<Block>, CastProblem> cloud(Player caster) {
     var under = Aim.pos(Magic.at(caster).getBlock()).below();
     var cloud = Aim.blocks(caster.getWorld(), Shapes.platform(under, settings.size()));
-    return Aim.buildable(tools, caster, cloud, Replaceability.Mode.OPEN_SPACE)
-        .map(
-            blocks ->
-                () -> {
-                  tools
-                      .blocks()
-                      .place(
-                          blocks,
-                          material.createBlockData(),
-                          Duration.ofSeconds(settings.durationSeconds()));
-                  Magic.potion(
-                      caster,
-                      PotionEffectType.SLOW_FALLING,
-                      settings.durationSeconds() + SOFT_LANDING_SECONDS,
-                      0);
-                  tools.fx().cast(kind(), Magic.at(caster));
-                  tools.fx().ring(kind(), Magic.at(caster), settings.size() / 2.0 + 0.5);
-                });
+    return Aim.buildable(tools, caster, cloud, Replaceability.Mode.OPEN_SPACE);
+  }
+
+  /**
+   * Stops the caster's fall and forms the cloud under where they are now; slow falling carries them
+   * down gently if the cloud cannot form in time or when it melts.
+   */
+  private void weave(Player caster) {
+    caster.setVelocity(new Vector(0, 0, 0));
+    caster.setFallDistance(0);
+    Magic.potion(
+        caster,
+        PotionEffectType.SLOW_FALLING,
+        settings.durationSeconds() + SOFT_LANDING_SECONDS,
+        0);
+    if (cloud(caster) instanceof Result.Ok<List<Block>, CastProblem>(var blocks)) {
+      tools
+          .blocks()
+          .place(
+              blocks, material.createBlockData(), Duration.ofSeconds(settings.durationSeconds()));
+    }
+    tools.fx().cast(kind(), Magic.at(caster));
+    tools.fx().ring(kind(), Magic.at(caster), settings.size() / 2.0 + 0.5);
   }
 }

@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
 import java.util.OptionalInt;
@@ -53,22 +54,33 @@ final class Disarm implements Spell {
       if (weapon.isEmpty() || slot.isEmpty()) {
         return Result.err(CastProblem.noTarget("weapon to knock away"));
       }
-      return Result.ok(
-          () -> {
-            inventory.setItem(slot.getAsInt(), inventory.getItemInMainHand());
-            inventory.setItemInMainHand(null);
-            flourish(caster, target);
-          });
+      return Result.ok(() -> strike(caster, target, Harm.Blow.none().then(Disarm::stow)));
     }
     var equipment = target.getEquipment();
     if (equipment == null || equipment.getItemInMainHand().isEmpty()) {
       return Result.err(CastProblem.noTarget("weapon to knock away"));
     }
     return Result.ok(
-        () -> {
-          drop(target, equipment);
-          flourish(caster, target);
-        });
+        () -> strike(caster, target, Harm.Blow.none().then(monster -> drop(monster, equipment))));
+  }
+
+  private void strike(Player caster, LivingEntity target, Harm.Blow blow) {
+    if (tools.harm().strike(caster, target, blow)) {
+      flourish(caster, target);
+    }
+  }
+
+  /** Moves a player's weapon into their own backpack, if there is still room. */
+  private static void stow(LivingEntity target) {
+    if (!(target instanceof Player victim)) {
+      return;
+    }
+    var inventory = victim.getInventory();
+    var slot = freeBackpackSlot(inventory);
+    if (slot.isPresent()) {
+      inventory.setItem(slot.getAsInt(), inventory.getItemInMainHand());
+      inventory.setItemInMainHand(null);
+    }
   }
 
   private static void drop(LivingEntity target, EntityEquipment equipment) {

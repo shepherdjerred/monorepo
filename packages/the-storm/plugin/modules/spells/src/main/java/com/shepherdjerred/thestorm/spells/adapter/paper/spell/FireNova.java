@@ -1,13 +1,14 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
 import org.bukkit.entity.Player;
 
 /**
- * Fire Nova (I): a ring of flame bursts from the caster, burning and hurting every creature around
- * them that they may harm. It sets creatures alight, never blocks.
+ * Fire Nova (I): a ring of flame bursts from the caster, burning and hurting every creature they
+ * can see around them that they may harm. It sets creatures alight, never blocks.
  */
 final class FireNova implements Spell {
 
@@ -26,15 +27,15 @@ final class FireNova implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
+    var blow =
+        Harm.Blow.none()
+            .withDamage(settings.damage())
+            .withFire(Magic.ticks(settings.fireSeconds()));
     return Aim.creaturesAround(tools, caster, settings.radius())
         .map(
             victims ->
                 () -> {
-                  var fireTicks = Magic.ticks(settings.fireSeconds());
-                  for (var victim : victims) {
-                    Magic.hurt(victim, settings.damage(), caster);
-                    victim.setFireTicks(Math.max(victim.getFireTicks(), fireTicks));
-                  }
+                  victims.forEach(victim -> tools.harm().strike(caster, victim, blow));
                   tools.fx().sound(kind(), Magic.at(caster));
                   tools.fx().ring(kind(), Magic.at(caster), settings.radius());
                 });

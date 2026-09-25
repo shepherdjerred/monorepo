@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
 import org.bukkit.entity.Player;
@@ -24,22 +25,19 @@ final class Cripple implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
+    var ticks = Magic.ticks(settings.durationSeconds());
+    var blow =
+        Harm.Blow.none()
+            .withPotion(PotionEffectType.SLOWNESS, ticks, settings.amplifier())
+            .withPotion(PotionEffectType.WEAKNESS, ticks, settings.amplifier());
     return Aim.creature(tools, caster, settings.range())
         .map(
             target ->
                 () -> {
-                  Magic.potion(
-                      target,
-                      PotionEffectType.SLOWNESS,
-                      settings.durationSeconds(),
-                      settings.amplifier());
-                  Magic.potion(
-                      target,
-                      PotionEffectType.WEAKNESS,
-                      settings.durationSeconds(),
-                      settings.amplifier());
-                  tools.fx().line(kind(), caster.getEyeLocation(), Magic.chest(target));
-                  tools.fx().cast(kind(), Magic.chest(target));
+                  if (tools.harm().strike(caster, target, blow)) {
+                    tools.fx().line(kind(), caster.getEyeLocation(), Magic.chest(target));
+                    tools.fx().cast(kind(), Magic.chest(target));
+                  }
                 });
   }
 }

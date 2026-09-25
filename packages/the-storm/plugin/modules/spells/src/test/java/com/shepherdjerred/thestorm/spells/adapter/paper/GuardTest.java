@@ -1,14 +1,12 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper;
 
+import static com.shepherdjerred.thestorm.spells.adapter.paper.FakeProtection.AEGIS;
+import static com.shepherdjerred.thestorm.spells.adapter.paper.FakeProtection.NO_PVP;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.shepherdjerred.thestorm.core.protection.Decision;
+import com.shepherdjerred.thestorm.core.protection.HarmTarget;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
-import com.shepherdjerred.thestorm.core.protection.Protection;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
-import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Cow;
@@ -16,13 +14,8 @@ import org.bukkit.entity.Zombie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * Protection decisions with a fake land-protection port: everything east of x=0 is Aegis's claim,
- * where outsiders may not build, hurt animals or players, or teleport in.
- */
+/** Protection decisions with a fake land-protection port (Aegis's claim is x >= 0). */
 final class GuardTest {
-
-  private static final Component AEGIS = Component.text("This land belongs to Aegis.");
 
   private final Harness harness = new Harness();
   private final FakeProtection protection = new FakeProtection();
@@ -31,21 +24,6 @@ final class GuardTest {
   @AfterEach
   void tearDown() {
     harness.close();
-  }
-
-  /** Denies everything at x >= 0 except to the claim's owner; records every question. */
-  static final class FakeProtection implements Protection {
-    final List<ProtectedAction> asked = new ArrayList<>();
-    UUID owner = new UUID(9, 9);
-
-    @Override
-    public Decision check(UUID player, ProtectedAction action, Location location) {
-      asked.add(action);
-      if (location.getX() >= 0 && !player.equals(owner)) {
-        return new Decision.Denied(AEGIS);
-      }
-      return Decision.allowed();
-    }
   }
 
   private Location at(double x) {
@@ -65,44 +43,74 @@ final class GuardTest {
 
     assertThat(screened.allowed()).containsExactly(blocks.get(0), blocks.get(2));
     assertThat(screened.firstDenial()).contains(AEGIS);
-    assertThat(protection.asked).containsOnly(ProtectedAction.BUILD);
+    assertThat(protection.actions).containsOnly(ProtectedAction.BUILD);
   }
 
   @Test
-  void theClaimOwnerMayCastInTheirOwnClaim() {
+  void aResidentMayBuildInTheirOwnClaim() {
     var caster = harness.server.addPlayer();
-    protection.owner = caster.getUniqueId();
+    protection.residents.add(caster.getUniqueId());
 
     var screened =
         guard.blocks(caster, ProtectedAction.BUILD, List.of(harness.world.getBlockAt(5, 64, 0)));
 
     assertThat(screened.allowed()).hasSize(1);
-    assertThat(screened.firstDenial()).isEmpty();
   }
 
   @Test
-  void aPlayerInANoPvpClaimCannotBeHarmed() {
+  void harmingAPlayerNeedsPvpOnBothLands() {
     var caster = harness.server.addPlayer();
     var victim = harness.server.addPlayer();
-    victim.teleport(at(4));
+    caster.teleport(at(-10));
 
-    assertThat(guard.harmDenial(caster, victim)).contains(AEGIS);
-    assertThat(protection.asked).containsExactly(ProtectedAction.DAMAGE_ENTITY);
+    victim.teleport(at(4));
+    assertThat(guard.harmDenial(caster, victim)).contains(NO_PVP);
 
     victim.teleport(at(-4));
     assertThat(guard.harmDenial(caster, victim)).isEmpty();
+
+    // The victim stands in the wilderness, but the caster fires from inside the PvP-off claim.
+    caster.teleport(at(10));
+    assertThat(guard.harmDenial(caster, victim)).contains(NO_PVP);
+    assertThat(protection.harms).containsOnly(HarmTarget.PLAYER);
   }
 
   @Test
-  void animalsInAClaimAreProtectedButMonstersAreFairGame() {
+  void residentsCannotHarmEachOtherInAPvpOffClaim() {
+    var caster = harness.server.addPlayer();
+    var victim = harness.server.addPlayer();
+    protection.residents.add(caster.getUniqueId());
+    protection.residents.add(victim.getUniqueId());
+    caster.teleport(at(3));
+    victim.teleport(at(5));
+
+    assertThat(guard.harmDenial(caster, victim)).contains(NO_PVP);
+  }
+
+  @Test
+  void animalsAreAskedAsPassiveCreaturesOfTheirLand() {
     var caster = harness.server.addPlayer();
     var cow = harness.world.spawn(at(3), Cow.class);
-    var zombie = harness.world.spawn(at(3), Zombie.class);
 
-    var screened = guard.creatures(caster, List.of(cow, zombie));
+    assertThat(guard.harmDenial(caster, cow)).contains(AEGIS);
+    assertThat(protection.harms).containsExactly(HarmTarget.PASSIVE);
 
-    assertThat(screened.allowed()).containsExactly(zombie);
+    protection.residents.add(caster.getUniqueId());
+    assertThat(guard.harmDenial(caster, cow)).isEmpty();
+  }
+
+  @Test
+  void monstersAreFairGameExceptOnLandTheCasterMayNotBuildOn() {
+    var caster = harness.server.addPlayer();
+    var wild = harness.world.spawn(at(-3), Zombie.class);
+    var farmed = harness.world.spawn(at(3), Zombie.class);
+
+    var screened = guard.creatures(caster, List.of(wild, farmed));
+
+    assertThat(screened.allowed()).containsExactly(wild);
     assertThat(screened.firstDenial()).contains(AEGIS);
+    assertThat(protection.harms).isEmpty();
+    assertThat(protection.actions).containsOnly(ProtectedAction.BUILD);
   }
 
   @Test
@@ -111,6 +119,5 @@ final class GuardTest {
 
     assertThat(guard.denial(caster, ProtectedAction.TELEPORT_INTO, at(10))).contains(AEGIS);
     assertThat(guard.denial(caster, ProtectedAction.TELEPORT_INTO, at(-10))).isEmpty();
-    assertThat(protection.asked).containsOnly(ProtectedAction.TELEPORT_INTO);
   }
 }

@@ -21,6 +21,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import org.jooq.Condition;
+import org.jooq.DSLContext;
 
 /** The spells module's SQLite tables. Every write is one transaction on the writer thread. */
 public final class JooqSpellStore implements SpellStore {
@@ -47,24 +49,39 @@ public final class JooqSpellStore implements SpellStore {
         dsl -> {
           var saved = new ArrayList<BlockKey>();
           for (var block : copy) {
-            var key = block.key();
-            var inserted =
-                dsl.insertInto(SPELLS_TEMPORARY_BLOCK)
-                    .set(SPELLS_TEMPORARY_BLOCK.WORLD, key.world())
-                    .set(SPELLS_TEMPORARY_BLOCK.X, key.x())
-                    .set(SPELLS_TEMPORARY_BLOCK.Y, key.y())
-                    .set(SPELLS_TEMPORARY_BLOCK.Z, key.z())
-                    .set(SPELLS_TEMPORARY_BLOCK.ORIGINAL, block.original())
-                    .set(SPELLS_TEMPORARY_BLOCK.PLACED, block.placed())
-                    .set(SPELLS_TEMPORARY_BLOCK.REVERT_AT, block.revertAt().toEpochMilli())
-                    .onConflictDoNothing()
-                    .execute();
-            if (inserted == 1) {
-              saved.add(key);
+            if (save(dsl, block) == 1) {
+              saved.add(block.key());
             }
           }
           return List.copyOf(saved);
         });
+  }
+
+  /** Inserts {@code block}, or replaces a reverted record at its position; 0 if one is pending. */
+  private static int save(DSLContext dsl, TemporaryBlock block) {
+    var key = block.key();
+    var revertAt = block.revertAt().toEpochMilli();
+    return dsl.insertInto(SPELLS_TEMPORARY_BLOCK)
+        .set(SPELLS_TEMPORARY_BLOCK.WORLD, key.world())
+        .set(SPELLS_TEMPORARY_BLOCK.X, key.x())
+        .set(SPELLS_TEMPORARY_BLOCK.Y, key.y())
+        .set(SPELLS_TEMPORARY_BLOCK.Z, key.z())
+        .set(SPELLS_TEMPORARY_BLOCK.ORIGINAL, block.original())
+        .set(SPELLS_TEMPORARY_BLOCK.PLACED, block.placed())
+        .set(SPELLS_TEMPORARY_BLOCK.REVERT_AT, revertAt)
+        .set(SPELLS_TEMPORARY_BLOCK.REVERTED, false)
+        .onConflict(
+            SPELLS_TEMPORARY_BLOCK.WORLD,
+            SPELLS_TEMPORARY_BLOCK.X,
+            SPELLS_TEMPORARY_BLOCK.Y,
+            SPELLS_TEMPORARY_BLOCK.Z)
+        .doUpdate()
+        .set(SPELLS_TEMPORARY_BLOCK.ORIGINAL, block.original())
+        .set(SPELLS_TEMPORARY_BLOCK.PLACED, block.placed())
+        .set(SPELLS_TEMPORARY_BLOCK.REVERT_AT, revertAt)
+        .set(SPELLS_TEMPORARY_BLOCK.REVERTED, false)
+        .where(SPELLS_TEMPORARY_BLOCK.REVERTED.isTrue())
+        .execute();
   }
 
   @Override
@@ -74,17 +91,63 @@ public final class JooqSpellStore implements SpellStore {
         dsl -> {
           var deleted = 0;
           for (var key : copy) {
+            deleted += dsl.deleteFrom(SPELLS_TEMPORARY_BLOCK).where(at(key)).execute();
+          }
+          return deleted;
+        });
+  }
+
+  @Override
+  public CompletableFuture<Integer> markReverted(List<BlockKey> keys) {
+    var copy = List.copyOf(keys);
+    return database.write(
+        dsl -> {
+          var marked = 0;
+          for (var key : copy) {
+            marked +=
+                dsl.update(SPELLS_TEMPORARY_BLOCK)
+                    .set(SPELLS_TEMPORARY_BLOCK.REVERTED, true)
+                    .where(at(key))
+                    .execute();
+          }
+          return marked;
+        });
+  }
+
+  @Override
+  public CompletableFuture<Integer> forgetReverted(List<BlockKey> keys) {
+    var copy = List.copyOf(keys);
+    return database.write(
+        dsl -> {
+          var deleted = 0;
+          for (var key : copy) {
             deleted +=
                 dsl.deleteFrom(SPELLS_TEMPORARY_BLOCK)
-                    .where(
-                        SPELLS_TEMPORARY_BLOCK.WORLD.eq(key.world()),
-                        SPELLS_TEMPORARY_BLOCK.X.eq(key.x()),
-                        SPELLS_TEMPORARY_BLOCK.Y.eq(key.y()),
-                        SPELLS_TEMPORARY_BLOCK.Z.eq(key.z()))
+                    .where(at(key), SPELLS_TEMPORARY_BLOCK.REVERTED.isTrue())
                     .execute();
           }
           return deleted;
         });
+  }
+
+  @Override
+  public CompletableFuture<Integer> forgetReverted(String world) {
+    return database.write(
+        dsl ->
+            dsl.deleteFrom(SPELLS_TEMPORARY_BLOCK)
+                .where(
+                    SPELLS_TEMPORARY_BLOCK.WORLD.eq(world),
+                    SPELLS_TEMPORARY_BLOCK.REVERTED.isTrue())
+                .execute());
+  }
+
+  private static Condition at(BlockKey key) {
+    return SPELLS_TEMPORARY_BLOCK
+        .WORLD
+        .eq(key.world())
+        .and(SPELLS_TEMPORARY_BLOCK.X.eq(key.x()))
+        .and(SPELLS_TEMPORARY_BLOCK.Y.eq(key.y()))
+        .and(SPELLS_TEMPORARY_BLOCK.Z.eq(key.z()));
   }
 
   @Override

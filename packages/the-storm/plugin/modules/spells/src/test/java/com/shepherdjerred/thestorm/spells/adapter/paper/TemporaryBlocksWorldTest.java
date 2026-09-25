@@ -15,8 +15,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Zombie;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -33,33 +35,81 @@ final class TemporaryBlocksWorldTest {
     harness.close();
   }
 
-  /** Pending reverts in memory, like the SQLite table. */
+  /** The SQLite table in memory: records with their reverted flag. */
   static final class MemoryStore implements SpellStore {
-    final Map<BlockKey, TemporaryBlock> rows = new LinkedHashMap<>();
+
+    record Row(TemporaryBlock block, boolean reverted) {}
+
+    final Map<BlockKey, Row> rows = new LinkedHashMap<>();
+
+    /** When set, saves wait until the test completes them, like a slow database. */
+    CompletableFuture<Boolean> gate = CompletableFuture.completedFuture(true);
+
+    List<TemporaryBlock> pending() {
+      return rows.values().stream().filter(row -> !row.reverted()).map(Row::block).toList();
+    }
+
+    List<BlockKey> reverted() {
+      return rows.entrySet().stream()
+          .filter(entry -> entry.getValue().reverted())
+          .map(Map.Entry::getKey)
+          .toList();
+    }
 
     @Override
     public CompletableFuture<List<TemporaryBlock>> temporaryBlocks() {
-      return CompletableFuture.completedFuture(List.copyOf(rows.values()));
+      return CompletableFuture.completedFuture(rows.values().stream().map(Row::block).toList());
     }
 
     @Override
     public CompletableFuture<List<BlockKey>> saveTemporaryBlocks(List<TemporaryBlock> blocks) {
-      var saved = new ArrayList<BlockKey>();
-      for (var block : blocks) {
-        if (rows.putIfAbsent(block.key(), block) == null) {
-          saved.add(block.key());
-        }
-      }
-      return CompletableFuture.completedFuture(saved);
+      return gate.thenApply(
+          ignored -> {
+            var saved = new ArrayList<BlockKey>();
+            for (var block : blocks) {
+              var existing = rows.get(block.key());
+              if (existing == null || existing.reverted()) {
+                rows.put(block.key(), new Row(block, false));
+                saved.add(block.key());
+              }
+            }
+            return saved;
+          });
     }
 
     @Override
     public CompletableFuture<Integer> deleteTemporaryBlocks(List<BlockKey> keys) {
-      var deleted = 0;
+      keys.forEach(rows::remove);
+      return CompletableFuture.completedFuture(keys.size());
+    }
+
+    @Override
+    public CompletableFuture<Integer> markReverted(List<BlockKey> keys) {
       for (var key : keys) {
-        deleted += rows.remove(key) == null ? 0 : 1;
+        rows.computeIfPresent(key, (k, row) -> new Row(row.block(), true));
       }
-      return CompletableFuture.completedFuture(deleted);
+      return CompletableFuture.completedFuture(keys.size());
+    }
+
+    @Override
+    public CompletableFuture<Integer> forgetReverted(List<BlockKey> keys) {
+      var forgotten = 0;
+      for (var key : keys) {
+        var row = rows.get(key);
+        if (row != null && row.reverted()) {
+          rows.remove(key);
+          forgotten++;
+        }
+      }
+      return CompletableFuture.completedFuture(forgotten);
+    }
+
+    @Override
+    public CompletableFuture<Integer> forgetReverted(String world) {
+      var before = rows.size();
+      rows.entrySet()
+          .removeIf(entry -> entry.getValue().reverted() && entry.getKey().world().equals(world));
+      return CompletableFuture.completedFuture(before - rows.size());
     }
 
     @Override
@@ -99,7 +149,7 @@ final class TemporaryBlocksWorldTest {
     place(wall, 10);
 
     assertThat(wall).allMatch(block -> block.getType() == Material.DEEPSLATE_BRICKS);
-    assertThat(store.rows).hasSize(2);
+    assertThat(store.pending()).hasSize(2);
     assertThat(blocks.holds(wall.getFirst())).isTrue();
 
     harness.clock.advance(Duration.ofSeconds(9));
@@ -109,8 +159,73 @@ final class TemporaryBlocksWorldTest {
     harness.clock.advance(Duration.ofSeconds(1));
     blocks.sweep();
     assertThat(wall).allMatch(block -> block.getType() == Material.AIR);
-    assertThat(store.rows).isEmpty();
     assertThat(blocks.holds(wall.getFirst())).isFalse();
+    // Reverted, but remembered until the world is saved.
+    assertThat(store.reverted()).hasSize(2);
+    assertThat(store.pending()).isEmpty();
+
+    blocks.worldSaved(harness.world);
+    assertThat(store.rows).isEmpty();
+  }
+
+  @Test
+  void aCrashAfterARevertButBeforeTheSaveRevertsAgainAtStartup() {
+    var block = air(0);
+    place(List.of(block), 10);
+    harness.clock.advance(Duration.ofSeconds(10));
+    blocks.sweep();
+    assertThat(block.getType()).isEqualTo(Material.AIR);
+
+    // kill -9: the world on disk still shows the wall, and the record is still there.
+    block.setType(Material.DEEPSLATE_BRICKS);
+    var restarted = new TemporaryBlocks(store, harness.server, harness.clock, harness.async);
+    restarted.recover(() -> {});
+
+    assertThat(block.getType()).isEqualTo(Material.AIR);
+    assertThat(store.reverted()).containsExactly(TemporaryBlocks.key(block));
+  }
+
+  @Test
+  void aCrashAfterTheWorldSavedTheRevertLeavesTheWorldAlone() {
+    var block = air(0);
+    place(List.of(block), 10);
+    harness.clock.advance(Duration.ofSeconds(10));
+    blocks.sweep();
+    // Someone builds where the wall stood, then the server dies before the save.
+    block.setType(Material.OAK_PLANKS);
+
+    new TemporaryBlocks(store, harness.server, harness.clock, harness.async).recover(() -> {});
+
+    assertThat(block.getType()).isEqualTo(Material.OAK_PLANKS);
+  }
+
+  @Test
+  void aSavedChunkForgetsOnlyItsOwnReverts() {
+    var near = air(0);
+    var far = harness.world.getBlockAt(100, 100, 0);
+    far.setType(Material.AIR);
+    place(List.of(near, far), 1);
+    harness.clock.advance(Duration.ofSeconds(1));
+    blocks.sweep();
+
+    blocks.chunkSaved(near.getChunk());
+
+    assertThat(store.reverted()).containsExactly(TemporaryBlocks.key(far));
+  }
+
+  @Test
+  void aNewSpellMayReuseAPositionWhoseRevertAwaitsTheSave() {
+    var block = air(0);
+    place(List.of(block), 1);
+    harness.clock.advance(Duration.ofSeconds(1));
+    blocks.sweep();
+
+    place(List.of(block), 10);
+
+    assertThat(block.getType()).isEqualTo(Material.DEEPSLATE_BRICKS);
+    assertThat(store.pending()).hasSize(1);
+    blocks.worldSaved(harness.world);
+    assertThat(store.pending()).hasSize(1);
   }
 
   @Test
@@ -134,16 +249,42 @@ final class TemporaryBlocksWorldTest {
   }
 
   @Test
-  void aBlockChangedWhileItsRecordWasWrittenIsLeftAlone() {
+  void freezeNeverIcesWaterACreatureIsIn() {
+    var occupied = harness.world.getBlockAt(0, 100, 0);
+    occupied.setType(Material.WATER);
+    var free = harness.world.getBlockAt(4, 100, 0);
+    free.setType(Material.WATER);
+    harness.world.spawn(new Location(harness.world, 0.5, 100, 0.5), Zombie.class);
+
+    assertThat(blocks.eligible(List.of(occupied, free), Replaceability.Mode.WATER))
+        .containsExactly(free);
+  }
+
+  @Test
+  void aCreatureThatStepsInWhileTheRecordIsWrittenKeepsItsSpace() {
+    var gate = new CompletableFuture<Boolean>();
+    store.gate = gate;
     var block = air(0);
-    // A pending revert from an earlier run already owns this position.
+    place(List.of(block), 10);
+
+    harness.world.spawn(new Location(harness.world, 0.5, 100, 0.5), Zombie.class);
+    gate.complete(true);
+
+    assertThat(block.getType()).isEqualTo(Material.AIR);
+    assertThat(blocks.holds(block)).isFalse();
+    assertThat(store.rows).isEmpty();
+  }
+
+  @Test
+  void aPendingRevertFromAnEarlierRunIsNeverOverwritten() {
+    var block = air(0);
+    var key = TemporaryBlocks.key(block);
     store.rows.put(
-        TemporaryBlocks.key(block),
-        new TemporaryBlock(
-            TemporaryBlocks.key(block),
-            "minecraft:water[level=0]",
-            "minecraft:packed_ice",
-            harness.clock.instant()));
+        key,
+        new MemoryStore.Row(
+            new TemporaryBlock(
+                key, "minecraft:water[level=0]", "minecraft:packed_ice", harness.clock.instant()),
+            false));
 
     place(List.of(block), 10);
 
@@ -158,15 +299,44 @@ final class TemporaryBlocksWorldTest {
     var key = TemporaryBlocks.key(ice);
     store.rows.put(
         key,
-        new TemporaryBlock(
-            key, "minecraft:air", "minecraft:packed_ice", harness.clock.instant().plusSeconds(60)));
+        new MemoryStore.Row(
+            new TemporaryBlock(
+                key,
+                "minecraft:air",
+                "minecraft:packed_ice",
+                harness.clock.instant().plusSeconds(60)),
+            false));
     var ready = new boolean[1];
 
     blocks.recover(() -> ready[0] = true);
 
     assertThat(ice.getType()).isEqualTo(Material.AIR);
-    assertThat(store.rows).isEmpty();
+    assertThat(store.reverted()).containsExactly(key);
     assertThat(ready[0]).isTrue();
+  }
+
+  @Test
+  void leftoversInAnUnloadedWorldWaitForItToLoad() {
+    var ice = harness.world.getBlockAt(0, 100, 0);
+    ice.setType(Material.PACKED_ICE);
+    var key = TemporaryBlocks.key(ice);
+    store.rows.put(
+        key,
+        new MemoryStore.Row(
+            new TemporaryBlock(
+                key, "minecraft:air", "minecraft:packed_ice", harness.clock.instant()),
+            false));
+    harness.server.removeWorld(harness.world);
+
+    blocks.recover(() -> {});
+    assertThat(ice.getType()).isEqualTo(Material.PACKED_ICE);
+    assertThat(store.pending()).hasSize(1);
+
+    harness.server.addWorld(harness.world);
+    blocks.worldLoaded(harness.world);
+
+    assertThat(ice.getType()).isEqualTo(Material.AIR);
+    assertThat(store.reverted()).containsExactly(key);
   }
 
   @Test
@@ -177,6 +347,6 @@ final class TemporaryBlocksWorldTest {
     blocks.revertAll();
 
     assertThat(wall).allMatch(block -> block.getType() == Material.AIR);
-    assertThat(store.rows).isEmpty();
+    assertThat(store.pending()).isEmpty();
   }
 }

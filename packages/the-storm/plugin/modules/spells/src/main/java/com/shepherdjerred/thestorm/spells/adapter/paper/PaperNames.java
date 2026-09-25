@@ -4,14 +4,17 @@ import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellsConfig;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.Registry;
 import org.bukkit.Sound;
+import org.bukkit.Tag;
 import org.bukkit.block.BlockType;
 import org.bukkit.block.TileState;
 import org.bukkit.entity.EntityType;
@@ -22,6 +25,18 @@ import org.bukkit.entity.EntityType;
  * instead of failing on the first cast.
  */
 public final class PaperNames {
+
+  /** Blocks that change by themselves: they melt, prime or spread. */
+  private static final Set<Material> UNSTABLE =
+      EnumSet.of(
+          Material.TNT,
+          Material.ICE,
+          Material.FROSTED_ICE,
+          Material.SNOW_BLOCK,
+          Material.GRASS_BLOCK,
+          Material.MYCELIUM,
+          Material.FARMLAND,
+          Material.SCULK_CATALYST);
 
   private PaperNames() {}
 
@@ -99,15 +114,22 @@ public final class PaperNames {
   }
 
   /**
-   * A full, solid block for temporary blocks: nothing with a block entity (it could hold items) and
-   * nothing that falls or flows.
+   * A full, solid, inert block for temporary blocks: nothing with a block entity (it could hold
+   * items), and nothing that falls, flows, decays, melts, hardens or ignites on its own (leaves,
+   * sand and gravel, concrete powder, ice, TNT), so the block the revert finds is the one placed.
    */
   public static Optional<Material> solid(String name) {
     return blockType(name)
         .filter(BlockType::isSolid)
         .filter(type -> !type.hasGravity())
         .filter(type -> !(type.createBlockData().createBlockState() instanceof TileState))
-        .flatMap(type -> material(name));
+        .flatMap(type -> material(name))
+        .filter(material -> !unstable(material));
+  }
+
+  private static boolean unstable(Material material) {
+    // Concrete powder hardens in water, but it falls, so hasGravity already refuses it.
+    return UNSTABLE.contains(material) || Tag.LEAVES.isTagged(material);
   }
 
   private static Optional<BlockType> blockType(String name) {
