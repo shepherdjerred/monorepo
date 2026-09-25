@@ -8,8 +8,7 @@ public enum ChannelKey {
   GLOBAL("global", "Global", "G"),
   WAR("war", "War", "W"),
   STAFF("staff", "Staff", "S"),
-  TOWN("town", "Town", "T"),
-  NATION("nation", "Nation", "N");
+  TOWN("town", "Town", "T");
 
   private final String id;
   private final String displayName;
@@ -41,7 +40,7 @@ public enum ChannelKey {
     return switch (this) {
       case GLOBAL, WAR -> Reach.EVERYONE;
       case STAFF -> Reach.STAFF;
-      case TOWN, NATION -> Reach.GROUP;
+      case TOWN -> Reach.TOWN;
     };
   }
 
@@ -56,7 +55,7 @@ public enum ChannelKey {
     EVERYONE,
     /** Players with the staff permission. */
     STAFF,
-    /** The speaker's town or nation, as another module resolves it. */
-    GROUP
+    /** The speaker's town, as the towns module resolves it. */
+    TOWN
   }
 }

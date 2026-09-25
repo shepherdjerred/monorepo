@@ -8,6 +8,6 @@ public enum ChannelAccess {
   NO_PERMISSION,
   /** No module provides the channel's members yet (towns are not live). */
   UNAVAILABLE,
-  /** They are not in a town or nation. */
+  /** They are not in a town. */
   NOT_A_MEMBER
 }
