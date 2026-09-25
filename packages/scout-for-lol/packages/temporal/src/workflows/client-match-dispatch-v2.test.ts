@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { Client } from "@temporalio/client";
+import type { Client, WorkflowStartOptions } from "@temporalio/client";
 import { ApplicationFailure } from "@temporalio/common";
 import { Worker } from "@temporalio/worker";
 import { z } from "zod";
@@ -591,19 +591,43 @@ function discoveredMatch(
   };
 }
 
+function discoveryStartOptions(
+  workflowId: string,
+): WorkflowStartOptions<typeof scoutPostMatchDiscoveryV2Workflow> {
+  return {
+    taskQueue: "scout-dev",
+    workflowId,
+    args: [
+      scoutPostMatchDiscoveryV2InputCodec.serialize({
+        stage,
+        trigger: "schedule",
+      }),
+    ],
+  };
+}
+
 async function runDiscovery(workflowId: string) {
   return await harness
     .client()
-    .workflow.execute(scoutPostMatchDiscoveryV2Workflow, {
-      taskQueue: "scout-dev",
-      workflowId,
-      args: [
-        scoutPostMatchDiscoveryV2InputCodec.serialize({
-          stage,
-          trigger: "schedule",
-        }),
-      ],
-    });
+    .workflow.execute(
+      scoutPostMatchDiscoveryV2Workflow,
+      discoveryStartOptions(workflowId),
+    );
+}
+
+/**
+ * Starts a discovery without awaiting its result. The time-skipping test
+ * server only skips time while a client awaits a result, so a test that holds
+ * an Activity open must not await one until it releases it; otherwise the
+ * held Activity's start-to-close timeout elapses in skipped time.
+ */
+async function startDiscovery(workflowId: string) {
+  return await harness
+    .client()
+    .workflow.start(
+      scoutPostMatchDiscoveryV2Workflow,
+      discoveryStartOptions(workflowId),
+    );
 }
 
 /**
@@ -760,9 +784,11 @@ test("processes an older Riot match another account's poll delivered after a new
 
   const dispatcherId = scoutClientMatchDispatchV2WorkflowId(stage);
   const dispatcher = harness.client().workflow.getHandle(dispatcherId);
-  const newer = runDiscovery("discovery-newer-account");
+  // Started, not executed: nothing awaits a result while the newer commit is
+  // held, so the test server cannot skip past its start-to-close timeout.
+  const newer = await startDiscovery("discovery-newer-account");
   await newerCommitStarted.promise;
-  const older = runDiscovery("discovery-older-account");
+  const older = await startDiscovery("discovery-older-account");
   // Hold the newer match until the older one has been signalled, so the
   // dispatcher sees it behind a frontier that is already past it.
   for (;;) {
@@ -781,8 +807,8 @@ test("processes an older Riot match another account's poll delivered after a new
     childrenStarted: 1,
     complete: true,
   });
-  await expect(newer).resolves.toEqual(completed);
-  await expect(older).resolves.toEqual(completed);
+  await expect(newer.result()).resolves.toEqual(completed);
+  await expect(older.result()).resolves.toEqual(completed);
   const history = await dispatcher.fetchHistory();
   await terminateDispatcher(dispatcherId, "test observed both discoveries");
 
