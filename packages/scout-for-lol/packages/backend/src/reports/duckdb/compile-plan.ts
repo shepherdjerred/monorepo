@@ -46,12 +46,6 @@ import {
 } from "#src/reports/duckdb/select-sql.ts";
 import { buildFactsCte } from "#src/reports/duckdb/facts-cte.ts";
 import {
-  buildStreakStep,
-  collectStreaks,
-  STREAK_ORDER_COLUMNS,
-  unsupportedStreak,
-} from "#src/reports/duckdb/streak-sql.ts";
-import {
   buildLookupSources,
   enforceScopeGuards,
   hasTrackedAccounts,
@@ -217,13 +211,7 @@ function buildFactsPipeline(
     ? combineAnd(pushedFragments)
     : combineAnd([range, ...pushedFragments]);
   const source = match(kind.columnSource)
-    .with("match", "match-pair", "match-item", (columnSource) =>
-      buildMatchesSource(
-        input.files,
-        pushdown,
-        columnSource === "match-item" ? "with-items" : "reads",
-      ),
-    )
+    .with("match", () => buildMatchesSource(input.files, pushdown))
     .with("prematch", () => buildPrematchSource(input.files, pushdown))
     .with("match-team", () => buildMatchTeamsSource(input.files, pushdown))
     .with("match-team-ban", () =>
@@ -312,12 +300,6 @@ export function compileScoutQlPlanQuery(
   );
 
   const referenced = referencedColumnNames(plan);
-  const streaks = collectStreaks(plan);
-  if (streaks.length > 0) {
-    for (const name of STREAK_ORDER_COLUMNS) {
-      referenced.add(name);
-    }
-  }
   for (const grouping of groupings) {
     for (const name of grouping.columnNames) {
       referenced.add(name);
@@ -362,34 +344,17 @@ export function compileScoutQlPlanQuery(
     return undefined;
   }
 
-  const streakStep =
-    streaks.length === 0
-      ? undefined
-      : buildStreakStep({
-          streaks,
-          relation: pipeline.relation,
-          scope: input.scope,
-          groupings,
-          columns,
-          playerPuuids: input.playerPuuids,
-        });
   const { tail, columns: planColumns } = buildAggregateTail({
     plan,
     columns,
     scope: input.scope,
     groupings,
     playerPuuids: input.playerPuuids,
-    factsRelation: streakStep?.relation ?? pipeline.relation,
-    resolveStreak: streakStep?.resolveStreak ?? unsupportedStreak,
+    factsRelation: pipeline.relation,
     limit: input.limit,
   });
 
-  const aggregate = seq(
-    pipeline.prefix,
-    streakStep?.ctes ?? frag(""),
-    " ",
-    tail,
-  );
+  const aggregate = seq(pipeline.prefix, " ", tail);
   const scanned = seq(
     pipeline.prefix,
     ` SELECT (COUNT(*))::BIGINT AS scanned FROM ${pipeline.relation}`,

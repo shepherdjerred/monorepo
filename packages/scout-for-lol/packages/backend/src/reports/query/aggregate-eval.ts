@@ -428,11 +428,6 @@ export function evaluateAggregate(
       }
       return ctx.outputs.get(node.name) ?? null;
     })
-    .with({ kind: "streak" }, () => {
-      throw new Error(
-        "Streaks are not supported by the JS aggregate evaluator: they need games in order, and player_groups and rank-source rows are already folded.",
-      );
-    })
     .exhaustive();
 }
 

@@ -50,13 +50,6 @@ export type AggregateContext = {
    * throwing resolver: alias references are legal only in HAVING / ORDER BY.
    */
   resolveOutputRef: (name: string) => SqlFragment;
-  /**
-   * The tail's SQL for a streak aggregate. Streaks read window columns a
-   * step before the GROUP BY adds (see streak-sql.ts), not the facts.
-   */
-  resolveStreak: (
-    node: Extract<ScoutQlAggregateExpr, { kind: "streak" }>,
-  ) => SqlFragment;
 };
 
 /** Infer the static type class of a scalar expression for cast decisions. */
@@ -221,7 +214,6 @@ export function compileAggregateExpr(
       ),
     )
     .with({ kind: "output-ref" }, (node) => ctx.resolveOutputRef(node.name))
-    .with({ kind: "streak" }, (node) => ctx.resolveStreak(node))
     .exhaustive();
 }
 
@@ -288,9 +280,6 @@ export function walkAggregateExpr(
     })
     .with({ kind: "literal" }, { kind: "output-ref" }, () => {
       // Leaf.
-    })
-    .with({ kind: "streak" }, (node) => {
-      walkScalarExpr(node.arg, visit);
     })
     .with({ kind: "arithmetic" }, (node) => {
       walkAggregateExpr(node.left, visit);

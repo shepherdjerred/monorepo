@@ -171,11 +171,7 @@ function compileInPredicate(
   );
 }
 
-function compilePlayerRef(
-  index: number,
-  other: boolean,
-  ctx: ExprContext,
-): SqlFragment {
+function compilePlayerRef(index: number, ctx: ExprContext): SqlFragment {
   if (ctx.playerPuuids === undefined) {
     throw new Error(
       "player('…') requires resolved PUUIDs; the executor must supply playerPuuids.",
@@ -189,12 +185,7 @@ function compilePlayerRef(
   }
   // Compared exactly, with no lower() on either side: PUUIDs are
   // case-sensitive base64url, so folding them would be a semantic lie.
-  // other('…') matches the other side of a match_pairs row, a lookup that
-  // exists only in facts; recordColumnNames routes it there.
-  const column = other
-    ? resolveColumn(ctx.columns, "other_puuid").sql
-    : "puuid";
-  return frag(`(${column} IN (SELECT unnest(?)))`, [listParam(puuids)]);
+  return frag("(puuid IN (SELECT unnest(?)))", [listParam(puuids)]);
 }
 
 const COMPARE_OPERATOR = {
@@ -254,9 +245,7 @@ export function compilePredicate(
         `) IS ${node.negated ? "NOT NULL" : "NULL"})`,
       ),
     )
-    .with({ kind: "player-ref" }, (node) =>
-      compilePlayerRef(node.index, node.side === "other", ctx),
-    )
+    .with({ kind: "player-ref" }, (node) => compilePlayerRef(node.index, ctx))
     .exhaustive();
 }
 
@@ -363,7 +352,7 @@ export function recordColumnNames(
     into.add(node.column);
   }
   if (node.kind === "player-ref") {
-    into.add(node.side === "other" ? "other_puuid" : "puuid");
+    into.add("puuid");
   }
 }
 

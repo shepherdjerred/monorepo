@@ -68,19 +68,6 @@ export function number_(value: unknown): number {
   return CountSchema.parse(value);
 }
 
-/** Run a plan and key each row's numeric outputs by its group label. */
-export async function outputsByLabel(
-  input: PlanQueryInput,
-): Promise<Record<string, number[]>> {
-  const { rows, compiled } = await runPlan(input);
-  return Object.fromEntries(
-    rows.map((row) => [
-      String(row[compiled.columns.label]),
-      compiled.columns.outputs.map((output) => number_(row[output.alias])),
-    ]),
-  );
-}
-
 // ── Plan builders for end-to-end tests ───────────────────────────────────────
 
 export function col(column: string): ScoutQlScalarExpr {

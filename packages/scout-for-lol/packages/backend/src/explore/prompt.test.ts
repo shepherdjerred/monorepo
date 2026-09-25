@@ -186,21 +186,15 @@ describe("data Scout has that Explore cannot query", () => {
     for (const entry of LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH) {
       expect(instructions).toContain(entry);
     }
-    // The rule travels with the list: with nothing to list there is no
-    // section, rather than a rule about an empty set.
-    expect(instructions.includes(LAKE_COVERAGE_RULE)).toBe(
-      LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.length > 0,
-    );
+    expect(instructions).toContain(LAKE_COVERAGE_RULE);
   });
 
   test("the judge grades against the same list the agent is given", () => {
     // Two copies would drift, and the two halves would then disagree about
     // what Scout holds — the exact failure this list exists to stop.
-    const judge = judgeSystemPrompt();
-    for (const entry of LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH) {
-      expect(judge).toContain(entry);
-    }
-    expect(judge).toContain("overclaimed_absence");
+    expect(judgeSystemPrompt()).toContain(
+      LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH[0],
+    );
   });
 });
 
@@ -319,17 +313,10 @@ describe("unresolved concepts", () => {
     expect(instructions).toContain("player_groups reads groups");
     expect(instructions).toContain("never runs without them");
     expect(instructions).not.toContain("must never be queried: player_groups");
-    // Teammates and opponents are both reachable now, through match_pairs.
+    // Teammates are reachable now; opponents are still a stated limit.
     const listed = LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.join(" ");
     expect(listed).not.toContain("plays well together");
-    expect(listed).not.toContain("head-to-head");
-  });
-
-  test("points teammate and head-to-head questions at match_pairs", () => {
-    const instructions = exploreAgentInstructions({ bucks: null });
-    expect(instructions).toContain("match_pairs pairs each player");
-    expect(instructions).toContain("other('…')");
-    expect(instructions).toContain("HAVING games >= 5");
+    expect(listed).toContain("head-to-head");
   });
 
   test("defines the Hall of Fame, which was once read as a player name", () => {

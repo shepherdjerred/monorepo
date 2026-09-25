@@ -165,16 +165,12 @@ function checkPlayerRefConflict(
   conjuncts: ScoutQlExprAst[],
   diagnostics: ScoutQlDiagnostic[],
 ): void {
-  const seenBySide = new Map<string, Map<string, ScoutQlExprAst>>();
+  const seen = new Map<string, ScoutQlExprAst>();
   for (const conjunct of conjuncts) {
     const shape = playerRefShape(conjunct);
     if (shape === undefined) {
       continue;
     }
-    // Each side of a pair is one player; the two sides are different people.
-    const seen =
-      seenBySide.get(shape.side) ?? new Map<string, ScoutQlExprAst>();
-    seenBySide.set(shape.side, seen);
     const key = shape.name.trim().toLocaleLowerCase("en-US");
     const previous = seen.get(key);
     if (previous === undefined && seen.size > 0) {

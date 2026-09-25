@@ -20,7 +20,7 @@ import { SCOUTQL_IDIOMS } from "@scout-for-lol/data/model/scoutql/editor/scoutql
 const PREAMBLE: readonly string[] = [
   "ScoutQL is a bounded subset of DuckDB SQL over Scout's report lake. Clause order is SQL's:",
   "`SELECT <outputs> FROM <source> [WHERE <predicate>] [GROUP BY <keys>] [HAVING <predicate>] [ORDER BY <keys>] [LIMIT <n>] [RENDER <kind> [WITH (<options>)]]`.",
-  "Where ScoutQL overlaps SQL it behaves exactly as DuckDB does — single-quoted strings ('' escapes a quote), `::` casts, `INTERVAL`, `--` line comments, and no forgiving special cases. On top of SQL it adds `RENDER … WITH (…)`, `player('…')`, `champion('…')`, `kda()`, `per_minute(x)`, and the streak aggregates `LONGEST_STREAK(cond)` / `CURRENT_STREAK(cond)`.",
+  "Where ScoutQL overlaps SQL it behaves exactly as DuckDB does — single-quoted strings ('' escapes a quote), `::` casts, `INTERVAL`, `--` line comments, and no forgiving special cases. On top of SQL it adds `RENDER … WITH (…)`, `player('…')`, `champion('…')`, `kda()`, and `per_minute(x)`.",
   "There is no metric vocabulary and no implicit aggregation: you select raw lake columns wrapped in ordinary SQL aggregates.",
 ];
 

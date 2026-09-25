@@ -26,9 +26,9 @@ describe("every idiom compiles and lints clean", () => {
 });
 
 describe("idiom hygiene", () => {
-  test("the cookbook holds 13 recipes with unique ids", () => {
-    expect(SCOUTQL_IDIOMS).toHaveLength(13);
-    expect(new Set(SCOUTQL_IDIOMS.map((idiom) => idiom.id)).size).toBe(13);
+  test("the cookbook holds 12 recipes with unique ids", () => {
+    expect(SCOUTQL_IDIOMS).toHaveLength(12);
+    expect(new Set(SCOUTQL_IDIOMS.map((idiom) => idiom.id)).size).toBe(12);
   });
 
   test("every idiom states a time bound, since the field guide demands one", () => {

@@ -37,8 +37,6 @@ import type {
 const FINISHED_MATCH_SOURCES: ReadonlySet<ScoutQlSource> =
   new Set<ScoutQlSource>([
     "match_participants",
-    "match_pairs",
-    "match_items",
     "competition_match_participants",
   ]);
 

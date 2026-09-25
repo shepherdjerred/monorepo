@@ -4,7 +4,10 @@ import type {
   ScoutQlFix,
   ScoutQlSpan,
 } from "#src/model/scoutql/editor/diagnostics.ts";
-import { unknownNamedConstant } from "#src/model/scoutql/analyze/analyze-named-constant.ts";
+import {
+  closestChampionName,
+  resolveReportChampion,
+} from "#src/model/reports/report-query-champions.ts";
 import {
   closestScoutQlFunctionName,
   scoutQlFunction,
@@ -19,10 +22,6 @@ import {
   type ExprTypingContext,
   type ScoutQlExprType,
 } from "#src/model/scoutql/analyze/analyze-expr-shared.ts";
-import {
-  filterRefusal,
-  typeStreakCall,
-} from "#src/model/scoutql/analyze/analyze-expr-streak.ts";
 
 // ── Call typing ──────────────────────────────────────────────────────────────
 // Arity, DISTINCT/*/FILTER acceptance, and result types for every registry
@@ -93,7 +92,7 @@ function checkCallFlags(
   if (node.filter !== undefined && !info.acceptsFilter) {
     emitDiagnostic(ctx.diagnostics, {
       code: "type-mismatch",
-      message: filterRefusal(node.name),
+      message: "FILTER (WHERE …) only applies to aggregate functions.",
       span: node.span,
     });
   }
@@ -254,10 +253,6 @@ function typeAggregateCall(
       return "double";
     })
     .with("min", "max", (): ScoutQlExprType => argType)
-    .with("longest_streak", "current_streak", (): ScoutQlExprType => {
-      typeStreakCall(node, arg, argType, ctx);
-      return "integer";
-    })
     .otherwise((): ScoutQlExprType => "unknown");
 }
 
@@ -440,12 +435,13 @@ function typeReferenceCall(
   node: CallNode,
   ctx: ExprTypingContext,
 ): ScoutQlExprType {
-  if (node.name === "player" || node.name === "other") {
+  if (node.name === "player") {
     // Valid player('…') shapes are consumed by typeConditionExpr before typing
     // descends here, so reaching this point is always a misuse.
     emitDiagnostic(ctx.diagnostics, {
       code: "player-ref-unavailable",
-      message: `${node.name}('…') is only usable as a WHERE condition (bare, or ${node.name} = ${node.name}('…')).`,
+      message:
+        "player('…') is only usable as a WHERE condition (bare, or player = player('…')).",
       span: node.span,
     });
     return "unknown";
@@ -455,15 +451,19 @@ function typeReferenceCall(
     if (arg !== undefined && !containsErrorNode(arg)) {
       emitDiagnostic(ctx.diagnostics, {
         code: "function-arity",
-        message: `${node.name}('…') takes one string literal.`,
+        message: "champion('…') takes one string literal.",
         span: node.span,
       });
     }
     return "integer";
   }
-  const unknown = unknownNamedConstant(node.name, arg.value);
-  if (unknown !== undefined) {
-    emitDiagnostic(ctx.diagnostics, { ...unknown, span: arg.span });
+  if (resolveReportChampion(arg.value) === undefined) {
+    const suggestion = closestChampionName(arg.value);
+    emitDiagnostic(ctx.diagnostics, {
+      code: "champion-unknown",
+      message: `Unknown champion "${arg.value}".${suggestion === undefined ? "" : ` Did you mean "${suggestion}"?`}`,
+      span: arg.span,
+    });
   }
   return "integer";
 }

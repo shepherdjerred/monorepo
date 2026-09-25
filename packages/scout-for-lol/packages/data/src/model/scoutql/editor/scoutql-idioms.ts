@@ -192,24 +192,6 @@ ORDER BY patch ASC`,
     snippet: { clause: "where", body: "player('${1:name}')" },
   },
   {
-    id: "streaks",
-    title: "Win and loss streaks",
-    description:
-      "`LONGEST_STREAK(condition)` is a player's longest run of consecutive games where the condition held; `CURRENT_STREAK(condition)` is the run still going at their latest game. Games run in the order they ended, per player (or per group as well, when grouped by more). A game the WHERE leaves out is skipped, not a break, so this is the solo-queue streak with ARAM ignored — and a run is cut off at the time bound. Any condition works: `NOT win`, `kills >= 10`.",
-    query: `SELECT COUNT(*) AS games, LONGEST_STREAK(win) AS best_run, CURRENT_STREAK(win) AS current_run, LONGEST_STREAK(NOT win) AS worst_skid
-FROM match_participants
-WHERE game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 90 DAY
-  AND queue = 'solo'
-GROUP BY player
-HAVING games >= 10
-ORDER BY best_run DESC
-RENDER leaderboard`,
-    snippet: {
-      clause: "select",
-      body: "LONGEST_STREAK(${1:win}) AS ${2:best_run}",
-    },
-  },
-  {
     id: "box-plot",
     title: "A five-number summary",
     description:

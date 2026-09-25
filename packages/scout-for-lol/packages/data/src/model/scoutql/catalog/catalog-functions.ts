@@ -180,40 +180,6 @@ export const SCOUTQL_FUNCTIONS: readonly ScoutQlFunctionInfo[] = [
     acceptsFilter: true,
   }),
   fn({
-    name: "longest_streak",
-    kind: "aggregate",
-    signatures: [
-      {
-        label: "LONGEST_STREAK(condition)",
-        params: [
-          param("condition", "Boolean per game, e.g. `win` or `kills >= 10`."),
-        ],
-      },
-    ],
-    resultType: "BIGINT",
-    docMarkdown:
-      "Longest run of consecutive games where the condition holds, per player, in game order. `LONGEST_STREAK(win)` is the longest win streak; `LONGEST_STREAK(NOT win)` the longest losing one. Only games the WHERE keeps count: a game it removes is skipped, not a break. Runs are cut at the edges of the time window.",
-    minArgs: 1,
-    maxArgs: 1,
-  }),
-  fn({
-    name: "current_streak",
-    kind: "aggregate",
-    signatures: [
-      {
-        label: "CURRENT_STREAK(condition)",
-        params: [
-          param("condition", "Boolean per game, e.g. `win` or `NOT win`."),
-        ],
-      },
-    ],
-    resultType: "BIGINT",
-    docMarkdown:
-      "The run of consecutive games ending at a player's latest game where the condition holds; 0 if their latest game fails it. Only games the WHERE keeps count, in game order.",
-    minArgs: 1,
-    maxArgs: 1,
-  }),
-  fn({
     name: "round",
     kind: "scalar",
     signatures: [
@@ -390,38 +356,6 @@ export const SCOUTQL_FUNCTIONS: readonly ScoutQlFunctionInfo[] = [
     docMarkdown:
       "Filter to one tracked player's rows: `WHERE player('Bob')` (or `WHERE player = player('Bob')`). The name resolves at run time.",
     snippet: "player('${1:name}')",
-    minArgs: 1,
-    maxArgs: 1,
-  }),
-  fn({
-    name: "other",
-    kind: "reference",
-    signatures: [
-      {
-        label: "other('name')",
-        params: [param("name", "Tracked player alias or Riot ID.")],
-      },
-    ],
-    resultType: "BOOLEAN (WHERE only, match_pairs)",
-    docMarkdown:
-      "On `match_pairs`, filter to pairs whose other player is this one: `WHERE player('Bob') AND other('Alice')` reads Bob's games with or against Alice. Resolves like `player('…')`: a Riot ID works for anyone.",
-    snippet: "other('${1:name}')",
-    minArgs: 1,
-    maxArgs: 1,
-  }),
-  fn({
-    name: "item",
-    kind: "reference",
-    signatures: [
-      {
-        label: "item('Name')",
-        params: [param("Name", "Item display name, e.g. 'Infinity Edge'.")],
-      },
-    ],
-    resultType: "INTEGER constant (an item_id)",
-    docMarkdown:
-      "Resolve an item display name to its numeric id at compile time: `WHERE item_id = item('Infinity Edge')` on `match_items`.",
-    snippet: "item('${1:Name}')",
     minArgs: 1,
     maxArgs: 1,
   }),

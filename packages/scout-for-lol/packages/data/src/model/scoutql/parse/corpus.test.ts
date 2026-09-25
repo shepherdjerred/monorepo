@@ -111,39 +111,6 @@ export const CORPUS: Expectation[] = [
     groupings: ["column/champion"],
   },
   {
-    name: "win and loss streaks per player",
-    query: `SELECT player, LONGEST_STREAK(win) AS best_run, CURRENT_STREAK(NOT win) AS losing_run FROM match_participants WHERE ${BOUND} GROUP BY player`,
-    timeWindow: "relative",
-    outputs: [
-      "player:text:sample",
-      "best_run:count:sample",
-      "losing_run:count:sample",
-    ],
-    groupings: ["column/player"],
-  },
-  {
-    name: "a player's teammates, by partner",
-    query: `SELECT other, COUNT(*) AS games, AVG(win::INT) AS win_rate FROM match_pairs WHERE player('Gex') AND other('Lolo') AND relation = 'teammate' AND ${BOUND} GROUP BY other`,
-    timeWindow: "relative",
-    outputs: [
-      "other:text:sample",
-      "games:count:sample+",
-      "win_rate:percent:rate",
-    ],
-    groupings: ["column/other"],
-  },
-  {
-    name: "a champion's most-built finished items",
-    query: `SELECT item, COUNT(DISTINCT match_id) AS games, AVG(win::INT) AS win_rate FROM match_items WHERE champion_id = champion('Mel') AND item_tier = 'legendary' AND item_id != item('Infinity Edge') AND ${BOUND} GROUP BY item`,
-    timeWindow: "relative",
-    outputs: [
-      "item:text:sample",
-      "games:count:sample",
-      "win_rate:percent:rate",
-    ],
-    groupings: ["column/item"],
-  },
-  {
     name: "histogram over a FLOOR bucket",
     query: `SELECT FLOOR(game_duration_seconds / 300) * 300 AS bucket, COUNT(*) AS games FROM match_participants WHERE ${BOUND} GROUP BY FLOOR(game_duration_seconds / 300) * 300 RENDER histogram`,
     timeWindow: "relative",

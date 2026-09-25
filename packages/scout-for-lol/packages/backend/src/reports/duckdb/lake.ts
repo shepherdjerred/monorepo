@@ -363,12 +363,11 @@ export function buildUnionSource(
 export function buildMatchesSource(
   files: LakeFiles,
   predicate: SqlFragment,
-  columns: "reads" | "with-items" = "reads",
 ): SqlFragment | undefined {
   return buildUnionSource({
     parquetFiles: files.matchesParquet,
     stagingFiles: files.matchesStaging,
-    columns: columns === "reads" ? MATCH_READ_COLUMNS : MATCH_LAKE_COLUMNS,
+    columns: MATCH_READ_COLUMNS,
     dedupe: "matches",
     predicate,
   });

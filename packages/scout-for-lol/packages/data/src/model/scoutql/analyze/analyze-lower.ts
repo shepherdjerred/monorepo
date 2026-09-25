@@ -12,10 +12,7 @@ import {
   ScoutQlCompareOpSchema,
   ScoutQlScalarFunctionSchema,
 } from "#src/model/scoutql/parse/expression.ts";
-import {
-  isNamedConstantFunction,
-  resolveNamedConstant,
-} from "#src/model/scoutql/analyze/analyze-named-constant.ts";
+import { resolveReportChampion } from "#src/model/reports/report-query-champions.ts";
 import {
   inItemLiteral,
   normalizeCastType,
@@ -84,13 +81,15 @@ export function allDefined<T>(values: (T | undefined)[]): T[] | undefined {
 function lowerScalarCall(
   node: Extract<ScoutQlExprAst, { kind: "call" }>,
 ): ScoutQlScalarExpr | undefined {
-  if (isNamedConstantFunction(node.name)) {
+  if (node.name === "champion") {
     const [arg] = node.args;
-    const id =
-      arg?.kind === "string"
-        ? resolveNamedConstant(node.name, arg.value)
-        : undefined;
-    return id === undefined ? undefined : { kind: "literal", value: id };
+    if (arg?.kind !== "string") {
+      return undefined;
+    }
+    const champion = resolveReportChampion(arg.value);
+    return champion === undefined
+      ? undefined
+      : { kind: "literal", value: champion.id };
   }
   const func = scalarFunction(node.name);
   if (func === undefined) {
@@ -231,10 +230,7 @@ export function lowerPredicate(
 ): ScoutQlPredicate | undefined {
   const playerRef = playerRefShape(expr);
   if (playerRef !== undefined) {
-    const index = refs.indexOf(playerRef.name);
-    return playerRef.side === "other"
-      ? { kind: "player-ref", index, side: "other" }
-      : { kind: "player-ref", index };
+    return { kind: "player-ref", index: refs.indexOf(playerRef.name) };
   }
   return match(expr)
     .with({ kind: "binary", op: "and" }, { kind: "binary", op: "or" }, (node) =>

@@ -4,11 +4,6 @@ import type { PlanColumnSource } from "#src/reports/duckdb/column-map.ts";
 import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
 import type { ServerPerson } from "#src/reports/server-people.ts";
 import {
-  namesPairSubject,
-  PAIR_KEYS_SCAN_FILTER,
-} from "#src/reports/duckdb/sources/pair-sql.ts";
-import {
-  buildMatchesSource,
   buildMatchDimensionSource,
   buildMatchTeamsSource,
   buildParticipantDimensionSource,
@@ -23,7 +18,7 @@ import {
   FRAME_KEYS_SCAN_FILTER,
   type FactsCteInput,
 } from "#src/reports/duckdb/facts-cte.ts";
-import { combineAnd, frag } from "#src/reports/duckdb/sql-fragment.ts";
+import { frag } from "#src/reports/duckdb/sql-fragment.ts";
 
 /**
  * Which rows a plan reads, and which scopes it may be read in.
@@ -53,16 +48,6 @@ export function planSourceKind(
         timeColumn: "game_creation_at",
       }),
     )
-    // A pair's own player is a participant row; the other is a lookup.
-    .with("match_pairs", (): SourceKind => ({
-      columnSource: "match-pair",
-      timeColumn: "game_creation_at",
-    }))
-    // An item's player is a participant row; the item is unpivoted from it.
-    .with("match_items", (): SourceKind => ({
-      columnSource: "match-item",
-      timeColumn: "game_creation_at",
-    }))
     .with("prematch_participants", (): SourceKind => ({
       columnSource: "prematch",
       timeColumn: "observed_at",
@@ -160,15 +145,6 @@ export function enforceScopeGuards(input: {
       );
     }
   }
-  if (
-    input.plan.source === "match_pairs" &&
-    input.scope.kind === "global" &&
-    !namesPairSubject(input.plan)
-  ) {
-    throw new ScopeRefusedError(
-      "match_pairs needs a player: name one with player('…'), or query a server's players. Without one it would pair every player in every recorded game.",
-    );
-  }
   // Rank sources threw in planSourceKind, so only the match flavor remains.
   if (input.plan.source === "competition_match_participants") {
     if (input.scope.kind !== "guild") {
@@ -195,8 +171,6 @@ const EMPTY_TEAM_DIMENSION =
   "SELECT NULL::VARCHAR AS match_id, NULL::INTEGER AS team_id, NULL::INTEGER AS champion_kills, NULL::BOOLEAN AS win WHERE false";
 
 export type LookupSources = {
-  /** The other side of a match_pairs row: every participant of the kept games. */
-  pairOthers: SqlFragment | undefined;
   matchDimension: SqlFragment | undefined;
   participantDimension: SqlFragment | undefined;
   teamDimension: SqlFragment | undefined;
@@ -295,17 +269,7 @@ export function buildLookupSources(
           frag(narrowed ? FRAME_KEYS_SCAN_FILTER : ""),
         )
       : undefined;
-  // Unfiltered but for the games the row's own side kept: a query's filters
-  // describe its own player, never the one it is paired with.
-  const pairOthers =
-    kind.columnSource === "match-pair"
-      ? buildMatchesSource(
-          files,
-          combineAnd([range, frag(PAIR_KEYS_SCAN_FILTER)]),
-        )
-      : undefined;
   return {
-    pairOthers,
     matchDimension,
     participantDimension,
     teamDimension,

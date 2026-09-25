@@ -14,8 +14,6 @@ import {
   type ScoutQlColumnType,
 } from "#src/model/scoutql/catalog/catalog-column-types.ts";
 import {
-  MATCH_ITEM_VIRTUALS,
-  MATCH_PAIR_VIRTUALS,
   MATCH_TEAM_BAN_VIRTUALS,
   MATCH_TEAM_VIRTUALS,
   MATCH_VIRTUALS,
@@ -81,7 +79,7 @@ const DURATION_COLUMNS = new Set([
 
 /**
  * Excluded from every catalog: partitioning and dedupe plumbing, and the raw
- * inventory slots, which match_items reads as one row per item.
+ * inventory slots, which no ScoutQL source reads yet.
  */
 const INTERNAL_COLUMNS = new Set<string>([
   "month",
@@ -244,34 +242,6 @@ const CATALOG_LIST: SourceCatalog[] = [
     id: "match_participants",
     description: "One row per participant per finished match.",
     columns: toMap([...physicalColumns(MATCH_LAKE_COLUMNS), ...MATCH_VIRTUALS]),
-    timeColumn: "game_creation_at",
-    requiresCompetitionId: false,
-    playerRefAllowed: true,
-    groupCall: false,
-  },
-  {
-    id: "match_pairs",
-    description:
-      "One row per pair of players in the same finished match: every match_participants column describes the row's own player, and other, relation and the other_* columns describe the player they are paired with — a teammate or an opponent, tracked or not. For duo partners, worst teammates and head-to-head. Needs a player: name one with player('…'), or query a server.",
-    columns: toMap([
-      ...physicalColumns(MATCH_LAKE_COLUMNS),
-      ...MATCH_VIRTUALS,
-      ...MATCH_PAIR_VIRTUALS,
-    ]),
-    timeColumn: "game_creation_at",
-    requiresCompetitionId: false,
-    playerRefAllowed: true,
-    groupCall: false,
-  },
-  {
-    id: "match_items",
-    description:
-      "One row per item a player held when a finished match ended — final inventory, not build order or timing. Every match_participants column describes the player holding it; item, item_id, item_tier and slot describe the item. Count builds as games with COUNT(DISTINCT match_id), not rows.",
-    columns: toMap([
-      ...physicalColumns(MATCH_LAKE_COLUMNS),
-      ...MATCH_VIRTUALS,
-      ...MATCH_ITEM_VIRTUALS,
-    ]),
     timeColumn: "game_creation_at",
     requiresCompetitionId: false,
     playerRefAllowed: true,

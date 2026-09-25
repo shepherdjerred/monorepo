@@ -1,5 +1,4 @@
 import { match } from "ts-pattern";
-import { z } from "zod";
 import type { ScoutQlExprAst } from "#src/model/scoutql/parse/ast.ts";
 import type {
   ScoutQlDiagnostic,
@@ -18,10 +17,7 @@ import {
 } from "#src/model/scoutql/parse/expression.ts";
 import type { SourceCatalog } from "#src/model/scoutql/catalog/catalog-columns.ts";
 import type { ScoutQlColumnInfo } from "#src/model/scoutql/catalog/catalog-column-types.ts";
-import {
-  isNamedConstantFunction,
-  resolveNamedConstant,
-} from "#src/model/scoutql/analyze/analyze-named-constant.ts";
+import { resolveReportChampion } from "#src/model/reports/report-query-champions.ts";
 
 // ── Expression-analysis shared vocabulary ────────────────────────────────────
 // The type lattice, the diagnostic emitter, the AST walkers, and the small
@@ -145,8 +141,6 @@ export const SCOUTQL_AGGREGATE_NAMES: ReadonlySet<string> = new Set([
   "median",
   "quantile_cont",
   "stddev",
-  "longest_streak",
-  "current_streak",
   "kda",
   "per_minute",
 ]);
@@ -253,25 +247,12 @@ export function comparable(a: ScoutQlExprType, b: ScoutQlExprType): boolean {
 
 // ── player('…') shapes ───────────────────────────────────────────────────────
 
-/**
- * `player('…')` names the row's player. On match_pairs, `other('…')` names
- * the other player of the pair, resolved the same way.
- */
-const PlayerRefSideSchema = z.enum(["player", "other"]);
-export type PlayerRefSide = z.infer<typeof PlayerRefSideSchema>;
-
-export type PlayerRefShape = {
-  name: string;
-  span: ScoutQlSpan;
-  side: PlayerRefSide;
-};
+export type PlayerRefShape = { name: string; span: ScoutQlSpan };
 
 function barePlayerCall(expr: ScoutQlExprAst): PlayerRefShape | undefined {
-  const side =
-    expr.kind === "call" ? PlayerRefSideSchema.safeParse(expr.name) : undefined;
   if (
     expr.kind === "call" &&
-    side?.success === true &&
+    expr.name === "player" &&
     !expr.star &&
     !expr.distinct &&
     !expr.all &&
@@ -280,7 +261,7 @@ function barePlayerCall(expr: ScoutQlExprAst): PlayerRefShape | undefined {
   ) {
     const [arg] = expr.args;
     if (arg?.kind === "string") {
-      return { name: arg.value, span: expr.span, side: side.data };
+      return { name: arg.value, span: expr.span };
     }
   }
   return undefined;
@@ -288,9 +269,8 @@ function barePlayerCall(expr: ScoutQlExprAst): PlayerRefShape | undefined {
 
 /**
  * The two accepted `player('…')` condition shapes: a bare call, and the
- * legacy-familiar `player = player('…')` comparison (`other = other('…')`
- * alike). Both lift the name into `plan.playerRefs` and leave a `player-ref`
- * node behind.
+ * legacy-familiar `player = player('…')` comparison. Both lift the name into
+ * `plan.playerRefs` and leave a `player-ref` node behind.
  */
 export function playerRefShape(
   expr: ScoutQlExprAst,
@@ -309,9 +289,9 @@ export function playerRefShape(
       if (
         call !== undefined &&
         side.column.kind === "column" &&
-        side.column.name === call.side
+        side.column.name === "player"
       ) {
-        return { ...call, span: expr.span };
+        return { name: call.name, span: expr.span };
       }
     }
   }
@@ -340,13 +320,13 @@ export function inItemLiteral(
   }
   if (
     item.kind === "call" &&
-    isNamedConstantFunction(item.name) &&
+    item.name === "champion" &&
     item.args.length === 1 &&
     item.args[0]?.kind === "string"
   ) {
-    const id = resolveNamedConstant(item.name, item.args[0].value);
-    if (id !== undefined) {
-      return { value: id };
+    const champion = resolveReportChampion(item.args[0].value);
+    if (champion !== undefined) {
+      return { value: champion.id };
     }
   }
   return undefined;
