@@ -290,8 +290,8 @@ const COLLECTIONS: Record<SourceId, OpsCollection> = {
   }),
   ai: mapAi(
     {
-      billedMtd: [sample(200)],
-      openAiToday: [sample(1.5)],
+      clusterMtd: [sample(200)],
+      billedToday: [sample(1.5)],
       macCostMtd: [sample(12, { source: "codex" })],
       macTokens24h: [sample(1000)],
       clusterTokens24h: [sample(500)],
