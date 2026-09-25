@@ -3,12 +3,12 @@ package com.shepherdjerred.thestorm.economy.app;
 import com.shepherdjerred.thestorm.core.result.Result;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * The economy's use cases over the ledger: the {@link Wallets} port other modules call, plus the
- * starting balance and administrator corrections the economy's own commands need.
+ * starting balance, player lookup, leaderboard and administrator corrections the economy's own
+ * commands need.
  */
 public final class LedgerWallets implements Wallets {
 
@@ -36,17 +36,29 @@ public final class LedgerWallets implements Wallets {
 
   @Override
   public CompletableFuture<List<Standing>> top(int limit) {
+    return leaderboard(limit)
+        .thenApply(ranked -> ranked.stream().map(RankedPlayer::standing).toList());
+  }
+
+  /** The richest players with the names they last joined under. */
+  public CompletableFuture<List<RankedPlayer>> leaderboard(int limit) {
     if (limit < 1) {
       throw new IllegalArgumentException("limit must be positive: " + limit);
     }
     return store.top(limit);
   }
 
+  /** The player who most recently joined as {@code name}, ignoring case. */
+  public CompletableFuture<Optional<SeenPlayer>> findPlayer(String name) {
+    return store.findPlayer(name);
+  }
+
   /**
-   * Grants the configured starting balance the first time {@code player} is ever seen. Safe to call
-   * on every join: later calls change nothing and complete empty.
+   * Records {@code player}'s current name and grants the configured starting balance the first time
+   * they are ever seen. Safe to call on every join: later calls only refresh the name and complete
+   * empty.
    */
-  public CompletableFuture<Optional<Receipt>> welcome(UUID player) {
+  public CompletableFuture<Optional<Receipt>> welcome(SeenPlayer player) {
     return store.welcome(player, startingBalance, STARTING_BALANCE_REASON);
   }
 

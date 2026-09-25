@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.economy.adapter.paper;
 
 import com.shepherdjerred.thestorm.economy.app.LedgerWallets;
+import com.shepherdjerred.thestorm.economy.app.SeenPlayer;
 import com.shepherdjerred.thestorm.economy.domain.CrystalFormat;
 import org.bukkit.Server;
 import org.bukkit.event.EventHandler;
@@ -9,8 +10,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 /**
- * Pays the starting balance on a player's first join. The ledger remembers who it has seen, so this
- * runs on every join and pays once.
+ * Records every join, with the name joined under, and pays the starting balance on a player's first
+ * join. The ledger remembers who it has seen, so this runs on every join and pays once.
  */
 public final class FirstJoinListener implements Listener {
 
@@ -31,7 +32,7 @@ public final class FirstJoinListener implements Listener {
     var player = event.getPlayer();
     var uuid = player.getUniqueId();
     replies.whenDone(
-        wallets.welcome(uuid),
+        wallets.welcome(new SeenPlayer(uuid, player.getName())),
         player,
         granted ->
             granted.ifPresent(

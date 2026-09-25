@@ -3,14 +3,13 @@ package com.shepherdjerred.thestorm.economy.app;
 import com.shepherdjerred.thestorm.core.result.Result;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Durable balances and the ledger, implemented by the economy's database adapter. Internal to the
- * economy module: other modules use {@link Wallets}. Each write is one transaction that reads the
- * balances it needs, applies the domain's transfer rules, and records one ledger entry per
- * transfer.
+ * Durable balances, the ledger and the players the economy has seen, implemented by the economy's
+ * database adapter. Internal to the economy module: other modules use {@link Wallets}. Each write
+ * is one transaction that reads the balances it needs, applies the domain's transfer rules, and
+ * records one ledger entry per transfer.
  */
 public interface LedgerStore {
 
@@ -21,14 +20,17 @@ public interface LedgerStore {
   CompletableFuture<Result<Receipt, EconomyError>> transfer(
       AccountId from, AccountId to, Crystals amount, String reason);
 
-  /** Up to {@code limit} player accounts with a positive balance, richest first. */
-  CompletableFuture<List<Wallets.Standing>> top(int limit);
+  /** Up to {@code limit} player accounts with a positive balance, richest first, with names. */
+  CompletableFuture<List<RankedPlayer>> top(int limit);
 
   /**
-   * Marks {@code player} as seen and, the first time only, pays them {@code grant} from the server.
-   * Empty when the player was already seen or {@code grant} is zero.
+   * Records that {@code player} joined under their current name and, the first time only, pays them
+   * {@code grant} from the server. Empty when the player was already seen or {@code grant} is zero.
    */
-  CompletableFuture<Optional<Receipt>> welcome(UUID player, Crystals grant, String reason);
+  CompletableFuture<Optional<Receipt>> welcome(SeenPlayer player, Crystals grant, String reason);
+
+  /** The player who most recently joined as {@code name}, ignoring case; empty if nobody has. */
+  CompletableFuture<Optional<SeenPlayer>> findPlayer(String name);
 
   /**
    * Brings {@code account} to exactly {@code target} with one transfer to or from the server. Empty

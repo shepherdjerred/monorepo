@@ -42,8 +42,8 @@ final class LedgerWalletsTest {
 
   @Test
   void welcomePaysTheConfiguredStartingBalanceOnce() throws Exception {
-    var first = wallets.welcome(ALICE.uuid()).get(10, TimeUnit.SECONDS);
-    var again = wallets.welcome(ALICE.uuid()).get(10, TimeUnit.SECONDS);
+    var first = wallets.welcome(new SeenPlayer(ALICE.uuid(), "Alice")).get(10, TimeUnit.SECONDS);
+    var again = wallets.welcome(new SeenPlayer(ALICE.uuid(), "Alice")).get(10, TimeUnit.SECONDS);
 
     assertThat(first.orElseThrow().reason()).isEqualTo(LedgerWallets.STARTING_BALANCE_REASON);
     assertThat(first.orElseThrow().amount()).isEqualTo(Crystals.of(500));
@@ -53,7 +53,7 @@ final class LedgerWalletsTest {
 
   @Test
   void startingBalancesAreSpendable() throws Exception {
-    wallets.welcome(ALICE.uuid()).get(10, TimeUnit.SECONDS);
+    wallets.welcome(new SeenPlayer(ALICE.uuid(), "Alice")).get(10, TimeUnit.SECONDS);
 
     var paid = wallets.transfer(ALICE, BOB, Crystals.of(125), "pay").get(10, TimeUnit.SECONDS);
 

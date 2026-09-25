@@ -10,8 +10,9 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
+import com.shepherdjerred.thestorm.economy.app.RankedPlayer;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
-import com.shepherdjerred.thestorm.economy.app.Wallets;
+import com.shepherdjerred.thestorm.economy.app.SeenPlayer;
 import com.shepherdjerred.thestorm.economy.domain.TransferRules;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -24,6 +25,7 @@ import java.util.Optional;
 import java.util.SplittableRandom;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.AfterEach;
@@ -140,8 +142,10 @@ final class JooqLedgerStoreTest {
   }
 
   @Test
-  void topListsPlayersWithCrystalsRichestFirst() throws Exception {
+  void topListsPlayersWithCrystalsRichestFirstWithTheirNames() throws Exception {
     var carol = new AccountId.Player(new UUID(0, 3));
+    await(store.welcome(new SeenPlayer(ALICE.uuid(), "Alice"), Crystals.ZERO, "starting-balance"));
+    await(store.welcome(new SeenPlayer(BOB.uuid(), "Bob"), Crystals.ZERO, "starting-balance"));
     fund(ALICE, 300);
     fund(BOB, 900);
     fund(carol, 300);
@@ -151,16 +155,83 @@ final class JooqLedgerStoreTest {
 
     assertThat(await(store.top(10)))
         .containsExactly(
-            new Wallets.Standing(BOB, Crystals.of(900)),
-            new Wallets.Standing(ALICE, Crystals.of(300)),
-            new Wallets.Standing(carol, Crystals.of(300)));
-    assertThat(await(store.top(1))).containsExactly(new Wallets.Standing(BOB, Crystals.of(900)));
+            new RankedPlayer(BOB, Optional.of("Bob"), Crystals.of(900)),
+            new RankedPlayer(ALICE, Optional.of("Alice"), Crystals.of(300)),
+            new RankedPlayer(carol, Optional.empty(), Crystals.of(300)));
+    assertThat(await(store.top(1)))
+        .containsExactly(new RankedPlayer(BOB, Optional.of("Bob"), Crystals.of(900)));
+  }
+
+  @Test
+  void findPlayerMatchesTheLastNameIgnoringCase() throws Exception {
+    await(store.welcome(new SeenPlayer(ALICE.uuid(), "Alice"), Crystals.of(500), "starting"));
+
+    assertThat(await(store.findPlayer("alice"))).contains(new SeenPlayer(ALICE.uuid(), "Alice"));
+    assertThat(await(store.findPlayer("ALICE"))).contains(new SeenPlayer(ALICE.uuid(), "Alice"));
+    assertThat(await(store.findPlayer("Alic"))).isEmpty();
+    assertThat(await(store.findPlayer("Nobody"))).isEmpty();
+  }
+
+  @Test
+  void rejoiningUnderANewNameUpdatesItWithoutPayingAgain() throws Exception {
+    await(store.welcome(new SeenPlayer(ALICE.uuid(), "Alice"), Crystals.of(500), "starting"));
+    var renamed =
+        await(store.welcome(new SeenPlayer(ALICE.uuid(), "Alicia"), Crystals.of(500), "starting"));
+
+    assertThat(renamed).isEmpty();
+    assertThat(await(store.findPlayer("Alicia"))).contains(new SeenPlayer(ALICE.uuid(), "Alicia"));
+    assertThat(await(store.findPlayer("Alice"))).isEmpty();
+    assertThat(await(store.balance(ALICE))).isEqualTo(Crystals.of(500));
+  }
+
+  @Test
+  void aReusedNameFindsWhoeverJoinedWithItMostRecently() throws Exception {
+    var early = new JooqLedgerStore(database, InstantSource.fixed(NOW), TransferRules.standard());
+    var later =
+        new JooqLedgerStore(
+            database, InstantSource.fixed(NOW.plusSeconds(60)), TransferRules.standard());
+    await(early.welcome(new SeenPlayer(ALICE.uuid(), "Storm"), Crystals.ZERO, "starting"));
+    await(later.welcome(new SeenPlayer(BOB.uuid(), "storm"), Crystals.ZERO, "starting"));
+
+    assertThat(await(store.findPlayer("STORM"))).contains(new SeenPlayer(BOB.uuid(), "storm"));
+  }
+
+  @Test
+  void aFailureMidTransferRollsTheWholeTransferBack() throws Exception {
+    fund(ALICE, 100);
+    await(
+        database.write(
+            dsl ->
+                dsl.execute(
+                    "CREATE TRIGGER fail_ledger BEFORE INSERT ON economy_ledger"
+                        + " BEGIN SELECT RAISE(ABORT, 'ledger unavailable'); END")));
+    var rowsBefore = ledgerRows();
+
+    assertThatThrownBy(() -> await(store.transfer(ALICE, BOB, Crystals.of(40), "pay")))
+        .isInstanceOf(ExecutionException.class)
+        .hasMessageContaining("ledger unavailable");
+
+    assertThat(await(store.balance(ALICE))).isEqualTo(Crystals.of(100));
+    assertThat(await(store.balance(BOB))).isEqualTo(Crystals.ZERO);
+    assertThat(ledgerRows()).isEqualTo(rowsBefore);
+    var bobRows =
+        await(
+            database.read(
+                dsl ->
+                    dsl.fetchCount(ECONOMY_ACCOUNT, ECONOMY_ACCOUNT.ID.eq(BOB.uuid().toString()))));
+    assertThat(bobRows).isZero();
   }
 
   @Test
   void welcomeGrantsTheStartingBalanceOnce() throws Exception {
-    var first = await(store.welcome(ALICE.uuid(), Crystals.of(500), "starting-balance"));
-    var second = await(store.welcome(ALICE.uuid(), Crystals.of(500), "starting-balance"));
+    var first =
+        await(
+            store.welcome(
+                new SeenPlayer(ALICE.uuid(), "Alice"), Crystals.of(500), "starting-balance"));
+    var second =
+        await(
+            store.welcome(
+                new SeenPlayer(ALICE.uuid(), "Alice"), Crystals.of(500), "starting-balance"));
 
     assertThat(first).isPresent();
     assertThat(first.orElseThrow().from()).isEqualTo(SERVER);
@@ -171,10 +242,13 @@ final class JooqLedgerStoreTest {
   }
 
   @Test
-  void concurrentWelcomesGrantOnce() throws Exception {
+  void welcomesSubmittedTogetherAreSerializedByTheWriterAndPayOnce() throws Exception {
     var futures =
         IntStream.range(0, 50)
-            .mapToObj(i -> store.welcome(BOB.uuid(), Crystals.of(500), "starting-balance"))
+            .mapToObj(
+                i ->
+                    store.welcome(
+                        new SeenPlayer(BOB.uuid(), "Bob"), Crystals.of(500), "starting-balance"))
             .toList();
     CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).get(30, TimeUnit.SECONDS);
 
@@ -185,19 +259,28 @@ final class JooqLedgerStoreTest {
 
   @Test
   void welcomeSurvivesReopeningTheDatabase() throws Exception {
-    await(store.welcome(ALICE.uuid(), Crystals.of(500), "starting-balance"));
+    await(
+        store.welcome(new SeenPlayer(ALICE.uuid(), "Alice"), Crystals.of(500), "starting-balance"));
     database.close();
     database = StormDatabase.open(directory.resolve("t.db"));
     database.migrate("economy", JooqLedgerStoreTest.class.getClassLoader());
     store = new JooqLedgerStore(database, InstantSource.fixed(NOW), TransferRules.standard());
 
-    assertThat(await(store.welcome(ALICE.uuid(), Crystals.of(500), "starting-balance"))).isEmpty();
+    assertThat(
+            await(
+                store.welcome(
+                    new SeenPlayer(ALICE.uuid(), "Alice"), Crystals.of(500), "starting-balance")))
+        .isEmpty();
     assertThat(await(store.balance(ALICE))).isEqualTo(Crystals.of(500));
   }
 
   @Test
   void aZeroStartingBalanceMarksThePlayerWithoutALedgerEntry() throws Exception {
-    assertThat(await(store.welcome(ALICE.uuid(), Crystals.ZERO, "starting-balance"))).isEmpty();
+    assertThat(
+            await(
+                store.welcome(
+                    new SeenPlayer(ALICE.uuid(), "Alice"), Crystals.ZERO, "starting-balance")))
+        .isEmpty();
     assertThat(ledgerRows()).isZero();
   }
 
@@ -223,7 +306,8 @@ final class JooqLedgerStoreTest {
   }
 
   @Test
-  void concurrentTransfersNeverOverdrawAndTheLedgerExplainsEveryBalance() throws Exception {
+  void transfersSubmittedTogetherAreSerializedByTheWriterNeverOverdrawAndMatchTheLedger()
+      throws Exception {
     var players =
         IntStream.range(0, 8).mapToObj(i -> new AccountId.Player(new UUID(2, i))).toList();
     List<AccountId> accounts = new ArrayList<>(players);

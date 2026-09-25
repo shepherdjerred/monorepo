@@ -7,20 +7,26 @@ import static com.mojang.brigadier.arguments.StringArgumentType.word;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.LedgerWallets;
+import com.shepherdjerred.thestorm.economy.app.RankedPlayer;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
+import com.shepherdjerred.thestorm.economy.app.SeenPlayer;
 import com.shepherdjerred.thestorm.economy.domain.CrystalFormat;
 import com.shepherdjerred.thestorm.economy.domain.Explanations;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Server;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -29,6 +35,10 @@ import org.bukkit.entity.Player;
  * {@code /balance} ({@code /bal}), {@code /pay}, {@code /baltop} and the administrators' {@code
  * /eco give|take|set}. Every change is a ledgered transfer; {@code /eco} moves crystals to or from
  * the server and records the administrator's name in the reason.
+ *
+ * <p>A named player is found among online players first, then in the economy's own record of
+ * everyone who has joined (read off the main thread). Players who have never joined cannot be paid
+ * or looked up.
  */
 final class EconomyCommands {
 
@@ -48,7 +58,7 @@ final class EconomyCommands {
   /**
    * The Paper services the commands use.
    *
-   * @param server the server, for looking players up
+   * @param server the server, for online players
    * @param replies messages and main-thread completion
    */
   record Paper(Server server, Replies replies) {}
@@ -109,8 +119,7 @@ final class EconomyCommands {
   }
 
   private RequiredArgumentBuilder<CommandSourceStack, String> playerArgument() {
-    return Commands.argument(PLAYER, word())
-        .suggests((context, builder) -> KnownPlayer.suggest(paper.server(), builder));
+    return Commands.argument(PLAYER, word()).suggests((context, builder) -> suggest(builder));
   }
 
   private RequiredArgumentBuilder<CommandSourceStack, String> adminAction(
@@ -121,13 +130,24 @@ final class EconomyCommands {
                 .executes(
                     context -> {
                       var sender = context.getSource().getSender();
+                      var amount = new Crystals(getLong(context, AMOUNT));
                       withPlayer(
                           sender,
                           getString(context, PLAYER),
-                          target ->
-                              action.run(sender, target, new Crystals(getLong(context, AMOUNT))));
+                          target -> action.run(sender, target, amount));
                       return Command.SINGLE_SUCCESS;
                     }));
+  }
+
+  /** Suggests online player names starting with what has been typed, ignoring case. */
+  private CompletableFuture<Suggestions> suggest(SuggestionsBuilder builder) {
+    var prefix = builder.getRemainingLowerCase();
+    for (var player : paper.server().getOnlinePlayers()) {
+      if (player.getName().toLowerCase(Locale.ROOT).startsWith(prefix)) {
+        builder.suggest(player.getName());
+      }
+    }
+    return builder.buildFuture();
   }
 
   private int ownBalance(CommandSender sender) {
@@ -165,23 +185,20 @@ final class EconomyCommands {
       sender.sendMessage(Replies.error("Only players can pay; use /eco give instead."));
       return Command.SINGLE_SUCCESS;
     }
+    var payerName = payer.getName();
+    var payerAccount = new AccountId.Player(payer.getUniqueId());
     withPlayer(
         sender,
         name,
         target ->
             whenTransferred(
                 sender,
-                wallets.transfer(
-                    new AccountId.Player(payer.getUniqueId()), target.account(), amount, "pay"),
+                wallets.transfer(payerAccount, target.account(), amount, "pay"),
                 receipt -> {
                   var words = format.words(receipt.amount());
                   sender.sendMessage(
                       Replies.success("You paid " + target.name() + " " + words + "."));
-                  var online = paper.server().getPlayer(target.uuid());
-                  if (online != null) {
-                    online.sendMessage(
-                        Replies.success(payer.getName() + " paid you " + words + "."));
-                  }
+                  tell(target, Replies.success(payerName + " paid you " + words + "."));
                 }));
     return Command.SINGLE_SUCCESS;
   }
@@ -190,49 +207,51 @@ final class EconomyCommands {
     paper
         .replies()
         .whenDone(
-            wallets.top(baltopSize),
+            wallets.leaderboard(baltopSize),
             sender,
-            standings -> {
-              if (standings.isEmpty()) {
+            ranked -> {
+              if (ranked.isEmpty()) {
                 sender.sendMessage(Replies.info("Nobody holds any crystals yet."));
                 return;
               }
               sender.sendMessage(Replies.info("Richest players:"));
-              var rank = 1;
-              for (var standing : standings) {
-                var name = KnownPlayer.nameOf(paper.server(), standing.account().uuid());
-                sender.sendMessage(
-                    Replies.info(
-                        "#" + rank + " " + name + " " + format.symbol(standing.balance())));
-                rank++;
+              for (var index = 0; index < ranked.size(); index++) {
+                sender.sendMessage(Replies.info(standingLine(index + 1, ranked.get(index))));
               }
             });
     return Command.SINGLE_SUCCESS;
   }
 
-  private void give(CommandSender admin, KnownPlayer target, Crystals amount) {
+  private String standingLine(int rank, RankedPlayer player) {
+    var name = player.name().orElseGet(() -> player.account().uuid().toString());
+    return "#" + rank + " " + name + " " + format.symbol(player.balance());
+  }
+
+  private void give(CommandSender admin, SeenPlayer target, Crystals amount) {
     whenTransferred(
         admin,
         wallets.transfer(
             new AccountId.Server(), target.account(), amount, adminReason("give", admin)),
-        receipt ->
-            admin.sendMessage(
-                Replies.success(
-                    "Gave " + target.name() + " " + format.words(receipt.amount()) + ".")));
+        receipt -> {
+          var words = format.words(receipt.amount());
+          admin.sendMessage(Replies.success("Gave " + target.name() + " " + words + "."));
+          tell(target, Replies.success("An admin gave you " + words + "."));
+        });
   }
 
-  private void take(CommandSender admin, KnownPlayer target, Crystals amount) {
+  private void take(CommandSender admin, SeenPlayer target, Crystals amount) {
     whenTransferred(
         admin,
         wallets.transfer(
             target.account(), new AccountId.Server(), amount, adminReason("take", admin)),
-        receipt ->
-            admin.sendMessage(
-                Replies.success(
-                    "Took " + format.words(receipt.amount()) + " from " + target.name() + ".")));
+        receipt -> {
+          var words = format.words(receipt.amount());
+          admin.sendMessage(Replies.success("Took " + words + " from " + target.name() + "."));
+          tell(target, Replies.info("An admin took " + words + " from you."));
+        });
   }
 
-  private void set(CommandSender admin, KnownPlayer target, Crystals amount) {
+  private void set(CommandSender admin, SeenPlayer target, Crystals amount) {
     paper
         .replies()
         .whenDone(
@@ -240,18 +259,41 @@ final class EconomyCommands {
             admin,
             receipt -> {
               var words = format.words(amount);
-              admin.sendMessage(
-                  receipt.isPresent()
-                      ? Replies.success("Set " + target.name() + " to " + words + ".")
-                      : Replies.info(target.name() + " already has " + words + "."));
+              if (receipt.isEmpty()) {
+                admin.sendMessage(Replies.info(target.name() + " already has " + words + "."));
+                return;
+              }
+              admin.sendMessage(Replies.success("Set " + target.name() + " to " + words + "."));
+              tell(target, Replies.info("An admin set your balance to " + words + "."));
             });
   }
 
-  private void withPlayer(CommandSender sender, String name, Consumer<KnownPlayer> action) {
-    KnownPlayer.find(paper.server(), name)
-        .ifPresentOrElse(
-            action,
-            () -> sender.sendMessage(Replies.error("No player named " + name + " has joined.")));
+  /** Finds {@code name} online, else in the economy's records, and runs {@code action} on them. */
+  private void withPlayer(CommandSender sender, String name, Consumer<SeenPlayer> action) {
+    Player online = paper.server().getPlayerExact(name);
+    if (online != null) {
+      action.accept(new SeenPlayer(online.getUniqueId(), online.getName()));
+      return;
+    }
+    paper
+        .replies()
+        .whenDone(
+            wallets.findPlayer(name),
+            sender,
+            found ->
+                found.ifPresentOrElse(
+                    action,
+                    () ->
+                        sender.sendMessage(
+                            Replies.error("Nobody named " + name + " has played on The Storm."))));
+  }
+
+  /** Sends {@code message} to {@code player} if they are online now. */
+  private void tell(SeenPlayer player, Component message) {
+    var online = paper.server().getPlayer(player.uuid());
+    if (online != null) {
+      online.sendMessage(message);
+    }
   }
 
   private void whenTransferred(
@@ -279,6 +321,6 @@ final class EconomyCommands {
   /** One {@code /eco} subcommand, run once the target player is known. */
   @FunctionalInterface
   private interface AdminAction {
-    void run(CommandSender admin, KnownPlayer target, Crystals amount);
+    void run(CommandSender admin, SeenPlayer target, Crystals amount);
   }
 }
