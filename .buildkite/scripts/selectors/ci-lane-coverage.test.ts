@@ -76,6 +76,7 @@ const LANE_TO_STEP: Record<string, string | readonly string[] | null> = {
   images: null,
   "ci-base": null,
   "ci-playwright": null,
+  "windows-cross-compiler": "windows-cross-compiler-pr",
   "helm-types": "pr-dryrun",
   tofu: [
     "tofu-plan-seaweedfs",
@@ -95,6 +96,8 @@ const LANE_TO_STEP: Record<string, string | readonly string[] | null> = {
   "site-webring": "pr-dryrun",
   "site-cooklang": "pr-dryrun",
   "site-stocks": "pr-dryrun",
+  "site-macos-cross": "pr-dryrun",
+  "macos-cross-compiler": "macos-cross-compiler-pr",
   "site-wiki": "pr-dryrun",
   "site-better-skill-capped": "pr-dryrun",
   "site-glitter": "pr-dryrun",

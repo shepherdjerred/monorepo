@@ -27,6 +27,7 @@ import type {
   ScoutImageGcResult,
 } from "#activities/scout/scout-image-gc.ts";
 import { runVeleroOrphanAuditWorkflow as _runVeleroOrphanAuditWorkflow } from "./homelab/velero-orphan-audit.ts";
+import { runVeleroR2OrphanAuditWorkflow as _runVeleroR2OrphanAuditWorkflow } from "./homelab/velero-r2-orphan-audit.ts";
 import { runScoutDataDragonUpdate as _runScoutDataDragonUpdate } from "./scout/data-dragon.ts";
 import { runScoutLanePriorsWeeklyRefresh as _runScoutLanePriorsWeeklyRefresh } from "./scout/lane-prior-refresh.ts";
 import type { DataDragonUpdateResult } from "#shared/data-dragon-types.ts";
@@ -124,6 +125,14 @@ import {
 import type { BackupCadence } from "@shepherdjerred/seaweedfs-backup/schemas";
 import { runOpenAiComplimentaryUsageReconciliation as _runOpenAiComplimentaryUsageReconciliation } from "./openai-complimentary-usage.ts";
 import type { OpenAiComplimentaryUsageResult } from "#shared/openai-complimentary-usage.ts";
+import {
+  runOpsDigest as _runOpsDigest,
+  runOpsSnapshot as _runOpsSnapshot,
+} from "./ops-snapshot.ts";
+import type {
+  OpsDigestKind,
+  OpsPublishSummary,
+} from "#activities/ops/ops-publish.ts";
 
 export function workerDeploymentCanaryWorkflow(
   input: WorkerDeploymentCanaryInput,
@@ -253,6 +262,10 @@ export async function runScoutImageGcWorkflow(
 
 export async function runVeleroOrphanAuditWorkflow(): Promise<void> {
   return _runVeleroOrphanAuditWorkflow();
+}
+
+export async function runVeleroR2OrphanAuditWorkflow(): Promise<void> {
+  return _runVeleroR2OrphanAuditWorkflow();
 }
 
 export async function runScoutDataDragonVersionCheck(
@@ -410,4 +423,14 @@ export async function runSeaweedFsBackupRetentionAndGcWorkflow(): Promise<{
 
 export async function runOpenAiComplimentaryUsageReconciliation(): Promise<OpenAiComplimentaryUsageResult> {
   return _runOpenAiComplimentaryUsageReconciliation();
+}
+
+export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
+  return _runOpsSnapshot();
+}
+
+export async function runOpsDigest(input: {
+  kind: OpsDigestKind;
+}): Promise<{ kind: OpsDigestKind }> {
+  return _runOpsDigest(input);
 }

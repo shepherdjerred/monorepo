@@ -24,9 +24,9 @@ import { kubectlExecInPod } from "#shared/infra/kubectl-exec.ts";
 // any live `velero.io/v1/Backup` CR. Such snapshots are orphans from a prior
 // Velero deployment whose deletion path failed to run during teardown.
 //
-// R2 detection is intentionally NOT included here because the worker's S3
-// credentials are scoped to SeaweedFS, not R2. The package-local remediation
-// runbook covers the manual R2 check using extracted Velero credentials.
+// R2 detection lives in the sibling velero-r2-orphan-audit workflow, which
+// carries its own read-only R2 credential. This activity stays local-only so
+// a missing R2 credential can never break local orphan detection.
 
 const NAMESPACE_OPENEBS = "openebs";
 const ZFS_NODE_LABEL = "role=openebs-zfs,app=openebs-zfs-node";
@@ -193,7 +193,7 @@ const BackupListSchema = z.object({
     .optional(),
 });
 
-async function listLiveVeleroBackups(): Promise<string[]> {
+export async function listLiveVeleroBackups(): Promise<string[]> {
   const api = loadCustomObjectsApi();
   const response: unknown = await api.listNamespacedCustomObject({
     group: VELERO_API_GROUP,

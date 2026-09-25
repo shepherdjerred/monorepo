@@ -1,0 +1,27 @@
+#!/bin/sh
+# Runs a Windows SDK or Windows App SDK build tool under the image's Wine.
+# Usage: windows-cross-wine-run [--xaml-compiler] <tool.exe> [argument...]
+set -eu
+
+if [ "$1" != "--xaml-compiler" ]; then
+  # The SDK ships its packaging DLLs beside its tools; they replace
+  # Wine's partial built-in versions.
+  export WINEDLLOVERRIDES="opcservices,appxpackaging,appxsip=n,b"
+  exec wine "$@"
+fi
+
+compiler=$2
+input=$3
+output=$4
+
+# MSBuild on Linux writes '/'-separated paths, while XamlCompiler.exe derives
+# output names by splitting on '\'. Give it a Windows-separated copy of its
+# input and map the paths it reports back to the Linux paths MSBuild consumes.
+windows_input="${input%.json}.windows.json"
+sed 's#/#\\\\#g' "$input" > "$windows_input"
+status=0
+wine "$compiler" "$windows_input" "$output" || status=$?
+if [ -f "$output" ]; then
+  sed -i -e 's#[Zz]:\\\\#/#g' -e 's#\\\\#/#g' "$output"
+fi
+exit "$status"

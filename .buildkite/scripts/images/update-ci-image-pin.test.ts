@@ -1,8 +1,14 @@
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { describe, expect, test } from "vitest";
 import {
+  checkedOutSourceCommand,
   ciImagePromotionFiles,
   classifyCiImageRuntimePromotion,
   isCurrentSourceCandidate,
+  localPromotionDecision,
+  pendingFirstPinCoversCandidate,
   newestPinState,
   parseCiImageCandidate,
   parseCiImagePinState,
@@ -364,6 +370,10 @@ describe("Playwright candidate promotion", () => {
       ".buildkite/ci-image/DIGEST",
       ".buildkite/ci-image/STATE.json",
     ]);
+    expect(ciImagePromotionFiles("windows-cross-compiler-winui")).toEqual([
+      "packages/windows-cross-compiler/images/windows-cross-compiler-winui/DIGEST",
+      "packages/windows-cross-compiler/images/windows-cross-compiler-winui/STATE.json",
+    ]);
   });
 
   test("coordinates its nested lockfile install with cache collection", async () => {
@@ -395,18 +405,25 @@ describe("Playwright candidate promotion", () => {
     expect(helperBody).toContain("await retireStalePromotion(");
     expect(helperBody).toContain("await assertMainPinUnchanged(");
 
-    // All three no-promotion exits — digest-equal, older-than-pin, and
-    // content-unchanged — route through the one funnel with a distinct reason.
+    // All three no-promotion exits against a main pin — digest-equal,
+    // older-than-pin, and content-unchanged — route through the one funnel with
+    // a distinct reason. The runtime gate reaches it through its skip callback.
     const calls = source.match(/await finalizeSkippedPromotion\(/g) ?? [];
-    expect(calls).toHaveLength(3);
+    expect(calls).toHaveLength(2);
     expect(source).toContain(
       'reason: "candidate has no runtime digest change"',
     );
     expect(source).toContain(
       'reason: "candidate is older than the committed pin"',
     );
-    expect(source).toContain(
-      'reason: "candidate runtime content is unchanged"',
+    expect(source).toMatch(
+      /skip: async \(reason\) =>\s+finalizeSkippedPromotion\(\{/,
+    );
+    const runtimeGate = await Bun.file(
+      new URL("update-ci-image-pin-runtime.ts", import.meta.url),
+    ).text();
+    expect(runtimeGate).toContain(
+      'await options.skip("candidate runtime content is unchanged")',
     );
 
     // promote() never invokes retirement or the recheck inline — only via the
@@ -428,7 +445,8 @@ describe("Playwright candidate promotion", () => {
     const dryRunBlock = source.slice(dryRunIndex, cloneIndex);
     expect(dryRunBlock).not.toContain("finalizeSkippedPromotion");
     expect(dryRunBlock).not.toContain("retireStalePromotion");
-    expect(dryRunBlock).toContain("DRYRUN: would promote");
+    expect(dryRunBlock).toContain("dryRunReport(");
+    expect(source).toContain("DRYRUN: would promote");
   });
 
   test("the retirement helper closes the stale PR and deletes its branch", async () => {
@@ -461,5 +479,114 @@ describe("Playwright candidate promotion", () => {
     );
     expect(helperBody).toContain('"fetch", "origin", "main"');
     expect(helperBody).toContain("throw new TransientError(");
+  });
+});
+
+describe("local promotion decision", () => {
+  test("promotes the first pin when main has none", () => {
+    expect(localPromotionDecision(undefined, state(1, "a"))).toBe("promote");
+  });
+
+  test("promotes a newer build with a new digest", () => {
+    expect(localPromotionDecision(state(5, "a"), state(6, "b"))).toBe(
+      "promote",
+    );
+  });
+
+  test("skips a candidate whose digest is already pinned", () => {
+    expect(localPromotionDecision(state(5, "a"), state(6, "a"))).toBe(
+      "no-digest-change",
+    );
+  });
+
+  test("refuses to replace a newer pin", () => {
+    expect(localPromotionDecision(state(7, "a"), state(6, "b"))).toBe(
+      "older-than-pin",
+    );
+  });
+});
+
+describe("main-side source fingerprint", () => {
+  test("reads sources with checkout conversions so CRLF files match the build", async () => {
+    const repository = await mkdtemp(path.join(tmpdir(), "ci-image-pin-eol-"));
+    const git = (...args: string[]): void => {
+      const result = Bun.spawnSync(["git", "-C", repository, ...args]);
+      if (result.exitCode !== 0) {
+        throw new Error(result.stderr.toString());
+      }
+    };
+    try {
+      git("init", "--quiet");
+      await Bun.write(
+        path.join(repository, ".gitattributes"),
+        "*.targets text eol=crlf\n",
+      );
+      await Bun.write(path.join(repository, "a.targets"), "one\ntwo\n");
+      git("add", ".");
+      git(
+        "-c",
+        "user.name=t",
+        "-c",
+        "user.email=t@t",
+        "commit",
+        "--quiet",
+        "-m",
+        "x",
+      );
+      await rm(path.join(repository, "a.targets"));
+      git("checkout", "--", "a.targets");
+
+      const checkedOut = new Uint8Array(
+        await Bun.file(path.join(repository, "a.targets")).arrayBuffer(),
+      );
+      const fromCommand = Bun.spawnSync([
+        ...checkedOutSourceCommand(repository, "HEAD", "a.targets"),
+      ]).stdout;
+      expect(new TextDecoder().decode(checkedOut)).toBe("one\r\ntwo\r\n");
+      expect(new TextDecoder().decode(fromCommand)).toBe("one\r\ntwo\r\n");
+    } finally {
+      await rm(repository, { recursive: true, force: true });
+    }
+  });
+});
+
+const pendingRepository = "ghcr.io/example/image";
+const pendingReader =
+  (fingerprints: Record<string, string>) =>
+  async (image: string): Promise<string | undefined> =>
+    fingerprints[image.split("@")[1] ?? ""];
+
+describe("pending first pin", () => {
+  test("keeps a pending first pin whose runtime matches the rebuild", async () => {
+    await expect(
+      pendingFirstPinCoversCandidate(
+        pendingRepository,
+        state(5, "a"),
+        state(6, "b"),
+        pendingReader({ [digest("a")]: "same", [digest("b")]: "same" }),
+      ),
+    ).resolves.toBe(true);
+  });
+
+  test("replaces a pending first pin when the runtime changed", async () => {
+    await expect(
+      pendingFirstPinCoversCandidate(
+        pendingRepository,
+        state(5, "a"),
+        state(6, "b"),
+        pendingReader({ [digest("a")]: "old", [digest("b")]: "new" }),
+      ),
+    ).resolves.toBe(false);
+  });
+
+  test("promotes when there is no pending first pin", async () => {
+    await expect(
+      pendingFirstPinCoversCandidate(
+        pendingRepository,
+        undefined,
+        state(6, "b"),
+        pendingReader({}),
+      ),
+    ).resolves.toBe(false);
   });
 });

@@ -11,7 +11,7 @@ const USERNAME_PREFIX: &str = "device-credential";
 
 fn credential_username(backend_origin: &str) -> String {
     let digest = Sha256::digest(backend_origin.as_bytes());
-    format!("{USERNAME_PREFIX}-{digest:x}")
+    format!("{USERNAME_PREFIX}-{}", hex::encode(digest))
 }
 
 fn credential_entry(backend_origin: &str) -> Result<Entry, KeyringError> {
@@ -99,5 +99,13 @@ mod tests {
             credential_username("https://beta.scout.sjer.red/")
         );
         assert_ne!(production, credential_username("http://127.0.0.1:3000/"));
+    }
+
+    #[test]
+    fn credential_slot_names_match_persisted_keychain_entries() {
+        assert_eq!(
+            credential_username("https://scout.sjer.red/"),
+            "device-credential-002eafed56bdcf9f7e14a9932e57c7253eac1c5431d096985b9330ed9a55f5ff"
+        );
     }
 }

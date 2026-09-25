@@ -36,7 +36,7 @@ ENV OTTOHG_SHA=c101be5ac2ae53c5d18ee063f16eeeda751639f8
 # decomp host tools, libpng/zlib + pkg-config for gbagfx, python3 + uv for the
 # sound-data tooling.
 # renovate: datasource=pypi depName=uv
-ARG UV_VERSION=0.12.17
+ARG UV_VERSION=0.12.18
 # Unpinned on purpose: Debian/Ubuntu drop superseded point releases from the
 # archive, so an exact `pkg=version` pin turns every upstream security respin
 # into a build failure here. Reproducibility would need a snapshot archive, not

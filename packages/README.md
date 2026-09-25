@@ -7,12 +7,13 @@ hold only scoped invariants that agents must keep in context.
 
 | Package                                                         | Description                                                                              |
 | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| [alert-dashboard](alert-dashboard/)                             | Homelab alert dashboard — Postal email ingest, Grafana previews, enforced hexagonal core |
+| [alert-dashboard](alert-dashboard/)                             | Ops dashboard — snapshot overview, alert ledger, digest email, Grafana previews          |
 | [birmel](birmel/)                                               | Discord bot on an explicit AI SDK agent runtime                                          |
 | [monarch](monarch/)                                             | AI transaction categorization pipeline for Monarch Money                                 |
 | [scout-for-lol](scout-for-lol/)                                 | Discord bot tracking friends' League of Legends matches with rich post-game reports      |
 | [starlight-karma-bot](starlight-karma-bot/)                     | Discord karma bot — points, leaderboards, scheduled recaps                               |
 | [macos-ai-subscription-tracker](macos-ai-subscription-tracker/) | Brim (QuotaBar) — native macOS menu-bar tracker for AI subscription quotas               |
+| [macos-cross-compiler](macos-cross-compiler/)                   | Public Docker images that build macOS, iOS, and Catalyst apps on Linux                   |
 | [temporal](temporal/)                                           | Temporal worker: scheduled automation, agent tasks, homelab audits, PR-opening refreshes |
 | [trmnl-dashboard](trmnl-dashboard/)                             | TRMNL e-ink dashboard backend aggregating home/homelab status                            |
 
@@ -48,6 +49,7 @@ hold only scoped invariants that agents must keep in context.
 | [stocks-sjer-red](stocks-sjer-red/)             | PC-component investment portfolio tracker (Astro)            |
 | [cooklang-rich-preview](cooklang-rich-preview/) | Marketing site for the Cooklang Rich Preview Obsidian plugin |
 | [glitter](glitter/)                             | Glitter Boys friend-group site                               |
+| [macos-cross-site](macos-cross-site/)           | Marketing site for the macos-cross-compiler Docker image     |
 
 ## Libraries
 
@@ -62,6 +64,8 @@ hold only scoped invariants that agents must keep in context.
 | [llm-models](llm-models/)                         | Language-neutral LLM model catalog (JSON + schema) with upstream pricing sync  |
 | [llm-observability](llm-observability/)           | LLM tracing/metrics: OTel wrappers + S3 span-body archive                      |
 | [loaded](loaded/)                                 | `Loaded<T>` renderability algebra + `LoadingBlock` for async UI state          |
+| [ops-clients](ops-clients/)                       | Zod-validated upstream clients for the ops snapshot collector                  |
+| [ops-model](ops-model/)                           | Ops snapshot contract, severity policy, and the service catalog                |
 | [voice-assistant](voice-assistant/)               | Shared wake-word voice pipeline (local cascade + OpenAI Realtime turn)         |
 
 ## Plugins & extensions
@@ -73,17 +77,18 @@ hold only scoped invariants that agents must keep in context.
 
 ## Infrastructure & tooling
 
-| Package                                                   | Description                                                              |
-| --------------------------------------------------------- | ------------------------------------------------------------------------ |
-| [homelab](homelab/)                                       | Kubernetes homelab: Talos, cdk8s, OpenTofu, ArgoCD                       |
-| [hkctl](hkctl/)                                           | Development-signed Apple HomeKit command-line app (Mac Catalyst)         |
-| [terraform-provider-asuswrt](terraform-provider-asuswrt/) | Terraform/OpenTofu provider for Asuswrt-Merlin routers                   |
-| [toolkit](toolkit/)                                       | CLI developer tools (`pr`, `alerts`, `bugsink`, `grafana`, `discord`, …) |
-| [pr-fleet-controller](pr-fleet-controller/)               | AI SDK controller that drives the open-PR fleet with a live dashboard    |
-| [justin-principal-engineer](justin-principal-engineer/)   | Local Linear-to-PR queue with Docker coding turns and owner approval     |
-| [release-tools](release-tools/)                           | release-please wrapper for the release lane                              |
-| [dotfiles](dotfiles/)                                     | Dotfiles & shell config (chezmoi source)                                 |
-| [fonts](fonts/)                                           | Berkeley Mono Nerd Fonts patcher                                         |
+| Package                                                   | Description                                                                    |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [homelab](homelab/)                                       | Kubernetes homelab: Talos, cdk8s, OpenTofu, ArgoCD                             |
+| [hkctl](hkctl/)                                           | Development-signed Apple HomeKit command-line app (Mac Catalyst)               |
+| [terraform-provider-asuswrt](terraform-provider-asuswrt/) | Terraform/OpenTofu provider for Asuswrt-Merlin routers                         |
+| [toolkit](toolkit/)                                       | CLI developer tools (`pr`, `alerts`, `bugsink`, `grafana`, `discord`, …)       |
+| [windows-cross-compiler](windows-cross-compiler/)         | Linux images that cross-compile C, C++, Rust, .NET, and WinUI/MSIX for Windows |
+| [pr-fleet-controller](pr-fleet-controller/)               | AI SDK controller that drives the open-PR fleet with a live dashboard          |
+| [justin-principal-engineer](justin-principal-engineer/)   | Local Linear-to-PR queue with Docker coding turns and owner approval           |
+| [release-tools](release-tools/)                           | release-please wrapper for the release lane                                    |
+| [dotfiles](dotfiles/)                                     | Dotfiles & shell config (chezmoi source)                                       |
+| [fonts](fonts/)                                           | Berkeley Mono Nerd Fonts patcher                                               |
 
 ## Learning & reference
 

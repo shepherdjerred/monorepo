@@ -20,6 +20,7 @@ const {
   markPostMatchPollStarted,
   PostMatchPollOwnershipError,
   POST_MATCH_POLL_STALE_AFTER_MS,
+  renewPostMatchPollClaim,
 } = await import("#src/league/tasks/recovery/app-state.ts");
 
 const BOT_STATE_ID = 1;
@@ -221,5 +222,101 @@ describe("v1's unowned poll writes", () => {
     });
     const overwritten = await pollRow();
     expect(overwritten?.pollStatus).toBe("incomplete");
+  });
+});
+
+/** The first instant at which a claim last touched at `from` is stale. */
+function afterBound(from: Date): Date {
+  return new Date(from.getTime() + POST_MATCH_POLL_STALE_AFTER_MS + 1);
+}
+
+describe("renewing a held claim", () => {
+  test("keeps a renewed claim live past the staleness bound", async () => {
+    // A delegated v1 pass ingesting a backlog outlives the bound. Its owner
+    // renewed the claim 25 minutes in, so a claimant 30 minutes after the
+    // START is still refused.
+    await claimPostMatchPoll({ startedAt: FIRST });
+    const renewedAt = new Date(FIRST.getTime() + 25 * 60 * 1000);
+    expect(
+      await renewPostMatchPollClaim({
+        owner: { startedAt: FIRST },
+        renewedAt,
+      }),
+    ).toBe(true);
+
+    expect(await claimPostMatchPoll({ startedAt: afterBound(FIRST) })).toEqual({
+      outcome: "held",
+      since: FIRST,
+    });
+    // Once the renewal itself is past the bound, the claim is stale again.
+    const takeover = afterBound(renewedAt);
+    expect(await claimPostMatchPoll({ startedAt: takeover })).toEqual({
+      outcome: "claimed",
+      owner: { startedAt: takeover },
+    });
+  });
+
+  test("keeps the renewal when the owner re-presents its claim", async () => {
+    // The delegated v1 discovery re-takes the handoff's claim. Doing so must
+    // not reset a renewal, or a late re-take would make a live claim stale.
+    await claimPostMatchPoll({ startedAt: FIRST });
+    await renewPostMatchPollClaim({
+      owner: { startedAt: FIRST },
+      renewedAt: new Date(FIRST.getTime() + 25 * 60 * 1000),
+    });
+    expect(await claimPostMatchPoll({ startedAt: FIRST })).toEqual({
+      outcome: "claimed",
+      owner: { startedAt: FIRST },
+    });
+
+    expect(await claimPostMatchPoll({ startedAt: afterBound(FIRST) })).toEqual({
+      outcome: "held",
+      since: FIRST,
+    });
+  });
+
+  test("never revives a claim that was closed or taken over", async () => {
+    await claimPostMatchPoll({ startedAt: FIRST });
+    await markPostMatchPollCompleted({
+      completedAt: SECOND,
+      evidenceComplete: true,
+      owner: { startedAt: FIRST },
+    });
+    expect(
+      await renewPostMatchPollClaim({
+        owner: { startedAt: FIRST },
+        renewedAt: SECOND,
+      }),
+    ).toBe(false);
+    const closed = await pollRow();
+    expect(closed?.pollStatus).toBe("healthy");
+
+    await claimPostMatchPoll({ startedAt: SECOND });
+    expect(
+      await renewPostMatchPollClaim({
+        owner: { startedAt: FIRST },
+        renewedAt: SECOND,
+      }),
+    ).toBe(false);
+  });
+
+  test("a fresh claim does not inherit the previous holder's renewal", async () => {
+    await claimPostMatchPoll({ startedAt: FIRST });
+    await renewPostMatchPollClaim({
+      owner: { startedAt: FIRST },
+      renewedAt: new Date(FIRST.getTime() + 25 * 60 * 1000),
+    });
+    await markPostMatchPollCompleted({
+      completedAt: SECOND,
+      evidenceComplete: true,
+      owner: { startedAt: FIRST },
+    });
+    await claimPostMatchPoll({ startedAt: SECOND });
+
+    const takeover = afterBound(SECOND);
+    expect(await claimPostMatchPoll({ startedAt: takeover })).toEqual({
+      outcome: "claimed",
+      owner: { startedAt: takeover },
+    });
   });
 });

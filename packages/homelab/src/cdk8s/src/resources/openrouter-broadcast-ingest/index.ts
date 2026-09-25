@@ -87,7 +87,7 @@ export function createOpenRouterBroadcastIngestDeployment(chart: Chart) {
         // delivery, which would turn that receipt into a lie during a gateway
         // crash or exporter retry exhaustion. Tempo's own response is the
         // delivery signal this contract needs. (Nothing here targets
-        // Braintrust either — no allowlist branch matches this service.)
+        // Phoenix either — no allowlist branch matches this service.)
         TEMPO_OTLP_HTTP_URL: EnvValue.fromValue(
           "http://tempo.tempo.svc.cluster.local:4318/v1/traces",
         ),

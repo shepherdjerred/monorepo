@@ -29,3 +29,19 @@ CI_PLAYWRIGHT_IMAGE=$(read_ci_image_ref \
   ghcr.io/shepherdjerred/ci-playwright \
   .buildkite/ci-playwright/DIGEST)
 export CI_BASE_IMAGE CI_PLAYWRIGHT_IMAGE
+
+# The windows-cross-compiler images have no pin until their first promotion
+# merges; steps that run in them are added once the pins exist.
+windows_cross_pins=packages/windows-cross-compiler/images
+if [ -f "$windows_cross_pins/windows-cross-compiler/DIGEST" ]; then
+  WINDOWS_CROSS_COMPILER_IMAGE=$(read_ci_image_ref \
+    ghcr.io/shepherdjerred/windows-cross-compiler \
+    "$windows_cross_pins/windows-cross-compiler/DIGEST")
+  export WINDOWS_CROSS_COMPILER_IMAGE
+fi
+if [ -f "$windows_cross_pins/windows-cross-compiler-winui/DIGEST" ]; then
+  WINDOWS_CROSS_COMPILER_WINUI_IMAGE=$(read_ci_image_ref \
+    ghcr.io/shepherdjerred/windows-cross-compiler-winui \
+    "$windows_cross_pins/windows-cross-compiler-winui/DIGEST")
+  export WINDOWS_CROSS_COMPILER_WINUI_IMAGE
+fi

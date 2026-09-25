@@ -230,6 +230,17 @@ test("groups Talos, Kubernetes, and installer updates into one PR", async () => 
   });
 });
 
+test("groups the AI SDK so ai and @ai-sdk/otel bump together", async () => {
+  const config = RenovateConfigSchema.parse(
+    await Bun.file(`${root}/renovate.json`).json(),
+  );
+  const rule = config.packageRules.find(
+    (candidate) => candidate.groupName === "AI SDK",
+  );
+
+  expect(rule?.matchPackageNames).toEqual(["ai", "@ai-sdk/**"]);
+});
+
 test("keeps direct TypeScript on 6 without constraining the native alias", async () => {
   const config = RenovateConfigSchema.parse(
     await Bun.file(`${root}/renovate.json`).json(),
@@ -270,34 +281,32 @@ test("keeps the custom Corretto manager authoritative for mise Java", async () =
   });
 });
 
-test("ignores only the bogus qBittorrent v20 release while retaining semantic tags", async () => {
+test("rejects stale qBittorrent Ubuntu tags while retaining semantic app tags", async () => {
   const config = RenovateConfigSchema.parse(
     await Bun.file(`${root}/renovate.json`).json(),
   );
-  const exactIgnore = config.packageRules.find(
-    (candidate) =>
-      candidate.description ===
-      "Ignore bogus LinuxServer qBittorrent v20 tag; it is not an app release",
-  );
-  const semanticOnly = config.packageRules.find(
-    (candidate) =>
-      candidate.description ===
-      "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are old Ubuntu-based image tags, not qBittorrent app versions",
+  const description =
+    "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are stale Ubuntu YY.MM-based image tags, not qBittorrent app versions. qBittorrent never zero-pads its minor version, so rejecting a leading-zero minor excludes them while keeping every semantic app tag.";
+  const rules = config.packageRules.filter((candidate) =>
+    candidate.matchPackageNames?.includes("linuxserver/qbittorrent"),
   );
 
-  expect(exactIgnore).toEqual({
-    description:
-      "Ignore bogus LinuxServer qBittorrent v20 tag; it is not an app release",
-    matchPackageNames: ["linuxserver/qbittorrent"],
-    matchNewValue: "/^v?20$/",
-    enabled: false,
-  });
-  expect(semanticOnly).toEqual({
-    description:
-      "Ignore bogus LinuxServer qBittorrent OS tags such as 20.04.1; those are old Ubuntu-based image tags, not qBittorrent app versions",
-    matchPackageNames: ["linuxserver/qbittorrent"],
-    allowedVersions: String.raw`/^[0-9]+\.[0-9]+\.[0-9]+$/`,
-  });
+  expect(rules).toEqual([
+    {
+      description,
+      matchPackageNames: ["linuxserver/qbittorrent"],
+      allowedVersions: String.raw`/^[0-9]+\.(0|[1-9][0-9]*)\.[0-9]+$/`,
+    },
+  ]);
+
+  const allowedVersions = rules[0]?.allowedVersions;
+  if (allowedVersions === undefined) {
+    throw new Error("qBittorrent rule is missing allowedVersions");
+  }
+  const allowed = new RegExp(allowedVersions.slice(1, -1));
+  expect(allowed.test("20.04.1")).toBe(false);
+  expect(allowed.test("5.2.3")).toBe(true);
+  expect(allowed.test("5.10.0")).toBe(true);
 });
 
 test("updates application Dockerfile tool pins without hardcoded test fixtures", async () => {
@@ -397,7 +406,7 @@ test("extracts identical Emscripten tag and digest pins from both sources", asyn
     "packages/discord-plays-mario-kart/Dockerfile",
   ]);
   expect(pins).toEqual([
-    "6.0.9@sha256:96617f27fe16421588241def73908fd348a7f9d260440ed0d00b36dcf7a063cc",
-    "6.0.9@sha256:96617f27fe16421588241def73908fd348a7f9d260440ed0d00b36dcf7a063cc",
+    "6.0.10@sha256:e077d54e2b8970575ebc4f185ac1de0b95c05f2b266134d4ba27449af7aebf65",
+    "6.0.10@sha256:e077d54e2b8970575ebc4f185ac1de0b95c05f2b266134d4ba27449af7aebf65",
   ]);
 });

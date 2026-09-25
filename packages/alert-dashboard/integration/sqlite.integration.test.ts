@@ -17,6 +17,7 @@ import {
   waitForDatabase,
   webhook,
 } from "./sqlite-fixture.ts";
+import { registerOpsRepositoryCases } from "./ops-repository-cases.ts";
 import {
   keepsStaleResolutionOnPriorOccurrence,
   matchesRefreshedResolution,
@@ -45,6 +46,8 @@ async function expectNormalizedIndexes(): Promise<void> {
 beforeAll(waitForDatabase);
 beforeEach(resetDatabase);
 afterAll(disconnectDatabase);
+
+registerOpsRepositoryCases();
 
 describe("SQLite email cancellation", () => {
   it("dry-runs and audits cancellation of only pending incident email", async () => {

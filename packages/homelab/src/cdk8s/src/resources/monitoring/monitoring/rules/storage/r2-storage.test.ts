@@ -73,3 +73,25 @@ describe("SeaweedFS off-site backup alerts", () => {
     }
   });
 });
+
+describe("Velero R2 orphan alerts", () => {
+  test("emits prefix, bytes, and freshness alerts for the R2 audit", () => {
+    const group = getR2StorageRuleGroups().find(
+      (candidate) => candidate.name === "velero-r2-orphans",
+    );
+    if (group?.rules === undefined) {
+      throw new Error("Missing Velero R2 orphans rule group");
+    }
+    expect(
+      group.rules.map((rule) => [
+        rule.alert,
+        rule.labels?.["severity"],
+        rule.for ?? "",
+      ]),
+    ).toEqual([
+      ["VeleroR2OrphanPrefixes", "warning", "24h"],
+      ["VeleroR2OrphanBytesExcessive", "warning", "24h"],
+      ["VeleroR2OrphanAuditNotRunning", "warning", "1h"],
+    ]);
+  });
+});

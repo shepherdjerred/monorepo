@@ -14,7 +14,14 @@ import {
   type UsageReport,
 } from "./types.ts";
 import { ingestResults } from "./ingest.ts";
-import { queryUsage, type UsageQueryOptions } from "./usage-query.ts";
+import {
+  queryUsage,
+  queryUsageEventsForDocument,
+  queryUsageFingerprints,
+  type ExportableUsageEvent,
+  type UsageDocumentFingerprint,
+  type UsageQueryOptions,
+} from "./usage-query.ts";
 
 const INDEX_SCHEMA_VERSION = 3;
 
@@ -336,5 +343,13 @@ export class HistoryIndex {
 
   usage(options: UsageQueryOptions): UsageReport {
     return queryUsage(this.#database, options);
+  }
+
+  usageFingerprints(): UsageDocumentFingerprint[] {
+    return queryUsageFingerprints(this.#database);
+  }
+
+  usageEventsForDocument(documentId: number): ExportableUsageEvent[] {
+    return queryUsageEventsForDocument(this.#database, documentId);
   }
 }

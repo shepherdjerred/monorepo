@@ -2,26 +2,26 @@
 # Manual edits may be lost in future updates.
 
 provider "registry.terraform.io/openrouterteam/openrouter" {
-  version     = "0.3.8"
-  constraints = "0.3.8"
+  version     = "0.3.19"
+  constraints = "0.3.19"
   hashes = [
-    "h1:Hkexb8rj5/x0jHZt5+/1GcUUIp499ucG1E1OkDlaF+c=",
-    "h1:OnEWko3y1Tl7zC0ackL1p5l2D6FJJpR0iMOjNphnnmA=",
-    "h1:QficalfdSsFMguBf/3e/IgqUq/vdXM02lroOCvKmV94=",
-    "h1:Ye0wW3eadcsNtG2KOsUFrBwggJe6w/FQpXot2DnzNoI=",
-    "zh:085d51e50e15763ee56a376b60133a496d779350cd1d12b72b3a7ebfbba5fdd4",
-    "zh:140123b563b9e9810f36910e682ad1500129780209025bac4f24df0884dd84d5",
-    "zh:282a29e8c127313f683e2a31257d5f1f620e6df3e1571c0102b2abde8e124e9c",
-    "zh:3223d37e191cda290e5b790971c0aea58df34e83ea45e573b9ee76562346be8e",
-    "zh:36674de953c981d537d242fb0009b64860a2bc83c1474195a63ee2b929116758",
-    "zh:5ee467f2dca7010affc3c942fcc4850a626d2e6f3b0b8920764c4617c33eed34",
-    "zh:6c7c2b0fa9909d4d422a5d1809213f376e75d4fd8644277b0a0b6882ce7a3f41",
-    "zh:72f8c8ffd302e6cc2e1993dad236f8e38ff1fabe45603c3be35da6141b1f1bcd",
-    "zh:79f069a61689d136580fdae2d94ab59456efc4d8c4f6cbb4523a533783a44c93",
+    "h1:D7dA5MV6h4+rwx5eThR7TPaMLS4VZnSHXGYPftQ5kDI=",
+    "h1:TB/ibP/gqxVRm15GxSUg5kHXscRhpuH8LTBWLUZmntc=",
+    "h1:TeH346BprlOqTRXJ7vyY0khhN3LSMTGop9XW2vGlBI4=",
+    "h1:Uu1Kp714wMxmb8pgAIJbOGCVgi4c0lJ9fwISLTP3Rq8=",
+    "zh:05f5493fd47ae7d4d6b8ad97b1d3694ca303d3d2d68a3ad8bfd776a6424fecb6",
+    "zh:5a2f732e59b55bb1be35fe1a76781e2d3f644bcbc93a54c4b034b66fbc3c2d36",
+    "zh:5c56939fcaf8d1ba3c699e1540c2921163cdf1dd6431915b926bde07574f698b",
+    "zh:665e7bdb1fc52c480d08f094b5738b2ab9b892ac6412db3199b6de89bea71072",
+    "zh:6d8f5bca0922378e85d48d894703ee11e8e613bcdcbdb7283f68c91816203d0c",
+    "zh:6e55cdef2c8a837894b7c0d42fce2693feec32776bdb33a6761079d628f8b9dd",
+    "zh:87bf96f42b389740a59ddd6b859e5ff0e437a3db1987b767b9b15dd2a4b8351c",
     "zh:890df766e9b839623b1f0437355032a3c006226a6c200cd911e15ee1a9014e9f",
-    "zh:d1a814e29284de762959343c0ef7af8e36d5b6902932bdfc3c42f3738fbd58fb",
-    "zh:d80079bbad7f11f7ba8f336d5572d48743bcc547345fc16dbb1e30512a49d2a0",
-    "zh:da28b15753d13b37124d9c271a6ca0c6c4e32d1dacb4bad736018d44abe9fe45",
-    "zh:ed0b7a0ef798b71a52554ed2b68228e28740a34226742fab6e20d403c7d8cd20",
+    "zh:a46a3d3f76641e7c75e6106247d91df7e02f30ca2a5d629ee867c92e17c7fe33",
+    "zh:aea787e8ff8108e281bb16abd3b926db231c6a1bef4d3110f59cb841340aeed7",
+    "zh:c2050b381772da66c98884508bfbb3d9258629debce86957a90c4b9f70276193",
+    "zh:d21bea645c12fceb8dd76b69af107ff0041db99b1fefbba6e8636b6b4f7df3ad",
+    "zh:d4cd5e95c7a5dc3cc182e64e634f435b80ecb4330e4fd5df00a02d49b333559d",
+    "zh:e62c9415968aaf7975f309da637fea3a78dd4542aacf89d30c4b7555f78404d8",
   ]
 }

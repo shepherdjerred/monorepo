@@ -115,6 +115,8 @@ export default defineConfig({
     "/temporal/workflows/repo-upkeep":
       "/explanation/temporal/workflow-families/",
     "/temporal/workflows/scout": "/explanation/temporal/workflow-families/",
+    "/how-to/route-a-service-to-braintrust":
+      "/how-to/route-a-service-to-phoenix/",
   },
   prefetch: {
     defaultStrategy: "hover",

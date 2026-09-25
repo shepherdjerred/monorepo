@@ -20,9 +20,9 @@
     "@duckdb/node-api": "1.5.4-r.1",
     "@shepherdjerred/llm-models": "workspace:*",
     "@shepherdjerred/llm-runtime": "workspace:*",
-    "ai": "7.0.107",
+    "ai": "7.0.114",
     "pdfjs-dist": "^6.3.289",
-    "playwright": "1.62.1",
+    "playwright": "1.63.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

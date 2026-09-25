@@ -19,7 +19,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@openai/codex-sdk": "0.155.1",
+    "@openai/codex-sdk": "0.156.1",
     "@shepherdjerred/llm-runtime": "workspace:*",
     "zod": "^4.4.3"
   },

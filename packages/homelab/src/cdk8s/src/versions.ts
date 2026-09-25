@@ -36,7 +36,7 @@ applyCurrentBuildImageOverrides(versions);
  *   curl -fSL "https://codeload.github.com/fuatakgun/eufy_security/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const EUFY_TARBALL_SHA256 =
-  "b744aac0ce03a8a75de5100c672957504173c20cbe2ac0fc4d09d5bc75c59411";
+  "b581e07c34c2cb6c2c19bbc7f4b733f19ad4d5703aea91d0c5d4cd1a29b9a98c";
 
 /**
  * SHA-256 of the GitHub release tarball for `basnijholt/adaptive-lighting`,
@@ -117,7 +117,7 @@ export const PETLIBRO_TARBALL_SHA256 =
  *   curl -fSL "https://codeload.github.com/AlexxIT/SonoffLAN/tar.gz/refs/tags/$VERSION" | sha256sum
  */
 export const SONOFF_TARBALL_SHA256 =
-  "abb08554f9989073ca346358f19e6cd4f39db33183ef7d8baf03074c90077839";
+  "4d2ee5ef9fb1a497b26379dd7d774ec5aec31f2c5a3bfd82766bc3f745d05d14";
 
 /**
  * SHA-256 of the GitHub release tarball for `elax46/custom-brand-icons`

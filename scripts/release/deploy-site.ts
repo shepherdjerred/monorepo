@@ -134,6 +134,16 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     immutablePrefixes: ["_astro/"],
   },
   {
+    bucket: "macos-cross",
+    name: "macos-cross-site",
+    url: "https://macos-cross.sjer.red",
+    buildDir: "packages/macos-cross-site",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/macos-cross-site/dist",
+    target: "s3",
+    immutablePrefixes: ["_astro/"],
+  },
+  {
     bucket: "stocks-sjer-red",
     name: "stocks-sjer-red",
     url: "https://stocks.sjer.red",

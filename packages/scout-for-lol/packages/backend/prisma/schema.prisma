@@ -919,6 +919,9 @@ model BotState {
   lastSuccessfulPollAt      DateTime?
   reconciliationCompletedAt DateTime?
   pollStartedAt             DateTime?
+  // Last renewal by the holder of a durable poll claim. A claim goes stale
+  // only when both its start and its last renewal are past the bound.
+  pollClaimRenewedAt        DateTime?
   pollCompletedAt           DateTime?
   evidenceWatermarkAt       DateTime?
   pollEvidenceComplete      Boolean?

@@ -4,7 +4,7 @@ terraform {
   required_providers {
     openrouter = {
       source  = "registry.terraform.io/OpenRouterTeam/openrouter"
-      version = "0.3.8"
+      version = "0.3.19"
     }
   }
 }

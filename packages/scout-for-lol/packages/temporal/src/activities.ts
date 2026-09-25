@@ -60,6 +60,10 @@ import type {
   ScoutNotificationOutcomeV2Input,
   ScoutNotificationRenderV2Result,
   ScoutNotificationTransitionV2Result,
+  ScoutPostMatchDiscoveryOwnerV2Result,
+  ScoutPostMatchPollReleaseV2Input,
+  ScoutPostMatchPollReleaseV2Result,
+  ScoutPostMatchPollRenewalV2Result,
   ScoutPostMatchScanV2Result,
   ScoutPrematchArchiveV2Result,
   ScoutPrematchScanV2Result,
@@ -143,6 +147,15 @@ export type ScoutTemporalActivities = {
  */
 export type ScoutTemporalV2Activities = {
   // Discovery — Riot reads, realtime.
+  resolvePostMatchDiscoveryOwnerV2: (
+    input: ScoutPostMatchDiscoveryV2Input,
+  ) => Promise<ScoutPostMatchDiscoveryOwnerV2Result>;
+  renewPostMatchPollClaimV2: (
+    input: ScoutPostMatchPollReleaseV2Input,
+  ) => Promise<ScoutPostMatchPollRenewalV2Result>;
+  releasePostMatchPollClaimV2: (
+    input: ScoutPostMatchPollReleaseV2Input,
+  ) => Promise<ScoutPostMatchPollReleaseV2Result>;
   discoverPostMatchIdsV2: (
     input: ScoutPostMatchDiscoveryV2Input,
   ) => Promise<ScoutPostMatchScanV2Result>;

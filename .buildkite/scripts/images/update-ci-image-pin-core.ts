@@ -1,6 +1,6 @@
 import { asRecord } from "../../../scripts/lib/json.ts";
 import { classifyRuntimeChange } from "./application-image-runtime.ts";
-import { ciImageDefinition } from "./build-ci-image-core.ts";
+import { ciImageDefinition, type CiImageName } from "./build-ci-image-core.ts";
 
 const DIGEST_PATTERN = /^sha256:[\da-f]{64}$/;
 const COMMIT_PATTERN = /^[\da-f]{40}$/;
@@ -56,7 +56,7 @@ export type CiImagePinState = {
 
 export type CiImageCandidate = {
   readonly schema: "ci-image-candidate/v1";
-  readonly image: "ci-base" | "ci-playwright";
+  readonly image: CiImageName;
   readonly buildNumber: number;
   readonly sourceCommit: string;
   readonly sourceFingerprint: string;
@@ -220,6 +220,42 @@ export async function classifyCiImageRuntimePromotion(
   );
 }
 
+export function requireMainPin(
+  mainState: CiImagePinState | undefined,
+  definition: { readonly name: string },
+): CiImagePinState {
+  if (mainState === undefined) {
+    throw new Error(
+      `${definition.name} is pinned locally but has no pin on origin/main`,
+    );
+  }
+  return mainState;
+}
+
+/**
+ * Whether a pending first pin already carries the candidate's runtime content,
+ * so replacing it would only churn the pin PR.
+ */
+export async function pendingFirstPinCoversCandidate(
+  repository: string,
+  pending: CiImagePinState | undefined,
+  candidate: CiImagePinState,
+  getRuntimeFingerprint: RuntimeFingerprintReader,
+): Promise<boolean> {
+  if (pending === undefined || pending.digest === candidate.digest) {
+    return false;
+  }
+  const outcome = await classifyCiImageRuntimePromotion(
+    {
+      repository,
+      pinnedDigest: pending.digest,
+      candidateDigest: candidate.digest,
+    },
+    getRuntimeFingerprint,
+  );
+  return outcome === "content-unchanged";
+}
+
 export function isCurrentSourceCandidate(
   candidate: CiImagePinState,
   sourceFingerprint: string,
@@ -257,6 +293,49 @@ export function newestPinState(
     }
   }
   return newest;
+}
+
+export type LocalPromotionDecision =
+  "no-digest-change" | "older-than-pin" | "promote";
+
+/**
+ * Compares a candidate with the committed pin. An image with no pin yet always
+ * promotes its first candidate.
+ */
+/**
+ * Reads a source file at a revision as checkout writes it. The build
+ * fingerprints checked-out bytes, so the main-side comparison must apply the
+ * same .gitattributes conversions (e.g. `*.targets eol=crlf`); a raw blob would
+ * make every such candidate look superseded.
+ */
+export function checkedOutSourceCommand(
+  repository: string,
+  revision: string,
+  path: string,
+): readonly string[] {
+  return [
+    "git",
+    "-C",
+    repository,
+    "cat-file",
+    "--filters",
+    `${revision}:${path}`,
+  ];
+}
+
+export function localPromotionDecision(
+  current: CiImagePinState | undefined,
+  candidate: CiImagePinState,
+): LocalPromotionDecision {
+  if (current === undefined) {
+    return "promote";
+  }
+  if (candidate.digest === current.digest) {
+    return "no-digest-change";
+  }
+  return newestPinState([current, candidate]) === candidate
+    ? "promote"
+    : "older-than-pin";
 }
 
 export function verifyDigestFile(
@@ -350,7 +429,7 @@ export function ciImagePromotionFiles(
   image: CiImageCandidate["image"],
 ): readonly string[] {
   const definition = ciImageDefinition(image);
-  if (image === "ci-base") {
+  if (image !== "ci-playwright") {
     return [definition.digestFile, definition.stateFile];
   }
   return [

@@ -8,19 +8,17 @@ import { run, runAllowExit, tmpBase } from "../../../scripts/lib/run.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
 import {
-  CI_IMAGE_IGNORED_ENV_PREFIXES,
-  imageRuntimeFingerprint,
-} from "./application-image-runtime.ts";
-import {
   ciImageDefinition,
   ciImageSourceFingerprint,
   type CiImageDefinition,
 } from "./build-ci-image-core.ts";
 import {
+  checkedOutSourceCommand,
   ciImagePromotionFiles,
-  classifyCiImageRuntimePromotion,
   isCurrentSourceCandidate,
+  localPromotionDecision,
   newestPinState,
+  requireMainPin,
   parseCiImageCandidate,
   parseCiImagePinState,
   playwrightVersionFromDockerfile,
@@ -30,8 +28,11 @@ import {
   serializedState,
   stateFromCandidate,
   verifyDigestFile,
+  type CiImageCandidate,
   type CiImagePinState,
+  type LocalPromotionDecision,
 } from "./update-ci-image-pin-core.ts";
+import { runtimeGateSkips } from "./update-ci-image-pin-runtime.ts";
 import {
   MONOREPO_REPO,
   openOrUpdatePullRequest,
@@ -46,6 +47,38 @@ const BUN_INSTALL_WRAPPER = fileURLToPath(
 
 async function readStateFile(path: string): Promise<CiImagePinState> {
   return parseCiImagePinState(await Bun.file(path).json());
+}
+
+function dryRunReport(
+  definition: CiImageDefinition,
+  candidate: CiImageCandidate,
+  decision: LocalPromotionDecision,
+): string {
+  switch (decision) {
+    case "no-digest-change":
+      return `${definition.name} candidate has no runtime digest change`;
+    case "older-than-pin":
+      return `${definition.name} candidate is older than the committed pin`;
+    case "promote":
+      return `DRYRUN: would promote ${definition.name} build ${candidate.buildNumber.toString()} at ${candidate.digest}`;
+  }
+}
+
+/** A new image has no pin until its first promotion merges. */
+async function readPinIfPresent(
+  stateFile: string,
+  digestFile: string,
+): Promise<CiImagePinState | undefined> {
+  const [hasState, hasDigest] = await Promise.all([
+    Bun.file(stateFile).exists(),
+    Bun.file(digestFile).exists(),
+  ]);
+  if (!hasState && !hasDigest) {
+    return undefined;
+  }
+  const state = await readStateFile(stateFile);
+  verifyDigestFile(await Bun.file(digestFile).text(), state);
+  return state;
 }
 
 async function pendingState(
@@ -223,8 +256,8 @@ async function sourceFingerprintAtRevision(
     definition,
     async (path) => {
       const source = await run(
-        ["git", "-C", cloneDir, "show", `${revision}:${path}`],
-        { env, capture: true },
+        [...checkedOutSourceCommand(cloneDir, revision, path)],
+        { env, capture: true, echoCapturedStdout: false },
       );
       return new TextEncoder().encode(source.stdout);
     },
@@ -232,42 +265,21 @@ async function sourceFingerprintAtRevision(
   return `sha256:${fingerprint}`;
 }
 
-async function runtimeFingerprint(
-  image: string,
-  env: Record<string, string>,
-): Promise<string | undefined> {
-  return imageRuntimeFingerprint(
-    image,
-    async (command) => {
-      return runAllowExit([...command], { env, capture: true });
-    },
-    CI_IMAGE_IGNORED_ENV_PREFIXES,
-  );
-}
-
 async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
   const candidate = parseCiImageCandidate(await Bun.file(candidatePath).json());
   const definition = ciImageDefinition(candidate.image);
-  const currentState = await readStateFile(definition.stateFile);
-  verifyDigestFile(await Bun.file(definition.digestFile).text(), currentState);
+  const currentState = await readPinIfPresent(
+    definition.stateFile,
+    definition.digestFile,
+  );
   const candidateState = stateFromCandidate(candidate);
-  const localNewest = newestPinState([currentState, candidateState]);
-  const noDigestChange = localNewest.digest === currentState.digest;
-  const olderThanPin = !noDigestChange && localNewest !== candidateState;
+  const decision = localPromotionDecision(currentState, candidateState);
+  const noDigestChange = decision === "no-digest-change";
+  const olderThanPin = decision === "older-than-pin";
 
   if (dryRun) {
     // Dry-run never clones or mutates remote state; report the decision only.
-    if (noDigestChange) {
-      console.log(`${definition.name} candidate has no runtime digest change`);
-    } else if (olderThanPin) {
-      console.log(
-        `${definition.name} candidate is older than the committed pin`,
-      );
-    } else {
-      console.log(
-        `DRYRUN: would promote ${definition.name} build ${candidate.buildNumber.toString()} at ${candidate.digest}`,
-      );
-    }
+    console.log(dryRunReport(definition, candidate, decision));
     return;
   }
 
@@ -284,12 +296,9 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
     await run(["git", "-C", cloneDir, "config", "user.name", "CI Bot"], {
       env: auth.env,
     });
-    const mainState = await readStateFile(
+    const mainState = await readPinIfPresent(
       `${cloneDir}/${definition.stateFile}`,
-    );
-    verifyDigestFile(
-      await Bun.file(`${cloneDir}/${definition.digestFile}`).text(),
-      mainState,
+      `${cloneDir}/${definition.digestFile}`,
     );
     const pending = await pendingState(cloneDir, definition);
 
@@ -302,7 +311,7 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
         cloneDir,
         definition,
         pending,
-        mainState,
+        mainState: requireMainPin(mainState, definition),
         reason: "candidate has no runtime digest change",
         env: auth.env,
       });
@@ -313,7 +322,7 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
         cloneDir,
         definition,
         pending,
-        mainState,
+        mainState: requireMainPin(mainState, definition),
         reason: "candidate is older than the committed pin",
         env: auth.env,
       });
@@ -341,7 +350,8 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
         ? pending
         : undefined;
     const currentStatesBeforeCandidate = [
-      ...(isCurrentSourceCandidate(mainState, mainSourceFingerprint)
+      ...(mainState !== undefined &&
+      isCurrentSourceCandidate(mainState, mainSourceFingerprint)
         ? [mainState]
         : []),
       ...(currentPending === undefined ? [] : [currentPending.state]),
@@ -359,29 +369,25 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
         ? selectedBeforeCandidate
         : selected;
 
-    const runtimeOutcome = await classifyCiImageRuntimePromotion(
-      {
-        repository: definition.repository,
-        pinnedDigest: mainState.digest,
-        candidateDigest: promoted.digest,
-      },
-      async (image) => runtimeFingerprint(image, auth.env),
-    );
-    if (runtimeOutcome === "content-unchanged") {
-      await finalizeSkippedPromotion({
-        cloneDir,
+    if (
+      await runtimeGateSkips({
         definition,
-        pending,
+        currentPendingState: currentPending?.state,
         mainState,
-        reason: "candidate runtime content is unchanged",
+        promoted,
         env: auth.env,
-      });
+        skip: async (reason) =>
+          finalizeSkippedPromotion({
+            cloneDir,
+            definition,
+            pending,
+            mainState: requireMainPin(mainState, definition),
+            reason,
+            env: auth.env,
+          }),
+      })
+    ) {
       return;
-    }
-    if (runtimeOutcome === "pin-unresolvable-bumped") {
-      console.warn(
-        `${definition.name} current pin could not be fingerprinted; promoting the verified candidate`,
-      );
     }
 
     await run(

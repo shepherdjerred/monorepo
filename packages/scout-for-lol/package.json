@@ -53,9 +53,9 @@
     "eslint-plugin-regexp": "^3.1.0",
     "eslint-plugin-unicorn": "^76.0.0",
     "jiti": "^2.7.0",
-    "prettier": "3.9.8",
+    "prettier": "3.9.9",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.70.0",
+    "typescript-eslint": "^8.70.1",
     "vitest": "5.0.1"
   },
   "dependencies": {

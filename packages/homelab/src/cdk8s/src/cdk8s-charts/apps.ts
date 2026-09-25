@@ -58,6 +58,7 @@ import { createKueueApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo
 import { createKueueConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/kueue-config.ts";
 import { createCpuPowerCap } from "@shepherdjerred/homelab/cdk8s/src/resources/cpu-power-cap.ts";
 import { createBugsinkApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/bugsink.ts";
+import { createPhoenixApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/phoenix.ts";
 import { createTasknotesApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/tasknotes.ts";
 import { createRelayApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/relay.ts";
 import { createTemporalApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/temporal.ts";
@@ -171,6 +172,7 @@ export async function createAppsChart(app: App) {
   createGickupApp(chart);
   createGrafanaDbApp(chart);
   createBugsinkApp(chart);
+  createPhoenixApp(chart);
   createTasknotesApp(chart);
   createRelayApp(chart);
   createTemporalApp(chart);

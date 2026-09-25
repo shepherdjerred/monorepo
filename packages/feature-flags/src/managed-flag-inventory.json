@@ -30,6 +30,11 @@
       "key": "temporal",
       "name": "Temporal",
       "description": "Shared Temporal platform feature flags."
+    },
+    {
+      "key": "alert-dashboard",
+      "name": "Alert Dashboard",
+      "description": "Ops dashboard (alert-dashboard) feature flags."
     }
   ],
   "flags": [
@@ -790,6 +795,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout_v2_postmatch_ownership_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Let the V2 pipeline own scheduled post-match discovery. Off hands each pass to v1 scoutPostMatchDiscoveryWorkflow; the rollback switch for the V2 cutover.",
+      "type": "boolean",
+      "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "llm-daily-token-budget",
       "owner": "scout",
       "namespace": "scout",
@@ -1107,6 +1124,18 @@
       "namespace": "trmnl-dashboard",
       "source": "trmnl-dashboard",
       "purpose": "Expose the authenticated pet-care TRMNL dashboard payload after deployment verification.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "ops-digest-email-enabled",
+      "owner": "alert-dashboard",
+      "namespace": "alert-dashboard",
+      "source": "alert-dashboard",
+      "purpose": "Send the daily and weekly ops digest email through Postal after deployment verification.",
       "type": "boolean",
       "default": false,
       "rollouts": [],
@@ -1654,6 +1683,14 @@
               "result": true
             }
           ]
+        },
+        {
+          "key": "pet-dashboard-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
         }
       ]
     }

@@ -8,8 +8,13 @@ use std::sync::{Arc, RwLock};
 use std::time::{Duration, UNIX_EPOCH};
 
 use directories::ProjectDirs;
-use scout_client_core::backend::ScoutBackendClient;
+use scout_client_core::backend::{
+    BackendError, ReplayOffer, ReplayOfferDecision, ScoutBackendClient,
+};
 use scout_client_core::credentials::DeviceCredential;
+use scout_client_core::diagnostics::{
+    DiagnosticCategory, DiagnosticEvent, DiagnosticLevel, DiagnosticOutcome, Diagnostics, FileSink,
+};
 use scout_client_core::lcu::{
     LcuClient, LcuEndpoint, LcuError, LeagueLockfile, LiveClient, discover_lockfile,
 };
@@ -17,6 +22,9 @@ use scout_client_core::outbox::ObservationOutbox;
 use scout_client_core::protocol::{
     CreatePairingRequest, ExchangePairingResponse, ObservationBatch, ObservationEnvelope,
     ObservationKind, ObservationOutcome, ObservationQuarantineReason, ObservationReceipt,
+};
+use scout_client_core::reporting::{
+    BugsinkSink, ReportingGuard, reporting_environment, start_error_reporting,
 };
 use serde_json::Value;
 use sha2::{Digest as _, Sha256};
@@ -72,6 +80,10 @@ type ReplayUploadTask = JoinHandle<Result<(), String>>;
 pub struct ClientRuntime {
     /// Latest immutable UI snapshot.
     pub state: Arc<RwLock<RuntimeState>>,
+    diagnostics: Arc<Diagnostics>,
+    log_directory: Option<PathBuf>,
+    /// Flushes queued error reports when the runtime is dropped.
+    _reporting: Option<ReportingGuard>,
     commands: mpsc::UnboundedSender<RuntimeCommand>,
     shutdown: watch::Sender<bool>,
     _thread: std::thread::JoinHandle<()>,
@@ -82,13 +94,35 @@ impl ClientRuntime {
     #[must_use]
     pub fn start(backend_origin: String) -> Self {
         let state = Arc::new(RwLock::new(RuntimeState::default()));
+        let log_directory = log_directory();
+        let mut diagnostics = Diagnostics::in_memory();
+        if let Some(sink) = log_directory.clone().and_then(FileSink::new) {
+            diagnostics = diagnostics.with_sink(Box::new(sink));
+        }
+        // Only when this build has somewhere to report to; the guard must
+        // outlive the process, so it is held here.
+        let reporting = start_error_reporting(reporting_environment(&backend_origin));
+        if reporting.is_some() {
+            diagnostics = diagnostics.with_sink(Box::new(BugsinkSink));
+        }
+        let diagnostics = Arc::new(diagnostics);
         let (shutdown, shutdown_receiver) = watch::channel(false);
         let (commands, command_receiver) = mpsc::unbounded_channel();
         let worker_state = Arc::clone(&state);
+        let worker_diagnostics = Arc::clone(&diagnostics);
         let thread = std::thread::spawn(move || {
             let runtime = match Runtime::new() {
                 Ok(runtime) => runtime,
                 Err(error) => {
+                    worker_diagnostics.record(
+                        DiagnosticEvent::new(
+                            DiagnosticLevel::Critical,
+                            DiagnosticCategory::Runtime,
+                            "start_collector",
+                            DiagnosticOutcome::Failed,
+                        )
+                        .with_detail(error.to_string()),
+                    );
                     set_error(
                         &worker_state,
                         format!("Could not start background runtime: {error}"),
@@ -98,6 +132,7 @@ impl ClientRuntime {
             };
             runtime.block_on(run_collector(
                 worker_state,
+                worker_diagnostics,
                 shutdown_receiver,
                 command_receiver,
                 backend_origin,
@@ -105,10 +140,25 @@ impl ClientRuntime {
         });
         Self {
             state,
+            diagnostics,
+            log_directory,
+            _reporting: reporting,
             commands,
             shutdown,
             _thread: thread,
         }
+    }
+
+    /// The diagnostics this client is accumulating.
+    #[must_use]
+    pub fn diagnostics(&self) -> &Arc<Diagnostics> {
+        &self.diagnostics
+    }
+
+    /// Where JSONL records are being written, when a file sink opened.
+    #[must_use]
+    pub fn log_directory(&self) -> Option<&Path> {
+        self.log_directory.as_deref()
     }
 
     /// Begin a new browser pairing request.
@@ -146,12 +196,28 @@ impl ClientRuntime {
 
 async fn run_collector(
     state: Arc<RwLock<RuntimeState>>,
+    diagnostics: Arc<Diagnostics>,
     mut shutdown: watch::Receiver<bool>,
     mut commands: mpsc::UnboundedReceiver<RuntimeCommand>,
     backend_origin: String,
 ) {
+    diagnostics.record(DiagnosticEvent::new(
+        DiagnosticLevel::Info,
+        DiagnosticCategory::Runtime,
+        "start_collector",
+        DiagnosticOutcome::Succeeded,
+    ));
     let Some((backend, mut credential, mut outbox)) = collector_resources(&state, &backend_origin)
     else {
+        diagnostics.record(
+            DiagnosticEvent::new(
+                DiagnosticLevel::Critical,
+                DiagnosticCategory::Runtime,
+                "open_resources",
+                DiagnosticOutcome::Failed,
+            )
+            .with_detail("backend client, credential store, or outbox unavailable"),
+        );
         return;
     };
     update_state(&state, |snapshot| snapshot.paired = credential.is_some());
@@ -210,6 +276,7 @@ async fn run_collector(
                         payloads: &mut payloads,
                         live_client: live_client.as_ref(),
                         tick_number,
+                        diagnostics: &diagnostics,
                     }).await
                 {
                     set_error(&state, error);
@@ -223,6 +290,7 @@ async fn run_collector(
                         &backend,
                         &outbox,
                         active_credential,
+                        &diagnostics,
                     ));
                 }
             }
@@ -239,6 +307,7 @@ struct ObservationTickContext<'a> {
     payloads: &'a mut HashMap<String, Vec<u8>>,
     live_client: Option<&'a LiveClient>,
     tick_number: u64,
+    diagnostics: &'a Diagnostics,
 }
 
 async fn collect_and_upload_observations(
@@ -250,6 +319,7 @@ async fn collect_and_upload_observations(
         context.outbox,
         context.credential,
         context.checked_in_device,
+        context.diagnostics,
     )
     .await
     {
@@ -283,6 +353,20 @@ async fn collect_and_upload_observations(
         )
         .await
     {
+        // A collection failure drops an observation before it is ever durable,
+        // so it leaves no trace anywhere else. An envelope the contract
+        // refuses — an empty platformId, say — looks from the outside exactly
+        // like a quiet client.
+        context.diagnostics.counters().observation_rejected();
+        context.diagnostics.record(
+            DiagnosticEvent::new(
+                DiagnosticLevel::Warn,
+                DiagnosticCategory::Protocol,
+                "collect_observations",
+                DiagnosticOutcome::Failed,
+            )
+            .with_detail(&error),
+        );
         tick_error.get_or_insert(error);
     }
     if upload_ready
@@ -291,6 +375,7 @@ async fn collect_and_upload_observations(
             context.backend,
             context.outbox,
             context.credential,
+            context.diagnostics,
         )
         .await
     {
@@ -330,11 +415,15 @@ fn start_replay_upload(
     backend: &ScoutBackendClient,
     outbox: &ObservationOutbox,
     credential: &DeviceCredential,
+    diagnostics: &Arc<Diagnostics>,
 ) -> ReplayUploadTask {
     let backend = backend.clone();
     let outbox = outbox.clone();
     let credential = credential.clone();
-    tokio::spawn(async move { upload_new_replays(&backend, &outbox, &credential).await })
+    let diagnostics = Arc::clone(diagnostics);
+    tokio::spawn(
+        async move { upload_new_replays(&backend, &outbox, &credential, &diagnostics).await },
+    )
 }
 
 fn cancel_replay_upload(task: &mut Option<ReplayUploadTask>) {
@@ -375,14 +464,16 @@ async fn ensure_checked_in(
     outbox: &ObservationOutbox,
     credential: &DeviceCredential,
     checked_in_device: &mut Option<Uuid>,
+    diagnostics: &Diagnostics,
 ) -> Result<(), String> {
     if *checked_in_device == Some(credential.device_id) {
         return Ok(());
     }
-    let next_sequence = backend
+    let started = std::time::Instant::now();
+    let outcome = backend
         .check_in(credential, env!("CARGO_PKG_VERSION"))
-        .await
-        .map_err(|error| error.to_string())?;
+        .await;
+    let next_sequence = record_backend_outcome(diagnostics, "check_in", started, outcome, None)?;
     outbox
         .ensure_next_sequence_at_least(next_sequence)
         .map_err(|error| error.to_string())?;
@@ -404,7 +495,11 @@ async fn upload_new_replays(
     backend: &ScoutBackendClient,
     outbox: &ObservationOutbox,
     credential: &DeviceCredential,
+    diagnostics: &Diagnostics,
 ) -> Result<(), String> {
+    // Collected rather than returned on sight: a failure on one file must not
+    // skip every replay behind it in the directory.
+    let mut scan_error: Option<String> = None;
     let Some(lockfile) = optional_lockfile(discover_lockfile())? else {
         return Ok(());
     };
@@ -424,20 +519,45 @@ async fn upload_new_replays(
     };
     for entry in std::fs::read_dir(replay_path).map_err(|error| error.to_string())? {
         let entry = entry.map_err(|error| error.to_string())?;
+        match scan_replay_entry(backend, outbox, credential, diagnostics, &entry).await? {
+            ReplayDelivery::Settled | ReplayDelivery::Deferred => {}
+            ReplayDelivery::Unresolved(detail) => {
+                scan_error.get_or_insert(detail);
+            }
+        }
+    }
+    match scan_error {
+        Some(error) => Err(error),
+        None => Ok(()),
+    }
+}
+
+/// Consider one directory entry, and deliver it when it is a settled replay.
+///
+/// Entries that are not finished replays are reported as `Settled`: there is
+/// nothing to deliver and nothing to report.
+async fn scan_replay_entry(
+    backend: &ScoutBackendClient,
+    outbox: &ObservationOutbox,
+    credential: &DeviceCredential,
+    diagnostics: &Diagnostics,
+    entry: &std::fs::DirEntry,
+) -> Result<ReplayDelivery, String> {
+    {
         if !entry
             .file_type()
             .map_err(|error| error.to_string())?
             .is_file()
         {
-            continue;
+            return Ok(ReplayDelivery::Settled);
         }
         let path = entry.path();
         if path.extension().and_then(|value| value.to_str()) != Some("rofl") {
-            continue;
+            return Ok(ReplayDelivery::Settled);
         }
         let metadata = entry.metadata().map_err(|error| error.to_string())?;
         if metadata.len() == 0 || metadata.len() > 512 * 1024 * 1024 {
-            continue;
+            return Ok(ReplayDelivery::Settled);
         }
         let is_stable = metadata
             .modified()
@@ -445,10 +565,11 @@ async fn upload_new_replays(
             .and_then(|modified| modified.elapsed().ok())
             .is_some_and(|age| age >= Duration::from_secs(30));
         if !is_stable {
-            continue;
+            return Ok(ReplayDelivery::Settled);
         }
+        let platform_id = replay_platform_id(&path);
         let Some(game_id) = replay_game_id(&path) else {
-            continue;
+            return Ok(ReplayDelivery::Settled);
         };
         let path_key = path.to_string_lossy().into_owned();
         let bytes = i64::try_from(metadata.len())
@@ -466,7 +587,7 @@ async fn upload_new_replays(
             .replay_file_handled(&path_key, bytes, modified_at_millis)
             .map_err(|error| error.to_string())?
         {
-            continue;
+            return Ok(ReplayDelivery::Settled);
         }
         let digest = replay_sha256(path.clone()).await?;
         if outbox
@@ -476,32 +597,446 @@ async fn upload_new_replays(
             outbox
                 .mark_replay_file_handled(&path_key, bytes, modified_at_millis, &digest)
                 .map_err(|error| error.to_string())?;
-            continue;
+            return Ok(ReplayDelivery::Settled);
         }
-        match backend
-            .upload_replay(credential, &game_id, &digest, &path)
-            .await
+        match deliver_replay(
+            backend,
+            outbox,
+            credential,
+            diagnostics,
+            &ReplayCandidate {
+                game_id: &game_id,
+                platform_id: platform_id.as_deref(),
+                digest: &digest,
+                path: &path,
+                bytes: metadata.len(),
+            },
+        )
+        .await?
         {
-            Ok(_) => outbox
-                .mark_replay_uploaded(&digest, &game_id)
-                .map_err(|error| error.to_string())?,
-            Err(error) => {
-                if error.replay_should_be_deferred() {
-                    continue;
-                }
-                let Some(status) = error.terminal_replay_rejection_status() else {
-                    return Err(error.to_string());
-                };
-                outbox
-                    .mark_replay_rejected(&digest, &game_id, status)
-                    .map_err(|outbox_error| outbox_error.to_string())?;
+            // A deferral leaves the file unhandled on purpose, so the next
+            // scan offers it again.
+            ReplayDelivery::Deferred => return Ok(ReplayDelivery::Deferred),
+            ReplayDelivery::Unresolved(detail) => {
+                return Ok(ReplayDelivery::Unresolved(detail));
             }
+            ReplayDelivery::Settled => {}
         }
         outbox
             .mark_replay_file_handled(&path_key, bytes, modified_at_millis, &digest)
             .map_err(|error| error.to_string())?;
+        Ok(ReplayDelivery::Settled)
     }
-    Ok(())
+}
+
+/// Number of deferrals after which a replay is worth a warning.
+const REPLAY_DEFERRAL_ATTENTION_ATTEMPTS: i64 = 5;
+/// Deferrals after which a replay stops being offered at all.
+///
+/// A game nobody can vouch for is usually a game nobody ever will: it was
+/// played before this account had a client watching, and it has already aged
+/// out of the twenty-game match history the client can read. Retrying it every
+/// scan forever costs a request each time and buries everything else in the
+/// diagnostics.
+const REPLAY_DEFERRAL_LIMIT: i64 = 12;
+
+/// What the offer settled, before any bytes are read.
+enum ReplayOfferOutcome {
+    /// The server wants it; upload.
+    Send,
+    /// Nothing more to do for this file, now or ever.
+    Settled,
+    /// Ask again on a later scan.
+    Deferred,
+    /// The offer itself failed; record it and move to the next file.
+    Unresolved(String),
+}
+
+/// Record one Scout backend call and hand back its result as a message.
+///
+/// The client used to stringify a `BackendError` at the first call boundary,
+/// which threw away the status before anything could count or branch on it.
+/// Every caller now goes through here, so the counters and the log agree about
+/// what the server said.
+fn record_backend_outcome<T>(
+    diagnostics: &Diagnostics,
+    operation: &'static str,
+    started: std::time::Instant,
+    outcome: Result<T, BackendError>,
+    bytes: Option<u64>,
+) -> Result<T, String> {
+    let elapsed = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
+    let status = outcome.as_ref().err().and_then(BackendError::status);
+    diagnostics
+        .counters()
+        .http_response(outcome.as_ref().map_or(status, |_| Some(200)));
+    let (level, result) = match &outcome {
+        Ok(_) => (DiagnosticLevel::Info, DiagnosticOutcome::Succeeded),
+        Err(_) => (DiagnosticLevel::Error, DiagnosticOutcome::Failed),
+    };
+    let mut event = DiagnosticEvent::new(level, DiagnosticCategory::Backend, operation, result)
+        .with_duration_ms(elapsed);
+    if let Some(status) = status {
+        event = event.with_status(status);
+    }
+    if let Some(bytes) = bytes {
+        event = event.with_bytes(bytes);
+    }
+    if let Err(error) = &outcome {
+        event = event.with_detail(
+            error
+                .server_message()
+                .map_or_else(|| error.to_string(), str::to_owned),
+        );
+    }
+    diagnostics.record(event);
+    outcome.map_err(|error| error.to_string())
+}
+
+/// Ask before sending, and record what the server said.
+async fn offer_replay(
+    backend: &ScoutBackendClient,
+    outbox: &ObservationOutbox,
+    credential: &DeviceCredential,
+    diagnostics: &Diagnostics,
+    candidate: &ReplayCandidate<'_>,
+) -> Result<ReplayOfferOutcome, String> {
+    let started = std::time::Instant::now();
+    let outcome = backend
+        .offer_replay(
+            credential,
+            candidate.game_id,
+            &ReplayOffer {
+                digest: candidate.digest,
+                bytes: candidate.bytes,
+                platform_id: candidate.platform_id,
+            },
+        )
+        .await;
+    let duration_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
+    let status = outcome.as_ref().err().and_then(BackendError::status);
+    diagnostics.counters().http_response(status);
+
+    let decision = match outcome {
+        Ok(decision) => decision,
+        // A backend that predates the offer route has no opinion to give, so
+        // fall back to the behaviour that existed before it: upload and let
+        // the server refuse. This keeps a client that ships ahead of its
+        // server working rather than stalling every replay on a 404.
+        Err(error) if status == Some(404) => {
+            record_replay_event(
+                diagnostics,
+                ReplayEvent {
+                    level: DiagnosticLevel::Info,
+                    operation: "offer_replay",
+                    outcome: DiagnosticOutcome::Skipped,
+                    status,
+                    duration_ms,
+                    bytes: candidate.bytes,
+                    detail: Some("backend does not accept offers yet".to_owned()),
+                },
+            );
+            let _ = error;
+            return Ok(ReplayOfferOutcome::Send);
+        }
+        Err(error) => {
+            let detail = error
+                .server_message()
+                .map_or_else(|| error.to_string(), str::to_owned);
+            record_replay_event(
+                diagnostics,
+                ReplayEvent {
+                    level: DiagnosticLevel::Error,
+                    operation: "offer_replay",
+                    outcome: DiagnosticOutcome::Failed,
+                    status,
+                    duration_ms,
+                    bytes: candidate.bytes,
+                    detail: Some(detail.clone()),
+                },
+            );
+            return Ok(ReplayOfferOutcome::Unresolved(detail));
+        }
+    };
+
+    let (level, result, detail) = match decision {
+        ReplayOfferDecision::Want => (
+            DiagnosticLevel::Info,
+            DiagnosticOutcome::Succeeded,
+            "wanted",
+        ),
+        ReplayOfferDecision::Have => (
+            DiagnosticLevel::Info,
+            DiagnosticOutcome::Skipped,
+            "already stored",
+        ),
+        ReplayOfferDecision::Never => (
+            DiagnosticLevel::Warn,
+            DiagnosticOutcome::Failed,
+            "refused for good",
+        ),
+        ReplayOfferDecision::Later => (
+            DiagnosticLevel::Info,
+            DiagnosticOutcome::Deferred,
+            "no evidence yet",
+        ),
+    };
+    record_replay_event(
+        diagnostics,
+        ReplayEvent {
+            level,
+            operation: "offer_replay",
+            outcome: result,
+            status,
+            duration_ms,
+            bytes: candidate.bytes,
+            detail: Some(detail.to_owned()),
+        },
+    );
+    apply_offer_decision(outbox, diagnostics, candidate, decision, duration_ms)
+}
+
+/// Turn the server's answer into a durable local receipt.
+fn apply_offer_decision(
+    outbox: &ObservationOutbox,
+    diagnostics: &Diagnostics,
+    candidate: &ReplayCandidate<'_>,
+    decision: ReplayOfferDecision,
+    duration_ms: u64,
+) -> Result<ReplayOfferOutcome, String> {
+    match decision {
+        ReplayOfferDecision::Want => Ok(ReplayOfferOutcome::Send),
+        ReplayOfferDecision::Have => {
+            outbox
+                .mark_replay_uploaded(candidate.digest, candidate.game_id)
+                .map_err(|error| error.to_string())?;
+            Ok(ReplayOfferOutcome::Settled)
+        }
+        ReplayOfferDecision::Never => {
+            diagnostics.counters().replay_abandoned();
+            abandon_replay(outbox, candidate)?;
+            Ok(ReplayOfferOutcome::Settled)
+        }
+        ReplayOfferDecision::Later => {
+            diagnostics.counters().replay_deferred();
+            let attempts = outbox
+                .record_replay_deferral(candidate.digest, candidate.game_id)
+                .map_err(|error| error.to_string())?;
+            if attempts < REPLAY_DEFERRAL_LIMIT {
+                if attempts >= REPLAY_DEFERRAL_ATTENTION_ATTEMPTS {
+                    // Still retryable, but long enough to be worth noticing.
+                    record_replay_event(
+                        diagnostics,
+                        ReplayEvent {
+                            level: DiagnosticLevel::Warn,
+                            operation: "offer_replay",
+                            outcome: DiagnosticOutcome::Deferred,
+                            status: None,
+                            duration_ms,
+                            bytes: candidate.bytes,
+                            detail: Some(format!("still no evidence after {attempts} offers")),
+                        },
+                    );
+                }
+                return Ok(ReplayOfferOutcome::Deferred);
+            }
+            diagnostics.counters().replay_abandoned();
+            record_replay_event(
+                diagnostics,
+                ReplayEvent {
+                    level: DiagnosticLevel::Warn,
+                    operation: "abandon_replay",
+                    outcome: DiagnosticOutcome::Failed,
+                    status: None,
+                    duration_ms,
+                    bytes: candidate.bytes,
+                    detail: Some(format!("no evidence after {attempts} offers")),
+                },
+            );
+            abandon_replay(outbox, candidate)?;
+            Ok(ReplayOfferOutcome::Settled)
+        }
+    }
+}
+
+/// Write the terminal receipt that stops a replay being offered ever again.
+fn abandon_replay(
+    outbox: &ObservationOutbox,
+    candidate: &ReplayCandidate<'_>,
+) -> Result<(), String> {
+    outbox
+        .mark_replay_rejected(candidate.digest, candidate.game_id, 409)
+        .map_err(|error| error.to_string())
+}
+
+/// One discovered replay, ready to offer to the backend.
+struct ReplayCandidate<'a> {
+    game_id: &'a str,
+    /// Platform the filename named, when it carried one.
+    platform_id: Option<&'a str>,
+    digest: &'a str,
+    path: &'a Path,
+    bytes: u64,
+}
+
+/// What one upload attempt settled.
+enum ReplayDelivery {
+    /// Stored or permanently rejected; the file needs no further attention.
+    Settled,
+    /// The backend said "not yet"; leave the file for a later scan.
+    Deferred,
+    /// Neither: the scan records the reason and moves to the next file.
+    Unresolved(String),
+}
+
+/// Offer one replay to the backend and classify what came back.
+///
+/// Returns `Err` only when the local outbox cannot record the outcome, which
+/// is a broken local invariant rather than a delivery result.
+async fn deliver_replay(
+    backend: &ScoutBackendClient,
+    outbox: &ObservationOutbox,
+    credential: &DeviceCredential,
+    diagnostics: &Diagnostics,
+    candidate: &ReplayCandidate<'_>,
+) -> Result<ReplayDelivery, String> {
+    match offer_replay(backend, outbox, credential, diagnostics, candidate).await? {
+        ReplayOfferOutcome::Send => {}
+        ReplayOfferOutcome::Settled => return Ok(ReplayDelivery::Settled),
+        ReplayOfferOutcome::Deferred => return Ok(ReplayDelivery::Deferred),
+        ReplayOfferOutcome::Unresolved(detail) => {
+            return Ok(ReplayDelivery::Unresolved(detail));
+        }
+    }
+    diagnostics.counters().replay_attempted();
+    let started = std::time::Instant::now();
+    let outcome = backend
+        .upload_replay(
+            credential,
+            candidate.game_id,
+            candidate.digest,
+            candidate.platform_id,
+            candidate.path,
+        )
+        .await;
+    let elapsed = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
+    let status = outcome.as_ref().err().and_then(BackendError::status);
+    diagnostics.counters().http_response(status);
+
+    let Err(error) = outcome else {
+        diagnostics.counters().replay_uploaded();
+        record_replay_event(
+            diagnostics,
+            ReplayEvent {
+                level: DiagnosticLevel::Info,
+                operation: "upload_replay",
+                outcome: DiagnosticOutcome::Succeeded,
+                status,
+                duration_ms: elapsed,
+                bytes: candidate.bytes,
+                detail: None,
+            },
+        );
+        outbox
+            .mark_replay_uploaded(candidate.digest, candidate.game_id)
+            .map_err(|error| error.to_string())?;
+        return Ok(ReplayDelivery::Settled);
+    };
+
+    // The server's own words when it gave them, since a bare status has
+    // repeatedly proven to be the least useful half of the answer.
+    let detail = error
+        .server_message()
+        .map_or_else(|| error.to_string(), str::to_owned);
+
+    if error.replay_should_be_deferred() {
+        // The offer already cleared this replay, so a 409 here is a race —
+        // another device holding the claim — not missing evidence. It is not
+        // counted against the evidence tally the offer keeps.
+        diagnostics.counters().replay_deferred();
+        record_replay_event(
+            diagnostics,
+            ReplayEvent {
+                level: DiagnosticLevel::Info,
+                operation: "upload_replay",
+                outcome: DiagnosticOutcome::Deferred,
+                status,
+                duration_ms: elapsed,
+                bytes: candidate.bytes,
+                detail: Some(detail),
+            },
+        );
+        return Ok(ReplayDelivery::Deferred);
+    }
+
+    let Some(terminal) = error.terminal_replay_rejection_status() else {
+        // Anything else used to return, which skipped every remaining replay
+        // in the directory. One unhappy file must not decide the fate of the
+        // whole scan.
+        record_replay_event(
+            diagnostics,
+            ReplayEvent {
+                level: DiagnosticLevel::Error,
+                operation: "upload_replay",
+                outcome: DiagnosticOutcome::Failed,
+                status,
+                duration_ms: elapsed,
+                bytes: candidate.bytes,
+                detail: Some(detail.clone()),
+            },
+        );
+        return Ok(ReplayDelivery::Unresolved(detail));
+    };
+
+    diagnostics.counters().replay_rejected();
+    record_replay_event(
+        diagnostics,
+        ReplayEvent {
+            level: DiagnosticLevel::Error,
+            operation: "upload_replay",
+            outcome: DiagnosticOutcome::Failed,
+            status: Some(terminal),
+            duration_ms: elapsed,
+            bytes: candidate.bytes,
+            detail: Some(detail),
+        },
+    );
+    outbox
+        .mark_replay_rejected(candidate.digest, candidate.game_id, terminal)
+        .map_err(|outbox_error| outbox_error.to_string())?;
+    Ok(ReplayDelivery::Settled)
+}
+
+/// One thing that happened to one replay.
+///
+/// The game id and digest are deliberately absent: they identify a player's
+/// match, and the counters plus status already answer what diagnostics are for.
+struct ReplayEvent {
+    level: DiagnosticLevel,
+    operation: &'static str,
+    outcome: DiagnosticOutcome,
+    status: Option<u16>,
+    duration_ms: u64,
+    bytes: u64,
+    detail: Option<String>,
+}
+
+fn record_replay_event(diagnostics: &Diagnostics, event: ReplayEvent) {
+    let mut record = DiagnosticEvent::new(
+        event.level,
+        DiagnosticCategory::Replay,
+        event.operation,
+        event.outcome,
+    )
+    .with_duration_ms(event.duration_ms)
+    .with_bytes(event.bytes);
+    if let Some(status) = event.status {
+        record = record.with_status(status);
+    }
+    if let Some(detail) = event.detail {
+        record = record.with_detail(detail);
+    }
+    diagnostics.record(record);
 }
 
 fn optional_lockfile(
@@ -523,6 +1058,24 @@ fn replay_game_id(path: &Path) -> Option<String> {
         .map(str::to_owned)
 }
 
+/// The platform a replay filename names, as in the `NA1` of `NA1-123456.rofl`.
+///
+/// Riot names a match `NA1_123456`, but the upload route carries only the
+/// digits. Dropping the prefix leaves the server unable to build the canonical
+/// match id it needs to look the game up, so it is recovered here and sent
+/// alongside. A stem without one is not an error — the server falls back to the
+/// regions the account has registered.
+fn replay_platform_id(path: &Path) -> Option<String> {
+    let stem = path.file_stem()?.to_str()?;
+    let head = stem.split(['-', '_']).next()?;
+    let letters = head.chars().take_while(char::is_ascii_alphabetic).count();
+    let digits = head.get(letters..)?;
+    let shaped = (2..=4).contains(&letters)
+        && digits.len() <= 2
+        && digits.chars().all(|character| character.is_ascii_digit());
+    shaped.then(|| head.to_ascii_uppercase())
+}
+
 async fn replay_sha256(path: PathBuf) -> Result<String, String> {
     tokio::task::spawn_blocking(move || {
         let mut file = std::fs::File::open(path).map_err(|error| error.to_string())?;
@@ -535,7 +1088,7 @@ async fn replay_sha256(path: PathBuf) -> Result<String, String> {
             }
             hasher.update(&buffer[..count]);
         }
-        Ok(format!("{:x}", hasher.finalize()))
+        Ok(hex::encode(hasher.finalize()))
     })
     .await
     .map_err(|error| format!("Replay hashing task failed: {error}"))?
@@ -681,6 +1234,7 @@ async fn upload_pending(
     backend: &ScoutBackendClient,
     outbox: &ObservationOutbox,
     credential: &DeviceCredential,
+    diagnostics: &Diagnostics,
 ) -> Result<(), String> {
     let pending = outbox.pending(100).map_err(|error| error.to_string())?;
     if pending.is_empty() {
@@ -702,10 +1256,17 @@ async fn upload_pending(
         .cloned()
         .map(|observation| (observation.observation_id, observation))
         .collect();
-    let receipt = backend
-        .upload_observations(credential, &batch)
-        .await
-        .map_err(|error| error.to_string())?;
+    let submitted_count = submitted.len() as u64;
+    let started = std::time::Instant::now();
+    let outcome = backend.upload_observations(credential, &batch).await;
+    let receipt = record_backend_outcome(
+        diagnostics,
+        "upload_observations",
+        started,
+        outcome,
+        Some(submitted_count),
+    )?;
+    diagnostics.counters().observation_uploaded(submitted_count);
     for item in receipt.receipts {
         if let Some(observation) = submitted.get(&item.observation_id) {
             apply_observation_receipt(outbox, observation, &item, &receipt.server_time)?;
@@ -1301,15 +1862,26 @@ fn create_observation(
     Ok(observation)
 }
 
+/// The first non-empty value for any of `keys`, searched depth-first.
+///
+/// An empty string counts as ABSENT rather than as a value. The League client
+/// answers `""` for a field it has no value for yet — `platformId` before a
+/// game is assigned, for instance — and every envelope field filled from here
+/// is an `Option` that `ObservationEnvelope::validate` is happy to see unset
+/// but rejects at length zero. Returning `Some("")` therefore failed the whole
+/// observation, and a post-game observation that never validates is one that
+/// never reaches Scout at all. Skipping the empty value also lets the search
+/// continue into nested objects, where the real value usually is.
 fn find_string(value: &Value, keys: &[&str]) -> Option<String> {
     match value {
         Value::Object(object) => {
             for key in keys {
                 if let Some(candidate) = object.get(*key) {
                     if let Some(value) = candidate.as_str() {
-                        return Some(value.to_owned());
-                    }
-                    if let Some(value) = candidate.as_u64() {
+                        if !value.is_empty() {
+                            return Some(value.to_owned());
+                        }
+                    } else if let Some(value) = candidate.as_u64() {
                         return Some(value.to_string());
                     }
                 }
@@ -1328,19 +1900,31 @@ fn outbox_file_name(backend_origin: &str, device_id: Option<Uuid>) -> String {
     if let Some(device_id) = device_id {
         hasher.update(device_id.as_bytes());
     }
-    format!("outbox-{:x}.db", hasher.finalize())
+    format!("outbox-{}.db", hex::encode(hasher.finalize()))
+}
+
+/// The per-user directory holding the outbox and the diagnostics log.
+fn data_directory() -> Option<PathBuf> {
+    let project = ProjectDirs::from("com", "Scout", "Scout Client")?;
+    let directory = project.data_local_dir().to_path_buf();
+    if let Err(error) = std::fs::create_dir_all(&directory) {
+        error!(%error, "could not create Scout Client data directory");
+        return None;
+    }
+    Some(directory)
+}
+
+/// Where rotated JSONL diagnostics are written.
+fn log_directory() -> Option<PathBuf> {
+    Some(data_directory()?.join("logs"))
 }
 
 fn outbox_path(backend_origin: &str, device_id: Option<Uuid>) -> PathBuf {
     let file_name = outbox_file_name(backend_origin, device_id);
-    if let Some(project) = ProjectDirs::from("com", "Scout", "Scout Client") {
-        let directory = project.data_local_dir();
-        if let Err(error) = std::fs::create_dir_all(directory) {
-            error!(%error, "could not create Scout Client data directory");
-        }
-        return directory.join(file_name);
-    }
-    std::env::temp_dir().join(file_name)
+    data_directory().map_or_else(
+        || std::env::temp_dir().join(&file_name),
+        |directory| directory.join(&file_name),
+    )
 }
 
 fn set_error(state: &Arc<RwLock<RuntimeState>>, message: String) {
@@ -1388,6 +1972,7 @@ fn update_state(state: &Arc<RwLock<RuntimeState>>, update: impl FnOnce(&mut Runt
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
     use std::sync::{Arc, RwLock};
 
     use scout_client_core::lcu::LcuError;
@@ -1402,9 +1987,96 @@ mod tests {
 
     use super::{
         RuntimeState, apply_observation_receipt, clear_replay_error, clear_runtime_error,
-        game_start_evidence, optional_lockfile, outbox_file_name, set_error, set_replay_error,
-        should_emit_live_game_frame, should_refresh_lobby, update_state,
+        find_string, game_start_evidence, optional_lockfile, outbox_file_name, replay_platform_id,
+        replay_sha256, set_error, set_replay_error, should_emit_live_game_frame,
+        should_refresh_lobby, update_state,
     };
+
+    #[test]
+    fn recovers_the_platform_a_replay_filename_names() {
+        // Riot names a match NA1_123456 but the upload route carries only the
+        // digits, so the prefix has to travel separately or the server cannot
+        // build the canonical match id.
+        assert_eq!(
+            replay_platform_id(Path::new("NA1-5565990955.rofl")),
+            Some("NA1".to_owned())
+        );
+        assert_eq!(
+            replay_platform_id(Path::new("euw1-123456.rofl")),
+            Some("EUW1".to_owned())
+        );
+        assert_eq!(
+            replay_platform_id(Path::new("RU_987654.rofl")),
+            Some("RU".to_owned())
+        );
+    }
+
+    #[test]
+    fn a_nameless_replay_reports_no_platform_rather_than_a_wrong_one() {
+        // Absence is fine: the server falls back to the regions the account
+        // has registered. A guess would not be.
+        assert_eq!(replay_platform_id(Path::new("5565990955.rofl")), None);
+        assert_eq!(replay_platform_id(Path::new("replay.rofl")), None);
+        assert_eq!(replay_platform_id(Path::new("TOOLONG1-123.rofl")), None);
+    }
+
+    #[test]
+    fn empty_league_strings_are_absent_rather_than_zero_length_values() {
+        // The League client answers "" for a field it has no value for yet.
+        // Reporting that as Some("") failed envelope validation and dropped the
+        // whole observation, so every field filled by find_string is affected.
+        for key in ["platformId", "gameId", "lobbyId", "gameVersion"] {
+            assert_eq!(find_string(&json!({ key: "" }), &[key]), None, "{key}");
+        }
+    }
+
+    #[test]
+    fn an_empty_value_does_not_hide_a_nested_one() {
+        let payload = json!({
+            "platformId": "",
+            "gameData": { "platformId": "NA1" },
+        });
+        assert_eq!(
+            find_string(&payload, &["platformId"]),
+            Some("NA1".to_owned())
+        );
+    }
+
+    #[test]
+    fn present_values_are_still_found_in_either_spelling() {
+        assert_eq!(
+            find_string(&json!({ "platformId": "EUW1" }), &["platformId"]),
+            Some("EUW1".to_owned())
+        );
+        assert_eq!(
+            find_string(&json!({ "gameId": 5_565_990_955_u64 }), &["gameId"]),
+            Some("5565990955".to_owned())
+        );
+        assert_eq!(
+            find_string(&json!({ "lobbyId": "abc" }), &["lobbyId", "partyId"]),
+            Some("abc".to_owned())
+        );
+    }
+
+    #[test]
+    fn an_empty_post_game_platform_id_still_yields_a_valid_envelope() {
+        // The exact shape observed in the field: a post_game payload whose
+        // platformId is blank must validate, not be rejected at length zero.
+        let constructed = ObservationEnvelope::new(
+            1,
+            ObservationKind::PostGame,
+            "0.1.0",
+            json!({ "resource": "end_of_game", "data": { "platformId": "", "gameId": 5_565_990_955_u64 } }),
+        );
+        let Ok(mut envelope) = constructed else {
+            unreachable!("a post_game envelope must construct")
+        };
+        envelope.platform_id = find_string(&envelope.payload, &["platformId"]);
+        envelope.game_id = find_string(&envelope.payload, &["gameId"]);
+        assert_eq!(envelope.platform_id, None);
+        assert_eq!(envelope.game_id, Some("5565990955".to_owned()));
+        assert!(envelope.validate().is_ok());
+    }
 
     #[test]
     fn stopped_league_is_not_a_replay_upload_error() {
@@ -1448,6 +2120,35 @@ mod tests {
             production,
             outbox_file_name("https://scout.sjer.red/", None)
         );
+    }
+
+    #[test]
+    fn outbox_file_names_match_persisted_databases() -> Result<(), uuid::Error> {
+        let device = Uuid::parse_str("00000000-0000-4000-8000-000000000001")?;
+
+        assert_eq!(
+            outbox_file_name("https://scout.sjer.red/", Some(device)),
+            "outbox-40889348c35a9742e33afe72090bb52b06193e3200cfa3181b3e6198e4922c81.db"
+        );
+        assert_eq!(
+            outbox_file_name("https://scout.sjer.red/", None),
+            "outbox-c0946c92d24dd4e6623c7d20a280d2d4dbe353ae2ec788d10824fc54711af925.db"
+        );
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn replay_digests_are_lowercase_sha256_hex() -> Result<(), Box<dyn std::error::Error>> {
+        let path = std::env::temp_dir().join(format!("scout-replay-{}.rofl", Uuid::new_v4()));
+        std::fs::write(&path, b"scout replay fixture")?;
+        let digest = replay_sha256(path.clone()).await;
+        std::fs::remove_file(&path)?;
+
+        assert_eq!(
+            digest?,
+            "f19101066a2b69c3f27c11a55b3b9dc753e5ede5feccb37e41170ea6dcdfb33f"
+        );
+        Ok(())
     }
 
     #[test]

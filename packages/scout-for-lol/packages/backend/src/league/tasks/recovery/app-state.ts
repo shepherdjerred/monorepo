@@ -46,6 +46,11 @@ function pollOpening(startedAt: Date) {
   };
 }
 
+/** A fresh poll: opened, and not yet renewed by the claim's holder. */
+function freshPollOpening(startedAt: Date) {
+  return { ...pollOpening(startedAt), pollClaimRenewedAt: null };
+}
+
 /**
  * Open the post-match poll unconditionally — v1's own start, which overwrites
  * whatever poll status stands. v1 serializes its polls in-process and through
@@ -57,8 +62,8 @@ export async function markPostMatchPollStarted(
 ): Promise<void> {
   await prismaClient.botState.upsert({
     where: { id: BOT_STATE_ID },
-    update: pollOpening(startedAt),
-    create: { id: BOT_STATE_ID, ...pollOpening(startedAt) },
+    update: freshPollOpening(startedAt),
+    create: { id: BOT_STATE_ID, ...freshPollOpening(startedAt) },
   });
 }
 
@@ -72,7 +77,9 @@ export async function markPostMatchPollStarted(
  * only a run that was TERMINATED — by an operator, or by an exhausted
  * maintenance retry with the database unreachable — leaves a claim standing,
  * and the threshold is the safety valve for that case rather than a bound on
- * an ordinary run. It is deliberately much longer than the five-minute
+ * an ordinary run. A holder that runs longer than the bound keeps its claim
+ * live with {@link renewPostMatchPollClaim}: the bound is measured from the
+ * later of the claim and its last renewal. It is deliberately much longer than the five-minute
  * in-process valve v1's poll uses, which guards one Activity's span: a false
  * takeover of a live run fails that run's maintenance loudly at the close.
  */
@@ -129,20 +136,37 @@ export async function claimPostMatchPoll(
 ): Promise<PostMatchPollClaim> {
   const staleAfterMs = input.staleAfterMs ?? POST_MATCH_POLL_STALE_AFTER_MS;
   const staleBefore = new Date(input.startedAt.getTime() - staleAfterMs);
+  const owner: PostMatchPollOwner = { startedAt: input.startedAt };
+  // The holder re-presenting its own claim, as a retried Activity or the
+  // delegated v1 pass does. It keeps the claim's renewal, so re-opening late
+  // cannot make a live claim look stale.
+  const retaken = await prismaClient.botState.updateMany({
+    where: {
+      id: BOT_STATE_ID,
+      pollStatus: "running",
+      pollStartedAt: input.startedAt,
+    },
+    data: pollOpening(input.startedAt),
+  });
+  if (retaken.count === 1) return { outcome: "claimed", owner };
   const holdableWhere = {
     id: BOT_STATE_ID,
     OR: [
       { pollStatus: { not: "running" } },
       { pollStartedAt: null },
-      { pollStartedAt: { lt: staleBefore } },
-      { pollStartedAt: input.startedAt },
+      {
+        pollStartedAt: { lt: staleBefore },
+        OR: [
+          { pollClaimRenewedAt: null },
+          { pollClaimRenewedAt: { lt: staleBefore } },
+        ],
+      },
     ],
   };
-  const owner: PostMatchPollOwner = { startedAt: input.startedAt };
   for (let attempt = 0; attempt < 2; attempt += 1) {
     const claimed = await prismaClient.botState.updateMany({
       where: holdableWhere,
-      data: pollOpening(input.startedAt),
+      data: freshPollOpening(input.startedAt),
     });
     if (claimed.count === 1) return { outcome: "claimed", owner };
     const standing = await prismaClient.botState.findUnique({
@@ -152,7 +176,7 @@ export async function claimPostMatchPoll(
       return { outcome: "held", since: standing.pollStartedAt };
     }
     const created = await prismaClient.botState.createMany({
-      data: [{ id: BOT_STATE_ID, ...pollOpening(input.startedAt) }],
+      data: [{ id: BOT_STATE_ID, ...freshPollOpening(input.startedAt) }],
       skipDuplicates: true,
     });
     if (created.count === 1) return { outcome: "claimed", owner };
@@ -162,6 +186,28 @@ export async function claimPostMatchPoll(
   throw new Error(
     "Could not claim the post-match poll: the BotState row kept changing under both the update and the insert",
   );
+}
+
+/**
+ * Keep a held claim live past the staleness bound.
+ *
+ * Applied only while the row still names `owner`'s poll as the running one,
+ * so renewing never revives a claim that was closed or taken over. Returns
+ * whether the claim was renewed.
+ */
+export async function renewPostMatchPollClaim(
+  input: { owner: PostMatchPollOwner; renewedAt: Date },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<boolean> {
+  const renewed = await prismaClient.botState.updateMany({
+    where: {
+      id: BOT_STATE_ID,
+      pollStatus: "running",
+      pollStartedAt: input.owner.startedAt,
+    },
+    data: { pollClaimRenewedAt: input.renewedAt },
+  });
+  return renewed.count === 1;
 }
 
 /**
