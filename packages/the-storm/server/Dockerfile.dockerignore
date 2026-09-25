@@ -1,0 +1,5 @@
+# Build context is packages/the-storm; keep local build output and caches out.
+**/build/
+**/.gradle/
+**/node_modules/
+**/.DS_Store

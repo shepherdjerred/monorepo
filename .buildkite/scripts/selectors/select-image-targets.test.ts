@@ -110,6 +110,29 @@ describe("selectImageTargets", () => {
     }
   });
 
+  test("rebuilds infra when The Storm's server image inputs change", async () => {
+    for (const path of [
+      "packages/the-storm/server/Dockerfile",
+      "packages/the-storm/server/plugins.json",
+      "packages/the-storm/server/owned/plugins/TheStorm/config.yml",
+      "packages/the-storm/server/patches/spigot.json",
+      "packages/the-storm/plugin/core/src/main/java/Example.java",
+      "packages/the-storm/plugin/gradle/libs.versions.toml",
+    ]) {
+      expect(await select([path])).toEqual(["infra"]);
+    }
+  });
+
+  test("leaves images alone for The Storm files outside the image context", async () => {
+    for (const path of [
+      "packages/the-storm/README.md",
+      "packages/the-storm/package.json",
+      "packages/the-storm/tests/e2e/boot.test.ts",
+    ]) {
+      expect(await select([path])).toEqual([]);
+    }
+  });
+
   test("selects toolkit's transitive image consumer", async () => {
     expect(await select(["packages/toolkit/src/commands/pr.ts"])).toEqual([
       "temporal-worker",

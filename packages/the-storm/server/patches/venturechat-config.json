@@ -1,0 +1,41 @@
+{
+  "file": "/data/plugins/VentureChat/config.yml",
+  "ops": [
+    {
+      "$set": {
+        "path": "$.filters",
+        "value": []
+      }
+    },
+    {
+      "$set": {
+        "path": "$.antispam.spamnumber",
+        "value": 20
+      }
+    },
+    {
+      "$set": {
+        "path": "$.enable_towny_channel",
+        "value": true
+      }
+    },
+    {
+      "$set": {
+        "path": "$.channels.Global.chatcolor",
+        "value": "white"
+      }
+    },
+    {
+      "$set": {
+        "path": "$.channels.Global.channel_prefix",
+        "value": ""
+      }
+    },
+    {
+      "$set": {
+        "path": "$.channels.Global.format",
+        "value": "&f{player_displayname}:"
+      }
+    }
+  ]
+}
