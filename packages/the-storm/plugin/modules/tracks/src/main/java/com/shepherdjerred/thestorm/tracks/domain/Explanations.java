@@ -5,14 +5,29 @@ import com.shepherdjerred.thestorm.tracks.app.Quote;
 import com.shepherdjerred.thestorm.tracks.app.Track;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.function.LongFunction;
 
 /** Player-facing sentences for purchase and admin problems. */
 public final class Explanations {
 
-  private final TracksConfig config;
+  /** What a player whose tracks failed to load is told. */
+  public static final String LOAD_FAILED = "Your tracks could not be loaded; try again shortly.";
 
-  public Explanations(TracksConfig config) {
+  private final TracksConfig config;
+  private final LongFunction<String> crystals;
+
+  /**
+   * @param config track names
+   * @param crystals writes an amount of crystals for a sentence (the economy's formatter)
+   */
+  public Explanations(TracksConfig config, LongFunction<String> crystals) {
     this.config = config;
+    this.crystals = crystals;
+  }
+
+  /** {@code amount} crystals for a sentence, for example "1,500 crystals". */
+  public String crystals(long amount) {
+    return crystals.apply(amount);
   }
 
   /** {@code track}'s display name, for example "Mechanic". */
@@ -27,7 +42,7 @@ public final class Explanations {
 
   /** What {@code quote} buys and costs, for example "Mechanic II for 1,500 crystals". */
   public String offer(Quote quote) {
-    return ranked(quote.track(), quote.level()) + " for " + Wording.crystals(quote.cost());
+    return ranked(quote.track(), quote.level()) + " for " + crystals(quote.cost());
   }
 
   /** Why a purchase was refused, as of {@code now}. */
@@ -48,11 +63,13 @@ public final class Explanations {
       case PurchaseProblem.CoolingDown(var availableAt) ->
           "You can train again in " + Wording.wait(Duration.between(now, availableAt)) + ".";
       case PurchaseProblem.CannotAfford(var cost, var balance) ->
-          "You need " + Wording.crystals(cost) + " and have " + Wording.crystals(balance) + ".";
+          "You need " + crystals(cost) + " and have " + crystals(balance) + ".";
       case PurchaseProblem.QuoteChanged(var offered, var current) ->
           "The offer changed from " + offer(offered) + " to " + offer(current) + "; check again.";
       case PurchaseProblem.StillLoading() ->
           "Your tracks are still loading; try again in a moment.";
+      case PurchaseProblem.LoadFailed() -> LOAD_FAILED;
+      case PurchaseProblem.ShuttingDown() -> "The server is stopping; train again once it is back.";
       case PurchaseProblem.AlreadyBuying() ->
           "You are already buying a level; wait for it to finish.";
       case PurchaseProblem.NotRecorded(var quote) ->

@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -86,6 +87,20 @@ final class PerksCommandsTest {
     return fail("%s's tracks never loaded", name);
   }
 
+  /**
+   * Waits until {@code player}'s track groups, which sync off the main thread, are {@code want}.
+   */
+  private void awaitGroups(PlayerMock player, Set<String> want) throws InterruptedException {
+    for (var attempt = 0; attempt < 400; attempt++) {
+      if (plugin.permissions().groupsOf(player.getUniqueId()).equals(want)) {
+        return;
+      }
+      server.getScheduler().performOneTick();
+      Thread.sleep(5);
+    }
+    assertThat(plugin.permissions().groupsOf(player.getUniqueId())).isEqualTo(want);
+  }
+
   private void give(PlayerMock player, long crystals) {
     plugin.wallets.give(new AccountId.Player(player.getUniqueId()), crystals);
   }
@@ -128,8 +143,7 @@ final class PerksCommandsTest {
     assertThat(plugin.cache.level(alice.getUniqueId(), Track.MECHANIC)).isEqualTo(1);
     assertThat(plugin.wallets.balanceOf(new AccountId.Player(alice.getUniqueId())))
         .isEqualTo(4_000);
-    assertThat(plugin.permissions.groupsOf(alice.getUniqueId()))
-        .containsExactly("storm-mechanic-1");
+    awaitGroups(alice, Set.of("storm-mechanic-1"));
   }
 
   @Test
@@ -202,8 +216,32 @@ final class PerksCommandsTest {
     assertThat(awaitLine(alice, "An admin"))
         .contains("[Tracks]: An admin set your Mechanic to III.");
     assertThat(plugin.cache.level(alice.getUniqueId(), Track.MECHANIC)).isEqualTo(3);
-    assertThat(plugin.permissions.groupsOf(alice.getUniqueId()))
-        .containsExactly("storm-mechanic-3");
+    awaitGroups(alice, Set.of("storm-mechanic-3"));
+  }
+
+  @Test
+  void anAdminCanSetAnOfflinePlayerFoundInThePlayerDirectory() throws Exception {
+    var bob = join("Bob");
+    plugin.players.joined(bob.getUniqueId(), "Bob");
+    bob.disconnect();
+    var admin = join("Admin");
+    admin.setOp(true);
+
+    server.dispatchCommand(admin, "perks admin set bob engineer 2");
+
+    assertThat(awaitLine(admin, "Set Bob")).contains("[Tracks]: Set Bob's Engineer to II.");
+    awaitGroups(bob, Set.of("storm-engineer-2"));
+  }
+
+  @Test
+  void anAdminIsToldWhenNobodyHasThatName() throws Exception {
+    var admin = join("Admin");
+    admin.setOp(true);
+
+    server.dispatchCommand(admin, "perks admin reset Nobody");
+
+    assertThat(awaitLine(admin, "Nobody named"))
+        .contains("[Tracks]: Nobody named Nobody has played on The Storm.");
   }
 
   @Test
@@ -235,7 +273,7 @@ final class PerksCommandsTest {
     server.dispatchCommand(admin, "perks admin reset Alice");
     assertThat(awaitLine(admin, "Reset Alice")).contains("[Tracks]: Reset Alice's tracks.");
     assertThat(plugin.cache.level(alice.getUniqueId(), Track.MECHANIC)).isZero();
-    assertThat(plugin.permissions.groupsOf(alice.getUniqueId())).isEmpty();
+    awaitGroups(alice, Set.of());
   }
 
   @Test

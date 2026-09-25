@@ -10,10 +10,11 @@ import org.slf4j.helpers.NOPLogger;
 final class TestRuntime implements InstantSource {
 
   final InMemoryTrackStore store = new InMemoryTrackStore();
-  final FakePermissionSync permissions = new FakePermissionSync();
+  final FakePermissionSync permissions = new FakePermissionSync(store);
   final LevelCache cache = new LevelCache();
+  final FakeScheduler scheduler = new FakeScheduler();
   final TrackRuntime runtime =
-      new TrackRuntime(store, permissions, cache, Runnable::run, this, NOPLogger.NOP_LOGGER);
+      new TrackRuntime(store, permissions, cache, scheduler, this, NOPLogger.NOP_LOGGER);
   private Instant now = Progressions.NOW;
 
   @Override
