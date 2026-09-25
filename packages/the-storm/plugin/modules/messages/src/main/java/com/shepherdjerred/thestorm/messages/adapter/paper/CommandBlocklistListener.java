@@ -12,7 +12,8 @@ import org.bukkit.event.player.PlayerCommandSendEvent;
 
 /**
  * Stops players without the bypass permission from running, or tab-completing, commands that reveal
- * the server's plugins and version.
+ * the server's plugins and version, and hides every namespaced command (such as {@code
+ * worldedit:wand}) from their command list.
  */
 public final class CommandBlocklistListener implements Listener {
 
@@ -38,7 +39,7 @@ public final class CommandBlocklistListener implements Listener {
   @EventHandler
   public void onCommandList(PlayerCommandSendEvent event) {
     if (restricted(event.getPlayer())) {
-      event.getCommands().removeIf(blocklist::blocks);
+      event.getCommands().removeIf(blocklist::hidesFromClient);
     }
   }
 

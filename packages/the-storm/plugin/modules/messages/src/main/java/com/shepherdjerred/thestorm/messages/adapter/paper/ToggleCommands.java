@@ -6,27 +6,47 @@ import com.shepherdjerred.thestorm.core.text.HouseStyle;
 import com.shepherdjerred.thestorm.messages.domain.Channel;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 
-/** {@code /toggle-tips} and {@code /toggle-ads}: mute or unmute an announcement channel. */
+/**
+ * {@code /toggle-tips} and {@code /toggle-ads}: mute or unmute an announcement channel. Only the
+ * channels that are actually announced get a command.
+ */
 public final class ToggleCommands {
 
   private final PreferenceStore preferences;
+  private final Set<Channel> channels;
 
-  public ToggleCommands(PreferenceStore preferences) {
+  public ToggleCommands(PreferenceStore preferences, Set<Channel> channels) {
     this.preferences = preferences;
+    this.channels = channels.isEmpty() ? Set.of() : Set.copyOf(EnumSet.copyOf(channels));
   }
 
-  /** Registers both commands. */
+  /** Registers the command for each announced channel. */
   public void register(Commands registrar) {
-    registrar.register(node("toggle-tips", Channel.TIPS, "Tips"), "Turn tips on or off");
-    registrar.register(node("toggle-ads", Channel.ADS, "Ads"), "Turn ads on or off");
+    for (var node : nodes()) {
+      registrar.register(
+          node, "Turn " + node.getLiteral().substring("toggle-".length()) + " on or off");
+    }
   }
 
-  private LiteralCommandNode<CommandSourceStack> node(String name, Channel channel, String label) {
-    return Commands.literal(name)
+  /** The command nodes, in channel order. */
+  public List<LiteralCommandNode<CommandSourceStack>> nodes() {
+    return EnumSet.allOf(Channel.class).stream()
+        .filter(channels::contains)
+        .map(this::node)
+        .toList();
+  }
+
+  private LiteralCommandNode<CommandSourceStack> node(Channel channel) {
+    var label = label(channel);
+    return Commands.literal("toggle-" + label.toLowerCase(Locale.ROOT))
         .requires(source -> source.getSender() instanceof Player)
         .executes(
             context -> {
@@ -37,6 +57,14 @@ public final class ToggleCommands {
               return Command.SINGLE_SUCCESS;
             })
         .build();
+  }
+
+  /** The announcement label for {@code channel}, such as {@code Tips}. */
+  public static String label(Channel channel) {
+    return switch (channel) {
+      case TIPS -> "Tips";
+      case ADS -> "Ads";
+    };
   }
 
   private static Component state(String label, boolean on) {
