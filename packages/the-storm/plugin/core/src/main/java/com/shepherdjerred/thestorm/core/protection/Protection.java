@@ -18,4 +18,11 @@ public interface Protection {
    * protected, so callers do not ask about them.
    */
   Decision checkHarm(UUID attacker, Location attackerAt, HarmTarget target, Location victimAt);
+
+  /**
+   * Whether {@code a} and {@code b} lie on land with the same owner: the same town, the same admin
+   * region, or both in the wilderness. Used to stop effects that start on one owner's land (such as
+   * redstone power) from driving mechanisms on another's.
+   */
+  boolean sameLand(Location a, Location b);
 }
