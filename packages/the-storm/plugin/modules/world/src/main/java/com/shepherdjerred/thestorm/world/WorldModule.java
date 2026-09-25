@@ -2,8 +2,11 @@ package com.shepherdjerred.thestorm.world;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
+import com.shepherdjerred.thestorm.world.adapter.paper.WorldPaper;
+import com.shepherdjerred.thestorm.world.app.WildWorlds;
+import com.shepherdjerred.thestorm.world.domain.WorldConfig;
 
-/** Entry point of the world module. Scaffolded; not implemented yet. */
+/** Creates the extra overworlds and publishes {@link WildWorlds}. */
 public final class WorldModule implements StormModule {
 
   @Override
@@ -13,6 +16,9 @@ public final class WorldModule implements StormModule {
 
   @Override
   public void enable(ModuleContext context) {
-    context.logger().info("{} module enabled (scaffold)", id());
+    var config = context.loadConfig("world.yml", WorldConfig.class);
+    var worlds = WorldPaper.install(context.plugin().getServer(), config);
+    context.services().provide(WildWorlds.class, worlds);
+    context.logger().info("{} module created {}", id(), worlds.defaultWorld().name());
   }
 }

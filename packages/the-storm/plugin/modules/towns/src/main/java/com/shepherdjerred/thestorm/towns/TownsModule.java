@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.towns;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
 import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.core.protection.SettledLand;
 import com.shepherdjerred.thestorm.towns.adapter.db.JooqTownsStore;
 import com.shepherdjerred.thestorm.towns.adapter.paper.TownsPaper;
 import com.shepherdjerred.thestorm.towns.app.Clocks;
@@ -63,8 +64,9 @@ public final class TownsModule implements StormModule {
                             "Towns could not be reloaded after a failed save; changes are"
                                 + " refused until the server restarts",
                             failure)));
-    var protection = TownsPaper.install(context, state, towns, config);
-    context.services().provide(Protection.class, protection);
+    var installed = TownsPaper.install(context, state, towns, config);
+    context.services().provide(Protection.class, installed.protection());
+    context.services().provide(SettledLand.class, installed.settled());
     context
         .logger()
         .info(

@@ -1,4 +1,4 @@
-/** The world module. */
+/** Worlds this server adds beyond the three Paper creates itself. */
 @NullMarked
 package com.shepherdjerred.thestorm.world;
 

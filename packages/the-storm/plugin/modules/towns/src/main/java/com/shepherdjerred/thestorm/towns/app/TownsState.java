@@ -130,6 +130,34 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup {
     return List.copyOf(towns.values());
   }
 
+  /** Claim chunks and admin-region footprints in {@code world}. */
+  public List<ChunkPos> settledChunks(String world) {
+    var settled = new ArrayList<ChunkPos>();
+    addClaims(world, settled);
+    addRegions(world, settled);
+    return List.copyOf(settled);
+  }
+
+  private void addClaims(String world, List<ChunkPos> settled) {
+    var worldClaims = claims.get(world);
+    if (worldClaims == null) {
+      return;
+    }
+    for (var land : worldClaims.values()) {
+      settled.add(land.claim().chunk());
+    }
+  }
+
+  private void addRegions(String world, List<ChunkPos> settled) {
+    for (var region : regions.all()) {
+      for (var area : region.areas().all()) {
+        if (area.world().equals(world)) {
+          settled.addAll(area.footprint());
+        }
+      }
+    }
+  }
+
   /** Every claim {@code townId} holds. */
   public List<Claim> claimsOf(UUID townId) {
     var held = new ArrayList<Claim>();

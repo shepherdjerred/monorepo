@@ -1,0 +1,30 @@
+# Graves and random teleport. Owned by the repository; the plugin never writes it.
+# Durations are ISO-8601. The first freeFor after qol first sees a player, /rtp
+# costs nothing. After that it costs crystals. The cooldown applies either way.
+# A grave chest spills into drops after graveLifetime. Recent landings repel the
+# next teleport for landingMemory.
+
+freeFor: P7D
+cooldown: PT15S
+warmup: PT3S
+graveLifetime: PT10M
+landingMemory: PT5M
+cost: 25
+batchSize: 24
+minGap: 512
+band: 1500
+borderMargin: 128
+nearBestHundredths: 90
+biomes:
+  - plains
+  - forest
+  - dark_forest
+  - cherry_grove
+  - flower_forest
+  - desert
+  - savanna
+  - jungle
+  - taiga
+  - snowy_plains
+  - badlands
+  - swamp

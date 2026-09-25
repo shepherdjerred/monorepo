@@ -1,6 +1,8 @@
 /**
- * The land-protection port. The towns module provides the one implementation; every other module
- * asks it before letting a player change the world on their behalf.
+ * The land-protection ports. The towns module provides the implementations; every other module asks
+ * {@link com.shepherdjerred.thestorm.core.protection.Protection} before changing the world, and
+ * {@link com.shepherdjerred.thestorm.core.protection.SettledLand} when it needs to stay away from
+ * claims.
  */
 @NullMarked
 package com.shepherdjerred.thestorm.core.protection;
