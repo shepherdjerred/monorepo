@@ -1,7 +1,9 @@
 import * as Sentry from "@sentry/bun";
 import {
+  BucksMessageRefsSchema,
   BucksPoolRosterSchema,
   LeaguePuuidSchema,
+  type BucksMessageRef,
   type BucksPoolParticipant,
   type DiscordGuildId,
   type QueueType,
@@ -145,6 +147,12 @@ export type OpenPoolsInput = {
 /**
  * Create a pool per flag-enabled guild that this game is being announced in.
  *
+ * Swallows every failure and answers an empty set, because on v1's inline
+ * send a betting bug must never take the loading screen down with it. The V2
+ * prematch path calls {@link openBettingPoolsStrict} instead: there the open
+ * is its own guarded Activity, so a failure is retried rather than recorded
+ * as "this game had no market".
+ *
  * @returns the guilds that got a pool, so the caller knows where to attach
  * betting buttons
  */
@@ -152,87 +160,8 @@ export async function openBettingPoolsForPrematch(
   input: OpenPoolsInput,
   prismaClient: ExtendedPrismaClient = prisma,
 ): Promise<Set<DiscordGuildId>> {
-  const opened = new Set<DiscordGuildId>();
-
   try {
-    if (
-      !isBettableGame({
-        queueType: input.queueType,
-        participants: input.gameInfo.participants,
-      })
-    ) {
-      return opened;
-    }
-
-    const enabledGuilds = await bettingEnabledGuilds(input.guildIds);
-    if (enabledGuilds.length === 0) {
-      return opened;
-    }
-
-    const roster = BucksPoolRosterSchema.parse({
-      participants: buildRoster({
-        gameInfo: input.gameInfo,
-        trackedAliasByPuuid: input.trackedAliasByPuuid,
-      }),
-    });
-    const closesAt = computeClosesAt({
-      detectedAt: input.detectedAt,
-      gameStartTime: input.gameInfo.gameStartTime,
-    });
-    const legacyPeekAvailableAt = computeLegacyPeekAvailableAt({
-      detectedAt: input.detectedAt,
-      gameStartTime: input.gameInfo.gameStartTime,
-      gameLength: input.gameInfo.gameLength,
-    });
-    for (const serverId of enabledGuilds) {
-      // Create rather than upsert: the prematch poll can re-detect the same
-      // game before the notification lands, and a re-detection must neither
-      // extend a live window nor reopen a settled pool. `upsert`'s update
-      // branch already did nothing for that case, so a plain `create` with
-      // its unique-constraint violation caught is behaviourally identical —
-      // and, unlike upsert, unambiguous about whether a pool was actually
-      // opened. The metric and transition log must only fire on that create
-      // branch, or a re-detection reads as repeated opens.
-      let created = true;
-      try {
-        await prismaClient.bucksMatchPool.create({
-          data: {
-            matchId: input.matchId,
-            serverId,
-            detectedAt: input.detectedAt,
-            closesAt,
-            peekAvailableAt: legacyPeekAvailableAt,
-            queueType: input.queueType ?? null,
-            roster: JSON.stringify(roster),
-          },
-        });
-      } catch (error) {
-        if (!isUniqueConstraintError(error)) {
-          throw error;
-        }
-        created = false;
-      }
-      opened.add(serverId);
-      if (!created) {
-        continue;
-      }
-      // Post-commit: the create above has already resolved.
-      bettingPoolsOpenedTotal.inc({
-        queue_type: metricQueueType(input.queueType),
-      });
-      logBucksTransition({
-        event: "bucks.pool.opened",
-        matchId: input.matchId,
-        serverId,
-        toState: "open",
-        queueType: input.queueType ?? "unknown",
-        surface: "prematch",
-      });
-    }
-
-    logger.info(
-      `🎲 Opened ${opened.size.toString()} Bryan Bucks pool(s) for ${input.matchId}`,
-    );
+    return await openBettingPoolsStrict(input, prismaClient);
   } catch (error) {
     logger.error(
       `❌ Could not open Bryan Bucks pools for ${input.matchId}:`,
@@ -244,7 +173,100 @@ export async function openBettingPoolsForPrematch(
     });
     return new Set<DiscordGuildId>();
   }
+}
 
+/**
+ * The pool open itself, with its failures left to the caller.
+ *
+ * Idempotent per (match, guild): `BucksMatchPool` is unique on exactly that
+ * pair, so a repeat finds the standing pool, reports the guild as having one,
+ * and neither extends its window nor reopens it. A guild whose pool already
+ * stands is reported whatever state that pool is in, exactly as v1's
+ * re-detection always was.
+ */
+export async function openBettingPoolsStrict(
+  input: OpenPoolsInput,
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<Set<DiscordGuildId>> {
+  const opened = new Set<DiscordGuildId>();
+  if (
+    !isBettableGame({
+      queueType: input.queueType,
+      participants: input.gameInfo.participants,
+    })
+  ) {
+    return opened;
+  }
+
+  const enabledGuilds = await bettingEnabledGuilds(input.guildIds);
+  if (enabledGuilds.length === 0) {
+    return opened;
+  }
+
+  const roster = BucksPoolRosterSchema.parse({
+    participants: buildRoster({
+      gameInfo: input.gameInfo,
+      trackedAliasByPuuid: input.trackedAliasByPuuid,
+    }),
+  });
+  const closesAt = computeClosesAt({
+    detectedAt: input.detectedAt,
+    gameStartTime: input.gameInfo.gameStartTime,
+  });
+  const legacyPeekAvailableAt = computeLegacyPeekAvailableAt({
+    detectedAt: input.detectedAt,
+    gameStartTime: input.gameInfo.gameStartTime,
+    gameLength: input.gameInfo.gameLength,
+  });
+  for (const serverId of enabledGuilds) {
+    // Create rather than upsert: the prematch poll can re-detect the same
+    // game before the notification lands, and a re-detection must neither
+    // extend a live window nor reopen a settled pool. `upsert`'s update
+    // branch already did nothing for that case, so a plain `create` with
+    // its unique-constraint violation caught is behaviourally identical —
+    // and, unlike upsert, unambiguous about whether a pool was actually
+    // opened. The metric and transition log must only fire on that create
+    // branch, or a re-detection reads as repeated opens.
+    let created = true;
+    try {
+      await prismaClient.bucksMatchPool.create({
+        data: {
+          matchId: input.matchId,
+          serverId,
+          detectedAt: input.detectedAt,
+          closesAt,
+          peekAvailableAt: legacyPeekAvailableAt,
+          queueType: input.queueType ?? null,
+          roster: JSON.stringify(roster),
+        },
+      });
+    } catch (error) {
+      if (!isUniqueConstraintError(error)) {
+        throw error;
+      }
+      created = false;
+    }
+    opened.add(serverId);
+    if (!created) {
+      continue;
+    }
+    // Post-commit: the create above has already resolved.
+    bettingPoolsOpenedTotal.inc({
+      queue_type: metricQueueType(input.queueType),
+    });
+    logBucksTransition({
+      event: "bucks.pool.opened",
+      matchId: input.matchId,
+      serverId,
+      toState: "open",
+      queueType: input.queueType ?? "unknown",
+      surface: "prematch",
+    });
+  }
+
+  logger.info(
+    `🎲 Opened ${opened.size.toString()} Bryan Bucks pool(s) for ${input.matchId}`,
+  );
   return opened;
 }
 
@@ -315,4 +337,79 @@ export async function recordPoolMessageRefs(
       });
     }
   }
+}
+
+const APPEND_MESSAGE_REF_ATTEMPTS = 8;
+
+export type AppendPoolMessageRefOutcome =
+  "recorded" | "already-recorded" | "no-pool";
+
+/**
+ * Add ONE delivered prematch message to a pool's refs, at most once.
+ *
+ * v1 knows every message of a game at once and writes the whole array in one
+ * go ({@link recordPoolMessageRefs}). The V2 prematch path delivers each
+ * channel from its own notification run, so several runs can record against
+ * one guild's pool at the same moment, and a whole-array write would let the
+ * last of them erase the others — losing a destination the settlement
+ * announcement has no other record of.
+ *
+ * So this is a compare-and-set on the stored array: read it, and write the
+ * extended array only where the column still holds exactly what was read. A
+ * rival that wrote in between makes the guarded update match nothing, and the
+ * loop re-reads. A ref already present is `already-recorded`, which is what a
+ * retried follow-up Activity finds. `prematchContentBase` is written with the
+ * ref, because the refresh that follows edits the message from it.
+ *
+ * Unlike {@link recordPoolMessageRefs} this THROWS on failure: its caller is
+ * a Temporal Activity, and a retry is exactly what a lost write needs.
+ */
+export async function appendPoolMessageRef(
+  input: {
+    matchId: string;
+    serverId: DiscordGuildId;
+    ref: BucksMessageRef;
+    prematchContentBase: string;
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<AppendPoolMessageRefOutcome> {
+  const where = {
+    matchId_serverId: { matchId: input.matchId, serverId: input.serverId },
+  };
+  for (let attempt = 1; attempt <= APPEND_MESSAGE_REF_ATTEMPTS; attempt++) {
+    const pool = await prismaClient.bucksMatchPool.findUnique({
+      where,
+      select: { messageRefs: true },
+    });
+    if (pool === null) return "no-pool";
+    const refs = BucksMessageRefsSchema.parse(JSON.parse(pool.messageRefs));
+    if (
+      refs.some(
+        (ref) =>
+          ref.channelId === input.ref.channelId &&
+          ref.messageId === input.ref.messageId,
+      )
+    ) {
+      return "already-recorded";
+    }
+    const updated = await prismaClient.bucksMatchPool.updateMany({
+      where: {
+        matchId: input.matchId,
+        serverId: input.serverId,
+        messageRefs: pool.messageRefs,
+      },
+      data: {
+        messageRefs: JSON.stringify([...refs, input.ref]),
+        prematchContentBase: input.prematchContentBase,
+      },
+    });
+    if (updated.count === 1) {
+      bettingMessageRefsRecordedTotal.inc({ status: "recorded" });
+      return "recorded";
+    }
+  }
+  bettingMessageRefsRecordedTotal.inc({ status: "failed" });
+  throw new Error(
+    `The Bryan Bucks message refs for ${input.matchId} in guild ${input.serverId} changed under every one of ${APPEND_MESSAGE_REF_ATTEMPTS.toString()} append attempts`,
+  );
 }

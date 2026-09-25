@@ -25,6 +25,7 @@ export type ScoutV2PrematchActivities = Pick<
   | "discoverPrematchGamesV2"
   | "archivePrematchSnapshotV2"
   | "planPrematchFanOutV2"
+  | "openPrematchMarketsV2"
   | "resolvePrematchPassOwnerV2"
   | "renewPrematchPassClaimV2"
   | "releasePrematchPassClaimV2"
@@ -92,6 +93,18 @@ export function createScoutV2PrematchActivities(): ScoutV2PrematchActivities {
           const { archivePrematchSnapshotV2 } =
             await import("#src/temporal/v2/prematch/prematch-archive.ts");
           return await archivePrematchSnapshotV2(input);
+        },
+      ),
+    openPrematchMarketsV2: async (input) =>
+      await heartbeatWhile(
+        {
+          riotMatchId: input.riotMatchId,
+          phase: "opening-prematch-markets-v2",
+        },
+        async () => {
+          const { openPrematchMarketsV2 } =
+            await import("#src/temporal/v2/prematch/prematch-markets.ts");
+          return await openPrematchMarketsV2(input);
         },
       ),
     planPrematchFanOutV2: async (input) =>
