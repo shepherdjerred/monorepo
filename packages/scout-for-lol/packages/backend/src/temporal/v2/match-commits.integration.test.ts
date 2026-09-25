@@ -269,34 +269,28 @@ describe("the Riot late-arrival terminal repair migration", () => {
     // global delete count.
     await applyRepair();
 
-    // The resume read no longer blocks the next discovery.
-    await expect(
-      readMatchPipelineStateV2({ riotMatchId: refused }),
-    ).resolves.toEqual({ kind: "absent" });
-    expect(await kindsOf(refused)).toEqual([
-      SCOUT_V2_MATCH_RECEIPT_KINDS.settlement,
-    ]);
-    expect(await kindsOf(observedTerminal)).toContain(
-      SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
-    );
-    for (const kept of [olderTerminal, laterTerminal]) {
+    // The resume read no longer blocks the next discovery, and nothing else
+    // this test seeded moved.
+    async function expectRepaired(): Promise<void> {
       await expect(
-        readMatchPipelineStateV2({ riotMatchId: kept }),
-      ).resolves.toEqual({ kind: "terminal" });
+        readMatchPipelineStateV2({ riotMatchId: refused }),
+      ).resolves.toEqual({ kind: "absent" });
+      expect(await kindsOf(refused)).toEqual([
+        SCOUT_V2_MATCH_RECEIPT_KINDS.settlement,
+      ]);
+      expect(await kindsOf(observedTerminal)).toContain(
+        SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
+      );
+      for (const kept of [olderTerminal, laterTerminal]) {
+        await expect(
+          readMatchPipelineStateV2({ riotMatchId: kept }),
+        ).resolves.toEqual({ kind: "terminal" });
+      }
     }
+    await expectRepaired();
 
     // Idempotent: a re-run leaves every seeded row exactly as the first run did.
     await applyRepair();
-    expect(await kindsOf(refused)).toEqual([
-      SCOUT_V2_MATCH_RECEIPT_KINDS.settlement,
-    ]);
-    expect(await kindsOf(observedTerminal)).toContain(
-      SCOUT_V2_CLIENT_MATCH_TERMINAL_RECEIPT_KIND,
-    );
-    for (const kept of [olderTerminal, laterTerminal]) {
-      await expect(
-        readMatchPipelineStateV2({ riotMatchId: kept }),
-      ).resolves.toEqual({ kind: "terminal" });
-    }
+    await expectRepaired();
   });
 });
