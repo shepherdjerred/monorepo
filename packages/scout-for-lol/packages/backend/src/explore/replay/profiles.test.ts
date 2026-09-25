@@ -20,6 +20,7 @@ const NOTHING: ExploreCapabilitySet = {
   riotHistory: false,
   mvpVotes: false,
   clash: false,
+  hallOfFame: false,
 };
 
 const EVERYTHING: ExploreCapabilitySet = {
@@ -30,6 +31,7 @@ const EVERYTHING: ExploreCapabilitySet = {
   riotHistory: false,
   mvpVotes: true,
   clash: true,
+  hallOfFame: true,
 };
 
 function config(
@@ -74,7 +76,8 @@ describe("conditionCapability", () => {
     expect(conditionCapability("bucks")).toBe("bucks");
     expect(conditionCapability("dares")).toBe("dares");
     expect(conditionCapability("challenges")).toBe("challenges");
-    expect(conditionCapability("competitions")).toBe("creation");
+    // Preparing a competition needs the creation tool; reading one does not.
+    expect(conditionCapability("competition_creation")).toBe("creation");
   });
 
   test("leaves lake-answerable conditions ungated", () => {
@@ -82,6 +85,11 @@ describe("conditionCapability", () => {
     // demanding a refusal would be wrong.
     expect(conditionCapability("always")).toBeNull();
     expect(conditionCapability("customs")).toBeNull();
+    // Reading competitions is a core feature, answered by permission-checked
+    // tools every turn has; it used to be graded against creation.
+    expect(conditionCapability("competitions")).toBeNull();
+    // Off, a record question is still answered from match data, labelled as
+    // not the official board.
     expect(conditionCapability("hall_of_fame")).toBeNull();
   });
 });
@@ -91,6 +99,7 @@ describe("chipExpectation", () => {
     for (const capabilities of [NOTHING, EVERYTHING]) {
       expect(chipExpectation(capabilities, "always")).toBe("answerable");
       expect(chipExpectation(capabilities, "customs")).toBe("answerable");
+      expect(chipExpectation(capabilities, "competitions")).toBe("answerable");
       expect(chipExpectation(capabilities, "hall_of_fame")).toBe("answerable");
     }
   });
@@ -99,8 +108,10 @@ describe("chipExpectation", () => {
     // The prod case and the beta case, which is the whole point.
     expect(chipExpectation(NOTHING, "bucks")).toBe("gated-off");
     expect(chipExpectation(EVERYTHING, "bucks")).toBe("answerable");
-    expect(chipExpectation(NOTHING, "competitions")).toBe("gated-off");
-    expect(chipExpectation(EVERYTHING, "competitions")).toBe("answerable");
+    expect(chipExpectation(NOTHING, "competition_creation")).toBe("gated-off");
+    expect(chipExpectation(EVERYTHING, "competition_creation")).toBe(
+      "answerable",
+    );
     expect(chipExpectation(NOTHING, "mvp_votes")).toBe("gated-off");
     expect(chipExpectation(EVERYTHING, "mvp_votes")).toBe("answerable");
   });
@@ -225,12 +236,12 @@ describe("capabilityMismatches", () => {
       config: config({ capabilities: EVERYTHING }),
       resolved: NOTHING,
     });
-    // Six, not seven: riotHistory is false on both sides, because a replay
+    // Seven, not eight: riotHistory is false on both sides, because a replay
     // never reproduces it.
-    expect(issues).toHaveLength(6);
+    expect(issues).toHaveLength(7);
   });
 
   test("checks every capability", () => {
-    expect(EXPLORE_REPLAY_CAPABILITIES).toHaveLength(7);
+    expect(EXPLORE_REPLAY_CAPABILITIES).toHaveLength(8);
   });
 });

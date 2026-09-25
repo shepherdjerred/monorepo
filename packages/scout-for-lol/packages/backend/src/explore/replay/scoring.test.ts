@@ -15,6 +15,7 @@ const CAPS: ExploreCapabilitySet = {
   riotHistory: false,
   mvpVotes: false,
   clash: false,
+  hallOfFame: false,
 };
 
 const SIDE: ReplaySide = {

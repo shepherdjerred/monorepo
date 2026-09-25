@@ -52,6 +52,7 @@
     "explore:capture-guilds": "bun run scripts/explore-replay/capture-guild-config.ts",
     "explore:curate-corpus": "bun run scripts/explore-replay/curate-replay-corpus.ts",
     "explore:summarize": "bun run scripts/explore-replay/summarize-bundle.ts",
+    "explore:judge": "bun run scripts/explore-replay/judge-bundle.ts",
     "analytics:backfill-bryan-bucks": "bun run scripts/backfill/backfill-bryan-bucks-analytics.ts",
     "customs:anonymize": "bun run scripts/anonymize-customs-participant.ts"
   },

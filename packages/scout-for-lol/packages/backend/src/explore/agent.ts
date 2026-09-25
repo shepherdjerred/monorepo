@@ -28,6 +28,7 @@ import { resolveMvpVotesCapability } from "#src/explore/tools/mvp-votes-tools.ts
 import { riotHistoryExploreEnabled } from "#src/explore/tools/riot-history-tools.ts";
 import { hydrateExploreMatchCards } from "#src/explore-match/match-view.ts";
 import { clashExploreEnabled } from "#src/league/clash/access.ts";
+import { resolveHallCapability } from "#src/explore/tools/hall-tools.ts";
 import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
 import {
   assertWithinBudget,
@@ -93,6 +94,7 @@ async function streamExploreAgentInternal(
   });
   const riotHistoryEnabled = await riotHistoryExploreEnabled(params.guildIds);
   const clashEnabled = await clashExploreEnabled(params.guildIds);
+  const hallCapability = await resolveHallCapability(params.guildIds);
 
   const clock = { currentTime: new Date().toISOString() };
   const skillOptions = {
@@ -103,6 +105,7 @@ async function streamExploreAgentInternal(
     creation: creationCapability !== null,
     riotHistory: riotHistoryEnabled,
     clash: clashEnabled,
+    hallOfFame: hallCapability !== null,
     surface: params.surface,
   };
 
@@ -121,6 +124,7 @@ async function streamExploreAgentInternal(
       creationCapability,
       riotHistoryEnabled,
       clashEnabled,
+      hallCapability,
     }),
     stopWhen: stepCountIs(EXPLORE_MAX_STEPS),
     // Most current models (every GPT-5.x, most Claude) declare
@@ -137,6 +141,10 @@ async function streamExploreAgentInternal(
     ...runtime.callOptions({
       workload: "scout.explore",
       sessionId: params.runId,
+      // One cache partition for every turn. The per-turn session id would
+      // otherwise partition it, and no turn could reuse another's cached
+      // prompt — which is most of what a turn sends.
+      promptCacheKey: "scout.explore",
     }),
   });
 

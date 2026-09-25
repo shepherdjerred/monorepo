@@ -31,10 +31,21 @@ A beta deployment of the same dashboard runs at
 Explore keeps private, branching conversations over Scout's recorded match
 corpus.
 
+What a question reads:
+
+| Question                                         | Reads                                                                           | Players are named by |
+| ------------------------------------------------ | ------------------------------------------------------------------------------- | -------------------- |
+| About the game, champions, or players in general | Every match Scout has recorded, across all servers, including untracked players | Riot ID              |
+| About "our", "the server", or "my group"         | Only the tracked players of the servers you are in: one, several, or all        | Scout name           |
+
+Tracked players, their accounts, and teammate groups are read only for servers
+you are in. With several servers, Explore uses the one you name, or asks.
+
 ## Server workspace sections
 
 Each section requires the corresponding `read` permission; a section you cannot
-read is not shown.
+read is not shown. Every member holds the Player role, so **Players**,
+**Competitions**, and **Reports** are readable by anyone in the server.
 
 | Section           | Route           | Contents                                                               |
 | ----------------- | --------------- | ---------------------------------------------------------------------- |

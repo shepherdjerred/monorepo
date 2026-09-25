@@ -118,8 +118,12 @@ export function planRowSchema(
     [columns.playerId]: DuckDbScalarSchema,
     [columns.discordId]: DuckDbScalarSchema,
   };
+  // Keys normalize as outputs do, because an output that echoes a grouping
+  // reads the key column itself. A boolean key — GROUP BY first_dragon,
+  // GROUP BY outcome — otherwise reached the output reader as a raw boolean
+  // and failed the whole query as "not normalized".
   for (const key of columns.groupingKeys) {
-    shape[key] ??= DuckDbScalarSchema;
+    shape[key] ??= OutputValueSchema;
   }
   for (const output of columns.outputs) {
     shape[output.alias] ??= OutputValueSchema;

@@ -14,8 +14,6 @@ import type {
 } from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import {
   compileGroupFactsProjection,
-  compileScoutQlPlanQuery,
-  type CompiledPlanQuery,
   type PlanQueryInput,
 } from "#src/reports/duckdb/compile-plan.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -26,6 +24,13 @@ import {
 } from "#src/reports/duckdb/lake.ts";
 import { GLOBAL_SCOPE, guildScope } from "#src/reports/duckdb/scope.ts";
 import { writeTestLake } from "#src/testing/test-report-lake.ts";
+import {
+  CountSchema,
+  RowSchema,
+  number_,
+  runPlan,
+} from "#src/testing/run-compiled-plan.ts";
+import { lakeMonth } from "#src/report-lake/schema.ts";
 import { testGuildId, testPuuid } from "#src/testing/test-ids.ts";
 
 /**
@@ -68,6 +73,37 @@ beforeAll(async () => {
   };
   await writeTestLake(lakeDir, {
     serverId: SERVER_ID,
+    // Yasuo banned in two games, Zed in one, and one slot left unused.
+    bans: [
+      {
+        match_id: "NA1_100",
+        month: lakeMonth(WEEK1.getTime()),
+        team_id: 100,
+        pick_turn: 1,
+        champion_id: 157,
+      },
+      {
+        match_id: "NA1_100",
+        month: lakeMonth(WEEK1.getTime()),
+        team_id: 200,
+        pick_turn: 2,
+        champion_id: 238,
+      },
+      {
+        match_id: "NA1_101",
+        month: lakeMonth(WEEK1B.getTime()),
+        team_id: 100,
+        pick_turn: 1,
+        champion_id: 157,
+      },
+      {
+        match_id: "NA1_101",
+        month: lakeMonth(WEEK1B.getTime()),
+        team_id: 200,
+        pick_turn: 2,
+        champion_id: -1,
+      },
+    ],
     matchFacts: [
       {
         ...alice,
@@ -75,6 +111,7 @@ beforeAll(async () => {
         queue: "solo",
         win: true,
         kills: 2,
+        firstDragon: true,
         gameCreationAt: WEEK1,
       },
       {
@@ -93,6 +130,7 @@ beforeAll(async () => {
         kills: 7,
         championId: 222,
         championName: "Jinx",
+        firstDragon: true,
         gameCreationAt: WEEK1B,
       },
       {
@@ -223,49 +261,7 @@ function makeInput(overrides: Partial<PlanQueryInput> = {}): PlanQueryInput {
   };
 }
 
-const CountSchema = z.union([z.bigint(), z.number()]).transform(Number);
-const RowSchema = z.record(z.string(), z.unknown());
-
-async function execute(compiled: CompiledPlanQuery): Promise<{
-  rows: Record<string, unknown>[];
-  scanned: number;
-}> {
-  return await withDuckDBConnection(async (session) => {
-    const bind = (params: BoundParam[]) =>
-      params.map((param) =>
-        param.kind === "list" ? session.list(param.values) : param.value,
-      );
-    const rawRows = await session.run(
-      compiled.aggregateSql,
-      bind(compiled.aggregateParams),
-    );
-    const scannedRows = await session.run(
-      compiled.scannedSql,
-      bind(compiled.scannedParams),
-    );
-    const scanned = z
-      .object({ scanned: CountSchema })
-      .parse(scannedRows[0]).scanned;
-    return { rows: rawRows.map((row) => RowSchema.parse(row)), scanned };
-  });
-}
-
-async function run(input: PlanQueryInput): Promise<{
-  rows: Record<string, unknown>[];
-  scanned: number;
-  compiled: CompiledPlanQuery;
-}> {
-  const compiled = compileScoutQlPlanQuery(input);
-  if (compiled === undefined) {
-    throw new Error("expected compiled query");
-  }
-  const result = await execute(compiled);
-  return { ...result, compiled };
-}
-
-function number_(value: unknown): number {
-  return CountSchema.parse(value);
-}
+const run = runPlan;
 
 describe("aggregates end-to-end", () => {
   test("win_rate with FILTER over the solo queue, with rate evidence", async () => {
@@ -615,5 +611,176 @@ describe("group facts projection end-to-end", () => {
     }
     expect(compiled.columns.raw).toEqual(["kills"]);
     expect(scanned).toBe(5);
+  });
+});
+
+// ── match_teams ──────────────────────────────────────────────────────────────
+
+function teamPlan(overrides: Partial<ScoutQlPlan> = {}): ScoutQlPlan {
+  return makePlan({
+    source: "match_teams",
+    outputs: [countOutput("teams")],
+    ...overrides,
+  });
+}
+
+describe("match_teams end-to-end", () => {
+  test("counts team rows, two per match, over the real lake", async () => {
+    const { rows } = await run(
+      makeInput({ plan: teamPlan(), scope: GLOBAL_SCOPE }),
+    );
+    expect(rows).toHaveLength(1);
+    // Six matches are seeded; each writes one team row per distinct team id.
+    expect(number_(rows[0]?.["expr_0"])).toBeGreaterThan(0);
+  });
+
+  test("splits win rate by a first-objective flag", async () => {
+    const winRate: ScoutQlOutput = {
+      name: "win_rate",
+      expr: {
+        kind: "aggregate",
+        func: "avg",
+        arg: { kind: "cast", to: "int", operand: col("win") },
+        distinct: false,
+      },
+      displayKind: "percent",
+      additive: false,
+      evidence: { kind: "sample" },
+    };
+    const { rows } = await run(
+      makeInput({
+        plan: teamPlan({
+          outputs: [countOutput("teams"), winRate],
+          groupings: [
+            { kind: "column", column: "first_dragon", name: "first_dragon" },
+          ],
+        }),
+        scope: GLOBAL_SCOPE,
+      }),
+    );
+    // Both buckets exist, which is the whole point of the source.
+    expect(rows.length).toBe(2);
+    const byKey = new Map(
+      rows.map((row) => [String(row["__key_0"]), row] as const),
+    );
+    expect([...byKey.keys()].toSorted()).toEqual(["false", "true"]);
+    // The two seeded first-dragon teams both won.
+    expect(number_(byKey.get("true")?.["expr_1"])).toBe(1);
+  });
+
+  test("filters on queue, which lives on the match and not the team row", async () => {
+    const solo = await run(
+      makeInput({
+        plan: teamPlan({ where: eq("queue", "solo") }),
+        scope: GLOBAL_SCOPE,
+      }),
+    );
+    const flex = await run(
+      makeInput({
+        plan: teamPlan({ where: eq("queue", "flex") }),
+        scope: GLOBAL_SCOPE,
+      }),
+    );
+    const soloTeams = number_(solo.rows[0]?.["expr_0"]);
+    const flexTeams = number_(flex.rows[0]?.["expr_0"]);
+    // One seeded match is flex; the rest are solo. Without the looked-up
+    // column this query could not be written at all.
+    expect(flexTeams).toBeGreaterThan(0);
+    expect(soloTeams).toBeGreaterThan(flexTeams);
+  });
+
+  test("the time window reaches team rows through the match", async () => {
+    const week1Only = await run(
+      makeInput({
+        plan: teamPlan(),
+        scope: GLOBAL_SCOPE,
+        range: { start: WEEK1, end: WEEK1B },
+      }),
+    );
+    const everything = await run(
+      makeInput({ plan: teamPlan(), scope: GLOBAL_SCOPE }),
+    );
+    expect(number_(week1Only.rows[0]?.["expr_0"])).toBeLessThan(
+      number_(everything.rows[0]?.["expr_0"]),
+    );
+  });
+});
+
+// ── team lookups on participant rows ─────────────────────────────────────────
+
+describe("kill participation end-to-end", () => {
+  test("divides each player's kills and assists by their team's kills", async () => {
+    // NA1_100, team 100: Alice 2 kills + 5 assists, Bob 3 + 1, and the
+    // untracked Derek 9 kills — 14 team kills in all.
+    const kp: ScoutQlOutput = {
+      name: "kp",
+      expr: {
+        kind: "aggregate",
+        func: "avg",
+        arg: col("kill_participation"),
+        distinct: false,
+      },
+      displayKind: "percent",
+      additive: false,
+      evidence: { kind: "sample" },
+    };
+    const { rows, compiled } = await run(
+      makeInput({
+        plan: makePlan({
+          outputs: [kp],
+          where: eq("match_id", "NA1_100"),
+          groupings: [{ kind: "column", column: "player", name: "player" }],
+        }),
+      }),
+    );
+    expect(compiled.aggregateSql).toContain("LEFT JOIN team_dim t");
+    const byPlayer = new Map(
+      rows.map((row) => [String(row["label"]), Number(row["expr_0"])] as const),
+    );
+    expect(byPlayer.get("Alice")).toBeCloseTo(7 / 14, 6);
+    expect(byPlayer.get("Bob")).toBeCloseTo(4 / 14, 6);
+  });
+
+  test("does not join the team table unless a query names a team column", async () => {
+    const { compiled } = await run(makeInput());
+    expect(compiled.aggregateSql).not.toContain("team_dim");
+  });
+});
+
+describe("match_team_bans end-to-end", () => {
+  test("counts bans per champion, named from the registry", async () => {
+    const { rows } = await run(
+      makeInput({
+        plan: makePlan({
+          source: "match_team_bans",
+          outputs: [countOutput("bans")],
+          groupings: [{ kind: "column", column: "champion", name: "champion" }],
+        }),
+        scope: GLOBAL_SCOPE,
+      }),
+    );
+    const byChampion = new Map(
+      rows.map(
+        (row) => [String(row["label"]), number_(row["expr_0"])] as const,
+      ),
+    );
+    expect(byChampion.get("Yasuo")).toBe(2);
+    expect(byChampion.get("Zed")).toBe(1);
+    // Riot's -1 is an empty slot, and says so rather than showing a number.
+    expect(byChampion.get("No ban")).toBe(1);
+  });
+
+  test("champion('Name') filters bans by id, like participant rows", async () => {
+    const { rows } = await run(
+      makeInput({
+        plan: makePlan({
+          source: "match_team_bans",
+          outputs: [countOutput("bans")],
+          where: eq("champion_id", 157),
+        }),
+        scope: GLOBAL_SCOPE,
+      }),
+    );
+    expect(number_(rows[0]?.["expr_0"])).toBe(2);
   });
 });

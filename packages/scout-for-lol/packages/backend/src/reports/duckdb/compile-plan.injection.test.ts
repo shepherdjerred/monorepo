@@ -552,6 +552,8 @@ const CLOSED_STRING_LITERALS = new Set([
   "'Surrender'",
   "'Played out'",
   "'unknown'",
+  // Riot's empty position, folded into 'unknown'.
+  "''",
   "'Not Arena'",
   "'All'",
   "' • '",

@@ -130,19 +130,30 @@ afterAll(async () => {
   await trpc.prisma.$disconnect();
 });
 
+/** The leaderboard chart's status, then the report run chart's. */
+async function chartStatuses(): Promise<(number | undefined)[]> {
+  const leaderboard = await get(
+    `/api/competition/${String(competitionId)}/leaderboard.png`,
+  );
+  const reportRun = await get(
+    `/api/report/${String(reportId)}/runs/${String(runId)}.png`,
+  );
+  return [leaderboard?.status, reportRun?.status];
+}
+
 describe("image-route RBAC authorization", () => {
-  test("member without a grant is denied (403) for both charts", async () => {
+  test("a member without a grant passes as a Player (404, image absent)", async () => {
     trpc.setMembership([{ guildId, asAdmin: false }]);
     await seedGrants();
 
-    const lb = await get(
-      `/api/competition/${String(competitionId)}/leaderboard.png`,
-    );
-    expect(lb?.status).toBe(403);
-    const rr = await get(
-      `/api/report/${String(reportId)}/runs/${String(runId)}.png`,
-    );
-    expect(rr?.status).toBe(403);
+    expect(await chartStatuses()).toEqual([404, 404]);
+  });
+
+  test("a non-member is denied (403) for both charts", async () => {
+    trpc.setMembership([]);
+    await seedGrants();
+
+    expect(await chartStatuses()).toEqual([403, 403]);
   });
 
   test("member with the read grant passes authorization (404, image absent)", async () => {
@@ -152,38 +163,14 @@ describe("image-route RBAC authorization", () => {
       permissionKey({ resource: "reports", action: "read" }),
     );
 
-    const lb = await get(
-      `/api/competition/${String(competitionId)}/leaderboard.png`,
-    );
-    expect(lb?.status).toBe(404);
-    const rr = await get(
-      `/api/report/${String(reportId)}/runs/${String(runId)}.png`,
-    );
-    expect(rr?.status).toBe(404);
-  });
-
-  test("a reports:read holder is still denied the leaderboard (wrong resource)", async () => {
-    trpc.setMembership([{ guildId, asAdmin: false }]);
-    await seedGrants(permissionKey({ resource: "reports", action: "read" }));
-
-    const lb = await get(
-      `/api/competition/${String(competitionId)}/leaderboard.png`,
-    );
-    expect(lb?.status).toBe(403);
+    expect(await chartStatuses()).toEqual([404, 404]);
   });
 
   test("Discord admin (root) is allowed without any grant", async () => {
     trpc.setMembership("root");
     await seedGrants();
 
-    const lb = await get(
-      `/api/competition/${String(competitionId)}/leaderboard.png`,
-    );
-    expect(lb?.status).toBe(404);
-    const rr = await get(
-      `/api/report/${String(reportId)}/runs/${String(runId)}.png`,
-    );
-    expect(rr?.status).toBe(404);
+    expect(await chartStatuses()).toEqual([404, 404]);
   });
 
   test("no session cookie is 401", async () => {

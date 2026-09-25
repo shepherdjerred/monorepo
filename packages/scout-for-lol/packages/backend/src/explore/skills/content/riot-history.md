@@ -16,6 +16,6 @@ Start with `inspect_player_coverage` when coverage is uncertain. Use `get_ranked
 
 The target can be a full `GameName#TAG` plus platform region, or `current_lane_opponent`. The latter resolves the asker's linked account through Riot Spectator and infers one player per standard Summoner's Rift lane on each team.
 
-The history tool requests the newest 100 matches from Riot with `type=ranked`, reuses matches already in the lake, fetches only missing ones, permanently ingests them, and folds the lake before returning. After it succeeds, load `scoutql` and query the requested statistic.
+The history tool requests the newest 100 matches from Riot with `type=ranked`, reuses matches already in the lake, fetches only missing ones, permanently ingests them, and folds the lake before returning. After it succeeds, query the requested statistic with ScoutQL.
 
 For timeline analysis, first run ScoutQL with `match_id` projected and inspect the coverage result. Call `acquire_match_timelines` only for missing IDs from that most recent query, at most 10. It runs as a separate durable workflow with three concurrent Riot reads, persists the timelines, and folds the lake before returning.

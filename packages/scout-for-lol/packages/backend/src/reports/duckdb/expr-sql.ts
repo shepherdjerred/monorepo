@@ -1,14 +1,13 @@
 import { match } from "ts-pattern";
-import {
-  MATCH_LAKE_COLUMNS,
-  PREMATCH_LAKE_COLUMNS,
-  type DuckDbColumnType,
-} from "@scout-for-lol/data/model/reports/lake-columns.ts";
 import type {
   ScoutQlPredicate,
   ScoutQlScalarExpr,
 } from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import { listParam, scalarParam } from "#src/reports/duckdb/lake.ts";
+import {
+  resolveColumn,
+  type ColumnMap,
+} from "#src/reports/duckdb/column-map.ts";
 import type { SqlFragment } from "#src/reports/duckdb/lake.ts";
 import {
   emitArithmetic,
@@ -26,129 +25,10 @@ import {
  * name throws before any SQL exists. Every literal, IN list, timezone, and
  * interval amount travels as a bound parameter; the only SQL text emitted here
  * is selected by exhaustive matches over the closed IR enums.
+ *
+ * The vocabulary itself — which names exist and what SQL each becomes — lives
+ * in column-map.ts; this file only translates expressions against it.
  */
-
-export type SqlTypeClass =
-  "numeric" | "boolean" | "text" | "timestamp" | "date" | "interval";
-
-export type ColumnBinding = {
-  /** SQL over bare source-column names (valid in union branches and facts). */
-  sql: string;
-  type: SqlTypeClass;
-  /** Source columns this expression reads (grown into the facts projection). */
-  dependencies: readonly string[];
-  /** Identity columns exist only after the facts projection, never in a
-   * union-branch pushdown context. */
-  identity: boolean;
-};
-
-export type ColumnMap = ReadonlyMap<string, ColumnBinding>;
-
-export type PlanColumnSource = "match" | "prematch";
-
-const LAKE_TYPE_CLASS: Record<DuckDbColumnType, SqlTypeClass> = {
-  VARCHAR: "text",
-  INTEGER: "numeric",
-  BIGINT: "numeric",
-  DOUBLE: "numeric",
-  BOOLEAN: "boolean",
-  TIMESTAMP: "timestamp",
-};
-
-function sourceColumnEntries(
-  columns: Record<string, DuckDbColumnType>,
-): [string, ColumnBinding][] {
-  return Object.entries(columns).map(([name, type]) => [
-    name,
-    {
-      sql: name,
-      type: LAKE_TYPE_CLASS[type],
-      dependencies: [name],
-      identity: false,
-    },
-  ]);
-}
-
-function virtual(
-  sql: string,
-  type: SqlTypeClass,
-  dependencies: string[],
-): ColumnBinding {
-  return { sql, type, dependencies, identity: false };
-}
-
-const PLAYER_BINDING: ColumnBinding = {
-  sql: "player_alias",
-  type: "text",
-  dependencies: [],
-  identity: true,
-};
-
-const SURRENDER_STATE_SQL =
-  "CASE WHEN early_surrendered THEN 'Early surrender' WHEN surrendered THEN 'Surrender' ELSE 'Played out' END";
-
-/** Virtual dimensions over match facts, mirroring the grouping arms. */
-const MATCH_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
-  ["player", PLAYER_BINDING],
-  ["champion", virtual("champion_name", "text", ["champion_name"])],
-  [
-    "patch",
-    virtual(
-      String.raw`regexp_extract(game_version, '^[0-9]+\.[0-9]+')`,
-      "text",
-      ["game_version"],
-    ),
-  ],
-  [
-    "outcome",
-    virtual("CASE WHEN win THEN 'Win' ELSE 'Loss' END", "text", ["win"]),
-  ],
-  [
-    "surrender_state",
-    virtual(SURRENDER_STATE_SQL, "text", ["early_surrendered", "surrendered"]),
-  ],
-  [
-    "arena_placement",
-    virtual("coalesce(placement::VARCHAR, 'Not Arena')", "text", ["placement"]),
-  ],
-  ["map", virtual("map_id", "numeric", ["map_id"])],
-];
-
-/** Prematch rows have no champion_name; the dimension shows the numeric id. */
-const PREMATCH_VIRTUAL_COLUMNS: [string, ColumnBinding][] = [
-  ["player", PLAYER_BINDING],
-  ["champion", virtual("champion_id::VARCHAR", "text", ["champion_id"])],
-  ["map", virtual("map_id", "numeric", ["map_id"])],
-];
-
-export function buildPlanColumnMap(source: PlanColumnSource): ColumnMap {
-  return match(source)
-    .with(
-      "match",
-      () =>
-        new Map([
-          ...sourceColumnEntries(MATCH_LAKE_COLUMNS),
-          ...MATCH_VIRTUAL_COLUMNS,
-        ]),
-    )
-    .with(
-      "prematch",
-      () =>
-        new Map([
-          ...sourceColumnEntries(PREMATCH_LAKE_COLUMNS),
-          ...PREMATCH_VIRTUAL_COLUMNS,
-        ]),
-    )
-    .exhaustive();
-}
-
-export function resolveColumn(columns: ColumnMap, name: string): ColumnBinding {
-  const binding = columns.get(name);
-  if (binding === undefined) {
-    throw new Error(`Unknown column "${name}" for this source.`);
-  }
-  return binding;
-}
 
 export type ExprContext = {
   columns: ColumnMap;
@@ -492,6 +372,16 @@ export function collectPredicateColumnNames(
   walkPredicate(pred, (node) => {
     recordColumnNames(node, into);
   });
+}
+
+/** Whether every column a predicate reads is one of `names`. */
+export function predicateReadsOnly(
+  pred: ScoutQlPredicate,
+  names: ReadonlySet<string>,
+): boolean {
+  const referenced = new Set<string>();
+  collectPredicateColumnNames(pred, referenced);
+  return [...referenced].every((name) => names.has(name));
 }
 
 /**

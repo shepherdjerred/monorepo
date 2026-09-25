@@ -4,7 +4,8 @@
  * client expands into `permissions[]`. Gated on `roles:{read,grant,revoke}`.
  *
  * Discord admins/owners always hold every permission implicitly and are not
- * listed as grant rows.
+ * listed as grant rows. Every other member holds the Player role without a
+ * grant; a member's shown role is derived from Player plus their rows.
  */
 
 import { z } from "zod";
@@ -18,6 +19,7 @@ import {
   PermissionSchema,
   createPermissionSet,
   deriveRole,
+  memberPermissions,
   parseStoredPermissionKey,
   permissionKey,
 } from "@scout-for-lol/data";
@@ -177,7 +179,9 @@ export const rolesRouter = router({
         username: names[discordUserId]?.displayName ?? discordUserId,
         avatar: names[discordUserId]?.avatar ?? null,
         permissions: entry.permissions,
-        role: deriveRole(createPermissionSet(entry.permissions)),
+        role: deriveRole(
+          createPermissionSet(memberPermissions(entry.permissions)),
+        ),
         grantedBy: entry.grantedBy,
         grantedAt: entry.grantedAt,
       }));
@@ -317,7 +321,9 @@ export const rolesRouter = router({
               serverId: input.guildId,
               payload: {
                 targetUserId: input.discordUserId,
-                role: deriveRole(createPermissionSet([...desired.values()])),
+                role: deriveRole(
+                  createPermissionSet(memberPermissions([...desired.values()])),
+                ),
                 permissions: additions.map((p) => permissionKey(p)),
               },
               ipAddress: ctx.webSession.ipAddress,

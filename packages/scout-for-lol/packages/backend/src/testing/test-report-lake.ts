@@ -1,10 +1,12 @@
-import { mkdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import {
   ACCOUNT_LAKE_COLUMNS,
   computeKda,
   type AccountLakeRow,
   type MatchLakeRow,
+  type MatchTeamBanLakeRow,
   type MatchTeamLakeRow,
   type PrematchLakeRow,
   type TimelineCoverageLakeRow,
@@ -24,11 +26,13 @@ import {
 } from "#src/report-lake/paths.ts";
 import {
   matchStagingFilePath,
+  matchTeamBanStagingFilePath,
   matchTeamStagingFilePath,
   prematchStagingFilePath,
   timelineStagingFilePath,
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { resolveLakeFiles, type LakeFiles } from "#src/reports/duckdb/lake.ts";
 
 /**
  * Test helper: build a minimal report lake from simplified fact inputs.
@@ -63,6 +67,9 @@ export type TestLakeMatchFact = {
   /** Override to make per-participant CS vary, e.g. for CS-per-minute tests. */
   creepScore?: number;
   teamId?: number;
+  /** Team objective flags for the match_teams row this fact rolls up into. */
+  firstDragon?: boolean;
+  firstBaron?: boolean;
   /** Arena subteam (1-8); leave unset for non-Arena queues. */
   playerSubteamId?: number;
   championId?: number;
@@ -214,12 +221,12 @@ function teamRowFromFacts(
     month: lakeMonth(first.gameCreationAt.getTime()),
     team_id: teamId,
     win: first.win,
-    baron_kills: 0,
-    first_baron: false,
+    baron_kills: first.firstBaron === true ? 1 : 0,
+    first_baron: first.firstBaron ?? false,
     champion_kills: facts.reduce((sum, fact) => sum + fact.kills, 0),
     first_champion_kill: false,
-    dragon_kills: 0,
-    first_dragon: false,
+    dragon_kills: first.firstDragon === true ? 1 : 0,
+    first_dragon: first.firstDragon ?? false,
     inhibitor_kills: 0,
     first_inhibitor: false,
     rift_herald_kills: 0,
@@ -279,6 +286,8 @@ type TestLakeInput = {
   timelineEventParticipants?: TimelineEventParticipantLakeRow[];
   timelineFrames?: TimelineParticipantFrameLakeRow[];
   timelineCoverage?: TimelineCoverageLakeRow[];
+  /** Raw ban rows, written as staging files one per match. */
+  bans?: MatchTeamBanLakeRow[];
 };
 
 async function writeTestAccounts(
@@ -422,6 +431,24 @@ async function writeTestTimelineRows(
   }
 }
 
+async function writeTestMatchTeamBans(
+  lakeDir: string,
+  input: TestLakeInput,
+): Promise<void> {
+  const byMatch = new Map<string, MatchTeamBanLakeRow[]>();
+  for (const row of input.bans ?? []) {
+    const rows = byMatch.get(row.match_id) ?? [];
+    rows.push(row);
+    byMatch.set(row.match_id, rows);
+  }
+  for (const [matchId, rows] of byMatch) {
+    await Bun.write(
+      matchTeamBanStagingFilePath(lakeDir, matchId),
+      rows.map((row) => JSON.stringify(row)).join("\n") + "\n",
+    );
+  }
+}
+
 export async function writeTestLake(
   lakeDir: string,
   input: TestLakeInput,
@@ -430,6 +457,7 @@ export async function writeTestLake(
   await writeTestAccounts(lakeDir, input);
   await writeTestMatches(lakeDir, input);
   await writeTestMatchTeams(lakeDir, input);
+  await writeTestMatchTeamBans(lakeDir, input);
   await writeTestPrematches(lakeDir, input);
   await writeTestTimelineRows(
     lakeDir,
@@ -451,4 +479,14 @@ export async function writeTestLake(
     "timeline_coverage",
     input.timelineCoverage ?? [],
   );
+}
+
+/** Write a test lake into a fresh temp directory and resolve its files. */
+export async function writeTempTestLake(
+  prefix: string,
+  input: TestLakeInput,
+): Promise<LakeFiles> {
+  const lakeDir = await mkdtemp(path.join(tmpdir(), prefix));
+  await writeTestLake(lakeDir, input);
+  return await resolveLakeFiles(lakeDir);
 }

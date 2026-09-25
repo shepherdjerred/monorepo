@@ -5,6 +5,7 @@ import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
   permissionKey,
+  PLAYER_PERMISSIONS,
   permissionsForRole,
 } from "@scout-for-lol/data";
 import {
@@ -145,18 +146,6 @@ describe("RBAC guild-permission gate", () => {
     });
   });
 
-  test("member with no grants is FORBIDDEN on every guild procedure", async () => {
-    await reset();
-    asMember();
-    const caller = trpc.authedCaller(member);
-    await expect(caller.subscription.list({ guildId })).rejects.toMatchObject({
-      code: "FORBIDDEN",
-    });
-    await expect(caller.report.list({ guildId })).rejects.toMatchObject({
-      code: "FORBIDDEN",
-    });
-  });
-
   test.each([
     { resource: "players", action: "read" },
     { resource: "players", action: "link" },
@@ -178,19 +167,6 @@ describe("RBAC guild-permission gate", () => {
       ).resolves.toEqual([]);
     },
   );
-
-  test("member search rejects grants unrelated to member selection", async () => {
-    await reset();
-    asMember();
-    await seedGrants(member, [{ resource: "audit", action: "read" }]);
-
-    await expect(
-      trpc.authedCaller(member).discord.searchMembers({
-        guildId,
-        query: "member",
-      }),
-    ).rejects.toMatchObject({ code: "FORBIDDEN" });
-  });
 
   test("manager can manage but cannot touch roles", async () => {
     await reset();
@@ -570,5 +546,52 @@ describe("competition creation RBAC", () => {
       .competition.create(competitionCreateInput());
 
     expect(checkRateLimit(guildId, member)).toBe(false);
+  });
+});
+
+describe("the implicit Player role", () => {
+  test("a member with no grants holds Player: player-facing reads only", async () => {
+    await reset();
+    asMember();
+    const caller = trpc.authedCaller(member);
+    // Player reads: what Scout already shows every member in Discord.
+    await expect(caller.report.list({ guildId })).resolves.toEqual([]);
+    // Management reads and writes stay behind a grant.
+    await expect(caller.subscription.list({ guildId })).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+    const mine = await caller.guild.myPermissions({ guildId });
+    expect(mine).toEqual(expect.arrayContaining([...PLAYER_PERMISSIONS]));
+    expect(mine).toHaveLength(PLAYER_PERMISSIONS.length);
+  });
+
+  test("a non-member is FORBIDDEN even for Player reads", async () => {
+    await reset();
+    trpc.setMembership([]);
+    await expect(
+      trpc.authedCaller(member).report.list({ guildId }),
+    ).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
+
+  test("listManageable leaves out servers where grants add nothing to Player", async () => {
+    await reset();
+    asMember();
+    const caller = trpc.authedCaller(member);
+    const before = await caller.guild.listManageable();
+    // A grant already inside Player still manages nothing.
+    await seedGrants(member, [{ resource: "players", action: "read" }]);
+    const after = await caller.guild.listManageable();
+    expect([...before, ...after].some((g) => g.id === guildId)).toBe(false);
+  });
+
+  test("member search is open to every member through Player's players:read", async () => {
+    await reset();
+    asMember();
+    await expect(
+      trpc.authedCaller(member).discord.searchMembers({
+        guildId,
+        query: "member",
+      }),
+    ).resolves.toEqual([]);
   });
 });

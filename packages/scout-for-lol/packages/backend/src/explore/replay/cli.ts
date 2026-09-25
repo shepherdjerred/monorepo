@@ -28,7 +28,8 @@ export type ReplayCliOptions = {
   /** A previous run to compare against; required for chips to mean anything. */
   readonly baselineRunId: string | null;
   /** Run exactly one case, by id. */
-  readonly onlyCaseId: string | null;
+  /** Run just these cases: a targeted re-check at a fraction of a sweep's cost. */
+  readonly onlyCaseIds: readonly string[] | null;
 };
 
 export type ReplayCliParseResult =
@@ -49,7 +50,7 @@ Options:
   --concurrency <n>        Cases in flight at once (default: 4)
   --resume <runId>         Continue a run, skipping recorded cases
   --baseline <runId>       Compare against a previous run
-  --only <caseId>          Run exactly one case
+  --only <caseId,...>      Run exactly these cases (comma-separated)
   --help                   Show this help
 
 With neither --chips nor --conversations, chips are run: they need no corpus.
@@ -123,7 +124,7 @@ export function parseReplayArgs(args: readonly string[]): ReplayCliParseResult {
   let concurrency = 4;
   let resumeRunId: string | null = null;
   let baselineRunId: string | null = null;
-  let onlyCaseId: string | null = null;
+  let onlyCaseIds: readonly string[] | null = null;
 
   for (let index = 0; index < args.length; index += 1) {
     const argument = args[index];
@@ -173,7 +174,10 @@ export function parseReplayArgs(args: readonly string[]): ReplayCliParseResult {
         index += 1;
         continue;
       case "--only":
-        onlyCaseId = requireValue(args, index, "--only");
+        onlyCaseIds = requireValue(args, index, "--only")
+          .split(",")
+          .map((caseId) => caseId.trim())
+          .filter((caseId) => caseId.length > 0);
         index += 1;
         continue;
       // `undefined` is unreachable while the loop is bounded by `length`,
@@ -201,7 +205,7 @@ export function parseReplayArgs(args: readonly string[]): ReplayCliParseResult {
       concurrency,
       resumeRunId,
       baselineRunId,
-      onlyCaseId,
+      onlyCaseIds,
     },
   };
 }

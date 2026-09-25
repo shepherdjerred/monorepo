@@ -4,9 +4,11 @@
  * permission-aware procedure builder so a resolver cannot forget its guard.
  *
  * The ONLY Discord signal is the admin/owner bit: a guild's Discord
- * Administrator or owner is Scout's root/sudo (all permissions). Everyone else's
- * access comes purely from Scout-managed grants in the `ServerPermission` table.
- * Membership (from the OAuth guild list) is a precondition either way.
+ * Administrator or owner is Scout's root/sudo (all permissions). Every other
+ * member holds the implicit Player role (`PLAYER_PERMISSIONS`: the
+ * player-facing reads Scout already shows them in Discord) plus any
+ * Scout-managed grants in the `ServerPermission` table. Membership (from the
+ * OAuth guild list) is a precondition either way.
  *
  * Whether Scout is installed at all comes from `lib/discord/installed-guilds.ts`
  * rather than the gateway guild cache, so this resolver answers identically on a
@@ -24,6 +26,7 @@ import {
   DiscordGuildIdSchema,
   P,
   createPermissionSet,
+  memberPermissions,
   parseStoredPermissionKey,
   rootPermissions,
 } from "@scout-for-lol/data";
@@ -46,7 +49,7 @@ const GuildIdInput = z.object({ guildId: DiscordGuildIdSchema });
  * - not a member ⇒ FORBIDDEN
  * - Scout not installed ⇒ NOT_FOUND
  * - Discord admin/owner ⇒ every permission ({@link rootPermissions})
- * - otherwise ⇒ the union of their validated granted rows
+ * - otherwise ⇒ the Player baseline plus their validated granted rows
  *
  * Grants are read per request (no cache) so a revoke takes effect immediately;
  * only the membership/admin branch lags up to the 5-minute `fetchUserGuilds`
@@ -84,7 +87,7 @@ export async function resolveGuildPermissions(
     select: { permission: true },
   });
   const granted = rows.map((row) => parseStoredPermissionKey(row.permission));
-  return createPermissionSet(granted);
+  return createPermissionSet(memberPermissions(granted));
 }
 
 async function requireGuildPermission<R extends Resource>(
