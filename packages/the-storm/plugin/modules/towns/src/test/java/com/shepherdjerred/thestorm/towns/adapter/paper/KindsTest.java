@@ -81,8 +81,15 @@ final class KindsTest {
     assertThat(kinds.impact(Material.TARGET))
         .contains(new Act(Action.USE_REDSTONE, Subject.REDSTONE_COMPONENT));
     assertThat(kinds.impact(Material.DECORATED_POT)).contains(new Act(Action.BREAK, Subject.BLOCK));
-    assertThat(kinds.impact(Material.OAK_BUTTON))
-        .contains(new Act(Action.INTERACT, Subject.BUTTON));
+    assertThat(kinds.impact(Material.OAK_BUTTON)).isEmpty();
+    assertThat(kinds.press(Material.OAK_BUTTON)).contains(new Act(Action.INTERACT, Subject.BUTTON));
+    assertThat(kinds.press(Material.TRIPWIRE)).contains(new Act(Action.INTERACT, Subject.TRIPWIRE));
+    assertThat(kinds.press(Material.FARMLAND)).contains(new Act(Action.BREAK, Subject.FARMLAND));
+    assertThat(kinds.press(Material.STONE)).isEmpty();
+    assertThat(kinds.isRedstone(Material.REDSTONE_WIRE)).isTrue();
+    assertThat(kinds.isRedstone(Material.WAXED_LIGHTNING_ROD)).isTrue();
+    assertThat(kinds.isRedstone(Material.STONE_BUTTON)).isTrue();
+    assertThat(kinds.isRedstone(Material.OAK_DOOR)).isFalse();
     assertThat(kinds.impact(Material.STONE)).isEmpty();
   }
 

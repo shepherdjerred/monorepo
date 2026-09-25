@@ -7,14 +7,19 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.Chest;
+import org.bukkit.block.data.type.Shelf;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 
 /**
- * Double chests: the two halves can sit on either side of a claim border, so every check on one
- * half must also hold for the other, or a chest placed in the wilderness would open a town's chest.
+ * Double chests and shelf rows: their parts can sit on either side of a claim border, so every
+ * check on one part must also hold for the others, or a chest or shelf placed in the wilderness
+ * would open a town's.
  */
 final class Chests {
+
+  /** How far along a row of shelves a use or placement is checked. */
+  static final int SHELF_REACH = 3;
 
   private Chests() {}
 
@@ -49,6 +54,46 @@ final class Chests {
     }
     var location = inventory.getLocation();
     return location == null ? List.of() : List.of(location);
+  }
+
+  /**
+   * The shelves {@code block} may swap items with: itself and up to {@link #SHELF_REACH} shelves
+   * facing the same way on each side (vanilla chains at most three, so this over-covers). Empty
+   * when {@code block} is not a shelf.
+   */
+  static List<Block> shelfChain(Block block) {
+    if (!(block.getBlockData() instanceof Shelf shelf)) {
+      return List.of();
+    }
+    var facing = shelf.getFacing();
+    var chain = new ArrayList<Block>();
+    chain.add(block);
+    for (var side : List.of(clockwise(facing), clockwise(facing).getOppositeFace())) {
+      var next = block;
+      for (var step = 0; step < SHELF_REACH; step++) {
+        next = next.getRelative(side);
+        if (!(next.getBlockData() instanceof Shelf neighbour) || neighbour.getFacing() != facing) {
+          break;
+        }
+        chain.add(next);
+      }
+    }
+    return List.copyOf(chain);
+  }
+
+  /**
+   * The shelves beside a shelf about to be placed facing {@code facing} at {@code block}, which it
+   * would chain with.
+   */
+  static List<Block> shelvesBeside(Block block, BlockFace facing) {
+    var beside = new ArrayList<Block>(2);
+    for (var side : List.of(clockwise(facing), clockwise(facing).getOppositeFace())) {
+      var neighbour = block.getRelative(side);
+      if (neighbour.getBlockData() instanceof Shelf shelf && shelf.getFacing() == facing) {
+        beside.add(neighbour);
+      }
+    }
+    return List.copyOf(beside);
   }
 
   private static BlockFace clockwise(BlockFace face) {

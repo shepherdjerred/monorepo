@@ -8,7 +8,10 @@ import io.papermc.paper.event.player.PlayerFlowerPotManipulateEvent;
 import io.papermc.paper.event.player.PlayerInsertLecternBookEvent;
 import io.papermc.paper.event.player.PlayerLecternPageChangeEvent;
 import io.papermc.paper.event.player.PlayerOpenSignEvent;
+import java.util.List;
+import org.bukkit.Tag;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.Directional;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
@@ -59,12 +62,52 @@ final class BlockListener implements Listener {
     }
     var block = event.getBlock();
     check(event, player, new Act(Action.BUILD, kinds.subject(block.getType())), block);
-    // A chest placed beside another joins it; only someone who may open that one may join it.
-    Chests.partner(block)
-        .filter(partner -> !event.isCancelled())
-        .ifPresent(
-            partner ->
-                check(event, player, new Act(Action.OPEN_CONTAINER, Subject.CONTAINER), partner));
+    if (!event.isCancelled() && !mayJoin(player, block)) {
+      event.setCancelled(true);
+    }
+    if (!event.isCancelled()
+        && kinds.isRedstone(block.getType())
+        && !mayWire(player, block, event.getBlockAgainst())) {
+      event.setCancelled(true);
+    }
+  }
+
+  /**
+   * A chest placed beside another joins it and a shelf joins the shelves beside it; only someone
+   * who may open those may join them.
+   */
+  private boolean mayJoin(Player player, Block block) {
+    var open = new Act(Action.OPEN_CONTAINER, Subject.CONTAINER);
+    var partner = Chests.partner(block);
+    if (partner.isPresent() && !guard.permits(player, open, guard.land(partner.get()))) {
+      return false;
+    }
+    if (block.getBlockData() instanceof Directional placed
+        && Tag.WOODEN_SHELVES.isTagged(block.getType())) {
+      for (var shelf : Chests.shelvesBeside(block, placed.getFacing())) {
+        if (!guard.permits(player, open, guard.land(shelf))) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * A redstone component or power source may only go where the player may change the redstone of
+   * every block it could power: the six blocks around it and, for components attached to a block,
+   * the six around that block. Otherwise a lever in the wilderness drives a town's pistons.
+   */
+  private boolean mayWire(Player player, Block block, Block against) {
+    var wire = new Act(Action.USE_REDSTONE, Subject.REDSTONE_COMPONENT);
+    for (var center : List.of(block, against)) {
+      for (var face : Redstone.FACES) {
+        if (!guard.permits(player, wire, guard.land(center.getRelative(face)))) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -138,9 +181,13 @@ final class BlockListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onCauldron(CauldronLevelChangeEvent event) {
-    Culprits.behind(event.getEntity())
-        .ifPresent(
-            player -> check(event, player, new Act(Action.BUILD, Subject.BLOCK), event.getBlock()));
+    guard
+        .culprit(event.getEntity())
+        .filter(
+            culprit ->
+                !guard.permits(
+                    culprit, new Act(Action.BUILD, Subject.BLOCK), guard.land(event.getBlock())))
+        .ifPresent(culprit -> event.setCancelled(true));
   }
 
   private void check(Cancellable event, Player player, Act act, Block block) {
