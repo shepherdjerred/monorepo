@@ -18,6 +18,10 @@ import {
 import { scoutMatchWorkflowId, scoutTaskQueues } from "#src/identifiers.ts";
 import { realtimeActivities } from "./activity-options.ts";
 import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
+import {
+  runOwnedPrematchPass,
+  SCOUT_V2_PREMATCH_OWNERSHIP_PATCH,
+} from "./ownership/prematch-ownership-v2.ts";
 
 /**
  * Guards the reconciliation command added to the already-started collision
@@ -46,6 +50,11 @@ export async function scoutRealtimePollWorkflow(
   if (Date.now() - scheduledStart > input.maximumAgeSeconds * 1000) {
     setWorkflowPhase("**Phase:** skipped because the poll was stale");
     return "stale";
+  }
+  // Only the prematch arm is routed, and only it records the patch marker:
+  // a tournament-lobby poll keeps its recorded command sequence exactly.
+  if (input.kind === "prematch" && patched(SCOUT_V2_PREMATCH_OWNERSHIP_PATCH)) {
+    return await runOwnedPrematchPass(input);
   }
   setWorkflowPhase("**Phase:** polling realtime Scout state");
   await realtimeActivities(input.stage).pollRealtime(input);

@@ -31,8 +31,11 @@ if (!is_array($manifest) || !isset($manifest['feeds']) || !is_array($manifest['f
 }
 
 $username = cliInitUser($username);
-$feedDao = FreshRSS_Factory::createFeedDao($username);
-$updated = 0;
+
+// FreshRSS stores a filter in its own serialized form (for example `!intitle:`
+// becomes `-intitle:`). A declared filter in any other form would be rewritten
+// on every pass and never match the export the Temporal sync verifies, so
+// refuse the whole manifest before writing anything.
 foreach ($manifest['feeds'] as $index => $desiredFeed) {
 	if (!is_array($desiredFeed) || !isset($desiredFeed['url']) || !is_string($desiredFeed['url'])) {
 		failFilterReconciliation('FreshRSS desired feed ' . $index . ' does not contain a URL');
@@ -41,7 +44,20 @@ foreach ($manifest['feeds'] as $index => $desiredFeed) {
 	if ($desiredFilter !== null && !is_string($desiredFilter)) {
 		failFilterReconciliation('FreshRSS desired feed ' . $index . ' has an invalid read filter');
 	}
+	if ($desiredFilter !== null) {
+		$canonicalFilter = (new FreshRSS_BooleanSearch($desiredFilter))->toString();
+		if ($canonicalFilter !== $desiredFilter) {
+			failFilterReconciliation('FreshRSS stores the read filter for ' . $desiredFeed['url'] . ' as ' .
+				json_encode($canonicalFilter, JSON_UNESCAPED_SLASHES) . '; declare that form instead of ' .
+				json_encode($desiredFilter, JSON_UNESCAPED_SLASHES));
+		}
+	}
+}
 
+$feedDao = FreshRSS_Factory::createFeedDao($username);
+$updated = 0;
+foreach ($manifest['feeds'] as $desiredFeed) {
+	$desiredFilter = $desiredFeed['filtersActionRead'] ?? null;
 	$feed = $feedDao->searchByUrl($desiredFeed['url']);
 	if ($feed === null) {
 		failFilterReconciliation('FreshRSS desired feed is not subscribed: ' . $desiredFeed['url']);

@@ -13,8 +13,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("#src/database/index.ts", () => ({
-  getAccountsWithState: mocks.getAccountsWithState,
   prisma: {},
+}));
+vi.mock("#src/database/player-accounts.ts", () => ({
+  getAccountsWithState: mocks.getAccountsWithState,
 }));
 vi.mock("#src/discord/utils/guild-membership.ts", () => ({
   getActiveServerIds: mocks.getActiveServerIds,

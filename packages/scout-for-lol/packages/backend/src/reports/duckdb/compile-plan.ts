@@ -1,11 +1,11 @@
 import { match } from "ts-pattern";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
-import type {
-  ScoutQlAggregateExpr,
-  ScoutQlEvidence,
-  ScoutQlPredicate,
-} from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
+import type { ScoutQlPredicate } from "@scout-for-lol/data/model/scoutql/parse/expression.ts";
 import {
+  buildMatchTeamBansSource,
+  buildTimelineEventsSource,
+  buildTimelineParticipantFramesSource,
+  buildMatchTeamsSource,
   buildMatchesSource,
   buildPrematchSource,
   listParam,
@@ -16,35 +16,49 @@ import type {
   LakeFiles,
   SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
-import type { LakeQueryScope } from "#src/reports/duckdb/scope.ts";
 import {
-  buildPlanColumnMap,
-  collectPredicateColumnNames,
+  isTrackedScope,
+  type LakeQueryScope,
+} from "#src/reports/duckdb/scope.ts";
+import type { ServerPerson } from "#src/reports/server-people.ts";
+import {
   compilePredicate,
-  countPredicateNodes,
-  countScalarNodes,
+  predicateReadsOnly,
   predicateTouchesIdentity,
-  resolveColumn,
-  type ColumnMap,
   type ExprContext,
-  type PlanColumnSource,
 } from "#src/reports/duckdb/expr-sql.ts";
 import {
-  collectAggregateColumnNames,
-  collectHavingColumnNames,
-  countAggregateNodes,
-  countHavingNodes,
-} from "#src/reports/duckdb/aggregate-sql.ts";
+  TEAM_LOOKUP_COLUMNS,
+  buildPlanColumnMap,
+  EVENT_LOOKUPS,
+  FIRST_OF_KIND_PARTITION,
+  timeFromLookup,
+  resolveColumn,
+  type ColumnMap,
+} from "#src/reports/duckdb/column-map.ts";
 import {
   compilePlanGrouping,
   type CompiledGrouping,
 } from "#src/reports/duckdb/group-sql.ts";
 import {
   buildAggregateTail,
-  buildFactsCte,
   type CompiledPlanColumns,
 } from "#src/reports/duckdb/select-sql.ts";
+import { buildFactsCte } from "#src/reports/duckdb/facts-cte.ts";
+import {
+  buildLookupSources,
+  enforceScopeGuards,
+  hasTrackedAccounts,
+  planSourceKind,
+  type EventLookupFlags,
+  type SourceKind,
+} from "#src/reports/duckdb/plan-source.ts";
 import { combineAnd, frag, seq } from "#src/reports/duckdb/sql-fragment.ts";
+import {
+  enforcePlanNodeBudget,
+  flattenConjuncts,
+  referencedColumnNames,
+} from "#src/reports/duckdb/plan-budget.ts";
 
 /**
  * ScoutQL v2 plan → parameterized DuckDB SQL for lake-backed sources.
@@ -82,141 +96,11 @@ export type PlanQueryInput = {
   playerPuuids?: Map<number, string[]> | undefined;
   /** Guild-only pre-resolved player scoping (competition path). */
   playerIds?: number[] | undefined;
+  /** The merged people of a `servers` scope; required there, unused elsewhere. */
+  serverPeople?: readonly ServerPerson[] | undefined;
   /** Effective limit, already policy-capped. */
   limit: number;
 };
-
-const PER_EXPRESSION_NODE_CAP = 64;
-const PLAN_NODE_CAP = 256;
-
-function cappedNodes(count: number, what: string): number {
-  if (count > PER_EXPRESSION_NODE_CAP) {
-    throw new Error(
-      `${what} exceeds the ${PER_EXPRESSION_NODE_CAP.toString()}-node expression cap (${count.toString()} nodes).`,
-    );
-  }
-  return count;
-}
-
-function evidenceExpressions(
-  evidence: ScoutQlEvidence,
-): ScoutQlAggregateExpr[] {
-  return match(evidence)
-    .with({ kind: "rate" }, (rate) => [rate.successes, rate.trials])
-    .with({ kind: "ratio" }, (ratio) => [ratio.numerator, ratio.denominator])
-    .with({ kind: "sample" }, () => [])
-    .exhaustive();
-}
-
-function enforcePlanNodeBudget(plan: ScoutQlPlan): void {
-  let total = 0;
-  if (plan.where !== undefined) {
-    total += cappedNodes(countPredicateNodes(plan.where), "WHERE");
-  }
-  if (plan.having !== undefined) {
-    total += cappedNodes(countHavingNodes(plan.having), "HAVING");
-  }
-  for (const output of plan.outputs) {
-    total +=
-      output.expr.kind === "grouping-ref"
-        ? 1
-        : cappedNodes(
-            countAggregateNodes(output.expr),
-            `Output "${output.name}"`,
-          );
-    total += 1;
-    for (const expr of evidenceExpressions(output.evidence)) {
-      total += cappedNodes(countAggregateNodes(expr), "Evidence");
-    }
-  }
-  for (const grouping of plan.groupings) {
-    total +=
-      grouping.kind === "expression"
-        ? cappedNodes(countScalarNodes(grouping.expr), "GROUP BY expression")
-        : 1;
-  }
-  if (total > PLAN_NODE_CAP) {
-    throw new Error(
-      `Plan exceeds the ${PLAN_NODE_CAP.toString()}-node budget (${total.toString()} nodes).`,
-    );
-  }
-}
-
-function referencedColumnNames(plan: ScoutQlPlan): Set<string> {
-  const referenced = new Set<string>();
-  if (plan.where !== undefined) {
-    collectPredicateColumnNames(plan.where, referenced);
-  }
-  if (plan.having !== undefined) {
-    collectHavingColumnNames(plan.having, referenced);
-  }
-  for (const output of plan.outputs) {
-    if (output.expr.kind !== "grouping-ref") {
-      collectAggregateColumnNames(output.expr, referenced);
-    }
-    for (const expr of evidenceExpressions(output.evidence)) {
-      collectAggregateColumnNames(expr, referenced);
-    }
-  }
-  return referenced;
-}
-
-function flattenConjuncts(pred: ScoutQlPredicate): ScoutQlPredicate[] {
-  return pred.kind === "and"
-    ? pred.operands.flatMap((operand) => flattenConjuncts(operand))
-    : [pred];
-}
-
-type SourceKind = {
-  columnSource: PlanColumnSource;
-  timeColumn: "game_creation_at" | "observed_at";
-};
-
-function planSourceKind(plan: ScoutQlPlan, forGroupFacts: boolean): SourceKind {
-  const kind = match(plan.source)
-    .with(
-      "match_participants",
-      "competition_match_participants",
-      "player_groups",
-      (): SourceKind => ({
-        columnSource: "match",
-        timeColumn: "game_creation_at",
-      }),
-    )
-    .with("prematch_participants", (): SourceKind => ({
-      columnSource: "prematch",
-      timeColumn: "observed_at",
-    }))
-    .with("rank_current", "competition_rank", () => {
-      throw new Error(`rank sources are not lake-backed: ${plan.source}`);
-    })
-    .exhaustive();
-  if ((plan.source === "player_groups") !== forGroupFacts) {
-    throw new Error(
-      forGroupFacts
-        ? `${plan.source} does not use the group-facts projection.`
-        : "player_groups compiles through compileGroupFactsProjection.",
-    );
-  }
-  return kind;
-}
-
-function enforceScopeGuards(input: PlanQueryInput): void {
-  if (input.scope.kind === "global" && input.playerIds !== undefined) {
-    throw new Error(
-      "playerIds scoping requires a guild scope — player ids are per-server.",
-    );
-  }
-  // Rank sources threw in planSourceKind, so only the match flavor remains.
-  if (input.plan.source === "competition_match_participants") {
-    if (input.scope.kind === "global") {
-      throw new Error("Competition reports are not available in global scope.");
-    }
-    if (input.plan.competitionId === undefined) {
-      throw new Error(`${input.plan.source} requires a competition_id.`);
-    }
-  }
-}
 
 type SplitWhere = {
   /** Identity-free conjuncts, pushed into both union branches. */
@@ -264,9 +148,10 @@ function projectionDependencies(
 ): Set<string> {
   const dependencies = new Set<string>();
   for (const name of referenced) {
-    const binding = resolveColumn(columns, name);
-    if (binding.identity) continue;
-    for (const dependency of binding.dependencies) {
+    // Identity and looked-up columns are projected by the facts CTE itself,
+    // but a column derived from one (kill participation) still reads source
+    // columns, and those must be projected like any other.
+    for (const dependency of resolveColumn(columns, name).dependencies) {
       dependencies.add(dependency);
     }
   }
@@ -283,7 +168,18 @@ function buildFactsPipeline(
   input: PlanQueryInput,
   kind: SourceKind,
   columns: ColumnMap,
-  extras: { projected: Set<string>; extraItems: SqlFragment[] },
+  extras: {
+    projected: Set<string>;
+    extraItems: SqlFragment[];
+    /** Join the team row for team_champion_kills / kill_participation. */
+    teamLookup?: boolean;
+    /** Compute gold differences against other frames of the same minute. */
+    frameGold?: { team: boolean; lane: boolean } | undefined;
+    /** Event lookups named by the plan. */
+    eventLookups?: EventLookupFlags | undefined;
+    /** A grouping keys on the player, so rows without one are dropped. */
+    playerGrouped?: boolean;
+  },
 ): FactsPipeline | undefined {
   const factsContext: ExprContext = {
     columns,
@@ -292,30 +188,62 @@ function buildFactsPipeline(
   };
   const sourceContext: ExprContext = { ...factsContext, placement: "source" };
 
-  const { pushed, residual } = splitWhere(input.plan.where, columns);
-  const pushdown = combineAnd([
-    rangePredicate(kind.timeColumn, input.range),
-    ...pushed.map((conjunct) => compilePredicate(conjunct, sourceContext)),
-  ]);
+  const split = splitWhere(input.plan.where, columns);
+  // The first-of-kind window must see its whole partition: only conjuncts that
+  // select whole partitions are pushed; the rest apply to facts after it.
+  const windowed = extras.eventLookups?.firstOfKind === true;
+  const pushed = windowed
+    ? split.pushed.filter((c) => predicateReadsOnly(c, FIRST_OF_KIND_PARTITION))
+    : split.pushed;
+  const residual = [
+    ...split.pushed.filter((c) => !pushed.includes(c)),
+    ...split.residual,
+  ];
+  const range = rangePredicate(kind.timeColumn, input.range);
+  const pushedFragments = pushed.map((conjunct) =>
+    compilePredicate(conjunct, sourceContext),
+  );
+  // Everywhere else the time window is pushed into the source's own scan. A
+  // team row has no timestamp, so for match_teams the window belongs to the
+  // match dimension the facts CTE joins, and only the team-side conjuncts are
+  // pushed here.
+  const pushdown = timeFromLookup(kind.columnSource)
+    ? combineAnd(pushedFragments)
+    : combineAnd([range, ...pushedFragments]);
   const source = match(kind.columnSource)
     .with("match", () => buildMatchesSource(input.files, pushdown))
     .with("prematch", () => buildPrematchSource(input.files, pushdown))
+    .with("match-team", () => buildMatchTeamsSource(input.files, pushdown))
+    .with("match-team-ban", () =>
+      buildMatchTeamBansSource(input.files, pushdown),
+    )
+    .with("timeline-frame", () =>
+      buildTimelineParticipantFramesSource(input.files, pushdown),
+    )
+    .with("timeline-event", () =>
+      buildTimelineEventsSource(input.files, pushdown),
+    )
     .exhaustive();
   if (source === undefined) {
     return undefined;
   }
-  if (
-    input.scope.kind === "guild" &&
-    input.files.accountsParquet === undefined
-  ) {
+  const lookups = buildLookupSources(input.files, kind, range, {
+    ...extras,
+    scanFiltered: pushdown.sql.length > 0,
+  });
+  if (lookups === undefined) {
     return undefined;
   }
-
+  if (!hasTrackedAccounts(input)) {
+    return undefined;
+  }
   const facts = buildFactsCte({
     scope: input.scope,
     files: input.files,
+    serverPeople: input.serverPeople,
     columnSource: kind.columnSource,
     source,
+    ...lookups,
     projected: [...extras.projected],
     extraItems: extras.extraItems,
   });
@@ -323,6 +251,10 @@ function buildFactsPipeline(
   const residualFragments = residual.map((conjunct) =>
     compilePredicate(conjunct, factsContext),
   );
+  // A tower's or minion's kill has no player, so no row under GROUP BY player.
+  if (extras.playerGrouped === true) {
+    residualFragments.push(frag("puuid IS NOT NULL"));
+  }
   if (input.playerIds !== undefined) {
     residualFragments.push(
       frag("player_id IN (SELECT unnest(?))", [listParam(input.playerIds)]),
@@ -375,13 +307,38 @@ export function compileScoutQlPlanQuery(
   }
   const projected = projectionDependencies(referenced, columns);
   // The time column backs global arg_max labeling and date-trunc groupings;
-  // puuid is always projected separately as `m.puuid AS puuid`.
-  projected.add(kind.timeColumn);
+  // puuid is always projected separately as `m.puuid AS puuid`. On match_teams
+  // neither is a column of `m` — the time comes from the joined dimension and
+  // there is no player — so nothing is added here.
+  if (!timeFromLookup(kind.columnSource)) {
+    projected.add(kind.timeColumn);
+  }
   projected.delete("puuid");
 
   const pipeline = buildFactsPipeline(input, kind, columns, {
     projected,
     extraItems: [],
+    playerGrouped: groupings.some((grouping) => grouping.playerIdentity),
+    teamLookup:
+      kind.columnSource === "match" &&
+      [...referenced].some((name) => TEAM_LOOKUP_COLUMNS.has(name)),
+    frameGold:
+      kind.columnSource === "timeline-frame"
+        ? {
+            team: referenced.has("team_gold_diff"),
+            lane: referenced.has("lane_gold_diff"),
+          }
+        : undefined,
+    eventLookups:
+      kind.columnSource === "timeline-event"
+        ? {
+            firstOfKind: referenced.has(EVENT_LOOKUPS.firstOfKind),
+            killerTeam: referenced.has(EVENT_LOOKUPS.killerTeamWon),
+            assists:
+              referenced.has(EVENT_LOOKUPS.assistCount) ||
+              referenced.has(EVENT_LOOKUPS.soloKill),
+          }
+        : undefined,
   });
   if (pipeline === undefined) {
     return undefined;
@@ -454,7 +411,7 @@ export function compileGroupFactsProjection(
   const { plan } = input;
   enforcePlanNodeBudget(plan);
   const kind = planSourceKind(plan, true);
-  if (input.scope.kind === "global") {
+  if (!isTrackedScope(input.scope)) {
     throw new Error(
       "player_groups is not available in global scope — teammate groups are " +
         "defined by tracked accounts queueing together, which global match " +
@@ -470,6 +427,14 @@ export function compileGroupFactsProjection(
   const columns = buildPlanColumnMap(kind.columnSource);
 
   const referenced = referencedColumnNames(plan);
+  const teamLookup = [...referenced].find((name) =>
+    TEAM_LOOKUP_COLUMNS.has(name),
+  );
+  if (teamLookup !== undefined) {
+    throw new Error(
+      `${teamLookup} is not available on player_groups: a group spans players, not one team row.`,
+    );
+  }
   const fixed = new Set<string>(["puuid", ...GROUP_UNIT_COLUMNS]);
   const rawNames: string[] = [];
   const projected = new Set<string>(GROUP_UNIT_COLUMNS);

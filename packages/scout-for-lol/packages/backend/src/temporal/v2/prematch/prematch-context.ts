@@ -7,11 +7,8 @@ import {
 import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ScoutPrematchGameRef } from "@scout-for-lol/temporal/contracts-v2";
 import { scoutPrematchGameV2MatchId } from "@scout-for-lol/temporal/identifiers";
-import {
-  getAccountsWithState,
-  prisma,
-  type ExtendedPrismaClient,
-} from "#src/database/index.ts";
+import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { getAccountsWithState } from "#src/database/player-accounts.ts";
 import { getActiveGame } from "#src/league/api/spectator.ts";
 
 /**

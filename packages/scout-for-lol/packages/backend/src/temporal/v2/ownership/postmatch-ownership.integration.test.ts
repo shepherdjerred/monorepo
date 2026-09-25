@@ -29,7 +29,7 @@ const {
   releasePostMatchPollClaimV2,
   renewPostMatchPollClaimV2,
   resolvePostMatchDiscoveryOwnerV2,
-} = await import("#src/temporal/v2/postmatch-ownership.ts");
+} = await import("#src/temporal/v2/ownership/postmatch-ownership.ts");
 const { beginPollingRun, endPollingRun } =
   await import("#src/league/tasks/postmatch/poll-ownership.ts");
 

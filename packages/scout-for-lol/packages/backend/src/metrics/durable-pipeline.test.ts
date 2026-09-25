@@ -8,6 +8,8 @@ import {
   scoutDurableBacklogOldestAge,
   scoutDurableLakeStagingLag,
   scoutDurableNotificationIntents,
+  scoutDurableObservationLag,
+  scoutDurablePostmatchMintGaps,
   scoutDurableReceiptsRecorded,
   scoutDurableWorkflowStartAcceptances,
   scoutDurableRecoveryBatches,
@@ -44,6 +46,17 @@ const DURABLE_METRICS = [
     name: "scout_durable_lake_staging_lag_seconds",
     labels: { artifact_kind: "match" },
     fill: () => scoutDurableLakeStagingLag.set({ artifact_kind: "match" }, 0),
+  },
+  {
+    name: "scout_durable_observation_lag_seconds",
+    labels: { statistic: "p90" },
+    fill: () => scoutDurableObservationLag.set({ statistic: "p90" }, 0),
+  },
+  {
+    // No labels at all: a count of matches, which must never carry the ids.
+    name: "scout_durable_postmatch_mint_gaps",
+    labels: {},
+    fill: () => scoutDurablePostmatchMintGaps.set(0),
   },
   {
     name: "scout_durable_receipts_recorded_total",
@@ -137,6 +150,7 @@ describe("durable pipeline metrics", () => {
       "stalled-match-processing",
       "live-recovery-batches",
       "unaccepted-workflow-starts",
+      "ready-notification-intents",
     ]);
   });
 

@@ -196,6 +196,14 @@ export function createOpenRouterRuntime(options: OpenRouterRuntimeOptions) {
       };
       return {
         headers,
+        ...(input.promptCacheKey === undefined
+          ? {}
+          : {
+              // Spread into the request body by the OpenRouter provider.
+              providerOptions: {
+                openrouter: { prompt_cache_key: input.promptCacheKey },
+              },
+            }),
         include: { requestBody: true, responseBody: true },
         telemetry: {
           isEnabled: true,

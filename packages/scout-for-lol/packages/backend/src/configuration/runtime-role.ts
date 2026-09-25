@@ -139,17 +139,23 @@ export type ScoutRuntimeCapabilities = {
   /** Workers started as soon as Temporal connects. */
   readonly temporalWorkers: readonly ScoutTemporalQueueClass[];
   /**
-   * Workers added once the Discord gateway is ready.
+   * Workers added once the `discord-gateway` boot step resolves.
    *
-   * Only `combined` has any: its realtime and background Activities read the
-   * live guild cache, so starting them before `clientReady` would poll with a
-   * cache that cannot yet answer. A role that owns no gateway either runs these
-   * from the start (`activity-worker`) or never (`application`, `gateway`).
+   * That step resolves when `client.login()` does, NOT on `clientReady`, so
+   * these can start while discord.js is still filling the guild cache. Only
+   * `combined` has any, and its realtime and background Activities tolerate
+   * that because their one cache read, `getActiveServerIds()`, answers
+   * "no filter" until the client is ready. A role that owns no gateway runs
+   * these from the start (`activity-worker`, and `application` for now) or
+   * never (`gateway`).
    */
   readonly deferredTemporalWorkers: readonly ScoutTemporalQueueClass[];
   /** Log into the Discord gateway and install the command/guild handlers. */
   readonly discordGateway: boolean;
-  /** Start one ingestion reconciliation once the gateway is ready. */
+  /**
+   * Start one ingestion reconciliation after the `discord-gateway` boot step
+   * resolves — on `login()`, not on `clientReady`.
+   */
   readonly gatewayReadyReconciliation: boolean;
   readonly httpSurface: ScoutHttpSurface;
   /** The activity worker for scheduled competition updates. */
@@ -217,8 +223,8 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
     // queues outright — Riot polling, prematch, match ingest, report runs,
     // parlay generation and Discord delivery — so this role carries them.
     //
-    // They are always-on here rather than deferred: deferral exists to wait for
-    // `clientReady`, and this role never logs a shard in, so a deferred worker
+    // They are always-on here rather than deferred: deferral waits for the
+    // gateway login, and this role never logs a shard in, so a deferred worker
     // would simply never start. That is the shape `activity-worker` already
     // uses, and it is sound for the same reason — the gatewayless sweep moved
     // these Activities off the live guild cache and behind ports.

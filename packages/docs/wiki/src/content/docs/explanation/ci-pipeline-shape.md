@@ -105,10 +105,20 @@ make the gate approve unreviewed changes.
 
 The gate runs after every other PR step. Any failed job marks a Buildkite build
 as failing, and most PR steps set `cancel_on_build_failing`, so a gate that ran
-beside them would cancel the whole build whenever Codex was out of quota. The
-gate therefore depends on every other PR step with `allow_dependency_failure`,
-still fails the build when the review fails, and still reports its verdict when
-another step failed. It does not run when a dependency was canceled, per
+beside them would cancel the whole build whenever it failed. The gate therefore
+depends on every other PR step with `allow_dependency_failure`, still fails the
+build when the review fails, and still reports its verdict when another step
+failed.
+
+Codex running out of quota is not a review failure. No review happened, and
+blocking every merge on a billing state would stop the rest of CI from
+counting. When Codex posts its usage-limit notice for the exact head, the gate
+exits with status 42, and the step soft-fails on that status alone. The build
+then carries a warning annotation telling the reviewer to rely on Greptile's
+review. Findings, unresolved threads, timeouts, and every other error exit with
+another status and still fail the required build. `select-pr-pipeline.ts`
+rejects any other `soft_fail` shape on the gate, so it cannot quietly widen
+into a gate that never fails. It does not run when a dependency was canceled, per
 Buildkite's
 [dependency rules](https://buildkite.com/docs/pipelines/configure/dependencies).
 The PR selector, `select-pr-pipeline.ts`, treats those edges as ordering only:

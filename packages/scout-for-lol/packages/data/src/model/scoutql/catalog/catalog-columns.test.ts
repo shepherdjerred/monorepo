@@ -1,14 +1,20 @@
 import { describe, expect, test } from "vitest";
 import {
   MATCH_LAKE_COLUMNS,
+  MATCH_TEAM_BAN_LAKE_COLUMNS,
+  MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
 } from "#src/model/reports/lake-columns.ts";
 import {
+  TIMELINE_EVENT_LAKE_COLUMNS,
+  TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+} from "#src/model/reports/timeline-lake-columns.ts";
+import {
   scoutQlSourceCatalog,
   scoutQlSourceCatalogs,
-  type ScoutQlColumnType,
 } from "#src/model/scoutql/catalog/catalog-columns.ts";
+import type { ScoutQlColumnType } from "#src/model/scoutql/catalog/catalog-column-types.ts";
 
 // ── Catalog drift ────────────────────────────────────────────────────────────
 // The catalogs are the language's whole vocabulary, and the engine resolves the
@@ -30,6 +36,10 @@ const LAKE_MAPS: Record<string, Record<string, DuckDbColumnType>> = {
   competition_match_participants: MATCH_LAKE_COLUMNS,
   player_groups: MATCH_LAKE_COLUMNS,
   prematch_participants: PREMATCH_LAKE_COLUMNS,
+  match_teams: MATCH_TEAM_LAKE_COLUMNS,
+  match_team_bans: MATCH_TEAM_BAN_LAKE_COLUMNS,
+  timeline_frames: TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
+  timeline_events: TIMELINE_EVENT_LAKE_COLUMNS,
 };
 
 describe("physical catalog columns come from the lake schema", () => {
@@ -89,6 +99,10 @@ describe("virtual dimensions match what the engine can compute", () => {
       "surrender_state",
       "arena_placement",
       "map",
+      // Looked up from the participant's team row (column-map.ts
+      // TEAM_LOOKUP_COLUMNS); joined only when a query names one.
+      "team_champion_kills",
+      "kill_participation",
     ]);
   });
 

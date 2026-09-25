@@ -1,3 +1,4 @@
+import { match } from "ts-pattern";
 import { Loaded } from "@shepherdjerred/loaded";
 import { LoadingBlock } from "@shepherdjerred/loaded/react.tsx";
 import { StaleState } from "@scout-for-lol/design-system/domain/states";
@@ -7,7 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   type Permission,
   type PermissionSet,
-  type Role,
+  type DerivedRole,
   ROLES,
   canDelegateRole,
   permissionsForRole,
@@ -56,10 +57,19 @@ import {
   Label,
 } from "@scout-for-lol/design-system/components/forms/field";
 
-function roleLabel(role: Role | "custom"): string {
-  return role === "custom"
-    ? "Custom"
-    : (ROLES.find((r) => r.id === role)?.label ?? role);
+function roleLabel(role: DerivedRole): string {
+  return match(role)
+    .with("custom", () => "Custom")
+    .with("player", () => "Player")
+    .otherwise((id) => ROLES.find((r) => r.id === id)?.label ?? id);
+}
+
+/**
+ * Player is implicit, never granted: a member whose grants add nothing to it
+ * is edited as their custom set.
+ */
+function editableRole(role: DerivedRole): RoleSelection {
+  return role === "player" ? "custom" : role;
 }
 
 function canDelegateSelection(
@@ -169,8 +179,10 @@ export function GuildAccess() {
             <div>
               <h2 className="text-xl font-semibold tracking-tight">Access</h2>
               <p className="mt-1 text-sm text-scout-subtle">
-                Grant members scoped access to this server. Discord admins
-                always have full access and aren&apos;t listed here.
+                Every member of this server is a Player: they can already see
+                its players, competitions, reports and custom games. Grant more
+                here. Discord admins always have full access and aren&apos;t
+                listed.
               </p>
             </div>
 
@@ -326,7 +338,7 @@ export function GuildAccess() {
                       colSpan={4}
                       className="text-center text-sm text-scout-subtle"
                     >
-                      No members have been granted access yet.
+                      No members have access beyond Player yet.
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -352,7 +364,7 @@ export function GuildAccess() {
                             <div className="flex items-center gap-2">
                               <MemberRoleForm
                                 id={member.discordUserId}
-                                role={member.role}
+                                role={editableRole(member.role)}
                                 permissions={perms}
                                 pending={setMutation.isPending}
                                 editingCustomPermissions={
@@ -428,7 +440,7 @@ export function GuildAccess() {
                                 });
                               }}
                             >
-                              Remove
+                              Reset to Player
                             </Button>
                           )}
                         </TableCell>

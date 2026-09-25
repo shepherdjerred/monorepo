@@ -22,7 +22,7 @@ import { uniqueBy } from "remeda";
 import {
   getChannelsSubscribedToPlayers,
   type SubscribedChannel,
-} from "#src/database/index.ts";
+} from "#src/database/subscribed-channels.ts";
 import {
   send,
   ChannelSendError,

@@ -218,9 +218,10 @@ export const prematchDetectionsTotal = new Counter({
   name: "prematch_detections_total",
   help: "Total pre-match game detections",
   // Status values: "detected", "already_tracked", "deferred_custom_prestart"
-  // (roster still filling during the loading screen) and
+  // (roster still filling during the loading screen),
   // "deferred_undersized_roster" (the game has started, so this is the roster
-  // Riot will report — notably, bots are never listed at all)
+  // Riot will report — notably, bots are never listed at all) and
+  // "owned_by_v2" (the V2 prematch path already captured this game)
   labelNames: ["status"] as const,
   registers: [registry],
 });
@@ -768,10 +769,24 @@ function updateUptimeMetric(): void {
   applicationUptime.set(uptimeSeconds);
 }
 
-// Update uptime every 10 seconds
-setInterval(() => {
+/**
+ * Update uptime every 10 seconds, without holding the process open.
+ *
+ * This runs at import time, so every script that reaches metrics — directly or
+ * through the database, the config or the Explore agent — inherits it. Without
+ * `unref` that timer is a live handle forever: a CLI that has written its
+ * output and disconnected everything still never exits, because a timer nobody
+ * is waiting for is still a reason to stay alive.
+ *
+ * That cost real time. The replay and capture CLIs appeared to hang after
+ * finishing their work, and the cause was read as a DuckDB handle more than
+ * once before it was measured. A long-lived server is unaffected: its HTTP
+ * listener holds the loop open, and an unref'd interval still fires.
+ */
+const uptimeTimer = setInterval(() => {
   updateUptimeMetric();
 }, 10_000);
+uptimeTimer.unref();
 
 logger.info("✅ Prometheus metrics initialized successfully");
 

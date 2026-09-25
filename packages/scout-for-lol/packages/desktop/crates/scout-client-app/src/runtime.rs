@@ -24,7 +24,7 @@ use scout_client_core::protocol::{
     ObservationKind, ObservationOutcome, ObservationQuarantineReason, ObservationReceipt,
 };
 use scout_client_core::reporting::{
-    BugsinkSink, ReportingGuard, reporting_environment, start_error_reporting,
+    BugsinkSink, ReportingGuard, reporting_environment, reporting_status, start_error_reporting,
 };
 use serde_json::Value;
 use sha2::{Digest as _, Sha256};
@@ -106,6 +106,7 @@ impl ClientRuntime {
             diagnostics = diagnostics.with_sink(Box::new(BugsinkSink));
         }
         let diagnostics = Arc::new(diagnostics);
+        diagnostics.record(reporting_status());
         let (shutdown, shutdown_receiver) = watch::channel(false);
         let (commands, command_receiver) = mpsc::unbounded_channel();
         let worker_state = Arc::clone(&state);
@@ -350,6 +351,7 @@ async fn collect_and_upload_observations(
             context.payloads,
             context.live_client,
             context.tick_number,
+            context.diagnostics,
         )
         .await
     {
@@ -1347,6 +1349,7 @@ async fn collect_once(
     payloads: &mut HashMap<String, Vec<u8>>,
     live_client: Option<&LiveClient>,
     tick_number: u64,
+    diagnostics: &Diagnostics,
 ) -> Result<(), String> {
     let Some(lockfile) = optional_lockfile(discover_lockfile())? else {
         update_state(state, |snapshot| {
@@ -1393,6 +1396,7 @@ async fn collect_once(
             ObservationKind::AccountProfile,
             &payload,
             Some(&local_puuid),
+            diagnostics,
         )?;
     }
 
@@ -1401,12 +1405,20 @@ async fn collect_once(
         outbox,
         payloads,
         LcuEndpoint::GameflowPhase,
-        "gameflow_phase",
-        ObservationKind::Gameflow,
+        ObservationSlot::named("gameflow_phase", ObservationKind::Gameflow),
         Some(&local_puuid),
+        diagnostics,
     )
     .await?;
-    collect_match_state(&client, outbox, payloads, Some(&local_puuid), tick_number).await?;
+    collect_match_state(
+        &client,
+        outbox,
+        payloads,
+        Some(&local_puuid),
+        tick_number,
+        diagnostics,
+    )
+    .await?;
 
     collect_live_frame(live_client, outbox, payloads, Some(&local_puuid)).await?;
     remember_game_start(outbox, payloads)?;
@@ -1415,8 +1427,10 @@ async fn collect_once(
         // Preserve the post-game bundle before querying optional profile
         // surfaces: one unavailable mastery, Challenge, or Clash endpoint must
         // not let a Riot-invisible match age out of recent history.
-        collect_recent_matches(&client, outbox, payloads, Some(&local_puuid)).await?;
-        collect_profile_snapshots(&client, outbox, payloads, Some(&local_puuid)).await?;
+        collect_recent_matches(&client, outbox, payloads, Some(&local_puuid), diagnostics).await?;
+        collect_profile_snapshots(&client, outbox, payloads, Some(&local_puuid), diagnostics)
+            .await?;
+        report_replay_inventory(outbox, payloads, Some(&local_puuid), diagnostics)?;
     }
 
     let phase_label = phase
@@ -1441,6 +1455,7 @@ async fn collect_match_state(
     payloads: &mut HashMap<String, Vec<u8>>,
     local_puuid: Option<&str>,
     tick_number: u64,
+    diagnostics: &Diagnostics,
 ) -> Result<Option<Value>, String> {
     for (endpoint, key, kind) in [
         (
@@ -1454,7 +1469,16 @@ async fn collect_match_state(
             ObservationKind::ChampSelect,
         ),
     ] {
-        observe_endpoint(client, outbox, payloads, endpoint, key, kind, local_puuid).await?;
+        observe_endpoint(
+            client,
+            outbox,
+            payloads,
+            endpoint,
+            ObservationSlot::named(key, kind),
+            local_puuid,
+            diagnostics,
+        )
+        .await?;
     }
     let previous_lobby = payloads.get("lobby").cloned();
     let lobby = observe_endpoint(
@@ -1462,9 +1486,9 @@ async fn collect_match_state(
         outbox,
         payloads,
         LcuEndpoint::Lobby,
-        "lobby",
-        ObservationKind::Lobby,
+        ObservationSlot::named("lobby", ObservationKind::Lobby),
         local_puuid,
+        diagnostics,
     )
     .await?;
     if let Some(lobby) = &lobby {
@@ -1477,6 +1501,7 @@ async fn collect_match_state(
                 ObservationKind::Lobby,
                 lobby,
                 local_puuid,
+                diagnostics,
             )?;
         }
     }
@@ -1485,9 +1510,9 @@ async fn collect_match_state(
         outbox,
         payloads,
         LcuEndpoint::EndOfGame,
-        "post_game",
-        ObservationKind::PostGame,
+        ObservationSlot::named("post_game", ObservationKind::PostGame),
         local_puuid,
+        diagnostics,
     )
     .await?;
     if let Some(payload) = &end_of_game {
@@ -1499,9 +1524,9 @@ async fn collect_match_state(
         outbox,
         payloads,
         LcuEndpoint::GameClientEndOfGame,
-        "post_game",
-        ObservationKind::PostGame,
+        ObservationSlot::named("post_game", ObservationKind::PostGame),
         local_puuid,
+        diagnostics,
     )
     .await?;
     if let Some(payload) = &end_of_game {
@@ -1613,6 +1638,7 @@ async fn collect_profile_snapshots(
     outbox: &ObservationOutbox,
     payloads: &mut HashMap<String, Vec<u8>>,
     local_puuid: Option<&str>,
+    diagnostics: &Diagnostics,
 ) -> Result<(), String> {
     for (endpoint, key, kind) in [
         (
@@ -1691,7 +1717,16 @@ async fn collect_profile_snapshots(
             ObservationKind::Clash,
         ),
     ] {
-        observe_endpoint(client, outbox, payloads, endpoint, key, kind, local_puuid).await?;
+        observe_endpoint(
+            client,
+            outbox,
+            payloads,
+            endpoint,
+            ObservationSlot::named(key, kind),
+            local_puuid,
+            diagnostics,
+        )
+        .await?;
     }
     Ok(())
 }
@@ -1701,6 +1736,7 @@ async fn collect_recent_matches(
     outbox: &ObservationOutbox,
     payloads: &mut HashMap<String, Vec<u8>>,
     local_puuid: Option<&str>,
+    diagnostics: &Diagnostics,
 ) -> Result<(), String> {
     let Some(history) = client
         .get(LcuEndpoint::MatchHistoryRecent)
@@ -1728,6 +1764,7 @@ async fn collect_recent_matches(
             ObservationKind::PostGame,
             game,
             local_puuid,
+            diagnostics,
         )?;
         if let Some(end_of_game) = outbox
             .pending_end_of_game(&game_id)
@@ -1741,9 +1778,11 @@ async fn collect_recent_matches(
             enqueue_resource_if_changed(
                 outbox,
                 payloads,
-                &format!("post_game_bundle:{game_id}"),
-                "post_game",
-                ObservationKind::PostGame,
+                ObservationSlot {
+                    cache_key: &format!("post_game_bundle:{game_id}"),
+                    resource: "post_game",
+                    kind: ObservationKind::PostGame,
+                },
                 &serde_json::json!({
                     "matchHistory": game,
                     "endOfGame": end_of_game,
@@ -1753,6 +1792,7 @@ async fn collect_recent_matches(
                     },
                 }),
                 local_puuid,
+                diagnostics,
             )?;
             outbox
                 .forget_end_of_game(&game_id)
@@ -1765,21 +1805,65 @@ async fn collect_recent_matches(
     Ok(())
 }
 
+/// What a collected payload is filed as.
+///
+/// These three always travel together — the loops below already group them as
+/// a tuple — so naming them keeps the call signatures within budget.
+#[derive(Clone, Copy)]
+struct ObservationSlot<'a> {
+    /// Key used to detect that a payload changed.
+    cache_key: &'a str,
+    /// Resource name carried on the wire.
+    resource: &'a str,
+    kind: ObservationKind,
+}
+
+impl<'a> ObservationSlot<'a> {
+    /// A slot whose cache key and resource name are the same.
+    const fn named(name: &'a str, kind: ObservationKind) -> Self {
+        Self {
+            cache_key: name,
+            resource: name,
+            kind,
+        }
+    }
+}
+
 async fn observe_endpoint(
     client: &LcuClient,
     outbox: &ObservationOutbox,
     payloads: &mut HashMap<String, Vec<u8>>,
     endpoint: LcuEndpoint,
-    key: &'static str,
-    kind: ObservationKind,
+    slot: ObservationSlot<'_>,
     local_puuid: Option<&str>,
+    diagnostics: &Diagnostics,
 ) -> Result<Option<Value>, String> {
-    let payload = client
-        .get(endpoint)
-        .await
-        .map_err(|error| error.to_string())?;
+    let key = slot.cache_key;
+    let payload = match client.get(endpoint).await {
+        Ok(payload) => payload,
+        Err(error) => {
+            // The League client is the other half of every observation, and
+            // until now a failure to read it was invisible: the typed LcuError
+            // was flattened to a string at this line and never recorded, so a
+            // client that had quietly stopped seeing games looked identical to
+            // one with nothing to report.
+            diagnostics.counters().lcu_error();
+            diagnostics.record(
+                DiagnosticEvent::new(
+                    DiagnosticLevel::Warn,
+                    DiagnosticCategory::Lcu,
+                    "lcu_read",
+                    DiagnosticOutcome::Failed,
+                )
+                // The endpoint travels in the detail rather than the operation
+                // because a slot borrows its name; both are bounded text.
+                .with_detail(format!("{key}: {error}")),
+            );
+            return Err(error.to_string());
+        }
+    };
     if let Some(value) = &payload {
-        enqueue_if_changed(outbox, payloads, key, kind, value, local_puuid)?;
+        enqueue_resource_if_changed(outbox, payloads, slot, value, local_puuid, diagnostics)?;
     } else {
         payloads.remove(key);
     }
@@ -1793,32 +1877,51 @@ fn enqueue_if_changed(
     kind: ObservationKind,
     payload: &Value,
     local_puuid: Option<&str>,
+    diagnostics: &Diagnostics,
 ) -> Result<(), String> {
-    enqueue_resource_if_changed(outbox, payloads, key, key, kind, payload, local_puuid)
+    enqueue_resource_if_changed(
+        outbox,
+        payloads,
+        ObservationSlot::named(key, kind),
+        payload,
+        local_puuid,
+        diagnostics,
+    )
 }
 
 fn enqueue_resource_if_changed(
     outbox: &ObservationOutbox,
     payloads: &mut HashMap<String, Vec<u8>>,
-    cache_key: &str,
-    resource: &str,
-    kind: ObservationKind,
+    slot: ObservationSlot<'_>,
     payload: &Value,
     local_puuid: Option<&str>,
+    diagnostics: &Diagnostics,
 ) -> Result<(), String> {
+    let (cache_key, resource, kind) = (slot.cache_key, slot.resource, slot.kind);
     let body = serde_json::to_vec(&payload).map_err(|error| error.to_string())?;
     if payloads.get(cache_key) == Some(&body) {
         return Ok(());
     }
     let observation = create_observation(outbox, resource, kind, payload, local_puuid)?;
-    if kind == ObservationKind::LiveGameFrame {
-        outbox
-            .enqueue_coalesced(resource, &observation)
-            .map_err(|error| error.to_string())?;
+    let stored = if kind == ObservationKind::LiveGameFrame {
+        outbox.enqueue_coalesced(resource, &observation)
     } else {
-        outbox
-            .enqueue(&observation)
-            .map_err(|error| error.to_string())?;
+        outbox.enqueue(&observation)
+    };
+    if let Err(error) = stored {
+        // The outbox is what makes an observation survive a network failure.
+        // If the write itself fails the evidence is simply gone, which is the
+        // one outbox outcome worth a record of its own.
+        diagnostics.record(
+            DiagnosticEvent::new(
+                DiagnosticLevel::Error,
+                DiagnosticCategory::Outbox,
+                "enqueue_observation",
+                DiagnosticOutcome::Failed,
+            )
+            .with_detail(error.to_string()),
+        );
+        return Err(error.to_string());
     }
     payloads.insert(cache_key.to_owned(), body);
     Ok(())
@@ -1831,11 +1934,70 @@ fn enqueue_coalesced_snapshot(
     kind: ObservationKind,
     payload: &Value,
     local_puuid: Option<&str>,
+    diagnostics: &Diagnostics,
 ) -> Result<(), String> {
     let observation = create_observation(outbox, resource, kind, payload, local_puuid)?;
-    outbox
-        .enqueue_coalesced(coalesce_key, &observation)
-        .map_err(|error| error.to_string())
+    if let Err(error) = outbox.enqueue_coalesced(coalesce_key, &observation) {
+        diagnostics.record(
+            DiagnosticEvent::new(
+                DiagnosticLevel::Error,
+                DiagnosticCategory::Outbox,
+                "enqueue_observation",
+                DiagnosticOutcome::Failed,
+            )
+            .with_detail(error.to_string()),
+        );
+        return Err(error.to_string());
+    }
+    Ok(())
+}
+
+/// Replays reported to the server in one inventory observation.
+const REPLAY_INVENTORY_LIMIT: u32 = 100;
+
+/// Tell the server which replays this device holds.
+///
+/// The server cannot see a machine's disk. Until it is told, a replay exists
+/// only in the moment the device happens to offer it, so a game that could not
+/// be vouched for at that moment is forgotten rather than revisited. Reporting
+/// the inventory turns that into something the server can come back to once
+/// Riot archives the match.
+///
+/// Carries the content digest and the game id — both already cross the wire on
+/// every upload — and no path, because where a file sits on disk is not the
+/// server's business.
+fn report_replay_inventory(
+    outbox: &ObservationOutbox,
+    payloads: &mut HashMap<String, Vec<u8>>,
+    local_puuid: Option<&str>,
+    diagnostics: &Diagnostics,
+) -> Result<(), String> {
+    let inventory = outbox
+        .replay_inventory(REPLAY_INVENTORY_LIMIT)
+        .map_err(|error| error.to_string())?;
+    if inventory.is_empty() {
+        return Ok(());
+    }
+    let payload = serde_json::json!({
+        "replays": inventory
+            .iter()
+            .map(|row| {
+                serde_json::json!({
+                    "gameId": row.game_id,
+                    "digest": row.digest,
+                    "state": row.state,
+                })
+            })
+            .collect::<Vec<_>>(),
+    });
+    enqueue_resource_if_changed(
+        outbox,
+        payloads,
+        ObservationSlot::named("replay_status", ObservationKind::ReplayStatus),
+        &payload,
+        local_puuid,
+        diagnostics,
+    )
 }
 
 fn create_observation(

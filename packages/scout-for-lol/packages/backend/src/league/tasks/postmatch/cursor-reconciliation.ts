@@ -9,7 +9,8 @@ import { ScoutLegacyMatchCompletionV2ResultSchema } from "@scout-for-lol/tempora
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { LeaguePuuidSchema, MatchIdSchema } from "@scout-for-lol/data/index.ts";
 
-import { prisma, updateLastProcessedMatch } from "#src/database/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { updateLastProcessedMatch } from "#src/database/account-cursors.ts";
 import { liveDurableFacts } from "#src/durable/match/live-facts.ts";
 import { recordCursorAdvanced } from "#src/durable/match/progression-facts.ts";
 import { logger } from "#src/logger.ts";

@@ -233,6 +233,9 @@ export function analyzeScoutQl(text: string): ScoutQlAnalysis {
     refs,
     diagnostics,
     clauseSpan: ast.select?.span ?? ast.span,
+    parseFailed: parse.diagnostics.some(
+      (diagnostic) => diagnostic.severity === "error",
+    ),
   });
 
   const outputTypes: ReadonlyMap<string, ScoutQlExprType> = new Map(

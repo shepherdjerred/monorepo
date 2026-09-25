@@ -1,9 +1,4 @@
-import {
-  condition,
-  patched,
-  startChild,
-  workflowInfo,
-} from "@temporalio/workflow";
+import { patched, startChild, workflowInfo } from "@temporalio/workflow";
 import type { IsoInstant } from "@scout-for-lol/domain/identity/brands.ts";
 import {
   scoutPostMatchDiscoveryV2ResultCodec,
@@ -12,8 +7,9 @@ import {
 } from "#src/workflow-contracts-v2.ts";
 import { SCOUT_WORKFLOW_NAMES, scoutTaskQueues } from "#src/identifiers.ts";
 import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
-import { realtimeV2Activities } from "./activity-options.ts";
-import { scoutPostMatchDiscoveryWorkflow } from "./realtime.ts";
+import { realtimeV2Activities } from "#src/workflows/activity-options.ts";
+import { scoutPostMatchDiscoveryWorkflow } from "#src/workflows/realtime.ts";
+import { awaitWhileRenewing } from "./claim-renewal.ts";
 
 /**
  * The marker for histories whose discovery asked who owns the pass.
@@ -120,7 +116,16 @@ async function runDelegatedV1Pass(
       parentClosePolicy: "TERMINATE",
       args: [{ stage: input.stage, pollOwner }],
     });
-    legacy = await awaitWhileRenewing(input, pollOwner, child.result());
+    legacy = await awaitWhileRenewing(
+      child.result(),
+      POSTMATCH_CLAIM_RENEWAL_INTERVAL,
+      async () => {
+        await realtimeV2Activities(input.stage).renewPostMatchPollClaimV2({
+          stage: input.stage,
+          pollOwner,
+        });
+      },
+    );
   } catch (error) {
     setWorkflowPhase(
       "**Phase:** v1 post-match discovery failed; releasing its poll claim",
@@ -142,52 +147,4 @@ async function runDelegatedV1Pass(
       childrenStarted: legacy.childrenStarted,
     },
   });
-}
-
-/**
- * Wait for the v1 child, renewing the handoff's claim until it settles.
- *
- * The claim would otherwise go stale 30 minutes after it was taken, and a
- * pass ingesting a long backlog can outlive that. Another run could then take
- * the claim over and discover while this pass is still ingesting. Renewing
- * from here, where the pass's liveness is known, keeps the claim live exactly
- * as long as its owner is. A terminated router stops renewing, so the bound
- * still frees a claim nothing is using.
- */
-async function awaitWhileRenewing<T>(
-  input: ScoutPostMatchDiscoveryV2Input,
-  pollOwner: IsoInstant,
-  result: Promise<T>,
-): Promise<T> {
-  let outcome:
-    | { readonly ok: true; readonly value: T }
-    | { readonly ok: false; readonly error: unknown }
-    | undefined;
-  // Records the child's outcome instead of rejecting, so a child that fails
-  // while the loop is waiting is never an unhandled rejection.
-  const settle = async (): Promise<void> => {
-    try {
-      outcome = { ok: true, value: await result };
-    } catch (error) {
-      outcome = { ok: false, error };
-    }
-  };
-  const settling = settle();
-  while (
-    !(await condition(
-      () => outcome !== undefined,
-      POSTMATCH_CLAIM_RENEWAL_INTERVAL,
-    ))
-  ) {
-    await realtimeV2Activities(input.stage).renewPostMatchPollClaimV2({
-      stage: input.stage,
-      pollOwner,
-    });
-  }
-  await settling;
-  if (outcome === undefined) {
-    throw new Error("The v1 child settled without recording an outcome");
-  }
-  if (outcome.ok) return outcome.value;
-  throw outcome.error;
 }

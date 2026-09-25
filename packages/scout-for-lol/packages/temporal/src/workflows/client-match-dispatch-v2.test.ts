@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
+import type { Client, WorkflowStartOptions } from "@temporalio/client";
 import { ApplicationFailure } from "@temporalio/common";
+import { Worker } from "@temporalio/worker";
+import { z } from "zod";
 import {
   IsoInstantSchema,
   RiotMatchIdSchema,
@@ -22,6 +25,7 @@ import {
   scoutClientMatchDispatchV2Workflow,
   scoutPostMatchDiscoveryV2Workflow,
 } from "./index.ts";
+import { SCOUT_V2_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH } from "./client-match-dispatch-v2.ts";
 import {
   createScoutV2MatchStore,
   MATCH_ID,
@@ -587,19 +591,67 @@ function discoveredMatch(
   };
 }
 
+function discoveryStartOptions(
+  workflowId: string,
+): WorkflowStartOptions<typeof scoutPostMatchDiscoveryV2Workflow> {
+  return {
+    taskQueue: "scout-dev",
+    workflowId,
+    args: [
+      scoutPostMatchDiscoveryV2InputCodec.serialize({
+        stage,
+        trigger: "schedule",
+      }),
+    ],
+  };
+}
+
 async function runDiscovery(workflowId: string) {
   return await harness
     .client()
-    .workflow.execute(scoutPostMatchDiscoveryV2Workflow, {
-      taskQueue: "scout-dev",
-      workflowId,
-      args: [
-        scoutPostMatchDiscoveryV2InputCodec.serialize({
-          stage,
-          trigger: "schedule",
-        }),
-      ],
-    });
+    .workflow.execute(
+      scoutPostMatchDiscoveryV2Workflow,
+      discoveryStartOptions(workflowId),
+    );
+}
+
+/**
+ * Starts a discovery without awaiting its result. The time-skipping test
+ * server only skips time while a client awaits a result, so a test that holds
+ * an Activity open must not await one until it releases it; otherwise the
+ * held Activity's start-to-close timeout elapses in skipped time.
+ */
+async function startDiscovery(workflowId: string) {
+  return await harness
+    .client()
+    .workflow.start(
+      scoutPostMatchDiscoveryV2Workflow,
+      discoveryStartOptions(workflowId),
+    );
+}
+
+/**
+ * A discovery Activity that serves one page per scan, repeating the last, and
+ * counts the scans it served.
+ */
+function pagedDiscovery(
+  pages: readonly (readonly ReturnType<typeof discoveredMatch>[])[],
+) {
+  const served = { scans: 0 };
+  return {
+    served,
+    discoverPostMatchIdsV2: () => {
+      const matches = pages[Math.min(served.scans, pages.length - 1)] ?? [];
+      served.scans += 1;
+      return {
+        outcome: "scanned",
+        riotMatchIds: matches.map((match) => match.riotMatchId),
+        matches,
+        complete: true,
+        pollOwner: POLL_OWNER,
+      };
+    },
+  };
 }
 
 test("a rediscovered, already-processed match does not hold back the matches after it", async () => {
@@ -609,11 +661,6 @@ test("a rediscovered, already-processed match does not hold back the matches aft
   // that stops at the first refused start never reaches anything newer.
   const log: string[] = [];
   const firstStore = createScoutV2MatchStore();
-  const pages = [
-    [discoveredMatch(MATCH_ID, 1)],
-    [discoveredMatch(MATCH_ID, 1), discoveredMatch(SECOND_MATCH_ID, 2)],
-  ];
-  let scans = 0;
   await harness.startWorkers({
     ...routedMatchActivities(firstStore, createScoutV2MatchStore(), {
       beforeCommit: (input) => {
@@ -623,17 +670,10 @@ test("a rediscovered, already-processed match does not hold back the matches aft
         log.push(`${riotMatchId}:fan-out`);
       },
     }),
-    discoverPostMatchIdsV2: () => {
-      const matches = pages[Math.min(scans, pages.length - 1)] ?? [];
-      scans += 1;
-      return {
-        outcome: "scanned",
-        riotMatchIds: matches.map((match) => match.riotMatchId),
-        matches,
-        complete: true,
-        pollOwner: POLL_OWNER,
-      };
-    },
+    discoverPostMatchIdsV2: pagedDiscovery([
+      [discoveredMatch(MATCH_ID, 1)],
+      [discoveredMatch(MATCH_ID, 1), discoveredMatch(SECOND_MATCH_ID, 2)],
+    ]).discoverPostMatchIdsV2,
     runPostMatchMaintenance: () => log.push("maintenance"),
   });
 
@@ -661,4 +701,192 @@ test("a rediscovered, already-processed match does not hold back the matches aft
   expect(log.filter((entry) => entry === `${MATCH_ID}:commit`)).toHaveLength(1);
   expect(log).toContain(`${SECOND_MATCH_ID}:fan-out`);
   expect(log.filter((entry) => entry === "maintenance")).toHaveLength(2);
+}, 90_000);
+
+type DispatcherHistory = Awaited<
+  ReturnType<ReturnType<Client["workflow"]["getHandle"]>["fetchHistory"]>
+>;
+
+/** The marker name the TypeScript SDK records `patched` calls under. */
+const PATCH_MARKER = "core_patch";
+
+const PatchMarkerDataSchema = z.strictObject({
+  id: z.string(),
+  deprecated: z.boolean(),
+});
+
+/**
+ * Turn this patch's markers into a history that never recorded the patch.
+ *
+ * Core refuses a non-deprecated marker no command claims, so a plain rename
+ * would fail replay on the marker itself and prove nothing about the gated
+ * branch. Renamed AND deprecated, the marker is one core may skip, `patched`
+ * answers false as it does for an execution that predates the gate, and any
+ * nondeterminism left is the gated routing disagreeing with the history.
+ */
+function unrecordPatch(history: DispatcherHistory, patchId: string): number {
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  let rewritten = 0;
+  for (const event of history.events ?? []) {
+    const marker = event.markerRecordedEventAttributes;
+    if (marker?.markerName !== PATCH_MARKER) continue;
+    for (const payloads of Object.values(marker.details ?? {})) {
+      for (const payload of payloads.payloads ?? []) {
+        const data = PatchMarkerDataSchema.parse(
+          JSON.parse(decoder.decode(payload.data ?? new Uint8Array())),
+        );
+        if (data.id !== patchId) continue;
+        payload.data = encoder.encode(
+          JSON.stringify({ id: `${patchId}-unrecorded`, deprecated: true }),
+        );
+        rewritten += 1;
+      }
+    }
+  }
+  return rewritten;
+}
+
+test("processes an older Riot match another account's poll delivered after a newer one", async () => {
+  // The prod shape: discovery polls a rotating subset of accounts, and each
+  // account's cursor is its own. One run hands over account A's newer match;
+  // while it is being processed the next run's page carries account B's older
+  // match. Refusing it as a late arrival never advanced B's cursor, failed
+  // every later run, and lost the match once B played again.
+  const otherPuuid = LeaguePuuidSchema.parse("t".repeat(78));
+  const log: string[] = [];
+  const olderStore = createScoutV2MatchStore();
+  const newerStore = createScoutV2MatchStore();
+  const newerCommitStarted = Promise.withResolvers<true>();
+  const releaseNewerCommit = Promise.withResolvers<true>();
+  const discovery = pagedDiscovery([
+    [discoveredMatch(SECOND_MATCH_ID, 2)],
+    [{ ...discoveredMatch(MATCH_ID, 1), sourcePuuid: otherPuuid }],
+  ]);
+  await harness.startWorkers({
+    ...routedMatchActivities(olderStore, newerStore, {
+      beforeCommit: async (input) => {
+        log.push(`${input.riotMatchId}:commit`);
+        if (input.riotMatchId === SECOND_MATCH_ID) {
+          newerCommitStarted.resolve(true);
+          await releaseNewerCommit.promise;
+        }
+      },
+      onTerminalReceipt: (riotMatchId) => {
+        log.push(`${riotMatchId}:terminal-receipt`);
+      },
+    }),
+    discoverPostMatchIdsV2: discovery.discoverPostMatchIdsV2,
+    runPostMatchMaintenance: (input: { settleDareV2Deadlines: boolean }) => {
+      log.push(`maintenance:settle=${String(input.settleDareV2Deadlines)}`);
+    },
+  });
+
+  const dispatcherId = scoutClientMatchDispatchV2WorkflowId(stage);
+  const dispatcher = harness.client().workflow.getHandle(dispatcherId);
+  // Started, not executed: nothing awaits a result while the newer commit is
+  // held, so the test server cannot skip past its start-to-close timeout.
+  const newer = await startDiscovery("discovery-newer-account");
+  await newerCommitStarted.promise;
+  const older = await startDiscovery("discovery-older-account");
+  // Hold the newer match until the older one has been signalled, so the
+  // dispatcher sees it behind a frontier that is already past it.
+  for (;;) {
+    const recorded = await dispatcher.fetchHistory();
+    const signals = (recorded.events ?? []).filter(
+      (event) => event.workflowExecutionSignaledEventAttributes != null,
+    );
+    if (signals.length >= 2) break;
+    await new Promise((resolve) => setTimeout(resolve, 50));
+  }
+  releaseNewerCommit.resolve(true);
+
+  const completed = scoutPostMatchDiscoveryV2ResultCodec.serialize({
+    status: "completed",
+    discovered: 1,
+    childrenStarted: 1,
+    complete: true,
+  });
+  await expect(newer.result()).resolves.toEqual(completed);
+  await expect(older.result()).resolves.toEqual(completed);
+  const history = await dispatcher.fetchHistory();
+  await terminateDispatcher(dispatcherId, "test observed both discoveries");
+
+  expect(discovery.served.scans).toBe(2);
+  expect(log).not.toContain(`${MATCH_ID}:terminal-receipt`);
+  expect(olderStore.calls).toContain("commitMatchObservationV2");
+  expect(olderStore.calls).toContain("advanceMatchCursorV2");
+  expect(log.filter((entry) => entry.startsWith("maintenance"))).toEqual([
+    "maintenance:settle=true",
+    "maintenance:settle=true",
+  ]);
+
+  // Replay safety. The recorded history carries the gate's marker and replays
+  // cleanly. With that marker renamed it is what an execution predating the
+  // gate would hold here, so the code takes the old review path and disagrees
+  // with the recorded child start. That disagreement proves the gate, not the
+  // new routing alone, decides what an open history replays.
+  const workflowsPath = new URL("index.ts", import.meta.url).pathname;
+  await Worker.runReplayHistory({ workflowsPath }, history, dispatcherId);
+  const withoutGate = structuredClone(history);
+  expect(
+    unrecordPatch(withoutGate, SCOUT_V2_DISPATCH_RIOT_BYPASSES_WATERMARK_PATCH),
+  ).toBe(1);
+  const replayed = Worker.runReplayHistory(
+    { workflowsPath },
+    withoutGate,
+    dispatcherId,
+  );
+  await expect(replayed).rejects.toMatchObject({
+    name: "DeterminismViolationError",
+  });
+  await expect(replayed).rejects.not.toThrow(/patch marker/u);
+}, 120_000);
+
+test("processes a queued client late arrival once Riot discovers it too", async () => {
+  // A client-only offline sighting sorts behind the frontier and is queued for
+  // review. Before its marker is written, Riot discovers the same match. Riot
+  // vouches for it, so it is processed in order instead of refused.
+  const olderStore = createScoutV2MatchStore();
+  const newerStore = createScoutV2MatchStore();
+  const newerCommitStarted = Promise.withResolvers<true>();
+  const releaseNewerCommit = Promise.withResolvers<true>();
+  const olderFanOut = Promise.withResolvers<true>();
+  const log: string[] = [];
+  await harness.startWorkers({
+    ...routedMatchActivities(olderStore, newerStore, {
+      beforeCommit: async (input) => {
+        if (input.riotMatchId === SECOND_MATCH_ID) {
+          newerCommitStarted.resolve(true);
+          await releaseNewerCommit.promise;
+        }
+      },
+      onFanOut: (riotMatchId) => {
+        if (riotMatchId === MATCH_ID) olderFanOut.resolve(true);
+      },
+      onTerminalReceipt: (riotMatchId) => {
+        log.push(`${riotMatchId}:terminal-receipt`);
+      },
+    }),
+  });
+  const workflowId = "client-match-dispatch-late-then-riot";
+  const dispatcher = await startDispatcher(workflowId);
+
+  await dispatcher.signal(dispatchScoutClientMatchesV2Signal, [
+    dispatchItem(SECOND_MATCH_ID, 2),
+  ]);
+  await newerCommitStarted.promise;
+  await dispatcher.signal(dispatchScoutClientMatchesV2Signal, [
+    dispatchItem(MATCH_ID, 1),
+    {
+      ...dispatchItem(MATCH_ID, 1),
+      completionTargets: [{ workflowId: "riot-discovery", runId: "run-1" }],
+    },
+  ]);
+  releaseNewerCommit.resolve(true);
+  await olderFanOut.promise;
+  await terminateDispatcher(workflowId, "test observed the promoted match");
+
+  expect(olderStore.calls).toContain("commitMatchObservationV2");
+  expect(log).not.toContain(`${MATCH_ID}:terminal-receipt`);
 }, 90_000);

@@ -1,7 +1,7 @@
 import { match } from "ts-pattern";
 import type { ScoutQlExprAst } from "#src/model/scoutql/parse/ast.ts";
 import type { ScoutQlSpan } from "#src/model/scoutql/editor/diagnostics.ts";
-import type { ScoutQlColumnInfo } from "#src/model/scoutql/catalog/catalog-columns.ts";
+import type { ScoutQlColumnInfo } from "#src/model/scoutql/catalog/catalog-column-types.ts";
 import { closestScoutQlName } from "#src/model/scoutql/catalog/catalog-functions.ts";
 import {
   castResultType,

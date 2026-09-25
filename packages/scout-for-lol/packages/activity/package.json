@@ -31,7 +31,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@playwright/test": "1.62.0",
+    "@playwright/test": "1.63.0",
     "@tailwindcss/vite": "^4.2.4",
     "@types/bun": "1.4.2",
     "@types/jsdom": "^30.0.0",

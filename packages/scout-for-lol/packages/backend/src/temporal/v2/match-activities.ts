@@ -30,7 +30,7 @@ export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
         { phase: "resolving-post-match-owner-v2" },
         async () => {
           const { resolvePostMatchDiscoveryOwnerV2 } =
-            await import("#src/temporal/v2/postmatch-ownership.ts");
+            await import("#src/temporal/v2/ownership/postmatch-ownership.ts");
           // The first-scheduled timestamp is the one instant every attempt
           // agrees on, so a retried attempt re-acquires the claim its
           // predecessor took instead of deferring behind it.
@@ -44,7 +44,7 @@ export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
         { phase: "renewing-post-match-claim-v2" },
         async () => {
           const { renewPostMatchPollClaimV2 } =
-            await import("#src/temporal/v2/postmatch-ownership.ts");
+            await import("#src/temporal/v2/ownership/postmatch-ownership.ts");
           return await renewPostMatchPollClaimV2({
             pollOwner: new Date(input.pollOwner),
             renewedAt: new Date(),
@@ -56,7 +56,7 @@ export function createScoutV2MatchActivities(): ScoutV2MatchActivities {
         { phase: "releasing-post-match-claim-v2" },
         async () => {
           const { releasePostMatchPollClaimV2 } =
-            await import("#src/temporal/v2/postmatch-ownership.ts");
+            await import("#src/temporal/v2/ownership/postmatch-ownership.ts");
           return await releasePostMatchPollClaimV2({
             pollOwner: new Date(input.pollOwner),
             releasedAt: new Date(),

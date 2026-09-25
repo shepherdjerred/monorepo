@@ -33,6 +33,17 @@ const logger = createLogger("metrics-durable-pipeline");
  * - *Are receipts being written, and is anything writing two different claims
  *   about one fact?* — `scout_durable_receipts_recorded_total`.
  *
+ * Three more answer questions a 28-hour prod outage showed nobody was asking,
+ * because each is about work the pipeline did not know it owed (see
+ * `database/durable/pipeline-gaps.ts`):
+ *
+ * - *Did a finished match mint its report?* —
+ *   `scout_durable_postmatch_mint_gaps`.
+ * - *Is a ready report being sent?* — the `ready-notification-intents`
+ *   backlog family.
+ * - *Are matches being found on time?* —
+ *   `scout_durable_observation_lag_seconds`.
+ *
  * ## Why every label here is bounded
  *
  * Each label draws from a closed vocabulary that a type already enforces, and
@@ -44,8 +55,9 @@ const logger = createLogger("metrics-durable-pipeline");
  *   classification table in `pipeline-scan.ts`.
  * - `state` on the recovery gauge: the 6 kinds of `RecoveryBatchState`, from
  *   the exhaustive liveness table beside it.
- * - `family` on the age gauge: the three constants below, and there is no code
+ * - `family` on the age gauge: the constants below, and there is no code
  *   path that derives one from data.
+ * - `statistic` on the observation-lag gauge: `p90` and `max`.
  * - `artifact_kind` on the lake gauge: `ArtifactKindSchema`'s three members.
  * - `receipt_kind` / `outcome` on the receipt counter: see the counter's own
  *   note — the kinds are source literals from four owner modules, and the
@@ -69,11 +81,18 @@ const logger = createLogger("metrics-durable-pipeline");
  * EXPIRING, not the one waiting longest, and reporting that as an age would
  * invert the direction an operator reads. The notification backlog's depth is
  * on the intent gauge instead, where it is honest.
+ *
+ * `ready-notification-intents` is not that family under another name. It is
+ * one state, `ready`, read by `createdAt` — a real age — so its head is the
+ * instruction that has waited longest for a sender. It exists because depth
+ * alone could not say whether a steady `ready` count was a queue draining
+ * quickly or the same rows sitting still.
  */
 export const DURABLE_BACKLOG_FAMILIES = [
   "stalled-match-processing",
   "live-recovery-batches",
   "unaccepted-workflow-starts",
+  "ready-notification-intents",
 ] as const;
 export type DurableBacklogFamily = (typeof DURABLE_BACKLOG_FAMILIES)[number];
 
@@ -102,6 +121,40 @@ export const scoutDurableLakeStagingLag = new Gauge({
   name: "scout_durable_lake_staging_lag_seconds",
   help: "How long the longest-unprojected archived artifact has waited for its lake staging receipt, by artifact kind, or zero when none is waiting.",
   labelNames: ["artifact_kind"] as const,
+  registers: [registry],
+});
+
+/**
+ * The observation-lag statistics, a closed pair.
+ *
+ * `p90` is the alertable one: a few late matches (a long game, a slow
+ * account) are normal, and a whole population arriving late is not. `max` is
+ * published beside it so an operator can see the tail without a second query.
+ */
+export const OBSERVATION_LAG_STATISTICS = ["p90", "max"] as const;
+
+/** How far back the observation-lag gauge looks. */
+export const OBSERVATION_LAG_WINDOW_MS = 2 * 60 * 60 * 1000;
+
+export const scoutDurableObservationLag = new Gauge({
+  name: "scout_durable_observation_lag_seconds",
+  help: "How long after game START live FULL matches observed in the last two hours were observed, by statistic (includes the game's own length), or zero when none were.",
+  labelNames: ["statistic"] as const,
+  registers: [registry],
+});
+
+/**
+ * Live V2 matches that finished their core without a post-match intent.
+ *
+ * Defined here with every other durable gauge, but FILLED by
+ * `temporal/v2/notification/postmatch-mint-gap.ts`: the read excludes matches
+ * carrying the post-match render receipt, whose kind the notification lane
+ * owns and `metrics/` may not import. It registers through
+ * `sweep-registry.ts`, as the lake lag does. -1 means the read failed.
+ */
+export const scoutDurablePostmatchMintGaps = new Gauge({
+  name: "scout_durable_postmatch_mint_gaps",
+  help: "Live V2 matches observed in the last 6 hours whose core completed at least 15 minutes ago, owed a report by an unfiltered subscription, with no postmatch intent and no postmatch render receipt; -1 when the read failed.",
   registers: [registry],
 });
 
@@ -186,14 +239,15 @@ function ageSeconds(oldest: Date | null, now: number): number {
 }
 
 /**
- * Fill the four swept families from the durable tables.
+ * Fill the swept durable families from the durable tables.
  *
  * Runs only where `databaseMetricSweepsEnabled()` is true, so exactly one role
  * pays for it and one set of series describes the deployment — see
  * `sweep-policy.ts` for why that is a deployment fact rather than a process
- * one. The lake family is not here: its receipt-kind vocabulary belongs to
- * `report-lake/`, which `metrics/` may not import, so that half registers
- * itself through `sweep-registry.ts`.
+ * one. The lake family and the post-match mint gap are not here: their
+ * receipt-kind vocabularies belong to `report-lake/` and `temporal/v2/`, which
+ * `metrics/` may not import, so each registers itself through
+ * `sweep-registry.ts`.
  *
  * Nothing is left at its last value on failure. A stale gauge reads as a
  * healthy pipeline that simply is not moving, which is indistinguishable from
@@ -213,20 +267,33 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
       oldestStalledMatchProcessingAt,
       oldestUnacceptedWorkflowStartAt,
     } = await import("#src/database/durable/pipeline-backlog.ts");
+    const { observationLag, oldestReadyNotificationIntentAt } =
+      await import("#src/database/durable/pipeline-gaps.ts");
 
     const now = Date.now();
-    const [intents, batches, stalledMatchAt, recoveryAt, workflowStartAt] =
-      await Promise.all([
-        countNotificationIntentsByState(db),
-        countRecoveryBatchesByState(db),
-        oldestStalledMatchProcessingAt(db, {
-          observationReceiptKind: SCOUT_V2_MATCH_RECEIPT_KINDS.observation,
-        }),
-        oldestLiveRecoveryBatchAt(db),
-        oldestUnacceptedWorkflowStartAt(db, {
-          workflowTypes: SCOUT_V2_WORKFLOW_NAMES,
-        }),
-      ]);
+    const [
+      intents,
+      batches,
+      stalledMatchAt,
+      recoveryAt,
+      workflowStartAt,
+      readyAt,
+      lag,
+    ] = await Promise.all([
+      countNotificationIntentsByState(db),
+      countRecoveryBatchesByState(db),
+      oldestStalledMatchProcessingAt(db, {
+        observationReceiptKind: SCOUT_V2_MATCH_RECEIPT_KINDS.observation,
+      }),
+      oldestLiveRecoveryBatchAt(db),
+      oldestUnacceptedWorkflowStartAt(db, {
+        workflowTypes: SCOUT_V2_WORKFLOW_NAMES,
+      }),
+      oldestReadyNotificationIntentAt(db),
+      observationLag(db, {
+        observedSince: new Date(now - OBSERVATION_LAG_WINDOW_MS),
+      }),
+    ]);
 
     for (const state of NOTIFICATION_INTENT_STATE_KINDS) {
       scoutDurableNotificationIntents.set({ state }, intents.get(state) ?? 0);
@@ -246,9 +313,18 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
       { family: "unaccepted-workflow-starts" },
       ageSeconds(workflowStartAt, now),
     );
+    scoutDurableBacklogOldestAge.set(
+      { family: "ready-notification-intents" },
+      ageSeconds(readyAt, now),
+    );
+    scoutDurableObservationLag.set({ statistic: "p90" }, lag.p90Seconds);
+    scoutDurableObservationLag.set({ statistic: "max" }, lag.maxSeconds);
   } catch (error) {
     for (const family of DURABLE_BACKLOG_FAMILIES) {
       scoutDurableBacklogOldestAge.set({ family }, -1);
+    }
+    for (const statistic of OBSERVATION_LAG_STATISTICS) {
+      scoutDurableObservationLag.set({ statistic }, -1);
     }
     scoutDurableNotificationIntents.reset();
     scoutDurableRecoveryBatches.reset();
@@ -260,7 +336,7 @@ export async function collectDurablePipelineMetrics(db: Db): Promise<void> {
  * Run the sweep against the process's own database.
  *
  * The client is a parameter on `collectDurablePipelineMetrics` rather than
- * something it reaches for, so the six queries below can be executed against a
+ * something it reaches for, so the queries below can be executed against a
  * real test database. Without that seam the only thing that would ever run them
  * is a deployed pod, and "it typechecks" is not evidence that a `groupBy` or a
  * three-table anti-join returns what the gauges claim.

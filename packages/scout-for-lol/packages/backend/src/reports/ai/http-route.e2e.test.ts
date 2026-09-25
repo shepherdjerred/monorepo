@@ -144,13 +144,15 @@ describe("report AI stream endpoint authorization", () => {
     expect(body.error).toContain("reports:create");
   });
 
-  test("reports:create alone is insufficient", async () => {
+  test("reports:create is enough, since every member already reads reports", async () => {
     trpc.setMembership([{ guildId, asAdmin: false }]);
     await seedGrants(permissionKey({ resource: "reports", action: "create" }));
     const res = await post();
-    expect(res?.status).toBe(403);
+    // Player carries reports:read, so the create grant alone passes
+    // authorization and reaches the disabled-feature 403.
     const body = ErrBody.parse(await res?.json());
-    expect(body.error).toContain("reports:read");
+    expect(body.error).not.toContain("reports:create");
+    expect(body.error).not.toContain("reports:read");
   });
 
   test("member with reports:create and reports:read passes authorization", async () => {

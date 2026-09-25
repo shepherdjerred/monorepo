@@ -21,6 +21,8 @@ import {
   blockingPolicyForThreshold,
   evaluateGate,
   formatSignalEvent,
+  gateExitCode,
+  REVIEW_GATE_FAILURE_EXIT_CODE,
   resolveProvider,
   reviewGateSkipReasonForAuthor,
   resolveRequiredReviewProvider,
@@ -205,6 +207,17 @@ function isRetryablePollError(error: Error): boolean {
     (code !== null && TRANSPORT_FAILURE_CODES.has(code)) ||
     TRANSPORT_FAILURE_RE.test(message)
   );
+}
+
+/** A terminal failed gate decision, carrying the exit status it maps to. */
+class ReviewGateFailure extends Error {
+  constructor(
+    message: string,
+    readonly exitCode: number,
+  ) {
+    super(message);
+    this.name = "ReviewGateFailure";
+  }
 }
 
 async function waitForReview(): Promise<void> {
@@ -534,7 +547,7 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
       return;
     }
     if (decision.state === "failed") {
-      throw new Error(decision.message);
+      throw new ReviewGateFailure(decision.message, gateExitCode(decision));
     }
     console.log(decision.message);
     await Bun.sleep(intervalSeconds * 1000);
@@ -573,6 +586,13 @@ if (import.meta.main) {
     await waitForReview();
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
-    process.exit(1);
+    // Only a provider-declared block (quota exhaustion) exits with the status
+    // the Buildkite step soft-fails on; timeouts, configuration errors, and
+    // findings all keep the hard failure status.
+    process.exit(
+      error instanceof ReviewGateFailure
+        ? error.exitCode
+        : REVIEW_GATE_FAILURE_EXIT_CODE,
+    );
   }
 }

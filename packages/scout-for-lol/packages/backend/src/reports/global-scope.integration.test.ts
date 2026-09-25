@@ -276,6 +276,6 @@ describe("global scope", () => {
           "SELECT COUNT(*) AS games FROM competition_match_participants WHERE competition_id = 1 AND game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY GROUP BY player",
         now,
       }),
-    ).rejects.toThrow(/not available in global scope/);
+    ).rejects.toThrow(/needs exactly one server/);
   });
 });

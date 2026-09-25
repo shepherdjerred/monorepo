@@ -91,7 +91,12 @@ describe("parseReplayArgs values", () => {
     expect(parsed.concurrency).toBe(2);
     expect(parsed.resumeRunId).toBe("run-1");
     expect(parsed.baselineRunId).toBe("run-0");
-    expect(parsed.onlyCaseId).toBe("chip:abc123");
+    expect(parsed.onlyCaseIds).toEqual(["chip:abc123"]);
+  });
+
+  test("--only takes a comma-separated list of cases", () => {
+    const parsed = options(["--chips", "--only", "chip:a1, chip:b2,"]);
+    expect(parsed.onlyCaseIds).toEqual(["chip:a1", "chip:b2"]);
   });
 
   test("rejects a non-positive limit or concurrency", () => {

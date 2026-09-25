@@ -13,9 +13,12 @@ import {
   rootPermissions,
 } from "#src/model/permissions/permission-set.ts";
 import {
+  PLAYER_PERMISSIONS,
   ROLE_CATALOG,
   canDelegateRole,
   deriveRole,
+  exceedsPlayer,
+  memberPermissions,
   permissionsForRole,
 } from "#src/model/permissions/roles.ts";
 import { PermissionCatalogSourceSchema } from "#src/model/permissions/permission-catalog-source.ts";
@@ -186,6 +189,49 @@ describe("roles", () => {
     expect(
       deriveRole(createPermissionSet([{ resource: "reports", action: "run" }])),
     ).toBe("custom");
+  });
+
+  test("every member's implicit Player role is the player-facing reads", () => {
+    const player = createPermissionSet(PLAYER_PERMISSIONS);
+    for (const resource of [
+      "players",
+      "accounts",
+      "competitions",
+      "reports",
+      "customs",
+    ] as const) {
+      expect(player.can(resource, "read")).toBe(true);
+    }
+    // Management reads and every write stay behind a grant.
+    expect(player.can("subscriptions", "read")).toBe(false);
+    expect(player.can("channels", "read")).toBe(false);
+    expect(player.can("audit", "read")).toBe(false);
+    expect(player.can("roles", "read")).toBe(false);
+    expect(player.can("reports", "run")).toBe(false);
+  });
+
+  test("a member's effective set is Player plus grants, derived by preset", () => {
+    expect(deriveRole(createPermissionSet(memberPermissions([])))).toBe(
+      "player",
+    );
+    // Every grantable preset already contains Player, so it still derives.
+    for (const role of ["viewer", "manager", "admin"] as const) {
+      expect(
+        deriveRole(
+          createPermissionSet(memberPermissions(permissionsForRole(role))),
+        ),
+      ).toBe(role);
+    }
+    const run = memberPermissions([{ resource: "reports", action: "run" }]);
+    expect(deriveRole(createPermissionSet(run))).toBe("custom");
+    expect(run).toHaveLength(PLAYER_PERMISSIONS.length + 1);
+  });
+
+  test("only grants beyond Player make a member more than a player", () => {
+    expect(exceedsPlayer([])).toBe(false);
+    expect(exceedsPlayer([...PLAYER_PERMISSIONS])).toBe(false);
+    expect(exceedsPlayer(permissionsForRole("viewer"))).toBe(true);
+    expect(exceedsPlayer([{ resource: "reports", action: "run" }])).toBe(true);
   });
 
   test("ROLE_CATALOG covers every role", () => {

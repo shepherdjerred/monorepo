@@ -42,6 +42,7 @@ const PIN: StageDatasetPin = StageDatasetPinSchema.parse({
         riotHistory: false,
         mvpVotes: false,
         clash: false,
+        hallOfFame: false,
       },
       capturedAt: "2026-09-19T00:00:00.000Z",
     },

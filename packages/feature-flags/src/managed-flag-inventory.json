@@ -807,6 +807,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout_v2_prematch_ownership_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Let the V2 pipeline own scheduled prematch detection. On runs scoutPrematchDiscoveryV2Workflow from each prematch poll and keeps only v1 prematch maintenance; the per-stage switch for the prematch V2 cutover.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "llm-daily-token-budget",
       "owner": "scout",
       "namespace": "scout",

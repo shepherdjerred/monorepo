@@ -83,6 +83,23 @@ function validatePublicUrl(rawUrl: string): void {
   }
 }
 
+// FreshRSS parses `!` and `-` as the same term negation but serializes only
+// `-`, so a `!`-negated filter is stored and exported in a different form than
+// the one declared. The reconcilers compare exact strings, so that filter could
+// never converge. Quoted and regex literals are masked first because a `!`
+// inside them is data, not an operator.
+const FRESHRSS_SEARCH_LITERAL = /(?<!\\)(["'/]).+?(?<!\\)\1[im]*/g;
+const FRESHRSS_BANG_NEGATION = /(?:^|[\s(])!/;
+
+function validateCanonicalReadFilter(filter: string, feedUrl: string): void {
+  const operators = filter.replaceAll(FRESHRSS_SEARCH_LITERAL, '""');
+  if (FRESHRSS_BANG_NEGATION.test(operators)) {
+    throw new Error(
+      `Feed ${feedUrl} read filter ${JSON.stringify(filter)} negates with "!", which FreshRSS stores as "-"; declare the "-" form so the filter can converge`,
+    );
+  }
+}
+
 export function parseFreshRssOpml(xml: string): FreshRssDesiredManifest {
   const parser = new XMLParser({
     ignoreAttributes: false,
@@ -108,6 +125,10 @@ export function parseFreshRssOpml(xml: string): FreshRssDesiredManifest {
     for (const feed of category.outline) {
       validatePublicUrl(feed.xmlUrl);
       if (feed.htmlUrl !== undefined) validatePublicUrl(feed.htmlUrl);
+      const readFilter = feed["frss:filtersActionRead"];
+      if (readFilter !== undefined) {
+        validateCanonicalReadFilter(readFilter, feed.xmlUrl);
+      }
       if (urls.has(feed.xmlUrl)) {
         throw new Error(`Duplicate feed URL: ${feed.xmlUrl}`);
       }

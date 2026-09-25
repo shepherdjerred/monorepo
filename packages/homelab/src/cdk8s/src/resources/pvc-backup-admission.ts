@@ -3,6 +3,7 @@ import {
   PVC_BACKUP_POLICY,
   pvcBackupPolicyKey,
 } from "@shepherdjerred/homelab/cdk8s/src/backup-policy/pvc-backup-policy.ts";
+import { CI_WORKSPACE_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 
 const INCLUDED_PVC_KEYS = PVC_BACKUP_POLICY.filter(
   (entry) => entry.backup === "enabled",
@@ -18,8 +19,18 @@ function toCelList(values: readonly string[]): string {
 
 const POLICY_KEY_EXPRESSION =
   "object.metadata.namespace + '/' + object.metadata.name";
+/** Where Woodpecker creates CI pods and their workspace claims. */
+const WOODPECKER_CI_NAMESPACE = "woodpecker-ci";
+/**
+ * Per-workflow CI workspaces, excluded by what they are rather than by name.
+ *
+ * Woodpecker names each claim after the workflow's ULID, so no inventory can
+ * list them. A claim on the workspace class in the CI namespace is disposable
+ * by definition: the class deletes its volume with the claim.
+ */
+const EPHEMERAL_CI_WORKSPACE_EXPRESSION = `object.metadata.namespace == '${WOODPECKER_CI_NAMESPACE}' && has(object.spec.storageClassName) && object.spec.storageClassName == '${CI_WORKSPACE_STORAGE_CLASS}'`;
 const INCLUDED_EXPRESSION = `${toCelList(INCLUDED_PVC_KEYS)}.exists(key, key == variables.policyKey)`;
-const EXCLUDED_EXPRESSION = `${toCelList(EXCLUDED_PVC_KEYS)}.exists(key, key == variables.policyKey)`;
+const EXCLUDED_EXPRESSION = `${toCelList(EXCLUDED_PVC_KEYS)}.exists(key, key == variables.policyKey) || (${EPHEMERAL_CI_WORKSPACE_EXPRESSION})`;
 export const PVC_BACKUP_ADMISSION_POLICY_SYNC_WAVE = "-30";
 export const PVC_BACKUP_ADMISSION_BINDING_SYNC_WAVE = "-29";
 

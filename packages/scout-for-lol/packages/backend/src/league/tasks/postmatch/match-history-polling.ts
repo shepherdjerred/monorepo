@@ -1,9 +1,7 @@
 import type { MatchId } from "@scout-for-lol/data/index.ts";
-import {
-  getAccountsWithState,
-  updateLastProcessedMatch,
-  prisma,
-} from "#src/database/index.ts";
+import { prisma } from "#src/database/index.ts";
+import { getAccountsWithState } from "#src/database/player-accounts.ts";
+import { updateLastProcessedMatch } from "#src/database/account-cursors.ts";
 import { MatchIdSchema } from "@scout-for-lol/data/index.ts";
 import { getActiveServerIds } from "#src/discord/utils/guild-membership.ts";
 import { MAX_PLAYERS_PER_RUN } from "@scout-for-lol/data/polling-config.ts";

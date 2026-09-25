@@ -15,10 +15,8 @@ import {
   ScoutQlCastTypeSchema,
   ScoutQlIntervalUnitSchema,
 } from "#src/model/scoutql/parse/expression.ts";
-import type {
-  ScoutQlColumnInfo,
-  SourceCatalog,
-} from "#src/model/scoutql/catalog/catalog-columns.ts";
+import type { SourceCatalog } from "#src/model/scoutql/catalog/catalog-columns.ts";
+import type { ScoutQlColumnInfo } from "#src/model/scoutql/catalog/catalog-column-types.ts";
 import { resolveReportChampion } from "#src/model/reports/report-query-champions.ts";
 
 // ── Expression-analysis shared vocabulary ────────────────────────────────────

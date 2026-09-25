@@ -247,3 +247,41 @@ describe("AI SDK 7 and OpenRouter provider contracts", () => {
     expect(observedAbort).toBe(true);
   });
 });
+
+describe("prompt caching", () => {
+  test("sends a prompt cache key in the request body when one is given", async () => {
+    let body: unknown;
+    const openRouter = runtime((_input, init) => {
+      body = requestBody(init);
+      return Promise.resolve(
+        Response.json({
+          id: "gen-cache",
+          model: "openai/gpt-5.6-luna",
+          choices: [
+            {
+              index: 0,
+              message: { role: "assistant", content: "hello" },
+              finish_reason: "stop",
+            },
+          ],
+          usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
+        }),
+      );
+    });
+
+    await generateText({
+      model: openRouter.languageModel("gpt-5.6-luna"),
+      prompt: "Say hello.",
+      ...openRouter.callOptions({
+        workload: "contract.cache",
+        sessionId: "turn-1",
+        promptCacheKey: "contract.cache:v1",
+      }),
+    });
+
+    expect(
+      z.object({ prompt_cache_key: z.string() }).loose().parse(body)
+        .prompt_cache_key,
+    ).toBe("contract.cache:v1");
+  });
+});

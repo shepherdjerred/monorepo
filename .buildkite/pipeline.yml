@@ -1584,7 +1584,6 @@ steps:
     key: trmnl-publish
     timeout_in_minutes: 20
     if: build.branch == pipeline.default_branch
-    cancel_on_build_failing: true
     depends_on: verify
     concurrency: 1
     concurrency_group: monorepo/trmnl-publish
@@ -2099,8 +2098,15 @@ steps:
   # so the script always reports which provider and head it gave up on rather
   # than Buildkite killing the pod first.
   #
-  # The gate runs LAST. Its failure (for example Codex out of quota) still
-  # fails the build, but only after every other PR step has finished, so it can
+  # The gate soft-fails on exactly one status: 42, which it exits with only when
+  # Codex declared it could not review this head because of its usage limit
+  # (REVIEW_GATE_BLOCKED_EXIT_CODE in @shepherdjerred/code-review). review-gate.sh
+  # then annotates the build to rely on Greptile. Findings, unresolved threads,
+  # timeouts, and every other error exit with another status and fail the build.
+  # select-pr-pipeline.ts rejects any other soft_fail shape on this step.
+  #
+  # The gate runs LAST. Its hard failure still fails the build, but only after
+  # every other PR step has finished, so it can
   # never flip the build to "failing" while a `cancel_on_build_failing` sibling
   # is still running and get that sibling canceled. `allow_dependency_failure`
   # keeps the gate reporting its review verdict when another step failed.
@@ -2138,6 +2144,8 @@ steps:
       - windows-cross-compiler-pr
       - macos-cross-compiler-pr
     allow_dependency_failure: true
+    soft_fail:
+      - exit_status: 42
     env:
       REVIEW_PROVIDER: codex
     command: |
@@ -2786,16 +2794,10 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: verify
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/image-push
     command: |
       if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts images; then
-        pending_version_bump=$$(git ls-remote origin refs/heads/chore/version-bump-pending)
-        if [ -n "$$pending_version_bump" ]; then
-          echo "chore/version-bump-pending is still active; retry after its catalog update merges"
-          exit 1
-        fi
         jq -n '{}' | buildkite-agent meta-data set image-digests
         jq -cn --arg build "$BUILDKITE_BUILD_NUMBER" \
           '{schema:"pin-candidates/v1",buildNumber:($$build|tonumber),candidates:{}}' |
@@ -2892,7 +2894,6 @@ steps:
     timeout_in_minutes: 240
     if: build.branch == pipeline.default_branch
     depends_on: verify
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/macos-cross-compiler-push
     command: |
@@ -2930,7 +2931,6 @@ steps:
     # bucket exists before its first deployment sync.
     depends_on:
       [verify, playwright-e2e-main, resume-build-main, tofu-apply-seaweedfs]
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/site-deploys
     command: |
@@ -3067,7 +3067,6 @@ steps:
     depends_on:
       - verify
       - release-please
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/package-publish
     concurrency_method: ordered
@@ -3217,7 +3216,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: [homelab-release-admission, helm-push]
-    cancel_on_build_failing: true
     command: |
       release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
@@ -3256,7 +3254,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: tofu-apply-seaweedfs
-    cancel_on_build_failing: true
     command: |
       release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
@@ -3295,7 +3292,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: tofu-apply-tailscale
-    cancel_on_build_failing: true
     command: |
       release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
@@ -3333,7 +3329,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: tofu-apply-buildkite
-    cancel_on_build_failing: true
     command: |
       release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
       if [ "$$release_admission" = "superseded" ]; then exit 0; fi
@@ -3380,7 +3375,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: homelab-release-admission
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/tofu-github
     # No automatic retry: GitHub API mutations are not idempotent on partial
@@ -3423,7 +3417,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: homelab-release-admission
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/tofu-posthog
     command: |
@@ -3460,7 +3453,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: homelab-release-admission
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/tofu-platform-credentials
     command: |
@@ -3507,7 +3499,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: homelab-release-admission
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/tofu-platform-credentials
     command: |
@@ -3553,7 +3544,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: homelab-release-admission
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/tofu-platform-credentials
     command: |
@@ -3604,7 +3594,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: homelab-release-admission
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/tofu-platform-credentials
     command: |
@@ -3651,7 +3640,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: homelab-release-admission
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/tofu-platform-credentials
     command: |
@@ -3888,7 +3876,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: [homelab-release-admission, argocd-sync]
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/tofu-cloudflare
     # Fail-closed: the SeaweedFS TunnelBinding finalizer must complete before
@@ -3948,7 +3935,6 @@ steps:
     depends_on: verify
     concurrency: 1
     concurrency_group: monorepo/release-please
-    cancel_on_build_failing: true
     command: |
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter '@shepherdjerred/release-tools' --filter '@shepherdjerred/llm-models' --production
@@ -3987,7 +3973,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: images
-    cancel_on_build_failing: true
     concurrency: 1
     # Serialize commit-back with image publication. A later image build must
     # not evaluate converged pins from its stale checkout while an earlier
@@ -4027,7 +4012,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: verify
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/ci-base-refresh
     command: |
@@ -4061,7 +4045,6 @@ steps:
     timeout_in_minutes: 60
     if: build.branch == pipeline.default_branch
     depends_on: verify
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/ci-playwright-refresh
     command: |
@@ -4095,7 +4078,6 @@ steps:
     timeout_in_minutes: 120
     if: build.branch == pipeline.default_branch
     depends_on: verify
-    cancel_on_build_failing: true
     concurrency: 1
     concurrency_group: monorepo/windows-cross-compiler-refresh
     command: |
