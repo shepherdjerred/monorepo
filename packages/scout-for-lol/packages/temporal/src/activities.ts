@@ -60,6 +60,10 @@ import type {
   ScoutNotificationOutcomeV2Input,
   ScoutNotificationRenderV2Result,
   ScoutNotificationTransitionV2Result,
+  ScoutPostMatchDiscoveryOwnerV2Result,
+  ScoutPostMatchPollReleaseV2Input,
+  ScoutPostMatchPollReleaseV2Result,
+  ScoutPostMatchPollRenewalV2Result,
   ScoutPostMatchScanV2Result,
   ScoutPrematchArchiveV2Result,
   ScoutPrematchScanV2Result,
@@ -72,6 +76,7 @@ import type {
   ScoutRecoveryTransitionV2Result,
   ScoutTournamentResultV2Result,
 } from "./activity-contracts-v2.ts";
+import type { ScoutSilentPostmatchBackfillV2Result } from "./silent-postmatch-backfill-v2.ts";
 
 export type ScoutTemporalActivities = {
   probeQueue: (
@@ -142,6 +147,15 @@ export type ScoutTemporalActivities = {
  */
 export type ScoutTemporalV2Activities = {
   // Discovery — Riot reads, realtime.
+  resolvePostMatchDiscoveryOwnerV2: (
+    input: ScoutPostMatchDiscoveryV2Input,
+  ) => Promise<ScoutPostMatchDiscoveryOwnerV2Result>;
+  renewPostMatchPollClaimV2: (
+    input: ScoutPostMatchPollReleaseV2Input,
+  ) => Promise<ScoutPostMatchPollRenewalV2Result>;
+  releasePostMatchPollClaimV2: (
+    input: ScoutPostMatchPollReleaseV2Input,
+  ) => Promise<ScoutPostMatchPollReleaseV2Result>;
   discoverPostMatchIdsV2: (
     input: ScoutPostMatchDiscoveryV2Input,
   ) => Promise<ScoutPostMatchScanV2Result>;
@@ -242,6 +256,12 @@ export type ScoutTemporalV2Activities = {
   scanPipelineReconciliationPageV2: (
     input: ScoutPipelineReconciliationV2Input,
   ) => Promise<ScoutReconciliationScanV2Result>;
+
+  // Operator backfill — render and attest one match's post-match report with
+  // no intent and no delivery, background. See `silent-postmatch-backfill-v2.ts`.
+  backfillSilentPostmatchArtifactV2: (
+    input: ScoutMatchRefV2,
+  ) => Promise<ScoutSilentPostmatchBackfillV2Result>;
 };
 
 export type ScoutV2ActivityName = keyof ScoutTemporalV2Activities;

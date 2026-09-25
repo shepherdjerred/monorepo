@@ -25,7 +25,22 @@ const ContainerSchema = z
     ),
     env: z
       .array(
-        z.object({ name: z.string(), value: z.string().optional() }).loose(),
+        z
+          .object({
+            name: z.string(),
+            value: z.string().optional(),
+            valueFrom: z
+              .object({
+                secretKeyRef: z
+                  .object({
+                    key: z.string(),
+                    optional: z.boolean().optional(),
+                  })
+                  .loose(),
+              })
+              .optional(),
+          })
+          .loose(),
       )
       .optional(),
     securityContext: SecurityContextSchema,
@@ -82,6 +97,27 @@ function synthesizeDeployment(): z.infer<typeof DeploymentSchema> {
     throw new Error("Missing Deployment/alert-dashboard manifest");
   }
   return deployment;
+}
+
+const IngressSchema = z.object({
+  kind: z.literal("Ingress"),
+  spec: z
+    .object({
+      ingressClassName: z.string(),
+      tls: z.array(z.object({ hosts: z.array(z.string()) })),
+    })
+    .loose(),
+});
+
+function synthesizeTailnetHosts(): string[] {
+  const app = new App();
+  createAlertDashboardChart(app);
+  const manifests = z.array(z.unknown()).parse(app.charts.at(0)?.toJson());
+  return manifests
+    .map((manifest) => IngressSchema.safeParse(manifest))
+    .filter((result) => result.success)
+    .filter((result) => result.data.spec.ingressClassName === "tailscale")
+    .flatMap((result) => result.data.spec.tls.flatMap((tls) => tls.hosts));
 }
 
 function synthesizePersistentVolumeClaim(): z.infer<
@@ -165,5 +201,31 @@ describe("Alert Dashboard deployment", () => {
       dashboardContainer?.env?.find((entry) => entry.name === "POSTAL_HOST")
         ?.value,
     ).toBe(POSTAL_HOST);
+  });
+
+  test("serves the ops overview on its own tailnet host and keeps alerts", () => {
+    expect(synthesizeTailnetHosts().toSorted()).toEqual(["alerts", "ops"]);
+  });
+
+  test("requires the ops ingest token and wires Prometheus and Flipt", () => {
+    const env =
+      synthesizeDeployment().spec.template.spec.containers.find(
+        (container) => container.name === "alert-dashboard",
+      )?.env ?? [];
+    const entry = (name: string) => env.find((item) => item.name === name);
+
+    expect(entry("OPS_INGEST_TOKEN")?.valueFrom?.secretKeyRef).toMatchObject({
+      key: "OPS_INGEST_TOKEN",
+    });
+    expect(
+      entry("OPS_INGEST_TOKEN")?.valueFrom?.secretKeyRef.optional,
+    ).not.toBe(true);
+    expect(entry("PROMETHEUS_URL")?.value).toBe(
+      "http://prometheus-kube-prometheus-prometheus.prometheus:9090",
+    );
+    expect(entry("FEATURE_FLAGS_MODE")?.value).toBe("flipt");
+    expect(entry("FLIPT_URL")?.value).toBe(
+      "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
+    );
   });
 });

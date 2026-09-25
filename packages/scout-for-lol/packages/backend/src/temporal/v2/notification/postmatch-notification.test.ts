@@ -51,6 +51,7 @@ const RIOT_MATCH = RiotMatchIdSchema.parse("NA1_9301");
 const MATCH = MatchIdSchema.parse("NA1_9301");
 const IMAGE = new Uint8Array([137, 80, 78, 71, 1]);
 const REVIEW = new Uint8Array([137, 80, 78, 71, 2, 2]);
+const LIVE = { kind: "live" } as const;
 
 function reportEmbed(): EmbedBuilder {
   return new EmbedBuilder({ image: { url: `attachment://${MATCH}.png` } });
@@ -93,7 +94,12 @@ beforeEach(() => {
     matchId: MATCH,
     riotMatchId: RIOT_MATCH,
     matchData: {
-      info: { queueId: 420, gameMode: "CLASSIC", gameType: "MATCHED_GAME" },
+      info: {
+        queueId: 420,
+        gameMode: "CLASSIC",
+        gameType: "MATCHED_GAME",
+        gameCreation: 1_789_000_000_000,
+      },
     },
     trackedPlayers: [
       { alias: "jerred", league: { leagueAccount: { puuid: "p".repeat(78) } } },
@@ -122,7 +128,7 @@ describe("the round trip", () => {
   ])("rebuilds $name exactly as the generator built it", async (scenario) => {
     stubs.generateMatchReport.mockResolvedValue(scenario.message);
 
-    const rendered = await renderPostmatchNotificationV2(RIOT_MATCH);
+    const rendered = await renderPostmatchNotificationV2(RIOT_MATCH, LIVE);
     const rebuilt = buildPostmatchNotificationMessageV2(RIOT_MATCH, {
       image: rendered.image,
       review: rendered.review,
@@ -156,7 +162,7 @@ describe("what the render evaluates", () => {
     // The AI review is gated per guild and spent once per match; the render
     // evaluates the gate against the whole audience, as v1 does, so no
     // channel's review depends on which child rendered first.
-    await renderPostmatchNotificationV2(RIOT_MATCH);
+    await renderPostmatchNotificationV2(RIOT_MATCH, LIVE);
 
     expect(stubs.resolvePostmatchDeliveryChannels).toHaveBeenCalledWith({
       puuids: ["p".repeat(78)],
@@ -171,10 +177,41 @@ describe("what the render evaluates", () => {
     ]);
   });
 
+  test("a live render captures ranks; a historical one is handed the recorded changes", async () => {
+    // A live render runs minutes after the game, so the rank the generator
+    // captures IS the post-game rank. A historical render runs long after,
+    // and must not re-capture: it would upsert today's rank over the row the
+    // settlement-time capture wrote for that game.
+    const recorded = new Map([
+      ["p".repeat(78), { before: undefined, after: undefined }],
+    ]);
+    await renderPostmatchNotificationV2(RIOT_MATCH, LIVE);
+    await renderPostmatchNotificationV2(RIOT_MATCH, {
+      kind: "historical",
+      rankChanges: recorded,
+    });
+
+    const [live, historical] = stubs.generateMatchReport.mock.calls.map(
+      (call) => z.record(z.string(), z.unknown()).parse(call[2]),
+    );
+    expect(live).not.toHaveProperty("prefetchedRankChanges");
+    expect(live).not.toHaveProperty("omitMvpVotes");
+    expect(historical?.["prefetchedRankChanges"]).toBe(recorded);
+    // A report nobody will see gets no vote controls and no contest.
+    expect(historical?.["omitMvpVotes"]).toBe(true);
+  });
+
+  test("reports the game's creation instant for dating its objects", async () => {
+    const rendered = await renderPostmatchNotificationV2(RIOT_MATCH, LIVE);
+    expect(rendered.gameCreation).toBe(1_789_000_000_000);
+  });
+
   test("a report the generator cannot build is non-retryable", async () => {
     stubs.generateMatchReport.mockResolvedValue(undefined);
 
-    await expect(renderPostmatchNotificationV2(RIOT_MATCH)).rejects.toSatisfy(
+    await expect(
+      renderPostmatchNotificationV2(RIOT_MATCH, LIVE),
+    ).rejects.toSatisfy(
       (error: unknown) =>
         error instanceof ApplicationFailure && error.nonRetryable === true,
     );
@@ -230,8 +267,8 @@ describe("what the disassembly refuses", () => {
   ])("refuses $name", async (scenario) => {
     stubs.generateMatchReport.mockResolvedValue(scenario.message);
 
-    await expect(renderPostmatchNotificationV2(RIOT_MATCH)).rejects.toThrow(
-      scenario.reason,
-    );
+    await expect(
+      renderPostmatchNotificationV2(RIOT_MATCH, LIVE),
+    ).rejects.toThrow(scenario.reason);
   });
 });

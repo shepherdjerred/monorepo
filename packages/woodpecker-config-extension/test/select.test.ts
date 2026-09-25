@@ -311,6 +311,7 @@ describe("ported lanes", () => {
   const IMAGES = {
     base: "ghcr.io/shepherdjerred/ci-base@sha256:" + "a".repeat(64),
     playwright: "ghcr.io/shepherdjerred/ci-playwright@sha256:" + "b".repeat(64),
+    windowsCrossCompilerWinui: `ghcr.io/shepherdjerred/windows-cross-compiler-winui@sha256:${"c".repeat(64)}`,
     catalog: {
       "aquasec/trivy": "aquasec/trivy:0.72.0",
       "semgrep/semgrep": "semgrep/semgrep:1.170.0",

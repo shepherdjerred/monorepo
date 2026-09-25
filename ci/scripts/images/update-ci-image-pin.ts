@@ -8,10 +8,6 @@ import { run, runAllowExit, tmpBase } from "../../../scripts/lib/run.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
 import { runMain } from "../../../scripts/lib/transient.ts";
 import {
-  CI_IMAGE_IGNORED_ENV_PREFIXES,
-  imageRuntimeFingerprint,
-} from "./application-image-runtime.ts";
-import {
   ciImageDefinition,
   ciImageSourceFingerprint,
   type CiImageDefinition,
@@ -19,10 +15,10 @@ import {
 import {
   checkedOutSourceCommand,
   ciImagePromotionFiles,
-  classifyCiImageRuntimePromotion,
   isCurrentSourceCandidate,
   localPromotionDecision,
   newestPinState,
+  requireMainPin,
   parseCiImageCandidate,
   parseCiImagePinState,
   playwrightVersionFromDockerfile,
@@ -36,6 +32,7 @@ import {
   type CiImagePinState,
   type LocalPromotionDecision,
 } from "./update-ci-image-pin-core.ts";
+import { runtimeGateSkips } from "./update-ci-image-pin-runtime.ts";
 import {
   MONOREPO_REPO,
   openOrUpdatePullRequest,
@@ -82,18 +79,6 @@ async function readPinIfPresent(
   const state = await readStateFile(stateFile);
   verifyDigestFile(await Bun.file(digestFile).text(), state);
   return state;
-}
-
-function requireMainPin(
-  mainState: CiImagePinState | undefined,
-  definition: CiImageDefinition,
-): CiImagePinState {
-  if (mainState === undefined) {
-    throw new Error(
-      `${definition.name} is pinned locally but has no pin on origin/main`,
-    );
-  }
-  return mainState;
 }
 
 async function pendingState(
@@ -280,19 +265,6 @@ async function sourceFingerprintAtRevision(
   return `sha256:${fingerprint}`;
 }
 
-async function runtimeFingerprint(
-  image: string,
-  env: Record<string, string>,
-): Promise<string | undefined> {
-  return imageRuntimeFingerprint(
-    image,
-    async (command) => {
-      return runAllowExit([...command], { env, capture: true });
-    },
-    CI_IMAGE_IGNORED_ENV_PREFIXES,
-  );
-}
-
 async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
   const candidate = parseCiImageCandidate(await Bun.file(candidatePath).json());
   const definition = ciImageDefinition(candidate.image);
@@ -397,35 +369,25 @@ async function promote(candidatePath: string, dryRun: boolean): Promise<void> {
         ? selectedBeforeCandidate
         : selected;
 
-    if (mainState === undefined) {
-      console.log(
-        `${definition.name} has no pin yet; promoting its first build`,
-      );
-    } else {
-      const runtimeOutcome = await classifyCiImageRuntimePromotion(
-        {
-          repository: definition.repository,
-          pinnedDigest: mainState.digest,
-          candidateDigest: promoted.digest,
-        },
-        async (image) => runtimeFingerprint(image, auth.env),
-      );
-      if (runtimeOutcome === "content-unchanged") {
-        await finalizeSkippedPromotion({
-          cloneDir,
-          definition,
-          pending,
-          mainState,
-          reason: "candidate runtime content is unchanged",
-          env: auth.env,
-        });
-        return;
-      }
-      if (runtimeOutcome === "pin-unresolvable-bumped") {
-        console.warn(
-          `${definition.name} current pin could not be fingerprinted; promoting the verified candidate`,
-        );
-      }
+    if (
+      await runtimeGateSkips({
+        definition,
+        currentPendingState: currentPending?.state,
+        mainState,
+        promoted,
+        env: auth.env,
+        skip: async (reason) =>
+          finalizeSkippedPromotion({
+            cloneDir,
+            definition,
+            pending,
+            mainState: requireMainPin(mainState, definition),
+            reason,
+            env: auth.env,
+          }),
+      })
+    ) {
+      return;
     }
 
     await run(

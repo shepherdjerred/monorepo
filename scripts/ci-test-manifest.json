@@ -773,6 +773,16 @@
       "steps": [{ "runner": "vitest" }]
     },
     {
+      "package": "@shepherdjerred/ops-model",
+      "directory": "packages/ops-model",
+      "steps": [{ "runner": "vitest" }]
+    },
+    {
+      "package": "@shepherdjerred/ops-clients",
+      "directory": "packages/ops-clients",
+      "steps": [{ "runner": "vitest" }]
+    },
+    {
       "package": "@shepherdjerred/version-catalog",
       "directory": "packages/version-catalog",
       "steps": [

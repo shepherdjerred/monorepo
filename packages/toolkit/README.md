@@ -88,7 +88,11 @@ a root `index.html`, and asciinema `.cast` files get a self-contained player.
 `toolkit deployed [SELECTOR]` traces a commit through merge, image publication,
 GitOps pinning, ArgoCD sync, and the running pod digest. Selectors include a
 service (`scout`), variant (`scout/prod`), or commit. Use `--json`,
-`--no-github`, or `--no-cluster` when needed.
+`--no-github`, or `--no-cluster` when needed. Deployable services, their
+aliases, and variants come from the `@shepherdjerred/ops-model` service catalog,
+and reports (including the `service` field of `--json`) name each service by
+its catalog id, for example `temporal` or `static-sites`; the older names
+`temporal-worker` and `caddy-s3proxy` still work as selectors.
 
 `toolkit screenshot <package> [route]` starts a registered package on its fixed
 development port and drives a PinchTab-controlled browser. It fails if the port
@@ -102,6 +106,11 @@ PinchTab credentials or config.
 ### Operations and local history
 
 - `toolkit alerts list|show` queries the durable alert occurrence ledger.
+- `toolkit ops summary [--json] [--needs-me] [--section ID]` reads the homelab
+  ops snapshot, applies the staleness policy, and prints overall severity, one
+  line per section, what is waiting on you, and the top attention signals with
+  their first link. A non-200 response, unreachable dashboard, or snapshot that
+  breaks the `@shepherdjerred/ops-model` contract exits nonzero.
 - `toolkit bugsink ...` queries teams, projects, issues, events, stacktraces,
   and releases in self-hosted Bugsink.
 - `toolkit discord ...` operates the private local Discord session daemon.
@@ -190,7 +199,54 @@ priced as a subset already included in its input tokens (OpenAI's cache
 discount), distinct from the additive cache-read/cache-write tokens Claude
 Code and Antigravity's Claude-backed sessions report.
 
+##### Usage metrics push
+
+When `historyMetricsPushEnabled` is on, the history daemon pushes AI usage and
+Brim quota metrics over OTLP/HTTP every 60 seconds to the homelab Alloy
+gateway (`otlp-metrics` on the tailnet), which remote-writes them into
+Prometheus. It is off by default; enable it in `~/.toolkit/config.toml` and
+restart the daemon (`toolkit history daemon stop && toolkit history daemon start`):
+
+```toml
+[history.metrics.push]
+enabled = true
+```
+
+Pushed series are `ai_usage_tokens_total{source,model,type}`,
+`ai_usage_cost_usd_total{source,model}`, `ai_usage_events_total{source,model}`,
+`ai_usage_unpriced_events_total{source}`,
+`ai_subscription_quota_used_ratio{provider,window_id,window_kind}`,
+`ai_subscription_quota_reset_timestamp_seconds{provider,window_id}`, and
+`ai_subscription_snapshot_timestamp_seconds{provider}`, with
+`job="toolkit-history"` and `instance=<hostname>`. Prompts, paths, workspaces,
+and session ids never leave the machine.
+
+Because the history index is rebuildable, usage totals come from a separate
+ledger, `~/.toolkit/history/usage-export.sqlite`. It remembers a SHA-256 key per
+event, so pruning a transcript, reindexing, or restarting the daemon never
+lowers or double-counts a total. The first run records existing events without
+counting them: enabling the push never backfills history, and events that
+predate that seed never count later either. Keys older than 400 days are
+pruned. Deleting the ledger restarts the counters from zero. A missing Brim
+cache skips quota metrics; a corrupt one is logged as a refresh failure in the
+daemon log each scan until Brim rewrites it.
+
 Run `toolkit --help` or a workflow’s `--help` for the complete command surface.
+
+## Configuration
+
+Toolkit behavior settings resolve `environment -> ~/.toolkit/config.toml ->
+default`. An explicit value stops resolution, including `false`; an invalid
+value or unparseable file is an error, not a fallback.
+
+| Key (env / TOML path)                                             | Default                                               |
+| ----------------------------------------------------------------- | ----------------------------------------------------- |
+| `HISTORY_METRICS_PUSH_ENABLED` / `history.metrics.push.enabled`   | `false`                                               |
+| `HISTORY_METRICS_PUSH_ENDPOINT` / `history.metrics.push.endpoint` | `https://otlp-metrics.tailnet-1a49.ts.net/v1/metrics` |
+| `OPS_DASHBOARD_URL` / `ops.dashboard.url`                         | `https://ops.tailnet-1a49.ts.net`                     |
+
+The history daemon runs under launchd without your shell environment, so set
+its keys in the TOML file. It reads them once at start.
 
 ## Environment variables
 

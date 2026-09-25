@@ -11,7 +11,10 @@ import {
   releaseAdmissionStep,
   tofuApplySteps,
 } from "#src/pipeline/lanes/tofu-apply.ts";
-import { releaseChainSteps } from "#src/pipeline/lanes/release.ts";
+import {
+  imagesPrStep,
+  releaseChainSteps,
+} from "#src/pipeline/lanes/release.ts";
 import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
 import { macosCrossCompilerSteps } from "#src/pipeline/lanes/macos-cross-compiler.ts";
 import { scoutSteps } from "#src/pipeline/lanes/scout.ts";
@@ -19,6 +22,7 @@ import { siteSteps } from "#src/pipeline/lanes/sites.ts";
 import { macosSteps } from "#src/pipeline/lanes/macos.ts";
 import { observabilityE2eSteps } from "#src/pipeline/lanes/observability-e2e.ts";
 import { prGateSteps } from "#src/pipeline/lanes/pr-gates.ts";
+import { tasknotesWindowsSteps } from "#src/pipeline/lanes/tasknotes-windows.ts";
 
 /**
  * Shared cache claims mounted by step pods.
@@ -98,18 +102,25 @@ export function buildPipelineSteps({
   changedBase,
   imageReleaseBase,
 }: PipelineInputs): CiStep[] {
+  /**
+   * Change detection for every step, not only the ones that remember to ask.
+   *
+   * `ci-changed.ts`, the Playwright selector and the image selector all read
+   * these, and each treats an absent base as "run everything". A step without
+   * them would therefore rebuild and republish on every push to main -- the
+   * cross-compiler images, every site, every package.
+   */
   const sharedEnvironment = {
     CI_CHANGED_BASE: changedBase ?? "",
     CI_LAST_IMAGE_RELEASE_COMMIT: imageReleaseBase ?? "",
   };
 
-  return [
+  const steps: CiStep[] = [
     {
       key: "verify",
       label: "verify",
       image: images.base,
       commands: verifyCommands(),
-      environment: sharedEnvironment,
       timeoutMinutes: 30,
       resources: VERIFY_TIER,
       secrets: [
@@ -135,7 +146,8 @@ export function buildPipelineSteps({
     ...playwrightSteps(images),
     releaseAdmissionStep(images),
     ...tofuApplySteps(images),
-    ...releaseChainSteps(images, sharedEnvironment),
+    imagesPrStep(images),
+    ...releaseChainSteps(images),
     ...ciImageSteps(images),
     ...macosCrossCompilerSteps(images),
     ...scoutSteps(images),
@@ -143,5 +155,10 @@ export function buildPipelineSteps({
     ...macosSteps(),
     ...observabilityE2eSteps(images),
     ...prGateSteps(images),
+    ...tasknotesWindowsSteps(images),
   ];
+  return steps.map((step) => ({
+    ...step,
+    environment: { ...sharedEnvironment, ...step.environment },
+  }));
 }

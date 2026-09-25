@@ -3,6 +3,8 @@ import { z } from "zod";
 
 import { PrismaClient } from "#generated/prisma/client/index.js";
 import type { IngestWebhookInput } from "#application/ports";
+import { AsyncMutex } from "#infrastructure/async-mutex";
+import { PrismaOpsRepository } from "#infrastructure/prisma-ops-repository";
 import { createPrismaRepository } from "#infrastructure/prisma-repository";
 import { AlertmanagerWebhookSchema, JsonObjectSchema } from "#shared/schema";
 import { InstantTextSchema, instantTextToEpochNanoseconds } from "#shared/time";
@@ -14,6 +16,7 @@ export const prisma = new PrismaClient({
   adapter: new PrismaLibSql({ url: databaseUrl, intMode: "bigint" }),
 });
 export const repository = await createPrismaRepository(databaseUrl);
+export const opsRepository = new PrismaOpsRepository(prisma, new AsyncMutex());
 
 export function nanoseconds(value: string): bigint {
   return instantTextToEpochNanoseconds(InstantTextSchema.parse(value));
@@ -42,6 +45,10 @@ export async function resetDatabase(): Promise<void> {
     prisma.webhookDelivery.deleteMany(),
     prisma.snapshotRun.deleteMany(),
     prisma.alertOccurrence.deleteMany(),
+    prisma.opsSnapshot.deleteMany(),
+    prisma.changeEvent.deleteMany(),
+    prisma.viewerCursor.deleteMany(),
+    prisma.digestRun.deleteMany(),
   ]);
 }
 

@@ -118,3 +118,18 @@ export const SERVICE_TIER: ResourceTier = {
   ephemeralStorageRequest: "1Gi",
   ephemeralStorageLimit: "5Gi",
 };
+
+/**
+ * .NET cross-builds in the Windows cross-compiler images: restore and MSBuild
+ * run several projects in parallel. Requests and limits carried over from the
+ * Buildkite lane; the build writes to the workspace claim, not ephemeral
+ * storage.
+ */
+export const CROSS_BUILD_TIER: ResourceTier = {
+  cpuRequest: "4",
+  cpuLimit: "8",
+  memoryRequest: "8Gi",
+  memoryLimit: "16Gi",
+  ephemeralStorageRequest: "2Gi",
+  ephemeralStorageLimit: "40Gi",
+};

@@ -154,6 +154,8 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     "packages/llm-observability",
     "packages/llm-runtime",
     "packages/loaded",
+    "packages/ops-clients",
+    "packages/ops-model",
     "packages/release-tools",
     "packages/s3-signed-request",
     "packages/temporal-observability",

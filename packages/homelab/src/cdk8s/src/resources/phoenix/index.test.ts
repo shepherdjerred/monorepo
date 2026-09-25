@@ -20,6 +20,7 @@ const DeploymentSchema = z.object({
   spec: z.object({
     template: z.object({
       spec: z.object({
+        enableServiceLinks: z.literal(false),
         containers: z.array(
           z
             .object({

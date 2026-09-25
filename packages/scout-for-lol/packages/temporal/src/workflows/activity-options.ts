@@ -144,6 +144,24 @@ export function lakeV2Activities(stage: ScoutStage) {
 }
 
 /**
+ * The silent post-match backfill's whole reach: one Activity, on background.
+ *
+ * Typed as a `Pick` of that one name rather than as the full V2 surface, so
+ * the backfill Workflow cannot even NAME the minter, the send, or any other
+ * Activity with an effect beyond the render — the silence is what the type
+ * admits, not a branch the Workflow chose. Background because it is the
+ * render, and the render must never sit in front of a live match.
+ */
+export function silentPostmatchBackfillV2Activities(stage: ScoutStage) {
+  return proxyActivities<
+    Pick<ScoutTemporalV2Activities, "backfillSilentPostmatchArtifactV2">
+  >({
+    taskQueue: scoutTaskQueues(stage).background,
+    ...BACKGROUND_ACTIVITY_OPTIONS,
+  });
+}
+
+/**
  * The one V2 deviation from the sibling options, and the reason it exists.
  *
  * `deliverNotificationV2` is the single Activity whose retry is itself the

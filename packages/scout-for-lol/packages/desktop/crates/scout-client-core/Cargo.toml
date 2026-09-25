@@ -14,6 +14,7 @@ hex.workspace = true
 keyring.workspace = true
 reqwest.workspace = true
 rusqlite.workspace = true
+sentry.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true

@@ -4,11 +4,6 @@
       "count": 4
     }
   },
-  "ci/scripts/images/update-ci-image-pin.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "ci/scripts/selectors/ci-changed.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 1

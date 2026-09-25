@@ -94,6 +94,7 @@ describe("ManagedFlagInventorySchema", () => {
       "starlight-karma-bot",
       "trmnl-dashboard",
       "temporal",
+      "alert-dashboard",
     ]);
     expect(
       materializeManagedNamespaceEnvironment(
@@ -319,5 +320,17 @@ describe("pet dashboard rollout", () => {
       rules: [],
       thresholdRollouts: [],
     });
+  });
+});
+
+describe("Scout V2 post-match ownership", () => {
+  test("keeps V2 as the post-match discovery owner in every environment", () => {
+    // The rollback switch, not a new surface: merging it must change nothing,
+    // so both environments resolve the V2 ownership that already runs.
+    for (const environment of ["beta", "prod"]) {
+      expect(
+        scoutPolicyFlag(environment, "scout_v2_postmatch_ownership_enabled"),
+      ).toMatchObject({ default: true, rollouts: [] });
+    }
   });
 });

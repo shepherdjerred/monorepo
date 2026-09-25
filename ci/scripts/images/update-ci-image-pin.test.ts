@@ -2,12 +2,14 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, test } from "vitest";
+import { asRecord, toStringRecord } from "../../../scripts/lib/json.ts";
 import {
   checkedOutSourceCommand,
   ciImagePromotionFiles,
   classifyCiImageRuntimePromotion,
   isCurrentSourceCandidate,
   localPromotionDecision,
+  pendingFirstPinCoversCandidate,
   newestPinState,
   parseCiImageCandidate,
   parseCiImagePinState,
@@ -15,11 +17,55 @@ import {
   playwrightPackageVersion,
   playwrightVersionFromDockerfile,
   PLAYWRIGHT_PACKAGE_TARGETS,
+  PLAYWRIGHT_VERSION_FILE,
   rewritePlaywrightPackage,
   serializedState,
   stateFromCandidate,
   verifyDigestFile,
 } from "./update-ci-image-pin-core.ts";
+
+const PLAYWRIGHT_CLIENTS = new Set([
+  "playwright",
+  "playwright-core",
+  "@playwright/test",
+]);
+const PINNED_SECTIONS = [
+  "dependencies",
+  "devDependencies",
+  "optionalDependencies",
+] as const;
+
+/** Every exact-semver Playwright client pin across the root workspaces. */
+async function exactPlaywrightPins(
+  repoRoot: URL,
+): Promise<{ key: string; version: string }[]> {
+  const workspaces = asRecord(
+    await Bun.file(new URL("package.json", repoRoot)).json(),
+  )?.["workspaces"];
+  if (!Array.isArray(workspaces)) {
+    throw new TypeError("root package.json has no workspaces array");
+  }
+  const pins: { key: string; version: string }[] = [];
+  for (const workspace of workspaces) {
+    const manifestPath = `${String(workspace)}/package.json`;
+    const manifest = asRecord(
+      await Bun.file(new URL(manifestPath, repoRoot)).json(),
+    );
+    if (manifest === null) {
+      throw new TypeError(`${manifestPath} is not a JSON object`);
+    }
+    for (const section of PINNED_SECTIONS) {
+      for (const [name, version] of Object.entries(
+        toStringRecord(manifest[section]),
+      )) {
+        if (PLAYWRIGHT_CLIENTS.has(name) && /^\d+\.\d+\.\d+$/.test(version)) {
+          pins.push({ key: `${manifestPath}#${section}#${name}`, version });
+        }
+      }
+    }
+  }
+  return pins;
+}
 
 const digest = (character: string): string => `sha256:${character.repeat(64)}`;
 const commit = (character: string): string => character.repeat(40);
@@ -349,6 +395,26 @@ describe("Playwright candidate promotion", () => {
     ).toThrow("missing dependencies.playwright");
   });
 
+  test("covers every exact Playwright pin in the workspace at the image version", async () => {
+    // A hand-maintained target list drifted twice (v1.62.1, v1.63.0), each
+    // time leaving a package on the old client and splitting `Page` types.
+    // Derive the expectation from the workspace itself so a new pin fails here.
+    const repoRoot = new URL("../../../", import.meta.url);
+    const activeVersion = parsePlaywrightVersionFile(
+      await Bun.file(new URL(PLAYWRIGHT_VERSION_FILE, repoRoot)).text(),
+    );
+    const pins = await exactPlaywrightPins(repoRoot);
+    const registered = PLAYWRIGHT_PACKAGE_TARGETS.map(
+      (target) => `${target.path}#${target.section}#${target.dependency}`,
+    );
+    expect(pins.map((pin) => pin.key).toSorted()).toEqual(
+      registered.toSorted(),
+    );
+    for (const pin of pins) {
+      expect(`${pin.key}@${pin.version}`).toBe(`${pin.key}@${activeVersion}`);
+    }
+  });
+
   test("stages the complete atomic package and image promotion", () => {
     expect(ciImagePromotionFiles("ci-playwright")).toEqual([
       "ci/ci-playwright/DIGEST",
@@ -363,6 +429,8 @@ describe("Playwright candidate promotion", () => {
       "packages/scout-for-lol/packages/design-audit/package.json",
       "packages/scout-for-lol/packages/design-system/package.json",
       "packages/alert-dashboard/package.json",
+      "packages/scout-for-lol/packages/app/package.json",
+      "packages/scout-for-lol/packages/activity/package.json",
       "bun.lock",
     ]);
     expect(ciImagePromotionFiles("ci-base")).toEqual([
@@ -404,18 +472,25 @@ describe("Playwright candidate promotion", () => {
     expect(helperBody).toContain("await retireStalePromotion(");
     expect(helperBody).toContain("await assertMainPinUnchanged(");
 
-    // All three no-promotion exits — digest-equal, older-than-pin, and
-    // content-unchanged — route through the one funnel with a distinct reason.
+    // All three no-promotion exits against a main pin — digest-equal,
+    // older-than-pin, and content-unchanged — route through the one funnel with
+    // a distinct reason. The runtime gate reaches it through its skip callback.
     const calls = source.match(/await finalizeSkippedPromotion\(/g) ?? [];
-    expect(calls).toHaveLength(3);
+    expect(calls).toHaveLength(2);
     expect(source).toContain(
       'reason: "candidate has no runtime digest change"',
     );
     expect(source).toContain(
       'reason: "candidate is older than the committed pin"',
     );
-    expect(source).toContain(
-      'reason: "candidate runtime content is unchanged"',
+    expect(source).toMatch(
+      /skip: async \(reason\) =>\s+finalizeSkippedPromotion\(\{/,
+    );
+    const runtimeGate = await Bun.file(
+      new URL("update-ci-image-pin-runtime.ts", import.meta.url),
+    ).text();
+    expect(runtimeGate).toContain(
+      'await options.skip("candidate runtime content is unchanged")',
     );
 
     // promote() never invokes retirement or the recheck inline — only via the
@@ -539,5 +614,46 @@ describe("main-side source fingerprint", () => {
     } finally {
       await rm(repository, { recursive: true, force: true });
     }
+  });
+});
+
+const pendingRepository = "ghcr.io/example/image";
+const pendingReader =
+  (fingerprints: Record<string, string>) =>
+  async (image: string): Promise<string | undefined> =>
+    fingerprints[image.split("@")[1] ?? ""];
+
+describe("pending first pin", () => {
+  test("keeps a pending first pin whose runtime matches the rebuild", async () => {
+    await expect(
+      pendingFirstPinCoversCandidate(
+        pendingRepository,
+        state(5, "a"),
+        state(6, "b"),
+        pendingReader({ [digest("a")]: "same", [digest("b")]: "same" }),
+      ),
+    ).resolves.toBe(true);
+  });
+
+  test("replaces a pending first pin when the runtime changed", async () => {
+    await expect(
+      pendingFirstPinCoversCandidate(
+        pendingRepository,
+        state(5, "a"),
+        state(6, "b"),
+        pendingReader({ [digest("a")]: "old", [digest("b")]: "new" }),
+      ),
+    ).resolves.toBe(false);
+  });
+
+  test("promotes when there is no pending first pin", async () => {
+    await expect(
+      pendingFirstPinCoversCandidate(
+        pendingRepository,
+        undefined,
+        state(6, "b"),
+        pendingReader({}),
+      ),
+    ).resolves.toBe(false);
   });
 });

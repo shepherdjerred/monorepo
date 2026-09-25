@@ -3,8 +3,9 @@
 OpenTelemetry tracing for LLM calls: thin wrappers that emit `gen_ai.*` spans
 around provider SDK calls, plus an archive span processor that copies large
 prompt/response bodies to S3 for durable retention while the trace backend
-(Tempo) and any additional OTLP consumer receive the full redacted content on
-the span itself, alongside an archive reference. Consumers include
+(Tempo) and any additional OTLP consumer receive the full content on the span
+itself, alongside an archive reference. Only credentials are masked; prompts,
+responses, tool output, and Discord data are never redacted. Consumers include
 [packages/temporal](../temporal/) and
 [packages/pr-fleet-controller](../pr-fleet-controller/).
 
@@ -17,7 +18,7 @@ GenAI semantic conventions: `gen_ai.system`, `gen_ai.operation.name`,
 `gen_ai.response.model` / `id` / `finish_reasons`, and
 `gen_ai.usage.input_tokens` / `output_tokens` / cache read + creation tokens.
 Message bodies go on `gen_ai.input.messages` / `gen_ai.output.messages`
-(redacted in place by the archive processor before export).
+(credentials masked in place by the archive processor before export).
 
 | Export                                                                         | Traces                                              |
 | ------------------------------------------------------------------------------ | --------------------------------------------------- |
@@ -79,11 +80,12 @@ stdout/stderr, or Vercel AI SDK legacy keys), it:
 
 1. Builds one JSON envelope from the body attributes (request + response +
    usage),
-2. redacts obvious secrets (`redactSecrets`),
+2. masks credentials (`redactSecrets`: secret-shaped keys, known secret env
+   values, `Bearer` tokens, and Discord webhook and invite URLs),
 3. gzips and PUTs it to S3 under a deterministic key
    (`buildArchiveKey`/`uploadArchive` — SigV4-signed, path-style capable, so
    SeaweedFS works), and
-4. forwards a copy of the span with bodies redacted in place and
+4. forwards a copy of the span with credentials masked in the bodies and
    `llm.archive.*` attributes added (bucket, key, sha256, sizes, status).
 
 The forwarded span keeps the complete prompt, response, and tool content; the

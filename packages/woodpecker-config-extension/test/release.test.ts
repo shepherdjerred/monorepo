@@ -5,6 +5,7 @@ import { selectSteps } from "#src/pipeline/select.ts";
 const IMAGES = {
   base: "ghcr.io/shepherdjerred/ci-base@sha256:" + "a".repeat(64),
   playwright: "ghcr.io/shepherdjerred/ci-playwright@sha256:" + "b".repeat(64),
+  windowsCrossCompilerWinui: `ghcr.io/shepherdjerred/windows-cross-compiler-winui@sha256:${"c".repeat(64)}`,
   catalog: {
     "aquasec/trivy": "aquasec/trivy:0.72.0",
     "semgrep/semgrep": "semgrep/semgrep:1.170.0",
@@ -342,7 +343,7 @@ describe("coverage of the Buildkite pipeline", () => {
     "tofu-posthog-plan": "tofu-posthog-plan",
     "homelab-release-admission": "homelab-release-admission",
     images: "images",
-    "images-pr": "pr-dryrun",
+    "images-pr": "images-pr",
     "helm-push": "helm-push",
     "argocd-sync": "argocd-sync",
     "tofu-apply-seaweedfs": "tofu-apply-seaweedfs",
@@ -375,6 +376,7 @@ describe("coverage of the Buildkite pipeline", () => {
     "hkctl-native-main": "hkctl-native",
     "tasknotes-native-pr": "tasknotes-native",
     "tasknotes-native-main": "tasknotes-native",
+    "tasknotes-windows-cross": "tasknotes-windows-cross",
   };
 
   /** Buildkite steps deliberately left with no successor, and why. */
@@ -388,8 +390,8 @@ describe("coverage of the Buildkite pipeline", () => {
       "applies the Buildkite cluster stack, which is deleted rather than ported",
   };
 
-  test("accounts for all 60 Buildkite steps", () => {
-    expect(Object.keys(COVERAGE).length + Object.keys(RETIRED).length).toBe(60);
+  test("accounts for all 61 Buildkite steps", () => {
+    expect(Object.keys(COVERAGE).length + Object.keys(RETIRED).length).toBe(61);
   });
 
   test("every claimed successor actually exists", () => {
@@ -439,4 +441,26 @@ test("the sites lane installs and pre-builds the Storybook catalogs", () => {
     "bun --no-install scripts/release/deploy-site.ts scout-design-system",
   );
   expect(commands).not.toContain("turbo run");
+});
+
+/**
+ * `ci-changed.ts`, the Playwright selector, and the image selector each read
+ * the change base from the step's environment and treat its absence as "run
+ * everything". A step generated without it rebuilds and republishes on every
+ * push to main, so every step gets it -- not only the ones that remember to.
+ */
+describe("change detection", () => {
+  test("reaches every step", () => {
+    const steps = buildPipelineSteps({
+      images: IMAGES,
+      changedBase: "green-main",
+      imageReleaseBase: "released",
+    });
+    for (const candidate of steps) {
+      expect(candidate.environment, candidate.key).toMatchObject({
+        CI_CHANGED_BASE: "green-main",
+        CI_LAST_IMAGE_RELEASE_COMMIT: "released",
+      });
+    }
+  });
 });

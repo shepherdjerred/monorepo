@@ -69,7 +69,7 @@ describe("ci image resolution", () => {
     return path.endsWith("catalog.json") ? catalog : digest;
   }
 
-  test("pins both images by digest at the given commit", async () => {
+  test("pins every toolchain image by digest at the given commit", async () => {
     const seen: string[] = [];
     const images = await resolveCiImages("abc123", async (path, commit) => {
       seen.push(`${path}@${commit}`);
@@ -79,7 +79,13 @@ describe("ci image resolution", () => {
     expect(images.playwright).toBe(
       `ghcr.io/shepherdjerred/ci-playwright@${digest}`,
     );
+    expect(images.windowsCrossCompilerWinui).toBe(
+      `ghcr.io/shepherdjerred/windows-cross-compiler-winui@${digest}`,
+    );
     expect(seen).toContain("ci/ci-image/DIGEST@abc123");
+    expect(seen).toContain(
+      "packages/windows-cross-compiler/images/windows-cross-compiler-winui/DIGEST@abc123",
+    );
   });
 
   test("reads scanner versions from the catalog at that commit", async () => {

@@ -136,9 +136,21 @@ export async function selectedTargets(
   let base: string | undefined;
   let fallbackReason = "full build requested (no --affected/--push scoping)";
   if (options.affected) {
-    const result = await executor(["git", "merge-base", "origin/main", "HEAD"]);
-    if (result.exitCode === 0) base = result.stdout.trim();
-    else fallbackReason = "could not resolve merge-base with origin/main";
+    // The configuration extension resolves the change base for every step;
+    // Woodpecker's clone need not carry origin/main to take a merge-base from.
+    const changedBase = (options.environment ?? Bun.env)["CI_CHANGED_BASE"];
+    if (changedBase !== undefined && changedBase.trim() !== "") {
+      base = changedBase.trim();
+    } else {
+      const result = await executor([
+        "git",
+        "merge-base",
+        "origin/main",
+        "HEAD",
+      ]);
+      if (result.exitCode === 0) base = result.stdout.trim();
+      else fallbackReason = "could not resolve merge-base with origin/main";
+    }
   } else if (options.push) {
     base = await imageBaseCommit(commit);
     if (base === undefined)

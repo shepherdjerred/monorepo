@@ -20,6 +20,7 @@ const PLACEHOLDER_DIGEST = `sha256:${"0".repeat(64)}`;
 const PLACEHOLDER_IMAGES: CiImages = {
   base: `ghcr.io/shepherdjerred/ci-base@${PLACEHOLDER_DIGEST}`,
   playwright: `ghcr.io/shepherdjerred/ci-playwright@${PLACEHOLDER_DIGEST}`,
+  windowsCrossCompilerWinui: `ghcr.io/shepherdjerred/windows-cross-compiler-winui@${PLACEHOLDER_DIGEST}`,
   catalog: {
     "aquasec/trivy": "aquasec/trivy:0",
     "semgrep/semgrep": "semgrep/semgrep:0",

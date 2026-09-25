@@ -14,7 +14,9 @@ import {
   type AlertListInput,
   type EventListInput,
 } from "#shared/schema";
-import { fixedClock } from "#shared/time";
+import { fixedClock, systemClock } from "#shared/time";
+import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";
+import { createOpsFixture } from "#test-fixtures/ops-services";
 
 const alert = AlertDetailSchema.parse({
   id: `alert_${"a".repeat(32)}`,
@@ -234,10 +236,42 @@ const service = new AlertService({
   clock: fixedClock("2026-08-08T20:00:00Z"),
   emailEnabled: false,
 });
+// Ops pages render relative ages, so the ops fixture uses the real clock and
+// a snapshot generated moments before the server started.
+const opsFixture = createOpsFixture(systemClock);
+const opsNow = systemClock.now();
+await opsFixture.ops.ingest(
+  JSON.stringify(fixtureOpsIngest(opsNow.subtract({ minutes: 2 }).toString())),
+);
+opsFixture.repository.alertLedger = [
+  {
+    eventId: `event_${"e".repeat(32)}`,
+    occurrenceId: `alert_${"e".repeat(32)}`,
+    type: "opened",
+    occurredAtNs: opsNow.subtract({ hours: 2 }).epochNanoseconds,
+    alertname: "HomelabBackupStale",
+    namespace: "velero",
+    severity: "critical",
+    summary: "Velero backup is stale",
+  },
+  {
+    eventId: `event_${"f".repeat(32)}`,
+    occurrenceId: `alert_${"f".repeat(32)}`,
+    type: "resolved",
+    occurredAtNs: opsNow.subtract({ hours: 3 }).epochNanoseconds,
+    alertname: "PodCrashLooping",
+    namespace: "scout-beta",
+    severity: "warning",
+    summary: "scout-beta worker restarted repeatedly",
+  },
+];
 const app = createApp({
   service,
   changes: new ChangeBus(),
   metrics: new Metrics(),
   webhookToken: "fixture-webhook-token-with-32-characters",
+  ops: opsFixture.ops,
+  digests: opsFixture.digests,
+  opsIngestToken: "fixture-ops-ingest-token-with-32-characters",
 });
 Bun.serve({ hostname: "127.0.0.1", port: 17_341, fetch: app.fetch });

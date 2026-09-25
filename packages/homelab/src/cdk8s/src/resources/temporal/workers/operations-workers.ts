@@ -11,6 +11,7 @@ import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-ar
 import { createTemporalDomainWorker } from "./domain-worker.ts";
 import { temporalRuntimeEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/runtime-env.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
+import { opsSnapshotEnv } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ops-snapshot-env.ts";
 
 function s3Env(secret: ISecret): Record<string, EnvValue> {
   return {
@@ -96,6 +97,7 @@ export function createTemporalOperationsWorkers(
       ...s3Env(props.secret),
       ...githubEnv(props.secret),
       ...props.homelabAuditEnvironment,
+      ...opsSnapshotEnv(props.secret),
     },
     volumeMounts: [
       {

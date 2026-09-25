@@ -43,6 +43,20 @@ export const PLAYWRIGHT_PACKAGE_TARGETS = [
     section: "devDependencies",
     dependency: "@playwright/test",
   },
+  // Missed by the v1.62.1 -> v1.63.0 promotion: the Scout app's e2e spec hands
+  // its 1.62.1 `Page` to design-system's 1.63.0-typed Storybook helpers and
+  // failed typecheck on main. The workspace-coverage test now rejects any exact
+  // Playwright pin that is not listed here.
+  {
+    path: "packages/scout-for-lol/packages/app/package.json",
+    section: "devDependencies",
+    dependency: "@playwright/test",
+  },
+  {
+    path: "packages/scout-for-lol/packages/activity/package.json",
+    section: "devDependencies",
+    dependency: "@playwright/test",
+  },
 ] as const;
 
 export type CiImagePinState = {
@@ -217,6 +231,42 @@ export async function classifyCiImageRuntimePromotion(
     },
     getRuntimeFingerprint,
   );
+}
+
+export function requireMainPin(
+  mainState: CiImagePinState | undefined,
+  definition: { readonly name: string },
+): CiImagePinState {
+  if (mainState === undefined) {
+    throw new Error(
+      `${definition.name} is pinned locally but has no pin on origin/main`,
+    );
+  }
+  return mainState;
+}
+
+/**
+ * Whether a pending first pin already carries the candidate's runtime content,
+ * so replacing it would only churn the pin PR.
+ */
+export async function pendingFirstPinCoversCandidate(
+  repository: string,
+  pending: CiImagePinState | undefined,
+  candidate: CiImagePinState,
+  getRuntimeFingerprint: RuntimeFingerprintReader,
+): Promise<boolean> {
+  if (pending === undefined || pending.digest === candidate.digest) {
+    return false;
+  }
+  const outcome = await classifyCiImageRuntimePromotion(
+    {
+      repository,
+      pinnedDigest: pending.digest,
+      candidateDigest: candidate.digest,
+    },
+    getRuntimeFingerprint,
+  );
+  return outcome === "content-unchanged";
 }
 
 export function isCurrentSourceCandidate(

@@ -337,6 +337,45 @@ test("OpenAI complimentary usage reconciles hourly on the shared Workflow queue"
   });
 });
 
+describe("ops overview schedules", () => {
+  test("the snapshot runs every five minutes, skipping overlaps and stale catchup", () => {
+    expect(findScheduleById("ops-snapshot")).toMatchObject({
+      workflowType: "runOpsSnapshot",
+      args: [],
+      timing: {
+        kind: "cron",
+        expression: "*/5 * * * *",
+        timezone: "America/Los_Angeles",
+      },
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      overlap: ScheduleOverlapPolicy.SKIP,
+      catchupWindow: "5 minutes",
+      workflowExecutionTimeout: "5 minutes",
+    });
+    expect(
+      buildSchedulePolicies(findScheduleById("ops-snapshot")).catchupWindow,
+    ).toBe("5 minutes");
+  });
+
+  test.each([
+    ["ops-digest-daily", "daily", "30 7 * * *"],
+    ["ops-digest-weekly", "weekly", "0 8 * * 1"],
+  ] as const)("%s triggers the %s digest at %s Pacific", (id, kind, cron) => {
+    expect(findScheduleById(id)).toMatchObject({
+      workflowType: "runOpsDigest",
+      args: [{ kind }],
+      timing: {
+        kind: "cron",
+        expression: cron,
+        timezone: "America/Los_Angeles",
+      },
+      taskQueue: TASK_QUEUES.WORKFLOWS,
+      overlap: ScheduleOverlapPolicy.SKIP,
+      workflowExecutionTimeout: "10 minutes",
+    });
+  });
+});
+
 test("protobuf watch timeout covers collection and both delivery paths", () => {
   const timeout = findScheduleById(
     "protobufjs-v8-watch-weekly",
@@ -410,6 +449,13 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runFreshRssSyncWorkflow",
   "runFliptFlagInventory",
   "runOpenAiComplimentaryUsageReconciliation",
+  // Fans out one bounded collector Activity per source in parallel, then one
+  // publish Activity. No workflow-level sleeps; Activity timeouts and retry
+  // budgets fit inside the five-minute execution timeout.
+  "runOpsSnapshot",
+  // Awaits a single triggerOpsDigest Activity; the dashboard renders and
+  // sends. No workflow-level sleeps.
+  "runOpsDigest",
   // These workflows await one direct maintenance activity; the activity
   // timeout and retry policy are the relevant execution budget.
   "runBunCacheGcWorkflow",

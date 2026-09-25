@@ -561,7 +561,11 @@ test("selects affected image targets from the merge base", async () => {
   };
 
   expect(
-    await selectedTargets({ affected: true, push: false }, "current", executor),
+    await selectedTargets(
+      { affected: true, push: false, environment: {} },
+      "current",
+      executor,
+    ),
   ).toEqual({
     targets: ["birmel"],
     fallbackReason: "",
@@ -577,10 +581,37 @@ test("selects affected image targets from the merge base", async () => {
   ]);
 });
 
+/**
+ * Woodpecker's clone need not carry origin/main, so the extension-resolved
+ * base wins; the merge-base is only the fallback for local runs.
+ */
+test("selects affected image targets from the resolved change base", async () => {
+  const commands: string[][] = [];
+  const executor: CommandExecutor = async (command) => {
+    commands.push([...command]);
+    return commandResult(0, '["birmel"]\n');
+  };
+
+  expect(
+    await selectedTargets(
+      {
+        affected: true,
+        push: false,
+        environment: { CI_CHANGED_BASE: "green-main" },
+      },
+      "current",
+      executor,
+    ),
+  ).toEqual({ targets: ["birmel"], fallbackReason: "" });
+  expect(commands).toHaveLength(1);
+  expect(commands[0]).toContain("green-main");
+  expect(commands.flat()).not.toContain("merge-base");
+});
+
 test("falls back to all images when target selection fails", async () => {
   expect(
     await selectedTargets(
-      { affected: true, push: false },
+      { affected: true, push: false, environment: {} },
       "current",
       targetSelectionFailureExecutor,
     ),

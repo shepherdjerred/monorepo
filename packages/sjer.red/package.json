@@ -62,7 +62,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "1.62.1",
+    "@playwright/test": "1.63.0",
     "@shepherdjerred/eslint-config": "workspace:*",
     "@types/bun": "1.4.2",
     "@types/react": "^19.3.0",

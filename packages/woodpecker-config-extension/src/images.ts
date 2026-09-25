@@ -41,11 +41,15 @@ export type CatalogImageName =
 const DIGEST_PATHS = {
   base: "ci/ci-image/DIGEST",
   playwright: "ci/ci-playwright/DIGEST",
+  windowsCrossCompilerWinui:
+    "packages/windows-cross-compiler/images/windows-cross-compiler-winui/DIGEST",
 } as const;
 
 const IMAGE_REPOS = {
   base: "ghcr.io/shepherdjerred/ci-base",
   playwright: "ghcr.io/shepherdjerred/ci-playwright",
+  windowsCrossCompilerWinui:
+    "ghcr.io/shepherdjerred/windows-cross-compiler-winui",
 } as const;
 
 const DIGEST_PATTERN = /^sha256:[\da-f]{64}$/u;
@@ -55,6 +59,11 @@ export type CiImages = {
   readonly base: string;
   /** Digest-pinned browser toolchain image. */
   readonly playwright: string;
+  /**
+   * Digest-pinned WinUI cross-compiler, which builds the TaskNotes Windows
+   * app and its MSIX on Linux. Promoted by its own refresh lane.
+   */
+  readonly windowsCrossCompilerWinui: string;
   /** Third-party images, keyed by their version-catalog name. */
   readonly catalog: Readonly<Record<CatalogImageName, string>>;
 };
@@ -136,14 +145,17 @@ export async function resolveCiImages(
   commit: string,
   fetcher: ImageFetcher,
 ): Promise<CiImages> {
-  const [base, playwright, catalog] = await Promise.all([
-    fetcher(DIGEST_PATHS.base, commit),
-    fetcher(DIGEST_PATHS.playwright, commit),
-    fetcher(CATALOG_PATH, commit),
-  ]);
+  const [base, playwright, windowsCrossCompilerWinui, catalog] =
+    await Promise.all([
+      fetcher(DIGEST_PATHS.base, commit),
+      fetcher(DIGEST_PATHS.playwright, commit),
+      fetcher(DIGEST_PATHS.windowsCrossCompilerWinui, commit),
+      fetcher(CATALOG_PATH, commit),
+    ]);
   return {
     base: `${IMAGE_REPOS.base}@${requireDigest(base, DIGEST_PATHS.base)}`,
     playwright: `${IMAGE_REPOS.playwright}@${requireDigest(playwright, DIGEST_PATHS.playwright)}`,
+    windowsCrossCompilerWinui: `${IMAGE_REPOS.windowsCrossCompilerWinui}@${requireDigest(windowsCrossCompilerWinui, DIGEST_PATHS.windowsCrossCompilerWinui)}`,
     catalog: {
       "aquasec/trivy": reference(catalog, "aquasec/trivy"),
       "semgrep/semgrep": reference(catalog, "semgrep/semgrep"),

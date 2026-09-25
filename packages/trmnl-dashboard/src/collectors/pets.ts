@@ -49,7 +49,7 @@ export function createPetCareClients(config: AppConfig): PetCareClients {
       config.homeAssistant.url,
       config.homeAssistant.token,
     ),
-    alerts: new AlertsClient(config.homelab.alertDashboardUrl),
+    alerts: new AlertsClient(config.opsDashboardUrl),
   };
 }
 

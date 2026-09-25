@@ -20,7 +20,7 @@ export const TEMPORAL_SCHEMA_MIGRATION_ACTIVE_DEADLINE_SECONDS = 900;
  * waiter must outlast the migration hook it waits for: with the default 300 s
  * child budget, builds 16963 and 16977 failed the temporal sync while the
  * v1.14 migration was still legitimately running, and each retry replaced the
- * in-flight hook mid-DDL. 900 s of hook deadline plus 300 s for the
- * backup-preflight gate, the wave-0 rollout, and Argo apply latency.
+ * in-flight hook mid-DDL. 900 s of hook deadline plus 300 s for the wave-0
+ * rollout and Argo apply latency.
  */
 export const TEMPORAL_CHILD_SYNC_TIMEOUT_SECONDS = 1200;

@@ -125,6 +125,14 @@ import {
 import type { BackupCadence } from "@shepherdjerred/seaweedfs-backup/schemas";
 import { runOpenAiComplimentaryUsageReconciliation as _runOpenAiComplimentaryUsageReconciliation } from "./openai-complimentary-usage.ts";
 import type { OpenAiComplimentaryUsageResult } from "#shared/openai-complimentary-usage.ts";
+import {
+  runOpsDigest as _runOpsDigest,
+  runOpsSnapshot as _runOpsSnapshot,
+} from "./ops-snapshot.ts";
+import type {
+  OpsDigestKind,
+  OpsPublishSummary,
+} from "#activities/ops/ops-publish.ts";
 
 export function workerDeploymentCanaryWorkflow(
   input: WorkerDeploymentCanaryInput,
@@ -415,4 +423,14 @@ export async function runSeaweedFsBackupRetentionAndGcWorkflow(): Promise<{
 
 export async function runOpenAiComplimentaryUsageReconciliation(): Promise<OpenAiComplimentaryUsageResult> {
   return _runOpenAiComplimentaryUsageReconciliation();
+}
+
+export async function runOpsSnapshot(): Promise<OpsPublishSummary> {
+  return _runOpsSnapshot();
+}
+
+export async function runOpsDigest(input: {
+  kind: OpsDigestKind;
+}): Promise<{ kind: OpsDigestKind }> {
+  return _runOpsDigest(input);
 }

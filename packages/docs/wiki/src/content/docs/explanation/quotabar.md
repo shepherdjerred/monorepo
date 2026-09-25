@@ -216,5 +216,7 @@ and [Xcode project specification](https://github.com/shepherdjerred/monorepo/blo
 
 ## Related
 
+- [Operations overview](/explanation/homelab/operations-overview/) — where
+  pushed quota and usage metrics are shown
 - [Monorepo source](https://github.com/shepherdjerred/monorepo) —
   `packages/macos-ai-subscription-tracker`

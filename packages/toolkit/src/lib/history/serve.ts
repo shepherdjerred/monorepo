@@ -1,5 +1,13 @@
 import { appendFile, chmod, mkdir, rm, writeFile } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
+import { defaultSnapshotsPath } from "#lib/brim/cache.ts";
+import { loadToolkitConfig } from "#lib/toolkit-config.ts";
+import { createOtlpMetricsExporter } from "./metrics-push.ts";
+import {
+  startUsageMetricsExport,
+  type UsageMetricsExport,
+} from "./usage-metrics.ts";
 import { createHistorySources } from "./sources.ts";
 import { HistoryIndex } from "./index.ts";
 import { defaultHistoryPaths, defaultHistoryRuntimePaths } from "./paths.ts";
@@ -53,6 +61,38 @@ export async function scanHistorySources(
   return results;
 }
 
+/**
+ * Starts the usage metrics push when `historyMetricsPushEnabled` resolves
+ * true. Read once at boot; restart the daemon after changing it.
+ */
+async function startMetricsExportIfEnabled(
+  runtimePaths: HistoryRuntimePaths,
+): Promise<UsageMetricsExport | null> {
+  const config = await loadToolkitConfig();
+  const enabled = await config.get("historyMetricsPushEnabled");
+  if (!enabled.value) {
+    await logLine(runtimePaths, "usage metrics push disabled", {
+      source: enabled.source,
+    });
+    return null;
+  }
+  const endpoint = await config.get("historyMetricsPushEndpoint");
+  await logLine(runtimePaths, "usage metrics push enabled", {
+    enabledSource: enabled.source,
+    endpoint: endpoint.value,
+    endpointSource: endpoint.source,
+  });
+  return startUsageMetricsExport({
+    ledgerPath: runtimePaths.usageExportDb,
+    snapshotsPath: defaultSnapshotsPath(),
+    exporter: createOtlpMetricsExporter(endpoint.value),
+    hostname: os.hostname(),
+    log: async (message, extra) => {
+      await logLine(runtimePaths, message, extra);
+    },
+  });
+}
+
 export async function runHistoryDaemon(): Promise<void> {
   if (process.platform !== "darwin") {
     throw new Error(
@@ -68,6 +108,7 @@ export async function runHistoryDaemon(): Promise<void> {
   await rm(runtimePaths.socket, { force: true });
 
   const index = await HistoryIndex.open(runtimePaths);
+  const metricsExport = await startMetricsExportIfEnabled(runtimePaths);
   const sources = createHistorySources();
   const labels = new Map(sources.map((source) => [source.name, source.label]));
   let lastScanAt: string | null = null;
@@ -77,6 +118,26 @@ export async function runHistoryDaemon(): Promise<void> {
   let server: {
     stop: (closeActiveConnections?: boolean) => Promise<void>;
   } | null = null;
+
+  // Metrics are a side channel: a failed refresh is logged and retried on
+  // the next scan rather than taking down history search.
+  const refreshMetrics = async (): Promise<void> => {
+    if (metricsExport === null) {
+      return;
+    }
+    try {
+      const refresh = await metricsExport.refresh(index, new Date());
+      if (refresh.seeded || refresh.newKeys > 0 || refresh.prunedKeys > 0) {
+        await logLine(runtimePaths, "usage metrics ledger refreshed", {
+          ...refresh,
+        });
+      }
+    } catch (error: unknown) {
+      await logLine(runtimePaths, "usage metrics refresh failed", {
+        error: getErrorMessage(error),
+      });
+    }
+  };
 
   const scan = async (force: boolean): Promise<void> => {
     if (scanning) {
@@ -96,6 +157,7 @@ export async function runHistoryDaemon(): Promise<void> {
           error: result.error,
         })),
       });
+      await refreshMetrics();
     } catch (error: unknown) {
       await logLine(runtimePaths, "history scan failed", {
         error: getErrorMessage(error),
@@ -139,6 +201,13 @@ export async function runHistoryDaemon(): Promise<void> {
     }
     await logLine(runtimePaths, "history daemon stopping", { reason });
     await server?.stop(true);
+    try {
+      await metricsExport?.shutdown();
+    } catch (error: unknown) {
+      await logLine(runtimePaths, "usage metrics shutdown failed", {
+        error: getErrorMessage(error),
+      });
+    }
     index.close();
     await rm(runtimePaths.socket, { force: true });
     await rm(runtimePaths.state, { force: true });

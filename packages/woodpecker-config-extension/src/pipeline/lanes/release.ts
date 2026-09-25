@@ -1,6 +1,7 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { MEDIUM_TIER, VERIFY_TIER } from "#src/pipeline/tiers.ts";
+import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 import {
   GITHUB_DOWNLOAD,
   STATE_BACKEND,
@@ -77,16 +78,106 @@ const IMAGE_DIGESTS_VAR = "HOMELAB_IMAGE_DIGESTS_JSON";
 const smokeAssignment = `${SMOKE_PATH_VAR}=${CADDYFILE_SMOKE_PATH}`;
 const digestsAssignment = `export ${IMAGE_DIGESTS_VAR}="$image_digests"`;
 
-export function releaseChainSteps(
-  images: CiImages,
-  environment: Readonly<Record<string, string>>,
-): CiStep[] {
+/**
+ * Pull-request image check: bake the affected application images and run
+ * their in-image smoke tests, without pushing anything.
+ *
+ * `--affected` scopes the bake to images the change can reach; the BuildKit
+ * cache is read-only here, since only main writes the cache refs. It shares
+ * the main lane's Caddyfile smoke input, which verify hands off.
+ */
+export function imagesPrStep(images: CiImages): CiStep {
+  return {
+    key: "images-pr",
+    label: "bake and smoke images (no push)",
+    image: images.base,
+    commands: [
+      ". ci/scripts/toolchain.sh",
+      "bun --no-install ci/scripts/reporting/buildkit-env.ts",
+      `bun --no-install scripts/ci/read-ci-handoff.ts caddyfile | jq -r . > ${CADDYFILE_SMOKE_PATH}`,
+      `${smokeAssignment} bun --no-install ci/scripts/images/bake-images.ts --affected`,
+    ],
+    dependsOn: ["verify"],
+    timeoutMinutes: 60,
+    resources: VERIFY_TIER,
+    events: ["pull_request"],
+    changed: {
+      include: [
+        ...GLOBAL_SELECTOR_INPUTS,
+        "ci/application-image-smoke.Dockerfile",
+        "ci/scripts/images/application-image-runtime.ts",
+        "ci/scripts/images/bake-images.ts",
+        "ci/scripts/images/bake-retry.ts",
+        "ci/scripts/reporting/buildkit-env.ts",
+        "ci/scripts/selectors/ci-changed.ts",
+        "ci/scripts/images/image-targets.ts",
+        "ci/scripts/migration-core.ts",
+        "ci/scripts/selectors/select-image-targets.ts",
+        "ci/scripts/selectors/select-image-targets-lockfile.ts",
+        "ci/scripts/selectors/select-image-targets-workspaces.ts",
+        "ci/scripts/images/smoke-app-configs.ts",
+        "ci/scripts/images/smoke-app-in-image.ts",
+        "ci/scripts/toolchain.sh",
+        "scripts/lib/image-pin-catalog.ts",
+        ".dockerignore",
+        "bun.lock",
+        "bunfig.toml",
+        "docker-bake.hcl",
+        "package.json",
+        "packages/**/package.json",
+        "scripts/package.json",
+        "patches/**",
+        "turbo.json",
+        "tsconfig.base.json",
+        "packages/birmel/**",
+        "packages/alert-dashboard/**",
+        "packages/code-review/**",
+        "packages/discord-plays-core/**",
+        "packages/discord-plays-mario-kart/**",
+        "packages/discord-plays-pokemon/**",
+        "packages/discord-stream-lifecycle/**",
+        "packages/discord-video-stream/**",
+        "packages/eslint-config/**",
+        "packages/home-assistant/**",
+        "packages/homelab/images/**",
+        "packages/homelab/scripts/smoke-images.ts",
+        "packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts",
+        "packages/homelab/src/cdk8s/src/misc/common.ts",
+        "packages/homelab/src/cdk8s/src/misc/s3-static-site.ts",
+        "packages/homelab/src/cdk8s/src/resources/s3-static-sites/sites.ts",
+        "packages/llm-models/**",
+        "packages/llm-observability/**",
+        "packages/ops-clients/**",
+        "packages/ops-model/**",
+        "packages/s3-signed-request/**",
+        "packages/scout-for-lol/packages/backend/**",
+        "packages/scout-for-lol/packages/data/**",
+        "packages/scout-for-lol/packages/report/**",
+        "packages/scout-for-lol/tsconfig.base.json",
+        "packages/starlight-karma-bot/**",
+        "packages/streambot/**",
+        "packages/tasknotes-server/**",
+        "packages/tasknotes-types/**",
+        "packages/temporal/**",
+        "packages/toolkit/**",
+        "packages/trmnl-dashboard/**",
+        "packages/voice-assistant/**",
+      ],
+    },
+    secrets: [
+      GITHUB_DOWNLOAD,
+      grant("ci-github-credentials", "GITHUB_PACKAGES_TOKEN"),
+      ...HANDOFF_KEYS,
+    ],
+  };
+}
+
+export function releaseChainSteps(images: CiImages): CiStep[] {
   return [
     {
       key: "images",
       label: "bake and push images",
       image: images.base,
-      environment,
       commands: [
         ...admissionGate(),
         ". ci/scripts/toolchain.sh",
@@ -112,7 +203,6 @@ export function releaseChainSteps(
       key: "helm-push",
       label: "publish helm charts",
       image: images.base,
-      environment,
       commands: [
         ...admissionGate(),
         ...releaseRequestedGate(),
@@ -155,7 +245,6 @@ export function releaseChainSteps(
       key: "argocd-sync",
       label: "reconcile argocd",
       image: images.base,
-      environment,
       commands: [
         ...admissionGate(),
         ...releaseRequestedGate(),

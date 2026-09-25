@@ -9,7 +9,6 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/generated/imports/k8s.ts";
 import { createTemporalPostgreSQLDatabase } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db.ts";
 import { createTemporalPostgreSQLCertificate } from "@shepherdjerred/homelab/cdk8s/src/resources/postgres/temporal-db-tls.ts";
-import { createTemporalBackupPreflightJob } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/backup-preflight.ts";
 import { createTemporalDynamicConfig } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/dynamic-config.ts";
 import { createTemporalServerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/server.ts";
 import { createTemporalUiDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/ui.ts";
@@ -122,7 +121,6 @@ export function createTemporalChart(app: App) {
 
   createTemporalPostgreSQLCertificate(chart);
   createTemporalPostgreSQLDatabase(chart);
-  createTemporalBackupPreflightJob(chart);
   createTemporalSchemaMigrationJob(chart);
   const dynamicConfigMap = createTemporalDynamicConfig(chart);
   const server = createTemporalServerDeployment(chart, { dynamicConfigMap });
@@ -420,20 +418,6 @@ export function createTemporalChart(app: App) {
           ],
           ports: [{ port: IntOrString.fromNumber(5432), protocol: "TCP" }],
         },
-      ],
-    },
-  });
-
-  new KubeNetworkPolicy(chart, "temporal-backup-preflight-netpol", {
-    metadata: { name: "temporal-backup-preflight-netpol" },
-    spec: {
-      podSelector: {
-        matchLabels: { app: "temporal-backup-preflight" },
-      },
-      policyTypes: ["Egress"],
-      egress: [
-        dnsEgressRule(),
-        { ports: [{ port: IntOrString.fromNumber(6443), protocol: "TCP" }] },
       ],
     },
   });

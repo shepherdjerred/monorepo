@@ -731,6 +731,11 @@
       "source": "packages/windows-cross-compiler/test/selftest-winui.sh",
       "disposition": "retain",
       "reason": "Runs inside the windows-cross-compiler image, which ships no Bun; it drives the Windows SDK, cargo-xwin, and dotnet toolchains the image provides"
+    },
+    {
+      "source": "packages/tasknotes-windows/scripts/cross-build.sh",
+      "disposition": "retain",
+      "reason": "Runs inside the windows-cross-compiler-winui image, which ships no Bun; it only sequences locked dotnet restores and builds"
     }
   ]
 }

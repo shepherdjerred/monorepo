@@ -42,6 +42,7 @@
     "windows:build": "bun scripts/windows.ts build",
     "windows:test": "bun scripts/windows.ts test",
     "windows:package": "bun scripts/windows.ts package",
+    "windows:cross-package": "bun scripts/cross-package.ts",
     "windows:run": "bun scripts/windows.ts run",
     "windows:parity-check": "bun scripts/parity-check.ts",
     "windows:e2e": "bun scripts/e2e.ts",
