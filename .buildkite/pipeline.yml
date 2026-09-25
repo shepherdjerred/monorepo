@@ -1443,6 +1443,48 @@ steps:
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
 
+  - label: ":window: tasknotes-windows cross-build"
+    key: tasknotes-windows-cross
+    timeout_in_minutes: 60
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - "packages/tasknotes-windows/**"
+        - "packages/tasknotes-core/**"
+        - "packages/windows-cross-compiler/images/windows-cross-compiler-winui/DIGEST"
+        - "global.json"
+    cancel_on_build_failing: true
+    command: |
+      cd packages/tasknotes-windows
+      scripts/cross-build.sh AppPackages/cross
+    artifact_paths: "packages/tasknotes-windows/AppPackages/cross/**/*.msix"
+    retry: *retry
+    plugins:
+      - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tasknotes-windows-cross
+          checkout:
+            cloneFlags: "--no-tags"
+          podSpecPatch:
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
+            containers:
+              - *checkout_container
+              - name: container-0
+                # Pinned by packages/windows-cross-compiler/images/windows-cross-compiler-winui/DIGEST.
+                image: "${WINDOWS_CROSS_COMPILER_WINUI_IMAGE}"
+                securityContext:
+                  allowPrivilegeEscalation: false
+                resources:
+                  # The checkout container separately requests its 1Gi tmpfs charge.
+                  requests: { cpu: "4", memory: "8Gi" }
+                  limits: { cpu: "8", memory: "16Gi" }
+                volumeMounts:
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
+
   - label: ":scroll: resume build (main)"
     key: resume-build-main
     timeout_in_minutes: 20
@@ -2078,6 +2120,7 @@ steps:
       - alert-dashboard-sqlite
       - playwright-e2e-pr
       - resume-build-pr
+      - tasknotes-windows-cross
       - trmnl-validate-pr
       - docker-e2e-pr
       - trivy
