@@ -48,11 +48,16 @@ class MockFreshRssApi {
   malformedList = false;
   editStatus = 200;
   convergeFilters = true;
+  /** How FreshRSS serializes a filter it stores; the export returns this form. */
+  storeFilter: (filter: string) => string = (filter) => filter;
   /** Feed URLs FreshRSS will refuse to subscribe, as it does for a URL whose
    *  content-type is not a feed type. */
   readonly refusedSubscribeUrls = new Set<string>();
 
-  constructor(subscriptions: MockSubscription[]) {
+  constructor(
+    subscriptions: MockSubscription[],
+    readonly desired: DesiredFeed[] = desiredFeeds,
+  ) {
     this.subscriptions = structuredClone(subscriptions);
   }
 
@@ -85,7 +90,7 @@ class MockFreshRssApi {
 
   #export(): Response {
     if (this.convergeFilters) {
-      for (const feed of desiredFeeds) {
+      for (const feed of this.desired) {
         const subscription = this.subscriptions.find(
           (candidate) => candidate.url === feed.url,
         );
@@ -93,7 +98,9 @@ class MockFreshRssApi {
           if (feed.filtersActionRead === undefined) {
             delete subscription.filtersActionRead;
           } else {
-            subscription.filtersActionRead = feed.filtersActionRead;
+            subscription.filtersActionRead = this.storeFilter(
+              feed.filtersActionRead,
+            );
           }
         }
       }
@@ -178,13 +185,16 @@ function escapeXml(value: string): string {
     .replaceAll(">", "&gt;");
 }
 
-async function reconcile(api: MockFreshRssApi) {
+async function reconcile(
+  api: MockFreshRssApi,
+  manifest: DesiredManifest = desiredManifest,
+) {
   return reconcileFreshRss({
     apiUrl: "http://freshrss-service/api/greader.php",
     user: "sjerred",
     password: "test-only-password",
     category: "Repo Stack",
-    manifest: desiredManifest,
+    manifest,
     request: api.fetch,
     delay: () => Promise.resolve(),
   });
@@ -333,7 +343,28 @@ describe("FreshRSS reconciler", () => {
     const api = new MockFreshRssApi([]);
     api.convergeFilters = false;
 
-    await expect(reconcile(api)).rejects.toThrow("filters did not converge");
+    await expect(reconcile(api)).rejects.toThrow(
+      `filters did not converge to the desired OPML settings: ${BUN_RELEASES_URL} wants ${JSON.stringify(PRERELEASE_FILTER)}, export has null`,
+    );
+  });
+
+  test("names a declared filter FreshRSS stores in a different form", async () => {
+    const vercelUrl = "https://vercel.com/atom";
+    const bangFilter = String.raw`!intitle:/\bAI SDK\b/i`;
+    const feeds: DesiredFeed[] = [
+      { title: "Vercel News", url: vercelUrl, filtersActionRead: bangFilter },
+      { title: "TypeScript Blog", url: TYPESCRIPT_BLOG_URL },
+    ];
+    const api = new MockFreshRssApi([], feeds);
+    // FreshRSS parses `!` and `-` as the same negation but stores only `-`,
+    // so the export can never equal a `!`-negated declaration.
+    api.storeFilter = (filter) => filter.replace(/^!/u, "-");
+
+    await expect(
+      reconcile(api, { category: "Repo Stack", feeds }),
+    ).rejects.toThrow(
+      `${vercelUrl} wants ${JSON.stringify(bangFilter)}, export has ${JSON.stringify(bangFilter.replace(/^!/u, "-"))}`,
+    );
   });
 
   test("rejects a runtime category that differs from the manifest", async () => {
