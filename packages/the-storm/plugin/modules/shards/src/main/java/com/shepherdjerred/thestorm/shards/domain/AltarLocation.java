@@ -8,15 +8,23 @@ package com.shepherdjerred.thestorm.shards.domain;
  * @param x block x
  * @param y block y
  * @param z block z
+ * @param material the Paper block material that must be there, such as {@code EMERALD_BLOCK}; the
+ *     module refuses to start when the configured block is anything else
  */
-public record AltarLocation(String world, int x, int y, int z) {
+public record AltarLocation(String world, int x, int y, int z, String material) {
 
   public AltarLocation {
     Checks.key("altars[].world", world);
+    Checks.constant("altars[].material", material);
   }
 
-  /** Whether this altar is the block at the given position. */
-  public boolean isAt(String blockWorld, int blockX, int blockY, int blockZ) {
-    return world.equals(blockWorld) && x == blockX && y == blockY && z == blockZ;
+  /** The altar's position. */
+  public BlockPos position() {
+    return new BlockPos(world, x, y, z);
+  }
+
+  /** Whether {@code block} at {@code position} is this altar: the right place and material. */
+  public boolean is(BlockPos block, String blockMaterial) {
+    return position().equals(block) && material.equals(blockMaterial);
   }
 }
