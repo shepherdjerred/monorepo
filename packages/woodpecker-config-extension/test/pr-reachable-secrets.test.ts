@@ -43,6 +43,12 @@ const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
  * - `tofu-plan-*` hold their stack's provider credentials because a plan has
  *   to talk to the provider. They are the reason most of this list exists.
  * - `codex-review-gate` mints a review token; `pr-dryrun` reads ArgoCD.
+ * - `GITHUB_PACKAGES_TOKEN` can publish packages, and reaches
+ *   `windows-cross-compiler-pr` although that step only reads: its build
+ *   imports cache from a private ghcr package, and without registry login
+ *   BuildKit silently rebuilds from scratch past the lane's timeout. Accepted
+ *   deliberately to match the Buildkite lane it replaces; a read-only
+ *   packages token would remove it from this list.
  * - The SeaweedFS names are three distinct identities, each scoped in the
  *   gateway to the buckets its job touches. `SEAWEEDFS_HANDOFF_*` reaches only
  *   the `ci-handoff` bucket and `SEAWEEDFS_TOFU_STATE_*` only
@@ -65,6 +71,7 @@ const PR_REACHABLE_SECRETS = [
   "GITHUB_APP_INSTALLATION_ID",
   "GITHUB_APP_PRIVATE_KEY",
   "GITHUB_DOWNLOAD_TOKEN",
+  "GITHUB_PACKAGES_TOKEN",
   "GITHUB_REVIEW_TOKEN",
   "OPENROUTER_API_KEY",
   "PRIVATEHD_PASSWORD",
@@ -94,7 +101,6 @@ const RELEASE_ONLY_SECRETS = [
   "NPM_TOKEN",
   "CHARTMUSEUM_USERNAME",
   "CHARTMUSEUM_PASSWORD",
-  "GITHUB_PACKAGES_TOKEN",
   "SEAWEEDFS_SITES_ACCESS_KEY_ID",
   "SEAWEEDFS_SITES_SECRET_ACCESS_KEY",
 ];

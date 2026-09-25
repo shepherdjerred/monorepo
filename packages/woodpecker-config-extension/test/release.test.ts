@@ -362,6 +362,8 @@ describe("coverage of the Buildkite pipeline", () => {
     "version-commit-back": "version-commit-back",
     "ci-base-refresh": "ci-base-refresh",
     "ci-playwright-refresh": "ci-playwright-refresh",
+    "windows-cross-compiler-refresh": "windows-cross-compiler-refresh",
+    "windows-cross-compiler-pr": "windows-cross-compiler-pr",
     "scout-beta-release": "scout-beta-release",
     "scout-tag-release": "scout-tag-release",
     "scout-prod-reconcile": "scout-prod-reconcile",
@@ -384,8 +386,8 @@ describe("coverage of the Buildkite pipeline", () => {
       "applies the Buildkite cluster stack, which is deleted rather than ported",
   };
 
-  test("accounts for all 56 Buildkite steps", () => {
-    expect(Object.keys(COVERAGE).length + Object.keys(RETIRED).length).toBe(56);
+  test("accounts for all 58 Buildkite steps", () => {
+    expect(Object.keys(COVERAGE).length + Object.keys(RETIRED).length).toBe(58);
   });
 
   test("every claimed successor actually exists", () => {
