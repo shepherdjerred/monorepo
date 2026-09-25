@@ -223,8 +223,8 @@ export const RECOVERY_BATCH_STATE_KINDS: readonly string[] = Object.keys(
  * IS the column vocabulary — so it is taken from the schema rather than typed
  * out, which is one fewer string that can drift into matching nothing.
  */
-const TEMPORAL_V2_OWNER_COLUMN = "TEMPORAL_V2";
-const FULL_POLICY_COLUMN = MatchProcessingPolicySchema.parse("FULL");
+export const TEMPORAL_V2_OWNER_COLUMN = "TEMPORAL_V2";
+export const FULL_POLICY_COLUMN = MatchProcessingPolicySchema.parse("FULL");
 
 /**
  * The recovery policies and target kind the stalled-notification read holds
@@ -234,6 +234,28 @@ const FULL_POLICY_COLUMN = MatchProcessingPolicySchema.parse("FULL");
 const HELD_EVERYTHING_POLICY: RecoveryPolicy = "no-external";
 const HELD_CHANNELS_POLICY: RecoveryPolicy = "stale-private-only";
 const CHANNEL_TARGET_COLUMN: NotificationTargetKind = "channel";
+
+/**
+ * "No recovery batch's policy is deliberately holding this intent", as a SQL
+ * residual over an intent aliased `i`.
+ *
+ * `notificationDeliveryDecision`
+ * (`@scout-for-lol/domain/recovery/delivery-policy.ts`) said in SQL, held to
+ * it by `reconciliation-scan.integration.test.ts`: `no-external` holds
+ * everything, `stale-private-only` holds channels. A live intent has no batch
+ * and passes; a recovery intent whose batch row is missing also passes, so the
+ * child that reads it fails loudly on the missing row.
+ *
+ * Shared by the reconciliation read and the ready-backlog gauge, because a
+ * held intent is neither stalled nor stuck, and the two must agree on which
+ * intents those are.
+ */
+export const INTENT_NOT_HELD_BY_RECOVERY_POLICY = Prisma.sql`NOT EXISTS (SELECT 1
+                         FROM "MatchRecoveryBatch" AS b
+                        WHERE b."recoveryBatchId" = i."recoveryBatchId"
+                          AND (b."policy" = ${HELD_EVERYTHING_POLICY}
+                               OR (b."policy" = ${HELD_CHANNELS_POLICY}
+                                   AND i."targetKind" = ${CHANNEL_TARGET_COLUMN})))`;
 
 /**
  * Where a page stopped, in the vocabulary every read here already orders by.
@@ -485,23 +507,13 @@ export async function listStalledNotificationIntents(
   // Held intents are not stalled: a recovery-born intent whose batch policy
   // forbids its target is deliberately not being driven, and a sweep that
   // started a child on it would find the gate closed every minute until the
-  // batch is released. This predicate is `notificationDeliveryDecision`
-  // (`@scout-for-lol/domain/recovery/delivery-policy.ts`) said in SQL, held
-  // to it by `reconciliation-scan.integration.test.ts`: `no-external` holds
-  // everything, `stale-private-only` holds channels. A live intent has no
-  // batch and passes; a recovery intent whose batch row is missing also
-  // passes, so the child that reads it fails loudly on the missing row.
+  // batch is released. See {@link INTENT_NOT_HELD_BY_RECOVERY_POLICY}.
   const rows: unknown = await db.$queryRaw(Prisma.sql`
     SELECT i.*
       FROM "MatchNotificationIntent" AS i
      WHERE i."state" IN (${Prisma.join([...DRIVABLE_INTENT_STATES])})
        AND i."freshnessDeadline" > ${args.freshAt}::timestamp
-       AND NOT EXISTS (SELECT 1
-                         FROM "MatchRecoveryBatch" AS b
-                        WHERE b."recoveryBatchId" = i."recoveryBatchId"
-                          AND (b."policy" = ${HELD_EVERYTHING_POLICY}
-                               OR (b."policy" = ${HELD_CHANNELS_POLICY}
-                                   AND i."targetKind" = ${CHANNEL_TARGET_COLUMN})))
+       AND ${INTENT_NOT_HELD_BY_RECOVERY_POLICY}
        ${overtaken}
        ${keyset}
      ORDER BY i."freshnessDeadline" ASC, i."intentKey" ASC

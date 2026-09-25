@@ -21,6 +21,7 @@ import { setDiscordGatewayState } from "#src/metrics/platform/discord-gateway-he
 import { registerLakeStagingLagSweep } from "#src/report-lake/lake-staging-lag.ts";
 import type { ScoutRuntimeDependencies } from "#src/runtime/boot.ts";
 import type { ScoutTemporalSupervisor } from "#src/temporal/supervisor.ts";
+import { registerPostmatchMintGapSweep } from "#src/temporal/v2/notification/postmatch-mint-gap.ts";
 
 const logger = createLogger("runtime-subsystems");
 
@@ -54,7 +55,12 @@ export function scoutRuntimeSubsystems(
       // vocabulary, because `metrics/` may not import `report-lake/`. Wiring it
       // here keeps "which role computes it" beside every other role decision
       // rather than making it a consequence of who imported what.
-      if (enabled) registerLakeStagingLagSweep();
+      // The post-match mint gap is registered for the same reason: its
+      // render-receipt vocabulary belongs to the V2 notification lane.
+      if (enabled) {
+        registerLakeStagingLagSweep();
+        registerPostmatchMintGapSweep();
+      }
     },
 
     prepareDiscord: async ({ ownsGateway }) => {
