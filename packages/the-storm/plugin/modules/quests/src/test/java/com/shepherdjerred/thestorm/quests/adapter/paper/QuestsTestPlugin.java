@@ -33,6 +33,8 @@ import com.shepherdjerred.thestorm.quests.domain.model.ItemMatch;
 import com.shepherdjerred.thestorm.quests.domain.model.Objective;
 import com.shepherdjerred.thestorm.quests.domain.model.Region;
 import com.shepherdjerred.thestorm.quests.domain.view.Journal;
+import com.shepherdjerred.thestorm.tracks.app.Track;
+import com.shepherdjerred.thestorm.tracks.app.TrackLevels;
 import java.nio.file.Path;
 import java.time.InstantSource;
 import java.util.ArrayList;
@@ -152,7 +154,17 @@ public class QuestsTestPlugin extends JavaPlugin {
             context,
             CONFIG,
             new QuestsPaper.Ports(
-                (player, track) -> 0,
+                new TrackLevels() {
+                  @Override
+                  public int level(Player player, Track track) {
+                    return 0;
+                  }
+
+                  @Override
+                  public boolean isLoaded(UUID player) {
+                    return true;
+                  }
+                },
                 new Allow(),
                 new Npcs(),
                 dialogues,
