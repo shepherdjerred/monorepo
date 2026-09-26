@@ -5,10 +5,10 @@
  *
  * The catalog carries only the package↔versionKey↔argoApp wiring, which
  * changes rarely, so bundling it into the compiled binary is fine. Pinned
- * versions are never bundled: versions.ts is read live via git.
+ * versions are never bundled: the version catalog is read live via git.
  *
  * A drift test (test-integration/catalog.integration.test.ts) checks every
- * versionKey against the live versions.ts on HEAD so the catalog can't
+ * versionKey against the live version catalog on HEAD so the registry can't
  * silently fall out of sync.
  */
 import {

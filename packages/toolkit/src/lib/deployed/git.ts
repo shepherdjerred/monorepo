@@ -4,13 +4,12 @@
  * All reasoning is ancestry-based (never linear `git log` order): bump commits
  * are cut on side branches, so a commit can appear "below" a bump in the log
  * yet not be contained by it. We also locate the bump that *wrote* a given
- * digest by pickaxe (`git log -S<digest>`), because a promoted prod tag (e.g.
- * 2.0.0-2985) can be written into versions.ts by a later build (2.0.0-3016) —
- * the tag number and the writing build differ.
+ * digest by its first added catalog line, because later bumps can remove that
+ * digest from beta while prod continues to pin the image.
  */
 import { $ } from "bun";
 
-export const VERSIONS_PATH = "packages/homelab/src/cdk8s/src/versions.ts";
+export const CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 
 // Field separator for --format output. Git emits a real NUL byte via %x00; we
 // split on it so subjects (which contain spaces) survive intact.
@@ -25,13 +24,13 @@ async function gitOut(args: string[]): Promise<string | null> {
   return r.exitCode === 0 ? r.stdout.toString().trim() : null;
 }
 
-/** Repo root if we're inside the monorepo (verified by versions.ts presence). */
+/** Repo root if we're inside the monorepo (verified by the version catalog's presence). */
 export async function repoRoot(): Promise<string | null> {
   const root = await gitOut(["rev-parse", "--show-toplevel"]);
   if (root == null || root.length === 0) {
     return null;
   }
-  const exists = await Bun.file(`${root}/${VERSIONS_PATH}`).exists();
+  const exists = await Bun.file(`${root}/${CATALOG_PATH}`).exists();
   return exists ? root : null;
 }
 
@@ -101,37 +100,85 @@ export async function latestCommitForPackage(
   return sha == null || sha.length === 0 ? null : resolveCommit(sha);
 }
 
-/** Raw contents of versions.ts at a given ref. */
-export async function showVersionsAt(ref: string): Promise<string | null> {
-  return gitOut(["show", `${ref}:${VERSIONS_PATH}`]);
+/** Raw contents of the version catalog at a given ref. */
+export async function showCatalogAt(ref: string): Promise<string | null> {
+  return gitOut(["show", `${ref}:${CATALOG_PATH}`]);
+}
+
+type DigestHistoryEntry = {
+  sha: string;
+  subject: string;
+  patch: string;
+};
+
+/** Pick the earliest catalog commit that added this digest, ignoring removals. */
+export function firstDigestWriter(
+  history: readonly DigestHistoryEntry[],
+  digest: string,
+): { sha: string; subject: string } | null {
+  for (const commit of history) {
+    const addedDigest = commit.patch
+      .split("\n")
+      .some(
+        (line) =>
+          line.startsWith("+") &&
+          !line.startsWith("+++") &&
+          line.includes(digest),
+      );
+    if (addedDigest) {
+      return { sha: commit.sha, subject: commit.subject };
+    }
+  }
+  return null;
 }
 
 /**
- * The most recent commit that introduced `digest` into versions.ts. For a real
- * image this is the "bump image versions" commit; for a seed/placeholder it's
- * the feature commit that first hand-wrote the key.
+ * The first mainline commit that added `digest` to the version catalog. For a
+ * real image this is the image bump; for a seed/placeholder it's the feature
+ * commit that first hand-wrote the pin. Looking for additions avoids mistaking
+ * a later beta digest removal for the image's writer while prod retains it.
  */
 export async function commitThatWroteDigest(
   digest: string,
+  ref = "origin/main",
 ): Promise<{ sha: string; subject: string } | null> {
   const out = await gitOut([
     "log",
-    "-1",
+    "--first-parent",
+    "--reverse",
     "--format=%H%x00%s",
-    `-S${digest}`,
+    "-G",
+    digest,
+    ref,
     "--",
-    `:/${VERSIONS_PATH}`,
+    `:/${CATALOG_PATH}`,
   ]);
   if (out == null) {
     return null;
   }
-  const [sha, subject] = out.split(SEP);
-  return sha == null || subject == null || sha.length === 0
-    ? null
-    : { sha, subject };
+
+  const history: DigestHistoryEntry[] = [];
+  for (const line of out.split("\n")) {
+    const [sha, subject] = line.split(SEP);
+    if (sha == null || subject == null || sha.length === 0) {
+      continue;
+    }
+    const patch = await gitOut([
+      "show",
+      "--format=",
+      "--unified=0",
+      sha,
+      "--",
+      `:/${CATALOG_PATH}`,
+    ]);
+    history.push({ sha, subject, patch: patch ?? "" });
+  }
+  return firstDigestWriter(history, digest);
 }
 
-const BUMP_SUBJECT = /bump image versions/i;
+// Squash-merged generated bumps read "chore: bump pending image versions (#N)";
+// older direct commits read "chore: bump image versions to 2.0.0-N".
+const BUMP_SUBJECT = /bump (?:pending )?image versions/i;
 
 export function isBumpSubject(subject: string): boolean {
   return BUMP_SUBJECT.test(subject);

@@ -113,7 +113,10 @@
     "packages/homelab/src/cdk8s": {
       "entry": ["src/**/*.ts", "scripts/**/*.ts"],
       "project": ["src/**/*.ts", "scripts/**/*.ts"],
-      "ignoreDependencies": ["cdk8s-cli"]
+      // `homelab` is a graph edge, not an import: the Argo CD script tests
+      // here spawn packages/homelab/scripts, so a change there must select
+      // this package's tests.
+      "ignoreDependencies": ["cdk8s-cli", "homelab"]
     },
     "packages/homelab/src/helm-types": {
       "entry": [

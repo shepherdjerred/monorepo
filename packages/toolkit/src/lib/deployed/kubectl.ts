@@ -2,7 +2,7 @@
  * kubectl layer for `toolkit deployed`.
  *
  * The gold deployment signal: a running pod whose container `imageID` digest
- * matches the versions.ts pin. We scan all pods cluster-wide once and match by
+ * matches the version catalog pin. We scan all pods cluster-wide once and match by
  * image substring on the versionKey, sidestepping per-service namespace
  * mapping (mirrors the guide's `kubectl ... | grep shepherdjerred`).
  *

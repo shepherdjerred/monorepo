@@ -132,9 +132,9 @@ describe("CI reporting boundaries", () => {
           workspace.directory,
           excluded.path,
         );
-        // A documented exclusion must reference a real suite file so it cannot
-        // rot into a stale claim once the underlying test is renamed or removed.
-        expect(await Bun.file(suitePath).exists()).toBe(true);
+        // A documented exclusion must reference a real suite file or directory
+        // so it cannot rot into a stale claim once the test is renamed or removed.
+        expect(await Bun.file(suitePath).stat()).toBeDefined();
       }
     }
   });
@@ -159,6 +159,36 @@ describe("CI reporting boundaries", () => {
     expect(() => {
       assertExcludedSuitesAreUncovered(manifest);
     }).toThrow(/excluded suite but a reporting step already runs it/);
+  });
+
+  test("allows a documented suite excluded by a broad Vitest filter", () => {
+    const manifest = TestManifestSchema.parse({
+      $schema: "./ci-test-manifest.schema.json",
+      version: 2,
+      workspaces: [
+        {
+          package: "package",
+          directory: "packages/package",
+          steps: [
+            {
+              runner: "vitest",
+              args: ["src", "--exclude", "src/emulator/audio.test.ts"],
+            },
+          ],
+          excludedSuites: [
+            {
+              path: "src/emulator/audio.test.ts",
+              reason: "Runs in a dedicated image verification stage.",
+            },
+          ],
+        },
+      ],
+      testlessWorkspaces: [],
+      separateTests: [],
+    });
+    expect(() => {
+      assertExcludedSuitesAreUncovered(manifest);
+    }).not.toThrow();
   });
 });
 
@@ -741,6 +771,11 @@ describe("CI reporting manifest", () => {
           "scripts/helm/lint-helm.test.ts",
           "scripts/migration-smoke.test.ts",
           "scripts/velero-backups.test.ts",
+          "scripts/argocd/argocd-apply-safety.test.ts",
+          "scripts/argocd/argocd-auto-sync-policy.test.ts",
+          "scripts/argocd/argocd-child-sync-timeout.test.ts",
+          "scripts/argocd/argocd-release-result.test.ts",
+          "scripts/tofu/tofu-stack.test.ts",
         ],
       },
     ]);

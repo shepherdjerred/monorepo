@@ -1,4 +1,4 @@
-import { Database } from "bun:sqlite";
+import { constants, Database } from "bun:sqlite";
 import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -200,7 +200,12 @@ export async function readImmutableDatabase(
     }
     const immutableUrl = pathToFileURL(filePath);
     immutableUrl.searchParams.set("immutable", "1");
-    return new Database(immutableUrl.href, { readonly: true, strict: true });
+    // The options form never sets SQLITE_OPEN_URI, so Linux Bun reads the
+    // `file:` URL as a literal filename; the flags work on every platform.
+    return new Database(
+      immutableUrl.href,
+      constants.SQLITE_OPEN_READONLY | constants.SQLITE_OPEN_URI,
+    );
   }
 }
 
