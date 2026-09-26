@@ -101,7 +101,7 @@ export async function pauseTask(input: {
     resumePhase: input.state.resumePhase ?? input.state.phase,
     updatedAt: currentTimestamp(),
   });
-  await input.linear.needsHuman(input.state.issue.identifier, input.reason);
+  await input.linear.needsHuman(input.state.issue, input.reason);
   console.error(`${input.state.issue.identifier}: ${input.reason}`);
 }
 

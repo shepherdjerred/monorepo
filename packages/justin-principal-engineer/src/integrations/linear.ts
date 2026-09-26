@@ -20,6 +20,10 @@ const LabelsSchema = z.object({
 const LABEL_READY = "agent:ready";
 const LABEL_NEEDS_HUMAN = "agent:needs-human";
 
+const TeamLabelsSchema = z.object({
+  nodes: z.array(z.object({ id: z.string().min(1), name: z.string().min(1) })),
+});
+
 function labels(issue: LinearIssue): Set<string> {
   return new Set(issue.labels.nodes.map(({ name }) => name));
 }
@@ -127,52 +131,112 @@ export class LinearClient {
     );
   }
 
-  private finishArgs(
-    issue: LinearIssue,
-    state: string,
-    stripProvider: boolean,
-  ): string[] {
-    const args = ["issue", "update", issue.identifier, "--state", state];
+  private labelIdsCache: Map<string, string> | null = null;
+
+  private async labelIds(): Promise<Map<string, string>> {
+    if (this.labelIdsCache === null) {
+      const output = await this.command([
+        "label",
+        "list",
+        "--team",
+        this.team,
+        "--json",
+      ]);
+      const parsed = TeamLabelsSchema.parse(JSON.parse(output));
+      this.labelIdsCache = new Map(
+        parsed.nodes.map(({ id, name }) => [name, id] as const),
+      );
+    }
+    return this.labelIdsCache;
+  }
+
+  private async mutateLabels(input: {
+    nodeId: string;
+    add: readonly string[];
+    remove: readonly string[];
+  }): Promise<void> {
+    // Label names resolve inside the issue's own team, so cross-team issues
+    // must be mutated by label ID from the runner's home team instead.
+    if (input.add.length === 0 && input.remove.length === 0) return;
+    const ids = await this.labelIds();
+    const toIds = (names: readonly string[]): string[] =>
+      names.map((name) => {
+        const id = ids.get(name);
+        if (id === undefined) {
+          throw new Error(
+            `Linear label ${name} does not exist on team ${this.team}`,
+          );
+        }
+        return id;
+      });
+    await this.command([
+      "api",
+      "mutation($id: String!, $add: [ID!], $remove: [ID!]) { issueUpdate(input: {id: $id, addedLabelIds: $add, removedLabelIds: $remove}) { success } }",
+      "--variables-json",
+      JSON.stringify({
+        id: input.nodeId,
+        add: toIds(input.add),
+        remove: toIds(input.remove),
+      }),
+    ]);
+  }
+
+  private async setState(identifier: string, state: string): Promise<void> {
+    await this.command(["issue", "update", identifier, "--state", state]);
+  }
+
+  private removableLabels(issue: LinearIssue): string[] {
     const present = labels(issue);
-    const removable = [LABEL_NEEDS_HUMAN, LABEL_READY];
+    const candidates = [LABEL_NEEDS_HUMAN, LABEL_READY];
     const provider = providerForIssue(issue);
-    if (stripProvider && provider !== undefined) {
-      removable.push(`agent:${provider}`);
-    }
-    for (const label of removable) {
-      if (present.has(label)) args.push("--remove-label", label);
-    }
-    return args;
+    if (provider !== undefined) candidates.push(`agent:${provider}`);
+    return candidates.filter((label) => present.has(label));
   }
 
   public async claim(issue: LinearIssue): Promise<void> {
     // The provider label stays on through the whole task so that clearing
     // agent:needs-human requeues without relabeling. Only legacy labels go.
-    await this.command(this.finishArgs(issue, "In Progress", false));
+    await this.setState(issue.identifier, "In Progress");
+    const present = labels(issue);
+    await this.mutateLabels({
+      nodeId: issue.id,
+      add: [],
+      remove: present.has(LABEL_READY) ? [LABEL_READY] : [],
+    });
     await this.comment(
       issue.identifier,
       "Claimed by `justin-principal-engineer`. Work will continue in short, durable turns; this process is not holding an agent open while it waits.",
     );
   }
 
-  public async needsHuman(identifier: string, reason: string): Promise<void> {
-    await this.command([
-      "issue",
-      "update",
-      identifier,
-      "--add-label",
-      LABEL_NEEDS_HUMAN,
-    ]);
-    await this.comment(identifier, `Human input needed: ${reason}`);
+  public async needsHuman(issue: LinearIssue, reason: string): Promise<void> {
+    if (!labels(issue).has(LABEL_NEEDS_HUMAN)) {
+      await this.mutateLabels({
+        nodeId: issue.id,
+        add: [LABEL_NEEDS_HUMAN],
+        remove: [],
+      });
+    }
+    await this.comment(issue.identifier, `Human input needed: ${reason}`);
   }
 
   public async complete(issue: LinearIssue, prUrl: string): Promise<void> {
-    await this.command(this.finishArgs(issue, "Done", true));
+    await this.setState(issue.identifier, "Done");
+    await this.mutateLabels({
+      nodeId: issue.id,
+      add: [],
+      remove: this.removableLabels(issue),
+    });
     await this.comment(issue.identifier, `Merged: ${prUrl}`);
   }
 
   public async completeNoChange(issue: LinearIssue): Promise<void> {
-    await this.command(this.finishArgs(issue, "Done", true));
+    await this.setState(issue.identifier, "Done");
+    await this.mutateLabels({
+      nodeId: issue.id,
+      add: [],
+      remove: this.removableLabels(issue),
+    });
     await this.comment(
       issue.identifier,
       "No change needed; the requested state was already present.",
