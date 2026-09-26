@@ -21,7 +21,6 @@ import {
   agentChatSessionManifestKey,
   AmbiguousManifestPublicationError,
   pullLatestAgentChatSessionBundle,
-  pushAgentChatSessionBundle,
   recoverPublishedAgentChatTurn,
 } from "./session-bundle.ts";
 import {
@@ -34,6 +33,7 @@ import {
   rejectExpiredProviderAdmission,
 } from "./provider-admission.ts";
 import { cleanupAgentChatRuntime } from "./provider-cleanup.ts";
+import { publishAgentChatSession } from "./session-publication.ts";
 const HEARTBEAT_INTERVAL_MS = 20_000;
 const PROVIDER_PROCESS_CLEANUP_ATTEMPTS = 5;
 const PROVIDER_PROCESS_CLEANUP_DELAY_MS = 50;
@@ -133,7 +133,6 @@ async function runUidProcessCommand(
   );
   return processHandle.exited;
 }
-
 /**
  * The production provider queue is singleton and its dedicated uid is not
  * shared with the worker. Sweep and verify that uid before and after every
@@ -163,7 +162,6 @@ export async function terminateProviderSubprocesses(
   }
   throw new Error("Provider subprocesses remained after forced cleanup");
 }
-
 export type RunAgentChatTurnDependencies = {
   store: AgentChatObjectStore;
   bundlePrefix: string;
@@ -182,7 +180,6 @@ export type RunAgentChatTurnDependencies = {
   onProviderAdmission: () => void;
   providerExecutionTimeoutMs?: number;
 };
-
 export async function runAgentChatTurnWithDependencies(
   rawInput: RunAgentChatTurnInput,
   dependencies: RunAgentChatTurnDependencies,
@@ -192,6 +189,7 @@ export async function runAgentChatTurnWithDependencies(
   let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
   let publicationComplete = false,
     ownsRuntimePath = false;
+  let ambiguousPublication: AmbiguousManifestPublicationError | undefined;
 
   try {
     ownsRuntimePath = true;
@@ -383,7 +381,7 @@ export async function runAgentChatTurnWithDependencies(
       completedAt: dependencies.now().toISOString(),
       usage: outcome.usage,
     });
-    await pushAgentChatSessionBundle({
+    ambiguousPublication = await publishAgentChatSession({
       store: dependencies.store,
       prefix: dependencies.bundlePrefix,
       chatId: input.config.chatId,
@@ -399,6 +397,7 @@ export async function runAgentChatTurnWithDependencies(
       ],
       turnResult: result,
     });
+    if (ambiguousPublication !== undefined) throw ambiguousPublication;
     publicationComplete = true;
     return result;
   } finally {
@@ -407,6 +406,7 @@ export async function runAgentChatTurnWithDependencies(
       await cleanupAgentChatRuntime({
         root: paths.root,
         publicationComplete,
+        preserveFailure: ambiguousPublication,
         terminateProviderSubprocesses:
           dependencies.terminateProviderSubprocesses,
       });
@@ -453,7 +453,6 @@ function throwAgentChatActivityFailure(input: {
     type: "AgentChatTurnFailure",
   });
 }
-
 export async function runAgentChatTurn(
   input: RunAgentChatTurnInput,
 ): Promise<AgentChatTurnResult> {

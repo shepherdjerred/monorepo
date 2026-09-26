@@ -51,8 +51,9 @@ ledger or continues as new, while the receipt history remains within Temporal's
 submission. An ambiguous result retries that same execution, never a newer one.
 Only proven non-admission permits selecting a replacement execution. This
 prevents a delayed transport retry from repeating provider tool effects during
-the retention window. Reusing a turn ID after its receipt expires can repeat
-those effects.
+the retention window. After receipt history expires, the request and outcome
+are no longer retained, but the immutable provider-admission marker still
+prevents the same chat and turn ID from invoking the provider again.
 
 The selected provider and model are immutable chat configuration. Continuing a
 chat never silently changes Claude to Codex or chooses a newer model. A

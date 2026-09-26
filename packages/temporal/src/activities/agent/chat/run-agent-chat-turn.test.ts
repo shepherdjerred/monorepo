@@ -4,6 +4,7 @@ import { mkdir, stat } from "node:fs/promises";
 import type { runAgentTurn } from "#lib/agent-runner/run.ts";
 import type { RunAgentChatTurnInput } from "#shared/agent/agent-chat.ts";
 import { runAgentChatTurnWithDependencies } from "./run-agent-chat-turn.ts";
+import { agentChatSessionManifestKey } from "./session-bundle.ts";
 import {
   memoryAgentChatStore,
   temporaryDirectoryTracker,
@@ -755,6 +756,54 @@ describe("agent chat provider runtime cleanup", () => {
       }),
     ).resolves.toMatchObject({ finalText: "checkpointed" });
     expect(provider).toHaveBeenCalledOnce();
+  });
+
+  test("preserves ambiguous publication when runtime cleanup also fails", async () => {
+    const baseDirectory = await temporaryDirectories.create();
+    const store = memoryAgentChatStore();
+    const input = codexTurnInput("ambiguous-cleanup", "ambiguous-cleanup-turn");
+    const manifestKey = agentChatSessionManifestKey({
+      prefix: "agent-chats",
+      chatId: input.config.chatId,
+      turnNumber: input.turnNumber,
+      turnId: input.request.turnId,
+    });
+    const originalPut = store.put;
+    const originalHas = store.has;
+    let manifestPutAttempted = false;
+    store.put = vi.fn(async (key, body) => {
+      await originalPut(key, body);
+      if (key === manifestKey) {
+        manifestPutAttempted = true;
+        throw new Error("manifest response lost");
+      }
+    });
+    store.has = vi.fn((key) =>
+      key === manifestKey && manifestPutAttempted
+        ? Promise.reject(new Error("manifest verification unavailable"))
+        : originalHas(key),
+    );
+    const cleanup = vi
+      .fn<() => Promise<void>>()
+      .mockResolvedValueOnce()
+      .mockResolvedValueOnce()
+      .mockRejectedValueOnce(new Error("runtime cleanup failed"));
+
+    await expect(
+      runAgentChatTurnWithDependencies(input, {
+        ...providerMustNotRunDependencies(
+          baseDirectory,
+          () => new Date("2026-09-14T20:01:00.000Z"),
+        ),
+        store,
+        sourceEnv: codexAuthEnvironment(),
+        runTurn: successfulCodexProvider,
+        terminateProviderSubprocesses: cleanup,
+      }),
+    ).rejects.toMatchObject({
+      name: "AmbiguousManifestPublicationError",
+      message: "Session manifest publication status could not be verified",
+    });
   });
 });
 

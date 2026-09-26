@@ -10,6 +10,7 @@ function cleanupError(error: unknown): Error {
 export async function cleanupAgentChatRuntime(input: {
   root: string;
   publicationComplete: boolean;
+  preserveFailure: Error | undefined;
   terminateProviderSubprocesses: () => Promise<void>;
 }): Promise<void> {
   const failures: Error[] = [];
@@ -32,6 +33,7 @@ export async function cleanupAgentChatRuntime(input: {
     failures.length === 1
       ? firstFailure
       : new AggregateError(failures, "Agent chat runtime cleanup failed");
+  if (input.preserveFailure !== undefined) throw input.preserveFailure;
   if (input.publicationComplete) {
     throw ApplicationFailure.create({
       message: "Agent chat cleanup failed after durable publication",
