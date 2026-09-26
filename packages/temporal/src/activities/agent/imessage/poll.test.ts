@@ -65,28 +65,64 @@ describe("durable BlueBubbles polling", () => {
       where: [{ statement: "message.ROWID > :cursor", args: { cursor: 0 } }],
     });
   });
-  test("walks full initialization pages to the highest ROWID", async () => {
+  test("freezes initialization before admitting messages that arrive during it", async () => {
     mocks.request
       .mockResolvedValueOnce(
         Array.from({ length: 1000 }, (_, index) => message(index + 1)),
       )
-      .mockResolvedValueOnce([message(1500), message(1200)]);
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([message(1001)]);
 
-    const result = await pollBlueBubblesMessages({
+    const first = await pollBlueBubblesMessages({
       ...CURSOR,
       initialized: false,
       lastRowId: 0,
     });
+    expect(first).toMatchObject({
+      initialized: false,
+      lastRowId: 1000,
+      initializationHighWaterRowId: 1000,
+    });
+    if (first.initialized)
+      throw new Error("Expected initialization checkpoint");
 
-    expect(result.lastRowId).toBe(1500);
-    expect(mocks.request).toHaveBeenLastCalledWith(
+    const initialized = await pollBlueBubblesMessages({
+      startedAt: first.startedAt,
+      initialized: first.initialized,
+      lastRowId: first.lastRowId,
+      initializationHighWaterRowId: first.initializationHighWaterRowId,
+    });
+
+    expect(initialized).toEqual({
+      startedAt: CURSOR.startedAt,
+      initialized: true,
+      lastRowId: 1000,
+      commands: [],
+    });
+    expect(mocks.request).toHaveBeenNthCalledWith(
+      2,
       "/api/v1/message/query",
       expect.objectContaining({
         where: [
           { statement: "message.ROWID > :cursor", args: { cursor: 1000 } },
+          {
+            statement: "message.ROWID <= :initializationHighWater",
+            args: { initializationHighWater: 1000 },
+          },
         ],
       }),
     );
+
+    const live = await pollBlueBubblesMessages({
+      startedAt: initialized.startedAt,
+      initialized: initialized.initialized,
+      lastRowId: initialized.lastRowId,
+    });
+    expect(live).toMatchObject({
+      initialized: true,
+      lastRowId: 1001,
+      commands: [{ messageId: "guid-1001" }],
+    });
   });
   test("caps the durable batch at fifty without skipping the remainder", async () => {
     mocks.request.mockResolvedValue(
@@ -124,6 +160,39 @@ describe("durable BlueBubbles polling", () => {
       type: "BlueBubblesBacklogExceeded",
     });
   });
+  test("fails a stale initialization page without retrying forever", async () => {
+    mocks.request.mockResolvedValue([message(10)]);
+
+    await expect(
+      pollBlueBubblesMessages({ ...CURSOR, initialized: false }),
+    ).rejects.toMatchObject({
+      message: "BlueBubbles initialization did not advance its ROWID",
+      nonRetryable: true,
+      type: "BlueBubblesInitializationDidNotAdvance",
+    });
+  });
+  test("fails a stale cursor page without retrying forever", async () => {
+    mocks.request.mockResolvedValue([message(10)]);
+
+    await expect(pollBlueBubblesMessages(CURSOR)).rejects.toMatchObject({
+      message: "BlueBubbles returned a message outside the cursor query",
+      nonRetryable: true,
+      type: "BlueBubblesCursorQueryViolated",
+    });
+  });
+  test.each([{ handle: {} }, { dateCreated: 253_402_300_800_000 }])(
+    "fails malformed messages without retrying the same cursor forever: %j",
+    async (invalid) => {
+      mocks.request.mockResolvedValue([{ ...message(11), ...invalid }]);
+
+      await expect(pollBlueBubblesMessages(CURSOR)).rejects.toMatchObject({
+        message:
+          "BlueBubbles returned an invalid message payload; cursor was not advanced",
+        nonRetryable: true,
+        type: "BlueBubblesInvalidMessagePayload",
+      });
+    },
+  );
   test.each([
     { enabled: false, owners: ["owner"] },
     { enabled: true, owners: [] },

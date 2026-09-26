@@ -26,18 +26,32 @@ export const ImessageCommandSchema = z.strictObject({
   action: ImessageActionSchema,
 });
 export type ImessageCommand = z.infer<typeof ImessageCommandSchema>;
-export const BlueBubblesCursorSchema = z.strictObject({
+const BlueBubblesCursorFields = {
   startedAt: z.iso.datetime(),
-  initialized: z.boolean(),
   lastRowId: z.number().int().nonnegative(),
-});
+};
+export const BlueBubblesCursorSchema = z.discriminatedUnion("initialized", [
+  z.strictObject({ ...BlueBubblesCursorFields, initialized: z.literal(true) }),
+  z.strictObject({
+    ...BlueBubblesCursorFields,
+    initialized: z.literal(false),
+    initializationHighWaterRowId: z.number().int().nonnegative().optional(),
+  }),
+]);
 export type BlueBubblesCursor = z.infer<typeof BlueBubblesCursorSchema>;
-export const BlueBubblesPollResultSchema = z.strictObject({
-  startedAt: z.iso.datetime(),
-  initialized: z.boolean(),
-  lastRowId: z.number().int().nonnegative(),
-  commands: z.array(ImessageCommandSchema).max(50),
-});
+export const BlueBubblesPollResultSchema = z.discriminatedUnion("initialized", [
+  z.strictObject({
+    ...BlueBubblesCursorFields,
+    initialized: z.literal(true),
+    commands: z.array(ImessageCommandSchema).max(50),
+  }),
+  z.strictObject({
+    ...BlueBubblesCursorFields,
+    initialized: z.literal(false),
+    initializationHighWaterRowId: z.number().int().nonnegative(),
+    commands: z.array(ImessageCommandSchema).max(50),
+  }),
+]);
 export const PreparedImessageCommandSchema = z.discriminatedUnion("kind", [
   z.strictObject({
     kind: z.literal("turn"),
