@@ -57,12 +57,12 @@ export async function prepareImessageCommand(rawCommand: ImessageCommand) {
       return message(
         `Unknown chat: ${action.chatId}. Use /chats to list recent chats.`,
       );
-    await bindAgentChat(client, source, action.chatId, {
+    const selected = await bindAgentChat(client, source, action.chatId, {
       updatedAt: input.submittedAt,
       sourceSequence: input.sourceSequence,
     });
     return message(
-      `Selected ${action.chatId}. Send ordinary text to continue.`,
+      `Selected ${selected.config.chatId}. Send ordinary text to continue.`,
     );
   }
   const digest = new Bun.CryptoHasher("sha256")

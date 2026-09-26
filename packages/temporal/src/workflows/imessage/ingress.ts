@@ -21,7 +21,7 @@ import { imessageAgentChatWorkflow } from "./message.ts";
 
 const activities = proxyActivities<ImessageActivities>({
   taskQueue: TASK_QUEUES.AGENT_CHAT_IMESSAGE,
-  startToCloseTimeout: "1 minute",
+  startToCloseTimeout: "2 minutes",
   retry: { maximumInterval: "5 minutes" },
 });
 const duplicateCommandWait = proxyActivities<
