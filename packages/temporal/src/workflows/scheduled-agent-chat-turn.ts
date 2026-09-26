@@ -2,7 +2,6 @@ import { proxyActivities, workflowInfo } from "@temporalio/workflow";
 import {
   AgentChatTurnResultSchema,
   AGENT_CHAT_DISPATCH_MAX_ATTEMPTS,
-  AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS,
   AGENT_CHAT_SCHEDULE_ADMISSION_TIMEOUT_MS,
   AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS,
   ScheduledAgentChatTurnInputSchema,
@@ -14,7 +13,7 @@ import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const activities = proxyActivities<AgentChatDispatchActivities>({
   taskQueue: TASK_QUEUES.AGENT_CHAT_DISPATCH,
-  startToCloseTimeout: AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS,
+  startToCloseTimeout: AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS,
   scheduleToCloseTimeout: AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS,
   heartbeatTimeout: "1 minute",
   retry: { maximumAttempts: AGENT_CHAT_DISPATCH_MAX_ATTEMPTS },

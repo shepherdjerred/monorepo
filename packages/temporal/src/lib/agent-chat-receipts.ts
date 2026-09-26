@@ -58,6 +58,29 @@ export async function locateAgentChatRun(
   return description.runId;
 }
 
+async function rolloverPinnedResult(input: {
+  handle: ReturnType<WorkflowClient["getHandle"]>;
+  error: WorkflowUpdateFailedError;
+}): Promise<AgentChatPinnedResult | undefined> {
+  if (
+    !collectErrorMessages(input.error).includes(
+      "Agent chat is draining for workflow rollover",
+    )
+  ) {
+    return undefined;
+  }
+  const description = await input.handle.describe();
+  if (description.status.name === "CONTINUED_AS_NEW") {
+    return { status: "run-closed" };
+  }
+  if (description.status.name === "RUNNING") {
+    throw new Error("Pinned agent chat run is still draining for rollover", {
+      cause: input.error,
+    });
+  }
+  return undefined;
+}
+
 export async function dispatchPinnedAgentChatTurn(
   client: WorkflowClient,
   rawInput: AgentChatPinnedTurn,
@@ -99,19 +122,11 @@ export async function dispatchPinnedAgentChatTurn(
     };
   } catch (error: unknown) {
     if (error instanceof WorkflowUpdateFailedError) {
-      // A run can continue as new after the pre-dispatch status check. Only
-      // redirect after the original pin confirms that it closed; otherwise a
-      // failed update remains a durable terminal receipt outcome.
-      try {
-        const description = await handle.describe();
-        if (description.status.name === "CONTINUED_AS_NEW") {
-          return { status: "run-closed" };
-        }
-      } catch {
-        // We cannot safely redirect without confirmation from the pinned run.
-      }
+      const messages = collectErrorMessages(error);
+      const rollover = await rolloverPinnedResult({ handle, error });
+      if (rollover !== undefined) return rollover;
       throw ApplicationFailure.create({
-        message: boundAgentChatFailureMessage(collectErrorMessages(error)),
+        message: boundAgentChatFailureMessage(messages),
         type: "AgentChatTurnPreviouslyFailed",
         nonRetryable: true,
         cause: error,

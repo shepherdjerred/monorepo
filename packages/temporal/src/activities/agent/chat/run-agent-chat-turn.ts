@@ -19,6 +19,7 @@ import { providerSubprocessUid } from "#shared/agent/agent-subprocess-identity.t
 import {
   agentChatProviderAdmissionKey,
   agentChatSessionManifestKey,
+  AmbiguousManifestPublicationError,
   pullLatestAgentChatSessionBundle,
   pushAgentChatSessionBundle,
   recoverPublishedAgentChatTurn,
@@ -33,7 +34,6 @@ import {
   rejectExpiredProviderAdmission,
 } from "./provider-admission.ts";
 import { cleanupAgentChatRuntime } from "./provider-cleanup.ts";
-
 const HEARTBEAT_INTERVAL_MS = 20_000;
 const PROVIDER_PROCESS_CLEANUP_ATTEMPTS = 5;
 const PROVIDER_PROCESS_CLEANUP_DELAY_MS = 50;
@@ -49,7 +49,6 @@ const AGENT_CHAT_RUNTIME_CONFIG = AgentChatRuntimeConfigSchema.parse({
   region: "us-east-1",
   runtimeRoot: AGENT_CHAT_RUNTIME_ROOT,
 });
-
 function requiredEnvironment(
   env: Readonly<Record<string, string | undefined>>,
   name: string,
@@ -60,7 +59,6 @@ function requiredEnvironment(
   }
   return value;
 }
-
 function sessionPaths(
   baseDirectory: string,
   chatId: string,
@@ -76,7 +74,6 @@ function sessionPaths(
     workspacePath: path.join(root, "workspace"),
   };
 }
-
 function providerEnvironment(input: {
   provider: "claude" | "codex";
   sessionHome: string;
@@ -92,7 +89,6 @@ function providerEnvironment(input: {
   }
   return environment;
 }
-
 async function prepareProviderRuntime(input: {
   provider: "claude" | "codex";
   sessionHome: string;
@@ -101,7 +97,6 @@ async function prepareProviderRuntime(input: {
 }): Promise<void> {
   const uid = providerSubprocessUid(input.sourceEnv);
   if (uid === undefined) return;
-
   await mkdir(
     path.join(
       input.sessionHome,
@@ -109,7 +104,6 @@ async function prepareProviderRuntime(input: {
     ),
     { recursive: true },
   );
-
   const gid = process.getgid?.() ?? uid;
   const processHandle = Bun.spawn(
     [
@@ -129,7 +123,6 @@ async function prepareProviderRuntime(input: {
     );
   }
 }
-
 async function runUidProcessCommand(
   command: "pgrep" | "pkill",
   uid: number,
@@ -197,10 +190,11 @@ export async function runAgentChatTurnWithDependencies(
   const input = RunAgentChatTurnInputSchema.parse(rawInput);
   const paths = sessionPaths(dependencies.baseDirectory, input.config.chatId);
   let heartbeatTimer: ReturnType<typeof setInterval> | undefined;
-  let publicationComplete = false;
+  let publicationComplete = false,
+    ownsRuntimePath = false;
 
   try {
-    await dependencies.terminateProviderSubprocesses();
+    ownsRuntimePath = true;
     const published = await recoverPublishedAgentChatTurn({
       store: dependencies.store,
       prefix: dependencies.bundlePrefix,
@@ -214,18 +208,19 @@ export async function runAgentChatTurnWithDependencies(
     const providerAdmissionKey = agentChatProviderAdmissionKey({
       prefix: dependencies.bundlePrefix,
       chatId: input.config.chatId,
-      turnNumber: input.turnNumber,
       turnId: input.request.turnId,
     });
     if (
       dependencies.attempt > 1 &&
       (await dependencies.store.has(providerAdmissionKey))
     ) {
+      ownsRuntimePath = false;
       throw ApplicationFailure.nonRetryable(
         `Agent chat turn ${input.request.turnId} was durably admitted without a publication checkpoint; refusing to replay its provider call`,
         "AgentChatPublicationCheckpointMissing",
       );
     }
+    await dependencies.terminateProviderSubprocesses();
     rejectExpiredProviderAdmission(input, dependencies.now());
     await rm(paths.root, { recursive: true, force: true });
     await Promise.all([
@@ -408,11 +403,13 @@ export async function runAgentChatTurnWithDependencies(
     return result;
   } finally {
     if (heartbeatTimer !== undefined) clearInterval(heartbeatTimer);
-    await cleanupAgentChatRuntime({
-      root: paths.root,
-      publicationComplete,
-      terminateProviderSubprocesses: dependencies.terminateProviderSubprocesses,
-    });
+    if (ownsRuntimePath)
+      await cleanupAgentChatRuntime({
+        root: paths.root,
+        publicationComplete,
+        terminateProviderSubprocesses:
+          dependencies.terminateProviderSubprocesses,
+      });
   }
 }
 
@@ -423,6 +420,14 @@ function throwAgentChatActivityFailure(input: {
 }): never {
   const { error } = input;
   if (input.cancelled) throw error;
+  if (error instanceof AmbiguousManifestPublicationError) {
+    throw ApplicationFailure.create({
+      message: error.message,
+      cause: error,
+      nonRetryable: false,
+      type: error.name,
+    });
+  }
   if (error instanceof ApplicationFailure) {
     if (
       !input.providerAdmitted ||

@@ -120,6 +120,10 @@ export async function bindAgentChat(
 ): Promise<AgentChatCatalogEntry> {
   const binding = AgentChatBindingSchema.parse(rawBinding);
   const purpose = options.purpose ?? "initial";
+  // Restoring an evicted binding must reach the catalog even if a previous
+  // restore used the same input and was subsequently compacted away.
+  const restorationAttempt =
+    purpose === "restore" ? crypto.randomUUID() : undefined;
   const updateId = createHash("sha256")
     .update(
       JSON.stringify({
@@ -127,6 +131,7 @@ export async function bindAgentChat(
         chatId,
         updatedAt: options.updatedAt,
         purpose,
+        restorationAttempt,
       }),
     )
     .digest("hex");
