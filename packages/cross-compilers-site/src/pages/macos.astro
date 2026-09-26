@@ -4,13 +4,12 @@ import Layout from "../layouts/Layout.astro";
 import CodeBlock from "../components/CodeBlock.astro";
 import FeatureCard from "../components/FeatureCard.astro";
 import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
 import ProcessStep from "../components/ProcessStep.astro";
 import SectionHeader from "../components/SectionHeader.astro";
 
 const sourceUrl =
   "https://github.com/shepherdjerred/monorepo/tree/main/packages/macos-cross-compiler";
-const imageUrl =
-  "https://github.com/users/shepherdjerred/packages/container/package/macos-cross-compiler";
 const image = "ghcr.io/shepherdjerred/macos-cross-compiler:27";
 const run = `docker run --rm -v "$PWD:/workspace" \\\n  ${image} \\\n`;
 
@@ -138,49 +137,11 @@ const differences = [
 ];
 ---
 
-<Layout>
-  <header class="border-b border-stone-200 dark:border-stone-800">
-    <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-      <a
-        href="/"
-        class="flex min-w-0 items-center gap-2 font-mono text-sm font-semibold text-stone-900 dark:text-white"
-      >
-        <img
-          src="/favicon.svg"
-          alt=""
-          width="24"
-          height="24"
-          class="shrink-0"
-        />
-        <span class="truncate">macos-cross-compiler</span>
-      </a>
-      <nav aria-label="Primary" class="flex items-center gap-5 text-sm">
-        <a
-          href="#quick-start"
-          class="hidden text-stone-600 hover:text-stone-900 sm:inline dark:text-stone-400 dark:hover:text-white"
-        >
-          Quick start
-        </a>
-        <a
-          href="#how-it-works"
-          class="hidden text-stone-600 hover:text-stone-900 sm:inline dark:text-stone-400 dark:hover:text-white"
-        >
-          How it works
-        </a>
-        <a
-          href={sourceUrl}
-          class="inline-flex items-center gap-1.5 text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white"
-        >
-          <Icon
-            name="heroicons:code-bracket"
-            class="h-4 w-4"
-            aria-hidden="true"
-          />
-          GitHub
-        </a>
-      </nav>
-    </div>
-  </header>
+<Layout
+  title="macos-cross-compiler - Build macOS and iOS apps on Linux"
+  description="A Docker image that compiles, links, and signs macOS, iOS, and Mac Catalyst software on Linux: Swift, SwiftUI, SwiftPM, C, C++, Objective-C, and Rust, with Xcode-identical output."
+>
+  <Header current="macos" />
 
   <main id="main">
     <section
@@ -468,5 +429,5 @@ const differences = [
     </section>
   </main>
 
-  <Footer sourceUrl={sourceUrl} imageUrl={imageUrl} />
+  <Footer />
 </Layout>
