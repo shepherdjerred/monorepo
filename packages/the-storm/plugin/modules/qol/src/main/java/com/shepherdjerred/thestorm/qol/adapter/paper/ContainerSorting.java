@@ -76,10 +76,10 @@ final class ContainerSorting {
 
   /** Why {@code player} may not sort {@code inventory} at {@code block}, or empty if they may. */
   Optional<Component> refusal(Player player, Block block, Inventory inventory) {
-    if (block.getState(false) instanceof Lockable lockable && lockable.isLocked()) {
-      return Optional.of(Component.text("That container is locked."));
-    }
     for (var at : spans(block, inventory)) {
+      if (at.getBlock().getState(false) instanceof Lockable lockable && lockable.isLocked()) {
+        return Optional.of(Component.text("That container is locked."));
+      }
       if (protection.check(player.getUniqueId(), ProtectedAction.OPEN_CONTAINER, at)
           instanceof Decision.Denied(var reason)) {
         return Optional.of(reason);

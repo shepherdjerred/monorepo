@@ -1,19 +1,18 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
+import static java.util.Collections.newSetFromMap;
+
 import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.qol.domain.grave.DeathSite;
 import com.shepherdjerred.thestorm.qol.domain.grave.Grave;
 import com.shepherdjerred.thestorm.qol.domain.grave.GraveContents;
 import com.shepherdjerred.thestorm.qol.domain.grave.GraveFilling;
-import com.shepherdjerred.thestorm.qol.domain.grave.GraveItem;
 import com.shepherdjerred.thestorm.qol.domain.grave.GravePlacement;
 import com.shepherdjerred.thestorm.qol.domain.grave.GravePlacement.HeightRange;
 import com.shepherdjerred.thestorm.qol.domain.grave.GravePos;
 import com.shepherdjerred.thestorm.qol.domain.grave.ItemBytes;
 import com.shepherdjerred.thestorm.qol.domain.text.DurationText;
-import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -21,7 +20,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.random.RandomGenerator;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -34,10 +32,9 @@ import org.bukkit.inventory.ItemStack;
  * Turns a death into a grave.
  *
  * <p>The drops that go into the grave are taken out of the death's drop list and the inventory
- * empties as vanilla empties it; the player's data is saved to disk right after, so a crash cannot
- * restore an older inventory that still holds them. The grave is then saved. If saving fails the
- * items go back to the player (or, if they left, drop where they died) and are logged, so nothing
- * is ever lost or doubled. Arena items never go into a grave. Main thread only.
+ * empties as vanilla empties it. The death handoff is stored in player data together with the
+ * emptied inventory before the grave is written to SQLite. A failed write remains recoverable on
+ * the next join. Arena items never go into a grave. Main thread only.
  */
 final class GraveDeaths {
 
@@ -66,6 +63,16 @@ final class GraveDeaths {
     if (buried.isEmpty()) {
       return;
     }
+    if (GraveHandoff.hasPendingDeath(player)) {
+      runtime
+          .logger()
+          .warn(
+              "{} has an unsettled grave handoff; leaving this death's items in vanilla drops",
+              player.getName());
+      Say.error(
+          player, Say.GRAVES, "Your earlier grave is still settling; these items dropped here.");
+      return;
+    }
     if (!parts.registry().isLoaded()) {
       runtime.logger().warn("Graves are not loaded; {} drops their items", player.getName());
       return;
@@ -87,79 +94,81 @@ final class GraveDeaths {
     var contents = new GraveContents(grave, GraveFilling.fill(encode(buried), inventory(player)));
     parts.registry().reserve(grave.pos(), grave.id());
     GraveBlocks.place(block, grave, parts.hooks().face());
-    var taken = Collections.newSetFromMap(new IdentityHashMap<ItemStack, Boolean>());
+    GraveHandoff.rememberDeath(player, contents);
+    var taken = newSetFromMap(new IdentityHashMap<ItemStack, Boolean>());
     taken.addAll(buried);
     event.getDrops().removeIf(taken::contains);
-    // The inventory is emptied once this event returns; save it to disk straight after.
-    runtime
-        .scheduler()
-        .runOnMainThread(
-            () -> {
-              if (player.isOnline()) {
-                parts.hooks().saveData().accept(player);
-              }
-            });
-    var diedAt = Blocks.at(player).clone();
+    // The inventory is emptied once this event returns. SQLite must not commit
+    // the grave until player.dat holds the empty inventory and this handoff.
+    runtime.scheduler().runOnMainThread(() -> persistThenCreate(player, contents));
+  }
+
+  /** Replays a death whose player-data handoff survived a restart or failed database write. */
+  void recover(Player player) {
+    if (!parts.registry().isLoaded()) {
+      return;
+    }
+    GraveHandoff.death(player).ifPresent(contents -> persistThenCreate(player, contents));
+  }
+
+  private void persistThenCreate(Player player, GraveContents contents) {
+    try {
+      parts.hooks().saveData().accept(player);
+    } catch (RuntimeException failure) {
+      runtime.report("saving player data before grave creation", failure);
+      return;
+    }
     runtime.onMain(
         parts.store().create(contents),
         "saving " + player.getName() + "'s grave",
         done -> saved(contents),
-        failure -> notSaved(contents, block, diedAt));
+        failure -> notSaved(contents));
   }
 
   private void saved(GraveContents contents) {
     var grave = contents.grave();
-    parts.registry().put(contents);
+    runtime.onMain(
+        parts.store().loadAll(),
+        "reconciling " + grave.ownerName() + "'s saved grave",
+        graves -> {
+          var stored =
+              graves.stream()
+                  .filter(candidate -> candidate.grave().id().equals(grave.id()))
+                  .findFirst();
+          if (stored.isPresent()) {
+            parts.registry().put(stored.orElseThrow());
+          } else {
+            parts.registry().release(grave.pos());
+          }
+          var player = runtime.server().getPlayer(grave.owner());
+          if (player != null) {
+            GraveHandoff.clearDeath(player);
+            parts.hooks().saveData().accept(player);
+            if (stored.isPresent()) {
+              Say.info(
+                  player,
+                  Say.GRAVES,
+                  "Your items are in a grave at "
+                      + grave.pos().describe()
+                      + ". Only you can open it for the next "
+                      + DurationText.of(parts.policy().lockedFor())
+                      + ". /graves lists your graves.");
+            }
+          }
+        },
+        failure -> {});
+  }
+
+  /** The handoff stays in player data so a failed write can be retried safely. */
+  private void notSaved(GraveContents contents) {
+    var grave = contents.grave();
     var player = runtime.server().getPlayer(grave.owner());
     if (player != null) {
-      Say.info(
+      Say.error(
           player,
           Say.GRAVES,
-          "Your items are in a grave at "
-              + grave.pos().describe()
-              + ". Only you can open it for the next "
-              + DurationText.of(parts.policy().lockedFor())
-              + ". /graves lists your graves.");
+          "Your grave is waiting for storage; your items are safe and will be retried on join.");
     }
-  }
-
-  /** The grave could not be saved: its items go back to their owner, never lost, never doubled. */
-  private void notSaved(GraveContents contents, Block block, Location diedAt) {
-    var grave = contents.grave();
-    parts.registry().release(grave.pos());
-    GraveBlocks.clear(block, grave.id(), runtime.server().createBlockData(grave.replaced()));
-    for (var item : contents.items()) {
-      runtime
-          .logger()
-          .error(
-              "Unsaved grave item for {} ({}): {}",
-              grave.ownerName(),
-              grave.owner(),
-              Base64.getEncoder().encodeToString(item.item().bytes()));
-    }
-    var player = runtime.server().getPlayer(grave.owner());
-    if (player != null) {
-      give(player, contents.items());
-      Say.error(player, Say.GRAVES, "Your grave could not be saved, so your items are back.");
-    } else {
-      contents.items().forEach(item -> diedAt.getWorld().dropItemNaturally(diedAt, decode(item)));
-      runtime
-          .logger()
-          .error("{} was offline; the items dropped where they died", grave.ownerName());
-    }
-  }
-
-  private static void give(Player player, List<GraveItem> items) {
-    var inventory = player.getInventory();
-    for (var item : items) {
-      for (var left : inventory.addItem(decode(item)).values()) {
-        player.getWorld().dropItemNaturally(Blocks.at(player), left);
-      }
-    }
-  }
-
-  private static ItemStack decode(GraveItem item) {
-    return ItemCodec.decode(item.item());
   }
 
   /**

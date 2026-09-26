@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.mobs.domain.scaling.Scaling;
 import com.shepherdjerred.thestorm.mobs.domain.scaling.Stat;
 import java.util.Map;
 import java.util.OptionalInt;
+import java.util.function.BiConsumer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -34,11 +35,21 @@ final class LevelApplier implements MobLevels {
   private final Scaling scaling;
   private final int cap;
   private final Nameplate nameplate;
+  private final BiConsumer<LivingEntity, Runnable> namedMobPersistence;
 
   LevelApplier(Scaling scaling, int cap, Nameplate nameplate) {
+    this(scaling, cap, nameplate, LevelApplier::preserveDespawn);
+  }
+
+  LevelApplier(
+      Scaling scaling,
+      int cap,
+      Nameplate nameplate,
+      BiConsumer<LivingEntity, Runnable> namedMobPersistence) {
     this.scaling = scaling;
     this.cap = cap;
     this.nameplate = nameplate;
+    this.namedMobPersistence = namedMobPersistence;
   }
 
   /** Makes {@code mob} a level-{@code level} mob at full health. */
@@ -64,9 +75,20 @@ final class LevelApplier implements MobLevels {
     }
     mob.getPersistentDataContainer().set(MobKeys.LEVEL, PersistentDataType.INTEGER, level);
     if (nameplate.enabled()) {
-      mob.customName(nameplate(mob, level));
-      mob.setCustomNameVisible(nameplate.alwaysVisible());
+      namedMobPersistence.accept(
+          mob,
+          () -> {
+            mob.customName(nameplate(mob, level));
+            mob.setCustomNameVisible(nameplate.alwaysVisible());
+          });
     }
+  }
+
+  static void preserveDespawn(LivingEntity mob, Runnable name) {
+    var removeWhenFarAway = mob.getRemoveWhenFarAway();
+    name.run();
+    // A level plate must not turn an ordinary natural spawn into a permanent mob.
+    mob.setRemoveWhenFarAway(removeWhenFarAway);
   }
 
   @Override

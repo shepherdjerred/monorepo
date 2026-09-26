@@ -61,6 +61,10 @@ final class MobsConfigTest {
     assertThat(config.scaling().atCap(Stat.ITEM_DROPS, "zombie")).isEqualTo(0.5);
     assertThat(config.levels().world("world_nether"))
         .hasValueSatisfying(nether -> assertThat(nether.distanceScale()).isEqualTo(4.0));
+    for (var world : List.of("world", "wilds", "peaks", "mining")) {
+      assertThat(config.levels().world(world))
+          .hasValueSatisfying(overworld -> assertThat(overworld.moon()).isTrue());
+    }
     assertThat(config.adminRegions().policy()).isEqualTo(AdminPolicy.BLOCK_NATURAL);
     assertThat(config.nameplate().enabled()).isTrue();
   }

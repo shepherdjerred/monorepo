@@ -22,11 +22,15 @@ levels:
     - { from: 10000, min: 25, max: 35 }
     - { from: 20000, min: 35, max: 45 }
     - { from: 30000, min: 45, max: 50 }
-  # Worlds not listed (the End) never level mobs. Nether distances count four
-  # times, so its rings climb faster than the overworld's without matching its
+  # Worlds not listed (the End) never level mobs. The permanent exploration
+  # worlds and disposable mining world use the same overworld rules. Nether
+  # distances count four times, so its rings climb faster than the overworld's without matching its
   # 8:1 coordinates (a short portal trip would otherwise reach the top bands).
   worlds:
     world: { distanceScale: 1.0, depth: true, moon: true }
+    wilds: { distanceScale: 1.0, depth: true, moon: true }
+    peaks: { distanceScale: 1.0, depth: true, moon: true }
+    mining: { distanceScale: 1.0, depth: true, moon: true }
     world_nether: { distanceScale: 4.0, depth: false, moon: false }
   # Below transitionY, every `period` blocks add `multiplier` x the distance
   # level (rounded down): a level-10 mob at y -58 gains 12 levels.

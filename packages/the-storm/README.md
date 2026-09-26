@@ -117,3 +117,21 @@ until the ledger or database can be reconciled.
 - Dependencies are locked (`gradle.lockfile`) and checksum-verified
   (`gradle/verification-metadata.xml`).
 - Code copied from GPL/LGPL plugins keeps its license header.
+
+## Grave recovery
+
+The QoL module stores grave stacks in SQLite. A death first saves a handoff in
+the player's data with their emptied inventory, then creates the grave. Taking
+items first reserves them in SQLite, saves the recipient's inventory and a
+claim receipt to player data, then deletes the stored stacks. A restart or
+rejoin reconciles unfinished handoffs.
+If another death occurs before the first handoff settles, its items use vanilla
+drops so the saved handoff cannot be overwritten.
+
+Expired grave items and owner inventory overflow remain in SQLite as pending
+ground drops. Tagged `ItemDisplay` entities are replaceable views; nearby
+players collect them through the same saved receipt path. Overflow is owner
+only until the grave expires, then anyone can collect it. Loaded chunks are
+reconciled at startup and on chunk load. Interaction and nearby player movement
+also trigger expiry in chunks that stay loaded. Collection pauses while QoL is
+disabled; the stored stacks remain available when it starts again.
