@@ -1,5 +1,6 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
+import { BUN_CACHE, BUN_CACHE_CONTROL, UV_CACHE } from "#src/pipeline/cache.ts";
 import { VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import { scannerSteps } from "#src/pipeline/lanes/scanners.ts";
 import { alertDashboardSteps } from "#src/pipeline/lanes/alert-dashboard.ts";
@@ -19,23 +20,6 @@ import { siteSteps } from "#src/pipeline/lanes/sites.ts";
 import { macosSteps } from "#src/pipeline/lanes/macos.ts";
 import { observabilityE2eSteps } from "#src/pipeline/lanes/observability-e2e.ts";
 import { prGateSteps } from "#src/pipeline/lanes/pr-gates.ts";
-
-/**
- * Shared cache claims mounted by step pods.
- *
- * These names are a contract with the cluster: the claims are created in
- * `packages/homelab/src/cdk8s/src/resources/woodpecker/caches.ts`, and a step
- * that names a claim which does not exist stays Pending rather than failing,
- * so a rename on either side must change both.
- */
-const BUN_CACHE = {
-  claim: "woodpecker-bun-cache",
-  path: "/woodpecker/bun-cache",
-} as const;
-const UV_CACHE = {
-  claim: "woodpecker-uv-cache",
-  path: "/woodpecker/uv-cache",
-} as const;
 
 /**
  * The CI graph, as data.
@@ -125,7 +109,7 @@ export function buildPipelineSteps({
         },
         ...HANDOFF_KEYS,
       ],
-      volumes: [BUN_CACHE, UV_CACHE],
+      volumes: [BUN_CACHE, BUN_CACHE_CONTROL, UV_CACHE],
     },
     ...scannerSteps(images),
     ...alertDashboardSteps(images),

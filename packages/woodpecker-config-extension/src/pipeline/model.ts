@@ -49,7 +49,9 @@ export type StepEvent = "push" | "pull_request";
 export type StepService = {
   readonly name: string;
   readonly image: string;
-  /** Shell commands replacing the image entrypoint. */
+  /** Direct process arguments replacing the image entrypoint. */
+  readonly entrypoint?: readonly string[];
+  /** Shell commands replacing the image entrypoint; requires `/bin/sh`. */
   readonly commands?: readonly string[];
   readonly environment?: Readonly<Record<string, string>>;
   /**

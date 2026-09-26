@@ -125,6 +125,9 @@ function trivyCommands(): string[] {
 function semgrepCommands(): string[] {
   return [
     'echo "OPTIONAL SECURITY SCAN: findings do not block merge; merge-base, config, and runtime failures do."',
+    // Woodpecker's PR checkout has the source head but may not include the
+    // target branch ref needed to compute Semgrep's finding baseline.
+    "git fetch --no-tags origin main:refs/remotes/origin/main",
     "set +e",
     "base=$(git merge-base origin/main HEAD)",
     "merge_base_status=$?",

@@ -1,4 +1,5 @@
 import { stringify } from "yaml";
+import { bunInstallEnvironment } from "#src/pipeline/cache.ts";
 import type { CiStep, ResourceTier } from "#src/pipeline/model.ts";
 
 /**
@@ -226,10 +227,10 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
         name: step.key,
         image: step.image,
         commands: wrapCommands(step),
-        ...(step.environment === undefined ||
-        Object.keys(step.environment).length === 0
-          ? {}
-          : { environment: { ...step.environment } }),
+        environment: {
+          ...step.environment,
+          ...bunInstallEnvironment(step.volumes),
+        },
         ...(step.volumes === undefined || step.volumes.length === 0
           ? {}
           : {
@@ -252,6 +253,9 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
           services: step.services.map((service) => ({
             name: service.name,
             image: service.image,
+            ...(service.entrypoint === undefined
+              ? {}
+              : { entrypoint: [...service.entrypoint] }),
             ...(service.commands === undefined
               ? {}
               : { commands: [...service.commands] }),

@@ -3,6 +3,7 @@ import { parse } from "yaml";
 import { selectSteps } from "#src/pipeline/select.ts";
 import { emitWorkflow, shellQuote, wrapCommands } from "#src/pipeline/emit.ts";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
+import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { LIGHT_TIER } from "#src/pipeline/tiers.ts";
 import { TEST_IDENTITY } from "./identity.ts";
@@ -211,7 +212,7 @@ describe("emission", () => {
         secrets: [
           { secret: "ci-github-credentials", key: "TOKEN", env: "GH_TOKEN" },
         ],
-        volumes: [{ claim: "woodpecker-bun-cache", path: "/cache" }],
+        volumes: [BUN_CACHE, BUN_CACHE_CONTROL],
         concurrency: { limit: 1, group: "release" },
       }),
       TEST_IDENTITY,
@@ -223,7 +224,10 @@ describe("emission", () => {
       steps: [
         {
           name: "verify",
-          volumes: ["woodpecker-bun-cache:/cache"],
+          volumes: [
+            `${BUN_CACHE.claim}:${BUN_CACHE.path}`,
+            `${BUN_CACHE_CONTROL.claim}:${BUN_CACHE_CONTROL.path}`,
+          ],
           backend_options: {
             kubernetes: {
               serviceAccountName: "woodpecker-job",
@@ -367,6 +371,16 @@ describe("ported lanes", () => {
     expect(keysFor(["bun.lock"], "main")).not.toContain("trivy");
   });
 
+  test("Semgrep fetches the target branch before resolving its merge base", () => {
+    const semgrep = buildPipelineSteps({
+      images: IMAGES,
+      changedBase: "x",
+    }).find((candidate) => candidate.key === "semgrep");
+    expect(semgrep?.commands[1]).toBe(
+      "git fetch --no-tags origin main:refs/remotes/origin/main",
+    );
+  });
+
   /**
    * Buildkite needed a -pr and a -main step because the main variant carried a
    * precomputed metadata gate. Selection now happens before generation, so one
@@ -379,6 +393,9 @@ describe("ported lanes", () => {
     );
     const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
     expect(steps.filter((s) => s.key.startsWith("resume"))).toHaveLength(1);
+    expect(steps.find((s) => s.key === "resume-build")?.commands[0]).toContain(
+      "MISE_TOOLCHAIN_SCOPE=runtime . ci/scripts/toolchain.sh",
+    );
   });
 
   /** Publishing mutates one external dashboard, so it must not race itself. */

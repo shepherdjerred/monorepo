@@ -48,7 +48,12 @@ export function observabilityE2eSteps(images: CiImages): CiStep[] {
         {
           name: "tempo",
           image: images.catalog["grafana/tempo"],
-          commands: [`/tempo -config.file=$CI_WORKSPACE/${TEMPO_CONFIG}`],
+          // Tempo's image is distroless and has no /bin/sh for Woodpecker's
+          // `commands` wrapper. Services share the checkout at this path.
+          entrypoint: [
+            "/tempo",
+            `-config.file=/woodpecker/src/github.com/shepherdjerred/monorepo/${TEMPO_CONFIG}`,
+          ],
           resources: SERVICE_TIER,
         },
         {

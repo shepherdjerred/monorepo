@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { parse } from "yaml";
 import { z } from "zod";
+import { BUN_CACHE, BUN_CACHE_CONTROL } from "#src/pipeline/cache.ts";
 import {
   WORKFLOW_TIMEOUT_MINUTES,
   emitWorkflow,
@@ -52,6 +53,34 @@ describe("variable substitution", () => {
     ).steps[0].commands[0];
     expect(command).toContain('"${filters[@]}"');
     expect(command).toContain("${#filters[@]}");
+  });
+});
+
+describe("Bun cache install mode", () => {
+  test("sets a valid install mode on every workflow and locks shared cache use", () => {
+    for (const step of testPipelineSteps()) {
+      const parsed = z
+        .object({
+          steps: z.tuple([
+            z.object({ environment: z.record(z.string(), z.string()) }),
+          ]),
+        })
+        .parse(parse(substitute(emitWorkflow(step, TEST_IDENTITY))));
+      const environment = parsed.steps[0].environment;
+      const cacheClaims = new Set(
+        (step.volumes ?? []).map((volume) => volume.claim),
+      );
+      const shared =
+        cacheClaims.has(BUN_CACHE.claim) &&
+        cacheClaims.has(BUN_CACHE_CONTROL.claim);
+
+      expect(environment["BUN_INSTALL_LOCK_MODE"], step.key).toBe(
+        shared ? "shared" : "local",
+      );
+      expect(environment["BUN_CACHE_LOCK_FILE"], step.key).toBe(
+        shared ? `${BUN_CACHE_CONTROL.path}/.gc.lock` : undefined,
+      );
+    }
   });
 });
 
@@ -120,5 +149,32 @@ describe("pod shape", () => {
       }
     }
     expect(services).toBeGreaterThan(0);
+  });
+});
+
+describe("service entrypoints", () => {
+  test("starts Tempo directly without a shell wrapper", () => {
+    const step = testPipelineSteps().find(
+      (candidate) => candidate.key === "docker-e2e",
+    );
+    expect(step).toBeDefined();
+    if (step === undefined) return;
+    const emitted = z
+      .object({
+        services: z.array(
+          z.object({
+            name: z.string(),
+            entrypoint: z.array(z.string()).optional(),
+            commands: z.array(z.string()).optional(),
+          }),
+        ),
+      })
+      .parse(parse(substitute(emitWorkflow(step, TEST_IDENTITY))));
+    const tempo = emitted.services.find((service) => service.name === "tempo");
+    expect(tempo?.entrypoint).toEqual([
+      "/tempo",
+      "-config.file=/woodpecker/src/github.com/shepherdjerred/monorepo/packages/llm-observability/test/tempo.yaml",
+    ]);
+    expect(tempo?.commands).toBeUndefined();
   });
 });
