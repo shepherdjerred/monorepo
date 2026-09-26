@@ -1,0 +1,38 @@
+---
+interface Props {
+  address: string;
+}
+
+const { address } = Astro.props;
+---
+
+<div class="flex flex-wrap items-center gap-3">
+  <code class="border border-line bg-panel px-4 py-2.5 font-mono text-base tracking-wide text-text sm:text-lg">
+    {address}
+  </code>
+  <button
+    type="button"
+    data-copy-address={address}
+    class="cursor-pointer border border-storm px-4 py-2.5 text-sm font-semibold tracking-wide text-storm transition-colors duration-200 hover:bg-storm hover:text-coal"
+  >
+    Copy IP
+  </button>
+</div>
+
+<script is:inline>
+  for (const button of document.querySelectorAll("[data-copy-address]")) {
+    button.addEventListener("click", async () => {
+      const address = button.getAttribute("data-copy-address") ?? "";
+      const label = button.textContent;
+      try {
+        await navigator.clipboard.writeText(address);
+        button.textContent = "Copied";
+      } catch {
+        button.textContent = address;
+      }
+      window.setTimeout(() => {
+        button.textContent = label;
+      }, 1600);
+    });
+  }
+</script>

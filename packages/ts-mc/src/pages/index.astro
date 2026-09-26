@@ -1,0 +1,66 @@
+---
+import BaseLayout from "@layouts/BaseLayout.astro";
+import DestinationRow from "@components/DestinationRow.astro";
+import ServerAddress from "@components/ServerAddress.astro";
+---
+
+<BaseLayout title="The Storm">
+  <div class="relative min-h-screen overflow-hidden">
+    <div
+      aria-hidden="true"
+      class="pointer-events-none absolute inset-0 bg-cover bg-center"
+      style="background-image: url('/bg.jpg')"
+    ></div>
+    <div
+      aria-hidden="true"
+      class="pointer-events-none absolute inset-0"
+      style="background: rgba(10, 10, 10, 0.72)"
+    ></div>
+
+    <div class="relative mx-auto flex min-h-screen w-full max-w-3xl flex-col px-6 py-14 sm:px-10 sm:py-20">
+      <header>
+        <img
+          src="/logo.svg"
+          alt="The Storm"
+          class="h-auto w-64 sm:w-80"
+          width="1472"
+          height="452"
+        />
+        <h1 class="mt-10 text-4xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
+          Polished Minecraft survival.
+        </h1>
+        <p class="mt-4 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
+          The Storm is a small survival server focused on doing vanilla well —
+          stable performance and no pay-to-win.
+        </p>
+      </header>
+
+      <section aria-label="Server address" class="mt-10">
+        <ServerAddress address="ts-mc.net" />
+        <p class="mt-3 text-sm text-muted">Java Edition.</p>
+      </section>
+
+      <nav aria-label="Server destinations" class="mt-12">
+        <DestinationRow
+          href="https://docs.ts-mc.net"
+          name="Docs"
+          description="Rules, guides, and everything about the server"
+        />
+        <DestinationRow
+          href="https://bluemap.ts-mc.net"
+          name="Live map"
+          description="Explore every world from your browser"
+        />
+        <DestinationRow
+          href="https://discord.gg/TvTCcWnYUT"
+          name="Discord"
+          description="Chat, events, and server announcements"
+        />
+      </nav>
+
+      <footer class="mt-auto pt-16 text-sm text-muted">
+        <p>The Storm · ts-mc.net</p>
+      </footer>
+    </div>
+  </div>
+</BaseLayout>
