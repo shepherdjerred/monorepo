@@ -337,15 +337,6 @@ resource "cloudflare_dns_record" "sjer_red_cname_cook" {
   proxied = true
 }
 
-resource "cloudflare_dns_record" "sjer_red_cname_macos_cross" {
-  zone_id = cloudflare_zone.sjer_red.id
-  ttl     = 1
-  name    = "macos-cross"
-  type    = "CNAME"
-  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
-  proxied = true
-}
-
 resource "cloudflare_dns_record" "sjer_red_cname_cross_compilers" {
   zone_id = cloudflare_zone.sjer_red.id
   ttl     = 1
