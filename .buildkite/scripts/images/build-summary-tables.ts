@@ -20,7 +20,6 @@ export const summarySteps = [
   "docker-e2e-main",
   "images",
   "sites",
-  "macos-cross-compiler",
   "homelab-release-admission",
   "helm-push",
   "tofu-apply-seaweedfs",
@@ -44,7 +43,6 @@ export const summarySteps = [
   "version-commit-back",
   "ci-base-refresh",
   "ci-playwright-refresh",
-  "windows-cross-compiler-refresh",
 ] as const;
 
 export const summaryLanes = [
@@ -63,7 +61,6 @@ export const summaryLanes = [
   "site-cooklang",
   "site-stocks",
   "site-macos-cross",
-  "macos-cross-compiler",
   "site-wiki",
   "site-better-skill-capped",
   "site-glitter",
@@ -80,7 +77,6 @@ export const summaryLanes = [
   "scout-reconcile",
   "ci-base",
   "ci-playwright",
-  "windows-cross-compiler",
 ] as const;
 
 export function outcomeIcon(outcome: string): string {

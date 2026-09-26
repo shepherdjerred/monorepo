@@ -321,12 +321,6 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   sites: Object.entries(sitePaths)
     .filter(([lane]) => lane !== "site-scout")
     .flatMap(([, paths]) => paths),
-  "macos-cross-compiler": [
-    "packages/macos-cross-compiler",
-    "scripts/release/macos-cross-compiler.ts",
-    "scripts/lib/run.ts",
-    "scripts/lib/s3-static-site.ts",
-  ],
   "scout-reconcile": [
     ...workspacePaths,
     "packages/scout-for-lol",
@@ -364,32 +358,11 @@ export const lanePaths: Readonly<Record<string, readonly string[]>> = {
     ".buildkite/scripts/images/update-ci-image-pin.ts",
     "scripts/lib/transient-error.ts",
   ],
-  "windows-cross-compiler": [
-    "packages/windows-cross-compiler/Dockerfile",
-    "packages/windows-cross-compiler/bin/",
-    "packages/windows-cross-compiler/msbuild/",
-    "packages/windows-cross-compiler/wine-patches/",
-    ".buildkite/scripts/images/application-image-runtime.ts",
-    ".buildkite/scripts/images/bake-retry.ts",
-    ".buildkite/scripts/images/build-ci-image-core.ts",
-    ".buildkite/scripts/images/build-ci-image.ts",
-    ".buildkite/scripts/reporting/buildkit-env.ts",
-    ".buildkite/scripts/images/update-ci-image-pin-core.ts",
-    ".buildkite/scripts/images/update-ci-image-pin-github.ts",
-    ".buildkite/scripts/images/update-ci-image-pin.ts",
-    "scripts/lib/transient-error.ts",
-  ],
 };
 
-// These lanes' images are built only from their own sources and publish
-// scripts. A rebuild costs hours of long builds (multi-platform for
-// macos-cross-compiler), so CI plumbing edits (pipeline.yml, selectors) must
-// not re-trigger them.
-const lanesWithoutGlobalPaths = new Set([
-  "site-scout",
-  "windows-cross-compiler",
-  "macos-cross-compiler",
-]);
+// The Scout site is released through its own path and does not depend on
+// changes to general CI plumbing.
+const lanesWithoutGlobalPaths = new Set(["site-scout"]);
 
 export function selectorPathsForLane(
   lane: string,

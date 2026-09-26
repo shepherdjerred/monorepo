@@ -15,11 +15,11 @@ docker run --rm -v "$PWD:/workspace" ghcr.io/shepherdjerred/macos-cross-compiler
 There is one image per macOS SDK. The deployment target is independent of
 the SDK, so every image builds for macOS 15 and later by default.
 
-| Tag              | SDK (from) | Swift | Status  |
-| ---------------- | ---------- | ----- | ------- |
-| `:27`, `:latest` | Xcode 27.0 | 6.4   | current |
-| `:26`            | Xcode 26   | 6.2   | planned |
-| `:15`            | Xcode 16.4 | 6.2   | planned |
+| Tag              | SDK (from) | Swift | Status                |
+| ---------------- | ---------- | ----- | --------------------- |
+| `:27`, `:latest` | Xcode 27.0 | 6.4   | configured; CI paused |
+| `:26`            | Xcode 26   | 6.2   | planned               |
+| `:15`            | Xcode 16.4 | 6.2   | planned               |
 
 [`sdks.json`](sdks.json) is the matrix. Each image uses the Swift that shipped
 with its Xcode. The exception is Swift 6.1, which has no Swift Build, so the
@@ -120,8 +120,9 @@ docker build --target smoke --build-arg SDK=27 .
 
 The `smoke` stage builds every sample in [`samples/`](samples/) for every
 platform and checks each Mach-O's architectures, platform, deployment target,
-and recorded SDK. In CI, the tarballs come from a private bucket by the sha256
-recorded in `sdks.json`.
+and recorded SDK. Compiler image smoke tests and publication are paused in CI.
+The release script can fetch tarballs from a private bucket by the sha256
+recorded in `sdks.json` for an explicit image release.
 
 To compare an app built here with Xcode's build of the same project, run this
 on a Mac:
