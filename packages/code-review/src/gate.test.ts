@@ -669,6 +669,10 @@ describe("evaluateMultiGate", () => {
     expect(gateExitCode(d)).toBe(REVIEW_GATE_FAILURE_EXIT_CODE);
     expect(d.message).toContain("Ignored blocked provider(s): CodeRabbit");
   });
+});
+
+describe("evaluateMultiGate — skipped providers", () => {
+  const head = "abc123";
 
   test("unanimous skips pass", () => {
     const d = evaluateMultiGate({
@@ -686,6 +690,77 @@ describe("evaluateMultiGate", () => {
       ],
     });
     expect(d.state).toBe("passed");
+    expect(d.message).toContain("skipped");
+  });
+
+  test("a skip is not a pass while others still review", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: greptileProvider,
+          skipReason: "too-many-files",
+        }),
+        snapshot({ provider: codexProvider, reviewState: "reviewing" }),
+      ],
+    });
+    expect(d.state).toBe("waiting");
+    expect(d.message).toContain("Codex");
+  });
+
+  test("a skip beside a real pass still passes on the reviewer", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: greptileProvider,
+          skipReason: "too-many-files",
+        }),
+        snapshot({ provider: codexProvider }),
+      ],
+    });
+    expect(d.state).toBe("passed");
+    expect(d.message).toContain("Codex");
+    expect(d.message).not.toContain("Greptile");
+  });
+
+  test("a skip beside findings fails on the findings", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: greptileProvider,
+          skipReason: "too-many-files",
+        }),
+        snapshot({
+          provider: codexProvider,
+          reviewState: "reviewed",
+          threads: [thread({ priority: 1 })],
+        }),
+      ],
+    });
+    expect(d.state).toBe("failed");
+    expect(gateExitCode(d)).toBe(REVIEW_GATE_FAILURE_EXIT_CODE);
+  });
+
+  test("a stale P0 from a skipped provider still vetoes", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: greptileProvider,
+          skipReason: "too-many-files",
+          threads: [thread({ authorLogin: "greptile-apps", priority: 0 })],
+        }),
+        snapshot({ provider: codexProvider }),
+      ],
+    });
+    expect(d.state).toBe("failed");
+    expect(d.message).toContain("veto");
   });
 
   test("throws loudly with no provider snapshots", () => {

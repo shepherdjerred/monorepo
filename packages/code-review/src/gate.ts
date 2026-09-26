@@ -354,11 +354,18 @@ export function evaluateMultiGate(input: {
   }));
 
   const vetoes = vetoThreads(providers);
-  const passed = evaluated.filter(
-    ({ decision }) => decision.state === "passed",
+  // A skip is not a review. A provider that declined the PR (Greptile's
+  // too-many-files, an excluded author) evaluates to `passed`, but that pass
+  // must not satisfy the OR-gate while the other providers are still
+  // reviewing — and a skip from an earlier push stays recorded, so counting
+  // it would pass every later head without a single review. Only snapshots
+  // with no skip reason count toward the any-pass set.
+  const genuinelyPassed = evaluated.filter(
+    ({ decision, snapshot }) =>
+      decision.state === "passed" && (snapshot.skipReason ?? null) === null,
   );
-  if (passed.length > 0 && vetoes.length === 0) {
-    const names = passed
+  if (genuinelyPassed.length > 0 && vetoes.length === 0) {
+    const names = genuinelyPassed
       .map(({ snapshot }) => snapshot.provider.displayName)
       .join(", ");
     return {
@@ -382,6 +389,24 @@ export function evaluateMultiGate(input: {
         `${String(vetoes.length)} unresolved P0 comment(s) on ${head} veto the gate:\n${list}\n` +
         `Resolve each P0 thread, then re-run this step.`,
       blockedReason: null,
+    };
+  }
+
+  // Every enabled provider declined this PR: nothing will ever review it.
+  // (Bot-authored PRs never reach snapshots — the loop returns before
+  // evaluating — so this is the Greptile-style recorded skip.)
+  if (
+    evaluated.every(({ snapshot }) => (snapshot.skipReason ?? null) !== null)
+  ) {
+    const skips = evaluated
+      .map(
+        ({ snapshot }) =>
+          `${snapshot.provider.displayName} (${snapshot.skipReason ?? "skipped"})`,
+      )
+      .join(", ");
+    return {
+      state: "passed",
+      message: `All providers skipped ${head}: ${skips}. No review will run.`,
     };
   }
 

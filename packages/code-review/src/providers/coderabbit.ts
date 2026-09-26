@@ -1,4 +1,5 @@
 import type {
+  ProviderReviewSnapshot,
   ReviewProvider,
   ReviewThread,
   UnattributedBodyFinding,
@@ -147,11 +148,7 @@ function pathForChunk(body: string, chunkIndex: number): string | null {
  * every thread here carries its review so ordinals stay in one space.
  */
 export function parseCoderabbitReviewBodies(
-  reviews: readonly {
-    id: string;
-    submittedAt: string | null;
-    body: string | null;
-  }[],
+  reviews: readonly ProviderReviewSnapshot[],
 ): UnattributedBodyFinding[] {
   const findings: UnattributedBodyFinding[] = [];
   for (const review of reviews) {
@@ -173,6 +170,7 @@ export function parseCoderabbitReviewBodies(
         },
         reviewId: review.id,
         reviewSubmittedAt: review.submittedAt,
+        reviewCommitOid: review.commitOid,
       });
     }
   }

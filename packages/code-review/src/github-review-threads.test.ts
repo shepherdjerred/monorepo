@@ -1,10 +1,12 @@
 import { describe, expect, test } from "vitest";
 import {
+  appendReviewBodyFindings,
   attributeRaisedInReview,
   parseReviewPage,
   type ParsedReviewThread,
   type ProviderReview,
 } from "./github-review-threads.ts";
+import { coderabbitProvider } from "./providers/coderabbit.ts";
 import { qodoProvider } from "./providers/qodo.ts";
 
 describe("attributeRaisedInReview", () => {
@@ -101,5 +103,81 @@ describe("attributeRaisedInReview", () => {
         commitOid: null,
       },
     ]);
+  });
+});
+
+function appended(
+  reviews: ProviderReview[],
+  head: string | null,
+): ParsedReviewThread[] {
+  const parsed: ParsedReviewThread[] = [];
+  appendReviewBodyFindings(parsed, reviews, coderabbitProvider, head);
+  return parsed;
+}
+
+describe("appendReviewBodyFindings", () => {
+  const BODY =
+    "<details>\n" +
+    "<summary>⚠️ Outside diff range comments (1)</summary><blockquote>\n" +
+    "<details>\n" +
+    "<summary>src/example.ts (1)</summary><blockquote>\n" +
+    "\n" +
+    "`57-60`: _⚠️ Potential issue_ | _🟡 Minor_ | _⚡ Quick win_\n" +
+    "\n" +
+    "**Example finding.**\n" +
+    "\n" +
+    "</blockquote></details>\n";
+
+  function review(
+    overrides: Partial<ProviderReview> & { id: string },
+  ): ProviderReview {
+    return {
+      submittedAt: "2026-05-24T19:03:46Z",
+      authorLogin: "coderabbitai[bot]",
+      body: BODY,
+      commitOid: "abc123",
+      ...overrides,
+    };
+  }
+
+  test("keeps body findings from the head review current", () => {
+    const [entry] = appended([review({ id: "r1" })], "abc123");
+    expect(entry?.thread.isOutdated).toBe(false);
+    expect(entry?.thread.priority).toBe(2);
+    expect(entry?.thread.path).toBe("src/example.ts");
+    expect(entry?.review?.id).toBe("r1");
+  });
+
+  test("marks body findings from older reviews outdated", () => {
+    const [entry] = appended([review({ id: "r1" })], "def456");
+    expect(entry?.thread.isOutdated).toBe(true);
+  });
+
+  test("stays current when the commit or head is unknown", () => {
+    const [noCommit] = appended(
+      [review({ id: "r1", commitOid: null })],
+      "def456",
+    );
+    expect(noCommit?.thread.isOutdated).toBe(false);
+    const [noHead] = appended([review({ id: "r1" })], null);
+    expect(noHead?.thread.isOutdated).toBe(false);
+  });
+
+  test("ignores other authors and providers without a body parser", () => {
+    const parsed: ParsedReviewThread[] = [];
+    appendReviewBodyFindings(
+      parsed,
+      [review({ id: "r1", authorLogin: "shepherdjerred" })],
+      coderabbitProvider,
+      "abc123",
+    );
+    expect(parsed).toEqual([]);
+    appendReviewBodyFindings(
+      parsed,
+      [review({ id: "r1" })],
+      qodoProvider,
+      "abc123",
+    );
+    expect(parsed).toEqual([]);
   });
 });

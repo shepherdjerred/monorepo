@@ -27,6 +27,7 @@ export function appendReviewBodyFindings(
   parsed: ParsedReviewThread[],
   providerReviews: readonly ProviderReview[],
   provider: ReviewProvider,
+  head: string | null,
 ): void {
   const parseBodies = provider.parseReviewBodyFindings;
   if (parseBodies === null) return;
@@ -36,8 +37,23 @@ export function appendReviewBodyFindings(
       id: review.id,
       submittedAt: review.submittedAt,
       body: review.body,
+      commitOid: review.commitOid,
     }));
   for (const finding of parseBodies(snapshots)) {
+    // A body finding is current only while its review still reads the head.
+    // A fix pushed after the review leaves the text in place — unlike an
+    // addressable thread, nothing marks it resolved — so without this every
+    // historical body finding would veto every later head forever. Marking it
+    // outdated keeps it visible without blocking, exactly like GitHub's own
+    // outdated threads. An unknown commit or head stays current: the
+    // least-understood finding still blocks.
+    const superseded =
+      finding.reviewCommitOid !== null &&
+      head !== null &&
+      finding.reviewCommitOid !== head;
+    if (superseded) {
+      finding.thread.isOutdated = true;
+    }
     parsed.push({
       thread: finding.thread,
       review: {

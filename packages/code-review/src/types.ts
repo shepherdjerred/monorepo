@@ -221,6 +221,8 @@ export type ProviderReviewSnapshot = {
   id: string;
   submittedAt: string | null;
   body: string | null;
+  /** The full SHA of the commit the review read; null when unknown. */
+  commitOid: string | null;
 };
 
 /**
@@ -233,6 +235,8 @@ export type UnattributedBodyFinding = {
   thread: ReviewThread;
   reviewId: string;
   reviewSubmittedAt: string | null;
+  /** The commit the finding's review read; null when unknown. */
+  reviewCommitOid: string | null;
 };
 
 /** A registered code-review provider. */

@@ -115,12 +115,14 @@ describe("parseCoderabbitReviewBodies", () => {
         id: "review-1",
         submittedAt: "2026-05-24T19:03:46Z",
         body: REVIEW_BODY_WITH_OUTSIDE_DIFF,
+        commitOid: "abc123",
       },
     ]);
     expect(findings).toHaveLength(1);
     const finding = findings[0];
     expect(finding?.reviewId).toBe("review-1");
     expect(finding?.reviewSubmittedAt).toBe("2026-05-24T19:03:46Z");
+    expect(finding?.reviewCommitOid).toBe("abc123");
     expect(finding?.thread.path).toBe(
       "packages/docs/logs/2026-05-24_scout-app-imagepullbackoff.md",
     );
@@ -140,7 +142,12 @@ describe("parseCoderabbitReviewBodies", () => {
   test("emits nothing for nitpick-only bodies", () => {
     expect(
       parseCoderabbitReviewBodies([
-        { id: "review-2", submittedAt: null, body: NITPICK_ONLY_BODY },
+        {
+          id: "review-2",
+          submittedAt: null,
+          body: NITPICK_ONLY_BODY,
+          commitOid: null,
+        },
       ]),
     ).toEqual([]);
   });
@@ -148,7 +155,7 @@ describe("parseCoderabbitReviewBodies", () => {
   test("skips reviews with no body", () => {
     expect(
       parseCoderabbitReviewBodies([
-        { id: "review-3", submittedAt: null, body: null },
+        { id: "review-3", submittedAt: null, body: null, commitOid: null },
       ]),
     ).toEqual([]);
   });
