@@ -59,6 +59,8 @@ public final class TrainerWording {
           "Your training records are still loading. Try again in a moment.";
       case PurchaseProblem.LoadFailed() ->
           "Your training records could not be loaded. Try again shortly.";
+      case PurchaseProblem.PermissionsUnavailable() ->
+          "Training permissions are unavailable. Try again shortly.";
       case PurchaseProblem.ShuttingDown() -> "The server is restarting. Try again after.";
       case PurchaseProblem.AlreadyBuying() -> "Your last purchase is still going through.";
       case PurchaseProblem.NotRecorded _ ->

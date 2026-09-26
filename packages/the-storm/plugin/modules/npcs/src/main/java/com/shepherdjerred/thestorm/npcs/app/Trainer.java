@@ -47,6 +47,13 @@ public final class Trainer {
 
   /** The offer screen for {@code player}, led by {@code note}. Completes on the main thread. */
   public CompletableFuture<Screen> offer(Player player, NpcDefinition npc, String note) {
+    if (!levels.isLoaded(player.getUniqueId())) {
+      return CompletableFuture.completedFuture(
+          new Screen(
+              npc.name(),
+              "Your track levels are still loading. Try again shortly.",
+              List.of(new Screen.Button("Close", new Screen.Choice.Close()))));
+    }
     var track = track(npc);
     return purchases
         .quote(player.getUniqueId(), track)
