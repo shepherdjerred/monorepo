@@ -183,10 +183,13 @@ and still look green.
 
 ## The review gate waits for the exact head
 
-The required PR review gate is Codex. Its latest PR review must name the exact
-head commit; a clean review is represented by Codex's 👍 reaction. Unresolved
-Codex findings then fold into the gate decision. Qodo remains available as an
-optional provider, but is not required. The gate is
+The required PR review gate is multi-provider: one enabled reviewer (Codex,
+Qodo, Greptile, CodeRabbit — selected by `REVIEW_PROVIDERS`, default Codex)
+must finish reviewing the exact head commit with no blocking findings, while
+an unresolved P0 from any enabled provider vetoes the pass. Codex names the
+head in its latest PR review, and a clean Codex review is represented by its
+👍 reaction; each provider's completion signal is documented in
+`packages/code-review`. The gate is
 [`wait-for-review.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/review/wait-for-review.ts).
 
 Binding to the head commit is the whole point. A review comment from an earlier
@@ -198,6 +201,14 @@ make the gate approve unreviewed changes.
 Steps pass values to later steps through a build-scoped SeaweedFS prefix,
 `s3://ci-handoff/<pipeline number>/<key>.json`, written and read by
 [`ci-handoff.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/ci/ci-handoff.ts).
+
+A provider running out of quota is not a review failure. No review happened,
+and blocking every merge on a billing state would stop the rest of CI from
+counting. One blocked provider is ignored while the rest review; when every
+enabled provider posts its usage-limit notice for the exact head, the gate
+exits with status 42, and the step treats that status alone as advisory.
+Findings, unresolved threads, timeouts, and every other error exit with
+another status and still fail the required gate.
 
 There is one path rather than two. Buildkite offered build metadata for small
 values and artifacts for large ones, so every handoff had to choose, and image

@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   attributeRaisedInReview,
+  parseReviewPage,
   type ParsedReviewThread,
   type ProviderReview,
 } from "./github-review-threads.ts";
@@ -31,11 +32,15 @@ describe("attributeRaisedInReview", () => {
         id: "clean-review",
         submittedAt: "2026-08-22T01:00:00Z",
         authorLogin: "qodo-code-review",
+        body: null,
+        commitOid: "abc123",
       },
       {
         id: "finding-review",
         submittedAt: "2026-08-22T02:00:00Z",
         authorLogin: "qodo-code-review",
+        body: "finding body",
+        commitOid: "abc123",
       },
     ];
 
@@ -50,5 +55,51 @@ describe("attributeRaisedInReview", () => {
       ordinal: 2,
       hadBlockingSeverity: false,
     });
+  });
+
+  test("parseReviewPage keeps review bodies and commits for body parsers", () => {
+    const { reviews } = parseReviewPage({
+      data: {
+        repository: {
+          pullRequest: {
+            reviews: {
+              nodes: [
+                {
+                  id: "review-1",
+                  submittedAt: "2026-05-24T19:03:46Z",
+                  body: "**Actionable comments posted: 4**",
+                  commit: { oid: "abc123" },
+                  author: { login: "coderabbitai[bot]" },
+                },
+                {
+                  id: "review-2",
+                  submittedAt: null,
+                  body: null,
+                  commit: null,
+                  author: { login: "shepherdjerred" },
+                },
+              ],
+              pageInfo: { hasNextPage: false, endCursor: null },
+            },
+          },
+        },
+      },
+    });
+    expect(reviews).toEqual([
+      {
+        id: "review-1",
+        submittedAt: "2026-05-24T19:03:46Z",
+        authorLogin: "coderabbitai[bot]",
+        body: "**Actionable comments posted: 4**",
+        commitOid: "abc123",
+      },
+      {
+        id: "review-2",
+        submittedAt: null,
+        authorLogin: "shepherdjerred",
+        body: null,
+        commitOid: null,
+      },
+    ]);
   });
 });

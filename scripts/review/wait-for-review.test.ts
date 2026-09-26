@@ -15,6 +15,7 @@ import {
   DEFAULT_TIMEOUT_SECONDS,
   parseMaxBlockingPriority,
   resolveReviewGateProvider,
+  resolveReviewGateProviders,
 } from "./wait-for-review.ts";
 import {
   codexProvider,
@@ -44,6 +45,63 @@ describe("resolveReviewGateProvider", () => {
     expect(() => resolveReviewGateProvider("unknown")).toThrow(
       "CI review gate requires Codex",
     );
+  });
+});
+
+function withReviewEnv(
+  providers: string | undefined,
+  provider: string | undefined,
+  fn: () => void,
+): void {
+  const savedProviders = Bun.env["REVIEW_PROVIDERS"];
+  const savedProvider = Bun.env["REVIEW_PROVIDER"];
+  if (providers === undefined) delete Bun.env["REVIEW_PROVIDERS"];
+  else Bun.env["REVIEW_PROVIDERS"] = providers;
+  if (provider === undefined) delete Bun.env["REVIEW_PROVIDER"];
+  else Bun.env["REVIEW_PROVIDER"] = provider;
+  try {
+    fn();
+  } finally {
+    if (savedProviders === undefined) delete Bun.env["REVIEW_PROVIDERS"];
+    else Bun.env["REVIEW_PROVIDERS"] = savedProviders;
+    if (savedProvider === undefined) delete Bun.env["REVIEW_PROVIDER"];
+    else Bun.env["REVIEW_PROVIDER"] = savedProvider;
+  }
+}
+
+function gateProviderIds(): string[] {
+  return resolveReviewGateProviders().map((provider) => provider.id);
+}
+
+describe("resolveReviewGateProviders", () => {
+  test("defaults to the required provider with no configuration", () => {
+    withReviewEnv(undefined, undefined, () => {
+      expect(gateProviderIds()).toEqual(["codex"]);
+    });
+  });
+
+  test("keeps the legacy singular contract", () => {
+    withReviewEnv(undefined, "codex", () => {
+      expect(gateProviderIds()).toEqual(["codex"]);
+    });
+    withReviewEnv(undefined, "qodo", () => {
+      expect(() => gateProviderIds()).toThrow("CI review gate requires Codex");
+    });
+  });
+
+  test("accepts a comma list with normalization and dedupe", () => {
+    withReviewEnv(" codex , Qodo,coderabbit,codex,", undefined, () => {
+      expect(gateProviderIds()).toEqual(["codex", "qodo", "coderabbit"]);
+    });
+  });
+
+  test("fails loudly on unknown or empty provider lists", () => {
+    withReviewEnv("codex,unknown", undefined, () => {
+      expect(() => gateProviderIds()).toThrow("Unknown review provider");
+    });
+    withReviewEnv(" , ", undefined, () => {
+      expect(() => gateProviderIds()).toThrow("at least one provider");
+    });
   });
 });
 

@@ -15,6 +15,39 @@ import {
 } from "./github-http.ts";
 import type { ReviewProvider, ReviewThread } from "./types.ts";
 
+/**
+ * Append the findings a provider renders only in its own review bodies
+ * (CodeRabbit's outside-diff sections) to the parsed threads, ahead of
+ * attribution. Providers without a body parser contribute nothing. Each
+ * finding carries its review, so attribution places it in the same ordinal
+ * space as the addressable threads and the merge step can collapse a finding
+ * with its thread copy.
+ */
+export function appendReviewBodyFindings(
+  parsed: ParsedReviewThread[],
+  providerReviews: readonly ProviderReview[],
+  provider: ReviewProvider,
+): void {
+  const parseBodies = provider.parseReviewBodyFindings;
+  if (parseBodies === null) return;
+  const snapshots = providerReviews
+    .filter((review) => isProviderAuthor(provider, review.authorLogin))
+    .map((review) => ({
+      id: review.id,
+      submittedAt: review.submittedAt,
+      body: review.body,
+    }));
+  for (const finding of parseBodies(snapshots)) {
+    parsed.push({
+      thread: finding.thread,
+      review: {
+        id: finding.reviewId,
+        submittedAt: finding.reviewSubmittedAt,
+      },
+    });
+  }
+}
+
 export const REVIEW_THREADS_QUERY = `
 query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
   repository(owner: $owner, name: $name) {
@@ -55,11 +88,18 @@ export type ParsedReviewThread = {
   review: { id: string; submittedAt: string | null } | null;
 };
 
-/** A provider review, including clean reviews that opened no threads. */
+/**
+ * A provider review, including clean reviews that opened no threads. `body`
+ * feeds providers whose findings live partly in the review itself
+ * (CodeRabbit's outside-diff sections); `commitOid` ties a review to the head
+ * it read without a second lookup.
+ */
 export type ProviderReview = {
   id: string;
   submittedAt: string | null;
   authorLogin: string | null;
+  body: string | null;
+  commitOid: string | null;
 };
 
 export const REVIEW_REVIEWS_QUERY = `
@@ -71,6 +111,8 @@ query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
         nodes {
           id
           submittedAt
+          body
+          commit { oid }
           author { login }
         }
       }
@@ -104,11 +146,14 @@ export function parseReviewPage(payload: unknown): {
     const id = stringField(review, "id");
     if (id === null) return [];
     const author = recordField(review, "author");
+    const commit = recordField(review, "commit");
     return [
       {
         id,
         submittedAt: stringField(review, "submittedAt"),
         authorLogin: author === null ? null : stringField(author, "login"),
+        body: stringField(review, "body"),
+        commitOid: commit === null ? null : stringField(commit, "oid"),
       },
     ];
   });
