@@ -19,34 +19,30 @@
 import {
   type BlockingPolicy,
   blockingPolicyForThreshold,
-  evaluateGate,
+  evaluateMultiGate,
   formatSignalEvent,
   gateExitCode,
-  REVIEW_GATE_FAILURE_EXIT_CODE,
-  resolveProvider,
-  reviewGateSkipReasonForAuthor,
-  resolveRequiredReviewProvider,
   type GateDecision,
-  type PullRequestAuthor,
+  type ProviderGateSnapshot,
   type ReviewProvider,
   type ReviewThread,
+  resolveProvider,
+  resolveRequiredReviewProvider,
+  REVIEW_GATE_FAILURE_EXIT_CODE,
 } from "@shepherdjerred/code-review";
-import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import { buildSignalEvent } from "../lib/review/review-gate-signal.ts";
 import {
   DEFAULT_REQUEST_GRACE_SECONDS,
   DEFAULT_REQUEST_RETRY_SECONDS,
-  ensureReviewRequested,
-  requestGraceSecondsForProvider,
   validateReviewRequestSchedule,
   warnIfFirstReviewIsOversized,
 } from "../lib/review/review-gate-policy.ts";
 import {
-  fetchPullRequestAuthor,
-  fetchReviewThreads,
-  resolveReviewState,
-  type ReviewStateResult,
-} from "@shepherdjerred/code-review/github";
+  type GatePollState,
+  observeTick,
+  type ProviderObservation,
+} from "../lib/review/review-gate-observe.ts";
+import type { ReviewStateResult } from "@shepherdjerred/code-review/github";
 
 const DEFAULT_REPO = "shepherdjerred/monorepo";
 /**
@@ -104,6 +100,32 @@ export function resolveReviewGateProvider(
   return normalized === undefined || normalized === ""
     ? resolveRequiredReviewProvider()
     : resolveProvider(normalized);
+}
+
+/**
+ * The providers one gate run waits on. `REVIEW_PROVIDERS` (comma-separated)
+ * selects the multi-provider gate; an unknown id fails loudly instead of
+ * gating against the wrong bots. Without it, the legacy singular
+ * `REVIEW_PROVIDER` keeps its Codex-only contract, and an unset environment
+ * defaults to the required provider — today's behavior, unchanged.
+ */
+export function resolveReviewGateProviders(): ReviewProvider[] {
+  const plural = Bun.env["REVIEW_PROVIDERS"];
+  if (plural !== undefined && plural.trim() !== "") {
+    const ids = [
+      ...new Set(
+        plural
+          .split(",")
+          .map((id) => id.trim().toLowerCase())
+          .filter((id) => id !== ""),
+      ),
+    ];
+    if (ids.length === 0) {
+      throw new Error("REVIEW_PROVIDERS must name at least one provider");
+    }
+    return ids.map((id) => resolveProvider(id));
+  }
+  return [resolveReviewGateProvider(Bun.env["REVIEW_PROVIDER"])];
 }
 
 function parsePositiveIntegerEnv(name: string, fallback: number): number {
@@ -248,7 +270,7 @@ async function waitForReview(): Promise<void> {
   }
   const head = commit.trim();
   const repo = repoFromEnvironment();
-  const provider = resolveReviewGateProvider(Bun.env["REVIEW_PROVIDER"]);
+  const providers = resolveReviewGateProviders();
   const policy = blockingPolicyForThreshold(parseMaxBlockingPriority());
   const timeoutSeconds = parsePositiveIntegerEnv(
     "REVIEW_WAIT_TIMEOUT_SECONDS",
@@ -266,30 +288,33 @@ async function waitForReview(): Promise<void> {
     "REVIEW_REQUEST_GRACE_SECONDS",
     DEFAULT_REQUEST_GRACE_SECONDS,
   );
-  const graceSeconds = requestGraceSecondsForProvider(
-    provider,
-    configuredGraceSeconds,
-  );
+  // The request schedule is validated against the longest grace any enabled
+  // provider gets, so the advertised retry always fits inside the deadline.
+  const maxGraceSeconds = providers.some(
+    (provider) => provider.startsReviewOnPush,
+  )
+    ? configuredGraceSeconds
+    : 0;
   validateReviewRequestSchedule({
-    graceSeconds,
+    graceSeconds: maxGraceSeconds,
     retryAfterSeconds,
     timeoutSeconds,
   });
 
   console.log(
-    `Review gate: provider=${provider.id}, repo=${repo}, pr=#${String(number)}, head=${head}, ` +
+    `Review gate: providers=${providers.map((provider) => provider.id).join(",")}, repo=${repo}, pr=#${String(number)}, head=${head}, ` +
       `timeout=${String(timeoutSeconds)}s, blockingPriority<=P${String(policy.maxBlockingPriority)}, ` +
       `lowSeverity=${policy.lowSeverity}.`,
   );
 
   await pollReviewGate({
-    provider,
+    providers,
     repo,
     number,
     head,
     token,
     policy,
-    graceSeconds,
+    configuredGraceSeconds,
     retryAfterSeconds,
     timeoutSeconds,
     intervalSeconds,
@@ -297,21 +322,22 @@ async function waitForReview(): Promise<void> {
 }
 
 type GateConfig = {
-  provider: ReviewProvider;
+  providers: ReviewProvider[];
   repo: string;
   number: number;
   head: string;
   token: string;
   policy: BlockingPolicy;
-  graceSeconds: number;
+  configuredGraceSeconds: number;
   retryAfterSeconds: number;
   timeoutSeconds: number;
   intervalSeconds: number;
 };
 
-/** Log one structured `review-signal` event for the current observation. */
+/** Log one structured `review-signal` event for one provider's observation. */
 function emitSignal(input: {
   config: GateConfig;
+  provider: ReviewProvider;
   headPushedAt: string | null;
   state: ReviewStateResult;
   threads: readonly ReviewThread[];
@@ -324,7 +350,7 @@ function emitSignal(input: {
   console.log(
     formatSignalEvent(
       buildSignalEvent({
-        provider: config.provider,
+        provider: input.provider,
         pr: config.number,
         head: config.head,
         headPushedAt: input.headPushedAt,
@@ -353,140 +379,152 @@ const UNOBSERVED_STATE: ReviewStateResult = {
 };
 
 /**
+ * Evaluate one tick across providers: warn once about head movement and
+ * oversized first reviews, emit one signal event per provider, and report
+ * the combined decision. Returns true when the gate passed; throws
+ * ReviewGateFailure when it failed terminally.
+ */
+function concludeTick(
+  config: GateConfig,
+  poll: GatePollState,
+  observed: readonly ProviderObservation[],
+  startedAt: number,
+): boolean {
+  const { number, head, policy } = config;
+  const mismatch = observed.find(
+    (observation) =>
+      observation.headRefOid !== null && observation.headRefOid !== head,
+  );
+  const movedHead = mismatch?.headRefOid ?? null;
+  if (movedHead !== null && !poll.warnedMismatch) {
+    console.warn(
+      `PR #${String(number)} head is now ${movedHead}, but this build is for ${head}; evaluating ${head}.`,
+    );
+    poll.warnedMismatch = true;
+  }
+
+  const snapshots: ProviderGateSnapshot[] = observed.flatMap((observation) =>
+    observation.state === null
+      ? []
+      : [
+          {
+            provider: observation.provider,
+            reviewState: observation.state.state,
+            threads: observation.threads,
+            skipReason: observation.state.skipReason,
+            blockedReason: observation.state.blockedReason,
+          },
+        ],
+  );
+  const decision = evaluateMultiGate({ head, providers: snapshots, policy });
+
+  for (const observation of observed) {
+    if (
+      !poll.warnedOversized.has(observation.provider.id) &&
+      warnIfFirstReviewIsOversized({
+        provider: observation.provider,
+        number,
+        threads: observation.threads,
+      })
+    ) {
+      poll.warnedOversized.add(observation.provider.id);
+    }
+    emitSignal({
+      config,
+      provider: observation.provider,
+      headPushedAt: poll.headPushedAt,
+      state: observation.state ?? UNOBSERVED_STATE,
+      threads: observation.threads,
+      startedAt,
+      timedOut: false,
+      decision: observation.decision,
+      // Attempts already made, not the next one queued up.
+      requestAttempts: (poll.attempts.get(observation.provider.id) ?? 1) - 1,
+    });
+  }
+
+  if (decision.state === "passed") {
+    console.log(decision.message);
+    return true;
+  }
+  if (decision.state === "failed") {
+    throw new ReviewGateFailure(decision.message, gateExitCode(decision));
+  }
+  console.log(decision.message);
+  return false;
+}
+
+/**
+ * Emit one terminal `timed_out` signal event per provider, then throw the
+ * deadline error. Never returns.
+ */
+function failAtDeadline(
+  config: GateConfig,
+  poll: GatePollState,
+  startedAt: number,
+  lastPollError: Error | null,
+): never {
+  const { providers, repo, head, timeoutSeconds } = config;
+  for (const provider of providers) {
+    const last = poll.lastObservations.get(provider.id);
+    emitSignal({
+      config,
+      provider,
+      headPushedAt: poll.headPushedAt,
+      state: last?.state ?? UNOBSERVED_STATE,
+      threads: last?.threads ?? [],
+      startedAt,
+      timedOut: true,
+      decision: null,
+      requestAttempts: (poll.attempts.get(provider.id) ?? 1) - 1,
+    });
+  }
+
+  const names = providers.map((provider) => provider.displayName).join(", ");
+  if (lastPollError !== null) {
+    throw new Error(
+      `Timed out after ${String(timeoutSeconds)}s waiting for ${names} to review ${repo}@${head}; ` +
+        `the most recent GitHub query kept failing transiently: ${lastPollError.message}`,
+    );
+  }
+  const logins = providers
+    .flatMap((provider) => [...provider.authorLogins])
+    .join(", ");
+  throw new Error(
+    `Timed out after ${String(timeoutSeconds)}s waiting for ${names} to finish reviewing ${repo}@${head}. ` +
+      `Confirm each is enabled and authors reviews/threads as one of [${logins}].`,
+  );
+}
+
+/**
  * Poll GitHub until the gate passes, fails, or the deadline is reached.
  * Resolves cleanly on pass; throws on a blocking failure or a timeout.
  */
 async function pollReviewGate(config: GateConfig): Promise<void> {
-  const {
-    provider,
-    repo,
-    number,
-    head,
-    token,
-    policy,
-    graceSeconds,
-    retryAfterSeconds,
-    timeoutSeconds,
-    intervalSeconds,
-  } = config;
+  const { providers, timeoutSeconds, intervalSeconds } = config;
 
   const startedAt = Date.now();
   const deadline = startedAt + timeoutSeconds * 1000;
-  let warnedMismatch = false;
-  let warnedOversizedFirstReview = false;
-  // The head push time is REQUIRED for the clean-review 👍 binding (not
-  // telemetry-only), so it is fetched INSIDE the retry loop and CACHED only once
-  // a real timestamp resolves. A null result is deliberately NOT cached: the
-  // ref-update event can be briefly unavailable right after a push (GitHub has
-  // not exposed the Repository Activity event yet), so re-fetch on later polls
-  // rather than poison the whole wait — a transient failure or not-yet-visible
-  // event must not permanently mark every later reaction as stale.
-  let headPushedAt: string | null = null;
-  let pullRequestAuthor: PullRequestAuthor | null = null;
-  let lastState: ReviewStateResult | null = null;
-  let lastThreads: readonly ReviewThread[] = [];
+  const poll: GatePollState = {
+    headPushedAt: null,
+    pullRequestAuthor: null,
+    // The marker check makes a duplicate request impossible anyway; the map
+    // avoids paying for a comment scan on every poll. Incremented only once
+    // an attempt has actually been posted, so a poll that decides it is too
+    // early re-decides on the next one.
+    attempts: new Map(providers.map((provider) => [provider.id, 1])),
+    lastObservations: new Map(),
+    warnedMismatch: false,
+    warnedOversized: new Set(),
+  };
   let lastPollError: Error | null = null;
-  // Whether this run has already asked the provider to review the head. The
-  // marker check makes a duplicate request impossible anyway; this avoids
-  // paying for a comment scan on every poll.
-  // The next request attempt to make for this head, 1-based. Incremented only
-  // once an attempt has actually been posted, so a poll that decides it is too
-  // early to escalate re-decides on the next one.
-  let attempt = 1;
 
   while (Date.now() <= deadline) {
-    let stateResult: ReviewStateResult;
-    let threadResult: { threads: ReviewThread[]; headRefOid: string | null };
+    let observed: ProviderObservation[];
     try {
-      pullRequestAuthor ??= await fetchPullRequestAuthor({
-        repo,
-        number,
-        token,
-      });
-      const authorSkipReason = reviewGateSkipReasonForAuthor({
-        author: pullRequestAuthor,
-        provider,
-      });
-      if (authorSkipReason !== null) {
-        console.log(
-          JSON.stringify({
-            level: "info",
-            msg: "review-gate-skipped",
-            component: "review-gate",
-            reason: authorSkipReason,
-            provider: provider.id,
-            repo,
-            pr: number,
-            head_sha: head,
-            author_login: pullRequestAuthor.login,
-            author_type: pullRequestAuthor.type,
-          }),
-        );
-        console.log(
-          `Skipping ${provider.displayName} review gate for bot-authored PR #${String(number)} (${pullRequestAuthor.login}).`,
-        );
-        return;
-      }
-
-      // Review-at-head and issue-comment providers bind their completion to the
-      // exact head push. A check-run provider (e.g. Greptile) never reads this
-      // timestamp, so don't make the Activity endpoint a prerequisite for a
-      // gate that can otherwise pass on a valid check-run.
-      if (
-        provider.completion.kind === "review-at-head" ||
-        provider.completion.kind === "issue-comment"
-      ) {
-        headPushedAt ??= await fetchHeadPushedAt({
-          repo,
-          sha: head,
-          prNumber: number,
-          token,
-        });
-      }
-      // Resolve completion FIRST, then fetch threads AFTER — never
-      // concurrently. A concurrent thread query can be captured just before the
-      // provider submits its review while the state query lands just after,
-      // yielding `reviewed` with the newly-created findings missing from the
-      // thread snapshot, which would let the gate pass with unresolved threads.
-      // Fetching threads strictly after observing the state guarantees both
-      // decisions describe the same (or a fresher) review snapshot.
-      stateResult = await resolveReviewState({
-        provider,
-        repo,
-        head,
-        prNumber: number,
-        token,
-        headPushedAt,
-      });
-      threadResult = await fetchReviewThreads({
-        repo,
-        number,
-        token,
-        provider,
-        // Reuse the comment resolveReviewState just fetched: it makes both
-        // decisions describe the identical snapshot and avoids paginating the
-        // whole comment history twice on every poll.
-        issueComment: stateResult.issueComment,
-      });
-
-      // Ask for the review this loop is waiting on, once we have seen that the
-      // provider has not already reviewed this head. Kept inside the same retry
-      // boundary as the reads above: a transient failure while checking or
-      // posting the request must not fail the gate immediately.
-      attempt = await ensureReviewRequested({
-        repo,
-        number,
-        head,
-        token,
-        provider,
-        attempt,
-        graceSeconds,
-        retryAfterSeconds,
-        headPushedAt,
-        startedAt,
-        reviewedCommit: stateResult.reviewedCommit,
-        blockedReason: stateResult.blockedReason,
-      });
+      const tick = await observeTick(config, poll, startedAt);
+      if (tick === null) return;
+      observed = tick;
     } catch (error) {
       const err = error instanceof Error ? error : new Error(String(error));
       if (!isRetryablePollError(err)) throw err;
@@ -498,87 +536,13 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
       continue;
     }
     lastPollError = null;
-    lastState = stateResult;
-    lastThreads = threadResult.threads;
-
-    if (
-      !warnedMismatch &&
-      threadResult.headRefOid !== null &&
-      threadResult.headRefOid !== head
-    ) {
-      console.warn(
-        `PR #${String(number)} head is now ${threadResult.headRefOid}, but this build is for ${head}; evaluating ${head}.`,
-      );
-      warnedMismatch = true;
-    }
-
-    const decision = evaluateGate({
-      head,
-      provider,
-      reviewState: stateResult.state,
-      threads: threadResult.threads,
-      policy,
-      skipReason: stateResult.skipReason,
-      blockedReason: stateResult.blockedReason,
-    });
-
-    if (!warnedOversizedFirstReview) {
-      warnedOversizedFirstReview = warnIfFirstReviewIsOversized({
-        provider,
-        number,
-        threads: threadResult.threads,
-      });
-    }
-
-    emitSignal({
-      config,
-      headPushedAt,
-      state: stateResult,
-      threads: threadResult.threads,
-      startedAt,
-      timedOut: false,
-      decision,
-      // Attempts already made, not the next one queued up.
-      requestAttempts: attempt - 1,
-    });
-
-    if (decision.state === "passed") {
-      console.log(decision.message);
-      return;
-    }
-    if (decision.state === "failed") {
-      throw new ReviewGateFailure(decision.message, gateExitCode(decision));
-    }
-    console.log(decision.message);
+    if (concludeTick(config, poll, observed, startedAt)) return;
     await Bun.sleep(intervalSeconds * 1000);
   }
 
-  // Deadline reached. Always emit ONE terminal signal event with
-  // `timed_out: true` so consumers can distinguish a genuine timeout from an
-  // ordinary waiting poll — even when every poll failed transiently and no
-  // snapshot was ever captured (a synthetic "unobserved" state; the underlying
-  // error is carried in the thrown message below).
-  emitSignal({
-    config,
-    headPushedAt,
-    state: lastState ?? UNOBSERVED_STATE,
-    threads: lastThreads,
-    startedAt,
-    timedOut: true,
-    decision: null,
-    requestAttempts: attempt - 1,
-  });
-
-  if (lastPollError !== null) {
-    throw new Error(
-      `Timed out after ${String(timeoutSeconds)}s waiting for ${provider.displayName} to review ${repo}@${head}; ` +
-        `the most recent GitHub query kept failing transiently: ${lastPollError.message}`,
-    );
-  }
-  throw new Error(
-    `Timed out after ${String(timeoutSeconds)}s waiting for ${provider.displayName} to finish reviewing ${repo}@${head}. ` +
-      `Confirm it is enabled and authors reviews/threads as one of [${provider.authorLogins.join(", ")}].`,
-  );
+  // Deadline reached. Per-provider terminal signal events plus the deadline
+  // error live in failAtDeadline; this function never returns.
+  failAtDeadline(config, poll, startedAt, lastPollError);
 }
 
 if (import.meta.main) {

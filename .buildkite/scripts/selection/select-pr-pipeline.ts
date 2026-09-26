@@ -24,12 +24,14 @@ const GLOBAL_SELECTOR_INPUTS = new Set([
 ]);
 
 /**
- * The Codex review gate must never fail while another PR step is still
- * running: a failed job marks the build "failing", and Buildkite then cancels
- * every running `cancel_on_build_failing` sibling. The gate therefore declares
+ * The review gate must never fail while another PR step is still running: a
+ * failed job marks the build "failing", and Buildkite then cancels every
+ * running `cancel_on_build_failing` sibling. The gate therefore declares
  * every other PR step as a dependency with `allow_dependency_failure`. Those
  * edges order the gate last; they are not inputs, so selection keeps only the
  * ones that are already selected instead of scheduling every lane on every PR.
+ * (The step key stays `codex-review-gate` for dashboard continuity; the gate
+ * itself is multi-provider since REVIEW_PROVIDERS.)
  */
 export const REVIEW_GATE_KEY = "codex-review-gate";
 
@@ -153,7 +155,7 @@ export function assertReviewGateRunsLast(
 
 /**
  * The gate may soft-fail on exactly one exit status: the one it exits with
- * when the provider declared it could not review because of quota
+ * when every enabled provider declared it could not review because of quota
  * (`REVIEW_GATE_BLOCKED_EXIT_CODE` in `@shepherdjerred/code-review`). Any
  * broader soft_fail would let real review findings, timeouts, or errors look
  * green, so everything else is rejected, including an absent soft_fail.

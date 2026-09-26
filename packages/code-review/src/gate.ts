@@ -278,6 +278,167 @@ export function evaluateGate(input: {
   };
 }
 
+/**
+ * One provider's resolved snapshot for a multi-provider gate evaluation. The
+ * poll loop resolves each enabled provider independently (completion first,
+ * then threads — never concurrently) and evaluates the snapshots together.
+ */
+export type ProviderGateSnapshot = {
+  provider: ReviewProvider;
+  reviewState: ReviewState;
+  threads: readonly ReviewThread[];
+  /** Provider skip reason (e.g. "no-reviewable-files"), or null. */
+  skipReason?: string | null;
+  /** Provider-side block slug (e.g. "usage-limited"), or null. */
+  blockedReason?: string | null;
+};
+
+/**
+ * Unresolved P0 threads standing anywhere across the enabled providers.
+ *
+ * A P0 vetoes the whole gate even when another provider already passed: the
+ * OR-gate trusts one clean review, but a top-severity finding somebody still
+ * stands by is not something a second opinion overrules. Only the owning
+ * provider's own unresolved, current threads count — another login quoting a
+ * P0, a resolved thread, or an outdated anchor vetoes nothing. Evaluated
+ * before waiting states so a standing P0 fails fast instead of burning the
+ * polling budget while its author must act regardless.
+ */
+export function vetoThreads(
+  snapshots: readonly ProviderGateSnapshot[],
+): { provider: ReviewProvider; thread: ReviewThread }[] {
+  return snapshots.flatMap((snapshot) =>
+    snapshot.threads
+      .filter(
+        (thread) =>
+          isProviderAuthor(snapshot.provider, thread.authorLogin) &&
+          !thread.isResolved &&
+          !thread.isOutdated &&
+          thread.priority === 0,
+      )
+      .map((thread) => ({ provider: snapshot.provider, thread })),
+  );
+}
+
+/**
+ * Combine one evaluation pass across providers into a single gate decision.
+ *
+ * - Any `passed` provider passes the gate unless a P0 veto stands.
+ * - A P0 veto fails fast, even while other providers are still reviewing.
+ * - Otherwise any `waiting` provider keeps the gate waiting.
+ * - When every provider failed, unanimous provider-side blocks stay on the
+ *   soft-fail path (`blockedReason` set → exit 42); a single findings failure
+ *   among them makes the gate fail hard (exit 1) with the blocked providers
+ *   noted as ignored.
+ */
+export function evaluateMultiGate(input: {
+  head: string;
+  providers: readonly ProviderGateSnapshot[];
+  policy: BlockingPolicy;
+}): GateDecision {
+  const { head, providers, policy } = input;
+  if (providers.length === 0) {
+    throw new Error("evaluateMultiGate needs at least one provider snapshot");
+  }
+  const evaluated = providers.map((snapshot) => ({
+    snapshot,
+    decision: evaluateGate({
+      head,
+      provider: snapshot.provider,
+      reviewState: snapshot.reviewState,
+      threads: snapshot.threads,
+      policy,
+      skipReason: snapshot.skipReason ?? null,
+      blockedReason: snapshot.blockedReason ?? null,
+    }),
+  }));
+
+  const vetoes = vetoThreads(providers);
+  const passed = evaluated.filter(
+    ({ decision }) => decision.state === "passed",
+  );
+  if (passed.length > 0 && vetoes.length === 0) {
+    const names = passed
+      .map(({ snapshot }) => snapshot.provider.displayName)
+      .join(", ");
+    return {
+      state: "passed",
+      message:
+        `${names} reviewed ${head} with no blocking findings; ` +
+        `no unresolved P0 from any provider remains.`,
+    };
+  }
+
+  if (vetoes.length > 0) {
+    const list = vetoes
+      .map(
+        ({ provider, thread }) =>
+          `  - P0 ${provider.displayName} ${describeThread(thread)}`,
+      )
+      .join("\n");
+    return {
+      state: "failed",
+      message:
+        `${String(vetoes.length)} unresolved P0 comment(s) on ${head} veto the gate:\n${list}\n` +
+        `Resolve each P0 thread, then re-run this step.`,
+      blockedReason: null,
+    };
+  }
+
+  const waiting = evaluated.filter(
+    ({ decision }) => decision.state === "waiting",
+  );
+  if (waiting.length > 0) {
+    const names = waiting
+      .map(({ snapshot }) => snapshot.provider.displayName)
+      .join(", ");
+    return {
+      state: "waiting",
+      message: `Waiting for ${names} to finish reviewing ${head}.`,
+    };
+  }
+
+  const failed = evaluated.filter(
+    ({ decision }) => decision.state === "failed",
+  );
+  const blockedReasons = failed.map(({ decision }) =>
+    decision.state === "failed" ? decision.blockedReason : null,
+  );
+  if (blockedReasons.every((reason) => reason !== null)) {
+    const names = failed
+      .map(({ snapshot }) => snapshot.provider.displayName)
+      .join(", ");
+    const reasons = [...new Set(blockedReasons)].join(", ");
+    return {
+      state: "failed",
+      message:
+        `No provider could review ${head}: ${names} reported ${reasons}. ` +
+        `Resolve the provider blocks, then re-run this step.`,
+      blockedReason: blockedReasons[0] ?? null,
+    };
+  }
+
+  const details = failed
+    .map(({ decision }) =>
+      decision.state === "failed" ? decision.message : "",
+    )
+    .join("\n");
+  const ignored = evaluated
+    .filter(
+      ({ decision }) =>
+        decision.state === "failed" && decision.blockedReason !== null,
+    )
+    .map(({ snapshot }) => snapshot.provider.displayName)
+    .join(", ");
+  const ignoredNote =
+    ignored === "" ? "" : ` Ignored blocked provider(s): ${ignored}.`;
+  return {
+    state: "failed",
+    message: `${details}${ignoredNote}`,
+    blockedReason: null,
+  };
+}
+
 /** The gate's exit status for every failure other than a provider block. */
 export const REVIEW_GATE_FAILURE_EXIT_CODE = 1;
 

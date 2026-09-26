@@ -93,10 +93,13 @@ keeps the second one a real failure.
 
 ## The review gate waits for the exact head
 
-The required PR review gate is Codex. Its latest PR review must name the exact
-head commit; a clean review is represented by Codex's 👍 reaction. Unresolved
-Codex findings then fold into the gate decision. Qodo remains available as an
-optional provider, but is not required by Buildkite for now. The gate is
+The required PR review gate is multi-provider: one enabled reviewer (Codex,
+Qodo, Greptile, CodeRabbit — selected by `REVIEW_PROVIDERS`, default Codex)
+must finish reviewing the exact head commit with no blocking findings, while
+an unresolved P0 from any enabled provider vetoes the pass. Codex names the
+head in its latest PR review, and a clean Codex review is represented by its
+👍 reaction; each provider's completion signal is documented in
+`packages/code-review`. The gate is
 [`wait-for-review.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/review/wait-for-review.ts).
 
 Binding to the head commit is the whole point. A review comment from an earlier
@@ -110,16 +113,16 @@ depends on every other PR step with `allow_dependency_failure`, still fails the
 build when the review fails, and still reports its verdict when another step
 failed.
 
-Codex running out of quota is not a review failure. No review happened, and
-blocking every merge on a billing state would stop the rest of CI from
-counting. When Codex posts its usage-limit notice for the exact head, the gate
+A provider running out of quota is not a review failure. No review happened,
+and blocking every merge on a billing state would stop the rest of CI from
+counting. One blocked provider is ignored while the rest review; when every
+enabled provider posts its usage-limit notice for the exact head, the gate
 exits with status 42, and the step soft-fails on that status alone. The build
-then carries a warning annotation telling the reviewer to rely on Greptile's
-review. Findings, unresolved threads, timeouts, and every other error exit with
-another status and still fail the required build. `select-pr-pipeline.ts`
-rejects any other `soft_fail` shape on the gate, so it cannot quietly widen
-into a gate that never fails. It does not run when a dependency was canceled, per
-Buildkite's
+then carries a warning annotation. Findings, unresolved threads, timeouts, and
+every other error exit with another status and still fail the required build.
+`select-pr-pipeline.ts` rejects any other `soft_fail` shape on the gate, so it
+cannot quietly widen into a gate that never fails. It does not run when a
+dependency was canceled, per Buildkite's
 [dependency rules](https://buildkite.com/docs/pipelines/configure/dependencies).
 The PR selector, `select-pr-pipeline.ts`, treats those edges as ordering only:
 it keeps the selected lanes, never schedules an unselected one, and rejects a
