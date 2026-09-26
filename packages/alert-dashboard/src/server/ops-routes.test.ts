@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { SnapshotResponseSchema } from "@shepherdjerred/ops-model/snapshot.ts";
 
 import { AlertService } from "#application/alert-service";
 import { createApp } from "#server/app";
@@ -12,7 +13,6 @@ import {
   OpsErrorSchema,
   SeriesResponseSchema,
   ServiceDetailSchema,
-  SnapshotResponseSchema,
 } from "#shared/ops-schema";
 import { fixedClock } from "#shared/time";
 import { fixtureOpsIngest } from "#test-fixtures/ops-snapshot";

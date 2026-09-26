@@ -20,9 +20,20 @@ const fixture = parseSnapshot(JSON.parse(fixtureText));
 const GENERATED = Date.parse(fixture.generatedAt);
 const FRESH_NOW = new Date(GENERATED + 2 * 60_000);
 const STALE_NOW = new Date(GENERATED + 60 * 60_000);
+const freshFixture = applyFreshness(fixture, FRESH_NOW);
+const responseText = JSON.stringify({
+  ...freshFixture,
+  receivedAt: fixture.generatedAt,
+  newSignalIds: [],
+});
+const staleResponseText = JSON.stringify({
+  ...applyFreshness(fixture, STALE_NOW),
+  receivedAt: fixture.generatedAt,
+  newSignalIds: [],
+});
 
 type Route = { status: number; body: string };
-let route: Route = { status: 200, body: fixtureText };
+let route: Route = { status: 200, body: responseText };
 let lastUrl = "";
 let server: ReturnType<typeof Bun.serve>;
 let home = "";
@@ -51,13 +62,13 @@ function baseUrl(): string {
 }
 
 describe("ops snapshot client", () => {
-  test("requests the CLI consumer view and validates the snapshot", async () => {
-    route = { status: 200, body: fixtureText };
-    await expect(fetchOpsSnapshot(baseUrl())).resolves.toEqual(fixture);
+  test("requests the cursor-free snapshot view and validates the snapshot", async () => {
+    route = { status: 200, body: responseText };
+    await expect(fetchOpsSnapshot(baseUrl())).resolves.toEqual(freshFixture);
     expect(new URL(lastUrl).pathname).toBe("/api/v1/ops/snapshot");
-    expect(new URL(lastUrl).searchParams.get("consumer")).toBe("cli");
+    expect(new URL(lastUrl).searchParams.has("consumer")).toBe(false);
     expect(opsSnapshotUrl("https://ops.example/")).toBe(
-      "https://ops.example/api/v1/ops/snapshot?consumer=cli",
+      "https://ops.example/api/v1/ops/snapshot",
     );
   });
 
@@ -156,7 +167,7 @@ async function runToolkit(
 
 describe("toolkit ops summary subprocess", () => {
   test("prints JSON with freshness applied and exits zero", async () => {
-    route = { status: 200, body: fixtureText };
+    route = { status: 200, body: staleResponseText };
     const result = await runToolkit(["ops", "summary", "--json"]);
     expect(result.code).toBe(0);
     const printed: unknown = JSON.parse(result.stdout);

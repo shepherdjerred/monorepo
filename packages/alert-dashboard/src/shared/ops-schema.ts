@@ -4,7 +4,6 @@ import {
   ChangeEventSchema,
   LinkSchema,
   SignalSchema,
-  SnapshotSchema,
 } from "@shepherdjerred/ops-model/snapshot.ts";
 import { z } from "zod";
 
@@ -31,16 +30,6 @@ export type CursorResponse = z.infer<typeof CursorResponseSchema>;
 export const SnapshotQuerySchema = z.object({
   consumer: CursorConsumerSchema.optional(),
 });
-
-/** The latest snapshot with the freshness policy applied at read time. */
-export const SnapshotResponseSchema = SnapshotSchema.extend({
-  stale: z.boolean(),
-  ageMs: z.number(),
-  receivedAt: InstantTextSchema,
-  /** Signal ids absent from the consumer's cursor; empty without a consumer. */
-  newSignalIds: z.array(z.string()),
-});
-export type SnapshotResponse = z.infer<typeof SnapshotResponseSchema>;
 
 /** A stored or ledger-derived change, as the timeline renders it. */
 export const ChangeViewSchema = ChangeEventSchema.extend({

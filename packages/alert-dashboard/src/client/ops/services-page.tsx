@@ -1,5 +1,6 @@
 import { allSignals } from "@shepherdjerred/ops-model/assemble.ts";
 import { worstSeverity } from "@shepherdjerred/ops-model/severity.ts";
+import type { SnapshotResponse } from "@shepherdjerred/ops-model/snapshot.ts";
 import { Link } from "react-router";
 
 import {
@@ -8,7 +9,6 @@ import {
   WithSnapshot,
   services,
 } from "./ops-ui.tsx";
-import type { SnapshotResponse } from "#shared/ops-schema";
 
 function ServiceGrid({
   snapshot,
