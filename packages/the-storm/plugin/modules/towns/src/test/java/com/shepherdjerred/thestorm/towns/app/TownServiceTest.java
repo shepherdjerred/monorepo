@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.towns.app;
 
+import static com.shepherdjerred.thestorm.towns.domain.Fixtures.ASSISTANT;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.MEMBER;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.NOMAD;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.OWNER;
@@ -10,14 +11,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.towns.domain.Fixtures;
+import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimAllowance;
 import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimPolicy;
 import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimProblem;
 import com.shepherdjerred.thestorm.towns.domain.claiming.Claiming;
-import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
-import com.shepherdjerred.thestorm.towns.domain.land.Claim;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
+import com.shepherdjerred.thestorm.towns.domain.town.PlayerRef;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import com.shepherdjerred.thestorm.towns.domain.town.TownProblem;
 import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
@@ -25,9 +26,9 @@ import java.time.Instant;
 import java.time.InstantSource;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.SplittableRandom;
 import java.util.UUID;
@@ -44,19 +45,37 @@ final class TownServiceTest {
 
   private static final Instant NOW = Instant.parse("2026-09-25T12:00:00Z");
 
-  private final FakeStore store = new FakeStore();
+  private final FakeTownsStore store = new FakeTownsStore();
   private final TownsState state = new TownsState(new RegionIndex(List.of()));
   private final List<Throwable> reloadFailures = new ArrayList<>();
-  private final TownService service =
-      new TownService(
+
+  /** Governor levels of the players the test has put online. */
+  private final Map<UUID, Integer> online = new HashMap<>();
+
+  private final Settling settling =
+      new Settling(
           state,
           store,
-          new Claiming(new ClaimPolicy(Set.of(Fixtures.WORLD), 2, 10, Set.of())),
           new Clocks(
               InstantSource.fixed(NOW),
               new SplittableRandom(1),
               Runnable::run,
-              reloadFailures::add));
+              reloadFailures::add),
+          TownEvents.NONE);
+
+  private final TownService service =
+      new TownService(
+          settling,
+          new Claiming(
+              new ClaimPolicy(
+                  Set.of(Fixtures.WORLD),
+                  2,
+                  new ClaimAllowance(10, List.of(1, 2, 3, 4, 5)),
+                  Set.of())),
+          player ->
+              online.containsKey(player)
+                  ? OptionalInt.of(online.get(player))
+                  : OptionalInt.empty());
 
   @BeforeEach
   void load() {
@@ -131,14 +150,14 @@ final class TownServiceTest {
     ok(service.disband(OWNER, "Aegis"));
     assertThat(state.townOf(MEMBER)).isEmpty();
 
-    assertThat(service.found(MEMBER, "Carthage"))
+    assertThat(service.found(MEMBER, "Carthage", 1))
         .isEqualTo(Result.err(List.of(new TownProblem.Busy())));
 
     store.fail();
 
     assertThat(state.townOf(MEMBER)).contains(Fixtures.townA());
     assertThat(state.claimAt(chunk(0, 0))).contains(claim(TOWN_A, 0, 0));
-    assertThat(service.found(MEMBER, "Carthage").isOk()).isFalse();
+    assertThat(service.found(MEMBER, "Carthage", 1).isOk()).isFalse();
   }
 
   @Test
@@ -154,7 +173,7 @@ final class TownServiceTest {
 
   @Test
   void foundingAndDeletingATown() {
-    var town = ok(service.found(NOMAD, "Carthage"));
+    var town = ok(service.found(NOMAD, "Carthage", 1));
     store.succeed();
 
     assertThat(town.members()).containsExactly(Map.entry(NOMAD, TownRole.OWNER));
@@ -174,12 +193,12 @@ final class TownServiceTest {
 
     assertThat(service.claim(OWNER, chunk(5, 5)))
         .isEqualTo(Result.err(List.of(new ClaimProblem.Busy())));
-    assertThat(service.found(NOMAD, "Carthage"))
+    assertThat(service.found(NOMAD, "Carthage", 1))
         .isEqualTo(Result.err(List.of(new TownProblem.Busy())));
 
     store.finishReload();
     assertThat(service.isSettling()).isFalse();
-    assertThat(service.found(NOMAD, "Carthage").isOk()).isTrue();
+    assertThat(service.found(NOMAD, "Carthage", 1).isOk()).isTrue();
   }
 
   @Test
@@ -190,108 +209,105 @@ final class TownServiceTest {
     store.failReload();
 
     assertThat(reloadFailures).hasSize(1);
-    assertThat(service.found(NOMAD, "Carthage").isOk()).isFalse();
+    assertThat(service.found(NOMAD, "Carthage", 1).isOk()).isFalse();
   }
 
   @Test
   void refusalsExplainThemselves() {
     assertThat(service.claim(NOMAD, chunk(5, 5)))
         .isEqualTo(Result.err(List.of(new ClaimProblem.NotInTown())));
-    assertThat(service.found(OWNER, "Other").isOk()).isFalse();
+    assertThat(service.found(OWNER, "Other", 1).isOk()).isFalse();
     assertThat(service.disband(MEMBER, "Aegis").isOk()).isFalse();
   }
 
-  /**
-   * Keeps saved towns and claims. Each write waits until the test completes it: success applies it
-   * to what is saved, failure leaves that untouched. Reloads complete at once unless held.
-   */
-  private static final class FakeStore implements TownsStore {
+  @Test
+  void aClaimRecordsTheOwnersLiveGovernorLevel() {
+    online.put(OWNER, 3);
 
-    private final Map<UUID, Town> towns = new LinkedHashMap<>();
-    private final Map<ChunkPos, Claim> claims = new LinkedHashMap<>();
-    private final List<Write> pending = new ArrayList<>();
-    private boolean holdReload;
-    private CompletableFuture<TownsSnapshot> heldReload = new CompletableFuture<>();
+    ok(service.claim(OWNER, chunk(1, 0)));
+    store.succeedAll();
 
-    private record Write(Runnable apply, CompletableFuture<Void> done) {}
+    assertThat(state.town(TOWN_A).orElseThrow().governorLevel()).isEqualTo(3);
+    assertThat(store.snapshot().towns()).extracting(Town::governorLevel).containsExactly(3);
+  }
 
-    void seed(Town town, Claim claim) {
-      towns.put(town.id(), town);
-      claims.put(claim.chunk(), claim);
+  @Test
+  void theStoredLevelHoldsWhileTheOwnerIsAway() {
+    state.replaceTown(Fixtures.townA().withGovernorLevel(2));
+    for (var x = 1; x < 12; x++) {
+      state.addClaim(claim(TOWN_A, x, 0));
     }
 
-    TownsSnapshot snapshot() {
-      return new TownsSnapshot(List.copyOf(towns.values()), List.copyOf(claims.values()));
-    }
+    assertThat(service.claim(ASSISTANT, chunk(12, 0)))
+        .isEqualTo(Result.err(List.of(new ClaimProblem.LimitReached(12))));
+    assertThat(service.maxClaims(state.town(TOWN_A).orElseThrow())).isEqualTo(12);
 
-    private CompletableFuture<Void> record(Runnable apply) {
-      var done = new CompletableFuture<Void>();
-      pending.add(new Write(apply, done));
-      return done;
-    }
+    online.put(OWNER, 5);
+    assertThat(service.maxClaims(state.town(TOWN_A).orElseThrow())).isEqualTo(15);
+    ok(service.claim(ASSISTANT, chunk(12, 0)));
+  }
 
-    void succeed() {
-      var write = pending.removeFirst();
-      write.apply().run();
-      write.done().complete(null);
+  @Test
+  void aLowerLiveLevelShrinksTheLimitForNewClaimsOnly() {
+    state.replaceTown(Fixtures.townA().withGovernorLevel(5));
+    for (var x = 1; x < 12; x++) {
+      state.addClaim(claim(TOWN_A, x, 0));
     }
+    online.put(OWNER, 0);
 
-    void fail() {
-      pending.removeFirst().done().completeExceptionally(new IllegalStateException("disk full"));
-    }
+    assertThat(service.claim(OWNER, chunk(12, 0)))
+        .isEqualTo(Result.err(List.of(new ClaimProblem.LimitReached(10))));
+    assertThat(state.claimCount(TOWN_A)).isEqualTo(12);
+  }
 
-    void failAndHoldReload() {
-      holdReload = true;
-      fail();
-    }
+  @Test
+  void ownersLevelsAreRecordedWhenTheyComeAndGo() {
+    service.recordGovernorLevel(OWNER, 4);
+    assertThat(state.town(TOWN_A).orElseThrow().governorLevel()).isEqualTo(4);
+    store.succeed();
+    assertThat(store.snapshot().towns()).extracting(Town::governorLevel).containsExactly(4);
 
-    void finishReload() {
-      heldReload.complete(snapshot());
-    }
+    service.recordGovernorLevel(OWNER, 4);
+    service.recordGovernorLevel(MEMBER, 1);
+    service.recordGovernorLevel(NOMAD, 5);
+    assertThat(store.pending()).isZero();
+    assertThat(state.town(TOWN_A).orElseThrow().governorLevel()).isEqualTo(4);
+  }
 
-    void failReload() {
-      heldReload.completeExceptionally(new IllegalStateException("database gone"));
-    }
+  @Test
+  void aFoundedTownStartsWithItsFoundersLevel() {
+    var town = ok(service.found(NOMAD, "Carthage", 3));
 
-    @Override
-    public CompletableFuture<TownsSnapshot> loadAll() {
-      if (holdReload) {
-        heldReload = new CompletableFuture<>();
-        return heldReload;
-      }
-      return CompletableFuture.completedFuture(snapshot());
-    }
+    assertThat(town.governorLevel()).isEqualTo(3);
+  }
 
-    @Override
-    public CompletableFuture<Void> createTown(Town town) {
-      return record(() -> towns.put(town.id(), town));
-    }
+  @Test
+  void claimTrustIsSavedAndUndoneLikeAnyChange() {
+    var nomad = new PlayerRef(NOMAD, "Nomad");
 
-    @Override
-    public CompletableFuture<Void> deleteTown(UUID townId) {
-      return record(
-          () -> {
-            towns.remove(townId);
-            var remaining = new HashMap<>(claims);
-            remaining.values().removeIf(claim -> claim.townId().equals(townId));
-            claims.clear();
-            claims.putAll(remaining);
-          });
-    }
+    var trusted = ok(service.trust(OWNER, chunk(0, 0), nomad, true));
+    assertThat(trusted.trusted()).containsExactly(NOMAD);
+    assertThat(state.claimAt(chunk(0, 0))).contains(trusted);
+    store.succeed();
+    assertThat(store.snapshot().claims()).contains(trusted);
 
-    @Override
-    public CompletableFuture<Void> addClaim(Claim claim, Instant at) {
-      return record(() -> claims.put(claim.chunk(), claim));
-    }
+    ok(service.trust(ASSISTANT, chunk(0, 0), nomad, false));
+    store.fail();
+    assertThat(state.claimAt(chunk(0, 0)).orElseThrow().trusted()).containsExactly(NOMAD);
+  }
 
-    @Override
-    public CompletableFuture<Void> removeClaim(ChunkPos chunk) {
-      return record(() -> claims.remove(chunk));
-    }
+  @Test
+  void membersCannotTrustAndMembersNeedNoTrust() {
+    var nomad = new PlayerRef(NOMAD, "Nomad");
+    var owner = new PlayerRef(ASSISTANT, "Assistant");
 
-    @Override
-    public CompletableFuture<Void> saveFlags(Claim claim) {
-      return record(() -> claims.put(claim.chunk(), claim));
-    }
+    assertThat(service.trust(MEMBER, chunk(0, 0), nomad, true))
+        .isEqualTo(Result.err(List.of(new ClaimProblem.CannotManageClaims(TownRole.MEMBER))));
+    assertThat(service.trust(OWNER, chunk(0, 0), owner, true))
+        .isEqualTo(Result.err(List.of(new ClaimProblem.TrustsMember("Assistant"))));
+    assertThat(service.trust(OWNER, chunk(0, 0), nomad, false))
+        .isEqualTo(Result.err(List.of(new ClaimProblem.NotTrusted("Nomad"))));
+    assertThat(service.trust(OWNER, chunk(5, 5), nomad, true))
+        .isEqualTo(Result.err(List.of(new ClaimProblem.NotClaimed())));
   }
 }

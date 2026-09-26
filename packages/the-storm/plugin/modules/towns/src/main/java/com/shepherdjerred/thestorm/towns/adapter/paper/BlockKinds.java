@@ -37,8 +37,29 @@ final class BlockKinds {
           Material.CHISELED_BOOKSHELF,
           Material.DECORATED_POT,
           Material.COMPOSTER,
-          Material.BEACON,
           Material.VAULT);
+
+  /**
+   * Containers {@code /lock} protects beyond shulker boxes, copper chests and shelves (tags):
+   * chests, barrels, the furnace family, brewing stands, and the blocks that move items.
+   */
+  private static final List<Material> LOCKABLE =
+      List.of(
+          Material.CHEST,
+          Material.TRAPPED_CHEST,
+          Material.BARREL,
+          Material.FURNACE,
+          Material.BLAST_FURNACE,
+          Material.SMOKER,
+          Material.BREWING_STAND,
+          Material.HOPPER,
+          Material.DROPPER,
+          Material.DISPENSER,
+          Material.CRAFTER);
+
+  /** Lockable blocks that redstone makes push items out: dispensers, droppers and crafters. */
+  private static final Set<Material> REDSTONE_DRIVEN =
+      Set.of(Material.DROPPER, Material.DISPENSER, Material.CRAFTER);
 
   private static final List<Material> REDSTONE =
       List.of(
@@ -91,6 +112,7 @@ final class BlockKinds {
   private final Map<Material, Act> impacts = new EnumMap<>(Material.class);
   private final Map<Material, Act> presses = new EnumMap<>(Material.class);
   private final Set<Material> redstone = EnumSet.noneOf(Material.class);
+  private final Set<Material> lockable = EnumSet.noneOf(Material.class);
 
   BlockKinds() {
     switches();
@@ -98,6 +120,10 @@ final class BlockKinds {
     others();
     stepsAndImpacts();
     redstone();
+    lockable.addAll(LOCKABLE);
+    for (var tag : List.of(Tag.SHULKER_BOXES, Tag.COPPER_CHESTS, Tag.WOODEN_SHELVES)) {
+      lockable.addAll(tag.getValues());
+    }
   }
 
   private void switches() {
@@ -112,6 +138,8 @@ final class BlockKinds {
     use(Tag.ANVIL.getValues(), Action.INTERACT, Subject.ANVIL);
     use(Tag.CANDLES.getValues(), Action.INTERACT, Subject.BLOCK);
     use(Tag.COPPER_GOLEM_STATUES.getValues(), Action.INTERACT, Subject.BLOCK);
+    // A beacon holds no items; changing its effect is using a town's machine.
+    use(Set.of(Material.BEACON), Action.INTERACT, Subject.BLOCK);
     use(REDSTONE, Action.USE_REDSTONE, Subject.REDSTONE_COMPONENT);
   }
 
@@ -135,6 +163,7 @@ final class BlockKinds {
     subject(Tag.ALL_SIGNS.getValues(), Subject.SIGN);
     subject(Set.of(Material.LECTERN), Subject.LECTERN);
     subject(Set.of(Material.FARMLAND), Subject.FARMLAND);
+    subject(Set.of(Material.CREAKING_HEART), Subject.CREAKING_HEART);
     subject(Tag.PRESSURE_PLATES.getValues(), Subject.PRESSURE_PLATE);
     subject(Set.of(Material.TRIPWIRE, Material.TRIPWIRE_HOOK), Subject.TRIPWIRE);
   }
@@ -210,6 +239,16 @@ final class BlockKinds {
    */
   Optional<Act> press(Material type) {
     return Optional.ofNullable(presses.get(type));
+  }
+
+  /** True for containers {@code /lock} protects. */
+  boolean isLockable(Material type) {
+    return lockable.contains(type);
+  }
+
+  /** True for lockable blocks redstone makes push items out: dispensers, droppers, crafters. */
+  boolean isRedstoneDriven(Material type) {
+    return REDSTONE_DRIVEN.contains(type);
   }
 
   /** True for redstone components and power sources, which may not be wired into others' land. */

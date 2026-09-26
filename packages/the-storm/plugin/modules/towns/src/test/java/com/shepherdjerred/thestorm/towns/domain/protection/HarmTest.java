@@ -27,10 +27,11 @@ final class HarmTest {
       new Land.RegionLand(
           Fixtures.region("arena", Fixtures.allow(Action.ATTACK_PLAYER, Subject.PLAYER)));
 
-  private final ProtectionEngine engine = new ProtectionEngine(Fixtures.trust());
+  private final ProtectionEngine engine =
+      new ProtectionEngine(Fixtures.trust(), PvpPreferences.EVERYONE);
 
   static Stream<Case> cases() {
-    var other = new Victim.OtherPlayer();
+    var other = new Victim.OtherPlayer(Fixtures.OWNER);
     var pet = new Victim.OthersPet();
     var animal = new Victim.Protected(Subject.ANIMAL);
     return Stream.of(
@@ -88,7 +89,7 @@ final class HarmTest {
                 .decideHarm(member, A_SAFE, new Victim.Protected(Subject.ANIMAL), A_SAFE)
                 .isAllowed())
         .isTrue();
-    assertThat(engine.decideHarm(member, A_SAFE, new Victim.OtherPlayer(), A_SAFE))
+    assertThat(engine.decideHarm(member, A_SAFE, new Victim.OtherPlayer(Fixtures.OWNER), A_SAFE))
         .isEqualTo(new Verdict.Deny(new Denial.NoPvp()));
   }
 
@@ -96,7 +97,10 @@ final class HarmTest {
   void bypassNeverTurnsPvpOn() {
     var staff = new Actor(NOMAD, true);
 
-    assertThat(engine.decideHarm(staff, SPAWN, new Victim.OtherPlayer(), SPAWN).isAllowed())
+    assertThat(
+            engine
+                .decideHarm(staff, SPAWN, new Victim.OtherPlayer(Fixtures.OWNER), SPAWN)
+                .isAllowed())
         .isFalse();
     assertThat(engine.decideHarm(staff, WILD, new Victim.OthersPet(), A_SAFE).isAllowed())
         .isFalse();

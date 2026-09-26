@@ -26,7 +26,9 @@ public final class TownRules {
     if (!problems.isEmpty()) {
       return Result.err(List.copyOf(problems));
     }
-    return Result.ok(Town.found(founding.id(), founding.name(), founding.at(), founding.founder()));
+    return Result.ok(
+        Town.found(founding.id(), founding.name(), founding.at(), founding.founder())
+            .withGovernorLevel(founding.governorLevel()));
   }
 
   /**

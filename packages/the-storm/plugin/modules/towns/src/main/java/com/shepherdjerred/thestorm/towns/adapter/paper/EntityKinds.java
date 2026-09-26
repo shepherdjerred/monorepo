@@ -60,7 +60,7 @@ final class EntityKinds {
       return new Victim.Self();
     }
     if (entity instanceof Player) {
-      return new Victim.OtherPlayer();
+      return new Victim.OtherPlayer(entity.getUniqueId());
     }
     if (entity instanceof Tameable pet && pet.isTamed() && pet.getOwnerUniqueId() != null) {
       return attacker.equals(pet.getOwnerUniqueId()) ? new Victim.OwnPet() : new Victim.OthersPet();

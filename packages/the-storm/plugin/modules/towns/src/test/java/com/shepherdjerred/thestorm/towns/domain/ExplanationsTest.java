@@ -5,8 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimProblem;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlags;
+import com.shepherdjerred.thestorm.towns.domain.lock.LockProblem;
+import com.shepherdjerred.thestorm.towns.domain.pvp.PvpProblem;
 import com.shepherdjerred.thestorm.towns.domain.town.TownProblem;
 import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -73,7 +77,87 @@ final class ExplanationsTest {
     assertThat(Explanations.describe(ClaimFlags.of(ClaimFlag.PVP, ClaimFlag.PUBLIC_BUILD)))
         .isEqualTo(
             "pvp on, explosions off, fire-spread off, mob-griefing off, public-build on,"
-                + " public-containers off, public-switches off, public-entities off");
-    assertThat(Explanations.flagName(ClaimFlag.PUBLIC_CONTAINERS)).isEqualTo("public-containers");
+                + " public-switches off, public-entities off");
+    assertThat(Explanations.flagName(ClaimFlag.PUBLIC_SWITCHES)).isEqualTo("public-switches");
+  }
+
+  @Test
+  void everyMembershipProblemReads() {
+    var problems =
+        List.of(
+            new TownProblem.NoSuchTown("Atlantis"),
+            new TownProblem.NotInvited("Aegis"),
+            new TownProblem.OwnerCannotLeave(),
+            new TownProblem.NotAMember("Bob"),
+            new TownProblem.CannotManageMembers(TownRole.MEMBER),
+            new TownProblem.Outranked("Bob"),
+            new TownProblem.NotYourself(),
+            new TownProblem.AlreadyRanked("Bob", TownRole.ASSISTANT),
+            new TownProblem.TargetInTown("Bob"),
+            new TownProblem.NoPendingTransfer(),
+            new TownProblem.PayoutFailed());
+    for (var problem : problems) {
+      assertThat(Explanations.explain(problem)).as("%s", problem).isNotBlank().endsWith(".");
+    }
+    assertThat(Explanations.explain(new TownProblem.AlreadyRanked("Bob", TownRole.ASSISTANT)))
+        .isEqualTo("Bob is an assistant, so that changes nothing.");
+    assertThat(Explanations.explain(new TownProblem.NotInvited("Aegis")))
+        .isEqualTo("You have no invitation from Aegis, or it has expired.");
+  }
+
+  @Test
+  void everyClaimTrustProblemReads() {
+    assertThat(
+            Explanations.explain(new ClaimProblem.TrustsMember("Bob"), ExplanationsTest::bastion))
+        .isEqualTo("Bob is in your town already; members build everywhere on its land.");
+    assertThat(
+            Explanations.explain(new ClaimProblem.AlreadyTrusted("Bob"), ExplanationsTest::bastion))
+        .isEqualTo("Bob is already trusted here.");
+    assertThat(Explanations.explain(new ClaimProblem.NotTrusted("Bob"), ExplanationsTest::bastion))
+        .isEqualTo("Bob is not trusted here.");
+  }
+
+  @Test
+  void everyLockProblemReads() {
+    var problems =
+        List.of(
+            new LockProblem.NotLocked(),
+            new LockProblem.AlreadyLocked(true),
+            new LockProblem.AlreadyLocked(false),
+            new LockProblem.PlacedBySomeoneElse(),
+            new LockProblem.NotYourLand(),
+            new LockProblem.LimitReached(64),
+            new LockProblem.NotYourLock(),
+            new LockProblem.NotYourself(),
+            new LockProblem.AlreadyTrusted("Bob"),
+            new LockProblem.NotTrusted("Bob"),
+            new LockProblem.Busy());
+    for (var problem : problems) {
+      assertThat(Explanations.explain(problem)).as("%s", problem).isNotBlank().endsWith(".");
+    }
+    assertThat(Explanations.explain(new LockProblem.LimitReached(64)))
+        .isEqualTo("You already hold 64 locks, the most you may. Unlock one first.");
+  }
+
+  @Test
+  void pvpProblemsSayHowLongToWait() {
+    var now = Instant.parse("2026-09-25T12:00:00Z");
+
+    assertThat(Explanations.explain(new PvpProblem.TooSoon(now.plus(Duration.ofHours(75))), now))
+        .isEqualTo("You changed your PvP recently; you can change it again in 3 days 3 hours.");
+    assertThat(Explanations.explain(new PvpProblem.AlreadySet(false), now))
+        .isEqualTo("Your PvP is already off.");
+    assertThat(Explanations.explain(new PvpProblem.Busy(), now)).isNotBlank();
+  }
+
+  @Test
+  void waitsRoundUpToTheMinute() {
+    assertThat(Explanations.wait(Duration.ofSeconds(1))).isEqualTo("1 minute");
+    assertThat(Explanations.wait(Duration.ZERO)).isEqualTo("1 minute");
+    assertThat(Explanations.wait(Duration.ofSeconds(61))).isEqualTo("2 minutes");
+    assertThat(Explanations.wait(Duration.ofMinutes(60))).isEqualTo("1 hour");
+    assertThat(Explanations.wait(Duration.ofMinutes(125))).isEqualTo("2 hours 5 minutes");
+    assertThat(Explanations.wait(Duration.ofDays(7))).isEqualTo("7 days");
+    assertThat(Explanations.wait(Duration.ofDays(1).plusMinutes(30))).isEqualTo("1 day");
   }
 }

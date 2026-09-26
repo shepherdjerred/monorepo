@@ -22,6 +22,8 @@ public enum Subject {
   CAKE,
   REDSTONE_COMPONENT,
   FARMLAND,
+  /** The block that keeps a creaking alive; breaking it is how the creaking fight is won. */
+  CREAKING_HEART,
   /** Any other block. */
   BLOCK,
   PLAYER,

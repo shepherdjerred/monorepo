@@ -66,7 +66,7 @@ final class TownsModuleTest {
             dsl -> {
               // A town nobody owns breaks the one-owner invariant.
               dsl.execute(
-                  "INSERT INTO towns_town VALUES ('00000000-0000-4000-8000-00000000000a',"
+                  "INSERT INTO towns_town (id, name, created_at) VALUES ('00000000-0000-4000-8000-00000000000a',"
                       + " 'Aegis', 0)");
               return 0;
             })

@@ -1,7 +1,10 @@
 package com.shepherdjerred.thestorm.towns.adapter.db;
 
+import static com.shepherdjerred.thestorm.towns.domain.Fixtures.ASSISTANT;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.FOUNDED;
+import static com.shepherdjerred.thestorm.towns.domain.Fixtures.MEMBER;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.NOMAD;
+import static com.shepherdjerred.thestorm.towns.domain.Fixtures.OTHER_TOWN_OWNER;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.OWNER;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.TOWN_A;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.TOWN_B;
@@ -12,10 +15,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.towns.app.TownsSnapshot;
 import com.shepherdjerred.thestorm.towns.domain.Fixtures;
+import com.shepherdjerred.thestorm.towns.domain.land.BlockPos;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
+import com.shepherdjerred.thestorm.towns.domain.lock.Lock;
+import com.shepherdjerred.thestorm.towns.domain.lock.LockGrant;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
+import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -84,7 +93,7 @@ final class JooqTownsStoreTest {
     await(store.createTown(Fixtures.townA()));
     await(store.addClaim(claim(TOWN_A, 0, 0, ClaimFlag.PVP), CLAIMED));
 
-    await(store.saveFlags(claim(TOWN_A, 0, 0, ClaimFlag.EXPLOSIONS, ClaimFlag.FIRE_SPREAD)));
+    await(store.saveClaim(claim(TOWN_A, 0, 0, ClaimFlag.EXPLOSIONS, ClaimFlag.FIRE_SPREAD)));
 
     assertThat(load().claims())
         .containsExactly(claim(TOWN_A, 0, 0, ClaimFlag.EXPLOSIONS, ClaimFlag.FIRE_SPREAD));
@@ -96,7 +105,7 @@ final class JooqTownsStoreTest {
     await(store.createTown(Fixtures.townB()));
     await(store.addClaim(claim(TOWN_A, 0, 0), CLAIMED));
 
-    assertThatThrownBy(() -> await(store.saveFlags(claim(TOWN_B, 0, 0, ClaimFlag.PVP))))
+    assertThatThrownBy(() -> await(store.saveClaim(claim(TOWN_B, 0, 0, ClaimFlag.PVP))))
         .isInstanceOf(ExecutionException.class);
     assertThat(load().claims()).containsExactly(claim(TOWN_A, 0, 0));
   }
@@ -189,6 +198,136 @@ final class JooqTownsStoreTest {
             }));
 
     assertThatThrownBy(this::load).isInstanceOf(ExecutionException.class);
+  }
+
+  @Test
+  void governorLevelsAndClaimTrustRoundTrip() throws Exception {
+    var town = Fixtures.townA().withGovernorLevel(4);
+    await(store.createTown(town));
+    var trusted = claim(TOWN_A, 0, 0, ClaimFlag.PVP).withTrust(NOMAD, true);
+    await(store.addClaim(trusted, CLAIMED));
+
+    var snapshot = load();
+
+    assertThat(snapshot.towns()).containsExactly(town);
+    assertThat(snapshot.claims()).containsExactly(trusted);
+  }
+
+  @Test
+  void savingAClaimReplacesItsTrust() throws Exception {
+    await(store.createTown(Fixtures.townA()));
+    await(store.addClaim(claim(TOWN_A, 0, 0).withTrust(NOMAD, true), CLAIMED));
+
+    await(store.saveClaim(claim(TOWN_A, 0, 0).withTrust(OTHER_TOWN_OWNER, true)));
+
+    assertThat(load().claims())
+        .containsExactly(claim(TOWN_A, 0, 0).withTrust(OTHER_TOWN_OWNER, true));
+  }
+
+  @Test
+  void removingAClaimOrItsTownRemovesItsTrust() throws Exception {
+    await(store.createTown(Fixtures.townA()));
+    await(store.addClaim(claim(TOWN_A, 0, 0).withTrust(NOMAD, true), CLAIMED));
+    await(store.addClaim(claim(TOWN_A, 1, 0).withTrust(NOMAD, true), CLAIMED));
+
+    await(store.removeClaim(Fixtures.chunk(0, 0)));
+    assertThat(trustRows()).isEqualTo(1);
+
+    await(store.deleteTown(TOWN_A));
+    assertThat(trustRows()).isZero();
+  }
+
+  @Test
+  void savingATownReplacesItsNameLevelAndMembers() throws Exception {
+    await(store.createTown(Fixtures.townA()));
+    var handed =
+        Fixtures.townA()
+            .transferredTo(MEMBER, 2)
+            .withoutMember(ASSISTANT)
+            .withMember(NOMAD, TownRole.MEMBER)
+            .renamed("Arcadia");
+
+    await(store.saveTown(handed));
+
+    assertThat(load().towns()).containsExactly(handed);
+  }
+
+  @Test
+  void savingATownThatIsNotStoredFails() {
+    assertThatThrownBy(() -> await(store.saveTown(Fixtures.townB())))
+        .isInstanceOf(ExecutionException.class);
+  }
+
+  @Test
+  void aSavedTownKeepsNamesAndMembershipsUnique() throws Exception {
+    await(store.createTown(Fixtures.townA()));
+    await(store.createTown(Fixtures.townB()));
+
+    assertThatThrownBy(() -> await(store.saveTown(Fixtures.townB().renamed("aegis"))))
+        .isInstanceOf(ExecutionException.class);
+    assertThatThrownBy(
+            () -> await(store.saveTown(Fixtures.townB().withMember(MEMBER, TownRole.MEMBER))))
+        .isInstanceOf(ExecutionException.class);
+    assertThat(load().towns()).containsExactlyInAnyOrder(Fixtures.townA(), Fixtures.townB());
+  }
+
+  @Test
+  void departureTransfersOnlyLocksWhollyOnItsClaimsAndRemovesNewOwnerTrust() throws Exception {
+    var locks = new JooqLocksStore(database);
+    await(store.createTown(Fixtures.townA()));
+    await(store.createTown(Fixtures.townB()));
+    await(store.addClaim(claim(TOWN_A, 0, 0), CLAIMED));
+    await(store.addClaim(claim(TOWN_B, 1, 0), CLAIMED));
+    var inside =
+        new Lock(
+            UUID.randomUUID(),
+            MEMBER,
+            Set.of(new BlockPos("world", 0, 64, 0)),
+            Map.of(OWNER, LockGrant.USE),
+            new Lock.Options(true, true));
+    var split =
+        Lock.of(
+            UUID.randomUUID(),
+            MEMBER,
+            Set.of(new BlockPos("world", 15, 64, 0), new BlockPos("world", 16, 64, 0)));
+    var foreign = Lock.of(UUID.randomUUID(), MEMBER, Set.of(new BlockPos("world", 17, 64, 0)));
+    await(locks.save(inside));
+    await(locks.save(split));
+    await(locks.save(foreign));
+
+    var updated = Fixtures.townA().withoutMember(MEMBER);
+    assertThat(await(store.saveDeparture(updated, MEMBER))).containsExactly(inside.id());
+
+    assertThat(load().towns()).contains(updated);
+    assertThat(await(locks.loadAll()))
+        .containsExactlyInAnyOrder(inside.ownedBy(OWNER), split, foreign);
+  }
+
+  @Test
+  void failedLockTransferRollsBackMembership() throws Exception {
+    var locks = new JooqLocksStore(database);
+    var original = Fixtures.townA();
+    await(store.createTown(original));
+    await(store.addClaim(claim(TOWN_A, 0, 0), CLAIMED));
+    var lock = Lock.of(UUID.randomUUID(), MEMBER, Set.of(new BlockPos("world", 1, 64, 1)));
+    await(locks.save(lock));
+    await(
+        database.write(
+            dsl -> {
+              dsl.execute(
+                  "CREATE TRIGGER fail_lock_transfer BEFORE UPDATE OF owner_id ON towns_lock "
+                      + "BEGIN SELECT RAISE(FAIL, 'lock write failed'); END");
+              return 0;
+            }));
+
+    assertThatThrownBy(() -> await(store.saveDeparture(original.withoutMember(MEMBER), MEMBER)))
+        .isInstanceOf(ExecutionException.class);
+    assertThat(load().towns()).containsExactly(original);
+    assertThat(await(locks.loadAll())).containsExactly(lock);
+  }
+
+  private int trustRows() throws Exception {
+    return await(database.read(dsl -> dsl.fetchCount(DSL.table("towns_claim_trust"))));
   }
 
   private int flagRows() throws Exception {

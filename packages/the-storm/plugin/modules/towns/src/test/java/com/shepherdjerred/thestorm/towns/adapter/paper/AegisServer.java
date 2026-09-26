@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.towns.adapter.paper;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
+import com.shepherdjerred.thestorm.tracks.app.Track;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,6 +57,9 @@ abstract class AegisServer {
     plugin = load();
     alice = server.addPlayer("Alice");
     bob = server.addPlayer("Bob");
+    plugin.know(alice.getUniqueId(), "Alice");
+    plugin.know(bob.getUniqueId(), "Bob");
+    alice.addAttachment(plugin, Track.GOVERNOR.permission(1), true);
 
     assertThat(server.dispatchCommand(alice, "town create Aegis")).isTrue();
     awaitLine(alice, "Founded Aegis");

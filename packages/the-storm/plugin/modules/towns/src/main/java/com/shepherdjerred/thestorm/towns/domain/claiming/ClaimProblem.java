@@ -41,4 +41,13 @@ public sealed interface ClaimProblem {
 
   /** A change to this town or chunk is still being saved. */
   record Busy() implements ClaimProblem {}
+
+  /** Claim trust is for outsiders; the named player is already a member of the town. */
+  record TrustsMember(String player) implements ClaimProblem {}
+
+  /** The named player is already trusted on this claim. */
+  record AlreadyTrusted(String player) implements ClaimProblem {}
+
+  /** The named player is not trusted on this claim. */
+  record NotTrusted(String player) implements ClaimProblem {}
 }

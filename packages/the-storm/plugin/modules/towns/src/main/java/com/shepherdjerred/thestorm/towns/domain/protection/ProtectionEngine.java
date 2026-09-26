@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.towns.domain.protection;
 
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
+import java.util.UUID;
 
 /**
  * Decides whether a player may do something on a piece of land.
@@ -13,13 +14,19 @@ import com.shepherdjerred.thestorm.towns.domain.land.Land;
  *   <li>An admin region: only what the region allows.
  *   <li>Staff with bypass: anything, except that bypass never turns PvP on.
  * </ul>
+ *
+ * <p>Fighting another player also needs both players' own PvP switches on ({@link PvpPreferences}).
  */
 public final class ProtectionEngine {
 
-  private final TownLandRule towns;
+  private static final Act FIGHT = new Act(Action.ATTACK_PLAYER, Subject.PLAYER);
 
-  public ProtectionEngine(TrustLookup trust) {
+  private final TownLandRule towns;
+  private final PvpPreferences pvp;
+
+  public ProtectionEngine(TrustLookup trust, PvpPreferences pvp) {
     this.towns = new TownLandRule(trust);
+    this.pvp = pvp;
   }
 
   public Verdict decide(Actor actor, Act act, Land land) {
@@ -34,12 +41,25 @@ public final class ProtectionEngine {
   }
 
   /**
-   * Whether {@code attacker} may hurt another player: PvP must be on both where the attacker stands
-   * and where the victim stands, so nobody fights out of or into a safe zone.
+   * Whether {@code attacker} may hurt the player {@code victim}: both must have their own PvP on,
+   * and PvP must be on both where the attacker stands and where the victim stands, so nobody fights
+   * out of or into a safe zone. Bypass changes none of this.
    */
-  public Verdict decidePvp(Actor attacker, Land attackerLand, Land victimLand) {
-    var fight = new Act(Action.ATTACK_PLAYER, Subject.PLAYER);
-    return decide(attacker, fight, attackerLand).and(decide(attacker, fight, victimLand));
+  public Verdict decidePvp(Actor attacker, UUID victim, Land attackerLand, Land victimLand) {
+    var theirs = pvp.pvpOn(victim) ? Verdict.allow() : new Verdict.Deny(new Denial.TheirPvpIsOff());
+    return decideAttack(attacker, attackerLand, victimLand).and(theirs);
+  }
+
+  /**
+   * The attacker's half of {@link #decidePvp}: their own PvP switch and the land at both ends, for
+   * when the victim is not known.
+   */
+  public Verdict decideAttack(Actor attacker, Land attackerLand, Land victimLand) {
+    var own =
+        pvp.pvpOn(attacker.player())
+            ? Verdict.allow()
+            : new Verdict.Deny(new Denial.YourPvpIsOff());
+    return own.and(decide(attacker, FIGHT, attackerLand)).and(decide(attacker, FIGHT, victimLand));
   }
 
   /**
@@ -60,8 +80,7 @@ public final class ProtectionEngine {
     return switch (land) {
       case Land.Wilderness _ -> true;
       case Land.TownLand(var claim) -> claim.flags().has(ClaimFlag.PVP);
-      case Land.RegionLand(var region) ->
-          region.permits(new Act(Action.ATTACK_PLAYER, Subject.PLAYER));
+      case Land.RegionLand(var region) -> region.permits(FIGHT);
     };
   }
 
@@ -71,7 +90,7 @@ public final class ProtectionEngine {
    *
    * <ul>
    *   <li>themselves, their own pets and unprotected entities: always;
-   *   <li>another player: where PvP is on for both;
+   *   <li>another player: where PvP is on for both, and both have their own PvP on;
    *   <li>another player's pet: never, anywhere, bypass included;
    *   <li>anything else: where the land lets the attacker hurt entities.
    * </ul>
@@ -79,7 +98,7 @@ public final class ProtectionEngine {
   public Verdict decideHarm(Actor attacker, Land attackerLand, Victim victim, Land victimLand) {
     return switch (victim) {
       case Victim.Self _, Victim.OwnPet _, Victim.Unprotected _ -> Verdict.allow();
-      case Victim.OtherPlayer _ -> decidePvp(attacker, attackerLand, victimLand);
+      case Victim.OtherPlayer(var id) -> decidePvp(attacker, id, attackerLand, victimLand);
       case Victim.OthersPet _ -> new Verdict.Deny(new Denial.NotYourPet());
       case Victim.Protected(var subject) ->
           decide(attacker, new Act(Action.DAMAGE_ENTITY, subject), victimLand);

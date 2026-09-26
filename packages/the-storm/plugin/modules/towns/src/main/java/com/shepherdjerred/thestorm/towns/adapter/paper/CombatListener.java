@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
+import com.shepherdjerred.thestorm.towns.app.PvpService;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.Action;
@@ -37,9 +38,11 @@ import org.jspecify.annotations.Nullable;
 final class CombatListener implements Listener {
 
   private final Guard guard;
+  private final PvpService pvp;
 
-  CombatListener(Guard guard) {
+  CombatListener(Guard guard, PvpService pvp) {
     this.guard = guard;
+    this.pvp = pvp;
   }
 
   /**
@@ -86,6 +89,28 @@ final class CombatListener implements Listener {
     if (!allowed) {
       event.setCancelled(true);
     }
+  }
+
+  /** Only damage that survived protection and other plugins starts a combat switch lock. */
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onPlayerDamage(EntityDamageEvent event) {
+    if (!(event.getEntity() instanceof Player victim) || event.getFinalDamage() <= 0) {
+      return;
+    }
+    var attacker =
+        guard
+            .culprit(event.getDamageSource())
+            .or(
+                () ->
+                    event instanceof EntityDamageByEntityEvent hit
+                        ? guard.culprit(hit.getDamager())
+                        : Optional.empty());
+    attacker.ifPresent(
+        found -> {
+          if (!found.id().equals(victim.getUniqueId())) {
+            pvp.recordFight(found.id(), victim.getUniqueId());
+          }
+        });
   }
 
   /**

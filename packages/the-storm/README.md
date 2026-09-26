@@ -60,6 +60,13 @@ may no longer reflect stored claims. A denied join or respawn relocates only to
 an already loaded, permitted location; when none exists, the player is
 disconnected rather than triggering terrain generation in the arrival event.
 
+Towns separates land rights from container rights. Claims control building,
+while a lock controls opening a lockable container on claimed land. New
+containers lock for their placer; owners can unlock them for public use or
+grant use, management, town sharing, and redstone access separately. Admin
+regions retain their own opening rules. Other modules use the towns
+`Protection` port so their container interactions follow the same rules.
+
 ## Conventions
 
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating

@@ -9,11 +9,11 @@ import java.util.Set;
  *
  * @param worlds the worlds claims may be made in, by name
  * @param buffer how many chunks must separate one town's claims from another's
- * @param maxClaimsPerTown the most chunks one town may hold
+ * @param limits how many chunks a town may hold
  * @param defaultFlags the flags a new claim starts with
  */
 public record ClaimPolicy(
-    Set<String> worlds, int buffer, int maxClaimsPerTown, Set<ClaimFlag> defaultFlags) {
+    Set<String> worlds, int buffer, ClaimAllowance limits, Set<ClaimFlag> defaultFlags) {
 
   /** The largest buffer allowed, so a buffer check stays cheap. */
   public static final int MAX_BUFFER = 16;
@@ -29,9 +29,6 @@ public record ClaimPolicy(
     }
     if (buffer < 0 || buffer > MAX_BUFFER) {
       throw new IllegalArgumentException("buffer must be between 0 and " + MAX_BUFFER);
-    }
-    if (maxClaimsPerTown < 1) {
-      throw new IllegalArgumentException("maxClaimsPerTown must be at least 1");
     }
   }
 

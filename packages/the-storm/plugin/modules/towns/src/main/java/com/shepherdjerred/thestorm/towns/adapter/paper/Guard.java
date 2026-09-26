@@ -117,6 +117,10 @@ final class Guard {
     return culprits;
   }
 
+  ProtectionEngine engine() {
+    return engine;
+  }
+
   Verdict verdict(Player player, Act act, Land land) {
     return engine.decide(actor(player), act, land);
   }

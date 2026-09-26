@@ -3,8 +3,8 @@ package com.shepherdjerred.thestorm.towns.domain.claiming;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 
 /**
- * How many chunks a town may hold. Today a flat cap from config; town levels and the plot bank can
- * replace it without changing the claim rules.
+ * How many chunks a town may hold. The server uses {@link ClaimAllowance}: a base plus a bonus for
+ * the owner's Governor level.
  */
 @FunctionalInterface
 public interface ClaimLimits {
