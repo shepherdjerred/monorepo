@@ -6,6 +6,7 @@ import static org.jooq.impl.DSL.sum;
 import static org.jooq.impl.DSL.table;
 
 import java.nio.file.Path;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -40,6 +41,39 @@ final class StormDatabaseTest {
               .get(5, TimeUnit.SECONDS);
 
       assertThat(total).isEqualTo(55);
+    }
+  }
+
+  @Test
+  void aReadSeesWritesQueuedBeforeIt(@TempDir Path directory) throws Exception {
+    try (var database = StormDatabase.open(directory.resolve("test.db"))) {
+      database.migrate("sample", StormDatabaseTest.class.getClassLoader());
+      var release = new CountDownLatch(1);
+
+      var slowWrite =
+          database.write(
+              dsl -> {
+                awaitQuietly(release);
+                return dsl.insertInto(table("ledger"), field("player"), field("amount"))
+                    .values("RiotShielder", 7)
+                    .execute();
+              });
+      var count = database.read(dsl -> dsl.fetchCount(table("ledger")));
+      release.countDown();
+
+      assertThat(count.get(5, TimeUnit.SECONDS)).isEqualTo(1);
+      assertThat(slowWrite.get(5, TimeUnit.SECONDS)).isEqualTo(1);
+    }
+  }
+
+  private static void awaitQuietly(CountDownLatch latch) {
+    try {
+      if (!latch.await(5, TimeUnit.SECONDS)) {
+        throw new IllegalStateException("latch was never released");
+      }
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(e);
     }
   }
 

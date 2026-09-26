@@ -17,9 +17,9 @@ import org.jooq.impl.DSL;
  *
  * <p>Each module migrates its own schema with Flyway (its scripts live in {@code
  * db/migration/<module>} and it has its own history table). All writes run on one writer thread, in
- * a transaction, so SQLite never sees concurrent writers. Reads run on virtual threads. Nothing
- * here may be called from the main thread and waited on; callers complete the returned futures back
- * onto the main thread through the scheduler.
+ * a transaction, so SQLite never sees concurrent writers. Reads run on virtual threads, each after
+ * the writes queued before it. Nothing here may be called from the main thread and waited on;
+ * callers complete the returned futures back onto the main thread through the scheduler.
  */
 public final class StormDatabase implements AutoCloseable {
 
@@ -72,9 +72,14 @@ public final class StormDatabase implements AutoCloseable {
         () -> dsl.transactionResult(configuration -> work.apply(configuration.dsl())), writer);
   }
 
-  /** Runs {@code work} on a virtual thread. */
+  /**
+   * Runs {@code work} on a virtual thread once every write submitted before this call has finished,
+   * so a read always sees the caller's earlier writes (a player's state loaded on rejoin includes
+   * the save queued when they quit).
+   */
   public <T> CompletableFuture<T> read(Function<DSLContext, T> work) {
-    return CompletableFuture.supplyAsync(() -> work.apply(dsl), readers);
+    return CompletableFuture.runAsync(() -> {}, writer)
+        .thenApplyAsync(ignored -> work.apply(dsl), readers);
   }
 
   @Override
