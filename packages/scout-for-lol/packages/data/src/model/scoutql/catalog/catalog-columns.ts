@@ -84,22 +84,45 @@ const INTERNAL_COLUMNS = new Set<string>([
 /** Loadout ids are identifiers, so they display as text, never as counts. */
 const LOADOUT = new Set(LOADOUT_COLUMNS);
 
+const ASSET_COLUMNS: ReadonlyMap<string, ScoutQlColumnInfo["asset"]> = new Map([
+  ["champion_id", "champion"],
+  ["champion_name", "champion"],
+  ...[0, 1, 2, 3, 4, 5].map((slot): [string, ScoutQlColumnInfo["asset"]] => [
+    `item${slot.toString()}`,
+    "item",
+  ]),
+  ["summoner1_id", "spell"],
+  ["summoner2_id", "spell"],
+  ["perk0", "rune"],
+  ["perk1", "rune"],
+  ["perk2", "rune"],
+  ["perk3", "rune"],
+  ["perk4", "rune"],
+  ["perk5", "rune"],
+  ["perk_primary_style", "rune_tree"],
+  ["perk_sub_style", "rune_tree"],
+]);
+
 function physicalColumns(
   lake: Record<string, DuckDbColumnType>,
   overrides?: Record<string, string>,
 ): ScoutQlColumnInfo[] {
   return Object.entries(lake)
     .filter(([name]) => !INTERNAL_COLUMNS.has(name))
-    .map(([name, type]) => ({
-      name,
-      type: LAKE_TYPE[type],
-      description: describe(name, overrides),
-      displayKind: LOADOUT.has(name)
-        ? "text"
-        : rawDisplayKind(name, LAKE_TYPE[type]),
-      virtual: false,
-      contexts: ALL_CONTEXTS,
-    }));
+    .map(([name, type]) => {
+      const asset = ASSET_COLUMNS.get(name);
+      return {
+        name,
+        type: LAKE_TYPE[type],
+        description: describe(name, overrides),
+        displayKind: LOADOUT.has(name)
+          ? "text"
+          : rawDisplayKind(name, LAKE_TYPE[type]),
+        ...(asset === undefined ? {} : { asset }),
+        virtual: false,
+        contexts: ALL_CONTEXTS,
+      };
+    });
 }
 
 const COMPETITION_ID_COLUMN = virtualColumn(

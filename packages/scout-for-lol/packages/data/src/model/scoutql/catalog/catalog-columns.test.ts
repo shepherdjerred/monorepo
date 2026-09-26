@@ -82,6 +82,15 @@ describe("physical catalog columns come from the lake schema", () => {
       expect(catalog.columns.has("dedupe_key"), catalog.id).toBe(false);
     }
   });
+
+  test("loadout and champion ids carry their matching asset kinds", () => {
+    const catalog = scoutQlSourceCatalog("match_participants");
+    expect(catalog?.columns.get("champion_id")?.asset).toBe("champion");
+    expect(catalog?.columns.get("item0")?.asset).toBe("item");
+    expect(catalog?.columns.get("summoner1_id")?.asset).toBe("spell");
+    expect(catalog?.columns.get("perk0")?.asset).toBe("rune");
+    expect(catalog?.columns.get("perk_primary_style")?.asset).toBe("rune_tree");
+  });
 });
 
 describe("virtual dimensions match what the engine can compute", () => {
@@ -123,6 +132,16 @@ describe("virtual dimensions match what the engine can compute", () => {
       .filter((column) => column.virtual)
       .map((column) => column.name);
     expect(virtuals).toEqual(["player", "champion", "map"]);
+    expect(catalog?.columns.get("champion")?.asset).toBe("champion");
+  });
+
+  test("named loadout dimensions carry asset kinds", () => {
+    const catalog = scoutQlSourceCatalog("match_participants");
+    expect(catalog?.columns.get("keystone")?.asset).toBe("rune");
+    expect(catalog?.columns.get("primary_tree")?.asset).toBe("rune_tree");
+    expect(catalog?.columns.get("summoner1")?.asset).toBe("spell");
+    expect(catalog?.columns.get("items")?.asset).toBeUndefined();
+    expect(catalog?.columns.get("spells")?.asset).toBeUndefined();
   });
 });
 

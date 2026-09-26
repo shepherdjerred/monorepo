@@ -119,6 +119,37 @@ export const ResultTableInteractive: Story = {
   args: { columns: COLUMNS, rows: ROWS, interactive: true, rowsReturned: 3 },
 };
 
+export const ResultTableWithGameAssets: Story = {
+  args: {
+    columns: [
+      { key: "label", label: "Keystone", format: "text", asset: "rune" },
+      { key: "item0", label: "Item", format: "text", asset: "item" },
+      {
+        key: "summoner1_id",
+        label: "Summoner spell",
+        format: "text",
+        asset: "spell",
+      },
+    ],
+    rows: [
+      {
+        label: "Conqueror",
+        values: [
+          { column: "item0", value: 3031 },
+          { column: "summoner1_id", value: 4 },
+        ],
+      },
+      {
+        label: "Arcane Comet",
+        values: [
+          { column: "item0", value: 6655 },
+          { column: "summoner1_id", value: 14 },
+        ],
+      },
+    ],
+  },
+};
+
 export const ResultTableEmpty: Story = {
   args: { columns: COLUMNS, rows: [] },
 };

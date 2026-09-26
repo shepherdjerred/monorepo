@@ -13,13 +13,22 @@ import { reportItemCatalog } from "#src/model/reports/report-query-items.ts";
 
 export type LoadoutNameKind = "rune" | "rune_tree" | "spell" | "item";
 
-export type LoadoutName = { kind: LoadoutNameKind; id: number; name: string };
+export type LoadoutName = {
+  kind: LoadoutNameKind;
+  id: number;
+  name: string;
+  /** Canonical key used by the generated browser asset manifest. */
+  assetKey: string | number;
+};
 
 export function reportLoadoutNames(): LoadoutName[] {
   const trees = runes.map((tree): LoadoutName => ({
     kind: "rune_tree",
     id: tree.id,
     name: tree.name,
+    assetKey: tree.icon
+      .slice(tree.icon.lastIndexOf("/") + 1)
+      .replace(/\.png$/u, ""),
   }));
   const perks = runes.flatMap((tree) =>
     tree.slots.flatMap((slot) =>
@@ -27,6 +36,7 @@ export function reportLoadoutNames(): LoadoutName[] {
         kind: "rune",
         id: rune.id,
         name: rune.name,
+        assetKey: rune.key,
       })),
     ),
   );
@@ -34,11 +44,13 @@ export function reportLoadoutNames(): LoadoutName[] {
     kind: "spell",
     id: Number(spell.key),
     name: spell.name,
+    assetKey: spell.id,
   }));
   const items = reportItemCatalog().map(({ rawId, item }): LoadoutName => ({
     kind: "item",
     id: rawId,
     name: item.name,
+    assetKey: rawId,
   }));
   return [...trees, ...perks, ...spells, ...items];
 }

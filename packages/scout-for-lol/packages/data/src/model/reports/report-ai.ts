@@ -2,6 +2,7 @@ import { z } from "zod";
 import { DiscordGuildIdSchema } from "#src/model/core/discord.ts";
 import {
   REPORT_QUERY_MAX_LENGTH,
+  ReportAssetKindSchema,
   ReportOutputFormatSchema,
   ReportQueryTextSchema,
 } from "#src/model/reports/report.ts";
@@ -120,6 +121,7 @@ export const ReportResultColumnSchema = z
     key: z.string().min(1),
     label: z.string().min(1),
     format: ReportValueFormatSchema,
+    asset: ReportAssetKindSchema.optional(),
   })
   .strict();
 export type ReportResultColumn = z.infer<typeof ReportResultColumnSchema>;
