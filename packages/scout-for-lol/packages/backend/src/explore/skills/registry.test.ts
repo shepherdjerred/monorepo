@@ -27,6 +27,7 @@ describe("enabledExploreSkills", () => {
     expect(names).not.toContain("scoutql");
     expect(names).toContain("visualization");
     expect(names).toContain("match-cards");
+    expect(names).toContain("loadouts");
     expect(names).not.toContain("dares");
     expect(names).not.toContain("challenges");
     expect(names).not.toContain("clash");
@@ -60,6 +61,7 @@ describe("enabledExploreSkills", () => {
       surface: "discord",
     }).map((candidate) => candidate.name);
     expect(names).not.toContain("match-cards");
+    expect(names).not.toContain("loadouts");
     // Creation is web-only structurally; the skill file must agree.
     expect(names).not.toContain("creation");
     expect(names).toContain("visualization");
@@ -77,6 +79,17 @@ describe("skill bodies", () => {
       expect(body).not.toMatch(/\{\{[a-z][a-z0-9]*\}\}/i);
       expect(body.length).toBeGreaterThan(0);
     }
+  });
+
+  test("loadouts separates match inventories from aggregate item queries", () => {
+    const body = renderExploreSkillBody(skill("loadouts"), WEB_CONTEXT);
+    expect(body).toContain("`item0` through `item6`");
+    expect(body).toContain("summoner1_id");
+    expect(body).toContain("stat_perk_*");
+    expect(body).toContain("most common individual item");
+    expect(body).toContain("exact `(match_id, puuid)` pair");
+    expect(body).toContain("acquire_match_timelines");
+    expect(skill("loadouts").surfaces).toEqual(["web", "voice"]);
   });
 
   test("mvp-votes interpolates the turn timestamp and keeps the ScoutQL tripwire", () => {

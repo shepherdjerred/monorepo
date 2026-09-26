@@ -109,6 +109,7 @@ describe("exploreAgentInstructions", () => {
     expect(everything).toContain("private to the asker");
     expect(everything).toContain("queryText to null");
     expect(everything).toContain("ScoutQL cannot answer Discord MVP ballots");
+    expect(everything).toContain("an exact (match_id, puuid) pair");
 
     // Bodies stay out: one marker line per moved section.
     expect(everything).not.toContain("game-set CTE");
@@ -116,6 +117,7 @@ describe("exploreAgentInstructions", () => {
     expect(everything).not.toContain("catalog: 'current_champions'");
     expect(everything).not.toContain("NOTHING HAS BEEN CREATED YET");
     expect(everything).not.toContain("RENDER kpi_card");
+    expect(everything).not.toContain("six item slots into one row per item");
     // The per-turn timestamp lives in the bryan-bucks skill body now, so the
     // prompt stays byte-stable across turns for the provider prompt cache.
     expect(everything).not.toContain("2026-08-29T00:00:00.000Z");
@@ -130,6 +132,7 @@ describe("exploreAgentInstructions", () => {
     expect(instructions).toContain("Set matchCards to []");
     expect(instructions).toContain("fully self-contained");
     expect(instructions).not.toContain("- match-cards:");
+    expect(instructions).not.toContain("- loadouts:");
   });
 
   test("offers match cards on the web surface via the skill index", () => {
@@ -139,6 +142,7 @@ describe("exploreAgentInstructions", () => {
     });
 
     expect(instructions).toContain("- match-cards:");
+    expect(instructions).toContain("- loadouts:");
     expect(instructions).not.toContain("fully self-contained");
   });
 
@@ -152,6 +156,7 @@ describe("exploreAgentInstructions", () => {
     expect(instructions).toContain("one-to-three-sentence summary");
     expect(instructions).toContain("- visualization:");
     expect(instructions).toContain("- match-cards:");
+    expect(instructions).toContain("- loadouts:");
     expect(instructions).not.toContain("Set includeVisualization to false");
   });
 
@@ -317,6 +322,8 @@ describe("unresolved concepts", () => {
     const listed = LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH.join(" ");
     expect(listed).not.toContain("plays well together");
     expect(listed).toContain("head-to-head");
+    expect(listed).toContain("teammate groups involving untracked players");
+    expect(listed).toContain("aggregate item or build-path statistics");
   });
 
   test("defines the Hall of Fame, which was once read as a player name", () => {
