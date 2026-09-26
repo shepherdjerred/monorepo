@@ -2,14 +2,14 @@
   "schema": "pin-candidates-state/v1",
   "pins": {
     "shepherdjerred/alert-dashboard": {
-      "buildNumber": 17488,
       "version": "2.0.0-17488",
-      "digest": "sha256:8ee63f92e0070657c296c51e92ef3b64485864c4e3c0531e916b4af706edebad"
+      "digest": "sha256:8ee63f92e0070657c296c51e92ef3b64485864c4e3c0531e916b4af706edebad",
+      "buildNumber": 17488
     },
     "shepherdjerred/birmel": {
-      "buildNumber": 17488,
       "version": "2.0.0-17488",
-      "digest": "sha256:a79365b89abe04b80c91fc4bbae2b00a1fd052eda4142031e7d13668d9da6622"
+      "digest": "sha256:a79365b89abe04b80c91fc4bbae2b00a1fd052eda4142031e7d13668d9da6622",
+      "buildNumber": 17488
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-16936",
@@ -42,9 +42,9 @@
       "buildNumber": 16936
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 17504,
-      "version": "2.0.0-17504",
-      "digest": "sha256:569c5fb6261ad9a612c3009e319e935caba09c3b38e211c73b8144e8f414e1f2"
+      "buildNumber": 17521,
+      "version": "2.0.0-17521",
+      "digest": "sha256:9464bfbb9fdd94519f5f2be1a5df502a0b755b1eebcc7f1751c5a0cb94076e59"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -53,14 +53,14 @@
       "gitSha": "c42ee297992a5be0d83541b9c7deda5d4ceb99c7"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
-      "buildNumber": 17488,
       "version": "2.0.0-17488",
-      "digest": "sha256:a64b1cbdedf50568a8be52a881736eb9fb988f30025ee73a01cbe6f7a9231429"
+      "digest": "sha256:a64b1cbdedf50568a8be52a881736eb9fb988f30025ee73a01cbe6f7a9231429",
+      "buildNumber": 17488
     },
     "shepherdjerred/streambot": {
-      "buildNumber": 17488,
       "version": "2.0.0-17488",
-      "digest": "sha256:980deeccf8c0d2ce59bc3e98964b6c2cea0112ea629972e60e59ce09f0fddcd2"
+      "digest": "sha256:980deeccf8c0d2ce59bc3e98964b6c2cea0112ea629972e60e59ce09f0fddcd2",
+      "buildNumber": 17488
     },
     "shepherdjerred/tasknotes-server": {
       "version": "2.0.0-17478",
@@ -68,9 +68,9 @@
       "buildNumber": 17478
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 17504,
-      "version": "2.0.0-17504",
-      "digest": "sha256:174b00107ed7a74c316a945f54b8549db3067ec2d277641c2b21a8d4c1641acb"
+      "buildNumber": 17521,
+      "version": "2.0.0-17521",
+      "digest": "sha256:aa9ce8e5ea1dedc6de27504dc84be0d3571a14f5a7943a298c7295fe43350fcb"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-17396",
@@ -84,9 +84,9 @@
       "gitSha": "4bab713a81af0ce1bac2a1657faa1fbac98f868d"
     },
     "shepherdjerred/trmnl-dashboard": {
-      "buildNumber": 17488,
       "version": "2.0.0-17488",
-      "digest": "sha256:ca1465c207cc16f31fc632c29c4c3a207aeefe14ed8169397085234352ea4850"
+      "digest": "sha256:ca1465c207cc16f31fc632c29c4c3a207aeefe14ed8169397085234352ea4850",
+      "buildNumber": 17488
     }
   }
 }
