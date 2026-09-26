@@ -81,6 +81,8 @@ public class ShopsTestPlugin extends JavaPlugin {
   public void onEnable() {
     var directory = Objects.requireNonNull(ShopsTestPlugin.directory, "directory");
     copy(OWNED.resolve("shops.yml"), directory.resolve("shops.yml"));
+    // Tests click faster than players; the cooldown itself is tested in ChestShopsTest.
+    rewrite(directory.resolve("shops.yml"), "clickCooldownMillis: 250", "clickCooldownMillis: 0");
     var catalogs = directory.resolve("shops");
     try (var files = Files.list(OWNED.resolve("shops"))) {
       Files.createDirectories(catalogs);
@@ -130,6 +132,18 @@ public class ShopsTestPlugin extends JavaPlugin {
             RandomGenerator.getDefault(),
             getComponentLogger());
     new ShopsModule().enable(context);
+  }
+
+  private static void rewrite(Path file, String from, String to) {
+    try {
+      var text = Files.readString(file);
+      if (!text.contains(from)) {
+        throw new IllegalStateException(file + " no longer contains " + from);
+      }
+      Files.writeString(file, text.replace(from, to));
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 
   private static void copy(Path from, Path to) {

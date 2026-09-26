@@ -27,6 +27,7 @@ public final class FakeWallets implements Wallets {
   private final Deque<Runnable> afterTransfer = new ArrayDeque<>();
   private final Deque<RuntimeException> failures = new ArrayDeque<>();
   private final Deque<Runnable> held = new ArrayDeque<>();
+  private final Deque<RuntimeException> toThrow = new ArrayDeque<>();
   private int holds;
 
   public void set(AccountId account, long crystals) {
@@ -46,6 +47,11 @@ public final class FakeWallets implements Wallets {
     afterTransfer.add(hook);
   }
 
+  /** The next transfer throws {@code failure} instead of returning a future; nothing moves. */
+  void throwNext(RuntimeException failure) {
+    toThrow.add(failure);
+  }
+
   /** The next transfer's future fails with {@code failure}; nothing moves. */
   void failNext(RuntimeException failure) {
     failures.add(failure);
@@ -59,6 +65,9 @@ public final class FakeWallets implements Wallets {
   @Override
   public CompletableFuture<Result<Receipt, EconomyError>> transfer(
       AccountId from, AccountId to, Crystals amount, String reason) {
+    if (!toThrow.isEmpty()) {
+      throw toThrow.removeFirst();
+    }
     if (!failures.isEmpty()) {
       return CompletableFuture.failedFuture(failures.removeFirst());
     }

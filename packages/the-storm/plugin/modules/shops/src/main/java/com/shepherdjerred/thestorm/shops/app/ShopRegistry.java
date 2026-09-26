@@ -4,7 +4,9 @@ import com.shepherdjerred.thestorm.shops.domain.shop.BlockPos;
 import com.shepherdjerred.thestorm.shops.domain.shop.SignShop;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,7 @@ public final class ShopRegistry {
   private final Map<Long, SignShop> byId = new HashMap<>();
   private final Map<BlockPos, Long> bySign = new HashMap<>();
   private final Map<BlockPos, Set<Long>> byContainer = new HashMap<>();
+  private final Map<Long, String> closed = new LinkedHashMap<>();
   private long lastId;
 
   /**
@@ -62,7 +65,26 @@ public final class ShopRegistry {
     byId.put(shop.id(), shop);
   }
 
+  /** Closes a shop until an admin fixes it; it stays registered and guarded but does not trade. */
+  public void close(long id, String why) {
+    if (!byId.containsKey(id)) {
+      throw new IllegalArgumentException("no shop " + id);
+    }
+    closed.put(id, why);
+  }
+
+  /** Why a shop is closed, if it is. */
+  public Optional<String> closure(long id) {
+    return Optional.ofNullable(closed.get(id));
+  }
+
+  /** Every closed shop and why, in the order they were closed. */
+  public Map<Long, String> closed() {
+    return Collections.unmodifiableMap(new LinkedHashMap<>(closed));
+  }
+
   public void remove(long id) {
+    closed.remove(id);
     var shop = byId.remove(id);
     if (shop == null) {
       return;

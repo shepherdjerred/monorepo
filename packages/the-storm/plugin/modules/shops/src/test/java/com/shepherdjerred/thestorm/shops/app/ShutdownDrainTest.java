@@ -57,7 +57,10 @@ final class ShutdownDrainTest {
     var shops =
         new ChestShops(
             wiring,
-            CreationRules.standard(new ShopLimits(Map.of(1, 1, 2, 2, 3, 3, 4, 4, 5, 5))),
+            new ChestShops.Policy(
+                CreationRules.standard(new ShopLimits(Map.of(1, 1, 2, 2, 3, 3, 4, 4, 5, 5))),
+                new ServerOffers(List.of(), registry),
+                Duration.ZERO),
             new ShopEffects() {
               @Override
               public boolean tellOwnerIfOnline(UUID owner, TradeRecord trade) {
@@ -66,8 +69,7 @@ final class ShutdownDrainTest {
 
               @Override
               public void closeViewers(List<BlockPos> containerBlocks) {}
-            },
-            new ServerOffers(List.of(), registry));
+            });
     var shop =
         new SignShop(
             1,
@@ -80,8 +82,14 @@ final class ShutdownDrainTest {
             Instant.EPOCH);
     wallets.set(BOB.account(), 100);
     wallets.holdNext();
-    return shops.trade(
-        new ChestShops.Visit(shop, Direction.BUY, BOB, bobsItems, chest, List.of(CHEST)));
+    var trade =
+        shops.trade(
+            new ChestShops.Visit(shop, Direction.BUY, BOB, bobsItems, chest, List.of(CHEST)));
+    // While the server still ran, the affordability answer came back and the trade was locked and
+    // paid for; the ledger's answer to the payment is what is still outstanding.
+    pump.runQueued();
+    assertThat(locks.idle()).isFalse();
+    return trade;
   }
 
   @Test
@@ -116,7 +124,9 @@ final class ShutdownDrainTest {
             failure -> {
               assertThat(failure.payer()).isEqualTo(BOB.account());
               assertThat(failure.payee()).isEqualTo(new AccountId.Player(ALICE));
-              assertThat(failure.reason()).startsWith("unsettled at shutdown: shop:1:buy");
+              assertThat(failure.reason())
+                  .startsWith("unsettled at shutdown: shop:1:buy")
+                  .contains("whether the payment committed is unknown");
             });
   }
 }

@@ -210,7 +210,8 @@ final class CatalogTradesTest {
         Crystals.of(1),
         new Deal.Party(ALICE.account(), new FakeHoldings(0, 1)),
         new Deal.Party(new AccountId.Server(), Holdings.UNLIMITED),
-        "test");
+        "test",
+        "coal");
   }
 
   @Test
@@ -258,5 +259,26 @@ final class CatalogTradesTest {
     assertThat(
             usage.used(ALICE.id(), new ShopStore.UsageKey("exchange", "coal", Direction.BUY)).get())
         .isEqualTo(32);
+  }
+
+  @Test
+  void aLedgerThatThrowsReleasesTheLockAndReturnsTheEscrow() {
+    var inventory = new FakeHoldings(4, 64);
+    wallets.throwNext(new IllegalStateException("ledger broke"));
+
+    assertThatThrownBy(() -> trade(EMERALD, Direction.SELL, 4, inventory))
+        .hasRootCauseMessage("ledger broke");
+    assertThat(inventory.count).isEqualTo(4);
+    assertThat(locks.idle()).isTrue();
+  }
+
+  @Test
+  void aTradeWithoutTheGoodsNeverTakesTheLock() throws Exception {
+    var lease = locks.acquire(List.of(), ALICE.id(), dummyDeal()).orElseThrow();
+
+    // Refused for the missing emeralds, not because the customer is busy.
+    assertThat(trade(EMERALD, Direction.SELL, 1, new FakeHoldings(0, 64)))
+        .isEqualTo(new TradeOutcome.Refused(new TradeProblem.NotEnoughItems(0, 1)));
+    lease.release();
   }
 }

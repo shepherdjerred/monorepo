@@ -18,9 +18,15 @@ import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeProblem;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeRecord;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeSite;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.InstantSource;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import org.slf4j.Logger;
@@ -38,17 +44,33 @@ public final class ChestShops {
   private final CreationRules rules;
   private final ShopEffects effects;
   private final ServerOffers offers;
+  private final Duration clickCooldown;
+  private final Map<UUID, Instant> lastClicks = new HashMap<>();
   private final Executor mainThread;
   private final InstantSource time;
   private final Logger logger;
 
   /**
-   * @param wiring the shared collaborators
-   * @param rules the creation rules with the configured limits
-   * @param effects tells online owners about trades and closes containers while they trade
+   * The rules shops follow.
+   *
+   * @param creation the creation rules with the configured limits
    * @param offers the server's own prices, which admin shops may not loop with
+   * @param clickCooldown the least time between one customer's trades at sign shops
    */
-  public ChestShops(Wiring wiring, CreationRules rules, ShopEffects effects, ServerOffers offers) {
+  public record Policy(CreationRules creation, ServerOffers offers, Duration clickCooldown) {
+    public Policy {
+      if (clickCooldown.isNegative()) {
+        throw new IllegalArgumentException("the click cooldown must not be negative");
+      }
+    }
+  }
+
+  /**
+   * @param wiring the shared collaborators
+   * @param policy the rules shops follow
+   * @param effects tells online owners about trades and closes containers while they trade
+   */
+  public ChestShops(Wiring wiring, Policy policy, ShopEffects effects) {
     this.registry = wiring.registry();
     this.store = wiring.store();
     this.locks = wiring.locks();
@@ -56,9 +78,10 @@ public final class ChestShops {
     this.mainThread = wiring.mainThread();
     this.time = wiring.time();
     this.logger = wiring.logger();
-    this.rules = rules;
+    this.rules = policy.creation();
+    this.offers = policy.offers();
+    this.clickCooldown = policy.clickCooldown();
     this.effects = effects;
-    this.offers = offers;
   }
 
   /**
@@ -225,12 +248,17 @@ public final class ChestShops {
     }
   }
 
-  /** Trades one lot at a shop sign. */
+  /**
+   * Trades one lot at a shop sign. Everything that can refuse a trade cheaply (the click cooldown,
+   * a closed shop, missing goods, a payer who cannot afford it) is checked before the shop is
+   * locked, so a player clicking over and over with nothing to trade never freezes the shop or
+   * closes its owner's chest.
+   */
   public CompletableFuture<TradeOutcome> trade(Visit visit) {
     var shop = visit.shop();
     var direction = visit.direction();
     var customer = visit.customer();
-    var refusal = refusal(shop, direction, customer);
+    var refusal = refusal(shop, direction, customer).or(() -> tooSoon(customer));
     if (refusal.isPresent()) {
       return completedFuture(new TradeOutcome.Refused(refusal.orElseThrow()));
     }
@@ -242,22 +270,81 @@ public final class ChestShops {
             Crystals.of(price.crystals()),
             new Deal.Party(customer.account(), visit.customerItems()),
             new Deal.Party(accountOf(shop.owner()), visit.shopItems()),
-            "shop:" + shop.id() + ":" + direction.id());
-    // Every sign on this container, and both halves of a double chest, share one lock.
-    var lease = locks.acquire(visit.containerBlocks(), customer.id(), deal);
-    if (lease.isEmpty()) {
-      return completedFuture(new TradeOutcome.Refused(new TradeProblem.Busy()));
+            "shop:" + shop.id() + ":" + direction.id(),
+            shop.item().orElseThrow().template());
+    var goods = TradeEngine.goodsProblem(deal);
+    if (goods.isPresent()) {
+      return completedFuture(new TradeOutcome.Refused(goods.orElseThrow()));
     }
-    effects.closeViewers(visit.containerBlocks());
-    return lease
-        .orElseThrow()
-        .releaseAfter(
-            engine.execute(deal),
-            completed -> journal(shop, direction, customer, price.crystals()),
+    return engine
+        .affordability(deal)
+        .thenComposeAsync(
+            problem ->
+                problem
+                    .<CompletableFuture<TradeOutcome>>map(
+                        cannot -> completedFuture(new TradeOutcome.Refused(cannot)))
+                    .orElseGet(() -> settle(visit, deal, price.crystals())),
             mainThread);
   }
 
+  /** Main thread: locks the container and customer, then settles the deal. */
+  private CompletableFuture<TradeOutcome> settle(Visit visit, Deal deal, long price) {
+    // Every sign on this container, and both halves of a double chest, share one lock.
+    var lease = locks.acquire(visit.containerBlocks(), visit.customer().id(), deal);
+    if (lease.isEmpty()) {
+      return completedFuture(new TradeOutcome.Refused(new TradeProblem.Busy()));
+    }
+    CompletableFuture<TradeOutcome> execution;
+    try {
+      effects.closeViewers(visit.containerBlocks());
+      execution = engine.execute(deal, lease.orElseThrow().trail());
+    } catch (RuntimeException e) {
+      lease.orElseThrow().release();
+      return CompletableFuture.failedFuture(e);
+    }
+    return lease
+        .orElseThrow()
+        .releaseAfter(
+            execution,
+            completed -> journal(visit.shop(), deal.direction(), visit.customer(), price),
+            mainThread);
+  }
+
+  /** Refuses a click too soon after the customer's last one; every click restarts the wait. */
+  private Optional<TradeProblem> tooSoon(Customer customer) {
+    var now = time.instant();
+    var last = lastClicks.put(customer.id(), now);
+    return last != null && last.plus(clickCooldown).isAfter(now)
+        ? Optional.of(new TradeProblem.TooFast())
+        : Optional.empty();
+  }
+
+  /**
+   * Closes every admin shop whose prices loop with the server's, for example after a catalog edit.
+   * Called once the shops are loaded; each closed shop is logged loudly and listed by {@code /shop}
+   * for admins.
+   *
+   * @return the shops closed
+   */
+  public List<SignShop> closeLoopingAdminShops() {
+    var closedNow = new ArrayList<SignShop>();
+    for (var shop : registry.all()) {
+      var loop = offers.check(shop);
+      if (loop.isPresent()) {
+        var why = loop.orElseThrow().describe();
+        registry.close(shop.id(), why);
+        logger.error("Closed admin shop {} at {}: {}", shop.id(), shop.sign(), why);
+        closedNow.add(shop);
+      }
+    }
+    return List.copyOf(closedNow);
+  }
+
   private Optional<TradeProblem> refusal(SignShop shop, Direction direction, Customer customer) {
+    var closure = registry.closure(shop.id());
+    if (closure.isPresent()) {
+      return Optional.of(new TradeProblem.ShopClosed(closure.orElseThrow()));
+    }
     if (shop.item().isEmpty()) {
       return Optional.of(new TradeProblem.ItemNotSet());
     }

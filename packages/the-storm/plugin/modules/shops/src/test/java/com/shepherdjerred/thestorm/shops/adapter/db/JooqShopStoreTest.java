@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.shops.app.HeldItems;
 import com.shepherdjerred.thestorm.shops.app.RefundFailure;
 import com.shepherdjerred.thestorm.shops.app.ShopStore;
 import com.shepherdjerred.thestorm.shops.domain.price.ShopPrices;
@@ -189,6 +190,7 @@ final class JooqShopStoreTest {
             new AccountId.Player(BOB),
             Crystals.of(50),
             "refund:shop:1:buy",
+            Optional.of(new HeldItems("c3dvcmQ=", 16)),
             NOW);
 
     assertThat(store.recordRefundFailure(failure).get()).isEqualTo(1);
@@ -196,13 +198,21 @@ final class JooqShopStoreTest {
             store
                 .recordRefundFailure(
                     new RefundFailure(
-                        new AccountId.Server(), new AccountId.Town(BOB), Crystals.of(1), "r", NOW))
+                        new AccountId.Server(),
+                        new AccountId.Town(BOB),
+                        Crystals.of(1),
+                        "r",
+                        Optional.empty(),
+                        NOW))
                 .get())
         .isEqualTo(2);
 
     var rows = database.read(dsl -> dsl.selectFrom(SHOPS_REFUND_FAILURE).fetch()).get();
     assertThat(rows).hasSize(2);
     assertThat(rows.getFirst().getPayerKind()).isEqualTo("player");
+    assertThat(rows.getFirst().getHeldItem()).isEqualTo("c3dvcmQ=");
+    assertThat(rows.getFirst().getHeldQuantity()).isEqualTo(16);
+    assertThat(rows.get(1).getHeldItem()).isNull();
     assertThat(rows.getFirst().getPayeeId()).isEqualTo(BOB.toString());
     assertThat(rows.getFirst().getAmount()).isEqualTo(50);
     assertThat(rows.get(1).getPayerKind()).isEqualTo("server");

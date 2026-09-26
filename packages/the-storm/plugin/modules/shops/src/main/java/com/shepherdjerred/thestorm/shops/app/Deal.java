@@ -13,9 +13,17 @@ import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
  * @param customer the customer's wallet and inventory
  * @param shop the shop's wallet (its owner, or the server) and stock
  * @param reason the ledger reason, such as {@code shop:chest:12:buy}
+ * @param goods the item, as the refund-failure log keeps it: a chest shop's serialized fingerprint
+ *     or a catalog item key
  */
 public record Deal(
-    Direction direction, int quantity, Crystals price, Party customer, Party shop, String reason) {
+    Direction direction,
+    int quantity,
+    Crystals price,
+    Party customer,
+    Party shop,
+    String reason,
+    String goods) {
 
   /**
    * One side of a trade.

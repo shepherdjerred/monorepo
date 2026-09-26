@@ -15,8 +15,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
- * {@code /shop}: how many chest shops you own and may own. Admins also get {@code /shop <catalog>},
- * which opens any NPC shop without its NPC, for testing.
+ * {@code /shop}: how many chest shops you own and may own; admins also see every closed admin shop.
+ * Admins also get {@code /shop <catalog>}, which opens any NPC shop without its NPC, for testing.
  */
 final class ShopCommand {
 
@@ -72,6 +72,28 @@ final class ShopCommand {
                     + " chest shops Shopkeeper "
                     + level
                     + " allows."));
+    if (player.hasPermission(ShopsPaper.ADMIN_PERMISSION)) {
+      registry
+          .closed()
+          .forEach(
+              (id, why) ->
+                  registry
+                      .byId(id)
+                      .ifPresent(
+                          shop ->
+                              player.sendMessage(
+                                  Replies.error(
+                                      "Admin shop "
+                                          + id
+                                          + " at "
+                                          + shop.sign().x()
+                                          + " "
+                                          + shop.sign().y()
+                                          + " "
+                                          + shop.sign().z()
+                                          + " is closed: "
+                                          + why))));
+    }
     return Command.SINGLE_SUCCESS;
   }
 

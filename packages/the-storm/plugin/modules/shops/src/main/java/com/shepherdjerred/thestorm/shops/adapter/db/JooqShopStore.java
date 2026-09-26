@@ -204,6 +204,13 @@ public final class JooqShopStore implements ShopStore {
           record.setPayeeId(id(failure.payee()));
           record.setAmount(failure.amount().amount());
           record.setReason(failure.reason());
+          failure
+              .held()
+              .ifPresent(
+                  held -> {
+                    record.setHeldItem(held.item());
+                    record.setHeldQuantity(held.quantity());
+                  });
           record.setAt(failure.at().toEpochMilli());
           record.store();
           return record.getId().longValue();
