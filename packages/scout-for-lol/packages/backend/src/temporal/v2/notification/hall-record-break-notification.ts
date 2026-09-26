@@ -127,6 +127,11 @@ export async function hallRecordBreakSuppressionV2(
       detail: "a Hall announcement must target a guild channel",
     });
   }
+  const enabled = await isPolicyEnabled("hall_of_fame_enabled", {
+    server: announcement.guildId,
+  });
+  if (!enabled) return "feature-disabled";
+
   const channel = await fetchChannelForDelivery(target.channelId);
   if (channel !== null) {
     const guildId: unknown = "guildId" in channel ? channel.guildId : undefined;
@@ -137,10 +142,7 @@ export async function hallRecordBreakSuppressionV2(
       });
     }
   }
-  const enabled = await isPolicyEnabled("hall_of_fame_enabled", {
-    server: announcement.guildId,
-  });
-  return enabled ? undefined : "feature-disabled";
+  return undefined;
 }
 
 /**

@@ -181,6 +181,7 @@ describe("the hall record-break policy", () => {
     expect(stubs.isPolicyEnabled).toHaveBeenCalledWith("hall_of_fame_enabled", {
       server: hallGuildId,
     });
+    expect(stubs.fetchChannelForDelivery).not.toHaveBeenCalled();
   });
 
   test("permits the send while the guild has the Hall on", async () => {
@@ -189,14 +190,17 @@ describe("the hall record-break policy", () => {
     expect(await hallRecordBreakSuppressionV2(hallRecord())).toBeUndefined();
   });
 
-  test("refuses a target channel in another guild before the flag check", async () => {
+  test("refuses a target channel in another guild before sending", async () => {
+    stubs.isPolicyEnabled.mockResolvedValue(true);
     stubs.fetchChannelForDelivery.mockResolvedValue({
       guildId: "100000000000000002",
     });
     await expect(hallRecordBreakSuppressionV2(hallRecord())).rejects.toThrow(
       MalformedAnnouncementIntentError,
     );
-    expect(stubs.isPolicyEnabled).not.toHaveBeenCalled();
+    expect(stubs.isPolicyEnabled).toHaveBeenCalledWith("hall_of_fame_enabled", {
+      server: hallGuildId,
+    });
   });
 });
 
