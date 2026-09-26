@@ -57,6 +57,7 @@ export function executionDomainForTaskQueue(
     case TASK_QUEUES.BILLING:
     case TASK_QUEUES.AGENT_CHAT_INGRESS:
     case TASK_QUEUES.AGENT_CHAT_DELIVERY:
+    case TASK_QUEUES.AGENT_CHAT_IMESSAGE:
       return "platform";
     case TASK_QUEUES.WORKFLOWS:
       return "platform";
@@ -140,6 +141,8 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   // TASK_QUEUES.AGENT_TASK
   agentTaskWorkflow: "agent",
   agentChatWorkflow: "agent",
+  blueBubblesIngressWorkflow: "agent",
+  imessageAgentChatWorkflow: "agent",
   agentChatTurnReceiptWorkflow: "agent",
   agentChatCatalogWorkflow: "agent",
   scheduledAgentChatTurnWorkflow: "agent",

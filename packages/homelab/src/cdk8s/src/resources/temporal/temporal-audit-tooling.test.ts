@@ -473,6 +473,8 @@ describe("Temporal domain worker isolation", () => {
       "AGENT_TASK_API_TOKEN",
       "SLEEP_WEBHOOK_TOKEN",
       "XCODE_CLOUD_WEBHOOK_TOKEN",
+      "BLUEBUBBLES_URL",
+      "BLUEBUBBLES_PASSWORD",
     ]) {
       expect(gatewayEnv).toContain(required);
       expect(homeEnv).not.toContain(required);

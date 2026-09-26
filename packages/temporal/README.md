@@ -27,19 +27,19 @@ The central Scout worker also polls its unchanged `scout` queue in `beta` for
 the beta-owned Bryan Bucks analytics schedule; all other central queues are
 `prod` only.
 
-| Role              | Queue or surface                                                  | Activity concurrency |
-| ----------------- | ----------------------------------------------------------------- | -------------------: |
-| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery` |          4 per queue |
-| `home`            | `home`                                                            |                    4 |
-| `reports`         | `reports`                                                         |                    4 |
-| `infra`           | `infra`                                                           |                    1 |
-| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`   |          1 per queue |
-| `scout`           | `scout`                                                           |                    1 |
-| `agent`           | `agent-task`                                                      |                    1 |
-| `glitter-corpus`  | `glitter-corpus`                                                  |                    1 |
-| `glitter-context` | `glitter-context`                                                 |                    1 |
-| `maintenance`     | `maintenance`                                                     |                    1 |
-| `workflows`       | `monorepo-workflows`                                              |                 none |
+| Role              | Queue or surface                                                                         | Activity concurrency |
+| ----------------- | ---------------------------------------------------------------------------------------- | -------------------: |
+| `control`         | schedules, HTTP APIs, `agent-chat-ingress`, `agent-chat-delivery`, `agent-chat-imessage` |          4 per queue |
+| `home`            | `home`                                                                                   |                    4 |
+| `reports`         | `reports`                                                                                |                    4 |
+| `infra`           | `infra`                                                                                  |                    1 |
+| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts`                          |          1 per queue |
+| `scout`           | `scout`                                                                                  |                    1 |
+| `agent`           | `agent-task`                                                                             |                    1 |
+| `glitter-corpus`  | `glitter-corpus`                                                                         |                    1 |
+| `glitter-context` | `glitter-context`                                                                        |                    1 |
+| `maintenance`     | `maintenance`                                                                            |                    1 |
+| `workflows`       | `monorepo-workflows`                                                                     |                 none |
 
 The production manifests land in layers. The gateway, Workflow worker, and
 domain Activity Workers deploy independently so each queue has its own
@@ -118,6 +118,41 @@ credentialless stable poller. A later distinct candidate pin creates the ramp
 target, and `start --stable-build-id` establishes stable before sending 10% to
 candidate. The embedded poller remains only to drain old unversioned histories.
 Production remains embedded until beta acceptance completes.
+
+## BlueBubbles iMessage ingress
+
+The control worker starts `blueBubblesIngressWorkflow` when both
+`BLUEBUBBLES_URL` and `BLUEBUBBLES_PASSWORD` bootstrap credentials are present.
+Missing both leaves the connector inactive; a partial pair fails startup.
+Behavior uses the typed `temporal-agent-chat-imessage-*` flags, not environment
+variables. Production defaults off with an empty sender allowlist.
+
+The durable cursor excludes historical messages. Disabled or unowned polling
+advances the ROWID watermark, so activation does not backfill the disabled period.
+It advances by Messages database ROWID only after each command settles,
+and survives worker restarts and Continue-As-New. Incoming commands are processed
+in ROWID order so chat selection cannot race a following message. BlueBubbles
+retains incoming messages while a provider turn runs; ingestion resumes afterward.
+Only exact allowlisted sender handles in direct conversations are accepted.
+Outgoing messages, groups, attachments without text, and reactions are ignored.
+
+| Input                          | Operation                                                 |
+| ------------------------------ | --------------------------------------------------------- |
+| `/new claude <prompt>`         | Create and select a Claude Code chat                      |
+| `/new codex <prompt>`          | Create and select a Codex chat                            |
+| `/chats`                       | List recent chats from every transport and schedules      |
+| `/use <chat-id>`               | Select any existing chat, including catalog-evicted chats |
+| `/continue <chat-id> <prompt>` | Continue and select an explicit previous chat             |
+| Ordinary text                  | Continue the selected chat                                |
+| `/help`                        | Show command syntax and prompt limits                     |
+
+Prompts are limited to 4,000 characters. Poll responses are bounded to 2 MiB,
+999 messages, and 50 durable commands per batch. An oversized backlog fails
+without advancing the cursor. Polling retries connection failures with durable
+backoff. Replies use AppleScript, so the BlueBubbles Private API is unnecessary.
+Delivery has one attempt: an ambiguous send fails its command Workflow without
+repeating inference or sending another reply automatically. The checkpointed
+response remains in Temporal for operator inspection.
 
 ## Documentation
 

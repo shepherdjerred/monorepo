@@ -2,6 +2,7 @@ import {
   allHandlersFinished,
   condition,
   continueAsNew,
+  patched,
   setHandler,
   workflowInfo,
 } from "@temporalio/workflow";
@@ -33,6 +34,9 @@ import {
   resolveAgentChatBindingQuery,
   settleAgentChatTurnUpdate,
 } from "#shared/agent/agent-chat-workflow.ts";
+
+const REGISTER_AND_BIND_PRECEDENCE_PATCH =
+  "agent-chat-register-and-bind-precedence-v1";
 
 function catalogStateBytes(state: AgentChatCatalogState): number {
   return new TextEncoder().encode(JSON.stringify(state)).byteLength;
@@ -100,6 +104,25 @@ function existingBindingWins(
   return false;
 }
 
+function retainedBindingEntry(
+  state: AgentChatCatalogState,
+  next: AgentChatCatalogState["bindings"][number],
+): AgentChatCatalogEntry | undefined {
+  const bindingKey = agentChatBindingKey(next.binding);
+  const existing = state.bindings.find(
+    (candidate) => agentChatBindingKey(candidate.binding) === bindingKey,
+  );
+  if (existing === undefined || !existingBindingWins(existing, next)) {
+    return undefined;
+  }
+  const selected = entryFor(state, existing.chatId);
+  if (selected === undefined) {
+    throw new Error(
+      `Agent chat binding points to unknown chat ${existing.chatId}`,
+    );
+  }
+  return selected;
+}
 function oldestBindingIndex(
   state: AgentChatCatalogState,
   protectedBindingKey?: string,
@@ -323,15 +346,8 @@ function bind(
     }
     return selected;
   }
-  if (existing !== undefined && existingBindingWins(existing, next)) {
-    const selected = entryFor(state, existing.chatId);
-    if (selected === undefined) {
-      throw new Error(
-        `Agent chat binding points to unknown chat ${existing.chatId}`,
-      );
-    }
-    return selected;
-  }
+  const retained = retainedBindingEntry(state, next);
+  if (retained !== undefined) return retained;
   if (existing === undefined) {
     state.bindings.push(next);
   } else {
@@ -341,14 +357,35 @@ function bind(
   return entry;
 }
 
-export function registerAndBindAgentChatCatalogEntry(
-  state: AgentChatCatalogState,
-  rawEntry: AgentChatCatalogEntry,
-  rawBinding: AgentChatBinding,
-  update: AgentChatBindingUpdateInput,
-): AgentChatCatalogEntry {
+type RegisterAndBindAgentChatCatalogEntryInput = {
+  state: AgentChatCatalogState;
+  entry: AgentChatCatalogEntry;
+  binding: AgentChatBinding;
+  update: AgentChatBindingUpdateInput;
+  precedenceBeforeRegistration?: boolean;
+};
+
+export function registerAndBindAgentChatCatalogEntry({
+  state,
+  entry: rawEntry,
+  binding: rawBinding,
+  update: rawUpdate,
+  precedenceBeforeRegistration = true,
+}: RegisterAndBindAgentChatCatalogEntryInput): AgentChatCatalogEntry {
+  const candidate = AgentChatCatalogEntrySchema.parse(rawEntry);
+  const binding = AgentChatBindingSchema.parse(rawBinding);
+  const update = parseBindingUpdate(rawUpdate);
+  const next = AgentChatCatalogBindingSchema.parse({
+    binding,
+    chatId: candidate.config.chatId,
+    ...update,
+  });
+  if (precedenceBeforeRegistration) {
+    const retained = retainedBindingEntry(state, next);
+    if (retained !== undefined) return retained;
+  }
   const entry = registerAgentChatCatalogEntry(state, rawEntry);
-  return bind(state, rawBinding, entry.config.chatId, update);
+  return bind(state, binding, entry.config.chatId, update);
 }
 
 function resolve(
@@ -377,11 +414,17 @@ export async function agentChatCatalogWorkflow(
   setHandler(settleAgentChatTurnUpdate, (entry, turnCount, updatedAt) =>
     settleAgentChatCatalogTurn(state, entry, turnCount, updatedAt),
   );
-  setHandler(registerAndBindAgentChatUpdate, (entry, binding, updatedAt) =>
-    registerAndBindAgentChatCatalogEntry(state, entry, binding, updatedAt),
+  setHandler(registerAndBindAgentChatUpdate, (entry, binding, update) =>
+    registerAndBindAgentChatCatalogEntry({
+      state,
+      entry,
+      binding,
+      update,
+      precedenceBeforeRegistration: patched(REGISTER_AND_BIND_PRECEDENCE_PATCH),
+    }),
   );
-  setHandler(bindAgentChatUpdate, (binding, chatId, updatedAt) =>
-    bind(state, binding, chatId, updatedAt),
+  setHandler(bindAgentChatUpdate, (binding, chatId, update) =>
+    bind(state, binding, chatId, update),
   );
   setHandler(resolveAgentChatBindingQuery, (binding) =>
     resolve(state, binding),

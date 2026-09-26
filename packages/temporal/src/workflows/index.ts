@@ -151,6 +151,23 @@ import type {
   HttpAgentChatCommand,
   HttpAgentChatStartOptions,
 } from "#shared/agent/agent-chat-http.ts";
+import type {
+  BlueBubblesCursor,
+  ImessageCommand,
+} from "#shared/agent/agent-chat-imessage.ts";
+import { blueBubblesIngressWorkflow as _blueBubblesIngressWorkflow } from "./imessage/ingress.ts";
+import { imessageAgentChatWorkflow as _imessageAgentChatWorkflow } from "./imessage/message.ts";
+
+export async function blueBubblesIngressWorkflow(
+  cursor: BlueBubblesCursor,
+): Promise<never> {
+  return _blueBubblesIngressWorkflow(cursor);
+}
+export async function imessageAgentChatWorkflow(
+  command: ImessageCommand,
+): Promise<void> {
+  return _imessageAgentChatWorkflow(command);
+}
 
 export function workerDeploymentCanaryWorkflow(
   input: WorkerDeploymentCanaryInput,
