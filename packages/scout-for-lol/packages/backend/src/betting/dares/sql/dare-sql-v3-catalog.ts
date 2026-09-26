@@ -1,5 +1,5 @@
 import {
-  ITEM_SLOT_COLUMNS,
+  LOADOUT_COLUMNS,
   MATCH_LAKE_COLUMNS,
   MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
@@ -32,8 +32,8 @@ function columns(values: Record<string, DuckDbColumnType>) {
   return Object.entries(values).map(([name, type]) => ({ name, type }));
 }
 
-/** Dares read participant stats, not inventories: the slots stay out. */
-const DARE_EXCLUDED_COLUMNS = new Set<string>(ITEM_SLOT_COLUMNS);
+/** Dares read participant stats, not loadouts: items, spells and runes stay out. */
+const DARE_EXCLUDED_COLUMNS = new Set<string>(LOADOUT_COLUMNS);
 
 export function dareSqlV3Catalog() {
   const participantColumns = columns(MATCH_LAKE_COLUMNS).filter(

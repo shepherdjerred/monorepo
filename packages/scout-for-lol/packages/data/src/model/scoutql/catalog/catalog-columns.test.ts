@@ -99,6 +99,15 @@ describe("virtual dimensions match what the engine can compute", () => {
       "surrender_state",
       "arena_placement",
       "map",
+      // Loadout names from the bundled catalogs (column-map.ts
+      // LOADOUT_NAME_COLUMNS); joined only when a query names one.
+      "keystone",
+      "primary_tree",
+      "secondary_tree",
+      "summoner1",
+      "summoner2",
+      "spells",
+      "items",
       // Looked up from the participant's team row (column-map.ts
       // TEAM_LOOKUP_COLUMNS); joined only when a query names one.
       "team_champion_kills",

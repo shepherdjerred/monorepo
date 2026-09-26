@@ -1,5 +1,5 @@
 import {
-  ITEM_SLOT_COLUMNS,
+  LOADOUT_COLUMNS,
   MATCH_LAKE_COLUMNS,
   MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
@@ -77,15 +77,11 @@ const DURATION_COLUMNS = new Set([
   "time_ccing_others",
 ]);
 
-/**
- * Excluded from every catalog: partitioning and dedupe plumbing, and the raw
- * inventory slots, which no ScoutQL source reads yet.
- */
-const INTERNAL_COLUMNS = new Set<string>([
-  "month",
-  "dedupe_key",
-  ...ITEM_SLOT_COLUMNS,
-]);
+/** Internal plumbing excluded from every catalog (partitioning / dedupe). */
+const INTERNAL_COLUMNS = new Set(["month", "dedupe_key"]);
+
+/** Loadout ids are identifiers, so they display as text, never as counts. */
+const LOADOUT = new Set(LOADOUT_COLUMNS);
 
 function rawDisplayKind(
   name: string,
@@ -96,6 +92,9 @@ function rawDisplayKind(
   }
   if (name === "kda") {
     return "ratio";
+  }
+  if (LOADOUT.has(name)) {
+    return "text";
   }
   switch (type) {
     case "timestamp":
@@ -185,6 +184,8 @@ const GROUP_EXCLUDED = new Set([
   "placement",
   "subteam_placement",
   "player_subteam_id",
+  // One player's loadout has no meaning for a group row.
+  ...LOADOUT_COLUMNS,
 ]);
 
 function playerGroupsColumns(): ScoutQlColumnInfo[] {

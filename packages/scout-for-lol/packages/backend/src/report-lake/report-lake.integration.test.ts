@@ -300,6 +300,57 @@ describe("flatten", () => {
     }
   });
 
+  test("flattenMatch carries each participant's final build, spells and rune page", async () => {
+    const match = await loadMatchFixture();
+    const rows = flattenMatch(match);
+    for (const [index, participant] of match.info.participants.entries()) {
+      const row = rows[index];
+      if (row === undefined) {
+        throw new Error("row missing");
+      }
+      const primary = participant.perks.styles.find(
+        (style) => style.description === "primaryStyle",
+      );
+      const sub = participant.perks.styles.find(
+        (style) => style.description === "subStyle",
+      );
+      expect(row).toMatchObject({
+        item0: participant.item0,
+        item6: participant.item6,
+        summoner1_id: participant.summoner1Id,
+        summoner2_id: participant.summoner2Id,
+        perk_primary_style: primary?.style ?? null,
+        perk_sub_style: sub?.style ?? null,
+        perk0: primary?.selections[0]?.perk ?? null,
+        perk4: sub?.selections[0]?.perk ?? null,
+      });
+    }
+  });
+
+  test("a participant without runes keeps its rune page NULL", async () => {
+    const match = await loadMatchFixture();
+    const [first, ...rest] = match.info.participants;
+    if (first === undefined) {
+      throw new Error("fixture has no participants");
+    }
+    const noRunes = RawMatchSchema.parse({
+      ...match,
+      info: {
+        ...match.info,
+        participants: [
+          { ...first, perks: { ...first.perks, styles: [] } },
+          ...rest,
+        ],
+      },
+    });
+    expect(flattenMatch(noRunes)[0]).toMatchObject({
+      perk_primary_style: null,
+      perk0: null,
+      stat_perk_offense: null,
+      summoner1_id: first.summoner1Id,
+    });
+  });
+
   test("flattens normalized teams and bans for ordinary SQL joins", async () => {
     const match = await loadMatchFixture();
     const ordinaryMatch = RawMatchSchema.parse({
