@@ -258,6 +258,22 @@ describe("the hall record-break announcement codec", () => {
     ).toThrow();
   });
 
+  test("refuses a record from another match in the same announcement", () => {
+    const envelope = hallEnvelope(2);
+    expect(() =>
+      hallRecordBreakAnnouncementCodec.parse({
+        ...envelope,
+        data: {
+          ...envelope.data,
+          records: [
+            envelope.data.records[0],
+            { ...envelope.data.records[1], matchId: "NA1_9302" },
+          ],
+        },
+      }),
+    ).toThrow("Hall records must belong to the announced match");
+  });
+
   test("refuses a channel in the payload: the intent's target owns it", () => {
     const envelope = hallEnvelope(1);
     expect(() =>

@@ -364,11 +364,19 @@ export function dareSummaryAnnouncementEnvelope(
 export type HallRecordBreakAnnouncement = z.infer<
   typeof HallRecordBreakAnnouncementSchema
 >;
-export const HallRecordBreakAnnouncementSchema = z.strictObject({
-  guildId: DiscordGuildIdSchema,
-  riotMatchId: RiotMatchIdSchema,
-  records: HallBreakRecordsSchema,
-});
+export const HallRecordBreakAnnouncementSchema = z
+  .strictObject({
+    guildId: DiscordGuildIdSchema,
+    riotMatchId: RiotMatchIdSchema,
+    records: HallBreakRecordsSchema,
+  })
+  .refine(
+    (announcement) =>
+      announcement.records.every(
+        (record) => record.matchId === announcement.riotMatchId,
+      ),
+    { message: "Hall records must belong to the announced match" },
+  );
 
 export const hallRecordBreakAnnouncementCodec = defineVersionedCodec({
   kind: "scout-hall-record-break-announcement",
