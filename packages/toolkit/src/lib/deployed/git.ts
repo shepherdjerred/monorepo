@@ -166,6 +166,7 @@ export async function commitThatWroteDigest(
     const patch = await gitOut([
       "show",
       "--format=",
+      "--diff-merges=first-parent",
       "--unified=0",
       sha,
       "--",
