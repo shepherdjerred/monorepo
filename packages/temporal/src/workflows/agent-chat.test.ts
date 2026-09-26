@@ -536,9 +536,80 @@ test("rejects a changed retry that reuses a binding operation identity", () => {
   ).toEqual(firstEntry);
   expect(() =>
     registerAndBindAgentChatCatalogEntry(state, secondEntry, binding, update),
-  ).toThrow(
-    "binding operation binding-retry-1 was reused with different input",
-  );
+  ).toThrow("operation binding-retry-1 was reused with different input");
+});
+
+test("keeps a completed binding operation idempotent after a newer selection", () => {
+  const firstEntry: AgentChatCatalogEntry = {
+    schemaVersion: 1,
+    config: CONFIG,
+    updatedAt: CONFIG.createdAt,
+    turnCount: 0,
+  };
+  const secondEntry: AgentChatCatalogEntry = {
+    ...firstEntry,
+    config: { ...CONFIG, chatId: "newer-binding-selection" },
+  };
+  const binding = { kind: "discord" as const, channelId: "operation-channel" };
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: [firstEntry, secondEntry],
+    bindings: [],
+    retiredChatIds: [],
+  };
+  const first = {
+    updatedAt: "2026-09-14T16:01:00.000Z",
+    sourceSequence: "1",
+    tieBreaker: "operation-a",
+    orderingVersion: 1 as const,
+  };
+
+  registerAndBindAgentChatCatalogEntry(state, firstEntry, binding, first);
+  registerAndBindAgentChatCatalogEntry(state, secondEntry, binding, {
+    updatedAt: "2026-09-14T16:02:00.000Z",
+    sourceSequence: "2",
+    tieBreaker: "operation-b",
+    orderingVersion: 1,
+  });
+
+  expect(
+    registerAndBindAgentChatCatalogEntry(state, firstEntry, binding, first),
+  ).toEqual(firstEntry);
+  expect(state.bindings[0]?.chatId).toBe(secondEntry.config.chatId);
+});
+
+test("accepts a new ordering epoch after a source sequence reset", () => {
+  const firstEntry: AgentChatCatalogEntry = {
+    schemaVersion: 1,
+    config: CONFIG,
+    updatedAt: CONFIG.createdAt,
+    turnCount: 0,
+  };
+  const resetEntry: AgentChatCatalogEntry = {
+    ...firstEntry,
+    config: { ...CONFIG, chatId: "reset-sequence-selection" },
+  };
+  const binding = { kind: "imessage" as const, conversationId: "reset-chat" };
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: [firstEntry, resetEntry],
+    bindings: [],
+    retiredChatIds: [],
+  };
+
+  registerAndBindAgentChatCatalogEntry(state, firstEntry, binding, {
+    updatedAt: "2026-09-14T16:01:00.000Z",
+    sourceSequence: "9223372036854775806",
+    orderingVersion: 1,
+  });
+  expect(
+    registerAndBindAgentChatCatalogEntry(state, resetEntry, binding, {
+      updatedAt: "2026-09-14T16:02:00.000Z",
+      sourceSequence: "1",
+      sourceEpoch: "1",
+      orderingVersion: 1,
+    }),
+  ).toEqual(resetEntry);
 });
 
 async function testFreshCatalogRecovery(): Promise<void> {

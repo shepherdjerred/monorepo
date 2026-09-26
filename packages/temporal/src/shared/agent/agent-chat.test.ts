@@ -147,5 +147,8 @@ describe("agent chat contract", () => {
     expect(() =>
       AgentChatSourceSequenceSchema.parse("99999999999999999999"),
     ).toThrow();
+    expect(() =>
+      AgentChatSourceSequenceSchema.parse(9_007_199_254_740_992),
+    ).toThrow();
   });
 });
