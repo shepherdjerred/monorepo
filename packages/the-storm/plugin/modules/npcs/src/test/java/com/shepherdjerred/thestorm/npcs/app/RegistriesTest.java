@@ -130,6 +130,7 @@ final class RegistriesTest {
             new PurchaseProblem.QuoteChanged(quote, quote),
             new PurchaseProblem.StillLoading(),
             new PurchaseProblem.LoadFailed(),
+            new PurchaseProblem.PermissionsUnavailable(),
             new PurchaseProblem.ShuttingDown(),
             new PurchaseProblem.AlreadyBuying(),
             new PurchaseProblem.NotRecorded(quote));
@@ -143,6 +144,7 @@ final class RegistriesTest {
             "The price changed while you decided; here is the new offer.",
             "Your training records are still loading. Try again in a moment.",
             "Your training records could not be loaded. Try again shortly.",
+            "Training permissions are unavailable. Try again shortly.",
             "The server is restarting. Try again after.",
             "Your last purchase is still going through.",
             "The lesson could not be recorded, so your crystals were refunded.");
