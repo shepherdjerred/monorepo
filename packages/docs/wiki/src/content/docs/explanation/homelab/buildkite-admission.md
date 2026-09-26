@@ -48,6 +48,13 @@ nominal quota is:
 Jobs that do not fit stay **suspended** until resources are released. No pods are
 created, so there is no churn to observe and nothing to evict.
 
+Kueue admits these jobs by resource fit without waiting for pod readiness.
+Buildkite runs checkout as a regular container that exits after cloning. That
+leaves the pod `NotReady` while its command continues, so Kueue's default
+readiness deadline would evict healthy long-running jobs. The
+[Kueue configuration](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/argo-applications/platform/kueue.ts)
+disables that deadline while retaining quota admission.
+
 This keeps resource pressure quiet at admission time. Buildkite's count cap
 remains an independent backstop rather than the primary control.
 

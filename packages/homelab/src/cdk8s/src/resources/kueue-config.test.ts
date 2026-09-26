@@ -66,6 +66,53 @@ function synthKueueAppDocuments(): unknown[] {
 }
 
 describe("kueue-config", () => {
+  it("does not evict Buildkite jobs after checkout makes their pods NotReady", () => {
+    const documents = synthKueueAppDocuments();
+    const application = documents.find(
+      (document) =>
+        z
+          .object({
+            kind: z.literal("Application"),
+            metadata: z.object({ name: z.literal("kueue") }).loose(),
+          })
+          .loose()
+          .safeParse(document).success,
+    );
+    const config = z
+      .object({
+        spec: z.object({
+          source: z.object({
+            helm: z.object({
+              valuesObject: z.object({
+                managerConfig: z.object({
+                  controllerManagerConfigYaml: z.string(),
+                }),
+              }),
+            }),
+          }),
+        }),
+      })
+      .parse(application);
+    const kueueConfig: unknown = parseYaml(
+      config.spec.source.helm.valuesObject.managerConfig
+        .controllerManagerConfigYaml,
+    );
+    expect(
+      z
+        .object({
+          managedJobsNamespaceSelector: z.object({
+            matchLabels: z.object({
+              "kueue.x-k8s.io/managed-namespace": z.literal("true"),
+            }),
+          }),
+          featureGates: z.object({
+            DisableWaitForPodsReady: z.literal(true),
+          }),
+        })
+        .parse(kueueConfig),
+    ).toBeDefined();
+  });
+
   it("covers pods as a resource, alongside cpu and memory", () => {
     const clusterQueue = synthKueueClusterQueue();
     const group = clusterQueue.spec.resourceGroups[0];
