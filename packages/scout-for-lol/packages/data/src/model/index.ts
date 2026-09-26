@@ -49,6 +49,7 @@ export * from "./reports/report-query-champions.ts";
 export * from "./reports/temporal-analysis.ts";
 export * from "./reports/visualization-transforms.ts";
 export * from "./reports/report-result-format.ts";
+export * from "./reports/report-assets.ts";
 export * from "./riot/roster.ts";
 export * from "./core/state.ts";
 export * from "./core/subscription-filter.ts";

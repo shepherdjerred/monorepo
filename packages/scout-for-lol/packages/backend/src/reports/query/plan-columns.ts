@@ -5,6 +5,7 @@ import {
   type ReportResultColumn,
   type ReportValueFormat,
 } from "@scout-for-lol/data";
+import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
 
 /**
@@ -82,12 +83,34 @@ export function planResultColumns(
   plan: ScoutQlPlan,
   columns: string[],
 ): ReportResultColumn[] {
-  return columns.map((column) => ({
-    key: column,
-    label:
+  const catalog = scoutQlSourceCatalog(plan.source);
+  const groupingAsset = (index: number) => {
+    const grouping = plan.groupings[index];
+    return grouping?.kind === "column"
+      ? catalog?.columns.get(grouping.column)?.asset
+      : undefined;
+  };
+
+  return columns.map((column) => {
+    const output = plan.outputs.find((candidate) => candidate.name === column);
+    const asset =
       column === LABEL_COLUMN
-        ? planLabelColumnLabel(plan)
-        : columnLabel(column),
-    format: displayKindFormat(planDisplayKind(plan, column)),
-  }));
+        ? plan.groupings.length === 1
+          ? groupingAsset(0)
+          : undefined
+        : output === undefined
+          ? catalog?.columns.get(column)?.asset
+          : output.expr.kind === "grouping-ref"
+            ? groupingAsset(output.expr.index)
+            : undefined;
+    return {
+      key: column,
+      label:
+        column === LABEL_COLUMN
+          ? planLabelColumnLabel(plan)
+          : columnLabel(column),
+      format: displayKindFormat(planDisplayKind(plan, column)),
+      ...(asset === undefined ? {} : { asset }),
+    };
+  });
 }

@@ -1,4 +1,7 @@
-import type { ReportDisplayKind } from "#src/model/reports/report.ts";
+import type {
+  ReportAssetKind,
+  ReportDisplayKind,
+} from "#src/model/reports/report.ts";
 
 /**
  * The shape of one ScoutQL column, and the helper that builds a computed one.
@@ -25,6 +28,8 @@ export type ScoutQlColumnInfo = {
   description: string;
   /** Display kind of the RAW column (aggregates over it may inherit it). */
   displayKind: ReportDisplayKind;
+  /** Game asset represented by this raw or virtual dimension. */
+  asset?: ReportAssetKind;
   /** Computed by the engine (dimension), not a physical lake column. */
   virtual: boolean;
   contexts: ScoutQlColumnContexts;
@@ -50,4 +55,13 @@ export function virtualColumn(
     virtual: true,
     contexts,
   };
+}
+
+export function assetVirtualColumn(
+  name: string,
+  type: ScoutQlColumnType,
+  description: string,
+  asset: ReportAssetKind,
+): ScoutQlColumnInfo {
+  return { ...virtualColumn(name, type, description), asset };
 }

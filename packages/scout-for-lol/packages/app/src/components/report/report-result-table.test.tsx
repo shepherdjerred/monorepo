@@ -33,6 +33,28 @@ describe("ReportResultTable", () => {
     expect(markup).not.toContain("Copy CSV");
   });
 
+  test("renders icons and display names for asset dimensions and values", () => {
+    const markup = renderToStaticMarkup(
+      <ReportResultTable
+        columns={[
+          { key: "label", label: "Keystone", format: "text", asset: "rune" },
+          { key: "item0", label: "Item", format: "text", asset: "item" },
+        ]}
+        rows={[
+          {
+            label: "Conqueror",
+            values: [{ column: "item0", value: 3031 }],
+          },
+        ]}
+      />,
+    );
+
+    expect(markup).toContain("img/rune/Conqueror.png");
+    expect(markup).toContain("img/item/3031.png");
+    expect(markup).toContain("Conqueror");
+    expect(markup).toContain("Infinity Edge");
+  });
+
   test("renders search input, sort buttons, and export buttons when interactive is true", () => {
     const markup = renderToStaticMarkup(
       <ReportResultTable columns={columns} rows={rows} interactive={true} />,
