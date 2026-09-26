@@ -207,6 +207,20 @@ final class NpcTalkTest {
   }
 
   @Test
+  void aTrainerWaitsForTrackLevelsBeforeQuoting() {
+    levels.loaded = false;
+
+    talk.talk(player, DARREN);
+
+    assertThat(purchases.quoted).isEmpty();
+    assertThat(presenter.last().screen().body())
+        .isEqualTo("Your track levels are still loading. Try again shortly.");
+    assertThat(presenter.last().screen().buttons())
+        .extracting(button -> button.label())
+        .containsExactly("Close");
+  }
+
+  @Test
   void aTrainerQuotesConfirmsAndBuys() {
     purchases.nextQuote =
         CompletableFuture.completedFuture(Result.ok(new Quote(Track.MECHANIC, 1, 1000)));

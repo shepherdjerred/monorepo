@@ -23,6 +23,7 @@ import com.shepherdjerred.thestorm.npcs.domain.geo.ChunkKey;
 import com.shepherdjerred.thestorm.tracks.app.PurchaseProblem;
 import com.shepherdjerred.thestorm.tracks.app.Quote;
 import com.shepherdjerred.thestorm.tracks.app.Track;
+import com.shepherdjerred.thestorm.tracks.app.TrackLevels;
 import com.shepherdjerred.thestorm.tracks.app.TrackPurchases;
 import java.nio.file.Path;
 import java.time.InstantSource;
@@ -82,7 +83,17 @@ public class NpcsTestPlugin extends JavaPlugin {
     var trainer =
         new Trainer(
             new NoPurchases(),
-            (player, track) -> 0,
+            new TrackLevels() {
+              @Override
+              public int level(Player player, Track track) {
+                return 0;
+              }
+
+              @Override
+              public boolean isLoaded(UUID player) {
+                return true;
+              }
+            },
             new TrainerWording(amount -> amount + " crystals", InstantSource.system()),
             context.scheduler().mainThread());
     installed =

@@ -88,10 +88,16 @@ final class Fakes {
   static final class Levels implements TrackLevels {
 
     final Map<Track, Integer> levels = new HashMap<>();
+    boolean loaded = true;
 
     @Override
     public int level(Player player, Track track) {
       return levels.getOrDefault(track, 0);
+    }
+
+    @Override
+    public boolean isLoaded(UUID player) {
+      return loaded;
     }
   }
 
