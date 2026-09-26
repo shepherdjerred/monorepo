@@ -22,6 +22,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
 /**
@@ -45,6 +46,11 @@ final class ShopClickListener implements Listener {
     this.replies = tools.replies();
   }
 
+  @EventHandler(priority = EventPriority.MONITOR)
+  public void onQuit(PlayerQuitEvent event) {
+    shops.forget(event.getPlayer().getUniqueId());
+  }
+
   @EventHandler(priority = EventPriority.HIGH)
   public void onClick(PlayerInteractEvent event) {
     var click = click(event.getAction());
@@ -66,7 +72,7 @@ final class ShopClickListener implements Listener {
     }
     if (click.orElseThrow() == ChestShopSettings.Click.LEFT
         && player.isSneaking()
-        && player.hasPermission(ShopsPaper.ADMIN_PERMISSION)) {
+        && player.hasPermission(ShopsPermissions.ADMIN)) {
       return;
     }
     event.setCancelled(true);
@@ -81,7 +87,7 @@ final class ShopClickListener implements Listener {
     return shop.owner().isOwnedBy(player.getUniqueId())
         || (shop.isAdmin()
             && shop.item().isEmpty()
-            && player.hasPermission(ShopsPaper.ADMIN_PERMISSION));
+            && player.hasPermission(ShopsPermissions.ADMIN));
   }
 
   private void ownerClick(Player player, Block block, SignShop shop) {
@@ -89,6 +95,10 @@ final class ShopClickListener implements Listener {
       var hand = player.getInventory().getItemInMainHand();
       if (hand.getType().isAir()) {
         player.sendMessage(Replies.info("Right-click the sign holding the item this shop trades."));
+        return;
+      }
+      if (shop.isAdmin() && ItemTemplates.holdsItems(hand)) {
+        player.sendMessage(Replies.error(new CreationProblem.HoldsItems().describe()));
         return;
       }
       switch (shops.setItem(shop, templates.fingerprint(hand))) {

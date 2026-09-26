@@ -38,8 +38,9 @@ chestShops:
   # Item lines in the "while you were away" summary on join.
   summaryLines: 5
   # The least time, in milliseconds, between one player's trades at sign
-  # shops, so an autoclicker cannot hammer a shop.
-  clickCooldownMillis: 250
+  # shops, so an autoclicker cannot hammer a shop. Below 200 so holding the
+  # use button (which repeats every 200 ms) still trades.
+  clickCooldownMillis: 150
 
 # NPC shops.
 catalogs:

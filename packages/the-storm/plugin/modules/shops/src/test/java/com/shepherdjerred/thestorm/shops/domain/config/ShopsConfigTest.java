@@ -30,7 +30,7 @@ final class ShopsConfigTest {
     assertThat(config.chestShops().containers()).contains("CHEST", "BARREL", "COPPER_CHEST");
     assertThat(config.chestShops().containers()).doesNotContain("SHULKER_BOX");
     assertThat(config.chestShops().limits().allowed(1)).isEqualTo(5);
-    assertThat(config.chestShops().clickCooldown()).isEqualTo(java.time.Duration.ofMillis(250));
+    assertThat(config.chestShops().clickCooldown()).isEqualTo(java.time.Duration.ofMillis(150));
     assertThat(config.catalogs().zone()).isEqualTo(ZoneId.of("America/Los_Angeles"));
     assertThat(config.catalogs().maxDistance()).isEqualTo(8);
   }

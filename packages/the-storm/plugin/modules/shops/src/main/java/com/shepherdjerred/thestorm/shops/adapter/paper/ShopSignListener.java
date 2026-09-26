@@ -12,14 +12,12 @@ import com.shepherdjerred.thestorm.shops.app.ShopRegistry;
 import com.shepherdjerred.thestorm.shops.domain.config.ChestShopSettings;
 import com.shepherdjerred.thestorm.shops.domain.shop.CreationProblem;
 import com.shepherdjerred.thestorm.shops.domain.shop.ItemFingerprint;
-import com.shepherdjerred.thestorm.shops.domain.shop.ShopLimits;
 import com.shepherdjerred.thestorm.shops.domain.shop.SignShop;
 import com.shepherdjerred.thestorm.shops.domain.sign.ItemLine;
 import com.shepherdjerred.thestorm.shops.domain.sign.ShopSignDraft;
 import com.shepherdjerred.thestorm.shops.domain.sign.ShopSignParser;
 import com.shepherdjerred.thestorm.shops.domain.sign.SignLines;
 import com.shepherdjerred.thestorm.shops.domain.sign.SignProblem;
-import com.shepherdjerred.thestorm.tracks.app.Track;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -143,9 +141,8 @@ final class ShopSignListener implements Listener {
         new ChestShops.Request(
             draft,
             new Customer(player.getUniqueId(), player.getName()),
-            player.hasPermission(ShopsPaper.ADMIN_PERMISSION),
-            ShopLimits.highestLevel(
-                level -> player.hasPermission(Track.SHOPKEEPER.permission(level))),
+            player.hasPermission(ShopsPermissions.ADMIN),
+            ShopsPermissions.shopkeeperLevel(player),
             new ChestShops.Placement(
                 ShopBlocks.pos(block),
                 container.map(ShopBlocks::pos),

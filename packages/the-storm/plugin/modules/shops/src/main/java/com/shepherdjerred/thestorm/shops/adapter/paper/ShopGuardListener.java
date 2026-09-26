@@ -221,7 +221,7 @@ final class ShopGuardListener implements Listener {
 
   /** Admins, or the player who owns every one of these shops. */
   private static boolean mayManage(Player player, List<SignShop> shopsHere) {
-    return player.hasPermission(ShopsPaper.ADMIN_PERMISSION)
+    return player.hasPermission(ShopsPermissions.ADMIN)
         || shopsHere.stream().allMatch(shop -> shop.owner().isOwnedBy(player.getUniqueId()));
   }
 

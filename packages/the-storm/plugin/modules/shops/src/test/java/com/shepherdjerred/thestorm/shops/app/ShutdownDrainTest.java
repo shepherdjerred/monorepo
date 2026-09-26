@@ -80,6 +80,7 @@ final class ShutdownDrainTest {
             ShopPrices.buyOnly(50),
             Optional.of(new ItemFingerprint("coal", "Y29hbA==", false)),
             Instant.EPOCH);
+    registry.add(shop);
     wallets.set(BOB.account(), 100);
     wallets.holdNext();
     var trade =

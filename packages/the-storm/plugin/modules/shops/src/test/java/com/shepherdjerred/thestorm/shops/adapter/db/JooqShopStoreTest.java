@@ -183,6 +183,22 @@ final class JooqShopStoreTest {
   }
 
   @Test
+  void heldItemsNeedBothAnItemAndAQuantity() {
+    assertThatThrownBy(
+            () ->
+                database
+                    .write(
+                        dsl ->
+                            dsl.execute(
+                                "insert into shops_refund_failure (payer_kind, payer_id,"
+                                    + " payee_kind, payee_id, amount, reason, at, held_item)"
+                                    + " values ('player', 'a', 'player', 'b', 1, 'r', 0, 'coal')"))
+                    .get())
+        .isInstanceOf(ExecutionException.class)
+        .hasMessageContaining("CHECK");
+  }
+
+  @Test
   void refundFailuresAreKeptForStaff() throws Exception {
     var failure =
         new RefundFailure(

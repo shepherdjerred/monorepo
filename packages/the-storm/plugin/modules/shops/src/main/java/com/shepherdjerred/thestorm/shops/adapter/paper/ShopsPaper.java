@@ -32,9 +32,6 @@ import org.bukkit.plugin.IllegalPluginAccessException;
 /** Hooks the shops into Paper: listeners, the {@code /shop} command and the NPC shop dialogs. */
 public final class ShopsPaper {
 
-  /** Admin shops, opening and breaking anyone's shop, and {@code /shop <catalog>}. */
-  public static final String ADMIN_PERMISSION = "thestorm.shops.admin";
-
   private ShopsPaper() {}
 
   /**
@@ -126,6 +123,7 @@ public final class ShopsPaper {
     var templates = new ItemTemplates();
     var protection = services.require(Protection.class);
     var events = server.getPluginManager();
+    ShopsPermissions.register(events);
     events.registerEvents(
         new ShopSignListener(
             new ShopSignListener.Deps(

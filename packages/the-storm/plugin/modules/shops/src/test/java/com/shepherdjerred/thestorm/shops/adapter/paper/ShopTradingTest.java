@@ -66,6 +66,30 @@ final class ShopTradingTest extends ShopsFixture {
   }
 
   @Test
+  void anAdminShopCannotTradeAContainerWithItemsInside() {
+    var root = admin("Root");
+    var stone = world.getBlockAt(0, 64, 0);
+    stone.setType(Material.STONE);
+    var sign = shop(root, stone, "Admin Shop", "1", "B 500", "?");
+    messages(root);
+    var bundle = ItemStack.of(Material.BUNDLE);
+    var meta = (org.bukkit.inventory.meta.BundleMeta) bundle.getItemMeta();
+    meta.addItem(ItemStack.of(Material.DIAMOND, 16));
+    bundle.setItemMeta(meta);
+    root.getInventory().setItemInMainHand(bundle);
+
+    click(root, sign, Action.RIGHT_CLICK_BLOCK);
+
+    assertThat(messages(root))
+        .containsExactly(
+            "[Shop]: Admin shops cannot trade a shulker box, bundle or other container with items"
+                + " inside.");
+    root.getInventory().setItemInMainHand(ItemStack.of(Material.BUNDLE));
+    click(root, sign, Action.RIGHT_CLICK_BLOCK);
+    assertThat(messages(root)).containsExactly("[Shop]: This shop now trades Bundle.");
+  }
+
+  @Test
   void anAdminShopThatWouldLoopWithACatalogIsRefused() {
     var root = admin("Root");
     var stone = world.getBlockAt(0, 64, 0);

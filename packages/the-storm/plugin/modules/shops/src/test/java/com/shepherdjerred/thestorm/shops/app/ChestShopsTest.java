@@ -661,21 +661,109 @@ final class ChestShopsTest {
   }
 
   @Test
-  void aCustomerMustWaitOutTheClickCooldown() throws Exception {
+  void onlyATradeThatSettlesStartsTheCooldown() throws Exception {
     var now = new Instant[] {NOW};
     InstantSource clock = () -> now[0];
-    var cooled = shopsWith(List.of(), Duration.ofMillis(250), clock);
+    var cooled = shopsWith(List.of(), Duration.ofMillis(150), clock);
     var shop = create(ALICE, 0);
+    wallets.set(new AccountId.Player(ALICE.id()), 1000);
 
-    var first = click(cooled, shop, Direction.SELL, new FakeHoldings(0, 64));
+    // Refused clicks never start the wait.
+    var refused = click(cooled, shop, Direction.SELL, new FakeHoldings(0, 64));
+    now[0] = NOW.plusMillis(50);
+    var sold = click(cooled, shop, Direction.SELL, new FakeHoldings(16, 64));
     now[0] = NOW.plusMillis(100);
-    var tooSoon = click(cooled, shop, Direction.SELL, new FakeHoldings(0, 64));
-    now[0] = NOW.plusMillis(400);
-    var later = click(cooled, shop, Direction.SELL, new FakeHoldings(0, 64));
+    var tooSoon = click(cooled, shop, Direction.SELL, new FakeHoldings(16, 64));
+    // Holding the use button repeats every 200 ms, which is past the 150 ms cooldown.
+    now[0] = NOW.plusMillis(250);
+    var held = click(cooled, shop, Direction.SELL, new FakeHoldings(16, 64));
 
-    assertThat(first).isEqualTo(new TradeOutcome.Refused(new TradeProblem.NotEnoughItems(0, 16)));
+    assertThat(refused).isEqualTo(new TradeOutcome.Refused(new TradeProblem.NotEnoughItems(0, 16)));
+    assertThat(sold).isInstanceOf(TradeOutcome.Completed.class);
     assertThat(tooSoon).isEqualTo(new TradeOutcome.Refused(new TradeProblem.TooFast()));
-    assertThat(later).isEqualTo(new TradeOutcome.Refused(new TradeProblem.NotEnoughItems(0, 16)));
+    assertThat(held).isInstanceOf(TradeOutcome.Completed.class);
+  }
+
+  @Test
+  void aCustomerWhoLeftIsForgotten() throws Exception {
+    var cooled = shopsWith(List.of(), Duration.ofMinutes(1), InstantSource.fixed(NOW));
+    var shop = create(ALICE, 0);
+    wallets.set(new AccountId.Player(ALICE.id()), 1000);
+    click(cooled, shop, Direction.SELL, new FakeHoldings(16, 64));
+    assertThat(click(cooled, shop, Direction.SELL, new FakeHoldings(16, 64)))
+        .isEqualTo(new TradeOutcome.Refused(new TradeProblem.TooFast()));
+
+    cooled.forget(BOB.id());
+
+    assertThat(click(cooled, shop, Direction.SELL, new FakeHoldings(16, 64)))
+        .isInstanceOf(TradeOutcome.Completed.class);
+  }
+
+  @Test
+  void aShopRemovedOrClosedBeforeTheLockIsRefusedWithoutTouchingAnything() {
+    var queued = new ArrayList<Runnable>();
+    var time = InstantSource.fixed(NOW);
+    java.util.concurrent.Executor mainThread = queued::add;
+    var engine =
+        new TradeEngine(wallets, mainThread, new RefundJournal(store, time, NOPLogger.NOP_LOGGER));
+    var slow =
+        new ChestShops(
+            new ChestShops.Wiring(
+                registry, store, locks, engine, mainThread, time, NOPLogger.NOP_LOGGER),
+            new ChestShops.Policy(
+                CreationRules.standard(new ShopLimits(Map.of(1, 2, 2, 2, 3, 3, 4, 4, 5, 5))),
+                new ServerOffers(List.of(), registry),
+                Duration.ZERO),
+            new ShopEffects() {
+              @Override
+              public boolean tellOwnerIfOnline(UUID owner, TradeRecord trade) {
+                return false;
+              }
+
+              @Override
+              public void closeViewers(List<BlockPos> containerBlocks) {
+                closed.add(containerBlocks);
+              }
+            });
+    var removed = create(ALICE, 0);
+    var closedShop = create(BOB, 3);
+    wallets.set(BOB.account(), 1000);
+    wallets.set(new AccountId.Player(new UUID(0, 5)), 1000);
+    var bobsItems = new FakeHoldings(0, 64);
+
+    var first =
+        slow.trade(
+            new ChestShops.Visit(
+                removed,
+                Direction.BUY,
+                BOB,
+                bobsItems,
+                new FakeHoldings(64, 64),
+                List.of(at(100))));
+    var second =
+        slow.trade(
+            new ChestShops.Visit(
+                closedShop,
+                Direction.BUY,
+                new Customer(new UUID(0, 5), "Dan"),
+                new FakeHoldings(0, 64),
+                new FakeHoldings(64, 64),
+                List.of(at(103))));
+    // While the affordability checks were out, one shop was broken and the other closed.
+    registry.remove(removed.id());
+    registry.close(closedShop.id(), "an admin closed it.");
+    while (!queued.isEmpty()) {
+      queued.removeFirst().run();
+    }
+
+    assertThat(first.join())
+        .isEqualTo(new TradeOutcome.Refused(new TradeProblem.ShopClosed("it was just removed.")));
+    assertThat(second.join())
+        .isEqualTo(new TradeOutcome.Refused(new TradeProblem.ShopClosed("an admin closed it.")));
+    assertThat(closed).isEmpty();
+    assertThat(locks.idle()).isTrue();
+    assertThat(wallets.receipts()).isEmpty();
+    assertThat(bobsItems.count).isZero();
   }
 
   @Test

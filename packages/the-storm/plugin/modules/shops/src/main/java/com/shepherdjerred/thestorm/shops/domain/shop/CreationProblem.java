@@ -26,6 +26,12 @@ public sealed interface CreationProblem {
    */
   record PriceLoop(String with) implements CreationProblem {}
 
+  /**
+   * An admin shop may not trade a shulker box, bundle or other container with items inside: its
+   * endless stock would hand out endless copies of what is inside.
+   */
+  record HoldsItems() implements CreationProblem {}
+
   /** A sentence for the creator. */
   default String describe() {
     return switch (this) {
@@ -38,6 +44,8 @@ public sealed interface CreationProblem {
               + ", the most your Shopkeeper level allows.";
       case NoContainer() -> "Put the shop sign on a chest, barrel or copper chest.";
       case ContainerTaken() -> "Another player's shop already uses that container.";
+      case HoldsItems() ->
+          "Admin shops cannot trade a shulker box, bundle or other container with items inside.";
       case PriceLoop(var with) ->
           "Those prices would let players trade in a loop with "
               + with
