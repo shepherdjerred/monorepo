@@ -10,6 +10,17 @@ import {
 } from "cdk8s-plus-31";
 import type { Chart } from "cdk8s";
 import { Duration, Size } from "cdk8s";
+
+/**
+ * Where report and Explore queries spill once they outgrow DuckDB's memory
+ * limit: node-local scratch, sized with headroom over the spill cap so
+ * DuckDB's own limit is what a runaway query hits, not an eviction.
+ */
+export const SCOUT_DUCKDB_SCRATCH = {
+  path: "/scratch/duckdb",
+  maxSpill: "7GiB",
+  sizeLimit: Size.gibibytes(8),
+} as const;
 import {
   withCommonProps,
   setRevisionHistoryLimit,
@@ -268,9 +279,13 @@ export function createScoutGatewayDeployment(
       // "on top of the report lake"; after the split those two loads sit in
       // different pods, so the voice share lands here. Re-tune from observed
       // usage under a live voice session rather than guessing again.
+      // DuckDB may take 3GB (REPORT_DUCKDB_MEMORY_LIMIT) for an Explore
+      // query on top of that, so the request covers it and the limit matches
+      // the application pod's: contain an outlier rather than let it take the
+      // node's shared burst memory.
       resources: {
         cpu: { request: Cpu.millis(50) },
-        memory: { request: Size.gibibytes(2) },
+        memory: { request: Size.gibibytes(3), limit: Size.gibibytes(8) },
       },
       // Identical probe paths to the application role. `httpSurface: "admin"`
       // serves /ping, /livez, /healthz and /metrics on the same port 3000 as
@@ -290,6 +305,15 @@ export function createScoutGatewayDeployment(
             options.claim,
           ),
           readOnly: true,
+        },
+        {
+          path: SCOUT_DUCKDB_SCRATCH.path,
+          volume: Volume.fromEmptyDir(
+            chart,
+            "scout-gateway-duckdb-scratch",
+            "duckdb-scratch",
+            { sizeLimit: SCOUT_DUCKDB_SCRATCH.sizeLimit },
+          ),
         },
         ...(options.voiceSecretMount === undefined
           ? []

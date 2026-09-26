@@ -29,7 +29,10 @@ import {
 import { scoutAnalyticsConfiguration } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/analytics.ts";
 import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import { OTLP_GATEWAY_BASE_URL } from "@shepherdjerred/homelab/cdk8s/src/misc/otlp.ts";
-import { createScoutGatewayDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
+import {
+  createScoutGatewayDeployment,
+  SCOUT_DUCKDB_SCRATCH,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
 import { createScoutGatewayRetirementGate } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway-retirement-gate.ts";
 import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
 import {
@@ -220,10 +223,21 @@ export function createScoutDeployment(
           ),
         }
       : undefined;
+  const scratchMount = {
+    path: SCOUT_DUCKDB_SCRATCH.path,
+    volume: Volume.fromEmptyDir(
+      chart,
+      "scout-duckdb-scratch",
+      "duckdb-scratch",
+      {
+        sizeLimit: SCOUT_DUCKDB_SCRATCH.sizeLimit,
+      },
+    ),
+  };
   const volumeMounts =
     voiceSecretMount !== undefined && !splitTopology
-      ? [dataVolumeMount, voiceSecretMount]
-      : [dataVolumeMount];
+      ? [dataVolumeMount, scratchMount, voiceSecretMount]
+      : [dataVolumeMount, scratchMount];
 
   const baseEnvVariables = {
     ...dbEnv,
@@ -311,6 +325,17 @@ export function createScoutDeployment(
     // derived data on the same PVC as the legacy DB file; rebuilt from S3 by
     // the report-lake compaction crons.
     REPORT_LAKE_DIR: EnvValue.fromValue("/data/report-lake"),
+    // DuckDB for reports and Explore: generous on purpose, since both answer
+    // open questions over the whole lake. A query past memory_limit spills to
+    // the scratch volume (SCOUT_DUCKDB_SCRATCH) instead of failing. Only the
+    // pods that serve those queries get these explicitly so dev and worker
+    // processes can still choose their own resource budgets.
+    REPORT_DUCKDB_THREADS: EnvValue.fromValue("4"),
+    REPORT_DUCKDB_MEMORY_LIMIT: EnvValue.fromValue("3GB"),
+    REPORT_DUCKDB_TEMP_DIR: EnvValue.fromValue(SCOUT_DUCKDB_SCRATCH.path),
+    REPORT_DUCKDB_MAX_TEMP_SIZE: EnvValue.fromValue(
+      SCOUT_DUCKDB_SCRATCH.maxSpill,
+    ),
     JWT_SIGNING_SECRET: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
         chart,

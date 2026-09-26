@@ -16,7 +16,7 @@ import type {
 } from "#src/model/core/discord.ts";
 import { DiscordChannelIdSchema } from "#src/model/core/discord.ts";
 
-export const REPORT_QUERY_MAX_LENGTH = 4000;
+export const REPORT_QUERY_MAX_LENGTH = 16_000;
 export const REPORT_DEFAULT_MAX_ROWS = 10;
 export const REPORT_MAX_ROWS_LIMIT = 25;
 export const REPORT_ACTIVE_LIMIT_PER_SERVER = 3;

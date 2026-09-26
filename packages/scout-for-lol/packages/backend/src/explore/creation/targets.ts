@@ -145,7 +145,7 @@ export async function listCreationTargets(
   }
   const eligible = access.guilds.slice(0, CREATION_MAX_TARGETS);
   // One eligible server is the common case, and inlining its channels saves a
-  // whole agent step — the binding budget is EXPLORE_MAX_STEPS (14), not the
+  // whole agent step — the binding budget is EXPLORE_MAX_STEPS, not the
   // tool-call ceiling.
   const inlineChannels = eligible.length === 1;
   const described = await Promise.all(

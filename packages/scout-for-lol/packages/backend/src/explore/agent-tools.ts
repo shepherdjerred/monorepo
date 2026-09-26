@@ -4,7 +4,6 @@ import {
   type DiscordAccountId,
   EXPLORE_MAX_PREVIEW_CALLS,
   EXPLORE_MAX_TOOL_CALLS,
-  ReportAiModelPreviewSummarySchema,
   ReportQueryTextSchema,
   type DiscordChannelId,
   type ExploreMessage,
@@ -41,7 +40,10 @@ import {
   matchIdsInPreview,
 } from "#src/explore-match/match-view.ts";
 import { scoutExploreToolCallsTotal } from "#src/metrics/explore.ts";
-import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
+import {
+  reportQueryModelPreviewSummary,
+  reportQueryPreviewSummary,
+} from "#src/reports/ai/report-query-preview-summary.ts";
 import {
   createFormatTool,
   createValidateTool,
@@ -283,7 +285,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
           };
         }
         const preview = reportQueryPreviewSummary(result);
-        const modelPreview = ReportAiModelPreviewSummarySchema.parse(preview);
+        const modelPreview = reportQueryModelPreviewSummary(result);
         state.lastPreview = preview;
         state.lastVisualization = result.visualization ?? null;
         state.lastQueryMatchIds = matchIdsInPreview(preview, source);
