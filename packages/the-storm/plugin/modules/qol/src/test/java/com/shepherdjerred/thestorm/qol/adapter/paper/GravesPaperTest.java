@@ -18,7 +18,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Creeper;
-import org.bukkit.entity.Item;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -271,23 +271,25 @@ final class GravesPaperTest {
     var alice = aliceWithKit();
     alice.setHealth(0);
     alice.respawn();
+    var drops = spyOnDrops();
     alice.getInventory().setItem(3, new ItemStack(Material.APPLE, 2));
     alice.setHealth(0);
 
-    harness.until(() -> harness.graves.ownedBy(alice.getUniqueId()).size() == 2);
+    harness.until(() -> harness.graves.ownedBy(alice.getUniqueId()).size() == 1);
 
-    assertThat(storedStacks()).isEqualTo(4);
+    assertThat(storedStacks()).isEqualTo(3);
+    assertThat(drops.drops).containsExactly(new ItemStack(Material.APPLE, 2));
     assertThat(harness.graves.all()).extracting(c -> c.grave().pos()).doesNotHaveDuplicates();
     assertThat(alice.getInventory().isEmpty()).isTrue();
   }
 
   @Test
-  void aFailedSaveGivesTheItemsBackOnce() {
+  void aFailedSaveKeepsTheDeathHandoffForRetry() {
     harness.store.failCreate = true;
     var alice = aliceWithKit();
 
     alice.setHealth(0);
-    harness.awaitMessage(alice, "could not be saved");
+    harness.awaitMessage(alice, "waiting for storage");
     harness.server.getScheduler().performTicks(5);
 
     var inventory = alice.getInventory();
@@ -296,15 +298,17 @@ final class GravesPaperTest {
             .filter(s -> s != null && !s.isEmpty())
             .mapToInt(ItemStack::getAmount)
             .sum();
-    assertThat(total).isEqualTo(1 + 64 + 1);
+    assertThat(total).isZero();
+    assertThat(GraveHandoff.death(alice)).isPresent();
     assertThat(harness.graves.all()).isEmpty();
-    assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
+    assertThat(GraveBlocks.idAt(graveBlock())).isPresent();
     assertThat(harness.store.loadAll().join()).isEmpty();
   }
 
   @Test
-  void stoppingWhileAGraveIsSavingKeepsExactlyOneCopy() {
+  void stoppingAfterTheHandoffCommitKeepsOneStoredCopy() {
     aliceWithKit().setHealth(0);
+    harness.until(() -> harness.store.loadAll().join().size() == 1);
 
     harness.close();
     harness = QolHarness.start(directory);
@@ -408,12 +412,17 @@ final class GravesPaperTest {
     var alice = aliceDies();
     harness.clock.advance(Duration.ofDays(7));
 
-    harness.server.getScheduler().performTicks(30 * 20 + 1);
-    harness.until(() -> harness.graves.all().isEmpty());
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(new ChunkLoadEvent(harness.world.getChunkAt(0, 0), false));
+    harness.until(() -> harness.store.pendingDrops().join().size() == 3);
 
     assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
-    assertThat(harness.world.getEntitiesByClass(Item.class)).hasSize(3);
-    assertThat(harness.store.loadAll().join()).isEmpty();
+    assertThat(harness.world.getEntitiesByClass(ItemDisplay.class)).hasSize(3);
+    assertThat(harness.store.loadAll().join())
+        .singleElement()
+        .satisfies(c -> assertThat(c.items()).isEmpty());
     assertThat(harness.awaitMessage(alice, "broke open after 7d")).isNotEmpty();
   }
 
@@ -424,13 +433,16 @@ final class GravesPaperTest {
     alice.disconnect();
     harness.clock.advance(Duration.ofDays(7));
 
-    harness.server.getScheduler().performTicks(30 * 20 + 1);
-    harness.until(() -> harness.graves.all().isEmpty());
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(new ChunkLoadEvent(harness.world.getChunkAt(0, 0), false));
+    harness.until(() -> harness.store.pendingDrops().join().size() == 3);
 
     var back = new PlayerMock(harness.server, "Alice", id);
     harness.server.addPlayer(back);
     assertThat(harness.awaitMessage(back, "broke open after 7d")).isNotEmpty();
-    assertThat(harness.store.takeNotices(id).join()).isEmpty();
+    assertThat(harness.store.listNotices(id).join()).isEmpty();
   }
 
   @Test

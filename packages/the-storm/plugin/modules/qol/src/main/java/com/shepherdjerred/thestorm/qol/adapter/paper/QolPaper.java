@@ -27,7 +27,6 @@ import org.bukkit.event.Listener;
 public final class QolPaper {
 
   private static final Duration EVERY_SECOND = Duration.ofSeconds(1);
-  private static final Duration GRAVE_SWEEP = Duration.ofSeconds(30);
 
   private final List<Listener> listeners = new ArrayList<>();
   private final List<Cancellable> tasks = new ArrayList<>();
@@ -89,7 +88,7 @@ public final class QolPaper {
     var safe = new LastSafeSpots();
     var upkeep = new GraveUpkeep(runtime, parts);
     var deaths = new GraveDeaths(runtime, parts, safe, context.random());
-    var opening = new GraveOpening(runtime, parts, upkeep);
+    var opening = new GraveOpening(runtime, parts, upkeep, context.random());
     var sorting = new ContainerSorting(app.protection());
     var combat = new CombatListener(runtime, app.combat(), config.combat());
     var sleep = new SleepListener(runtime, app.afk(), config.sleep().percent());
@@ -132,9 +131,19 @@ public final class QolPaper {
             scheduler.repeatOnMainThread(
                 EVERY_SECOND, EVERY_SECOND, () -> server.getOnlinePlayers().forEach(safe::sample)),
             scheduler.repeatOnMainThread(EVERY_SECOND, EVERY_SECOND, combat::tick),
-            scheduler.repeatOnMainThread(EVERY_SECOND, EVERY_SECOND, sleep::tick),
-            scheduler.repeatOnMainThread(GRAVE_SWEEP, GRAVE_SWEEP, upkeep::sweep)));
-    upkeep.load(paper::gravesUnreadable);
+            scheduler.repeatOnMainThread(EVERY_SECOND, EVERY_SECOND, sleep::tick)));
+    upkeep.load(
+        paper::gravesUnreadable,
+        () ->
+            server
+                .getOnlinePlayers()
+                .forEach(
+                    player -> {
+                      deaths.recover(player);
+                      opening.recover(player);
+                      upkeep.expireNear(player);
+                      opening.nearby(player);
+                    }));
     return paper;
   }
 

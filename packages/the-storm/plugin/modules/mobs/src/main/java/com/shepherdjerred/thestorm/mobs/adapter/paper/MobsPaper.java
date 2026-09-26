@@ -11,14 +11,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 
 /** Wires the mobs module into Paper. */
 public final class MobsPaper {
+
+  record Hooks(ExtraLoot loot, BiConsumer<LivingEntity, Runnable> namedMobPersistence) {}
 
   private final List<Listener> listeners;
   private final LevelApplier levels;
@@ -43,6 +47,11 @@ public final class MobsPaper {
    */
   static MobsPaper start(
       ModuleContext context, MobsConfig config, Supplier<Protection> protection, ExtraLoot loot) {
+    return start(context, config, protection, new Hooks(loot, LevelApplier::preserveDespawn));
+  }
+
+  static MobsPaper start(
+      ModuleContext context, MobsConfig config, Supplier<Protection> protection, Hooks hooks) {
     requireKnownNames(config);
     var server = context.plugin().getServer();
     var regions =
@@ -50,7 +59,12 @@ public final class MobsPaper {
             ? AdminRegionIndex.none(context.logger())
             : AdminRegionIndex.of(
                 server, config.adminRegions(), protection.get(), context.logger());
-    var levels = new LevelApplier(config.scaling(), config.levels().cap(), config.nameplate());
+    var levels =
+        new LevelApplier(
+            config.scaling(),
+            config.levels().cap(),
+            config.nameplate(),
+            hooks.namedMobPersistence());
     var rules =
         new SpawnListener.Rules(
             new SpawnPolicy(config.exclusions(), config.adminRegions().policy()),
@@ -58,7 +72,7 @@ public final class MobsPaper {
     List<Listener> listeners =
         List.of(
             new SpawnListener(rules, levels, regions, context.random()),
-            new StrengthListener(levels, loot, context.random()));
+            new StrengthListener(levels, hooks.loot(), context.random()));
     listeners.forEach(
         listener -> server.getPluginManager().registerEvents(listener, context.plugin()));
     return new MobsPaper(listeners, levels);

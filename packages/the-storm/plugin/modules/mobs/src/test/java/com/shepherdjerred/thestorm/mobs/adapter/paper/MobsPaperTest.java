@@ -140,7 +140,11 @@ final class MobsPaperTest {
                   plugin.getComponentLogger());
           var config = ConfigFiles.load(directory.resolve("mobs.yml"), MobsConfig.class);
           started =
-              MobsPaper.start(context, config, () -> services.require(Protection.class), loot);
+              MobsPaper.start(
+                  context,
+                  config,
+                  () -> services.require(Protection.class),
+                  new MobsPaper.Hooks(loot, (mob, name) -> name.run()));
         };
     MockBukkit.loadWith(
         HarnessPlugin.class,

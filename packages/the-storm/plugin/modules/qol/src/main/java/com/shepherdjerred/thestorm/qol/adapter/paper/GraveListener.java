@@ -1,12 +1,15 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -38,7 +41,11 @@ final class GraveListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
     safe.sample(event.getPlayer());
+    deaths.recover(event.getPlayer());
+    opening.recover(event.getPlayer());
     upkeep.deliverNotices(event.getPlayer());
+    upkeep.expireNear(event.getPlayer());
+    opening.nearby(event.getPlayer());
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
@@ -71,5 +78,21 @@ final class GraveListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR)
   void onChunkLoad(ChunkLoadEvent event) {
     upkeep.chunkLoaded(event.getChunk());
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onMove(PlayerMoveEvent event) {
+    if (event.hasChangedBlock()) {
+      upkeep.expireNear(event.getPlayer());
+      opening.nearby(event.getPlayer());
+    }
+  }
+
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+  void onGroundDamage(EntityDamageEvent event) {
+    if (event.getEntity() instanceof ItemDisplay display
+        && GraveDropEntity.key(display).isPresent()) {
+      event.setCancelled(true);
+    }
   }
 }

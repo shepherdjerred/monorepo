@@ -57,6 +57,14 @@ final class JooqGraveStoreTest {
     store = new JooqGraveStore(database);
   }
 
+  List<String> takeNotices(UUID player) {
+    var notices = store.listNotices(player).join();
+    store
+        .acknowledgeNotices(player, notices.stream().map(GraveStore.PendingNotice::id).toList())
+        .join();
+    return notices.stream().map(GraveStore.PendingNotice::message).toList();
+  }
+
   static ItemBytes item(int b) {
     return ItemBytes.of(new byte[] {(byte) b, (byte) (b + 1), 42});
   }
@@ -177,9 +185,9 @@ final class JooqGraveStoreTest {
     assertThat(left).hasSize(4);
     assertThat(store.loadAll().join()).isEmpty();
     restart();
-    assertThat(store.takeNotices(BOB).join()).isEmpty();
-    assertThat(store.takeNotices(ALICE).join()).containsExactly("Your grave broke open.");
-    assertThat(store.takeNotices(ALICE).join()).isEmpty();
+    assertThat(takeNotices(BOB)).isEmpty();
+    assertThat(takeNotices(ALICE)).containsExactly("Your grave broke open.");
+    assertThat(takeNotices(ALICE)).isEmpty();
   }
 
   @Test
@@ -188,7 +196,7 @@ final class JooqGraveStoreTest {
 
     store.expire(new UUID(0, 1), Optional.empty()).join();
 
-    assertThat(store.takeNotices(ALICE).join()).isEmpty();
+    assertThat(takeNotices(ALICE)).isEmpty();
   }
 
   @Test
@@ -198,7 +206,7 @@ final class JooqGraveStoreTest {
     store.expire(new UUID(0, 1), Optional.of(new GraveStore.Notice(ALICE, "first", T0))).join();
     store.expire(new UUID(0, 3), Optional.of(new GraveStore.Notice(ALICE, "second", T0))).join();
 
-    assertThat(store.takeNotices(ALICE).join()).containsExactly("first", "second");
+    assertThat(takeNotices(ALICE)).containsExactly("first", "second");
   }
 
   @Test

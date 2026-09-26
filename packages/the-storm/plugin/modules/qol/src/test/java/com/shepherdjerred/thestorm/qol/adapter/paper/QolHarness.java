@@ -150,6 +150,7 @@ final class QolHarness implements AutoCloseable {
   static QolHarness start(Path directory, boolean unreadable) {
     var server = MockBukkit.mock();
     var world = server.addSimpleWorld("world");
+    world.loadChunk(0, 0);
     try {
       Files.writeString(directory.resolve("qol.yml"), Files.readString(SHIPPED));
     } catch (IOException e) {
@@ -203,6 +204,7 @@ final class QolHarness implements AutoCloseable {
 
   /** A player standing on the flat world's grass at x, z. */
   PlayerMock playerAt(String name, int x, int z) {
+    world.loadChunk(x >> 4, z >> 4);
     var player = server.addPlayer(name);
     player.teleport(new Location(world, x + 0.5, 5, z + 0.5));
     return player;
