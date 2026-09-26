@@ -50,6 +50,7 @@ hold only scoped invariants that agents must keep in context.
 | [cooklang-rich-preview](cooklang-rich-preview/) | Marketing site for the Cooklang Rich Preview Obsidian plugin |
 | [glitter](glitter/)                             | Glitter Boys friend-group site                               |
 | [macos-cross-site](macos-cross-site/)           | Marketing site for the macos-cross-compiler Docker image     |
+| [ts-mc](ts-mc/)                                 | The Storm Minecraft server portal (Astro)                    |
 
 ## Libraries
 
