@@ -87,6 +87,7 @@ describe("physical catalog columns come from the lake schema", () => {
     const catalog = scoutQlSourceCatalog("match_participants");
     expect(catalog?.columns.get("champion_id")?.asset).toBe("champion");
     expect(catalog?.columns.get("item0")?.asset).toBe("item");
+    expect(catalog?.columns.get("item6")?.asset).toBe("item");
     expect(catalog?.columns.get("summoner1_id")?.asset).toBe("spell");
     expect(catalog?.columns.get("perk0")?.asset).toBe("rune");
     expect(catalog?.columns.get("perk_primary_style")?.asset).toBe("rune_tree");
