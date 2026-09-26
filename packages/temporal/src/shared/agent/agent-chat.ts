@@ -157,6 +157,19 @@ export const AgentChatSourceSequenceSchema = z
     message: `Source sequence must not exceed ${MAX_AGENT_CHAT_SOURCE_SEQUENCE}`,
   });
 
+// An ingress must advance this epoch before it restarts a bounded sequence.
+// Keeping the epoch separate from the provider sequence makes a reset explicit:
+// a delayed event from the prior epoch can never overwrite the new selection.
+export const AgentChatSourceEpochSchema = z
+  .union([
+    z.number().int().nonnegative(),
+    z
+      .string()
+      .regex(/^(0|[1-9]\d*)$/)
+      .max(32),
+  ])
+  .optional();
+
 export const AgentChatTurnRequestSchema = z.strictObject({
   turnId: z.string().min(1).max(512),
   prompt: AgentChatPromptSchema,
@@ -164,6 +177,7 @@ export const AgentChatTurnRequestSchema = z.strictObject({
   providerStartDeadline: z.iso.datetime({ offset: true }).optional(),
   source: AgentChatOriginSchema,
   sourceSequence: AgentChatSourceSequenceSchema.optional(),
+  sourceEpoch: AgentChatSourceEpochSchema,
 });
 export type AgentChatTurnRequest = z.infer<typeof AgentChatTurnRequestSchema>;
 
@@ -189,6 +203,7 @@ export function agentChatTurnRequestsMatch(
     previous.prompt === incoming.prompt &&
     previous.submittedAt === incoming.submittedAt &&
     previous.sourceSequence === incoming.sourceSequence &&
+    previous.sourceEpoch === incoming.sourceEpoch &&
     sourcesMatch
   );
 }
@@ -363,6 +378,7 @@ export type AgentChatCatalogEntry = z.infer<typeof AgentChatCatalogEntrySchema>;
 export const AgentChatBindingUpdateSchema = z.strictObject({
   updatedAt: z.iso.datetime({ offset: true }),
   sourceSequence: AgentChatSourceSequenceSchema.optional(),
+  sourceEpoch: AgentChatSourceEpochSchema,
   tieBreaker: z.string().min(1).max(512).optional(),
   orderingVersion: z.literal(1).optional(),
 });
@@ -377,6 +393,29 @@ export const AgentChatCatalogBindingSchema =
     chatId: AgentChatIdSchema,
   });
 
+export const AgentChatCatalogBindingOperationSchema =
+  AgentChatCatalogBindingSchema.extend({
+    tieBreaker: z.string().min(1).max(512),
+  });
+export type AgentChatCatalogBindingOperation = z.infer<
+  typeof AgentChatCatalogBindingOperationSchema
+>;
+
+export class AgentChatBindingConflictError extends Error {
+  public constructor(message: string) {
+    super(message);
+    this.name = "AgentChatBindingConflictError";
+  }
+}
+
+export function isAgentChatBindingConflictError(error: unknown): boolean {
+  return (
+    error instanceof AgentChatBindingConflictError ||
+    (error instanceof Error &&
+      error.message.startsWith("Agent chat binding conflict:"))
+  );
+}
+
 export const AgentChatCatalogStateSchema = z
   .strictObject({
     schemaVersion: z.literal(1),
@@ -386,6 +425,13 @@ export const AgentChatCatalogStateSchema = z
     bindings: z
       .array(AgentChatCatalogBindingSchema)
       .max(MAX_AGENT_CHAT_CATALOG_BINDINGS),
+    // Retain stable HTTP binding identities independently of the selected
+    // binding. An optional field keeps histories written before this contract
+    // compatible; new executions always initialize it.
+    bindingOperations: z
+      .array(AgentChatCatalogBindingOperationSchema)
+      .max(MAX_AGENT_CHAT_CATALOG_BINDINGS)
+      .optional(),
     retiredChatIds: z
       .array(AgentChatIdSchema)
       .max(MAX_AGENT_CHAT_CATALOG_ENTRIES)

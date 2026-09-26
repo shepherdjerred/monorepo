@@ -58,8 +58,9 @@ Create, continue, and explicit binding requests require a caller-assigned
 native ordered identifier when it has one, such as a Discord interaction
 snowflake. Retries must preserve the original sequence. Binding precedence is
 decided by this sequence, not by arrival time or `bindingId`. Values must be
-non-negative integers no greater than `9223372036854775806`; the reserved final
-signed 64-bit value cannot permanently prevent a later selection.
+non-negative integers no greater than `9223372036854775806`. If a source must
+reset that bounded sequence, advance a decimal `sourceEpoch`; delayed events
+from the previous epoch remain older than the new epoch.
 
 Explicit binding requests also require `binding`, a caller-stable `bindingId`,
 and an ISO-8601 `submittedAt`:
@@ -73,9 +74,10 @@ and an ISO-8601 `submittedAt`:
 }
 ```
 
-Retries retain the original `bindingId`, `submittedAt`, and `sourceSequence`.
-The stable binding ID identifies the operation; the monotonic source sequence
-prevents a delayed older operation from replacing a newer active binding.
+Retries retain the original `bindingId`, `submittedAt`, `sourceSequence`, and
+`sourceEpoch` when present. The stable binding ID identifies the operation and
+is retained independently of the active selection: a retry after a newer
+binding returns its original result rather than rebinding the conversation.
 
 Create a chat from iMessage:
 
@@ -127,9 +129,9 @@ prevents a delayed retry from replacing a newer active binding.
 Prompt-bearing POSTs return `202 Accepted` immediately with the `turnId` and
 Temporal `workflowId`. A create request without an explicit `chatId` derives a
 stable chat ID from that turn ID, so retrying the POST cannot leave a second
-empty chat behind. A prompt-less create must supply `chatId`; retrying it with
-the same configuration and `sourceSequence` reuses the original catalog entry
-and creation time.
+empty chat behind. A prompt-less create must supply both `chatId` and a stable
+`bindingId`; retrying it with the same configuration and ordering fields reuses
+the original catalog entry and binding operation.
 Reusing either stable ID for different content returns `409 Conflict`. Poll
 `GET /agent-chat-turns/:turnId`: it returns `202` while the turn is running and
 `200` with either the completed turn result or a terminal failure status. The

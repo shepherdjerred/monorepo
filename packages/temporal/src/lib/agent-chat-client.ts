@@ -241,6 +241,9 @@ async function bindTurnSource(input: {
         updatedAt: input.request.submittedAt,
         purpose: input.purpose,
         sourceSequence: input.request.sourceSequence,
+        ...(input.request.sourceEpoch === undefined
+          ? {}
+          : { sourceEpoch: input.request.sourceEpoch }),
       },
     );
   }

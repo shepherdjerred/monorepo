@@ -44,6 +44,12 @@ import {
   type ContinueAgentChatInput,
 } from "./agent-chat-api-schema.ts";
 import { bearerMatches, bearerToken } from "./http-auth.ts";
+import {
+  AgentChatRegistrationConflictError,
+  conflictMessage,
+  ingressTimestamp,
+  sourceOrdering,
+} from "./agent-chat-api/route-support.ts";
 
 const COMPONENT = "agent-chat-api";
 export type AgentChatApiOperations = {
@@ -78,14 +84,6 @@ export type AgentChatApiOperations = {
     turnId: string,
   ) => Promise<HttpAgentChatTurnStatus | undefined>;
 };
-class AgentChatRegistrationConflictError extends Error {
-  public constructor(chatId: string) {
-    super(
-      `Durable agent chat ID ${chatId} was reused with different configuration`,
-    );
-    this.name = "AgentChatRegistrationConflictError";
-  }
-}
 const defaultOperations: AgentChatApiOperations = {
   register: registerAgentChat,
   bind: bindAgentChat,
@@ -101,7 +99,6 @@ type AgentChatApiDependencies = {
   operations?: AgentChatApiOperations;
   now?: () => string;
 };
-
 function jsonLog(
   level: "info" | "warning" | "error",
   message: string,
@@ -111,14 +108,11 @@ function jsonLog(
     JSON.stringify({ level, msg: message, component: COMPONENT, ...fields }),
   );
 }
-
 function unauthorized(authorization: string | undefined, token: string) {
   return !bearerMatches(bearerToken(authorization), token);
 }
-
 const parseBody = async (request: Request): Promise<unknown> =>
   await request.json();
-
 function configForIngress(
   input: {
     chatId?: string | undefined;
@@ -128,6 +122,7 @@ function configForIngress(
     model: string;
     source: AgentChatBinding;
     sourceSequence: string | number;
+    sourceEpoch?: string | number | undefined;
     maxTurnsPerMessage: number;
   },
   now: string,
@@ -151,7 +146,6 @@ function configForIngress(
     maxTurnsPerMessage: input.maxTurnsPerMessage,
   };
 }
-
 function requestedConfigMatches(
   existing: AgentChatConfig,
   requested: AgentChatConfig,
@@ -165,7 +159,6 @@ function requestedConfigMatches(
     existing.maxTurnsPerMessage === requested.maxTurnsPerMessage
   );
 }
-
 async function findMatchingRegistration(
   operations: AgentChatApiOperations,
   client: WorkflowClient,
@@ -180,7 +173,6 @@ async function findMatchingRegistration(
   }
   return undefined;
 }
-
 async function registerIdempotently(
   operations: AgentChatApiOperations,
   client: WorkflowClient,
@@ -201,7 +193,6 @@ async function registerIdempotently(
     return raced;
   }
 }
-
 async function registerClaimedTurn(
   operations: AgentChatApiOperations,
   client: Client,
@@ -217,13 +208,13 @@ async function registerClaimedTurn(
     throw error;
   }
 }
-
 function requestForIngress(
   input: {
     source: AgentChatBinding;
     prompt?: string | undefined;
     turnId?: string | undefined;
     sourceSequence: string | number;
+    sourceEpoch?: string | number | undefined;
   },
   now: string,
 ): AgentChatTurnRequest {
@@ -234,7 +225,7 @@ function requestForIngress(
     prompt: input.prompt,
     submittedAt: now,
     source: input.source,
-    sourceSequence: input.sourceSequence,
+    ...sourceOrdering(input),
   };
 }
 
@@ -252,7 +243,6 @@ async function resolveIngressChatId(
   if (resolved === undefined) throw new AgentChatBindingNotFoundError();
   return resolved.config.chatId;
 }
-
 function captureFailure(error: unknown, operation: string): void {
   Sentry.withScope((scope) => {
     scope.setTag("component", COMPONENT);
@@ -264,7 +254,6 @@ function captureFailure(error: unknown, operation: string): void {
     error: error instanceof Error ? error.message : String(error),
   });
 }
-
 async function checkpointAcceptedTurn(
   operation: string,
   checkpoint: () => Promise<unknown>,
@@ -277,7 +266,6 @@ async function checkpointAcceptedTurn(
     captureFailure(error, operation);
   }
 }
-
 export function buildAgentChatApiRoutes(
   token: string,
   client: Client,
@@ -286,7 +274,6 @@ export function buildAgentChatApiRoutes(
   const app = new Hono();
   const operations = dependencies.operations ?? defaultOperations;
   const now = dependencies.now ?? (() => new Date().toISOString());
-
   app.get("/agent-chats", async (c) => {
     if (unauthorized(c.req.header("authorization"), token)) {
       return c.text("unauthorized\n", 401);
@@ -298,7 +285,6 @@ export function buildAgentChatApiRoutes(
       return c.text("list failed\n", 500);
     }
   });
-
   app.get("/agent-chats/:chatId", async (c) => {
     if (unauthorized(c.req.header("authorization"), token)) {
       return c.text("unauthorized\n", 401);
@@ -317,7 +303,6 @@ export function buildAgentChatApiRoutes(
       return c.text("lookup failed\n", 500);
     }
   });
-
   app.post("/agent-chats", async (c) => {
     if (unauthorized(c.req.header("authorization"), token)) {
       return c.text("unauthorized\n", 401);
@@ -325,7 +310,7 @@ export function buildAgentChatApiRoutes(
     try {
       const input = CreateAgentChatSchema.parse(await parseBody(c.req.raw));
       const currentTime = now();
-      const timestamp = input.submittedAt ?? currentTime;
+      const timestamp = ingressTimestamp(input.submittedAt, currentTime);
       validateAgentChatIngressTimestamp(timestamp, currentTime);
       const config = configForIngress(input, timestamp);
       if (input.prompt === undefined) {
@@ -336,7 +321,7 @@ export function buildAgentChatApiRoutes(
         );
         await operations.bind(client.workflow, input.source, config.chatId, {
           updatedAt: entry.config.createdAt,
-          sourceSequence: input.sourceSequence,
+          ...sourceOrdering(input),
           tieBreaker: input.bindingId,
         });
         return c.json({ chat: entry }, 201);
@@ -371,7 +356,7 @@ export function buildAgentChatApiRoutes(
       await checkpointAcceptedTurn("create-bind-after-activation", async () =>
         operations.bind(client.workflow, input.source, entry.config.chatId, {
           updatedAt: timestamp,
-          sourceSequence: input.sourceSequence,
+          ...sourceOrdering(input),
         }),
       );
       return c.json({ chatId: config.chatId, turn: receipt }, 202);
@@ -383,9 +368,8 @@ export function buildAgentChatApiRoutes(
       if (error instanceof AgentChatTurnConflictError) {
         return c.text(`${error.message}\n`, 409);
       }
-      if (error instanceof AgentChatRegistrationConflictError) {
-        return c.text(`${error.message}\n`, 409);
-      }
+      const conflict = conflictMessage(error);
+      if (conflict !== undefined) return c.text(`${conflict}\n`, 409);
       if (error instanceof AgentChatTimestampInFutureError) {
         return c.json({ error: error.message }, 400);
       }
@@ -393,7 +377,6 @@ export function buildAgentChatApiRoutes(
       return c.text("create failed\n", 500);
     }
   });
-
   app.post("/agent-chat-turns", async (c) => {
     if (unauthorized(c.req.header("authorization"), token)) {
       return c.text("unauthorized\n", 401);
@@ -420,7 +403,7 @@ export function buildAgentChatApiRoutes(
           async () =>
             operations.bind(client.workflow, input.source, chatId, {
               updatedAt: input.submittedAt,
-              sourceSequence: input.sourceSequence,
+              ...sourceOrdering(input),
             }),
         );
       }
@@ -446,7 +429,6 @@ export function buildAgentChatApiRoutes(
       return c.text("turn failed\n", 500);
     }
   });
-
   app.get("/agent-chat-turns/:turnId", async (c) => {
     if (unauthorized(c.req.header("authorization"), token)) {
       return c.text("unauthorized\n", 401);
@@ -464,7 +446,6 @@ export function buildAgentChatApiRoutes(
       return c.text("turn lookup failed\n", 500);
     }
   });
-
   app.post("/agent-chats/:chatId/bindings", async (c) => {
     if (unauthorized(c.req.header("authorization"), token)) {
       return c.text("unauthorized\n", 401);
@@ -479,7 +460,7 @@ export function buildAgentChatApiRoutes(
         chatId,
         {
           updatedAt: input.submittedAt,
-          sourceSequence: input.sourceSequence,
+          ...sourceOrdering(input),
           tieBreaker: input.bindingId,
         },
       );
@@ -495,6 +476,8 @@ export function buildAgentChatApiRoutes(
       if (error instanceof AgentChatTimestampInFutureError) {
         return c.json({ error: error.message }, 400);
       }
+      const conflict = conflictMessage(error);
+      if (conflict !== undefined) return c.text(`${conflict}\n`, 409);
       captureFailure(error, "bind");
       return c.text("bind failed\n", 500);
     }
