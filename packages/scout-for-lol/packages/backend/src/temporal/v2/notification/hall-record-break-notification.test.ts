@@ -28,10 +28,12 @@ const stubs = vi.hoisted(() => ({
 }));
 
 vi.mock("#src/configuration/flags.ts", async () => {
-  const actual = await vi.importActual<Record<string, unknown>>(
-    "#src/configuration/flags.ts",
-  );
-  return { ...actual, isPolicyEnabled: stubs.isPolicyEnabled };
+  return {
+    ...(await vi.importActual<Record<string, unknown>>(
+      "#src/configuration/flags.ts",
+    )),
+    isPolicyEnabled: stubs.isPolicyEnabled,
+  };
 });
 vi.mock("#src/discord/utils/channel.ts", async () => {
   const actual = await vi.importActual<Record<string, unknown>>(
