@@ -102,6 +102,7 @@ const LANE_TO_STEP: Record<string, string | readonly string[] | null> = {
   "site-better-skill-capped": "pr-dryrun",
   "site-glitter": "pr-dryrun",
   "site-ts-mc": "pr-dryrun",
+  "site-ts-mc-docs": "pr-dryrun",
   "site-scout-design-system": "pr-dryrun",
   "site-scout": "pr-dryrun",
   sites: "pr-dryrun",

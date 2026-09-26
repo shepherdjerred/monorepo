@@ -55,6 +55,11 @@
       "sessionReplay": true
     },
     {
+      "key": "ts-mc-docs",
+      "hostname": "docs.ts-mc.net",
+      "sessionReplay": true
+    },
+    {
       "key": "glitter-boys-ppl",
       "hostname": "ppl.glitter-boys.com",
       "sessionReplay": true

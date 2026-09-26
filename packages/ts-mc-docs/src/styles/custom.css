@@ -1,0 +1,12 @@
+/* Storm brand accents for Starlight. */
+:root {
+  --sl-color-accent-low: #003b38;
+  --sl-color-accent: #00d0c6;
+  --sl-color-accent-high: #a8fffb;
+}
+
+:root[data-theme="light"] {
+  --sl-color-accent-low: #c2f5f2;
+  --sl-color-accent: #007a74;
+  --sl-color-accent-high: #06302e;
+}

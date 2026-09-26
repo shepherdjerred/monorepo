@@ -210,6 +210,17 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     // Astro's hashed output dir.
     immutablePrefixes: ["_astro/"],
   },
+  {
+    bucket: "ts-mc-docs",
+    name: "ts-mc-docs",
+    url: "https://docs.ts-mc.net",
+    buildDir: "packages/ts-mc-docs",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/ts-mc-docs/dist",
+    target: "s3",
+    // Astro's hashed output dir.
+    immutablePrefixes: ["_astro/"],
+  },
 ];
 
 // ---------------------------------------------------------------------------

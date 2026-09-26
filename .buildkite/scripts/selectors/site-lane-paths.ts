@@ -74,6 +74,13 @@ export const sitePaths = {
     "config/analytics-sites.json",
     ...deployScripts,
   ],
+  "site-ts-mc-docs": [
+    ...workspacePaths,
+    "packages/ts-mc-docs",
+    // Registry corrections must rebuild every static tracker consumer.
+    "config/analytics-sites.json",
+    ...deployScripts,
+  ],
   // The Storybook catalogs. Scoped to the two packages that build them rather
   // than all of `packages/scout-for-lol`, so a backend or bot change does not
   // redeploy a component catalog neither of them appears in.

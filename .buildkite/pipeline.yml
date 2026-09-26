@@ -2195,6 +2195,7 @@ steps:
         - "packages/glitter/**"
         - "packages/glitter-context/**"
         - "packages/ts-mc/**"
+        - "packages/ts-mc-docs/**"
         - "packages/scout-for-lol/**"
         - "config/analytics-sites.json"
     depends_on: verify
@@ -2219,7 +2220,7 @@ steps:
       fi
       # Print-only rehearsals (seconds each): sites catalog, the versioned
       # scout release path, helm chart push, and release-please.
-      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red macos-cross-site wiki better-skill-capped glitter ts-mc scout-design-system; do
+      for site in sjer.red resume webring cooklang-rich-preview stocks-sjer-red macos-cross-site wiki better-skill-capped glitter ts-mc ts-mc-docs scout-design-system; do
         bun --no-install scripts/release/deploy-site.ts "$$site" --dry-run
       done
       scout_backend=$$(bun --no-install scripts/release/scout-site-release.ts resolve-backend-digest)
@@ -2913,6 +2914,7 @@ steps:
       site_wiki=false
       site_glitter=false
       site_ts_mc=false
+      site_ts_mc_docs=false
       site_scout_design_system=false
       if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-sjer-red; then site_sjer=true; fi
       if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-resume; then site_resume=true; fi
@@ -2959,6 +2961,10 @@ steps:
         site_ts_mc=true
         filters+=(--filter '@shepherdjerred/ts-mc')
       fi
+      if bun --no-install .buildkite/scripts/selectors/ci-changed.ts site-ts-mc-docs; then
+        site_ts_mc_docs=true
+        filters+=(--filter '@shepherdjerred/ts-mc-docs')
+      fi
       if [ "$${#filters[@]}" -gt 0 ]; then
         .buildkite/scripts/bun-install.sh --frozen-lockfile "$${filters[@]}"
       fi
@@ -2986,6 +2992,7 @@ steps:
       fi
       if $$site_glitter; then bun --no-install scripts/release/deploy-site.ts glitter; fi
       if $$site_ts_mc; then bun --no-install scripts/release/deploy-site.ts ts-mc; fi
+      if $$site_ts_mc_docs; then bun --no-install scripts/release/deploy-site.ts ts-mc-docs; fi
       if $$site_scout_design_system; then
         bun --no-install run --cwd packages/llm-models build
         bun --no-install run --cwd packages/glitter-context build
