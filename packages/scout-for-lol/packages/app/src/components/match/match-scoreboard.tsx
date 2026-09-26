@@ -1,5 +1,11 @@
 import { Link } from "react-router";
-import { championNameToDisplayName, computeKda } from "@scout-for-lol/data";
+import {
+  championNameToDisplayName,
+  computeKda,
+  laneToString,
+  type Lane,
+  type MatchLoadout,
+} from "@scout-for-lol/data";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import {
   Card,
@@ -17,9 +23,10 @@ import {
 } from "@scout-for-lol/design-system/components/table";
 import { ChampionIcon } from "#src/components/match/champion-icon.tsx";
 import { MatchObjectivesSummary } from "#src/components/match/match-objectives-summary.tsx";
+import { MatchLoadoutDisplay } from "#src/components/match/match-loadout.tsx";
 import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
 
-type MatchParticipant = {
+export type MatchParticipant = {
   participantId: number;
   teamId?: number | undefined;
   selectedPlayer?: boolean | undefined;
@@ -43,11 +50,13 @@ type MatchParticipant = {
     barons: number;
     dragons: number;
   };
+  loadout?: MatchLoadout | undefined;
+  augments?: { id: number; name: string | null }[] | undefined;
   scoutAliases?:
     { playerId: number; alias: string; guildName: string }[] | undefined;
 };
 
-type MatchTeam = {
+export type MatchTeam = {
   teamId: number;
   win: boolean;
   participants: MatchParticipant[];
@@ -59,6 +68,18 @@ type MatchTeam = {
   };
 };
 
+export type RoleMatchup = {
+  role: Lane;
+  blueParticipantId: number;
+  redParticipantId: number;
+  at15: {
+    timestampMs: number;
+    goldDelta: number;
+    creepScoreDelta: number;
+    xpDelta: number;
+  } | null;
+};
+
 function percent(value: number | null): string {
   return value === null ? "—" : `${Math.round(value * 100).toString()}%`;
 }
@@ -67,7 +88,17 @@ function kda(participant: MatchParticipant): string {
   return computeKda(participant).toFixed(2);
 }
 
-export function MatchScoreboards(props: { teams: MatchTeam[] }) {
+function formatAugments(augments: MatchParticipant["augments"]): string {
+  if (augments === undefined || augments.length === 0) return "—";
+  return augments
+    .map((augment) => augment.name ?? `#${augment.id.toString()}`)
+    .join(" · ");
+}
+
+export function MatchScoreboards(props: {
+  teams: MatchTeam[];
+  showLoadout?: boolean;
+}) {
   return (
     <div className="space-y-5">
       {props.teams.map((team) => (
@@ -99,6 +130,10 @@ export function MatchScoreboards(props: { teams: MatchTeam[] }) {
                   <TableHead className="text-right">Damage</TableHead>
                   <TableHead className="text-right">KP</TableHead>
                   <TableHead className="text-right">Damage share</TableHead>
+                  {props.showLoadout === true && <TableHead>Loadout</TableHead>}
+                  {team.participants.some(
+                    (participant) => (participant.augments?.length ?? 0) > 0,
+                  ) && <TableHead>Augments</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -107,7 +142,7 @@ export function MatchScoreboards(props: { teams: MatchTeam[] }) {
                     key={participant.participantId}
                     className={
                       participant.selectedPlayer === true
-                        ? "bg-primary/10"
+                        ? "bg-scout-brand/10"
                         : undefined
                     }
                   >
@@ -121,7 +156,7 @@ export function MatchScoreboards(props: { teams: MatchTeam[] }) {
                               "Unknown Riot ID",
                             )}
                             {participant.selectedPlayer === true && (
-                              <span className="ml-2 text-xs text-primary">
+                              <span className="ml-2 text-xs text-scout-brand">
                                 Selected
                               </span>
                             )}
@@ -178,6 +213,22 @@ export function MatchScoreboards(props: { teams: MatchTeam[] }) {
                     <TableCell className="text-right">
                       {percent(participant.damageShare)}
                     </TableCell>
+                    {props.showLoadout === true && (
+                      <TableCell>
+                        {participant.loadout === undefined ? (
+                          "—"
+                        ) : (
+                          <MatchLoadoutDisplay loadout={participant.loadout} />
+                        )}
+                      </TableCell>
+                    )}
+                    {team.participants.some(
+                      (member) => (member.augments?.length ?? 0) > 0,
+                    ) && (
+                      <TableCell className="min-w-40 text-xs">
+                        {formatAugments(participant.augments)}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
@@ -186,5 +237,196 @@ export function MatchScoreboards(props: { teams: MatchTeam[] }) {
         </Card>
       ))}
     </div>
+  );
+}
+
+function requireTeam(teams: MatchTeam[], teamId: number): MatchTeam {
+  const team = teams.find((candidate) => candidate.teamId === teamId);
+  if (team === undefined) {
+    throw new Error(
+      `Role-paired scoreboard is missing team ${teamId.toString()}`,
+    );
+  }
+  return team;
+}
+
+function requireParticipant(
+  teams: MatchTeam[],
+  participantId: number,
+): MatchParticipant {
+  const participant = teams
+    .flatMap((team) => team.participants)
+    .find((candidate) => candidate.participantId === participantId);
+  if (participant === undefined) {
+    throw new Error(
+      `Role-paired scoreboard is missing participant ${participantId.toString()}`,
+    );
+  }
+  return participant;
+}
+
+function ParticipantPanel(props: {
+  participant: MatchParticipant;
+  align: "left" | "right";
+}) {
+  const reverse = props.align === "right";
+  if (props.participant.loadout === undefined) {
+    throw new Error("Role-paired participant is missing a loadout");
+  }
+  return (
+    <div
+      className={`space-y-2 rounded-md p-3 ${
+        props.participant.selectedPlayer === true ? "bg-scout-brand/10" : ""
+      }`}
+    >
+      <div
+        className={`flex items-center gap-2 ${reverse ? "flex-row-reverse text-right" : ""}`}
+      >
+        <ChampionIcon championName={props.participant.championName} />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">
+            {formatRiotId(props.participant.riotId, "Unknown Riot ID")}
+            {props.participant.selectedPlayer === true && (
+              <span className="ml-1 text-xs text-scout-brand">Selected</span>
+            )}
+          </p>
+          <p className="text-xs text-scout-subtle">
+            {championNameToDisplayName(props.participant.championName)}
+          </p>
+        </div>
+      </div>
+      <p className={`text-sm ${reverse ? "text-right" : ""}`}>
+        <span className="font-medium">
+          {props.participant.kills.toString()} /{" "}
+          {props.participant.deaths.toString()} /{" "}
+          {props.participant.assists.toString()}
+        </span>
+        <span className="text-scout-subtle">
+          {" "}
+          · {kda(props.participant)} KDA
+        </span>
+      </p>
+      <p className={`text-xs text-scout-subtle ${reverse ? "text-right" : ""}`}>
+        {props.participant.creepScore.toLocaleString()} CS ·{" "}
+        {props.participant.goldEarned.toLocaleString()} gold ·{" "}
+        {props.participant.damageToChampions.toLocaleString()} damage ·{" "}
+        {props.participant.visionScore.toLocaleString()} vision ·{" "}
+        {percent(props.participant.killParticipation)} KP
+      </p>
+      <div className={reverse ? "flex justify-end" : ""}>
+        <MatchLoadoutDisplay loadout={props.participant.loadout} />
+      </div>
+      {(props.participant.scoutAliases?.length ?? 0) > 0 && (
+        <p
+          className={`text-xs text-scout-subtle ${reverse ? "text-right" : ""}`}
+        >
+          {props.participant.scoutAliases?.map((alias, index) => (
+            <span key={`${alias.guildName}:${alias.playerId.toString()}`}>
+              {index > 0 ? " · " : ""}
+              <Link
+                className="hover:underline"
+                to={`/players/${alias.playerId.toString()}`}
+              >
+                {alias.alias} ({alias.guildName})
+              </Link>
+            </span>
+          ))}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function signed(value: number): string {
+  return `${value > 0 ? "+" : ""}${value.toLocaleString()}`;
+}
+
+function LaneDelta(props: { matchup: RoleMatchup }) {
+  return (
+    <div className="px-2 text-center">
+      <p className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
+        {laneToString(props.matchup.role)}
+      </p>
+      {props.matchup.at15 === null ? (
+        <p className="mt-2 text-xs text-scout-subtle">15m unavailable</p>
+      ) : (
+        <div
+          className="mt-1 space-y-0.5 text-xs"
+          aria-label="Blue side deltas at 15 minutes"
+        >
+          <p>{signed(props.matchup.at15.goldDelta)} gold</p>
+          <p>{signed(props.matchup.at15.creepScoreDelta)} CS</p>
+          <p>{signed(props.matchup.at15.xpDelta)} XP</p>
+          <p className="text-[10px] text-scout-subtle">Blue Δ @ 15m</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function RolePairedMatchScoreboard(props: {
+  teams: MatchTeam[];
+  matchups: RoleMatchup[];
+}) {
+  const blue = requireTeam(props.teams, 100);
+  const red = requireTeam(props.teams, 200);
+  return (
+    <Card>
+      <CardHeader>
+        <div className="grid min-w-[760px] grid-cols-[minmax(280px,1fr)_120px_minmax(280px,1fr)] items-start gap-3">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              Blue team
+              <Badge variant={blue.win ? "default" : "outline"}>
+                {blue.win ? "Victory" : "Defeat"}
+              </Badge>
+            </CardTitle>
+            <p className="mt-1 text-xs text-scout-subtle">
+              <MatchObjectivesSummary objectives={blue.objectives} />
+            </p>
+          </div>
+          <p className="pt-1 text-center text-xs text-scout-subtle">
+            Lane matchup
+          </p>
+          <div className="text-right">
+            <CardTitle className="flex items-center justify-end gap-2">
+              <Badge variant={red.win ? "default" : "outline"}>
+                {red.win ? "Victory" : "Defeat"}
+              </Badge>
+              Red team
+            </CardTitle>
+            <p className="mt-1 text-xs text-scout-subtle">
+              <MatchObjectivesSummary objectives={red.objectives} />
+            </p>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="overflow-x-auto p-0">
+        <div className="min-w-[760px] divide-y">
+          {props.matchups.map((matchup) => (
+            <div
+              key={matchup.role}
+              className="grid grid-cols-[minmax(280px,1fr)_120px_minmax(280px,1fr)] items-center gap-3 py-2"
+            >
+              <ParticipantPanel
+                participant={requireParticipant(
+                  props.teams,
+                  matchup.blueParticipantId,
+                )}
+                align="left"
+              />
+              <LaneDelta matchup={matchup} />
+              <ParticipantPanel
+                participant={requireParticipant(
+                  props.teams,
+                  matchup.redParticipantId,
+                )}
+                align="right"
+              />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

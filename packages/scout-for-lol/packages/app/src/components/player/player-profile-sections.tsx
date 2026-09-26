@@ -1,4 +1,9 @@
-import { computeKda, divisionToString, type Rank } from "@scout-for-lol/data";
+import {
+  computeKda,
+  divisionToString,
+  type MatchLoadout,
+  type Rank,
+} from "@scout-for-lol/data";
 import { SCOUT_RANKS } from "@scout-for-lol/design-system/assets";
 import { Link } from "react-router";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
@@ -9,6 +14,7 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { ChampionIcon } from "#src/components/match/champion-icon.tsx";
+import { MatchLoadoutDisplay } from "#src/components/match/match-loadout.tsx";
 import { formatRiotId } from "#src/lib/format/riot-id-format.ts";
 import { regionName } from "#src/lib/regions.ts";
 import { RankDisplay } from "@scout-for-lol/design-system/domain/rank-display";
@@ -232,6 +238,14 @@ type MatchEntry = {
   csPerMinute: number;
   killParticipation: number | null;
   leaguePointsDelta: number | null;
+  loadout?: MatchLoadout | undefined;
+  placement?: number | null;
+  augments?: { id: number; name: string | null }[];
+  roster?: {
+    teamId: number;
+    championName: string;
+    riotId: { gameName: string | null; tagLine: string };
+  }[];
   account: {
     gameName: string | null;
     tagLine: string | null;
@@ -288,7 +302,9 @@ export function MatchHistoryList(props: {
           <div className="min-w-32">
             <p className="text-sm font-medium text-scout-ink">
               {props.playerId === undefined ? (
-                entry.win ? (
+                entry.placement !== undefined && entry.placement !== null ? (
+                  `#${entry.placement.toString()} placement`
+                ) : entry.win ? (
                   "Victory"
                 ) : (
                   "Defeat"
@@ -298,7 +314,11 @@ export function MatchHistoryList(props: {
                   className="underline-offset-4 hover:underline"
                   to={`/players/${props.playerId.toString()}/matches/${encodeURIComponent(entry.matchId)}${props.profileSearch}`}
                 >
-                  {entry.win ? "Victory" : "Defeat"}
+                  {entry.placement !== undefined && entry.placement !== null
+                    ? `#${entry.placement.toString()} placement`
+                    : entry.win
+                      ? "Victory"
+                      : "Defeat"}
                 </Link>
               )}
             </p>
@@ -332,6 +352,53 @@ export function MatchHistoryList(props: {
               {formatPercent(entry.killParticipation)} KP
             </p>
           </div>
+          {entry.loadout !== undefined && (
+            <div className="overflow-x-auto py-1">
+              <MatchLoadoutDisplay loadout={entry.loadout} />
+            </div>
+          )}
+          {(entry.augments?.length ?? 0) > 0 && (
+            <p className="text-xs text-scout-subtle">
+              Augments:{" "}
+              {entry.augments
+                ?.map((augment) => augment.name ?? `#${augment.id.toString()}`)
+                .join(" · ")}
+            </p>
+          )}
+          {entry.roster?.length === 10 &&
+            new Set(entry.roster.map((participant) => participant.teamId))
+              .size === 2 && (
+              <div className="flex flex-col gap-1" aria-label="Match roster">
+                {[
+                  ...new Set(
+                    entry.roster.map((participant) => participant.teamId),
+                  ),
+                ].map((teamId) => (
+                  <div key={teamId} className="flex flex-wrap gap-1">
+                    {entry.roster
+                      ?.filter((participant) => participant.teamId === teamId)
+                      .map((participant, index) => (
+                        <span
+                          key={`${teamId.toString()}:${index.toString()}`}
+                          className="flex max-w-24 items-center gap-0.5 text-[10px] text-scout-subtle"
+                          title={formatRiotId(
+                            participant.riotId,
+                            "Unknown Riot ID",
+                          )}
+                        >
+                          <ChampionIcon
+                            championName={participant.championName}
+                            size="sm"
+                          />
+                          <span className="truncate">
+                            {participant.riotId.gameName ?? "Unknown"}
+                          </span>
+                        </span>
+                      ))}
+                  </div>
+                ))}
+              </div>
+            )}
           <div className="ml-auto flex items-center gap-2">
             {entry.teamPosition.length > 0 && (
               <Badge variant="outline">

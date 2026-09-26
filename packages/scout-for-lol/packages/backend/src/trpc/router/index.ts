@@ -22,6 +22,7 @@ import { rolesRouter } from "#src/trpc/router/roles.router.ts";
 import { consumerPlayerRouter } from "#src/trpc/router/consumer/consumer-player.router.ts";
 import { consumerChampionRouter } from "#src/trpc/router/consumer/consumer-champion.router.ts";
 import { consumerMatchRouter } from "#src/trpc/router/consumer/consumer-match.router.ts";
+import { consumerGuildRouter } from "#src/trpc/router/consumer/consumer-guild.router.ts";
 import { bucksRouter } from "#src/trpc/router/bucks/bucks.router.ts";
 import { exploreMatchRouter } from "#src/trpc/router/explore/explore-match.router.ts";
 import { customsRouter } from "#src/trpc/router/customs.router.ts";
@@ -51,6 +52,7 @@ export const appRouter = router({
   consumerPlayer: consumerPlayerRouter,
   consumerChampion: consumerChampionRouter,
   consumerMatch: consumerMatchRouter,
+  consumerGuild: consumerGuildRouter,
   exploreMatch: exploreMatchRouter,
   bucks: bucksRouter,
   customs: customsRouter,

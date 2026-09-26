@@ -15,6 +15,7 @@ import {
   fetchTimelineCoverage,
   fetchTimelineEventPage,
   fetchTimelineFramePage,
+  fetchTimelineFramesAt,
 } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
@@ -248,6 +249,12 @@ describe("consumer profile lake reads", () => {
   test("returns the complete stored scoreboard", async () => {
     const rows = await fetchFullMatch({ matchId, lakeDir });
     expect(rows.map((row) => row.champion_name)).toEqual(["Ashe", "Garen"]);
+    expect(rows[0]).toMatchObject({
+      item_0_id: 1055,
+      item_6_id: 3340,
+      summoner_spell_1_id: 4,
+      primary_rune_0_id: 8005,
+    });
   });
 
   test("aborts the post-query match support read when its caller stops", async () => {
@@ -308,6 +315,15 @@ describe("consumer profile lake reads", () => {
       lakeDir,
     });
     expect(laterFrames.map((row) => row.participant_id)).toEqual([2]);
+    expect(
+      await fetchTimelineFramesAt({
+        matchId,
+        timestampMs: 120_000,
+        lakeDir,
+      }),
+    ).toEqual([
+      expect.objectContaining({ participant_id: 2, minions_killed: 10 }),
+    ]);
   });
 
   test("returns null when Scout never retained timeline coverage", async () => {

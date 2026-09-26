@@ -5,17 +5,22 @@ import {
   PlayerIdSchema,
   TimelineCursorSchema,
   TimelineEventFilterSchema,
+  isArenaQueueOrMode,
 } from "@scout-for-lol/data";
 import type { User } from "#generated/prisma/client/index.js";
 import { assertConsumerPlayerScope } from "#src/consumer/player-access.ts";
 import { prisma } from "#src/database/index.ts";
+import { arenaAugmentsFromLakeRow } from "#src/report-lake/arena.ts";
+import { matchLoadoutFromLakeRow } from "#src/report-lake/loadout.ts";
 import {
   fetchFullMatch,
   fetchTimelineChartFrames,
   fetchTimelineCoverage,
   fetchTimelineEventPage,
+  fetchTimelineFramesAt,
   type LakeMatchParticipantRow,
 } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+import { buildRoleMatchups } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 import {
   fetchMatchTimelineEvents,
   fetchMatchTimelineFrames,
@@ -132,6 +137,9 @@ function matchView(match: AuthorizedMatch) {
     return {
       participantId: row.participant_id,
       teamId: row.team_id,
+      subteamId: row.player_subteam_id,
+      placement: row.subteam_placement ?? row.placement,
+      augments: arenaAugmentsFromLakeRow(row),
       selectedPlayer: match.player.puuids.has(row.puuid),
       riotId: {
         gameName: row.riot_id_game_name,
@@ -156,6 +164,7 @@ function matchView(match: AuthorizedMatch) {
         barons: row.baron_kills,
         dragons: row.dragon_kills,
       },
+      loadout: matchLoadoutFromLakeRow(row),
       scoutAliases: match.aliasesByPuuid.get(row.puuid) ?? [],
     };
   });
@@ -194,6 +203,21 @@ function matchView(match: AuthorizedMatch) {
     gameType: first.game_type,
     gameVersion: first.game_version,
     mapId: first.map_id,
+    arenaSubteams: isArenaQueueOrMode(first.queue_id, first.game_mode)
+      ? [...new Set(participants.map((participant) => participant.subteamId))]
+          .filter((id) => id !== null)
+          .map((subteamId) => ({
+            subteamId,
+            participants: participants.filter(
+              (participant) => participant.subteamId === subteamId,
+            ),
+          }))
+          .toSorted(
+            (left, right) =>
+              (left.participants[0]?.placement ?? Number.MAX_SAFE_INTEGER) -
+              (right.participants[0]?.placement ?? Number.MAX_SAFE_INTEGER),
+          )
+      : null,
     teams,
   };
 }
@@ -201,7 +225,7 @@ function matchView(match: AuthorizedMatch) {
 export const consumerMatchRouter = router({
   detail: protectedProcedure.input(MatchInput).query(async ({ ctx, input }) => {
     const authorized = await authorizeMatch(ctx.user, input);
-    const [coverage, keyEvents] = await Promise.all([
+    const [coverage, keyEvents, laneDeltaFrames] = await Promise.all([
       fetchTimelineCoverage({ matchId: input.matchId }),
       fetchTimelineEventPage({
         matchId: input.matchId,
@@ -209,8 +233,22 @@ export const consumerMatchRouter = router({
         limit: 40,
         eventTypes: MATCH_KEY_EVENT_TYPES,
       }),
+      fetchTimelineFramesAt({
+        matchId: input.matchId,
+        timestampMs: 900_000,
+      }),
     ]);
-    return { match: matchView(authorized), timeline: { coverage, keyEvents } };
+    return {
+      match: {
+        ...matchView(authorized),
+        roleMatchups: buildRoleMatchups({
+          rows: authorized.rows,
+          coverage,
+          frames: laneDeltaFrames,
+        }),
+      },
+      timeline: { coverage, keyEvents },
+    };
   }),
 
   events: protectedProcedure
