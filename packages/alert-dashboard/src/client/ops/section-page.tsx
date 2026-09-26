@@ -1,5 +1,8 @@
 import { findSection } from "@shepherdjerred/ops-model/assemble.ts";
-import type { SectionId } from "@shepherdjerred/ops-model/snapshot.ts";
+import type {
+  SectionId,
+  SnapshotResponse,
+} from "@shepherdjerred/ops-model/snapshot.ts";
 
 import {
   MetricTile,
@@ -11,7 +14,7 @@ import {
 } from "./ops-ui.tsx";
 import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { useRange } from "#client/charts/use-range.ts";
-import type { SeriesPresetId, SnapshotResponse } from "#shared/ops-schema";
+import type { SeriesPresetId } from "#shared/ops-schema";
 
 export type SectionPageDefinition = {
   title: string;

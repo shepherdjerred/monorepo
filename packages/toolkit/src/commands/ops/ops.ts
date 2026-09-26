@@ -1,5 +1,4 @@
 import {
-  applyFreshness,
   attentionSignals,
   findSection,
   needsMeSignals,
@@ -193,9 +192,8 @@ export async function opsSummaryCommand(
   options: OpsSummaryOptions,
 ): Promise<void> {
   const config = await loadToolkitConfig();
-  const snapshot = applyFreshness(
-    await fetchOpsSnapshot(await config.value("opsDashboardUrl")),
-    new Date(),
+  const snapshot = await fetchOpsSnapshot(
+    await config.value("opsDashboardUrl"),
   );
   console.log(
     options.json

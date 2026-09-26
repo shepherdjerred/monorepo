@@ -154,6 +154,18 @@ export const SnapshotSchema = z.strictObject({
 });
 export type Snapshot = z.infer<typeof SnapshotSchema>;
 
+/**
+ * Public snapshot API response: the latest snapshot with freshness and cursor
+ * metadata applied at read time.
+ */
+export const SnapshotResponseSchema = SnapshotSchema.extend({
+  stale: z.boolean(),
+  ageMs: z.number(),
+  receivedAt: z.iso.datetime({ offset: true }),
+  newSignalIds: z.array(z.string()),
+});
+export type SnapshotResponse = z.infer<typeof SnapshotResponseSchema>;
+
 export const CHANGE_KINDS = [
   "deploy",
   "sync",
