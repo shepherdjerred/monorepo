@@ -25,6 +25,9 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
     `cleanSignal: "thumbsup-reaction"` detects "reviewed, nothing to flag"
     (Codex). `cleanSignal: "none"` declares the provider always posts a
     review object, so a missing review means "not reviewed yet" (CodeRabbit).
+  - `issue-comment`: the provider maintains findings in a persistent issue
+    comment and posts a separate acknowledgement naming each reviewed head
+    (Qodo). Consumers reuse that same comment snapshot when parsing findings.
 - **`parseReviewBodyFindings`** — parses findings that live only in the
   provider's review bodies (CodeRabbit's "outside diff range" sections, which
   the platform would not let it post inline) into threads ahead of
@@ -32,9 +35,6 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
   thread copies via `findingKey`. Only badged findings may be emitted;
   severity-less sections (nitpicks) never block. `null` for providers whose
   every finding is an addressable thread.
-  - `issue-comment`: the provider maintains findings in a persistent issue
-    comment and posts a separate acknowledgement naming each reviewed head
-    (Qodo). Consumers reuse that same comment snapshot when parsing findings.
 - **`parseSeverity`** — parses a P0–P3 badge from a review comment body into a
   numeric priority (0 = most severe), or `null` when unbadged.
 - **`detectSkip: SkipStrategy | null`** — how a deliberate skip ("no

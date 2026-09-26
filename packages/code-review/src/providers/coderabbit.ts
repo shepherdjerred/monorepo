@@ -133,10 +133,18 @@ function pathForChunk(body: string, chunkIndex: number): string | null {
   let path: string | null = null;
   for (const match of body.matchAll(CODERABBIT_FILE_SECTION_RE)) {
     if (match.index > chunkIndex) break;
-    // Section headers also introduce prompt and summary blocks; only a
-    // file-like header (a slash path) names a finding's file.
+    // Section headers also introduce prompt and summary blocks ("⚠️ Outside
+    // diff range comments", "🧹 Nitpick comments"); those contain spaces.
+    // A file header is either a slash path (which may itself contain
+    // spaces) or a single whitespace-free token (root-level files like
+    // package.json, which CodeRabbit also renders per-file).
     const header = match[1]?.trim();
-    path = header?.includes("/") === true ? header : null;
+    path =
+      header !== undefined &&
+      header !== "" &&
+      (header.includes("/") || !/\s/u.test(header))
+        ? header
+        : null;
   }
   return path;
 }

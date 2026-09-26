@@ -159,6 +159,33 @@ describe("parseCoderabbitReviewBodies", () => {
       ]),
     ).toEqual([]);
   });
+
+  test("keeps root-level file headers and rejects spaced section headers", () => {
+    const body =
+      "<details>\n" +
+      "<summary>⚠️ Outside diff range comments (1)</summary><blockquote>\n" +
+      "<details>\n" +
+      "<summary>package.json (1)</summary><blockquote>\n" +
+      "\n" +
+      `${BODY_MINOR}\n` +
+      "\n" +
+      "</blockquote></details>\n" +
+      "</blockquote></details>\n";
+    const [finding] = parseCoderabbitReviewBodies([
+      { id: "review-4", submittedAt: null, body, commitOid: null },
+    ]);
+    // The root-level file names the finding's file, not the spaced
+    // section header above it — so the body copy merges with its inline
+    // copy instead of counting twice as a general comment.
+    if (finding === undefined) throw new Error("expected one finding");
+    expect(finding.thread.path).toBe("package.json");
+    expect(
+      coderabbitProvider.findingKey?.({
+        ...finding.thread,
+        threadId: "thread-9",
+      }),
+    ).not.toBeNull();
+  });
 });
 
 describe("coderabbitProvider", () => {
