@@ -362,18 +362,30 @@ describe("Scout V2 post-match ownership", () => {
 });
 
 describe("Scout V2 progression notifications", () => {
-  test("keeps new progression announcements on v1 in every environment", () => {
-    // Per-server ramp, not a rollback: merging it must change nothing, so
-    // both environments resolve off with no targeting, and each server ramp
-    // records its own rollout.
-    for (const environment of ["beta", "prod"]) {
-      expect(
-        scoutPolicyFlag(
-          environment,
-          "scout_v2_progression_notifications_enabled",
-        ),
-      ).toMatchObject({ default: false, rollouts: [], rules: [] });
-    }
+  test("targets the beta canary and leaves production off", () => {
+    const beta = scoutPolicyFlag(
+      "beta",
+      "scout_v2_progression_notifications_enabled",
+    );
+    expect(beta.default).toBe(false);
+    expect(beta.rollouts).toEqual([
+      expect.objectContaining({
+        segmentKey: "scout-guild-1337623164146155593",
+        constraints: [
+          expect.objectContaining({
+            property: "server",
+            operator: "eq",
+            value: "1337623164146155593",
+          }),
+        ],
+        result: true,
+      }),
+    ]);
+    expect(beta.rules).toEqual([]);
+
+    expect(
+      scoutPolicyFlag("prod", "scout_v2_progression_notifications_enabled"),
+    ).toMatchObject({ default: false, rollouts: [], rules: [] });
   });
 });
 
