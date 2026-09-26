@@ -2,14 +2,14 @@
   "schema": "pin-candidates-state/v1",
   "pins": {
     "shepherdjerred/alert-dashboard": {
-      "buildNumber": 17487,
-      "version": "2.0.0-17487",
-      "digest": "sha256:940cfb82751c3155b9e3b4950e557f26a5e6bb388ffa6506e91d076c1003a7f6"
+      "buildNumber": 17488,
+      "version": "2.0.0-17488",
+      "digest": "sha256:8ee63f92e0070657c296c51e92ef3b64485864c4e3c0531e916b4af706edebad"
     },
     "shepherdjerred/birmel": {
-      "buildNumber": 17487,
-      "version": "2.0.0-17487",
-      "digest": "sha256:cc4f400451f5b490c708ceb74c974ff477aaf83b8a73d52d17ca33dae29cbdfb"
+      "buildNumber": 17488,
+      "version": "2.0.0-17488",
+      "digest": "sha256:a79365b89abe04b80c91fc4bbae2b00a1fd052eda4142031e7d13668d9da6622"
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-16936",
@@ -42,9 +42,9 @@
       "buildNumber": 16936
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 17487,
-      "version": "2.0.0-17487",
-      "digest": "sha256:a1659816b1d103f42b8a5c85839bee13d64eab14d7ecf0d2bc77cb144ca2ae01"
+      "buildNumber": 17504,
+      "version": "2.0.0-17504",
+      "digest": "sha256:569c5fb6261ad9a612c3009e319e935caba09c3b38e211c73b8144e8f414e1f2"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -53,14 +53,14 @@
       "gitSha": "c42ee297992a5be0d83541b9c7deda5d4ceb99c7"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
-      "buildNumber": 17487,
-      "version": "2.0.0-17487",
-      "digest": "sha256:a4cd5b973de77a365fa7886f066415542bdb7daefa8fa7c6851e4526b09444a8"
+      "buildNumber": 17488,
+      "version": "2.0.0-17488",
+      "digest": "sha256:a64b1cbdedf50568a8be52a881736eb9fb988f30025ee73a01cbe6f7a9231429"
     },
     "shepherdjerred/streambot": {
-      "buildNumber": 17487,
-      "version": "2.0.0-17487",
-      "digest": "sha256:43e109ab098e129e483f4f166a8515874c1224eb967080a6e580a697870a7663"
+      "buildNumber": 17488,
+      "version": "2.0.0-17488",
+      "digest": "sha256:980deeccf8c0d2ce59bc3e98964b6c2cea0112ea629972e60e59ce09f0fddcd2"
     },
     "shepherdjerred/tasknotes-server": {
       "version": "2.0.0-17478",
@@ -68,9 +68,9 @@
       "buildNumber": 17478
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 17487,
-      "version": "2.0.0-17487",
-      "digest": "sha256:e3cd662168d505642329f6a15624ffeca9fac940f8178f73fadfd36d842264a1"
+      "buildNumber": 17504,
+      "version": "2.0.0-17504",
+      "digest": "sha256:174b00107ed7a74c316a945f54b8549db3067ec2d277641c2b21a8d4c1641acb"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-17396",
@@ -84,9 +84,9 @@
       "gitSha": "4bab713a81af0ce1bac2a1657faa1fbac98f868d"
     },
     "shepherdjerred/trmnl-dashboard": {
-      "buildNumber": 17487,
-      "version": "2.0.0-17487",
-      "digest": "sha256:a85131ed45f3f768f3e12d99f9fe5f580b6a44b4c66e114955fa77e574a554e1"
+      "buildNumber": 17488,
+      "version": "2.0.0-17488",
+      "digest": "sha256:ca1465c207cc16f31fc632c29c4c3a207aeefe14ed8169397085234352ea4850"
     }
   }
 }
