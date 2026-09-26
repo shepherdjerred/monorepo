@@ -1,29 +1,35 @@
-# Arrival and random teleport. Owned by the repository; the plugin never writes it.
-# Durations are ISO-8601. The first freeFor after qol first sees a player, /rtp
-# costs nothing. After that it costs crystals. The cooldown begins when a search
-# starts, even if warmup is cancelled or the charge is refused.
-# Recent landings repel the next teleport for landingMemory.
+# Quality of life: graves, combat tags, the sleep vote and chest sorting
+# (replaces GravesX, CombatLog, Sleeper and ChestSort).
+# Owned by the repository; the plugin never writes it. Every key is required,
+# unknown keys are errors, and durations are ISO-8601 (PT15S, PT15M, PT72H).
 
-freeFor: P7D
-cooldown: PT15S
-warmup: PT3S
-landingMemory: PT5M
-cost: 25
-batchSize: 24
-minGap: 512
-band: 1500
-borderMargin: 128
-nearBestHundredths: 90
-biomes:
-  - plains
-  - forest
-  - dark_forest
-  - cherry_grove
-  - flower_forest
-  - desert
-  - savanna
-  - jungle
-  - taiga
-  - snowy_plains
-  - badlands
-  - swamp
+# When a player dies their drops go into a grave: a player head near where
+# they died (or, after a death in the void or lava, where they last stood
+# safely). The items live in the database, not in the block. The owner can
+# always empty it; after lockedFor anyone may take what fits in their
+# inventory ("stealing from unlocked chests is allowed"). After expireAfter the
+# grave breaks open and drops what is left. /graves lists your graves.
+graves:
+  lockedFor: PT15M
+  expireAfter: PT72H
+  # How far from the death, on each axis, a grave may be placed (1-8).
+  searchRadius: 4
+
+# A hit between two players tags both. Tagged players cannot teleport (/home,
+# /spawn, /tpa, /back, /warp) and, with killOnLogout, die if they log out.
+combat:
+  tagFor: PT15S
+  killOnLogout: true
+  logoutMessage: "{player} logged out in combat and was struck down."
+
+# The night passes when this share (1-100, rounded up, at least one) of a
+# world's players are asleep. AFK players only count when they are in bed.
+sleep:
+  percent: 50
+  morningMessage: "The night passes. Good morning!"
+
+# /sort sorts the container you are looking at. With sneakPunch, punching a
+# chest, barrel, shulker box or ender chest while sneaking with an empty hand
+# sorts it too.
+sort:
+  sneakPunch: true

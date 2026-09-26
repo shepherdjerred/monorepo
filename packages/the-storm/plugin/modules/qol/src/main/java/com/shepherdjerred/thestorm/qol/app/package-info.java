@@ -1,4 +1,4 @@
-/** Stored players, RTP attempts, and recent landings. */
+/** Quality-of-life use cases and the ports other modules may call. */
 @NullMarked
 package com.shepherdjerred.thestorm.qol.app;
 
