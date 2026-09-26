@@ -1,0 +1,925 @@
+# Mob Arena classes. Owned by the repository; the plugin never writes it.
+# Every key is required and unknown keys are errors.
+#
+# The nine 2014-2015 kits (Archer, Madman, Guardian, Healer, Wolfmaster, Tank,
+# Knight, Oddjob, Chemist) are open to everyone; there are no paid classes.
+# Advanced classes (the 2017 idea) need thestorm.arena.class.<id>, which quests
+# grant. Each kit can clear every wave solo: there is no natural healing to
+# lean on, so every kit carries healing potions and golden apples, and upgrade
+# waves (the wave after each boss) refill the consumables.
+#
+# Items: material, amount (1-64), name (plain text or null), enchantments
+# (key: level), potion (a potion type key such as strong_healing, for potions
+# and tipped arrows, or null) and slot (HEAD, CHEST, LEGS, FEET, MAIN_HAND,
+# OFF_HAND, or null for anywhere). Arena gear is unbreakable, and nothing a
+# class carries leaves the arena.
+# Effects are potion effect keys to amplifiers (0 is level I) lasting the game.
+classes:
+  knight:
+    name: Knight
+    advanced: false
+    items:
+      - material: DIAMOND_SWORD
+        amount: 1
+        name: null
+        enchantments:
+          sharpness: 1
+        potion: null
+        slot: MAIN_HAND
+      - material: SHIELD
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: OFF_HAND
+      - material: IRON_HELMET
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: HEAD
+      - material: IRON_CHESTPLATE
+        amount: 1
+        name: null
+        enchantments:
+          protection: 1
+        potion: null
+        slot: CHEST
+      - material: IRON_LEGGINGS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: LEGS
+      - material: IRON_BOOTS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: FEET
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: COOKED_BEEF
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    upgrade:
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    effects: {}
+    wolves: 0
+
+  archer:
+    name: Archer
+    advanced: false
+    items:
+      - material: BOW
+        amount: 1
+        name: God Bow
+        enchantments:
+          power: 3
+          punch: 1
+          infinity: 1
+        potion: null
+        slot: MAIN_HAND
+      - material: ARROW
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: STONE_SWORD
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: CHAINMAIL_HELMET
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: HEAD
+      - material: LEATHER_CHESTPLATE
+        amount: 1
+        name: null
+        enchantments:
+          protection: 2
+        potion: null
+        slot: CHEST
+      - material: LEATHER_LEGGINGS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: LEGS
+      - material: CHAINMAIL_BOOTS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: FEET
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: COOKED_BEEF
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    upgrade:
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    effects: {}
+    wolves: 3
+
+  madman:
+    name: Madman
+    advanced: false
+    items:
+      - material: DIAMOND_AXE
+        amount: 1
+        name: Madman's Axe
+        enchantments:
+          sharpness: 3
+        potion: null
+        slot: MAIN_HAND
+      - material: LEATHER_HELMET
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: HEAD
+      - material: CHAINMAIL_CHESTPLATE
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: CHEST
+      - material: LEATHER_LEGGINGS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: LEGS
+      - material: LEATHER_BOOTS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: FEET
+      - material: SPLASH_POTION
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: strong_strength
+        slot: null
+      - material: SPLASH_POTION
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: strong_swiftness
+        slot: null
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: COOKED_BEEF
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    upgrade:
+      - material: SPLASH_POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_strength
+        slot: null
+      - material: SPLASH_POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_swiftness
+        slot: null
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+    effects: {}
+    wolves: 0
+
+  guardian:
+    name: Guardian
+    advanced: false
+    items:
+      - material: GOLDEN_SWORD
+        amount: 1
+        name: null
+        enchantments:
+          sharpness: 3
+        potion: null
+        slot: MAIN_HAND
+      - material: GOLDEN_HELMET
+        amount: 1
+        name: null
+        enchantments:
+          protection: 2
+        potion: null
+        slot: HEAD
+      - material: GOLDEN_CHESTPLATE
+        amount: 1
+        name: null
+        enchantments:
+          protection: 2
+        potion: null
+        slot: CHEST
+      - material: GOLDEN_LEGGINGS
+        amount: 1
+        name: null
+        enchantments:
+          protection: 2
+        potion: null
+        slot: LEGS
+      - material: GOLDEN_BOOTS
+        amount: 1
+        name: null
+        enchantments:
+          protection: 2
+        potion: null
+        slot: FEET
+      - material: SPLASH_POTION
+        amount: 4
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: SPLASH_POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_regeneration
+        slot: null
+      - material: SPLASH_POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_harming
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: COOKED_BEEF
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    upgrade:
+      - material: SPLASH_POTION
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: SPLASH_POTION
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: strong_harming
+        slot: null
+    effects: {}
+    wolves: 0
+
+  healer:
+    name: Healer
+    advanced: false
+    items:
+      - material: IRON_SWORD
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: MAIN_HAND
+      - material: CHAINMAIL_HELMET
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: HEAD
+      - material: CHAINMAIL_CHESTPLATE
+        amount: 1
+        name: null
+        enchantments:
+          protection: 1
+        potion: null
+        slot: CHEST
+      - material: CHAINMAIL_LEGGINGS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: LEGS
+      - material: CHAINMAIL_BOOTS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: FEET
+      - material: SPLASH_POTION
+        amount: 6
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: LINGERING_POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_regeneration
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 4
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: COOKED_BEEF
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    upgrade:
+      - material: SPLASH_POTION
+        amount: 4
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: LINGERING_POTION
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: strong_regeneration
+        slot: null
+    effects:
+      regeneration: 0
+    wolves: 0
+
+  wolfmaster:
+    name: Wolfmaster
+    advanced: false
+    items:
+      - material: IRON_SWORD
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: MAIN_HAND
+      - material: LEATHER_HELMET
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: HEAD
+      - material: IRON_CHESTPLATE
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: CHEST
+      - material: LEATHER_LEGGINGS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: LEGS
+      - material: LEATHER_BOOTS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: FEET
+      - material: BONE
+        amount: 32
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: COOKED_BEEF
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    upgrade:
+      - material: BONE
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+    effects:
+      speed: 0
+    wolves: 7
+
+  tank:
+    name: Tank
+    advanced: false
+    items:
+      - material: IRON_SWORD
+        amount: 1
+        name: null
+        enchantments:
+          knockback: 1
+        potion: null
+        slot: MAIN_HAND
+      - material: SHIELD
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: OFF_HAND
+      - material: DIAMOND_HELMET
+        amount: 1
+        name: null
+        enchantments:
+          protection: 1
+        potion: null
+        slot: HEAD
+      - material: DIAMOND_CHESTPLATE
+        amount: 1
+        name: null
+        enchantments:
+          protection: 2
+        potion: null
+        slot: CHEST
+      - material: DIAMOND_LEGGINGS
+        amount: 1
+        name: null
+        enchantments:
+          protection: 1
+        potion: null
+        slot: LEGS
+      - material: DIAMOND_BOOTS
+        amount: 1
+        name: null
+        enchantments:
+          protection: 1
+        potion: null
+        slot: FEET
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: COOKED_BEEF
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    upgrade:
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    effects:
+      slowness: 0
+    wolves: 0
+
+  oddjob:
+    name: Oddjob
+    advanced: false
+    items:
+      - material: IRON_SWORD
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: MAIN_HAND
+      - material: TNT
+        amount: 16
+        name: Arena TNT
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: WIND_CHARGE
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: CHAINMAIL_HELMET
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: HEAD
+      - material: CHAINMAIL_CHESTPLATE
+        amount: 1
+        name: null
+        enchantments:
+          blast_protection: 3
+        potion: null
+        slot: CHEST
+      - material: CHAINMAIL_LEGGINGS
+        amount: 1
+        name: null
+        enchantments:
+          blast_protection: 2
+        potion: null
+        slot: LEGS
+      - material: CHAINMAIL_BOOTS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: FEET
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: COOKED_BEEF
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    upgrade:
+      - material: TNT
+        amount: 8
+        name: Arena TNT
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: WIND_CHARGE
+        amount: 8
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+    effects: {}
+    wolves: 0
+
+  chemist:
+    name: Chemist
+    advanced: false
+    items:
+      - material: STONE_SWORD
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: MAIN_HAND
+      - material: LEATHER_HELMET
+        amount: 1
+        name: null
+        enchantments:
+          protection: 2
+        potion: null
+        slot: HEAD
+      - material: LEATHER_CHESTPLATE
+        amount: 1
+        name: null
+        enchantments:
+          protection: 2
+        potion: null
+        slot: CHEST
+      - material: LEATHER_LEGGINGS
+        amount: 1
+        name: null
+        enchantments:
+          protection: 2
+        potion: null
+        slot: LEGS
+      - material: LEATHER_BOOTS
+        amount: 1
+        name: null
+        enchantments:
+          protection: 2
+        potion: null
+        slot: FEET
+      - material: SPLASH_POTION
+        amount: 6
+        name: null
+        enchantments: {}
+        potion: strong_harming
+        slot: null
+      - material: LINGERING_POTION
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: strong_poison
+        slot: null
+      - material: SPLASH_POTION
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: long_weakness
+        slot: null
+      - material: SPLASH_POTION
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: COOKED_BEEF
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    upgrade:
+      - material: SPLASH_POTION
+        amount: 4
+        name: null
+        enchantments: {}
+        potion: strong_harming
+        slot: null
+      - material: LINGERING_POTION
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: strong_poison
+        slot: null
+      - material: SPLASH_POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+    effects: {}
+    wolves: 0
+
+  # Advanced: a mace fighter who leaps in on wind charges and smashes crowds.
+  vanguard:
+    name: Vanguard
+    advanced: true
+    items:
+      - material: MACE
+        amount: 1
+        name: null
+        enchantments:
+          density: 3
+          wind_burst: 1
+        potion: null
+        slot: MAIN_HAND
+      - material: SHIELD
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: OFF_HAND
+      - material: WIND_CHARGE
+        amount: 32
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: IRON_HELMET
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: HEAD
+      - material: IRON_CHESTPLATE
+        amount: 1
+        name: null
+        enchantments:
+          protection: 2
+        potion: null
+        slot: CHEST
+      - material: IRON_LEGGINGS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: LEGS
+      - material: IRON_BOOTS
+        amount: 1
+        name: null
+        enchantments:
+          feather_falling: 4
+        potion: null
+        slot: FEET
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: COOKED_BEEF
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    upgrade:
+      - material: WIND_CHARGE
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+    effects: {}
+    wolves: 0
+
+  # Advanced: a spear fighter with reach, charging through the line.
+  lancer:
+    name: Lancer
+    advanced: true
+    items:
+      - material: DIAMOND_SPEAR
+        amount: 1
+        name: null
+        enchantments:
+          sharpness: 2
+        potion: null
+        slot: MAIN_HAND
+      - material: IRON_HELMET
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: HEAD
+      - material: IRON_CHESTPLATE
+        amount: 1
+        name: null
+        enchantments:
+          protection: 1
+        potion: null
+        slot: CHEST
+      - material: IRON_LEGGINGS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: LEGS
+      - material: IRON_BOOTS
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: null
+        slot: FEET
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_swiftness
+        slot: null
+      - material: GOLDEN_APPLE
+        amount: 3
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+      - material: COOKED_BEEF
+        amount: 16
+        name: null
+        enchantments: {}
+        potion: null
+        slot: null
+    upgrade:
+      - material: POTION
+        amount: 2
+        name: null
+        enchantments: {}
+        potion: strong_healing
+        slot: null
+      - material: POTION
+        amount: 1
+        name: null
+        enchantments: {}
+        potion: strong_swiftness
+        slot: null
+    effects: {}
+    wolves: 2
