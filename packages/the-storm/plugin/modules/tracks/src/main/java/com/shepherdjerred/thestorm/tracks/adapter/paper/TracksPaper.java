@@ -29,8 +29,15 @@ public final class TracksPaper {
     };
   }
 
-  public static void install(ModuleContext context, TracksConfig config, UseCases useCases) {
+  /**
+   * Registers the permissions, the listener and {@code /perks}. Returns the registered permissions,
+   * which the caller unregisters on disable.
+   */
+  public static TracksPermissions install(
+      ModuleContext context, TracksConfig config, UseCases useCases) {
     var server = context.plugin().getServer();
+    var permissions = new TracksPermissions(server.getPluginManager());
+    permissions.register();
     var formatter = context.services().require(CrystalFormatter.class);
     var replies = new Replies(context.scheduler().mainThread(), context.logger());
     var explanations = new Explanations(config, amount -> formatter.words(Crystals.of(amount)));
@@ -54,5 +61,6 @@ public final class TracksPaper {
         .lifecycle()
         .registerEventHandler(
             LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
+    return permissions;
   }
 }

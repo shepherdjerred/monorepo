@@ -121,7 +121,7 @@ tracks:
   governor:
     displayName: Governor
     color: "#4A7FD9"
-    summary: Found and grow a town. Each level adds to your town's plot bank and raises the level it can reach.
+    summary: Found and grow a town. Higher levels add more chunks to your town's claim limit.
     levels:
       - title: Founder
         unlocks:

@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -31,8 +32,10 @@ final class PurchaseServiceTest {
 
   private final TestRuntime test = new TestRuntime();
   private final FakeWallets wallets = new FakeWallets();
+  private final AtomicBoolean groupsReady = new AtomicBoolean(true);
   private final PurchaseService service =
-      new PurchaseService(test.runtime, wallets, PurchaseRules.standard(DEFAULT_PRICING, DAY));
+      new PurchaseService(
+          test.runtime, wallets, PurchaseRules.standard(DEFAULT_PRICING, DAY), groupsReady::get);
 
   @BeforeEach
   void aliceIsOnline() {
@@ -312,6 +315,23 @@ final class PurchaseServiceTest {
     assertThat(second).isEqualTo(Result.err(List.of(new PurchaseProblem.AlreadyBuying())));
     assertThat(first.join().isOk()).isTrue();
     assertThat(wallets.receipts()).hasSize(1);
+  }
+
+  @Test
+  void groupDeclarationMustCompleteBeforeAPlayerCanPay() {
+    wallets.give(ALICE_ACCOUNT, 5_000);
+    var offered = quote(MECHANIC);
+    groupsReady.set(false);
+
+    assertThat(service.quote(ALICE, MECHANIC).join())
+        .isEqualTo(Result.err(List.of(new PurchaseProblem.PermissionsUnavailable())));
+    assertThat(service.buy(ALICE, offered).join())
+        .isEqualTo(Result.err(List.of(new PurchaseProblem.PermissionsUnavailable())));
+    assertThat(service.overview(ALICE).join().isOk()).isTrue();
+    assertThat(wallets.receipts()).isEmpty();
+
+    groupsReady.set(true);
+    assertThat(service.buy(ALICE, offered).join().isOk()).isTrue();
   }
 
   @Test

@@ -54,6 +54,9 @@ final class ExplanationsTest {
         .isEqualTo("Your tracks are still loading; try again in a moment.");
     assertThat(explain(new PurchaseProblem.LoadFailed()))
         .isEqualTo("Your tracks could not be loaded; try again shortly.");
+    assertThat(explain(new PurchaseProblem.PermissionsUnavailable()))
+        .isEqualTo(
+            "Track permissions are temporarily unavailable; no crystals were charged. Try again shortly.");
     assertThat(explain(new PurchaseProblem.ShuttingDown()))
         .isEqualTo("The server is stopping; train again once it is back.");
     assertThat(explain(new PurchaseProblem.AlreadyBuying()))

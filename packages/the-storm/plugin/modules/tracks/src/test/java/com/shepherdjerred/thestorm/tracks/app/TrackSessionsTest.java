@@ -141,6 +141,38 @@ final class TrackSessionsTest {
     assertThat(test.cache.state(ALICE)).isEmpty();
   }
 
+  @Test
+  void aFailedPermissionSyncRetriesDuringTheSameSession() {
+    test.store.put(ALICE, owning(MECHANIC, 2));
+    test.permissions.failFromNowOn();
+    sessions.joined(ALICE);
+
+    assertThat(test.permissions.groupsOf(ALICE)).isEmpty();
+    assertThat(test.scheduler.pendingDelays()).containsExactly(Duration.ofSeconds(1));
+
+    test.permissions.recover();
+    test.scheduler.runDelayed();
+
+    assertThat(test.permissions.groupsOf(ALICE)).containsExactly("storm-mechanic-2");
+    assertThat(test.scheduler.pendingDelays()).isEmpty();
+  }
+
+  @Test
+  void anOldPermissionRetryCannotApplyAfterQuitAndRejoin() {
+    test.store.put(ALICE, owning(MECHANIC, 2));
+    test.permissions.failFromNowOn();
+    sessions.joined(ALICE);
+    sessions.quit(ALICE);
+    test.permissions.recover();
+    sessions.joined(ALICE);
+    var applications = test.permissions.applied();
+
+    test.scheduler.runDelayed();
+
+    assertThat(test.permissions.applied()).isEqualTo(applications);
+    assertThat(test.permissions.groupsOf(ALICE)).containsExactly("storm-mechanic-2");
+  }
+
   @ParameterizedTest(name = "retry {0} waits {1}s")
   @CsvSource({"1, 1", "2, 2", "3, 4", "4, 8", "5, 16", "6, 32", "7, 60", "8, 60", "100, 60"})
   void retryDelaysDoubleUpToAMinute(int attempt, long seconds) {

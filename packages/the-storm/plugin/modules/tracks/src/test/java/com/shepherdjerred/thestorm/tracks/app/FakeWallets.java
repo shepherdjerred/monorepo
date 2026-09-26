@@ -1,11 +1,13 @@
 package com.shepherdjerred.thestorm.tracks.app;
 
+import static java.util.Objects.requireNonNull;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
+import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.time.Instant;
@@ -13,6 +15,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -25,6 +29,8 @@ public final class FakeWallets implements Wallets {
 
   private final Map<AccountId, Long> balances = new HashMap<>();
   private final List<Receipt> receipts = new ArrayList<>();
+  private final Map<UUID, KeyedTransfer> keyed = new HashMap<>();
+  private final Map<UUID, Receipt> keyedReceipts = new HashMap<>();
   private int refuseTransfers;
   private int failTransfersAfter = Integer.MAX_VALUE;
 
@@ -75,6 +81,32 @@ public final class FakeWallets implements Wallets {
     var receipt = new Receipt(receipts.size() + 1L, from, to, amount, reason, Instant.EPOCH);
     receipts.add(receipt);
     return completedFuture(Result.ok(receipt));
+  }
+
+  @Override
+  public synchronized CompletableFuture<Result<Receipt, EconomyError>> transferOnce(
+      KeyedTransfer transfer) {
+    var previous = keyed.get(transfer.key());
+    if (previous != null) {
+      if (!previous.equals(transfer)) {
+        throw new IllegalArgumentException("transfer key reused with different details");
+      }
+      return completedFuture(Result.ok(requireNonNull(keyedReceipts.get(transfer.key()))));
+    }
+    return transfer(transfer.from(), transfer.to(), transfer.amount(), transfer.reason())
+        .thenApply(
+            result -> {
+              if (result instanceof Result.Ok<Receipt, EconomyError>(var receipt)) {
+                keyed.put(transfer.key(), transfer);
+                keyedReceipts.put(transfer.key(), receipt);
+              }
+              return result;
+            });
+  }
+
+  @Override
+  public synchronized CompletableFuture<Optional<Receipt>> receiptFor(UUID key) {
+    return completedFuture(Optional.ofNullable(keyedReceipts.get(key)));
   }
 
   @Override

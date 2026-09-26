@@ -30,6 +30,9 @@ public sealed interface PurchaseProblem {
   /** Loading the player's levels failed; it is being retried. */
   record LoadFailed() implements PurchaseProblem {}
 
+  /** LuckPerms track groups have not been declared yet; no paid unlocks can be granted. */
+  record PermissionsUnavailable() implements PurchaseProblem {}
+
   /** The server is stopping and takes no new purchases. */
   record ShuttingDown() implements PurchaseProblem {}
 

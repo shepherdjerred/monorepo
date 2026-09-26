@@ -47,6 +47,11 @@ public final class LevelCache implements TrackLevels {
     return level(player.getUniqueId(), track);
   }
 
+  @Override
+  public boolean isLoaded(UUID player) {
+    return progress(player).isPresent();
+  }
+
   /** {@code player}'s level in {@code track}; 0 if untrained, offline or not loaded yet. */
   public int level(UUID player, Track track) {
     return progress(player).map(progress -> progress.level(track)).orElse(0);

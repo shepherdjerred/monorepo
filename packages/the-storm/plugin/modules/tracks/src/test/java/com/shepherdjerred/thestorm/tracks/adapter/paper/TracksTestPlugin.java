@@ -43,6 +43,7 @@ public class TracksTestPlugin extends JavaPlugin {
   final LevelCache cache = new LevelCache();
   @Nullable FakePermissionSync permissions;
   private @Nullable StormDatabase database;
+  private @Nullable TracksPermissions registered;
 
   FakePermissionSync permissions() {
     return Objects.requireNonNull(permissions, "permissions");
@@ -75,17 +76,29 @@ public class TracksTestPlugin extends JavaPlugin {
     permissions = sync;
     var runtime =
         new TrackRuntime(
-            store, sync, cache, scheduler, InstantSource.system(), getComponentLogger());
+            store,
+            sync,
+            cache,
+            new TrackRuntime.RuntimeServices(
+                scheduler, InstantSource.system(), getComponentLogger()));
     var purchases =
         new PurchaseService(
-            runtime, wallets, PurchaseRules.standard(config.pricing(), config.purchaseCooldown()));
+            runtime,
+            wallets,
+            PurchaseRules.standard(config.pricing(), config.purchaseCooldown()),
+            () -> true);
     var sessions = new TrackSessions(runtime, TracksPaper.loadFailedNotice(getServer()));
-    TracksPaper.install(
-        context, config, new UseCases(purchases, new TrackAdmin(runtime), sessions, cache));
+    registered =
+        TracksPaper.install(
+            context, config, new UseCases(purchases, new TrackAdmin(runtime), sessions, cache));
   }
 
   @Override
   public void onDisable() {
+    if (registered != null) {
+      registered.unregister();
+      registered = null;
+    }
     if (database != null) {
       database.close();
     }

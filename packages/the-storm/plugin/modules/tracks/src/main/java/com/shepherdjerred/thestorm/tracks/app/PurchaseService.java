@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.BooleanSupplier;
 
 /**
  * Buying track levels. The level is written only after the economy has taken payment; if it then
@@ -41,16 +42,19 @@ public final class PurchaseService implements TrackPurchases {
   private final TrackRuntime runtime;
   private final Wallets wallets;
   private final PurchaseRules rules;
+  private final BooleanSupplier groupsReady;
 
   /** Each player's running purchase, completed once it has been paid and stored or refunded. */
   private final Map<UUID, CompletableFuture<Void>> buying = new ConcurrentHashMap<>();
 
   private volatile boolean closed;
 
-  public PurchaseService(TrackRuntime runtime, Wallets wallets, PurchaseRules rules) {
+  public PurchaseService(
+      TrackRuntime runtime, Wallets wallets, PurchaseRules rules, BooleanSupplier groupsReady) {
     this.runtime = runtime;
     this.wallets = wallets;
     this.rules = rules;
+    this.groupsReady = groupsReady;
   }
 
   /** The ledger reason for buying {@code quote}, for example {@code track:mechanic:2}. */
@@ -141,6 +145,9 @@ public final class PurchaseService implements TrackPurchases {
 
   @Override
   public CompletableFuture<Result<Quote, List<PurchaseProblem>>> quote(UUID player, Track track) {
+    if (!groupsReady.getAsBoolean()) {
+      return completedFuture(Result.err(List.of(new PurchaseProblem.PermissionsUnavailable())));
+    }
     return switch (ready(player)) {
       case Result.Err<TrackProgress, PurchaseProblem>(var problem) ->
           completedFuture(Result.err(List.of(problem)));
@@ -158,6 +165,9 @@ public final class PurchaseService implements TrackPurchases {
 
   @Override
   public CompletableFuture<Result<Purchase, List<PurchaseProblem>>> buy(UUID player, Quote quote) {
+    if (!groupsReady.getAsBoolean()) {
+      return completedFuture(Result.err(List.of(new PurchaseProblem.PermissionsUnavailable())));
+    }
     if (ready(player) instanceof Result.Err<TrackProgress, PurchaseProblem>(var problem)) {
       return completedFuture(Result.err(List.of(problem)));
     }
