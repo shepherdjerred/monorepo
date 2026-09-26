@@ -70,13 +70,14 @@ data.
 TEMPORAL_NAMESPACE=prod bun run worker-deployment start --build-id <candidate-image-git-sha>
 ```
 
-`start` refuses an existing ramp or firing `Temporal.*` alert. It verifies that
-the checkout SHA equals the candidate Build ID, requires a clean tracked
-checkout, replays the real Workflow suite and the retained IDs listed in
-`TEMPORAL_REPLAY_WORKFLOW_IDS`, starts a canary pinned to the candidate version,
-and waits for that Workflow to
-complete. For an empty Worker Deployment, pass the already registered stable
-Build ID so the deployment has a rollback target before candidate traffic:
+`start` refuses an existing ramp. It verifies that the checkout SHA equals the
+candidate Build ID, requires a clean tracked checkout, replays the real
+Workflow suite and the retained IDs listed in `TEMPORAL_REPLAY_WORKFLOW_IDS`,
+starts a canary pinned to the candidate version, and waits for that Workflow to
+complete. Firing Temporal alerts remain visible in monitoring but do not block
+routing changes. For an empty Worker Deployment, pass the already registered
+stable Build ID so the deployment has a rollback target before candidate
+traffic:
 
 ```bash
 TEMPORAL_NAMESPACE=prod bun run worker-deployment start \
@@ -89,21 +90,21 @@ ramp. Later releases need only `--build-id`.
 
 ## Advance to 50% and 100%
 
-After at least 30 clean minutes at 10%:
+After at least 30 minutes at 10%:
 
 ```bash
 TEMPORAL_NAMESPACE=prod bun run worker-deployment advance --build-id <candidate-image-git-sha>
 ```
 
-After at least two clean hours at 50%, run the same command again. It advances
-to 100%. Each transition rechecks candidate pollers, currently firing alerts,
-and Prometheus alert history over the entire required window. An alert that
-fired and resolved during the window still blocks the transition. An early,
-repeated, or out-of-order command fails without changing routing.
+After at least two hours at 50%, run the same command again. It advances to
+100%. Each transition rechecks candidate and stable poller history and
+Prometheus rule-evaluation health over the entire required window. Temporal
+workflow alerts are monitored separately and do not block these transitions.
+An early, repeated, or out-of-order command fails without changing routing.
 
 ## Promote after the soak
 
-After at least 24 clean hours at 100%:
+After at least 24 hours at 100%:
 
 ```bash
 TEMPORAL_NAMESPACE=prod bun run worker-deployment promote --build-id <candidate-image-git-sha>

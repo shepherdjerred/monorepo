@@ -80,10 +80,12 @@ candidate bundle, and runs an exact-version canary before opening a 10% ramp.
 Set `TEMPORAL_ADDRESS` to an
 operator-reachable endpoint; native calls use the existing `toolkit temporal`
 passthrough. The first ramp also requires `--stable-build-id <sha>` so an empty
-deployment has a rollback target. `advance` checks alert history across its
-clean windows. `promote` checks the 24-hour history, verifies the candidate
-pin's baked `GIT_SHA`, and writes the stable pin before changing routing so an
-interrupted command is safe to retry. `rollback` removes the exact active ramp,
+deployment has a rollback target. `advance` checks candidate and stable poller
+history plus Prometheus rule-evaluation health across each ramp window; firing
+Temporal alerts remain visible in monitoring but do not block routing.
+`promote` checks the 24-hour history, verifies the candidate pin's baked
+`GIT_SHA`, and writes the stable pin before changing routing so an interrupted
+command is safe to retry. `rollback` removes the exact active ramp,
 even if a newer build registered. CI retains a Workflow candidate whenever its
 pin differs from stable, so a later image release cannot evict an in-flight
 ramp. After rollback and candidate-history drain, rerun `rollback` with no

@@ -38,7 +38,7 @@ type Fixture = {
   workflowPollers?: number;
   alerts?: number;
   historicalAlerts?: number;
-  historicalAlertSamples?: number;
+  historicalRuleEvaluationSamples?: number;
   historicalPollerSamples?: number;
   historicalEvaluationProgress?: number;
   historicalEvaluationAgeSeconds?: number;
@@ -161,7 +161,7 @@ function metricValue(expression: string, fixture: Fixture): number {
   }
   if (expression.includes("count_over_time")) {
     return expression.includes("prometheus_rule_group")
-      ? (fixture.historicalAlertSamples ?? 10_000)
+      ? (fixture.historicalRuleEvaluationSamples ?? 10_000)
       : (fixture.historicalPollerSamples ?? 10_000);
   }
   if (expression.includes("max_over_time")) {
@@ -364,30 +364,31 @@ describe("Worker Deployment inspection", () => {
 });
 
 describe("Worker Deployment rollout", () => {
-  test("reports exact routing, poller, and alert state", async () => {
+  test("reports exact routing and candidate poller state without global alert checks", async () => {
     const commands: string[][] = [];
     const status = await executeWorkerDeploymentRollout(
       await options("status"),
-      fixtureRunner({}, commands),
+      fixtureRunner({ alerts: 7 }, commands),
     );
     expect(status).toMatchObject({
       currentBuildId: STABLE,
       candidateBuildId: CANDIDATE,
       rampPercentage: 0,
       workflowPollers: 1,
-      activeTemporalAlerts: 0,
       candidateWorkflowQueues: WORKFLOW_TASK_QUEUES.toSorted(),
     });
+    expect(status).not.toHaveProperty("activeTemporalAlerts");
+    expect(commands.some((command) => command.includes("ALERTS"))).toBe(false);
     expect(
       commands.some((command) => command.includes("describe-version")),
     ).toBe(true);
   });
 
-  test("starts at 10% only after replay, canary, poller, and alert proofs", async () => {
+  test("starts at 10% after replay and canary even when Temporal alerts are firing", async () => {
     const commands: string[][] = [];
     await executeWorkerDeploymentRollout(
       await options("start"),
-      fixtureRunner({}, commands),
+      fixtureRunner({ alerts: 7 }, commands),
     );
     expect(commands).toContainEqual(["bun", "run", "test:workflows"]);
     expect(commands).toContainEqual([
@@ -422,6 +423,7 @@ describe("Worker Deployment rollout", () => {
           command.includes("describe") && !command.includes("describe-version"),
       ),
     ).toHaveLength(3);
+    expect(commands.some((command) => command.includes("ALERTS"))).toBe(false);
   });
 
   test("uses the selected Scout queue, replay bundle, canary, and image repository", async () => {
@@ -535,7 +537,7 @@ describe("Worker Deployment rollout", () => {
     ).toBe(true);
   });
 
-  test("advances 10 to 50 after 30 clean minutes and 50 to 100 after two hours", async () => {
+  test("advances 10 to 50 after 30 minutes and 50 to 100 after two hours", async () => {
     const firstCommands: string[][] = [];
     await executeWorkerDeploymentRollout(
       await options("advance", new Date("2026-08-29T00:31:00Z")),
@@ -778,21 +780,22 @@ describe("Worker Deployment rollout safety", () => {
     ).rejects.toThrow("tracked modifications");
   });
 
-  test("rejects a ramp when an alert fired during the clean window", async () => {
-    await expect(
-      executeWorkerDeploymentRollout(
-        await options("advance", new Date("2026-08-29T00:31:00Z")),
-        fixtureRunner(
-          {
-            rampingBuildId: CANDIDATE,
-            rampPercentage: 10,
-            rampChangedTime: "2026-08-29T00:00:00Z",
-            historicalAlerts: 1,
-          },
-          [],
-        ),
+  test("continues the ramp when Temporal alerts fire during the rollout window", async () => {
+    const commands: string[][] = [];
+    await executeWorkerDeploymentRollout(
+      await options("advance", new Date("2026-08-29T00:31:00Z")),
+      fixtureRunner(
+        {
+          rampingBuildId: CANDIDATE,
+          rampPercentage: 10,
+          rampChangedTime: "2026-08-29T00:00:00Z",
+          historicalAlerts: 1,
+        },
+        commands,
       ),
-    ).rejects.toThrow("alerts fired during the required 30m clean window");
+    );
+    expect(commands.some((command) => command.includes("50"))).toBe(true);
+    expect(commands.some((command) => command.includes("ALERTS"))).toBe(false);
   });
 
   test("rejects a ramp without a complete Prometheus history window", async () => {
@@ -804,7 +807,7 @@ describe("Worker Deployment rollout safety", () => {
             rampingBuildId: CANDIDATE,
             rampPercentage: 10,
             rampChangedTime: "2026-08-29T00:00:00Z",
-            historicalAlertSamples: 5,
+            historicalRuleEvaluationSamples: 5,
           },
           [],
         ),
@@ -849,7 +852,6 @@ describe("Worker Deployment rollout safety", () => {
   test.each([
     [{ staleCandidate: true }, "stale"],
     [{ workflowPollers: 0 }, "healthy Workflow pollers"],
-    [{ alerts: 2 }, "active Temporal alerts"],
     [{ omitWorkflowQueue: true }, "missing registered Workflow pollers"],
   ])("refuses unsafe state %o", async (fixture, message) => {
     await expect(

@@ -91,23 +91,6 @@ export async function requireHealthyWorkflowPoller(
   }
 }
 
-export function requireCleanCandidate(status: {
-  workflowPollers: number | undefined;
-  activeTemporalAlerts: number | undefined;
-}): void {
-  if (status.workflowPollers !== undefined && status.workflowPollers < 1) {
-    throw new Error("Candidate has no healthy Workflow pollers");
-  }
-  if (
-    status.activeTemporalAlerts !== undefined &&
-    status.activeTemporalAlerts !== 0
-  ) {
-    throw new Error(
-      `Refusing rollout with ${String(status.activeTemporalAlerts)} active Temporal alerts`,
-    );
-  }
-}
-
 export async function requireReplayCheckout(
   buildId: string,
   run: RolloutCommandRunner,
@@ -269,7 +252,7 @@ async function requireHealthyRuleEvaluations(
   );
   if (evaluationProgress <= 0) {
     throw new Error(
-      `Temporal rule evaluations did not advance during the required ${duration} clean window`,
+      `Temporal rule evaluations did not advance during the required ${duration} rollout window`,
     );
   }
   const historicalEvaluationAgeSeconds = await queryRolloutMetric(
@@ -279,7 +262,7 @@ async function requireHealthyRuleEvaluations(
   );
   if (historicalEvaluationAgeSeconds > MAX_RULE_EVALUATION_AGE_SECONDS) {
     throw new Error(
-      `Temporal rule evaluations reached ${String(historicalEvaluationAgeSeconds)} seconds old during the required ${duration} clean window`,
+      `Temporal rule evaluations reached ${String(historicalEvaluationAgeSeconds)} seconds old during the required ${duration} rollout window`,
     );
   }
   const evaluationAgeSeconds = await queryRolloutMetric(
@@ -299,7 +282,7 @@ async function requireHealthyRuleEvaluations(
   );
   if (evaluationFailures !== 0) {
     throw new Error(
-      `Temporal Prometheus rules recorded ${String(evaluationFailures)} evaluation failures during the required ${duration} clean window`,
+      `Temporal Prometheus rules recorded ${String(evaluationFailures)} evaluation failures during the required ${duration} rollout window`,
     );
   }
 }
@@ -325,7 +308,7 @@ async function requirePollerHistory(input: {
   );
   if (pollerHistorySamples < requiredHistorySamples) {
     throw new Error(
-      `Workflow poller history for ${buildId} on ${taskQueue} covered only ${String(pollerHistorySamples)} samples during the required ${duration} clean window`,
+      `Workflow poller history for ${buildId} on ${taskQueue} covered only ${String(pollerHistorySamples)} samples during the required ${duration} rollout window`,
     );
   }
   const pollerSamples = await queryRolloutMetric(
@@ -335,12 +318,12 @@ async function requirePollerHistory(input: {
   );
   if (pollerSamples < 1) {
     throw new Error(
-      `Workflow poller for ${buildId} on ${taskQueue} was unavailable during the required ${duration} clean window`,
+      `Workflow poller for ${buildId} on ${taskQueue} was unavailable during the required ${duration} rollout window`,
     );
   }
 }
 
-export async function requireCleanAlertWindow(
+export async function requireHealthyRolloutWindow(
   duration: "30m" | "2h" | "24h",
   run: RolloutCommandRunner,
   poller?: {
@@ -360,20 +343,10 @@ export async function requireCleanAlertWindow(
   );
   if (historySamples < requiredHistorySamples) {
     throw new Error(
-      `Temporal Prometheus history covered only ${String(historySamples)} samples during the required ${duration} clean window`,
+      `Temporal Prometheus history covered only ${String(historySamples)} samples during the required ${duration} rollout window`,
     );
   }
   await requireHealthyRuleEvaluations(duration, run);
-  const alertSamples = await queryRolloutMetric(
-    `sum(max_over_time(ALERTS{alertstate="firing",alertname=~"Temporal.*"}[${duration}])) or vector(0)`,
-    `${duration} Temporal alert history query`,
-    run,
-  );
-  if (alertSamples !== 0) {
-    throw new Error(
-      `Temporal alerts fired during the required ${duration} clean window`,
-    );
-  }
   if (poller !== undefined) {
     const buildIds = [poller.buildId];
     if (
