@@ -447,6 +447,7 @@ export async function executeTurn(
               }),
           ...runtime.callOptions({
             workload: "birmel.agent.turn",
+            model: modelId,
             sessionId: packet.threadId ?? packet.channelId,
           }),
         });

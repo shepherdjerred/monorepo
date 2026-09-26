@@ -78,7 +78,7 @@ async function researchPrompt(userPrompt: string): Promise<{
       web_search: webSearchTool(llm, modelId, 20),
     },
     maxOutputTokens: 4096,
-    ...llm.callOptions({ workload: "monarch.batch.research" }),
+    ...llm.callOptions({ workload: "monarch.batch.research", model: modelId }),
   });
   const usage = {
     inputTokens: result.usage.inputTokens ?? 0,

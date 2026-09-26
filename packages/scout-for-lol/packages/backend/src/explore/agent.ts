@@ -139,6 +139,7 @@ async function streamExploreAgentInternal(
     output: Output.object({ schema: ExploreAnswerWireSchema }),
     ...runtime.callOptions({
       workload: "scout.explore",
+      model,
       sessionId: params.runId,
       // One cache partition for every turn. The per-turn session id would
       // otherwise partition it, and no turn could reuse another's cached

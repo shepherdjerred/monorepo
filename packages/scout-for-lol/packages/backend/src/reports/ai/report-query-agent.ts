@@ -101,6 +101,7 @@ async function streamReportQueryAgentInternal(
     maxOutputTokens: REPORT_AI_MAX_OUTPUT_TOKENS,
     ...runtime.callOptions({
       workload: "scout.report-query.tool-loop",
+      model,
       sessionId: params.runId,
     }),
   });

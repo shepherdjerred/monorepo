@@ -1,11 +1,17 @@
 import type {
   EmbeddingModelCallEndEvent,
   EmbeddingModelCallStartEvent,
+  ImageModel,
+  ImageModelMiddleware,
   LanguageModelCallEndEvent,
   LanguageModelCallStartEvent,
   Telemetry,
 } from "ai";
-import { costForTextUsage, type Provider } from "@shepherdjerred/llm-models";
+import {
+  costForTextUsage,
+  getPricing,
+  type Provider,
+} from "@shepherdjerred/llm-models";
 import {
   commonLlmMetrics,
   type CommonLlmMetrics,
@@ -18,7 +24,7 @@ import {
   normalizeProvider,
   stableModelId,
 } from "./logging.ts";
-import type { LlmRuntimeLogger } from "./types.ts";
+import type { LlmCallMetadata, LlmRuntimeLogger } from "./types.ts";
 
 type RuntimeMetrics = CommonLlmMetrics & {
   structuredAttempts: Counter<"service" | "workload" | "model" | "outcome">;
@@ -148,9 +154,12 @@ export class LlmMetricsTelemetry implements Telemetry {
 
   onEmbedEnd(event: EmbeddingModelCallEndEvent): void {
     this.remember(event.provider, event.modelId);
-    const metrics = this.#metrics;
-    if (metrics === undefined) return;
     const provider = normalizeProvider(event.provider);
+    if (provider === "unknown") {
+      throw new Error(
+        `Unsupported embedding model provider: ${event.provider}`,
+      );
+    }
     const model = stableModelId(provider, event.modelId);
     const labels = {
       service: this.#service,
@@ -158,17 +167,44 @@ export class LlmMetricsTelemetry implements Telemetry {
       provider,
       model,
     };
-    metrics.requests.inc({ ...labels, outcome: "success" });
     const startedAt = this.#embedStartedAt.get(event.embedCallId);
     this.#embedStartedAt.delete(event.embedCallId);
-    if (startedAt !== undefined) {
-      metrics.duration.observe(labels, (performance.now() - startedAt) / 1000);
-    }
-    metrics.tokens.inc({ ...labels, type: "input" }, event.usage.tokens);
+    const durationMs =
+      startedAt === undefined ? undefined : performance.now() - startedAt;
     const catalogCostUsd = costForTextUsage(model, {
       inputTokens: event.usage.tokens,
       outputTokens: 0,
     });
+
+    logLlmResponse({
+      logger: this.#logger,
+      service: this.#service,
+      workload: this.#workload,
+      metadata: {
+        requestedModel: model,
+        resolvedModel: model,
+        provider,
+        tokens: {
+          input: event.usage.tokens,
+          output: 0,
+          cachedInput: 0,
+          cacheWrite: 0,
+          reasoning: 0,
+          total: event.usage.tokens,
+        },
+        ...(catalogCostUsd === undefined ? {} : { catalogCostUsd }),
+      },
+      traceId: this.#traceId,
+      durationMs,
+    });
+
+    const metrics = this.#metrics;
+    if (metrics === undefined) return;
+    metrics.requests.inc({ ...labels, outcome: "success" });
+    if (durationMs !== undefined) {
+      metrics.duration.observe(labels, durationMs / 1000);
+    }
+    metrics.tokens.inc({ ...labels, type: "input" }, event.usage.tokens);
     if (catalogCostUsd !== undefined) {
       metrics.cost.inc({ ...labels, type: "catalog" }, catalogCostUsd);
     }
@@ -207,6 +243,176 @@ export class LlmMetricsTelemetry implements Telemetry {
     if (this.#model === undefined) this.#model = model;
     else if (this.#model !== model) this.#model = "multiple";
   }
+}
+
+/**
+ * Images do not use the AI SDK Telemetry integration, so they need their own
+ * model middleware. It records provider outcomes and catalog-priced images at
+ * the provider boundary, where the generated image count and resolved model
+ * are available.
+ */
+export function imageMetricsMiddleware(options: {
+  metrics: CommonLlmMetrics | undefined;
+  service: string;
+  workload: string;
+  modelId: string;
+  logger: LlmRuntimeLogger;
+  traceId: string | undefined;
+}): ImageModelMiddleware {
+  return {
+    specificationVersion: "v4",
+    wrapGenerate: async ({ doGenerate, model }) => {
+      const startedAt = performance.now();
+      const provider = normalizeProvider(model.provider);
+      if (provider === "unknown") {
+        throw new Error(`Unsupported image model provider: ${model.provider}`);
+      }
+      const modelId = options.modelId;
+      const labels = {
+        service: options.service,
+        workload: options.workload,
+        provider,
+        model: modelId,
+      };
+
+      let result: GeneratedImageResult;
+      try {
+        result = await doGenerate();
+      } catch (error: unknown) {
+        recordImageFailure({
+          options,
+          labels,
+          provider,
+          modelId,
+          durationMs: performance.now() - startedAt,
+          error,
+        });
+        throw error;
+      }
+
+      recordImageSuccess({
+        options,
+        labels,
+        provider,
+        modelId,
+        result,
+        durationMs: performance.now() - startedAt,
+      });
+      return result;
+    },
+  };
+}
+
+type GeneratedImageResult = Awaited<
+  ReturnType<Extract<ImageModel, { specificationVersion: "v4" }>["doGenerate"]>
+>;
+
+function recordImageSuccess(input: {
+  options: Parameters<typeof imageMetricsMiddleware>[0];
+  labels: {
+    service: string;
+    workload: string;
+    provider: Provider;
+    model: string;
+  };
+  provider: Provider;
+  modelId: string;
+  result: GeneratedImageResult;
+  durationMs: number;
+}): void {
+  const inputTokens = input.result.usage?.inputTokens ?? 0;
+  const outputTokens = input.result.usage?.outputTokens ?? 0;
+  const totalTokens =
+    input.result.usage?.totalTokens ?? inputTokens + outputTokens;
+  const pricing = getPricing(input.modelId);
+  const catalogCostUsd =
+    pricing?.modality === "image"
+      ? pricing.perImage * input.result.images.length
+      : undefined;
+
+  input.options.metrics?.requests.inc({ ...input.labels, outcome: "success" });
+  input.options.metrics?.duration.observe(
+    input.labels,
+    input.durationMs / 1000,
+  );
+  recordImageTokenMetrics(
+    input.options.metrics,
+    input.labels,
+    input.result.usage,
+  );
+  if (catalogCostUsd !== undefined && input.result.images.length > 0) {
+    input.options.metrics?.cost.inc(
+      { ...input.labels, type: "catalog" },
+      catalogCostUsd,
+    );
+  }
+
+  const metadata: LlmCallMetadata = {
+    requestedModel: input.modelId,
+    resolvedModel: stableModelId(input.provider, input.result.response.modelId),
+    provider: input.provider,
+    tokens: {
+      input: inputTokens,
+      output: outputTokens,
+      cachedInput: 0,
+      cacheWrite: 0,
+      reasoning: 0,
+      total: totalTokens,
+    },
+    ...(catalogCostUsd === undefined ? {} : { catalogCostUsd }),
+  };
+  logLlmResponse({
+    logger: input.options.logger,
+    service: input.options.service,
+    workload: input.options.workload,
+    metadata,
+    traceId: input.options.traceId,
+    durationMs: input.durationMs,
+  });
+}
+
+function recordImageTokenMetrics(
+  metrics: CommonLlmMetrics | undefined,
+  labels: {
+    service: string;
+    workload: string;
+    provider: Provider;
+    model: string;
+  },
+  usage: GeneratedImageResult["usage"],
+): void {
+  if (usage?.inputTokens !== undefined) {
+    metrics?.tokens.inc({ ...labels, type: "input" }, usage.inputTokens);
+  }
+  if (usage?.outputTokens !== undefined) {
+    metrics?.tokens.inc({ ...labels, type: "output" }, usage.outputTokens);
+  }
+}
+
+function recordImageFailure(input: {
+  options: Parameters<typeof imageMetricsMiddleware>[0];
+  labels: {
+    service: string;
+    workload: string;
+    provider: Provider;
+    model: string;
+  };
+  provider: Provider;
+  modelId: string;
+  durationMs: number;
+  error: unknown;
+}): void {
+  input.options.metrics?.requests.inc({ ...input.labels, outcome: "error" });
+  logLlmCallFailure({
+    logger: input.options.logger,
+    service: input.options.service,
+    workload: input.options.workload,
+    provider: input.provider,
+    model: input.modelId,
+    traceId: input.options.traceId,
+    durationMs: input.durationMs,
+    error: input.error,
+  });
 }
 
 export type RuntimeMetricsHandle = RuntimeMetrics;

@@ -123,6 +123,7 @@ async function observeOnce(
     output: Output.object({ schema: JudgeObservationSchema }),
     ...runtime.callOptions({
       workload: "scout.explore.replay-judge",
+      model: EXPLORE_JUDGE_MODEL,
       // The rubric is the same for every case, so every call after the first
       // reads it from the prompt cache; see Explore's own key in agent.ts.
       promptCacheKey: "scout.explore.replay-judge",

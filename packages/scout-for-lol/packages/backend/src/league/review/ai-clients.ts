@@ -84,6 +84,9 @@ export function getTextGenerationClient(): TextGenerationClient | undefined {
 }
 
 export function getImageGenerationClient(): ImageGenerationClient | undefined {
+  // Production Scout intentionally has no Gemini project. Text credentials
+  // alone must not advertise an image client that will fail at the first call.
+  if (providerCredentialsFromEnv().google === undefined) return undefined;
   const runtime = getLlmRuntime();
   if (runtime === undefined) return undefined;
   return {
@@ -108,9 +111,10 @@ export function getImageGenerationClient(): ImageGenerationClient | undefined {
           );
           const { headers } = runtime.callOptions({
             workload: params.workload,
+            model: params.model,
           });
           const result = await generateImage({
-            model: runtime.imageModel(params.model),
+            model: runtime.imageModel(params.model, params.workload),
             prompt: params.prompt,
             abortSignal: AbortSignal.timeout(params.timeoutMs),
             headers,

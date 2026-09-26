@@ -111,10 +111,11 @@ export const generateImageTool = createTool({
 
       const { headers } = runtime.callOptions({
         workload: "birmel.agent.image-generation",
+        model: imageModel,
       });
 
       const result = await generateImage({
-        model: runtime.imageModel(imageModel),
+        model: runtime.imageModel(imageModel, "birmel.agent.image-generation"),
         prompt: input.prompt,
         ...(input.aspectRatio == null
           ? {}

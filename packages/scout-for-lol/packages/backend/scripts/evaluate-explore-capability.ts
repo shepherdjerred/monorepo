@@ -108,7 +108,10 @@ async function answerOnce(
     // that loads two.
     stopWhen: stepCountIs(4),
     output: Output.object({ schema: ExploreAnswerWireSchema }),
-    ...runtime.callOptions({ workload: "scout.explore.capability-eval" }),
+    ...runtime.callOptions({
+      workload: "scout.explore.capability-eval",
+      model: EXPLORE_CAPABILITY_EVAL_MODEL,
+    }),
   });
   return result.output.answer;
 }

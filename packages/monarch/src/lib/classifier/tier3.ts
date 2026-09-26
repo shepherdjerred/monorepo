@@ -168,7 +168,7 @@ async function runToolLoop(
     tools,
     stopWhen: stepCountIs(5),
     maxOutputTokens: 4096,
-    ...llm.callOptions({ workload: "monarch.tier3.tool-loop" }),
+    ...llm.callOptions({ workload: "monarch.tier3.tool-loop", model: modelId }),
   });
   const research = await agent.generate({ prompt });
   const researchInputTokens = research.usage.inputTokens ?? 0;

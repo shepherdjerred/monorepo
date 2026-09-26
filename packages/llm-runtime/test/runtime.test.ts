@@ -1,4 +1,4 @@
-import { generateText } from "ai";
+import { embed, generateText } from "ai";
 import { describe, expect, test } from "vitest";
 import { Registry } from "prom-client";
 import { z } from "zod";
@@ -93,7 +93,7 @@ describe("catalog-aware routing", () => {
     expect(llm.embeddingModel("text-embedding-3-small").modelId).toBe(
       "text-embedding-3-small",
     );
-    expect(llm.imageModel("gemini-2.5-flash-image").modelId).toBe(
+    expect(llm.imageModel("gemini-2.5-flash-image", "test.image").modelId).toBe(
       "gemini-2.5-flash-image",
     );
   });
@@ -103,7 +103,9 @@ describe("catalog-aware routing", () => {
     expect(() => llm.languageModel("text-embedding-3-small")).toThrow(
       "not language",
     );
-    expect(() => llm.imageModel("gpt-5.6-luna")).toThrow("not image");
+    expect(() => llm.imageModel("gpt-5.6-luna", "test.image")).toThrow(
+      "not image",
+    );
     expect(() => llm.languageModel("gpt-9000")).toThrow("Unknown model id");
     expect(() => llm.embeddingModel("gemini-2.5-flash-image")).toThrow(
       "not embedding",
@@ -215,6 +217,42 @@ describe("observability", () => {
     const metrics = await register.metrics();
     expect(metrics).toContain('provider="openai"');
     expect(metrics).toContain("llm_cost_usd_total");
+  });
+
+  test("logs successful embeddings when metrics are disabled", async () => {
+    const records: LlmRuntimeLogRecord[] = [];
+    const llm = llmRuntime(
+      () =>
+        Promise.resolve(
+          Response.json({
+            object: "list",
+            data: [{ object: "embedding", index: 0, embedding: [0.1, 0.2] }],
+            model: "text-embedding-3-small",
+            usage: { prompt_tokens: 3, total_tokens: 3 },
+          }),
+        ),
+      { logger: (record) => records.push(record) },
+    );
+
+    await embed({
+      model: llm.embeddingModel("text-embedding-3-small"),
+      value: "embedding log test",
+      ...llm.callOptions({ workload: "test.embedding.logging" }),
+    });
+
+    expect(records).toContainEqual(
+      expect.objectContaining({
+        event: "llm.provider.response",
+        service: "runtime-test",
+        workload: "test.embedding.logging",
+        provider: "openai",
+        model: "text-embedding-3-small",
+        inputTokens: 3,
+        outputTokens: 0,
+        totalTokens: 3,
+        outcome: "success",
+      }),
+    );
   });
 });
 

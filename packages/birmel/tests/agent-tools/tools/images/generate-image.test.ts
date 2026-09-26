@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import type * as Ai from "ai";
 import {
   getStagedAttachments,
   runWithRequestContext,
@@ -8,9 +9,13 @@ import {
 const mockGenerateImage = vi.fn();
 const mockDownloadImageWithRetry = vi.fn();
 
-vi.mock("ai", () => ({
-  generateImage: (...args: unknown[]) => mockGenerateImage(...args),
-}));
+vi.mock("ai", async (importOriginal) => {
+  const actual = await importOriginal<typeof Ai>();
+  return {
+    ...actual,
+    generateImage: (...args: unknown[]) => mockGenerateImage(...args),
+  };
+});
 
 vi.mock("@shepherdjerred/birmel/utils/image.ts", () => ({
   downloadImageWithRetry: (...args: unknown[]) =>

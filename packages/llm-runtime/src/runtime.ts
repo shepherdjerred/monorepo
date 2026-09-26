@@ -2,6 +2,7 @@ import { context, propagation, trace } from "@opentelemetry/api";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { wrapImageModel } from "ai";
 import {
   getModel,
   requireNativeRoute,
@@ -10,7 +11,11 @@ import {
 } from "@shepherdjerred/llm-models";
 import { RepositoryOpenTelemetry } from "@shepherdjerred/llm-observability/ai-sdk-telemetry";
 import { createFederatedAnthropicFetch } from "./anthropic-federation.ts";
-import { LlmMetricsTelemetry, runtimeMetrics } from "./metrics.ts";
+import {
+  imageMetricsMiddleware,
+  LlmMetricsTelemetry,
+  runtimeMetrics,
+} from "./metrics.ts";
 import { defaultLlmRuntimeLogger } from "./logging.ts";
 import type {
   CallOptionsInput,
@@ -265,14 +270,25 @@ export function createLlmRuntime(options: LlmRuntimeOptions) {
       }
       return providers.get("openai").embeddingModel(route.modelId);
     },
-    imageModel(modelId: string) {
+    imageModel(modelId: string, workload: string) {
       const route = resolveRoute(modelId, { endpoint: "image" });
       if (route.provider !== "google") {
         throw new Error(
           `Model ${modelId} routes images to ${route.provider}, which this runtime does not wire up`,
         );
       }
-      return providers.get("google").imageModel(route.modelId);
+      const traceContext = traceFields({ workload, model: modelId });
+      return wrapImageModel({
+        model: providers.get("google").imageModel(route.modelId),
+        middleware: imageMetricsMiddleware({
+          metrics,
+          service: options.service,
+          workload,
+          modelId,
+          logger,
+          traceId: traceContext["trace_id"],
+        }),
+      });
     },
     /** The provider client behind a model, for provider-specific tools. */
     providerFor(modelId: string): ProviderHandle {

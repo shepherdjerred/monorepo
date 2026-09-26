@@ -87,7 +87,10 @@ async function evaluateParaphrase(
       }),
       output: Output.object({ schema: DareDefinitionV2ToolInputSchema }),
       maxOutputTokens: 8000,
-      ...runtime.callOptions({ workload: "scout.dare-v2-eval" }),
+      ...runtime.callOptions({
+        workload: "scout.dare-v2-eval",
+        model: DARE_V2_EVAL_MODEL,
+      }),
     });
     const output = DareDefinitionV2ToolInputSchema.parse(result.output);
     const resolvedTargets = resolveDareModelEvalTargets({
