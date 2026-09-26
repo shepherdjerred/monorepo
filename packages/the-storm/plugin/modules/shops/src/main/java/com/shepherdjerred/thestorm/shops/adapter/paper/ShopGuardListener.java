@@ -9,7 +9,6 @@ import io.papermc.paper.event.entity.ItemTransportingEntityValidateTargetEvent;
 import io.papermc.paper.event.player.PlayerOpenSignEvent;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Chest;
 import org.bukkit.entity.Player;
@@ -107,11 +106,7 @@ final class ShopGuardListener implements Listener {
       player.sendMessage(Replies.error(refusal.orElseThrow()));
       return;
     }
-    var pos = ShopBlocks.pos(block);
-    var removed =
-        Stream.concat(registry.atSign(pos).stream(), registry.tradingFrom(pos).stream())
-            .distinct()
-            .toList();
+    var removed = shopsHere;
     removed.forEach(shops::remove);
     if (!removed.isEmpty()) {
       player.sendMessage(Replies.info(removed.size() == 1 ? "Shop removed." : "Shops removed."));
@@ -221,7 +216,7 @@ final class ShopGuardListener implements Listener {
 
   /** Admins, or the player who owns every one of these shops. */
   private static boolean mayManage(Player player, List<SignShop> shopsHere) {
-    return player.hasPermission(ShopsPaper.ADMIN_PERMISSION)
+    return player.hasPermission(ShopsPermissions.ADMIN)
         || shopsHere.stream().allMatch(shop -> shop.owner().isOwnedBy(player.getUniqueId()));
   }
 

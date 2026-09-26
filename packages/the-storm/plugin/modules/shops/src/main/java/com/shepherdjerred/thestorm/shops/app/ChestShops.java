@@ -45,7 +45,7 @@ public final class ChestShops {
   private final ShopEffects effects;
   private final ServerOffers offers;
   private final Duration clickCooldown;
-  private final Map<UUID, Instant> lastClicks = new HashMap<>();
+  private final Map<UUID, Instant> lastTrades = new HashMap<>();
   private final Executor mainThread;
   private final InstantSource time;
   private final Logger logger;
@@ -294,6 +294,14 @@ public final class ChestShops {
     if (lease.isEmpty()) {
       return completedFuture(new TradeOutcome.Refused(new TradeProblem.Busy()));
     }
+    // The shop may have been broken or closed while the affordability check was out; decide again
+    // under the lock, before anything moves or the owner's view closes.
+    var stillOpen = stillTrading(visit.shop());
+    if (stillOpen.isPresent()) {
+      lease.orElseThrow().release();
+      return completedFuture(new TradeOutcome.Refused(stillOpen.orElseThrow()));
+    }
+    lastTrades.put(visit.customer().id(), time.instant());
     CompletableFuture<TradeOutcome> execution;
     try {
       effects.closeViewers(visit.containerBlocks());
@@ -310,13 +318,29 @@ public final class ChestShops {
             mainThread);
   }
 
-  /** Refuses a click too soon after the customer's last one; every click restarts the wait. */
+  /** Why a shop that passed the first checks can no longer trade, if it cannot. */
+  private Optional<TradeProblem> stillTrading(SignShop shop) {
+    if (registry.byId(shop.id()).isEmpty()) {
+      return Optional.of(new TradeProblem.ShopClosed("it was just removed."));
+    }
+    return registry.closure(shop.id()).map(TradeProblem.ShopClosed::new);
+  }
+
+  /**
+   * Refuses a click too soon after the customer's last trade that got as far as settling. Refused
+   * clicks do not restart the wait, so holding the button (which repeats every 200 ms) still
+   * trades.
+   */
   private Optional<TradeProblem> tooSoon(Customer customer) {
-    var now = time.instant();
-    var last = lastClicks.put(customer.id(), now);
-    return last != null && last.plus(clickCooldown).isAfter(now)
+    var last = lastTrades.get(customer.id());
+    return last != null && last.plus(clickCooldown).isAfter(time.instant())
         ? Optional.of(new TradeProblem.TooFast())
         : Optional.empty();
+  }
+
+  /** Forgets a customer who left, so the cooldown map never grows past who is online. */
+  public void forget(UUID customer) {
+    lastTrades.remove(customer);
   }
 
   /**

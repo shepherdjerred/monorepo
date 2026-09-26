@@ -57,18 +57,33 @@ final class FakeStore implements ShopStore {
   }
 
   @Override
-  public CompletableFuture<List<TradeRecord>> takeUnnotified(UUID owner) {
-    var taken = new ArrayList<TradeRecord>();
+  public CompletableFuture<List<PendingTrade>> listUnnotified(UUID owner) {
+    var pending = new ArrayList<PendingTrade>();
     for (var index = 0; index < trades.size(); index++) {
       var logged = trades.get(index);
       if (!logged.notified()
           && logged.trade().site() instanceof TradeSite.Chest(_, var shopOwner)
           && shopOwner.equals(owner)) {
-        taken.add(logged.trade());
-        trades.set(index, new Logged(logged.trade(), true));
+        pending.add(new PendingTrade(index + 1L, logged.trade()));
       }
     }
-    return CompletableFuture.completedFuture(List.copyOf(taken));
+    return CompletableFuture.completedFuture(List.copyOf(pending));
+  }
+
+  @Override
+  public CompletableFuture<Integer> markNotified(UUID owner, List<Long> ids) {
+    var changed = 0;
+    for (var id : ids) {
+      var index = Math.toIntExact(id - 1);
+      var logged = trades.get(index);
+      if (!logged.notified()
+          && logged.trade().site() instanceof TradeSite.Chest(_, var shopOwner)
+          && shopOwner.equals(owner)) {
+        trades.set(index, new Logged(logged.trade(), true));
+        changed++;
+      }
+    }
+    return CompletableFuture.completedFuture(changed);
   }
 
   @Override

@@ -77,6 +77,26 @@ final class ItemsAndHoldingsTest extends ShopsFixture {
   }
 
   @Test
+  void containersWithItemsInsideAreSpotted() {
+    var bundle = ItemStack.of(Material.BUNDLE);
+    assertThat(ItemTemplates.holdsItems(bundle)).isFalse();
+    var bundleMeta = (org.bukkit.inventory.meta.BundleMeta) bundle.getItemMeta();
+    bundleMeta.addItem(ItemStack.of(Material.COAL));
+    bundle.setItemMeta(bundleMeta);
+    assertThat(ItemTemplates.holdsItems(bundle)).isTrue();
+
+    var box = ItemStack.of(Material.SHULKER_BOX);
+    assertThat(ItemTemplates.holdsItems(box)).isFalse();
+    var boxMeta = (org.bukkit.inventory.meta.BlockStateMeta) box.getItemMeta();
+    var state = (org.bukkit.block.ShulkerBox) boxMeta.getBlockState();
+    state.getInventory().addItem(ItemStack.of(Material.DIAMOND, 3));
+    boxMeta.setBlockState(state);
+    box.setItemMeta(boxMeta);
+    assertThat(ItemTemplates.holdsItems(box)).isTrue();
+    assertThat(ItemTemplates.holdsItems(ItemStack.of(Material.COAL))).isFalse();
+  }
+
+  @Test
   void airHasNoFingerprint() {
     assertThatThrownBy(() -> templates.fingerprint(ItemStack.of(Material.AIR)))
         .isInstanceOf(IllegalArgumentException.class);

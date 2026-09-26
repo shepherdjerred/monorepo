@@ -119,6 +119,7 @@ public final class TradeEngine {
   private CompletableFuture<TradeOutcome> sell(Deal deal, LedgerTrail trail) {
     var escrow = deal.customer().holdings();
     escrow.remove(deal.quantity());
+    trail.escrowTaken();
     return pay(deal, trail)
         // Capture a failed payment as a value, so the escrowed items go back on the main thread.
         .<Result<Result<Receipt, EconomyError>, Throwable>>handle(
@@ -128,11 +129,13 @@ public final class TradeEngine {
                 switch (attempt) {
                   case Result.Err<Result<Receipt, EconomyError>, Throwable>(var error) -> {
                     escrow.addOrDrop(deal.quantity());
+                    trail.escrowReleased();
                     yield CompletableFuture.failedFuture(error);
                   }
                   case Result.Ok<Result<Receipt, EconomyError>, Throwable>(
                           Result.Err<Receipt, EconomyError>(var refusal)) -> {
                     escrow.addOrDrop(deal.quantity());
+                    trail.escrowReleased();
                     yield completedFuture(refused(deal, refusal));
                   }
                   case Result.Ok<Result<Receipt, EconomyError>, Throwable>(
@@ -157,11 +160,15 @@ public final class TradeEngine {
           new Refund(
               deal.reason(),
               new TradeProblem.ShopFull(room, quantity),
-              () -> deal.customer().holdings().addOrDrop(quantity),
+              () -> {
+                deal.customer().holdings().addOrDrop(quantity);
+                trail.escrowReleased();
+              },
               Optional.of(new HeldItems(deal.goods(), quantity))),
           trail);
     }
     deal.shop().holdings().add(quantity);
+    trail.escrowReleased();
     return completedFuture(new TradeOutcome.Completed(receipt));
   }
 

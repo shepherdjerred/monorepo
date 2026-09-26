@@ -126,6 +126,41 @@ final class ShopGuardListenerTest extends ShopsFixture {
     assertThat(messages(root)).contains("[Shop]: Shops removed.");
   }
 
+  @Test
+  void breakingAnAdminWallSignsOrdinarySupportRemovesItsShop() throws Exception {
+    var root = admin("Root");
+    var alice = player("Alice", 0);
+    var support = container(8, Material.STONE);
+    var sign = shop(root, support, "Admin Shop", "1", "S 12", "emerald");
+    var data = (org.bukkit.block.data.type.WallSign) sign.getBlockData();
+    data.setFacing(BlockFace.SOUTH);
+    sign.setBlockData(data);
+    assertThat(storedShops()).hasSize(1);
+    assertThat(ShopBlocks.supportOf(sign).map(ShopBlocks::pos)).contains(ShopBlocks.pos(support));
+
+    assertThat(breakBlock(alice, support).isCancelled()).isTrue();
+    assertThat(breakBlock(root, support).isCancelled()).isFalse();
+    tick(2);
+
+    assertThat(storedShops()).isEmpty();
+  }
+
+  @Test
+  void breakingAnAdminStandingSignsOrdinarySupportRemovesItsShop() throws Exception {
+    var root = admin("Root");
+    var support = container(9, Material.STONE);
+    var sign = support.getRelative(BlockFace.UP);
+    sign.setType(Material.OAK_SIGN);
+    assertThat(write(root, sign, "Admin Shop", "1", "S 12", "emerald").isCancelled()).isFalse();
+    tick(2);
+    assertThat(storedShops()).hasSize(1);
+
+    assertThat(breakBlock(root, support).isCancelled()).isFalse();
+    tick(2);
+
+    assertThat(storedShops()).isEmpty();
+  }
+
   /**
    * A shop chest at the world spawn. MockBukkit reports every block inventory's location as the
    * spawn, so machine moves resolve to this block whichever inventory they name; on a real server

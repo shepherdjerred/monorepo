@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.shops.adapter.paper;
 import com.shepherdjerred.thestorm.shops.app.ShopStore;
 import com.shepherdjerred.thestorm.shops.domain.trade.OwnerSummary;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeRecord;
+import java.util.List;
 import java.util.UUID;
 import org.bukkit.Server;
 import org.bukkit.event.EventHandler;
@@ -41,15 +42,23 @@ final class OwnerNoticesListener implements Listener {
   public void onJoin(PlayerJoinEvent event) {
     var owner = event.getPlayer().getUniqueId();
     replies.whenDone(
-        store.takeUnnotified(owner),
+        store.listUnnotified(owner),
         owner,
-        trades -> {
-          var summary = OwnerSummary.of(trades, summaryLines);
+        pending -> {
+          var player = server.getPlayer(owner);
+          if (player == null || !player.isOnline()) {
+            return;
+          }
+          var summary =
+              OwnerSummary.of(
+                  pending.stream().map(ShopStore.PendingTrade::trade).toList(), summaryLines);
           if (!summary.isEmpty()) {
             replies
                 .texts()
                 .summary(summary)
-                .forEach(line -> replies.tell(owner, Replies.info(line)));
+                .forEach(line -> player.sendMessage(Replies.info(line)));
+            List<Long> ids = pending.stream().map(ShopStore.PendingTrade::id).toList();
+            replies.noticeAcknowledgement(store.markNotified(owner, ids), owner);
           }
         });
   }
