@@ -77,6 +77,7 @@ function roster(
             ? "gamma"
             : `unknown-${index.toString()}`,
     team_id: index < 5 ? 100 : 200,
+    player_subteam_id: null,
     participant_id: index + 1,
     riot_id_game_name: `Riot${index.toString()}`,
     riot_id_tagline: "NA1",
@@ -137,6 +138,60 @@ describe("guild community insights", () => {
       lowSample: true,
     });
     expect(squadChemistry({ players, rows, playerIds: [1, 3] }).games).toBe(0);
+  });
+
+  test("uses Arena subteams for teammates, rivals, and pair chemistry", () => {
+    const arenaRows = roster("NA1_arena", 3000, "main").map((row, index) => ({
+      ...row,
+      queue: "arena",
+      queue_id: 1750,
+      game_mode: "CHERRY",
+      map_id: 30,
+      player_subteam_id: Math.floor(index / 2) + 1,
+      puuid: index === 2 ? "gamma" : index === 5 ? "unknown-5" : row.puuid,
+    }));
+    const insights = buildCommunityInsights({
+      players,
+      rows: arenaRows,
+      allTimeAccounts: [],
+      standardOnly: false,
+    });
+    expect(
+      insights.recentlyPlayedWith.find(
+        (relation) => relation.playerId === 1 && relation.guildPlayerId === 2,
+      ),
+    ).toMatchObject({ games: 1 });
+    expect(
+      insights.recentlyPlayedWith.find(
+        (relation) => relation.playerId === 1 && relation.guildPlayerId === 3,
+      ),
+    ).toBeUndefined();
+    expect(
+      insights.rivalries.find(
+        (relation) => relation.playerId === 1 && relation.guildPlayerId === 3,
+      ),
+    ).toMatchObject({ games: 1 });
+    expect(insights.pairs).toEqual([
+      expect.objectContaining({ firstId: 1, secondId: 2, games: 1 }),
+    ]);
+    expect(
+      buildCommunityInsights({
+        players,
+        rows: arenaRows,
+        allTimeAccounts: [],
+        standardOnly: true,
+      }).matchCount,
+    ).toBe(0);
+    expect(() =>
+      buildCommunityInsights({
+        players,
+        rows: arenaRows.map((row, index) =>
+          index === 0 ? { ...row, player_subteam_id: null } : row,
+        ),
+        allTimeAccounts: [],
+        standardOnly: false,
+      }),
+    ).toThrow(/missing a player subteam/);
   });
 
   test("assigns ten unique players to five roles per team deterministically", () => {

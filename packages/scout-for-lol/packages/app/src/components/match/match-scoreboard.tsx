@@ -89,10 +89,11 @@ function kda(participant: MatchParticipant): string {
 }
 
 function formatAugments(augments: MatchParticipant["augments"]): string {
-  if (augments === undefined || augments.length === 0) return "—";
-  return augments
-    .map((augment) => augment.name ?? `#${augment.id.toString()}`)
-    .join(" · ");
+  return augments === undefined || augments.length === 0
+    ? "—"
+    : augments
+        .map((augment) => augment.name ?? `#${augment.id.toString()}`)
+        .join(" · ");
 }
 
 export function MatchScoreboards(props: {

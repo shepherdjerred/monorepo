@@ -12,6 +12,7 @@ import {
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import {
   MATCH_LOADOUT_LAKE_COLUMNS_SQL,
+  MATCH_UI_READ_COLUMNS,
   MatchLoadoutLakeRowSchema,
 } from "#src/report-lake/loadout.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -38,24 +39,18 @@ async function runSource<T>(options: {
   leadingParams?: BoundParam[];
   trailingParams?: BoundParam[];
   schema: z.ZodType<T>;
-  abortSignal?: AbortSignal | undefined;
 }): Promise<T[]> {
-  return await withDuckDBConnection(
-    async (session) => {
-      const rows = await session.run(
-        options.sql,
-        bindParams(session, [
-          ...(options.leadingParams ?? []),
-          ...options.source.params,
-          ...(options.trailingParams ?? []),
-        ]),
-      );
-      return rows.map((row) => options.schema.parse(row));
-    },
-    options.abortSignal === undefined
-      ? {}
-      : { abortSignal: options.abortSignal },
-  );
+  return await withDuckDBConnection(async (session) => {
+    const rows = await session.run(
+      options.sql,
+      bindParams(session, [
+        ...(options.leadingParams ?? []),
+        ...options.source.params,
+        ...(options.trailingParams ?? []),
+      ]),
+    );
+    return rows.map((row) => options.schema.parse(row));
+  });
 }
 
 function queuePredicate(queues: QueueType[] | undefined): {
@@ -204,10 +199,14 @@ export async function fetchFullMatch(options: {
   lakeDir?: string;
 }): Promise<LakeMatchParticipantRow[]> {
   const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const source = buildMatchesSource(files, {
-    sql: "match_id = ?",
-    params: [scalarParam(options.matchId)],
-  });
+  const source = buildMatchesSource(
+    files,
+    {
+      sql: "match_id = ?",
+      params: [scalarParam(options.matchId)],
+    },
+    MATCH_UI_READ_COLUMNS,
+  );
   if (source === undefined) return [];
   return await runSource({
     source,
@@ -240,28 +239,6 @@ export async function fetchFullMatchTeams(options: {
     source,
     sql: `SELECT * FROM (${source.sql}) ORDER BY team_id`,
     schema: MatchTeamLakeRowSchema,
-  });
-}
-
-export async function fetchMatchSupport(options: {
-  matchIds: string[];
-  abortSignal?: AbortSignal | undefined;
-  lakeDir?: string | undefined;
-}): Promise<
-  readonly { match_id: string; queue_id: number; game_mode: string }[]
-> {
-  if (options.matchIds.length === 0) return [];
-  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const source = buildMatchesSource(files, {
-    sql: "match_id IN (SELECT unnest(?))",
-    params: [listParam(options.matchIds)],
-  });
-  if (source === undefined) return [];
-  return await runSource({
-    source,
-    sql: `SELECT DISTINCT match_id, queue_id, game_mode FROM (${source.sql})`,
-    schema: MatchSupportRowSchema,
-    abortSignal: options.abortSignal,
   });
 }
 

@@ -1,4 +1,6 @@
+import { isArenaQueueOrMode } from "@scout-for-lol/data";
 import type { GuildMatchRow } from "#src/reports/duckdb/community/community-lake.ts";
+import { isStandardRiftGame } from "#src/trpc/router/consumer/standard-rift.ts";
 
 export type CommunityPlayer = {
   id: number;
@@ -31,7 +33,12 @@ function groupMatches(rows: GuildMatchRow[]): Match[] {
 }
 
 export function isStandardFiveVsFive(match: Match): boolean {
-  if (match.rows.length !== 10 || match.rows[0]?.map_id !== 11) return false;
+  if (
+    match.rows.length !== 10 ||
+    match.rows[0] === undefined ||
+    !isStandardRiftGame(match.rows[0])
+  )
+    return false;
   const teams = new Map<number, number>();
   for (const row of match.rows)
     teams.set(row.team_id, (teams.get(row.team_id) ?? 0) + 1);
@@ -108,16 +115,25 @@ function pairKey(firstId: number, secondId: number): string {
 
 type OwnedRow = { row: GuildMatchRow; player: CommunityPlayer };
 
+function sameMatchTeam(left: GuildMatchRow, right: GuildMatchRow): boolean {
+  const arena = isArenaQueueOrMode(left.queue_id, left.game_mode);
+  if (arena !== isArenaQueueOrMode(right.queue_id, right.game_mode)) {
+    throw new Error(`Match ${left.match_id} has inconsistent Arena context`);
+  }
+  if (!arena) return left.team_id === right.team_id;
+  if (left.player_subteam_id === null || right.player_subteam_id === null) {
+    throw new Error(`Arena match ${left.match_id} is missing a player subteam`);
+  }
+  return left.player_subteam_id === right.player_subteam_id;
+}
+
 function addPair(
   pairs: Map<string, Pair>,
   left: OwnedRow,
   right: OwnedRow,
   match: Match,
 ) {
-  if (
-    left.row.team_id !== right.row.team_id ||
-    left.player.id === right.player.id
-  )
+  if (!sameMatchTeam(left.row, right.row) || left.player.id === right.player.id)
     return;
   const firstId = Math.min(left.player.id, right.player.id);
   const secondId = Math.max(left.player.id, right.player.id);
@@ -214,7 +230,8 @@ function addRelationships(
       otherPlayer === undefined
         ? `puuid:${other.puuid}`
         : `player:${otherPlayer.id.toString()}`;
-    if (other.team_id === owned.row.team_id && !seenTogether.has(key)) {
+    const teammates = sameMatchTeam(other, owned.row);
+    if (teammates && !seenTogether.has(key)) {
       addRelation({
         target: state.together,
         playerId: owned.player.id,
@@ -224,7 +241,7 @@ function addRelationships(
         match,
       });
       seenTogether.add(key);
-    } else if (other.team_id !== owned.row.team_id && !seenRivals.has(key)) {
+    } else if (!teammates && !seenRivals.has(key)) {
       addRelation({
         target: state.rivals,
         playerId: owned.player.id,

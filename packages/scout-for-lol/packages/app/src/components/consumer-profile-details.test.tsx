@@ -17,13 +17,13 @@ import {
 } from "#src/components/player/player-profile-sections.tsx";
 
 const loadout = MatchLoadoutSchema.parse({
-  itemIds: [1055, 3006, 3031, 3094, 3072, 0, 3340],
-  summonerSpellIds: [4, 7],
+  itemIds: [6672, 3006, 3031, 3085, 3072, 0, 3340],
+  summonerSpellIds: [4, 6],
   runes: {
     primaryStyleId: 8000,
-    primaryRuneIds: [8005, 8009, 9103, 8014],
-    secondaryStyleId: 8300,
-    secondaryRuneIds: [8304, 8347],
+    primaryRuneIds: [8005, 9111, 9104, 8017],
+    secondaryStyleId: 8100,
+    secondaryRuneIds: [8139, 8135],
     statShardIds: { offense: 5005, flex: 5008, defense: 5002 },
   },
 });

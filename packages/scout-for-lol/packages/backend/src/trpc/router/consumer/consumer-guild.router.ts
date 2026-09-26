@@ -232,11 +232,11 @@ export const consumerGuildRouter = router({
         expiresAt: true,
       },
     });
-    const completedMatches = await fetchMatchSupport(
-      active.flatMap((game) =>
+    const completedMatches = await fetchMatchSupport({
+      matchIds: active.flatMap((game) =>
         game.prematchMatchId === null ? [] : [game.prematchMatchId],
       ),
-    );
+    });
     const completed = new Set(completedMatches.map((match) => match.match_id));
     return active
       .flatMap((game) => {

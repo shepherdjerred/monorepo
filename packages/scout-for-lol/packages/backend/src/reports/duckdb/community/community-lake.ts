@@ -20,6 +20,7 @@ const GuildMatchRowSchema = z.object({
   map_id: LakeInt,
   puuid: z.string(),
   team_id: LakeInt,
+  player_subteam_id: LakeInt.nullable(),
   participant_id: LakeInt,
   riot_id_game_name: z.string().nullable(),
   riot_id_tagline: z.string(),
@@ -97,7 +98,7 @@ export async function fetchGuildMatchRows(options: {
     `WITH target AS (SELECT DISTINCT match_id FROM (${target.sql})), ` +
     `full_rosters AS (${full.sql}) ` +
     `SELECT match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
-    `queue, queue_id, game_mode, map_id, puuid, team_id, participant_id, ` +
+    `queue, queue_id, game_mode, map_id, puuid, team_id, player_subteam_id, participant_id, ` +
     `riot_id_game_name, riot_id_tagline, champion_name, team_position, win, ` +
     `kills, deaths, assists, creep_score, time_played FROM full_rosters ` +
     `ORDER BY game_creation_ms DESC, match_id DESC, participant_id`;

@@ -9,6 +9,7 @@ import { z } from "zod";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import {
   MATCH_LOADOUT_LAKE_COLUMNS_SQL,
+  MATCH_UI_READ_COLUMNS,
   MatchLoadoutLakeRowSchema,
 } from "#src/report-lake/loadout.ts";
 import {
@@ -210,9 +211,10 @@ export async function fetchTeamRowsForMatches(options: {
 async function matchesSourceFor(
   lakeDir: string | undefined,
   predicate: SqlFragment,
+  loadout: readonly string[] = [],
 ): Promise<SqlFragment | undefined> {
   const files = await resolveLakeFiles(lakeDir ?? resolveLakeDir());
-  return buildMatchesSource(files, predicate);
+  return buildMatchesSource(files, predicate, loadout);
 }
 
 /** Run `sql` over a built source and parse every row with `schema`. */
@@ -352,10 +354,14 @@ export async function fetchPlayerMatchHistory(options: {
     );
   }
 
-  const source = await matchesSourceFor(options.lakeDir, {
-    sql: clauses.join(" AND "),
-    params,
-  });
+  const source = await matchesSourceFor(
+    options.lakeDir,
+    {
+      sql: clauses.join(" AND "),
+      params,
+    },
+    MATCH_UI_READ_COLUMNS,
+  );
   if (source === undefined) {
     return [];
   }

@@ -80,6 +80,12 @@ describe("community lake reads", () => {
   });
 
   test("reads Arena placement and augments through detail and history", async () => {
+    const guildRows = await fetchGuildMatchRows({
+      puuids: [puuids[0] ?? ""],
+      queues: ["arena"],
+      lakeDir,
+    });
+    expect(guildRows[0]?.player_subteam_id).toBe(1);
     const detail = await fetchFullMatch({ matchId: "NA1_arena", lakeDir });
     expect(detail[0]).toMatchObject({
       player_subteam_id: 1,

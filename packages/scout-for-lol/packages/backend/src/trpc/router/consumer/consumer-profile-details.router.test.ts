@@ -350,13 +350,13 @@ describe("consumerMatch", () => {
 });
 
 const testLoadoutColumns = {
-  item_0_id: 1055,
-  item_1_id: 3006,
-  item_2_id: 3031,
-  item_3_id: 3094,
-  item_4_id: 3072,
-  item_5_id: 0,
-  item_6_id: 3340,
+  item0: 1055,
+  item1: 3006,
+  item2: 3031,
+  item3: 3094,
+  item4: 3072,
+  item5: 0,
+  item6: 3340,
   summoner_spell_1_id: 4,
   summoner_spell_2_id: 7,
   primary_rune_style_id: 8000,
@@ -493,6 +493,22 @@ describe("role-paired match scoreboards", () => {
         frames,
       }),
     ).toBeNull();
+  });
+
+  test("keeps rotating and non-Rift 5v5 games on the ordinary scoreboard", () => {
+    for (const context of [
+      { queue_id: 900 },
+      { game_mode: "URF" },
+      { map_id: 30 },
+    ]) {
+      expect(
+        buildRoleMatchups({
+          rows: rows.map((row) => ({ ...row, ...context })),
+          coverage: completeAt15Coverage,
+          frames,
+        }),
+      ).toBeNull();
+    }
   });
 
   test("fails when complete coverage omits a required 15-minute frame", () => {

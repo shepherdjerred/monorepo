@@ -11,12 +11,12 @@ import type {
 import {
   fetchChampionComparisons,
   fetchFullMatch,
-  fetchMatchSupport,
   fetchTimelineCoverage,
   fetchTimelineEventPage,
   fetchTimelineFramePage,
   fetchTimelineFramesAt,
 } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+import { fetchMatchSupport } from "#src/reports/duckdb/community/match-support.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 
@@ -250,8 +250,8 @@ describe("consumer profile lake reads", () => {
     const rows = await fetchFullMatch({ matchId, lakeDir });
     expect(rows.map((row) => row.champion_name)).toEqual(["Ashe", "Garen"]);
     expect(rows[0]).toMatchObject({
-      item_0_id: 1055,
-      item_6_id: 3340,
+      item0: 1055,
+      item6: 3340,
       summoner_spell_1_id: 4,
       primary_rune_0_id: 8005,
     });

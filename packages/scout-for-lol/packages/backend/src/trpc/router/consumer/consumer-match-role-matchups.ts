@@ -4,6 +4,7 @@ import type {
   LakeTimelineCoverage,
   LaneDeltaFrame,
 } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+import { isStandardRiftGame } from "#src/trpc/router/consumer/standard-rift.ts";
 
 const LANE_DELTA_TIMESTAMP_MS = 900_000;
 
@@ -35,6 +36,9 @@ export function buildRoleMatchups(options: {
   coverage: LakeTimelineCoverage | null;
   frames: LaneDeltaFrame[];
 }): RoleMatchup[] | null {
+  if (options.rows[0] === undefined || !isStandardRiftGame(options.rows[0])) {
+    return null;
+  }
   const blue = options.rows.filter((row) => row.team_id === 100);
   const red = options.rows.filter((row) => row.team_id === 200);
   if (options.rows.length !== 10 || blue.length !== 5 || red.length !== 5) {
@@ -84,7 +88,8 @@ export function buildRoleMatchups(options: {
       },
     };
   }).reduce<RoleMatchup[] | null>((matchups, matchup) => {
-    if (matchups === null || matchup === null) return null;
-    return [...matchups, matchup];
+    return matchups === null || matchup === null
+      ? null
+      : [...matchups, matchup];
   }, []);
 }

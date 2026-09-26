@@ -53,7 +53,6 @@ import {
   type ToolTracker,
 } from "#src/reports/ai/scoutql-tools.ts";
 import { fetchMatchSupport } from "#src/reports/duckdb/community/match-support.ts";
-import { GLOBAL_SCOPE } from "#src/reports/duckdb/scope.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 

@@ -134,8 +134,8 @@ describe("fetchPlayerMatchHistory", () => {
       "NA1_1",
     ]);
     expect(rows[0]).toMatchObject({
-      item_0_id: 1055,
-      item_6_id: 3340,
+      item0: 1055,
+      item6: 3340,
       summoner_spell_2_id: 7,
       primary_rune_0_id: 8005,
     });
