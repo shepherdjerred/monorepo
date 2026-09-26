@@ -96,6 +96,13 @@
       "reason": "Rebuildable static site"
     },
     {
+      "name": "cross-compilers",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
       "name": "stocks-sjer-red",
       "mode": "excluded",
       "cadences": [],

@@ -228,6 +228,7 @@ export const staticSites: StaticSiteConfig[] = [
   { hostname: "ppl.glitter-boys.com", bucket: "glitter-boys-ppl" },
   { hostname: "cook.sjer.red", bucket: "cook" },
   { hostname: "macos-cross.sjer.red", bucket: "macos-cross" },
+  { hostname: "cross-compilers.sjer.red", bucket: "cross-compilers" },
   { hostname: "stocks.sjer.red", bucket: "stocks-sjer-red" },
   {
     hostname: "wiki.sjer.red",
