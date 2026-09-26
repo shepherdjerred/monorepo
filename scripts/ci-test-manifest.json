@@ -173,6 +173,16 @@
             "src/emulator/audio/audio-fingerprint.test.ts"
           ]
         }
+      ],
+      "excludedSuites": [
+        {
+          "path": "src/emulator/emulator-symbols.integration.test.ts",
+          "reason": "Runs in the discord-plays-pokemon Dockerfile wasm-abi-test stage after the wasm-builder supplies the generated artifact."
+        },
+        {
+          "path": "src/emulator/audio/audio-fingerprint.test.ts",
+          "reason": "Runs in the discord-plays-pokemon Dockerfile wasm-abi-test stage after the wasm-builder supplies the generated artifact."
+        }
       ]
     },
     {

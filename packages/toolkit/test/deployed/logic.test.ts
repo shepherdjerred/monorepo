@@ -1,5 +1,5 @@
 import { test, expect, describe } from "vitest";
-import { isBumpSubject } from "#lib/deployed/git.ts";
+import { firstDigestWriter, isBumpSubject } from "#lib/deployed/git.ts";
 import { podsForVersionKey } from "#lib/deployed/kubectl.ts";
 import type { RunningPod } from "#lib/deployed/types.ts";
 
@@ -20,6 +20,46 @@ describe("isBumpSubject (NO_IMAGE / seed detection)", () => {
     expect(isBumpSubject("fix(homelab): clarify streambot image config")).toBe(
       false,
     );
+  });
+});
+
+describe("firstDigestWriter", () => {
+  test("keeps the image-writing commit when a later bump removes the beta pin", () => {
+    const writer = {
+      sha: "image-build",
+      subject: "chore: bump image versions to 2.0.0-1",
+      patch: '+  "value": "2.0.0-1@sha256:old"',
+    };
+    const laterBetaBump = {
+      sha: "new-beta-build",
+      subject: "chore: bump pending image versions (#2)",
+      patch:
+        '-  "value": "2.0.0-1@sha256:old"\n+          "value": "2.0.0-2@sha256:new"',
+    };
+    const laterPromotion = {
+      sha: "prod-promotion",
+      subject: "chore: promote prod image",
+      patch: '+  "value": "2.0.0-1@sha256:old"',
+    };
+
+    expect(
+      firstDigestWriter([writer, laterBetaBump, laterPromotion], "sha256:old"),
+    ).toEqual({ sha: "image-build", subject: writer.subject });
+  });
+
+  test("ignores a digest removal when there is no added occurrence", () => {
+    expect(
+      firstDigestWriter(
+        [
+          {
+            sha: "remove",
+            subject: "chore: bump pending image versions (#2)",
+            patch: '-  "value": "2.0.0-1@sha256:old"',
+          },
+        ],
+        "sha256:old",
+      ),
+    ).toBeNull();
   });
 });
 

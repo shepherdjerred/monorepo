@@ -178,7 +178,7 @@ async function runGitTrace(
       commitInImage: false,
     };
   }
-  const writingCommit = await commitThatWroteDigest(pin.digest);
+  const writingCommit = await commitThatWroteDigest(pin.digest, "origin/main");
   if (writingCommit == null) {
     return {
       pin,
