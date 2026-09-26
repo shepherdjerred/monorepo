@@ -4,7 +4,10 @@ import {
   scoutFixedScheduleId,
   type ScoutStage,
 } from "@scout-for-lol/temporal";
-import { scoutPostMatchDiscoveryV2InputCodec } from "@scout-for-lol/temporal/workflow-contracts-v2";
+import {
+  scoutPipelineReconciliationV2InputCodec,
+  scoutPostMatchDiscoveryV2InputCodec,
+} from "@scout-for-lol/temporal/workflow-contracts-v2";
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 import type { ScheduleDefinition } from "./schedule-types.ts";
 
@@ -115,6 +118,18 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       args: [{ stage, trigger: "schedule" }],
       every: "1 minute",
     }),
+    intervalSchedule(stage, {
+      name: "pipeline-reconciliation-v2",
+      workflowType: SCOUT_WORKFLOW_NAMES.pipelineReconciliationV2,
+      args: [
+        scoutPipelineReconciliationV2InputCodec.serialize({
+          stage,
+          trigger: "schedule",
+        }),
+      ],
+      every: "1 minute",
+      catchupWindow: CATCHUP_TIGHT,
+    }),
     ...(stage === "beta"
       ? [
           intervalSchedule(stage, {
@@ -174,6 +189,13 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       name: "progression-outbox",
       workflowType: "scoutBackgroundJobWorkflow",
       args: [{ stage, kind: "progression-outbox" }],
+      every: "1 minute",
+      catchupWindow: CATCHUP_TIGHT,
+    }),
+    intervalSchedule(stage, {
+      name: "progression-reconciliation",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "progression-reconciliation" }],
       every: "1 minute",
       catchupWindow: CATCHUP_TIGHT,
     }),
