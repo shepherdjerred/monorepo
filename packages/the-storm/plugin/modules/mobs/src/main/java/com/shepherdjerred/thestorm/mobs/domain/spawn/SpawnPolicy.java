@@ -5,8 +5,8 @@ import java.util.Set;
 
 /**
  * Decides what happens to a spawning mob. Only hostile mobs are ever levelled; arena mobs, bosses,
- * named and tamed mobs, babies (when configured) and excluded types and spawn reasons stay vanilla.
- * Admin regions follow their {@link AdminPolicy}.
+ * named and tamed mobs, babies (when configured), excluded types and every spawn reason outside the
+ * allowlist stay vanilla. Admin regions follow their {@link AdminPolicy}.
  */
 public final class SpawnPolicy {
 
@@ -63,8 +63,8 @@ public final class SpawnPolicy {
     if (exclusions.babies() && mob.is(Trait.BABY)) {
       return leave(Reason.BABY);
     }
-    if (exclusions.spawnReasons().contains(mob.reason())) {
-      return leave(Reason.EXCLUDED_REASON);
+    if (!exclusions.levelledReasons().contains(mob.reason())) {
+      return leave(Reason.UNLEVELLED_REASON);
     }
     return new SpawnVerdict.Level();
   }

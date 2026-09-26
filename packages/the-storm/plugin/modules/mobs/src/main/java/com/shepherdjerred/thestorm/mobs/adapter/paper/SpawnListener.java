@@ -67,7 +67,7 @@ final class SpawnListener implements Listener {
 
   private EnumSet<Trait> traits(LivingEntity mob, Location location) {
     var traits = EnumSet.noneOf(Trait.class);
-    if (mob.getPersistentDataContainer().has(MobKeys.ARENA)) {
+    if (mob.getPersistentDataContainer().has(MobKeys.ARENA_ENTITY)) {
       traits.add(Trait.ARENA);
     }
     if (mob instanceof Enemy) {

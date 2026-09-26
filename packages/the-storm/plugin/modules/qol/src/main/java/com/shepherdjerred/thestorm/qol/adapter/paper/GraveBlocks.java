@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.Skull;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.persistence.PersistentDataType;
 
 /**
@@ -22,6 +23,7 @@ final class GraveBlocks {
 
   /** Makes {@code block} the marker for {@code grave}. */
   static void place(Block block, Grave grave, GraveFace face) {
+    // Only open air is ever replaced (see Blocks.cell); the grave records it to put it back.
     block.setType(Material.PLAYER_HEAD, false);
     if (!(block.getState() instanceof Skull skull)) {
       throw new IllegalStateException("a player head has no skull state at " + block);
@@ -48,10 +50,10 @@ final class GraveBlocks {
     return idAt(block).isPresent();
   }
 
-  /** Removes {@code block} if it is the marker for {@code grave}. */
-  static void clear(Block block, UUID grave) {
+  /** Puts back {@code replaced} if {@code block} is the marker for {@code grave}. */
+  static void clear(Block block, UUID grave, BlockData replaced) {
     if (idAt(block).filter(grave::equals).isPresent()) {
-      block.setType(Material.AIR, false);
+      block.setBlockData(replaced, false);
     }
   }
 }

@@ -81,13 +81,17 @@ final class Blocks {
     return block(server, pos).map(block -> block.getLocation().add(0.5, 0.5, 0.5));
   }
 
-  /** What {@code block} is for placing a grave, ignoring graves (the caller checks those). */
+  /**
+   * What {@code block} is for placing a grave, ignoring graves (the caller checks those). Only air
+   * is open: a grave never replaces water, lava, light blocks, plants or anything else it could not
+   * put back exactly.
+   */
   static Cell cell(Block block) {
     var type = block.getType();
     if (HAZARDS.contains(type)) {
       return Cell.HAZARD;
     }
-    if (type.isAir() || type == Material.WATER || block.isReplaceable()) {
+    if (type.isAir()) {
       return Cell.OPEN;
     }
     return type.isSolid() ? Cell.FLOOR : Cell.BLOCKED;

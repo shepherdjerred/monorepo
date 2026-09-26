@@ -4,7 +4,11 @@ import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import net.kyori.adventure.text.Component;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Barrel;
 import org.bukkit.block.Block;
@@ -12,12 +16,14 @@ import org.bukkit.block.Chest;
 import org.bukkit.block.Lockable;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 
 /**
  * Sorting the chest, barrel, shulker box or ender chest a player points at. A player may only sort
- * what they may open: land protection must allow opening containers there, and a container locked
- * with a key is never touched. Main thread only.
+ * what they may open: land protection (which also enforces locks) must allow opening containers at
+ * every block the inventory spans, both halves of a double chest included, and a container locked
+ * with a vanilla key is never touched. Main thread only.
  */
 final class ContainerSorting {
 
@@ -54,21 +60,48 @@ final class ContainerSorting {
 
   /** Sorts {@code block} for {@code player} if they may open it. */
   void sort(Player player, Block block) {
-    var inventory = inventory(player, block);
-    if (inventory.isEmpty()) {
+    var found = inventory(player, block);
+    if (found.isEmpty()) {
       return;
     }
-    if (protection.check(player.getUniqueId(), ProtectedAction.OPEN_CONTAINER, block.getLocation())
-        instanceof Decision.Denied(var reason)) {
-      player.sendMessage(HouseStyle.error(Say.SORT, reason));
+    var inventory = found.orElseThrow();
+    var refusal = refusal(player, block, inventory);
+    if (refusal.isPresent()) {
+      player.sendMessage(HouseStyle.error(Say.SORT, refusal.orElseThrow()));
       return;
     }
-    if (block.getState(false) instanceof Lockable lockable && lockable.isLocked()) {
-      Say.error(player, Say.SORT, "That container is locked.");
-      return;
-    }
-    InventorySorter.sort(inventory.orElseThrow());
+    InventorySorter.sort(inventory);
     Say.success(player, Say.SORT, "Sorted.");
+  }
+
+  /** Why {@code player} may not sort {@code inventory} at {@code block}, or empty if they may. */
+  Optional<Component> refusal(Player player, Block block, Inventory inventory) {
+    if (block.getState(false) instanceof Lockable lockable && lockable.isLocked()) {
+      return Optional.of(Component.text("That container is locked."));
+    }
+    for (var at : spans(block, inventory)) {
+      if (protection.check(player.getUniqueId(), ProtectedAction.OPEN_CONTAINER, at)
+          instanceof Decision.Denied(var reason)) {
+        return Optional.of(reason);
+      }
+    }
+    return Optional.empty();
+  }
+
+  /** Every block {@code inventory} lives in: both halves of a double chest, else the block. */
+  static List<Location> spans(Block block, Inventory inventory) {
+    var spans = new ArrayList<Location>();
+    spans.add(block.getLocation());
+    if (inventory instanceof DoubleChestInventory chest) {
+      for (var half : List.of(chest.getLeftSide(), chest.getRightSide())) {
+        var at = half.getLocation();
+        if (at == null) {
+          throw new IllegalStateException("a double chest half has no location at " + block);
+        }
+        spans.add(at);
+      }
+    }
+    return spans;
   }
 
   /** The inventory {@code player} would open at {@code block}; a double chest is sorted whole. */

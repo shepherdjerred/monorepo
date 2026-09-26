@@ -81,6 +81,15 @@ final class LevelApplier implements MobLevels {
     if (level.isEmpty()) {
       return;
     }
+    clear(mob, nameplate(mob, level.getAsInt()));
+  }
+
+  /**
+   * Removes every trace of a level from {@code mob}: modifiers, level and damage tags, and the name
+   * {@code plate} if the mob still wears it. Used for mobs that inherited a level by converting
+   * from another mob, whose nameplate names the old type.
+   */
+  void clear(LivingEntity mob, Component plate) {
     ATTRIBUTES.forEach(
         (stat, attribute) -> {
           var instance = mob.getAttribute(attribute);
@@ -92,9 +101,12 @@ final class LevelApplier implements MobLevels {
     if (maxHealth != null && mob.getHealth() > maxHealth.getValue()) {
       mob.setHealth(maxHealth.getValue());
     }
-    mob.getPersistentDataContainer().remove(MobKeys.LEVEL);
+    var data = mob.getPersistentDataContainer();
+    data.remove(MobKeys.LEVEL);
+    data.remove(MobKeys.PLAYER_DAMAGE);
+    data.remove(MobKeys.OTHER_DAMAGE);
     // Only our own nameplate is removed; a name a player gave the mob since stays.
-    if (nameplate(mob, level.getAsInt()).equals(mob.customName())) {
+    if (plate.equals(mob.customName())) {
       mob.customName(null);
       mob.setCustomNameVisible(false);
     }
@@ -109,7 +121,8 @@ final class LevelApplier implements MobLevels {
     return scaling.bonus(stat, typeKey(mob), Math.min(level.getAsInt(), cap), cap);
   }
 
-  private Component nameplate(LivingEntity mob, int level) {
+  /** The nameplate a level-{@code level} {@code mob} wears. */
+  Component nameplate(LivingEntity mob, int level) {
     var hex = nameplate.colorFor(level);
     var color = TextColor.fromHexString(hex);
     if (color == null) {

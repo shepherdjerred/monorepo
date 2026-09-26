@@ -55,7 +55,12 @@ final class MobsConfigTest {
     assertThat(config.scaling().atCap(Stat.MAX_HEALTH, "zombie")).isEqualTo(1.1);
     assertThat(config.scaling().atCap(Stat.ATTACK_DAMAGE, "zombie")).isEqualTo(1.1);
     assertThat(config.scaling().atCap(Stat.MAX_HEALTH, "enderman")).isZero();
-    assertThat(config.exclusions().spawnReasons()).contains("SPAWNER", "CUSTOM");
+    assertThat(config.exclusions().levelledReasons())
+        .containsExactlyInAnyOrder("NATURAL", "JOCKEY", "MOUNT", "PATROL");
+    assertThat(config.scaling().atCap(Stat.XP, "zombie")).isEqualTo(1.0);
+    assertThat(config.scaling().atCap(Stat.ITEM_DROPS, "zombie")).isEqualTo(0.5);
+    assertThat(config.levels().world("world_nether"))
+        .hasValueSatisfying(nether -> assertThat(nether.distanceScale()).isEqualTo(4.0));
     assertThat(config.adminRegions().policy()).isEqualTo(AdminPolicy.BLOCK_NATURAL);
     assertThat(config.nameplate().enabled()).isTrue();
   }

@@ -12,7 +12,7 @@ public enum Trait {
   TAMED,
   /** A baby. */
   BABY,
-  /** Spawned by the arena, which tags its mobs {@code thestorm:arena}. */
+  /** Spawned by the arena, which tags its mobs {@code thestorm:arena_entity}. */
   ARENA,
   /** Inside an admin region such as the spawn town. */
   ADMIN_REGION

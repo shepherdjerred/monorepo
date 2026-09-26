@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
+import com.shepherdjerred.thestorm.qol.app.store.GraveStore;
 import com.shepherdjerred.thestorm.qol.domain.grave.Grave;
 import com.shepherdjerred.thestorm.qol.domain.grave.GraveContents;
 import com.shepherdjerred.thestorm.qol.domain.grave.GraveItem;
@@ -12,6 +13,7 @@ import com.shepherdjerred.thestorm.qol.domain.grave.ItemBytes;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.UUID;
@@ -70,7 +72,8 @@ final class JooqGraveStoreTest {
             owner,
             "Owner" + id,
             new GravePos("world", x, 64, -5),
-            T0.plusSeconds(id)),
+            T0.plusSeconds(id),
+            id % 2 == 0 ? "minecraft:cave_air" : "minecraft:air"),
         items);
   }
 
@@ -162,5 +165,49 @@ final class JooqGraveStoreTest {
     var empty = grave(3, BOB, 30, List.of());
     store.create(empty).join();
     assertThat(store.loadAll().join()).containsExactly(empty);
+  }
+
+  @Test
+  void expiringRemovesTheGraveAndLeavesANoticeInOneTransaction() {
+    store.create(ALICES).join();
+    var notice = new GraveStore.Notice(ALICE, "Your grave broke open.", T0);
+
+    var left = store.expire(new UUID(0, 1), Optional.of(notice)).join();
+
+    assertThat(left).hasSize(4);
+    assertThat(store.loadAll().join()).isEmpty();
+    restart();
+    assertThat(store.takeNotices(BOB).join()).isEmpty();
+    assertThat(store.takeNotices(ALICE).join()).containsExactly("Your grave broke open.");
+    assertThat(store.takeNotices(ALICE).join()).isEmpty();
+  }
+
+  @Test
+  void expiringWithoutANoticeLeavesNone() {
+    store.create(ALICES).join();
+
+    store.expire(new UUID(0, 1), Optional.empty()).join();
+
+    assertThat(store.takeNotices(ALICE).join()).isEmpty();
+  }
+
+  @Test
+  void noticesComeBackOldestFirst() {
+    store.create(ALICES).join();
+    store.create(grave(3, ALICE, 30, List.of(stack(0, 1)))).join();
+    store.expire(new UUID(0, 1), Optional.of(new GraveStore.Notice(ALICE, "first", T0))).join();
+    store.expire(new UUID(0, 3), Optional.of(new GraveStore.Notice(ALICE, "second", T0))).join();
+
+    assertThat(store.takeNotices(ALICE).join()).containsExactly("first", "second");
+  }
+
+  @Test
+  void theReplacedBlockIsKept() {
+    var bobs = grave(2, BOB, 20, List.of(stack(0, 5)));
+    store.create(bobs).join();
+    restart();
+    assertThat(store.loadAll().join())
+        .singleElement()
+        .satisfies(c -> assertThat(c.grave().replaced()).isEqualTo("minecraft:cave_air"));
   }
 }

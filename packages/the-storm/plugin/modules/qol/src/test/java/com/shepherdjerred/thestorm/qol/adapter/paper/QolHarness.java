@@ -31,12 +31,14 @@ import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.random.RandomGenerator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jspecify.annotations.Nullable;
 import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
@@ -88,16 +90,22 @@ final class QolHarness implements AutoCloseable {
     }
   }
 
-  /** Allows everything unless containers are switched off. */
+  /** Allows everything except where the test says building or opening containers is denied. */
   static final class Land implements Protection {
-    boolean containers = true;
+    Predicate<Location> noContainers = location -> false;
+    Predicate<Location> noBuilding = location -> false;
 
     @Override
     public Decision check(UUID player, ProtectedAction action, Location location) {
-      if (action == ProtectedAction.OPEN_CONTAINER && !containers) {
-        return new Decision.Denied(Component.text("This land belongs to Aegis."));
-      }
-      return Decision.allowed();
+      var denied =
+          switch (action) {
+            case OPEN_CONTAINER -> noContainers.test(location);
+            case BUILD -> noBuilding.test(location);
+            default -> false;
+          };
+      return denied
+          ? new Decision.Denied(Component.text("This land belongs to Aegis."))
+          : Decision.allowed();
     }
 
     @Override
@@ -120,19 +128,26 @@ final class QolHarness implements AutoCloseable {
   final Afk afk = new Afk();
   final Land land = new Land();
   final GraveRegistry graves = new GraveRegistry();
-  final JooqGraveStore store;
+  final FaultyStore store;
   final CombatTracker combat;
+  final List<UUID> saved = new CopyOnWriteArrayList<>();
+  @Nullable QolPaper paper;
 
   private QolHarness(ServerMock server, WorldMock world, StormDatabase database, QolConfig config) {
     this.server = server;
     this.world = world;
     this.database = database;
-    this.store = new JooqGraveStore(database);
+    this.store = new FaultyStore(new JooqGraveStore(database));
     this.combat = new CombatTracker(clock, config.combat().tagFor());
   }
 
   /** Starts qol over the database in {@code directory}, which may already hold graves. */
   static QolHarness start(Path directory) {
+    return start(directory, false);
+  }
+
+  /** Starts qol; with {@code unreadable}, reading graves from storage fails. */
+  static QolHarness start(Path directory, boolean unreadable) {
     var server = MockBukkit.mock();
     var world = server.addSimpleWorld("world");
     try {
@@ -144,6 +159,7 @@ final class QolHarness implements AutoCloseable {
     database.migrate("qol", QolHarness.class.getClassLoader());
     var config = ConfigFiles.load(directory.resolve("qol.yml"), QolConfig.class);
     var harness = new QolHarness(server, world, database, config);
+    harness.store.failLoad = unreadable;
     enabling =
         plugin -> {
           var context =
@@ -157,23 +173,27 @@ final class QolHarness implements AutoCloseable {
                   harness.clock,
                   RandomGenerator.getDefault(),
                   plugin.getComponentLogger());
-          QolPaper.start(
-              context,
-              config,
-              new QolPaper.App(
-                  harness.store,
-                  harness.graves,
-                  harness.combat,
-                  harness.land,
-                  harness.guards,
-                  harness.afk),
-              GraveFace.PLAIN);
+          harness.paper =
+              QolPaper.start(
+                  context,
+                  config,
+                  new QolPaper.App(
+                      harness.store,
+                      harness.graves,
+                      harness.combat,
+                      harness.land,
+                      harness.guards,
+                      harness.afk),
+                  new ServerHooks(
+                      GraveFace.PLAIN, player -> harness.saved.add(player.getUniqueId())));
         };
     try {
       MockBukkit.loadWith(
           HarnessPlugin.class,
           new PluginDescriptionFile("TheStorm", "1", HarnessPlugin.class.getName()));
-      harness.until(harness.graves::isLoaded);
+      if (!unreadable) {
+        harness.until(harness.graves::isLoaded);
+      }
     } catch (RuntimeException e) {
       harness.close();
       throw e;

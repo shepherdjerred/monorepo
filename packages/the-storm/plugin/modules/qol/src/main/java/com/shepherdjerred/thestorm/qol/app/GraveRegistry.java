@@ -22,7 +22,7 @@ public final class GraveRegistry {
   private final Map<UUID, GraveContents> byId = new HashMap<>();
   private final Map<GravePos, UUID> byPos = new HashMap<>();
   private final Set<UUID> busy = new HashSet<>();
-  private final Set<GravePos> reserved = new HashSet<>();
+  private final Map<GravePos, UUID> reserved = new HashMap<>();
   private boolean loaded;
 
   /** Replaces everything with what storage holds. */
@@ -59,12 +59,17 @@ public final class GraveRegistry {
 
   /** Whether a grave stands, or is about to be placed, at {@code pos}. */
   public boolean isTaken(GravePos pos) {
-    return byPos.containsKey(pos) || reserved.contains(pos);
+    return byPos.containsKey(pos) || reserved.containsKey(pos);
   }
 
-  /** Holds {@code pos} for a grave that is being saved. */
-  public void reserve(GravePos pos) {
-    reserved.add(pos);
+  /** Holds {@code pos} for grave {@code id}, which is being saved. */
+  public void reserve(GravePos pos, UUID id) {
+    reserved.put(pos, id);
+  }
+
+  /** Whether grave {@code id} is placed but not saved yet. */
+  public boolean isPending(UUID id) {
+    return reserved.containsValue(id);
   }
 
   /** Lets go of a reservation whose grave was not saved. */

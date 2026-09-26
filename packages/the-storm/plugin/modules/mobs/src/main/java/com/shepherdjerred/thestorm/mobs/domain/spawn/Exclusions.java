@@ -4,25 +4,29 @@ import java.util.Locale;
 import java.util.Set;
 
 /**
- * Hostile mobs that are never levelled.
+ * Which hostile mobs may be levelled.
  *
- * @param types entity type keys without namespace, such as {@code warden}
- * @param spawnReasons spawn reason names, such as {@code SPAWNER}; mob farms built on spawners stay
- *     vanilla, as in 2023
+ * @param types entity type keys without namespace, such as {@code warden}, that are never levelled
+ * @param levelledReasons the only spawn reason names, such as {@code NATURAL}, whose mobs are
+ *     levelled. An allowlist: spawners, eggs, raids, slime splits, portals, reinforcements and any
+ *     reason a future version adds stay vanilla, so no farm can breed levelled mobs
  * @param babies whether baby mobs are left alone (fast baby zombies with a level were too much in
  *     2023)
  */
-public record Exclusions(Set<String> types, Set<String> spawnReasons, boolean babies) {
+public record Exclusions(Set<String> types, Set<String> levelledReasons, boolean babies) {
 
   public Exclusions {
     types = Set.copyOf(types);
-    spawnReasons = Set.copyOf(spawnReasons);
+    levelledReasons = Set.copyOf(levelledReasons);
     for (var type : types) {
       if (type.isBlank() || !type.equals(type.toLowerCase(Locale.ROOT))) {
         throw new IllegalArgumentException("mob types are lowercase keys: '" + type + "'");
       }
     }
-    for (var reason : spawnReasons) {
+    if (levelledReasons.isEmpty()) {
+      throw new IllegalArgumentException("levelledReasons must name at least one spawn reason");
+    }
+    for (var reason : levelledReasons) {
       if (reason.isBlank() || !reason.equals(reason.toUpperCase(Locale.ROOT))) {
         throw new IllegalArgumentException("spawn reasons are uppercase names: '" + reason + "'");
       }

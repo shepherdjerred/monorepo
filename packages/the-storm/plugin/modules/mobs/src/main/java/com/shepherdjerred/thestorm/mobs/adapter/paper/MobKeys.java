@@ -12,8 +12,17 @@ final class MobKeys {
   /** A levelled mob's level (integer). */
   static final NamespacedKey LEVEL = new NamespacedKey(NAMESPACE, "mob_level");
 
-  /** Set by the arena on its mobs (any type); such mobs are never levelled. */
-  static final NamespacedKey ARENA = new NamespacedKey(NAMESPACE, "arena");
+  /** Damage players dealt a levelled mob with their own hits and projectiles (double). */
+  static final NamespacedKey PLAYER_DAMAGE = new NamespacedKey(NAMESPACE, "mob_player_damage");
+
+  /** Damage a levelled mob took from everything else (double). */
+  static final NamespacedKey OTHER_DAMAGE = new NamespacedKey(NAMESPACE, "mob_other_damage");
+
+  /**
+   * The arena module's tag on every entity it spawns (any type). A contract between modules: the
+   * arena sets it before the entity is added to the world, and mobs never levels such an entity.
+   */
+  static final NamespacedKey ARENA_ENTITY = new NamespacedKey(NAMESPACE, "arena_entity");
 
   private MobKeys() {}
 

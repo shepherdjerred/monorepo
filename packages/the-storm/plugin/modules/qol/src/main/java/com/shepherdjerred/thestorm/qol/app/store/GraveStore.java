@@ -2,7 +2,9 @@ package com.shepherdjerred.thestorm.qol.app.store;
 
 import com.shepherdjerred.thestorm.qol.domain.grave.GraveContents;
 import com.shepherdjerred.thestorm.qol.domain.grave.GraveItem;
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -43,4 +45,22 @@ public interface GraveStore {
 
   /** Removes a grave and returns every stack it still held. */
   CompletableFuture<List<GraveItem>> delete(UUID grave);
+
+  /**
+   * A message for a player who is offline.
+   *
+   * @param player who to tell
+   * @param message what to tell them
+   * @param at when it happened
+   */
+  record Notice(UUID player, String message, Instant at) {}
+
+  /**
+   * Removes an expired grave and, in the same transaction, leaves {@code notice} for its owner if
+   * given. Returns every stack the grave still held.
+   */
+  CompletableFuture<List<GraveItem>> expire(UUID grave, Optional<Notice> notice);
+
+  /** Removes and returns {@code player}'s notices, oldest first. */
+  CompletableFuture<List<String>> takeNotices(UUID player);
 }

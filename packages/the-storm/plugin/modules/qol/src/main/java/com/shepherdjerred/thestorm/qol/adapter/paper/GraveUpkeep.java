@@ -2,19 +2,22 @@ package com.shepherdjerred.thestorm.qol.adapter.paper;
 
 import com.shepherdjerred.thestorm.qol.app.GraveRegistry;
 import com.shepherdjerred.thestorm.qol.app.store.GraveStore;
+import com.shepherdjerred.thestorm.qol.domain.grave.Grave;
 import com.shepherdjerred.thestorm.qol.domain.grave.GraveContents;
 import com.shepherdjerred.thestorm.qol.domain.grave.GraveItem;
 import com.shepherdjerred.thestorm.qol.domain.grave.GravePlacement;
 import com.shepherdjerred.thestorm.qol.domain.grave.GravePolicy;
-import com.shepherdjerred.thestorm.qol.domain.grave.GravePos;
+import com.shepherdjerred.thestorm.qol.domain.text.DurationText;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.bukkit.Chunk;
+import org.bukkit.entity.Player;
 
 /**
- * Keeps graves and their blocks in step with storage: loads them at start, puts back a missing
- * grave block when its chunk loads, breaks open expired graves (only in loaded chunks, so the items
- * land where players can reach them) and removes emptied graves. Main thread only.
+ * Keeps graves and their blocks in step with storage: loads them at start (or stops qol if it
+ * cannot), puts back a missing grave block when its chunk loads, breaks open expired graves and
+ * tells their owners, and removes emptied graves. Main thread only.
  */
 final class GraveUpkeep {
 
@@ -29,11 +32,14 @@ final class GraveUpkeep {
     this.store = parts.store();
     this.registry = parts.registry();
     this.policy = parts.policy();
-    this.face = parts.face();
+    this.face = parts.hooks().face();
   }
 
-  /** Reads every grave from storage; until this finishes, no grave can be opened. */
-  void load() {
+  /**
+   * Reads every grave from storage; until this finishes no grave can be opened or made. If storage
+   * cannot be read, {@code failed} runs: graves must not run on a partial picture.
+   */
+  void load(Runnable failed) {
     runtime.onMain(
         store.loadAll(),
         "loading graves",
@@ -51,10 +57,10 @@ final class GraveUpkeep {
           }
           runtime.logger().info("qol loaded {} graves", graves.size());
         },
-        failure -> {});
+        failure -> failed.run());
   }
 
-  /** A chunk loaded: its graves get their blocks back if needed, and expired ones break open. */
+  /** A chunk loaded: its graves get their blocks back if they lost them. */
   void chunkLoaded(Chunk chunk) {
     var world = chunk.getWorld().getName();
     for (var contents : registry.all()) {
@@ -63,25 +69,32 @@ final class GraveUpkeep {
           && pos.x() >> 4 == chunk.getX()
           && pos.z() >> 4 == chunk.getZ()) {
         mark(contents);
-        if (policy.isExpired(contents.grave(), runtime.time().instant())) {
-          expire(contents);
-        }
       }
     }
   }
 
-  /** Breaks open every expired grave whose chunk is loaded. */
+  /**
+   * Breaks open every expired grave. The sweep loads the grave's chunk itself, so the items land
+   * where the grave stood (and wait there, unloaded, for their owner) rather than going to whoever
+   * happens to load the chunk later.
+   */
   void sweep() {
     var now = runtime.time().instant();
     for (var contents : registry.all()) {
-      if (policy.isExpired(contents.grave(), now)
-          && Blocks.isLoaded(runtime.server(), contents.grave().pos())) {
-        expire(contents);
+      var grave = contents.grave();
+      if (!policy.isExpired(grave, now)) {
+        continue;
       }
+      var world = runtime.server().getWorld(grave.pos().world());
+      if (world == null) {
+        continue;
+      }
+      world.loadChunk(grave.pos().x() >> 4, grave.pos().z() >> 4);
+      expire(grave);
     }
   }
 
-  /** Puts {@code contents}' block back if it is missing and its spot is open. */
+  /** Puts {@code contents}' block back if it is missing and its spot is open air. */
   void mark(GraveContents contents) {
     var grave = contents.grave();
     var found = Blocks.block(runtime.server(), grave.pos());
@@ -108,23 +121,52 @@ final class GraveUpkeep {
     }
   }
 
-  /** Breaks open an expired grave: its items drop where it stood. */
-  private void expire(GraveContents contents) {
-    var grave = contents.grave();
+  /** Sends {@code player} what happened to their graves while they were away. */
+  void deliverNotices(Player player) {
+    var id = player.getUniqueId();
+    runtime.onMain(
+        store.takeNotices(id),
+        "reading " + player.getName() + "'s grave notices",
+        messages -> {
+          var online = runtime.server().getPlayer(id);
+          if (online != null) {
+            messages.forEach(message -> Say.info(online, Say.GRAVES, message));
+          }
+        },
+        failure -> {});
+  }
+
+  /** Breaks open an expired grave: its items drop where it stood, and its owner is told. */
+  private void expire(Grave grave) {
     if (!registry.tryLock(grave.id())) {
       return;
     }
+    var message =
+        "Your grave at "
+            + grave.pos().describe()
+            + " broke open after "
+            + DurationText.of(policy.expireAfter())
+            + "; what was left in it lies on the ground there.";
+    var owner = runtime.server().getPlayer(grave.owner());
+    var notice =
+        owner == null
+            ? Optional.of(new GraveStore.Notice(grave.owner(), message, runtime.time().instant()))
+            : Optional.<GraveStore.Notice>empty();
     runtime.onMain(
-        store.delete(grave.id()),
+        store.expire(grave.id(), notice),
         "breaking open " + grave.ownerName() + "'s grave",
         items -> {
-          gone(grave.id(), grave.pos(), items);
-          var owner = runtime.server().getPlayer(grave.owner());
-          if (owner != null) {
-            Say.info(
-                owner,
-                Say.GRAVES,
-                "Your grave at " + grave.pos().describe() + " broke open and dropped its items.");
+          gone(grave, items);
+          runtime
+              .logger()
+              .info(
+                  "{}'s grave at {} expired and dropped {} stacks",
+                  grave.ownerName(),
+                  grave.pos(),
+                  items.size());
+          var online = runtime.server().getPlayer(grave.owner());
+          if (online != null && notice.isEmpty()) {
+            Say.info(online, Say.GRAVES, message);
           }
         },
         failure -> registry.unlock(grave.id()));
@@ -140,23 +182,26 @@ final class GraveUpkeep {
       registry.unlock(id);
       return;
     }
-    var pos = found.orElseThrow().grave().pos();
+    var grave = found.orElseThrow().grave();
     runtime.onMain(
         store.delete(id),
         "removing an emptied grave",
-        items -> gone(id, pos, items),
+        items -> gone(grave, items),
         failure -> registry.unlock(id));
   }
 
-  private void gone(UUID id, GravePos pos, List<GraveItem> items) {
-    registry.remove(id);
-    Blocks.block(runtime.server(), pos).ifPresent(block -> GraveBlocks.clear(block, id));
-    var center = Blocks.center(runtime.server(), pos);
+  /** Forgets {@code grave}, puts back the block it replaced and drops {@code items} there. */
+  private void gone(Grave grave, List<GraveItem> items) {
+    registry.remove(grave.id());
+    var replaced = runtime.server().createBlockData(grave.replaced());
+    Blocks.block(runtime.server(), grave.pos())
+        .ifPresent(block -> GraveBlocks.clear(block, grave.id(), replaced));
+    var center = Blocks.center(runtime.server(), grave.pos());
     if (center.isEmpty()) {
       if (!items.isEmpty()) {
         runtime
             .logger()
-            .error("A grave at {} held {} stacks but its world is gone", pos, items.size());
+            .error("A grave at {} held {} stacks but its world is gone", grave.pos(), items.size());
       }
       return;
     }

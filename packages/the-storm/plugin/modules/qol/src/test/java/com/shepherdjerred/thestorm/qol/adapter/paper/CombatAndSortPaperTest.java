@@ -2,17 +2,25 @@ package com.shepherdjerred.thestorm.qol.adapter.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.lang.reflect.Proxy;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.GameRules;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;
+import org.bukkit.entity.AreaEffectCloud;
+import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.Wolf;
 import org.bukkit.event.Event;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -78,14 +86,55 @@ final class CombatAndSortPaperTest {
   }
 
   @Test
-  void aPlayerStaffKickDuringCombatSurvives() {
+  void kicksAndServerErrorsDuringCombatNeverKill() {
+    var alice = harness.playerAt("Alice", 0, 0);
+    var bob = harness.playerAt("Bob", 2, 0);
+    for (var reason :
+        List.of(PlayerQuitEvent.QuitReason.KICKED, PlayerQuitEvent.QuitReason.ERRONEOUS_STATE)) {
+      harness.combat.hit(bob.getUniqueId(), alice.getUniqueId());
+
+      harness
+          .server
+          .getPluginManager()
+          .callEvent(new PlayerQuitEvent(alice, Component.text("bye"), reason));
+
+      assertThat(alice.isDead()).isFalse();
+      assertThat(harness.combat.inCombat(alice.getUniqueId())).isFalse();
+    }
+  }
+
+  @Test
+  void timingOutInCombatKills() {
     var alice = harness.playerAt("Alice", 0, 0);
     var bob = harness.playerAt("Bob", 2, 0);
     harness.combat.hit(bob.getUniqueId(), alice.getUniqueId());
 
-    alice.kick(Component.text("Take a break"), PlayerKickEvent.Cause.PLUGIN);
+    harness
+        .server
+        .getPluginManager()
+        .callEvent(
+            new PlayerQuitEvent(
+                alice, Component.text("bye"), PlayerQuitEvent.QuitReason.TIMED_OUT));
 
-    assertThat(alice.isDead()).isFalse();
+    assertThat(alice.isDead()).isTrue();
+  }
+
+  @Test
+  void petsTntAndLingeringCloudsTagTheirPlayer() {
+    var alice = harness.playerAt("Alice", 0, 0);
+    var wolf = harness.world.spawn(alice.getLocation(), Wolf.class);
+    wolf.setOwner(alice);
+    var tnt = harness.world.spawn(alice.getLocation(), TNTPrimed.class);
+    tnt.setSource(alice);
+    var cloud = harness.world.spawn(alice.getLocation(), AreaEffectCloud.class);
+    cloud.setSource(alice);
+    var stray = harness.world.spawn(alice.getLocation(), Wolf.class);
+
+    assertThat(CombatListener.attacker(alice)).contains(alice);
+    assertThat(CombatListener.attacker(wolf)).contains(alice);
+    assertThat(CombatListener.attacker(tnt)).contains(alice);
+    assertThat(CombatListener.attacker(cloud)).contains(alice);
+    assertThat(CombatListener.attacker(stray)).isEmpty();
   }
 
   static ItemStack named(Material type, int amount, String name) {
@@ -167,11 +216,84 @@ final class CombatAndSortPaperTest {
     var enderChest = harness.world.getBlockAt(1, 5, 0);
     enderChest.setType(Material.ENDER_CHEST);
     alice.getEnderChest().setItem(5, new ItemStack(Material.STONE, 1));
-    harness.land.containers = false;
+    harness.land.noContainers = location -> true;
 
     new ContainerSorting(harness.land).sort(alice, enderChest);
 
     assertThat(alice.getEnderChest().getItem(5)).isEqualTo(new ItemStack(Material.STONE, 1));
     assertThat(QolHarness.messages(alice)).contains("[Sort]: This land belongs to Aegis.");
+  }
+
+  /** A double chest whose halves stand at x 10 and x 11. */
+  DoubleChestInventory doubleChest() {
+    var left = half(new Location(harness.world, 10, 5, 0));
+    var right = half(new Location(harness.world, 11, 5, 0));
+    return (DoubleChestInventory)
+        Proxy.newProxyInstance(
+            getClass().getClassLoader(),
+            new Class<?>[] {DoubleChestInventory.class},
+            (proxy, method, args) ->
+                switch (method.getName()) {
+                  case "getLeftSide" -> left;
+                  case "getRightSide" -> right;
+                  default -> throw new UnsupportedOperationException(method.getName());
+                });
+  }
+
+  static Inventory half(Location at) {
+    return (Inventory)
+        Proxy.newProxyInstance(
+            CombatAndSortPaperTest.class.getClassLoader(),
+            new Class<?>[] {Inventory.class},
+            (proxy, method, args) -> {
+              if (method.getName().equals("getLocation")) {
+                return at;
+              }
+              throw new UnsupportedOperationException(method.getName());
+            });
+  }
+
+  @Test
+  void bothHalvesOfADoubleChestMustBeOpenable() {
+    var alice = harness.playerAt("Alice", 0, 0);
+    var block = harness.world.getBlockAt(10, 5, 0);
+    var sorting = new ContainerSorting(harness.land);
+
+    assertThat(ContainerSorting.spans(block, doubleChest()))
+        .extracting(Location::getBlockX)
+        .containsExactly(10, 10, 11);
+    assertThat(sorting.refusal(alice, block, doubleChest())).isEmpty();
+
+    harness.land.noContainers = location -> location.getBlockX() == 11;
+    assertThat(sorting.refusal(alice, block, doubleChest()))
+        .map(PlainTextComponentSerializer.plainText()::serialize)
+        .contains("This land belongs to Aegis.");
+  }
+
+  @Test
+  void theSleepVoteIsVanillasWithAfkPlayersLeftOut() {
+    var alice = harness.playerAt("Alice", 0, 0);
+    var bob = harness.playerAt("Bob", 2, 0);
+
+    assertThat(harness.world.getGameRuleValue(GameRules.PLAYERS_SLEEPING_PERCENTAGE)).isEqualTo(50);
+
+    harness.afk.away.add(bob.getUniqueId());
+    harness.server.getScheduler().performTicks(21);
+    assertThat(bob.isSleepingIgnored()).isTrue();
+    assertThat(alice.isSleepingIgnored()).isFalse();
+
+    harness.afk.away.remove(bob.getUniqueId());
+    harness.server.getScheduler().performTicks(21);
+    assertThat(bob.isSleepingIgnored()).isFalse();
+  }
+
+  @Test
+  void qolNeverClearsAnIgnoreFlagItDidNotSet() {
+    var vanished = harness.playerAt("Ghost", 0, 0);
+    vanished.setSleepingIgnored(true);
+
+    harness.server.getScheduler().performTicks(21);
+
+    assertThat(vanished.isSleepingIgnored()).isTrue();
   }
 }

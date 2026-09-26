@@ -23,7 +23,8 @@ final class AppTest {
 
   static GraveContents grave(int id, UUID owner, int x, Instant at) {
     return new GraveContents(
-        new Grave(new UUID(0, id), owner, "Owner", new GravePos("world", x, 64, 0), at),
+        new Grave(
+            new UUID(0, id), owner, "Owner", new GravePos("world", x, 64, 0), at, "minecraft:air"),
         List.of(new GraveItem(0, OptionalInt.empty(), ItemBytes.of(new byte[] {1}))));
   }
 
@@ -54,13 +55,17 @@ final class AppTest {
     var registry = new GraveRegistry();
     var pos = new GravePos("world", 5, 64, 5);
 
-    registry.reserve(pos);
+    registry.reserve(pos, new UUID(0, 9));
     assertThat(registry.isTaken(pos)).isTrue();
+    assertThat(registry.isPending(new UUID(0, 9))).isTrue();
     registry.release(pos);
     assertThat(registry.isTaken(pos)).isFalse();
+    assertThat(registry.isPending(new UUID(0, 9))).isFalse();
 
-    registry.reserve(new GravePos("world", 1, 64, 0));
+    registry.reserve(new GravePos("world", 1, 64, 0), new UUID(0, 1));
+    assertThat(registry.isPending(new UUID(0, 1))).isTrue();
     registry.put(grave(1, ALICE, 1, T0));
+    assertThat(registry.isPending(new UUID(0, 1))).isFalse();
     assertThat(registry.isTaken(new GravePos("world", 1, 64, 0))).isTrue();
     registry.remove(new UUID(0, 1));
     assertThat(registry.isTaken(new GravePos("world", 1, 64, 0))).isFalse();

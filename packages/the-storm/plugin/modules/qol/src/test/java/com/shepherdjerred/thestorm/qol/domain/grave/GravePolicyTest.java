@@ -25,7 +25,8 @@ final class GravePolicyTest {
           UUID.fromString("00000000-0000-0000-0000-0000000000a1"),
           "Alice",
           new GravePos("world", 1, 64, 2),
-          DIED);
+          DIED,
+          "minecraft:air");
   static final Duration NANO = Duration.ofNanos(1);
 
   static Instant after(Duration duration) {

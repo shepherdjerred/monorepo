@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.qol.adapter.db;
 
 import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_GRAVES;
 import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_GRAVE_ITEMS;
+import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_NOTICES;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.qol.adapter.db.generated.tables.records.QolGraveItemsRecord;
@@ -16,6 +17,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.UUID;
@@ -68,6 +70,7 @@ public final class JooqGraveStore implements GraveStore {
                   .set(QOL_GRAVES.Y, pos.y())
                   .set(QOL_GRAVES.Z, pos.z())
                   .set(QOL_GRAVES.CREATED_AT, grave.createdAt().toEpochMilli())
+                  .set(QOL_GRAVES.REPLACED_BLOCK, grave.replaced())
                   .execute();
               insertItems(dsl, grave.id(), contents.items());
               return true;
@@ -106,18 +109,51 @@ public final class JooqGraveStore implements GraveStore {
 
   @Override
   public CompletableFuture<List<GraveItem>> delete(UUID grave) {
+    return database.write(dsl -> remove(dsl, grave));
+  }
+
+  @Override
+  public CompletableFuture<List<GraveItem>> expire(UUID grave, Optional<Notice> notice) {
     return database.write(
         dsl -> {
-          var inGrave = QOL_GRAVE_ITEMS.GRAVE.eq(grave.toString());
-          var items =
-              dsl.selectFrom(QOL_GRAVE_ITEMS)
-                  .where(inGrave)
-                  .orderBy(QOL_GRAVE_ITEMS.IDX)
-                  .fetch(JooqGraveStore::toItem);
-          dsl.deleteFrom(QOL_GRAVE_ITEMS).where(inGrave).execute();
-          dsl.deleteFrom(QOL_GRAVES).where(QOL_GRAVES.ID.eq(grave.toString())).execute();
+          var items = remove(dsl, grave);
+          notice.ifPresent(
+              note ->
+                  dsl.insertInto(QOL_NOTICES)
+                      .set(QOL_NOTICES.PLAYER, note.player().toString())
+                      .set(QOL_NOTICES.MESSAGE, note.message())
+                      .set(QOL_NOTICES.CREATED_AT, note.at().toEpochMilli())
+                      .execute());
           return items;
         });
+  }
+
+  @Override
+  public CompletableFuture<List<String>> takeNotices(UUID player) {
+    return database.write(
+        dsl -> {
+          var mine = QOL_NOTICES.PLAYER.eq(player.toString());
+          var messages =
+              dsl.select(QOL_NOTICES.MESSAGE)
+                  .from(QOL_NOTICES)
+                  .where(mine)
+                  .orderBy(QOL_NOTICES.ID)
+                  .fetch(QOL_NOTICES.MESSAGE);
+          dsl.deleteFrom(QOL_NOTICES).where(mine).execute();
+          return List.copyOf(messages);
+        });
+  }
+
+  private static List<GraveItem> remove(DSLContext dsl, UUID grave) {
+    var inGrave = QOL_GRAVE_ITEMS.GRAVE.eq(grave.toString());
+    var items =
+        dsl.selectFrom(QOL_GRAVE_ITEMS)
+            .where(inGrave)
+            .orderBy(QOL_GRAVE_ITEMS.IDX)
+            .fetch(JooqGraveStore::toItem);
+    dsl.deleteFrom(QOL_GRAVE_ITEMS).where(inGrave).execute();
+    dsl.deleteFrom(QOL_GRAVES).where(QOL_GRAVES.ID.eq(grave.toString())).execute();
+    return items;
   }
 
   private static void insertItems(DSLContext dsl, UUID grave, List<GraveItem> items) {
@@ -141,7 +177,8 @@ public final class JooqGraveStore implements GraveStore {
         UUID.fromString(row.getOwner()),
         row.getOwnerName(),
         new GravePos(row.getWorld(), row.getX(), row.getY(), row.getZ()),
-        Instant.ofEpochMilli(row.getCreatedAt()));
+        Instant.ofEpochMilli(row.getCreatedAt()),
+        row.getReplacedBlock());
   }
 
   private static GraveItem toItem(QolGraveItemsRecord row) {

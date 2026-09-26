@@ -14,7 +14,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 final class SpawnPolicyTest {
 
   static final Exclusions EXCLUSIONS =
-      new Exclusions(Set.of("warden", "phantom"), Set.of("SPAWNER", "CUSTOM"), true);
+      new Exclusions(
+          Set.of("warden", "phantom"), Set.of("NATURAL", "JOCKEY", "MOUNT", "PATROL"), true);
 
   static SpawnPolicy policy(AdminPolicy admin) {
     return new SpawnPolicy(EXCLUSIONS, admin);
@@ -64,20 +65,43 @@ final class SpawnPolicyTest {
 
   @Test
   void babiesAreLevelledWhenNotExcluded() {
-    var babies = new SpawnPolicy(new Exclusions(Set.of(), Set.of(), false), AdminPolicy.LEVELLED);
+    var babies =
+        new SpawnPolicy(new Exclusions(Set.of(), Set.of("NATURAL"), false), AdminPolicy.LEVELLED);
     assertThat(babies.decide(mob("zombie", "NATURAL", Trait.HOSTILE, Trait.BABY))).isEqualTo(LEVEL);
   }
 
   @Test
-  void excludedTypesAndReasonsStayVanilla() {
-    var policy = policy(AdminPolicy.LEVELLED);
-    assertThat(policy.decide(mob("warden", "NATURAL", Trait.HOSTILE)))
+  void excludedTypesStayVanilla() {
+    assertThat(policy(AdminPolicy.LEVELLED).decide(mob("warden", "NATURAL", Trait.HOSTILE)))
         .isEqualTo(leave(Reason.EXCLUDED_TYPE));
-    assertThat(policy.decide(mob("zombie", "SPAWNER", Trait.HOSTILE)))
-        .isEqualTo(leave(Reason.EXCLUDED_REASON));
-    assertThat(policy.decide(mob("zombie", "CUSTOM", Trait.HOSTILE)))
-        .isEqualTo(leave(Reason.EXCLUDED_REASON));
-    assertThat(policy.decide(mob("zombie", "SLIME_SPLIT", Trait.HOSTILE))).isEqualTo(LEVEL);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"NATURAL", "JOCKEY", "MOUNT", "PATROL"})
+  void onlyAllowlistedReasonsAreLevelled(String reason) {
+    assertThat(policy(AdminPolicy.LEVELLED).decide(mob("zombie", reason, Trait.HOSTILE)))
+        .isEqualTo(LEVEL);
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "SPAWNER",
+    "TRIAL_SPAWNER",
+    "SPAWNER_EGG",
+    "DISPENSE_EGG",
+    "RAID",
+    "SLIME_SPLIT",
+    "NETHER_PORTAL",
+    "POTION_EFFECT",
+    "LIGHTNING",
+    "REINFORCEMENTS",
+    "COMMAND",
+    "CUSTOM",
+    "SOME_FUTURE_REASON",
+  })
+  void everyOtherReasonStaysVanilla(String reason) {
+    assertThat(policy(AdminPolicy.LEVELLED).decide(mob("zombie", reason, Trait.HOSTILE)))
+        .isEqualTo(leave(Reason.UNLEVELLED_REASON));
   }
 
   @ParameterizedTest
@@ -118,7 +142,7 @@ final class SpawnPolicyTest {
     assertThat(policy.decide(mob("zombie", "NATURAL", Trait.HOSTILE, Trait.ADMIN_REGION)))
         .isEqualTo(LEVEL);
     assertThat(policy.decide(mob("zombie", "SPAWNER", Trait.HOSTILE, Trait.ADMIN_REGION)))
-        .isEqualTo(leave(Reason.EXCLUDED_REASON));
+        .isEqualTo(leave(Reason.UNLEVELLED_REASON));
   }
 
   @ParameterizedTest
@@ -129,11 +153,13 @@ final class SpawnPolicyTest {
 
   @Test
   void exclusionsNeedCanonicalNames() {
-    assertThatThrownBy(() -> new Exclusions(Set.of("Zombie"), Set.of(), true))
+    assertThatThrownBy(() -> new Exclusions(Set.of("Zombie"), Set.of("NATURAL"), true))
         .hasMessageContaining("lowercase");
-    assertThatThrownBy(() -> new Exclusions(Set.of(), Set.of("spawner"), true))
+    assertThatThrownBy(() -> new Exclusions(Set.of(), Set.of("natural"), true))
         .hasMessageContaining("uppercase");
-    assertThatThrownBy(() -> new Exclusions(Set.of(" "), Set.of(), true))
+    assertThatThrownBy(() -> new Exclusions(Set.of(" "), Set.of("NATURAL"), true))
         .hasMessageContaining("lowercase");
+    assertThatThrownBy(() -> new Exclusions(Set.of(), Set.of(), true))
+        .hasMessageContaining("at least one");
   }
 }

@@ -22,6 +22,6 @@ public sealed interface SpawnVerdict {
     NAMED,
     TAMED,
     BABY,
-    EXCLUDED_REASON
+    UNLEVELLED_REASON
   }
 }
