@@ -51,6 +51,7 @@ hold only scoped invariants that agents must keep in context.
 | [glitter](glitter/)                             | Glitter Boys friend-group site                               |
 | [macos-cross-site](macos-cross-site/)           | Marketing site for the macos-cross-compiler Docker image     |
 | [ts-mc](ts-mc/)                                 | The Storm Minecraft server portal (Astro)                    |
+| [ts-mc-docs](ts-mc-docs/)                       | The Storm player documentation (Starlight)                   |
 
 ## Libraries
 
