@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.shops.domain.config;
 
 import com.shepherdjerred.thestorm.shops.domain.shop.ShopLimits;
 import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -16,6 +17,8 @@ import java.util.regex.Pattern;
  * @param containers the block materials a chest shop may trade from
  * @param shopLimits the most chest shops a player may own at each Shopkeeper level 1..5
  * @param summaryLines the most item lines in the "while you were away" summary
+ * @param clickCooldownMillis the least time between one player's trades at sign shops, so an
+ *     autoclicker cannot hammer a shop
  */
 public record ChestShopSettings(
     Click buyClick,
@@ -23,7 +26,8 @@ public record ChestShopSettings(
     String adminShopLabel,
     List<String> containers,
     Map<Integer, Integer> shopLimits,
-    int summaryLines) {
+    int summaryLines,
+    int clickCooldownMillis) {
 
   /** A mouse button on a sign. */
   public enum Click {
@@ -57,6 +61,14 @@ public record ChestShopSettings(
     if (summaryLines < 1) {
       throw new IllegalArgumentException("summaryLines must be positive: " + summaryLines);
     }
+    if (clickCooldownMillis < 0) {
+      throw new IllegalArgumentException(
+          "clickCooldownMillis must not be negative: " + clickCooldownMillis);
+    }
+  }
+
+  public Duration clickCooldown() {
+    return Duration.ofMillis(clickCooldownMillis);
   }
 
   public ShopLimits limits() {

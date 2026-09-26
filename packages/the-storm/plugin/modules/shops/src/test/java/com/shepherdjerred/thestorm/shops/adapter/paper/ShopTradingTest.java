@@ -61,8 +61,8 @@ final class ShopTradingTest extends ShopsFixture {
 
     click(bob, sign, Action.RIGHT_CLICK_BLOCK);
 
-    assertThat(inventoryOf(chest).getViewers()).doesNotContain(alice);
     assertThat(awaitLine(bob, "You bought")).isNotEmpty();
+    assertThat(inventoryOf(chest).getViewers()).doesNotContain(alice);
   }
 
   @Test

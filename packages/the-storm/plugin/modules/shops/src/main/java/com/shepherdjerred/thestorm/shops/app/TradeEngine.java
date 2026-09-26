@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.shops.app;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
@@ -11,6 +12,7 @@ import com.shepherdjerred.thestorm.shops.domain.trade.TradeProblem;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 /**
  * Settles a trade so that, from the customer's side, it happens completely or not at all, and no
@@ -23,15 +25,16 @@ import java.util.concurrent.Executor;
  *   <li><b>Selling:</b> check the customer's items and the shop's room, take the items from the
  *       customer into escrow, pay the customer from the shop, then put the items in the shop. If
  *       the payment fails the items go back. If the shop can no longer hold them, the payment is
- *       refunded first and the items go back only once it has; if the refund fails, the shop has
- *       paid for them, so they go to the shop (or are dropped at it), never back to the customer.
+ *       refunded first and the items go back only once it has; if the refund fails, the items are
+ *       kept in the refund-failure log for staff, never handed back to the customer.
  * </ul>
  *
  * <p>Items only ever move on the main thread, after the ledger has answered, and a customer who
  * logged off in the meantime is treated as having no room: buys are refunded and returned items
- * drop where they traded. Callers lock the shop's container for the whole trade, so no other trade
- * or open inventory changes its stock or room between the checks. Call {@link #execute} on the main
- * thread; the returned future completes on the main thread.
+ * drop where they traded. A ledger call that throws counts as a failed payment. Callers lock the
+ * shop's container for the whole trade, so no other trade or open inventory changes its stock or
+ * room between the checks. Call {@link #execute} on the main thread; the returned future completes
+ * on the main thread.
  */
 public final class TradeEngine {
 
@@ -45,25 +48,53 @@ public final class TradeEngine {
     this.refunds = refunds;
   }
 
-  public CompletableFuture<TradeOutcome> execute(Deal deal) {
+  /** Settles {@code deal}; what the ledger answers is recorded on {@code trail}. */
+  public CompletableFuture<TradeOutcome> execute(Deal deal, LedgerTrail trail) {
     var problem = goodsProblem(deal);
     if (problem.isPresent()) {
       return completedFuture(new TradeOutcome.Refused(problem.orElseThrow()));
     }
     return switch (deal.direction()) {
-      case BUY -> buy(deal);
-      case SELL -> sell(deal);
+      case BUY -> buy(deal, trail);
+      case SELL -> sell(deal, trail);
     };
   }
 
-  private CompletableFuture<TradeOutcome> buy(Deal deal) {
-    return pay(deal)
+  public CompletableFuture<TradeOutcome> execute(Deal deal) {
+    return execute(deal, new LedgerTrail());
+  }
+
+  /**
+   * Whether the payer can plausibly afford the deal, read before any lock is taken so a broke
+   * customer clicking over and over never freezes a shop. The ledger still decides when money
+   * moves. The server account always can.
+   */
+  public CompletableFuture<Optional<TradeProblem>> affordability(Deal deal) {
+    var payer = deal.payer().account();
+    if (payer instanceof AccountId.Server) {
+      return completedFuture(Optional.empty());
+    }
+    return ledger(() -> wallets.balance(payer))
+        .thenApply(
+            balance ->
+                balance.isAtLeast(deal.price())
+                    ? Optional.empty()
+                    : Optional.of(
+                        payer.equals(deal.customer().account())
+                            ? new TradeProblem.CustomerCannotPay(
+                                balance.amount(), deal.price().amount())
+                            : new TradeProblem.OwnerCannotPay()));
+  }
+
+  private CompletableFuture<TradeOutcome> buy(Deal deal, LedgerTrail trail) {
+    return pay(deal, trail)
         .thenComposeAsync(
             payment ->
                 switch (payment) {
                   case Result.Err<Receipt, EconomyError>(var error) ->
                       completedFuture(refused(deal, error));
-                  case Result.Ok<Receipt, EconomyError>(var receipt) -> deliver(deal, receipt);
+                  case Result.Ok<Receipt, EconomyError>(var receipt) ->
+                      deliver(deal, receipt, trail);
                 },
             mainThread);
   }
@@ -72,20 +103,23 @@ public final class TradeEngine {
    * Main thread, after the customer paid: move the goods, or refund if they are gone. A refund that
    * fails is logged for staff; the goods are still not delivered.
    */
-  private CompletableFuture<TradeOutcome> deliver(Deal deal, Receipt receipt) {
+  private CompletableFuture<TradeOutcome> deliver(Deal deal, Receipt receipt, LedgerTrail trail) {
     var problem = goodsProblem(deal);
     if (problem.isPresent()) {
-      return refund(receipt, deal.reason(), problem.orElseThrow(), Settle.NOTHING);
+      return refund(
+          receipt,
+          new Refund(deal.reason(), problem.orElseThrow(), () -> {}, Optional.empty()),
+          trail);
     }
     deal.shop().holdings().remove(deal.quantity());
     deal.customer().holdings().add(deal.quantity());
     return completedFuture(new TradeOutcome.Completed(receipt));
   }
 
-  private CompletableFuture<TradeOutcome> sell(Deal deal) {
+  private CompletableFuture<TradeOutcome> sell(Deal deal, LedgerTrail trail) {
     var escrow = deal.customer().holdings();
     escrow.remove(deal.quantity());
-    return pay(deal)
+    return pay(deal, trail)
         // Capture a failed payment as a value, so the escrowed items go back on the main thread.
         .<Result<Result<Receipt, EconomyError>, Throwable>>handle(
             (payment, error) -> error == null ? Result.ok(payment) : Result.err(error))
@@ -103,7 +137,7 @@ public final class TradeEngine {
                   }
                   case Result.Ok<Result<Receipt, EconomyError>, Throwable>(
                           Result.Ok<Receipt, EconomyError>(var receipt)) ->
-                      stock(deal, receipt);
+                      stock(deal, receipt, trail);
                 },
             mainThread);
   }
@@ -111,72 +145,103 @@ public final class TradeEngine {
   /**
    * Main thread, after the shop paid: put the escrowed items in the shop. If they no longer fit,
    * the payment is refunded first; the items go back to the customer only once the refund has gone
-   * through. If the refund fails the shop has paid for them, so they go to the shop (or are dropped
-   * at it), never back to the customer.
+   * through. If the refund fails the shop has paid for them, so they are kept in the refund-failure
+   * log for staff rather than dropped where nobody can reach them or handed back.
    */
-  private CompletableFuture<TradeOutcome> stock(Deal deal, Receipt receipt) {
+  private CompletableFuture<TradeOutcome> stock(Deal deal, Receipt receipt, LedgerTrail trail) {
     var room = deal.shop().holdings().stockpile().space();
-    if (room < deal.quantity()) {
-      var quantity = deal.quantity();
+    var quantity = deal.quantity();
+    if (room < quantity) {
       return refund(
           receipt,
-          deal.reason(),
-          new TradeProblem.ShopFull(room, quantity),
-          new Settle(
+          new Refund(
+              deal.reason(),
+              new TradeProblem.ShopFull(room, quantity),
               () -> deal.customer().holdings().addOrDrop(quantity),
-              () -> deal.shop().holdings().addOrDrop(quantity)));
+              Optional.of(new HeldItems(deal.goods(), quantity))),
+          trail);
     }
-    deal.shop().holdings().add(deal.quantity());
+    deal.shop().holdings().add(quantity);
     return completedFuture(new TradeOutcome.Completed(receipt));
   }
 
   /**
-   * What happens to escrowed goods once a refund settles.
+   * A refund to make.
    *
-   * @param refunded runs when the money went back
-   * @param refundFailed runs when it could not
+   * @param dealReason the trade's ledger reason
+   * @param problem why the trade is being undone
+   * @param refunded runs when the money went back: return escrowed goods
+   * @param keptOnFailure goods to keep in the log when the money could not go back
    */
-  private record Settle(Runnable refunded, Runnable refundFailed) {
-    static final Settle NOTHING = new Settle(() -> {}, () -> {});
-  }
+  private record Refund(
+      String dealReason,
+      TradeProblem problem,
+      Runnable refunded,
+      Optional<HeldItems> keptOnFailure) {}
 
-  private CompletableFuture<Result<Receipt, EconomyError>> pay(Deal deal) {
-    return wallets.transfer(
-        deal.payer().account(), deal.payee().account(), deal.price(), deal.reason());
+  private CompletableFuture<Result<Receipt, EconomyError>> pay(Deal deal, LedgerTrail trail) {
+    var payment =
+        ledger(
+            () ->
+                wallets.transfer(
+                    deal.payer().account(), deal.payee().account(), deal.price(), deal.reason()));
+    note(payment, "payment", trail);
+    return payment;
   }
 
   private CompletableFuture<TradeOutcome> refund(
-      Receipt receipt, String dealReason, TradeProblem problem, Settle settle) {
-    var reason = "refund:" + dealReason;
-    return wallets
-        .transfer(receipt.to(), receipt.from(), receipt.amount(), reason)
-        .handleAsync(
+      Receipt receipt, Refund refund, LedgerTrail trail) {
+    var reason = "refund:" + refund.dealReason();
+    var transfer =
+        ledger(() -> wallets.transfer(receipt.to(), receipt.from(), receipt.amount(), reason));
+    note(transfer, "refund", trail);
+    return transfer.handleAsync(
+        (result, error) -> {
+          if (error != null) {
+            return refundFailed(receipt, reason, refund, error.toString());
+          }
+          return switch (result) {
+            case Result.Ok<Receipt, EconomyError>(_) -> {
+              refund.refunded().run();
+              yield new TradeOutcome.Refunded(refund.problem());
+            }
+            case Result.Err<Receipt, EconomyError>(var refusal) ->
+                refundFailed(receipt, reason, refund, refusal.toString());
+          };
+        },
+        mainThread);
+  }
+
+  private TradeOutcome refundFailed(Receipt receipt, String reason, Refund refund, String why) {
+    refunds.failed(receipt, reason, why, refund.keptOnFailure());
+    return new TradeOutcome.RefundFailed(refund.problem(), why);
+  }
+
+  /** Calls the ledger; a call that throws becomes a failed future, never a thrown exception. */
+  private static <T> CompletableFuture<T> ledger(Supplier<CompletableFuture<T>> call) {
+    try {
+      return call.get();
+    } catch (RuntimeException e) {
+      return CompletableFuture.failedFuture(e);
+    }
+  }
+
+  private static void note(
+      CompletableFuture<Result<Receipt, EconomyError>> transfer, String what, LedgerTrail trail) {
+    var _ =
+        transfer.whenComplete(
             (result, error) -> {
               if (error != null) {
-                settle.refundFailed().run();
-                return refundFailed(receipt, reason, problem, error.toString());
+                trail.record(what + " failed: " + error);
+              } else if (result instanceof Result.Ok<Receipt, EconomyError>(var receipt)) {
+                trail.record(what + " committed as ledger entry " + receipt.transactionId());
+              } else {
+                trail.record(what + " refused: " + result);
               }
-              return switch (result) {
-                case Result.Ok<Receipt, EconomyError>(_) -> {
-                  settle.refunded().run();
-                  yield new TradeOutcome.Refunded(problem);
-                }
-                case Result.Err<Receipt, EconomyError>(var refusal) -> {
-                  settle.refundFailed().run();
-                  yield refundFailed(receipt, reason, problem, refusal.toString());
-                }
-              };
-            },
-            mainThread);
+            });
   }
 
-  private TradeOutcome refundFailed(
-      Receipt receipt, String reason, TradeProblem problem, String why) {
-    refunds.failed(receipt, reason, why);
-    return new TradeOutcome.RefundFailed(problem, why);
-  }
-
-  private static Optional<TradeProblem> goodsProblem(Deal deal) {
+  static Optional<TradeProblem> goodsProblem(Deal deal) {
     return TradeChecks.goods(
         deal.direction(),
         deal.quantity(),

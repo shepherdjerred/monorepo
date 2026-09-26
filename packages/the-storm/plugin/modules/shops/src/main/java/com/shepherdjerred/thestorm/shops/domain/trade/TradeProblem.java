@@ -33,6 +33,17 @@ public sealed interface TradeProblem {
   /** The shop's owner cannot afford to buy. The owner's balance stays private. */
   record OwnerCannotPay() implements TradeProblem {}
 
+  /** The customer clicked again before the click cooldown passed. */
+  record TooFast() implements TradeProblem {}
+
+  /**
+   * The shop is closed until an admin fixes it, for example an admin shop whose prices loop with
+   * the server's.
+   *
+   * @param why what is wrong
+   */
+  record ShopClosed(String why) implements TradeProblem {}
+
   /** The customer has used up today's allowance for this catalog entry. */
   record DailyLimitReached(int remaining, int requested) implements TradeProblem {}
 }

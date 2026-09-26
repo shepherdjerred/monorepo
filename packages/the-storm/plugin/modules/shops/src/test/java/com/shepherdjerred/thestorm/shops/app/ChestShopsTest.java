@@ -23,6 +23,7 @@ import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeProblem;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeRecord;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeSite;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.util.ArrayList;
@@ -83,9 +84,11 @@ final class ChestShopsTest {
     shops =
         new ChestShops(
             wiring,
-            CreationRules.standard(limits),
-            effects,
-            new ServerOffers(List.of(REYNOLDS), registry));
+            new ChestShops.Policy(
+                CreationRules.standard(limits),
+                new ServerOffers(List.of(REYNOLDS), registry),
+                Duration.ZERO),
+            effects);
   }
 
   private static BlockPos at(int x) {
@@ -345,12 +348,12 @@ final class ChestShopsTest {
         locks
             .acquire(shop.container().stream().toList(), new UUID(0, 99), dummyDeal())
             .orElseThrow();
+    wallets.set(BOB.account(), 50);
 
     assertThat(trade(shop, Direction.BUY, BOB, new FakeHoldings(0, 64)))
         .isEqualTo(new TradeOutcome.Refused(new TradeProblem.Busy()));
 
     lease.release();
-    wallets.set(BOB.account(), 50);
     assertThat(trade(shop, Direction.BUY, BOB, new FakeHoldings(0, 64)))
         .isInstanceOf(TradeOutcome.Completed.class);
   }
@@ -388,7 +391,8 @@ final class ChestShopsTest {
         Crystals.of(1),
         new Deal.Party(BOB.account(), new FakeHoldings(0, 1)),
         new Deal.Party(new AccountId.Server(), Holdings.UNLIMITED),
-        "test");
+        "test",
+        "coal");
   }
 
   private SignShop secondSignOnTheSameChest(SignShop first) {
@@ -474,7 +478,10 @@ final class ChestShopsTest {
     var slow =
         new ChestShops(
             wiring,
-            CreationRules.standard(new ShopLimits(Map.of(1, 1, 2, 2, 3, 3, 4, 4, 5, 5))),
+            new ChestShops.Policy(
+                CreationRules.standard(new ShopLimits(Map.of(1, 1, 2, 2, 3, 3, 4, 4, 5, 5))),
+                new ServerOffers(List.of(), registry),
+                Duration.ZERO),
             new ShopEffects() {
               @Override
               public boolean tellOwnerIfOnline(UUID owner, TradeRecord trade) {
@@ -483,8 +490,7 @@ final class ChestShopsTest {
 
               @Override
               public void closeViewers(List<BlockPos> containerBlocks) {}
-            },
-            new ServerOffers(List.of(), registry));
+            });
     var shop = create(ALICE, 0);
     wallets.set(BOB.account(), 100);
     wallets.failNext(new IllegalStateException("database down"));
@@ -499,6 +505,8 @@ final class ChestShopsTest {
                 new FakeHoldings(16, 64),
                 List.of(at(100))));
 
+    // The affordability answer is the first main-thread task; running it locks and pays.
+    queued.removeFirst().run();
     assertThat(locks.isBusy(at(100))).isTrue();
     while (!queued.isEmpty()) {
       queued.removeFirst().run();
@@ -578,5 +586,173 @@ final class ChestShopsTest {
     var restarted = new ShopRegistry(List.of(), 41);
 
     assertThat(restarted.nextId()).isEqualTo(42);
+  }
+
+  private ChestShops shopsWith(List<Catalog> catalogs, Duration cooldown, InstantSource clock) {
+    var engine =
+        new TradeEngine(
+            wallets, Runnable::run, new RefundJournal(store, clock, NOPLogger.NOP_LOGGER));
+    var wiring =
+        new ChestShops.Wiring(
+            registry, store, locks, engine, Runnable::run, clock, NOPLogger.NOP_LOGGER);
+    return new ChestShops(
+        wiring,
+        new ChestShops.Policy(
+            CreationRules.standard(new ShopLimits(Map.of(1, 1, 2, 2, 3, 3, 4, 4, 5, 5))),
+            new ServerOffers(catalogs, registry),
+            cooldown),
+        new ShopEffects() {
+          @Override
+          public boolean tellOwnerIfOnline(UUID owner, TradeRecord trade) {
+            return false;
+          }
+
+          @Override
+          public void closeViewers(List<BlockPos> containerBlocks) {
+            closed.add(containerBlocks);
+          }
+        });
+  }
+
+  private TradeOutcome click(ChestShops at, SignShop shop, Direction direction, Holdings items)
+      throws Exception {
+    return at.trade(
+            new ChestShops.Visit(
+                shop, direction, BOB, items, new FakeHoldings(0, 64), List.of(at(100))))
+        .get();
+  }
+
+  @Test
+  void twentyRefusedClicksNeverLockTheShopOrCloseTheOwnersView() throws Exception {
+    var shop = create(ALICE, 0);
+    wallets.set(BOB.account(), 0);
+    for (var click = 0; click < 20; click++) {
+      // An empty chest, empty hands, an empty wallet: every click is refused.
+      var direction = click % 2 == 0 ? Direction.BUY : Direction.SELL;
+      var outcome = click(shops, shop, direction, new FakeHoldings(0, 64));
+
+      assertThat(outcome).isInstanceOf(TradeOutcome.Refused.class);
+      assertThat(locks.idle()).isTrue();
+    }
+    assertThat(closed).isEmpty();
+  }
+
+  @Test
+  void aBrokeBuyerAtAStockedShopIsRefusedBeforeTheLock() throws Exception {
+    var shop = create(ALICE, 0);
+    wallets.set(BOB.account(), 49);
+
+    var outcome =
+        shops
+            .trade(
+                new ChestShops.Visit(
+                    shop,
+                    Direction.BUY,
+                    BOB,
+                    new FakeHoldings(0, 64),
+                    new FakeHoldings(64, 64),
+                    List.of(at(100))))
+            .get();
+
+    assertThat(outcome)
+        .isEqualTo(new TradeOutcome.Refused(new TradeProblem.CustomerCannotPay(49, 50)));
+    assertThat(closed).isEmpty();
+    assertThat(wallets.receipts()).isEmpty();
+  }
+
+  @Test
+  void aCustomerMustWaitOutTheClickCooldown() throws Exception {
+    var now = new Instant[] {NOW};
+    InstantSource clock = () -> now[0];
+    var cooled = shopsWith(List.of(), Duration.ofMillis(250), clock);
+    var shop = create(ALICE, 0);
+
+    var first = click(cooled, shop, Direction.SELL, new FakeHoldings(0, 64));
+    now[0] = NOW.plusMillis(100);
+    var tooSoon = click(cooled, shop, Direction.SELL, new FakeHoldings(0, 64));
+    now[0] = NOW.plusMillis(400);
+    var later = click(cooled, shop, Direction.SELL, new FakeHoldings(0, 64));
+
+    assertThat(first).isEqualTo(new TradeOutcome.Refused(new TradeProblem.NotEnoughItems(0, 16)));
+    assertThat(tooSoon).isEqualTo(new TradeOutcome.Refused(new TradeProblem.TooFast()));
+    assertThat(later).isEqualTo(new TradeOutcome.Refused(new TradeProblem.NotEnoughItems(0, 16)));
+  }
+
+  @Test
+  void aLedgerThatThrowsReleasesTheLockAndReturnsTheEscrow() {
+    var shop = create(ALICE, 0);
+    wallets.set(new AccountId.Player(ALICE.id()), 100);
+    wallets.throwNext(new IllegalStateException("ledger broke"));
+    var bobsItems = new FakeHoldings(16, 64);
+
+    var trade =
+        shops.trade(
+            new ChestShops.Visit(
+                shop, Direction.SELL, BOB, bobsItems, new FakeHoldings(0, 64), List.of(at(100))));
+
+    assertThatThrownBy(trade::get).hasRootCauseMessage("ledger broke");
+    assertThat(locks.idle()).isTrue();
+    assertThat(bobsItems.count).isEqualTo(16);
+  }
+
+  @Test
+  void aCatalogEditThatCreatesALoopClosesTheAdminShop() throws Exception {
+    // Made while no catalog bought coal: an admin shop paying 60 per 16 coal.
+    var before = shopsWith(List.of(), Duration.ZERO, InstantSource.fixed(NOW));
+    var admin =
+        created(
+            before.create(
+                new ChestShops.Request(
+                    new ShopSignDraft(
+                        new OwnerLine.AdminShop(),
+                        16,
+                        ShopPrices.sellOnly(60),
+                        new ItemLine.Named("coal")),
+                    ALICE,
+                    true,
+                    0,
+                    place(at(7), Optional.empty()),
+                    Optional.of(COAL))));
+
+    // Reynold's now sells coal at 3 each; the admin shop would pay 3.75.
+    var after = shopsWith(List.of(REYNOLDS), Duration.ZERO, InstantSource.fixed(NOW));
+    var closedShops = after.closeLoopingAdminShops();
+
+    assertThat(closedShops).containsExactly(admin);
+    assertThat(registry.closed()).containsOnlyKeys(admin.id());
+    var outcome =
+        after
+            .trade(
+                new ChestShops.Visit(
+                    admin,
+                    Direction.SELL,
+                    BOB,
+                    new FakeHoldings(16, 64),
+                    Holdings.UNLIMITED,
+                    List.of()))
+            .get();
+    assertThat(outcome).isInstanceOf(TradeOutcome.Refused.class);
+    assertThat(((TradeOutcome.Refused) outcome).problem())
+        .isInstanceOf(TradeProblem.ShopClosed.class);
+    assertThat(after.closeLoopingAdminShops()).containsExactly(admin);
+  }
+
+  @Test
+  void aCheapVariantCountsAsCheapPlainItems() {
+    // Renamed coal for 1 crystal per 16 can be ground back to plain coal, which Reynold's buys at
+    // 1 crystal each.
+    var renamed = new ItemFingerprint("coal", "cmVuYW1lZA==", true);
+    var request =
+        new ChestShops.Request(
+            new ShopSignDraft(
+                new OwnerLine.AdminShop(), 16, ShopPrices.buyOnly(1), new ItemLine.Pending()),
+            ALICE,
+            true,
+            0,
+            place(at(7), Optional.empty()),
+            Optional.of(renamed));
+
+    assertThat(shops.create(request))
+        .isEqualTo(Result.err(List.of(new CreationProblem.PriceLoop("Reynold's Supplies"))));
   }
 }

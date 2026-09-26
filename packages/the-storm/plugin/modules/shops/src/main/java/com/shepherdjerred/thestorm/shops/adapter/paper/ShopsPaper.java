@@ -115,9 +115,14 @@ public final class ShopsPaper {
     var chestShops =
         new ChestShops(
             wiring,
-            CreationRules.standard(settings.limits()),
-            new PaperShopEffects(notices, blocks),
-            new ServerOffers(state.catalogs(), state.registry()));
+            new ChestShops.Policy(
+                CreationRules.standard(settings.limits()),
+                new ServerOffers(state.catalogs(), state.registry()),
+                settings.clickCooldown()),
+            new PaperShopEffects(notices, blocks));
+    // A catalog edit (or a stale sign) can leave an admin shop looping with the server's prices:
+    // it stays guarded but stops trading, and every one is logged as an error.
+    chestShops.closeLoopingAdminShops();
     var templates = new ItemTemplates();
     var protection = services.require(Protection.class);
     var events = server.getPluginManager();

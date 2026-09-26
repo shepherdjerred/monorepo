@@ -28,7 +28,7 @@ public final class ShutdownDrain {
     pump.runUntil(locks::idle, timeout);
     var unsettled = locks.held();
     for (var lease : unsettled) {
-      journal.unsettled(lease.deal());
+      journal.unsettled(lease.deal(), lease.trail());
       lease.release();
     }
     return unsettled.size();
