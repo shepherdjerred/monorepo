@@ -352,6 +352,7 @@ packages/macos-cross-compiler:test
 packages/macos-cross-compiler:lint
 packages/macos-cross-compiler:typecheck
 packages/sjer.red:test
+packages/ts-mc:test
 packages/release-tools:build
 packages/release-tools:lint
 packages/release-tools:typecheck
