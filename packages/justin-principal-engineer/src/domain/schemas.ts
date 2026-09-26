@@ -57,7 +57,10 @@ export const AgentOutputSchema = z.object({
     .array(
       z.object({
         package: z.string().min(1),
-        route: z.string().startsWith("/"),
+        // NOTE: .regex() on purpose. z.toJSONSchema renders .startsWith()
+        // as {"format": "starts_with"}, which strict structured-output
+        // providers reject; .regex() renders {"pattern": ...} instead.
+        route: z.string().regex(/^\//, "Route must start with /"),
         name: z.string().regex(/^[a-z0-9][a-z0-9._-]*$/),
         waitForSelector: z.string().min(1).optional(),
       }),
