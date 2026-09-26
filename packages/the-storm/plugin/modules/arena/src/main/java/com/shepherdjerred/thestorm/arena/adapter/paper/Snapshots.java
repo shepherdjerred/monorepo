@@ -17,19 +17,21 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Every arena's snapshots, and the vault loot waiting for players outside. Main thread only.
  *
  * <p>Joining takes the snapshot and empties the player in the same tick, keeping the snapshot in
  * the book, then stores it; if storing fails the player is put back from memory. Restoring puts the
- * snapshot back, saves the player's data, and only then deletes the stored snapshot (retrying with
- * backoff), so a crash at any point leaves either the player's belongings or their snapshot.
+ * snapshot back, marks the stored snapshot restored, saves the player's data and then deletes the
+ * stored snapshot, so a crash leaves either the player's belongings or one snapshot that is
+ * restored once.
  */
 final class Snapshots {
 
-  /** How many times a failed snapshot delete is retried. */
-  private static final int DELETE_ATTEMPTS = 6;
+  /** How many times marking a restored snapshot is tried. */
+  private static final int MARK_ATTEMPTS = 6;
 
   private final PaperContext runtime;
   private final SnapshotStore store;
@@ -38,6 +40,7 @@ final class Snapshots {
   private final PlayerSaver saver;
   private final Set<UUID> delivering = new HashSet<>();
   private final Set<UUID> restoreOnRespawn = new HashSet<>();
+  private final Set<UUID> restoring = new HashSet<>();
   private SnapshotBook book = SnapshotBook.UNLOADED;
 
   /**
@@ -98,40 +101,59 @@ final class Snapshots {
         store
             .save(snapshot)
             .whenCompleteAsync(
-                (saved, failure) -> {
-                  if (failure == null) {
-                    done.accept(true);
-                    return;
-                  }
-                  runtime
-                      .logger()
-                      .error(
-                          "Could not store the arena snapshot of {}; putting them back",
-                          player.getName(),
-                          failure);
-                  if (player.isOnline()) {
-                    restore(player);
-                  }
-                  done.accept(false);
-                },
+                (saved, failure) ->
+                    runtime.guarded(
+                        "finishing the join of " + player.getName(),
+                        () -> stored(player, failure, done)),
                 runtime.mainThread());
   }
 
-  /**
-   * Deletes a stored snapshot that was already restored from memory (the player left while it was
-   * being written).
-   */
-  void forget(UUID player) {
-    if (book.holds(player)) {
-      throw new IllegalStateException(player + "'s snapshot is still held; restore it instead");
+  private void stored(Player player, @Nullable Throwable failure, Consumer<Boolean> done) {
+    if (failure == null) {
+      done.accept(true);
+      return;
     }
-    runtime.logFailure(store.delete(player), "delete the arena snapshot of " + player);
+    runtime
+        .logger()
+        .error(
+            "Could not store the arena snapshot of {}; putting them back",
+            player.getName(),
+            failure);
+    if (player.isOnline()) {
+      restore(player);
+    }
+    done.accept(false);
   }
 
   /**
-   * Restores {@code player}'s snapshot if they have one: puts it back, saves the player's data,
-   * then deletes the stored snapshot, and hands out vault loot waiting for them. Returns false if
-   * there was nothing to restore. A dead player is restored once they respawn.
+   * A snapshot finished storing after its player left the arena. Usually they were already put back
+   * from memory, so the stored copy must never be restored: it is marked restored, then deleted. If
+   * their restore is still waiting (they died while joining and have not respawned), the stored
+   * copy is their only copy on disk and is kept for that restore.
+   */
+  void forget(UUID player) {
+    if (book.holds(player)) {
+      runtime
+          .logger()
+          .info("Keeping the arena snapshot of {} until their restore after respawning", player);
+      return;
+    }
+    runtime.onMain(
+        store.markRestored(player, runtime.time().instant()),
+        marked ->
+            runtime.logFailure(
+                store.deleteRestored(player), "delete the arena snapshot of " + player),
+        "retire the arena snapshot of " + player);
+  }
+
+  /**
+   * Restores {@code player}'s snapshot if they have one, and hands out vault loot waiting for them.
+   * Returns false if there was nothing to restore. A dead player is restored once they respawn.
+   *
+   * <p>The order makes a restore happen at most once: put the snapshot back, mark the stored
+   * snapshot restored (one writer transaction), then save the player's data, then delete the stored
+   * snapshot best-effort. A crash before the mark restores it again on the next join (the player's
+   * data was not saved yet); after the mark it is never restored again.
    */
   boolean restore(Player player) {
     var id = player.getUniqueId();
@@ -145,52 +167,69 @@ final class Snapshots {
     var taken = book.take(id);
     book = taken.book();
     PlayerStates.discardHeld(player);
-    apply(player, taken.snapshot().orElseThrow());
-    saver.save(player);
-    delete(id, 1);
+    restoring.add(id);
+    try {
+      apply(player, taken.snapshot().orElseThrow());
+    } finally {
+      restoring.remove(id);
+    }
+    mark(player, 1);
     deliver(player);
     return true;
   }
 
-  /** Deletes a restored player's stored snapshot, retrying with backoff; loud when it fails. */
-  private void delete(UUID player, int attempt) {
+  /** Whether {@code player} is being put back right now: their restore teleport is allowed. */
+  boolean restoring(UUID player) {
+    return restoring.contains(player);
+  }
+
+  /** Marks the stored snapshot restored, then saves the player; retries the mark with backoff. */
+  private void mark(Player player, int attempt) {
+    var id = player.getUniqueId();
     var _ =
         store
-            .delete(player)
+            .markRestored(id, runtime.time().instant())
             .whenCompleteAsync(
-                (done, failure) -> {
-                  if (failure == null) {
-                    book = book.cleaned(player);
-                    return;
-                  }
-                  if (attempt >= DELETE_ATTEMPTS) {
-                    runtime
-                        .logger()
-                        .error(
-                            "GAVE UP deleting the restored arena snapshot of {} after {} attempts;"
-                                + " it will be restored again when they next join after a restart."
-                                + " Delete it from arena_snapshots by hand.",
-                            player,
-                            attempt,
-                            failure);
-                    return;
-                  }
-                  var backoff = Duration.ofSeconds(1L << attempt);
-                  runtime
-                      .logger()
-                      .error(
-                          "Could not delete the restored arena snapshot of {} (attempt {});"
-                              + " retrying in {}",
-                          player,
-                          attempt,
-                          backoff,
-                          failure);
-                  var _ =
-                      runtime
-                          .scheduler()
-                          .runOnMainThreadLater(backoff, () -> delete(player, attempt + 1));
-                },
+                (marked, failure) ->
+                    runtime.guarded(
+                        "finishing the restore of " + player.getName(),
+                        () -> marked(player, attempt, failure)),
                 runtime.mainThread());
+  }
+
+  private void marked(Player player, int attempt, @Nullable Throwable failure) {
+    var id = player.getUniqueId();
+    if (player.isOnline()) {
+      saver.save(player);
+    }
+    if (failure == null) {
+      book = book.cleaned(id);
+      runtime.logFailure(
+          store.deleteRestored(id), "delete the restored arena snapshot of " + player.getName());
+      return;
+    }
+    if (attempt >= MARK_ATTEMPTS) {
+      runtime
+          .logger()
+          .error(
+              "GAVE UP marking the arena snapshot of {} restored after {} attempts; if the server"
+                  + " restarts first it will be restored again, rolling them back. Delete it"
+                  + " from arena_snapshots by hand.",
+              player.getName(),
+              attempt,
+              failure);
+      return;
+    }
+    var backoff = Duration.ofSeconds(1L << attempt);
+    runtime
+        .logger()
+        .error(
+            "Could not mark the arena snapshot of {} restored (attempt {}); retrying in {}",
+            player.getName(),
+            attempt,
+            backoff,
+            failure);
+    var _ = runtime.scheduler().runOnMainThreadLater(backoff, () -> mark(player, attempt + 1));
   }
 
   /**
@@ -247,7 +286,9 @@ final class Snapshots {
                   if (failure != null) {
                     runtime.logger().error("Could not claim waiting vault loot", failure);
                   } else {
-                    handOut(player, claimed);
+                    runtime.guarded(
+                        "handing out vault loot to " + player.getName(),
+                        () -> handOut(player, claimed));
                   }
                 },
                 runtime.mainThread());

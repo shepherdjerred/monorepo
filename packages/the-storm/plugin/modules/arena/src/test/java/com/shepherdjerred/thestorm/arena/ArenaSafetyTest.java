@@ -8,7 +8,11 @@ import com.shepherdjerred.thestorm.arena.adapter.db.JooqRewardStore;
 import com.shepherdjerred.thestorm.arena.adapter.db.JooqSnapshotStore;
 import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.arena.app.store.RewardStore;
+import com.shepherdjerred.thestorm.arena.domain.snapshot.Experience;
 import com.shepherdjerred.thestorm.arena.domain.snapshot.ItemData;
+import com.shepherdjerred.thestorm.arena.domain.snapshot.Position;
+import com.shepherdjerred.thestorm.arena.domain.snapshot.Snapshot;
+import com.shepherdjerred.thestorm.arena.domain.snapshot.Vitals;
 import com.shepherdjerred.thestorm.arena.testing.Samples;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -16,6 +20,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.ExplosionResult;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -28,6 +33,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -36,6 +42,7 @@ import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -185,6 +192,8 @@ final class ArenaSafetyTest {
 
     join(alice, "arena join colosseum");
     assertThat(diamonds(alice)).as("emptied while the write runs").isZero();
+    // Pushed while joining (knockback, water): the restore must still take them back.
+    alice.setLocation(new Location(harness.world, 70.5, 70, -30.5));
 
     var seen = new ArrayList<String>();
     harness.until(
@@ -294,14 +303,15 @@ final class ArenaSafetyTest {
   // P1: the restore order.
 
   @Test
-  void aRestoreSavesThePlayerBeforeDeletingTheirSnapshot() {
+  void aRestoreMarksTheSnapshotRestoredBeforeSavingThePlayerAndDeletesItAfter() {
     var harness = start();
     var alice = player("Alice");
     lobby(alice);
 
     alice.performCommand("arena leave");
 
-    assertThat(harness.saver.saves).containsExactly("Alice (snapshot stored)");
+    harness.until(() -> !harness.saver.saves.isEmpty());
+    assertThat(harness.saver.saves).containsExactly("Alice (snapshot marked restored)");
     harness.until(() -> new JooqSnapshotStore(harness.database).loadAll().join().isEmpty());
   }
 
@@ -451,5 +461,179 @@ final class ArenaSafetyTest {
         .isEqualTo(2);
     assertThat(new JooqRewardStore(harness.database).claimAll(alice.getUniqueId()).join())
         .isEmpty();
+  }
+
+  // Polish: graves, rollbacks, staff, views, stuck restores, strays, dying while joining.
+
+  /** Records what a grave plugin at HIGH would see in a death's drops. */
+  public static final class GraveDigger implements Listener {
+    final List<Integer> dropsSeen = new ArrayList<>();
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void dig(PlayerDeathEvent event) {
+      dropsSeen.add(event.getDrops().size());
+    }
+  }
+
+  @Test
+  void aGravePluginSeesNoArenaDrops() {
+    var harness = start();
+    var digger = new GraveDigger();
+    harness
+        .server
+        .getPluginManager()
+        .registerEvents(
+            digger, requireNonNull(harness.server.getPluginManager().getPlugin("TheStorm")));
+    var alice = player("Alice");
+    lobby(alice);
+    alice.performCommand("arena class knight");
+
+    alice.setHealth(0);
+
+    assertThat(digger.dropsSeen).containsExactly(0);
+  }
+
+  @Test
+  void aSnapshotAlreadyMarkedRestoredIsNeverRestoredAgain() {
+    var harness = ArenaHarness.prepare(directory);
+    running = harness;
+    var alice = harness.server.addPlayer("Alice");
+    var old =
+        new Snapshot(
+            alice.getUniqueId(),
+            "colosseum",
+            new Position("world", 5.5, 70, 5.5, 0, 0),
+            new Vitals(9, 11, 1, 0, "SURVIVAL"),
+            new Experience(3, 0.25f, 40),
+            ItemData.of(
+                ItemStack.serializeItemsAsBytes(
+                    new ItemStack[] {ItemStack.of(Material.EMERALD, 12)})),
+            List.of(),
+            Samples.T0);
+    var store = new JooqSnapshotStore(harness.database);
+    store.save(old).join();
+    store.markRestored(alice.getUniqueId(), Samples.T0).join();
+    alice.getInventory().addItem(ItemStack.of(Material.DIAMOND, 5));
+
+    harness.enable(directory);
+    lobby(alice);
+    alice.performCommand("arena leave");
+
+    assertThat(alice.getInventory().contains(Material.EMERALD)).isFalse();
+    assertThat(diamonds(alice)).isEqualTo(5);
+  }
+
+  @Test
+  void staffInCreativeOrWithTheAdminNodeAreNotEjected() {
+    var harness = start();
+    var alice = player("Alice");
+    fight(alice);
+    var builder = player("Builder");
+    builder.setGameMode(GameMode.CREATIVE);
+    builder.setLocation(inside());
+    var admin = player("Admin");
+    admin.addAttachment(
+        requireNonNull(harness.server.getPluginManager().getPlugin("TheStorm")),
+        "thestorm.arena.admin",
+        true);
+    admin.teleport(inside());
+    var bob = player("Bob");
+    bob.setLocation(inside());
+
+    harness.until(() -> bob.getLocation().getX() == 990.5);
+
+    assertThat(builder.getLocation().getX()).isEqualTo(1020.5);
+    assertThat(admin.getLocation().getX()).isEqualTo(1020.5);
+  }
+
+  @Test
+  void viewingAMembersInventoryLeavesTheirKitAlone() {
+    var harness = start();
+    var alice = player("Alice");
+    lobby(alice);
+    alice.performCommand("arena class knight");
+    var staff = player("Staff");
+
+    staff.openInventory(alice.getInventory());
+    staff.closeInventory();
+
+    assertThat(alice.getInventory().getItemInMainHand().getType())
+        .isEqualTo(Material.DIAMOND_SWORD);
+    assertThat(harness.server.getOnlinePlayers()).hasSize(2);
+  }
+
+  @Test
+  void aPlayerRestoredIntoARunningArenaIsTeleportedThere() {
+    var harness = start();
+    var alice = player("Alice");
+    fight(alice);
+    var bob = player("Bob");
+    bob.setLocation(inside());
+
+    bob.performCommand("arena spec colosseum");
+    harness.until(() -> bob.getGameMode() == GameMode.SPECTATOR);
+    // As after dying: they respawn at the exit, outside, and are restored from there.
+    bob.setLocation(outside());
+    bob.performCommand("arena leave");
+
+    assertThat(bob.getLocation().getX()).isEqualTo(1020.5);
+    assertThat(bob.getGameMode()).isEqualTo(GameMode.SURVIVAL);
+  }
+
+  @Test
+  void reinforcementsNearARunningArenaButOutsideItNeverSpawn() {
+    var harness = start();
+    var alice = player("Alice");
+    fight(alice);
+
+    var stray =
+        harness.world.spawn(
+            new Location(harness.world, 1070.5, 64, 1020.5),
+            Zombie.class,
+            z -> {},
+            SpawnReason.REINFORCEMENTS);
+    var far = harness.world.spawn(outside(), Zombie.class, z -> {}, SpawnReason.REINFORCEMENTS);
+
+    assertThat(stray.isValid()).isFalse();
+    assertThat(far.isValid()).isTrue();
+  }
+
+  @Test
+  void aPlayerWhoDiesWhileJoiningIsRestoredOnRespawn() {
+    var harness = start();
+    var alice = player("Alice");
+    lobby(alice);
+    alice.performCommand("arena leave");
+    harness.until(() -> new JooqSnapshotStore(harness.database).loadAll().join().isEmpty());
+
+    harness.until(
+        () -> {
+          alice.performCommand("arena join colosseum");
+          return presence().arenaOf(alice.getUniqueId()).isPresent();
+        });
+    alice.setHealth(0);
+    harness.server.getScheduler().performTicks(20);
+    assertThat(diamonds(alice)).isZero();
+
+    alice.respawn();
+    harness.until(() -> diamonds(alice) == 5);
+
+    assertThat(presence().arenaOf(alice.getUniqueId())).isEmpty();
+  }
+
+  @Test
+  void anOpWithoutTheNodeCannotPlayAnAdvancedClass() {
+    start();
+    var owner = player("Owner");
+    owner.setOp(true);
+    lobby(owner);
+    messages(owner);
+
+    owner.performCommand("arena class vanguard");
+
+    assertThat(messages(owner)).anyMatch(m -> m.contains("not unlocked"));
+    assertThat(owner.hasPermission("thestorm.arena.class.vanguard")).isFalse();
+    assertThat(owner.hasPermission("thestorm.arena.admin")).isTrue();
+    assertThat(owner.hasPermission("thestorm.arena.join")).isTrue();
   }
 }

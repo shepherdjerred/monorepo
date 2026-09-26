@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.arena.adapter.db;
 
+import static com.shepherdjerred.thestorm.arena.adapter.db.generated.Tables.ARENA_SNAPSHOTS;
 import static com.shepherdjerred.thestorm.arena.adapter.db.generated.Tables.ARENA_SNAPSHOT_EFFECTS;
 import static com.shepherdjerred.thestorm.arena.testing.Samples.ALICE;
 import static com.shepherdjerred.thestorm.arena.testing.Samples.BOB;
@@ -91,7 +92,7 @@ final class JooqStoresTest {
   }
 
   @Test
-  void deletingRemovesTheSnapshotAndItsEffects() {
+  void deletingARestoredSnapshotRemovesItAndItsEffects() {
     var store = new JooqSnapshotStore(database);
     store
         .save(
@@ -101,12 +102,55 @@ final class JooqStoresTest {
                 List.of(new EffectRecord("minecraft:speed", 1, 60, false, true, true))))
         .join();
 
-    store.delete(ALICE).join();
-    store.delete(BOB).join();
+    assertThat(store.markRestored(ALICE, T0).join()).isTrue();
+    store.deleteRestored(ALICE).join();
+    store.deleteRestored(BOB).join();
 
-    assertThat(store.loadAll().join()).isEmpty();
+    var rows = database.read(dsl -> dsl.fetchCount(ARENA_SNAPSHOTS)).join();
     var orphans = database.read(dsl -> dsl.fetchCount(ARENA_SNAPSHOT_EFFECTS)).join();
+    assertThat(rows).isZero();
     assertThat(orphans).isZero();
+  }
+
+  @Test
+  void aSnapshotMarkedRestoredIsNeverLoadedAgainEvenIfItsDeleteNeverHappens() {
+    var store = new JooqSnapshotStore(database);
+    store.save(snapshot(ALICE, "colosseum", List.of())).join();
+    store.save(snapshot(BOB, "colosseum", List.of())).join();
+
+    assertThat(store.markRestored(ALICE, T0).join()).isTrue();
+    assertThat(store.markRestored(ALICE, T0.plusSeconds(1)).join())
+        .as("marked only once")
+        .isFalse();
+
+    assertThat(store.loadAll().join()).extracting(Snapshot::player).containsExactly(BOB);
+    var marked =
+        database
+            .read(
+                dsl ->
+                    dsl.select(ARENA_SNAPSHOTS.RESTORED_AT)
+                        .from(ARENA_SNAPSHOTS)
+                        .where(ARENA_SNAPSHOTS.PLAYER.eq(ALICE.toString()))
+                        .fetchOptional(ARENA_SNAPSHOTS.RESTORED_AT))
+            .join();
+    assertThat(marked).contains(T0.toEpochMilli());
+  }
+
+  @Test
+  void onlyRestoredSnapshotsAreDeletedAndANewSnapshotReplacesARestoredOne() {
+    var store = new JooqSnapshotStore(database);
+    store.save(snapshot(ALICE, "colosseum", List.of())).join();
+
+    store.deleteRestored(ALICE).join();
+    assertThat(store.loadAll().join()).as("unrestored is kept").hasSize(1);
+
+    store.markRestored(ALICE, T0).join();
+    var fresh = snapshot(ALICE, "maze", List.of());
+    store.save(fresh).join();
+    store.deleteRestored(ALICE).join();
+
+    assertThat(store.loadAll().join()).containsExactly(fresh);
+    assertThat(store.markRestored(CAROL, T0).join()).isFalse();
   }
 
   @Test

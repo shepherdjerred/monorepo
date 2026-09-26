@@ -95,6 +95,20 @@ final class ArenaWorld {
         && definition.region().contains(Places.point(location));
   }
 
+  /** Whether {@code location} is within {@code reach} blocks of the region (on any axis). */
+  boolean near(Location location, int reach) {
+    if (!location.getWorld().equals(world)) {
+      return false;
+    }
+    var region = definition.region();
+    return location.getBlockX() >= region.min().x() - reach
+        && location.getBlockX() <= region.max().x() + reach
+        && location.getBlockY() >= region.min().y() - reach
+        && location.getBlockY() <= region.max().y() + reach
+        && location.getBlockZ() >= region.min().z() - reach
+        && location.getBlockZ() <= region.max().z() + reach;
+  }
+
   /** Whether {@code entity} was spawned by this arena. */
   boolean owns(Entity entity) {
     return parts.keys().arenaOf(entity).filter(definition.id()::equals).isPresent();

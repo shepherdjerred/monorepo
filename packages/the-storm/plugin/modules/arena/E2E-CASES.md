@@ -71,25 +71,32 @@ crafting grids) on its own. These cases need the real server in
 
 ## Players
 
-18. Dying mid-wave: no drops, respawn at the exit, belongings and location
-    restored, "fell on wave N" announced, best wave recorded.
+18. Dying mid-wave: no drops (and no grave, with the qol module's graves on),
+    respawn at the exit, belongings and location restored, "fell on wave N"
+    announced, best wave recorded.
 19. Quitting while dead, then rejoining still dead: nothing is restored until
-    they respawn, then everything is.
+    they respawn, then everything is. A player who joined from inside the
+    region and died mid-game is taken back there when restored (and sent to
+    the exit if a game is still running).
 20. Disconnecting mid-wave: restored before the server saves the player; the
     game goes on for the others, or ends in defeat if nobody is left.
 21. `kill -9` the server mid-game, restart, rejoin: belongings restored, no
     arena items anywhere (inventory or ender chest), no arena mobs left, loot
     chests empty, no creaking heart on a mob spawn.
-22. `kill -9` the server right after `/arena leave` (once the chat says the
-    player left): on restart the player has their belongings (the restore
-    saved their data before deleting the snapshot) and is not restored a
-    second time.
+22. `kill -9` the server right after `/arena leave`: on restart the player has
+    their belongings, and is not restored (rolled back) a second time on their
+    next join, because the snapshot was marked restored before their data was
+    saved. With the database made read-only after joining, leaving logs the
+    failed mark loudly and retries it.
 23. Items in the 2x2 crafting grid and on the cursor when joining come back
     on leaving; an arena item on the cursor when leaving is gone.
 24. Ender pearls, chorus fruit, `/home`, `/spawn`, `/back` and `/tpa` cannot
     take a member out of the region, nor bring anyone else into it while a
     game runs; walking in sends an outsider to the exit and walking out sends
-    a member back.
+    a member back. Staff in creative or spectator mode, or with
+    `thestorm.arena.admin`, may stand in or teleport into a running arena, and
+    viewing a fighter's inventory (for example with `/invsee`) leaves their
+    kit alone.
 25. Members cannot drop items, open non-loot containers, the ender chest, a
     donkey's or llama's chest, a minecart chest, or put items into item
     frames or armor stands; they break or place no blocks and pour no fluids

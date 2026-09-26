@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.arena;
 
-import com.shepherdjerred.thestorm.arena.adapter.db.JooqSnapshotStore;
+import static com.shepherdjerred.thestorm.arena.adapter.db.generated.Tables.ARENA_SNAPSHOTS;
+
 import com.shepherdjerred.thestorm.arena.adapter.paper.ChunkKeeper;
 import com.shepherdjerred.thestorm.arena.adapter.paper.PlayerSaver;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ServerHooks;
@@ -74,26 +75,36 @@ public final class ArenaHarness implements AutoCloseable {
   }
 
   /**
-   * MockBukkit cannot save player data; record each save and whether the player's stored snapshot
-   * still existed at that moment (it must: the snapshot is deleted only after the save).
+   * MockBukkit cannot save player data; record each save and the state of the player's stored
+   * snapshot at that moment (it must already be marked restored, and not yet deleted).
    */
   final class RecordingSaver implements PlayerSaver {
     final List<String> saves = new ArrayList<>();
 
     @Override
     public void save(Player player) {
-      var stored =
-          new JooqSnapshotStore(database)
-              .loadAll()
+      var state =
+          database
+              .read(
+                  dsl ->
+                      dsl.select(ARENA_SNAPSHOTS.RESTORED_AT)
+                          .from(ARENA_SNAPSHOTS)
+                          .where(ARENA_SNAPSHOTS.PLAYER.eq(player.getUniqueId().toString()))
+                          .fetch(ARENA_SNAPSHOTS.RESTORED_AT))
               .handle(
-                  (all, failure) ->
-                      failure != null
-                          ? " (snapshots unreadable)"
-                          : all.stream().anyMatch(s -> s.player().equals(player.getUniqueId()))
-                              ? " (snapshot stored)"
-                              : " (snapshot gone)")
+                  (rows, failure) -> {
+                    if (failure != null) {
+                      return "snapshots unreadable";
+                    }
+                    if (rows.isEmpty()) {
+                      return "snapshot gone";
+                    }
+                    return rows.getFirst() == null
+                        ? "snapshot unrestored"
+                        : "snapshot marked restored";
+                  })
               .join();
-      saves.add(player.getName() + stored);
+      saves.add(player.getName() + " (" + state + ")");
     }
   }
 

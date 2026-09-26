@@ -156,6 +156,7 @@ final class GameRunner {
     for (var player : services.context().server().getOnlinePlayers()) {
       if (game.member(player.getUniqueId()).isEmpty()
           && !player.isDead()
+          && !Staff.exempt(player)
           && world.contains(Places.at(player))) {
         player.teleport(exit());
         Texts.error(player, "A game is under way in that arena. Use /arena spec to watch.");

@@ -59,7 +59,23 @@ final class PlayerListener implements Listener {
     arenas.of(id).ifPresent(runner -> runner.handle(new GameEvent.Disconnect(id)));
   }
 
-  /** Nothing drops in an arena; the player's belongings come back from their snapshot. */
+  /**
+   * Arena kits never drop, not even into a grave another module makes at a later priority: drops
+   * and experience are cleared first thing.
+   */
+  @EventHandler(priority = EventPriority.LOWEST)
+  void clearDrops(PlayerDeathEvent event) {
+    if (arenas.of(event.getPlayer().getUniqueId()).isPresent()) {
+      event.getDrops().clear();
+      event.setDroppedExp(0);
+      event.setShouldDropExperience(false);
+    }
+  }
+
+  /**
+   * Nothing drops in an arena (cleared again, in case a listener added drops); the player's
+   * belongings come back from their snapshot.
+   */
   @EventHandler(priority = EventPriority.HIGHEST)
   void onDeath(PlayerDeathEvent event) {
     var id = event.getPlayer().getUniqueId();
@@ -98,6 +114,10 @@ final class PlayerListener implements Listener {
   void onTeleport(PlayerTeleportEvent event) {
     var player = event.getPlayer();
     var id = player.getUniqueId();
+    if (snapshots.restoring(id)) {
+      // Being put back where they were, even if that is inside a running arena.
+      return;
+    }
     if (arenas.joining(id)) {
       event.setCancelled(true);
       return;
@@ -111,7 +131,9 @@ final class PlayerListener implements Listener {
       return;
     }
     var target = arenas.runningAt(event.getTo());
-    if (target.isPresent() && !target.orElseThrow().world().contains(event.getFrom())) {
+    if (target.isPresent()
+        && !Staff.exempt(player)
+        && !target.orElseThrow().world().contains(event.getFrom())) {
       event.setCancelled(true);
       Texts.error(player, "A game is under way in that arena. Use /arena spec to watch.");
     }

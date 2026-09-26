@@ -80,10 +80,22 @@ final class PaperContext {
               if (failure != null) {
                 logger().error("Could not {}", what, failure);
               } else {
-                then.accept(value);
+                guarded(what, () -> then.accept(value));
               }
             },
             mainThread());
+  }
+
+  /**
+   * Runs {@code work}, logging anything it throws. Future callbacks are otherwise silent: an
+   * exception there would vanish with the discarded future.
+   */
+  void guarded(String what, Runnable work) {
+    try {
+      work.run();
+    } catch (RuntimeException e) {
+      logger().error("Unexpected failure while {}", what, e);
+    }
   }
 
   /** Logs if {@code future} fails. */
