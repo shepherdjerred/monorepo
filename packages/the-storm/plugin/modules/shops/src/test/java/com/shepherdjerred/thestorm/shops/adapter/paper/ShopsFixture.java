@@ -77,7 +77,8 @@ abstract class ShopsFixture {
 
   PlayerMock admin(String name) {
     var player = server.addPlayer(name);
-    player.addAttachment(plugin, ShopsPaper.ADMIN_PERMISSION, true);
+    player.addAttachment(plugin, ShopsPermissions.ADMIN, true);
+    player.addAttachment(plugin, ShopsPermissions.OPEN_CATALOG, true);
     return player;
   }
 

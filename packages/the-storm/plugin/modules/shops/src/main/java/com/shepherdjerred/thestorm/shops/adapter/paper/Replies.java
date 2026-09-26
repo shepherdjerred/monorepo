@@ -71,6 +71,18 @@ final class Replies {
     }
   }
 
+  /** Logs a delivered notice whose acknowledgement could not be stored. */
+  void noticeAcknowledgement(CompletableFuture<?> future, UUID owner) {
+    var _ =
+        future.whenComplete(
+            (ignored, failure) -> {
+              if (failure != null) {
+                logger.error(
+                    "Could not acknowledge shop notices for {}; they may repeat", owner, failure);
+              }
+            });
+  }
+
   /** Tells the customer how a trade ended. */
   void outcome(
       Player customer, TradeOutcome outcome, String itemName, LongFunction<String> completed) {

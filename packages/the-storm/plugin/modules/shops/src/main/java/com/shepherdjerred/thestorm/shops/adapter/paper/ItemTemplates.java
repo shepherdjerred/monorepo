@@ -6,7 +6,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.bukkit.Material;
+import org.bukkit.block.Container;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.BundleMeta;
 
 /**
  * Turns items into shop fingerprints and back. The fingerprint is the whole one-item stack
@@ -46,6 +49,21 @@ public final class ItemTemplates {
   /** Whether {@code item} is the fingerprinted item, in any amount. */
   public boolean matches(ItemFingerprint fingerprint, ItemStack item) {
     return !item.getType().isAir() && template(fingerprint).isSimilar(item);
+  }
+
+  /** Whether {@code item} carries other items: a filled shulker box, bundle or other container. */
+  public static boolean holdsItems(ItemStack item) {
+    if (!item.hasItemMeta()) {
+      return false;
+    }
+    var meta = item.getItemMeta();
+    if (meta instanceof BundleMeta bundle) {
+      return bundle.hasItems();
+    }
+    return meta instanceof BlockStateMeta states
+        && states.hasBlockState()
+        && states.getBlockState() instanceof Container container
+        && !container.getInventory().isEmpty();
   }
 
   /** The item key used in storage and messages: {@code diamond_sword}. */

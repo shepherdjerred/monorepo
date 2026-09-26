@@ -21,13 +21,13 @@ public final class RefundJournal {
 
   /**
    * Records a trade the server shut down before it settled, with what the ledger had answered so
-   * far. Items taken from a selling customer were held in escrow; they are kept in the record so
-   * staff can give them back or to the shop, depending on whether the payment committed.
+   * far. Only items actually taken from a selling customer and still held in escrow are kept in the
+   * record for staff to settle according to the ledger outcome.
    */
   void unsettled(Deal deal, LedgerTrail trail) {
     var reason = "unsettled at shutdown: " + deal.reason() + " (" + trail.describe() + ")";
     var held =
-        deal.direction() == Direction.SELL
+        deal.direction() == Direction.SELL && trail.escrowHeld()
             ? Optional.of(new HeldItems(deal.goods(), deal.quantity()))
             : Optional.<HeldItems>empty();
     logger.error("Trade {} was still settling at shutdown: {}", deal.reason(), trail.describe());

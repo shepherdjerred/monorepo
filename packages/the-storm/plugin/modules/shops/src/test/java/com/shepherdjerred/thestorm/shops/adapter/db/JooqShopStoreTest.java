@@ -113,7 +113,7 @@ final class JooqShopStoreTest {
     assertThat(store.deleteShop(1).get()).isZero();
 
     assertThat(store.loadShops().get()).isEmpty();
-    assertThat(store.takeUnnotified(ALICE).get()).hasSize(1);
+    assertThat(store.listUnnotified(ALICE).get()).hasSize(1);
   }
 
   @Test
@@ -125,7 +125,7 @@ final class JooqShopStoreTest {
   }
 
   @Test
-  void unnotifiedTradesAreTakenOnceOldestFirst() throws Exception {
+  void unnotifiedTradesRemainPendingUntilTheirExactRowsAreAcknowledged() throws Exception {
     var site = new TradeSite.Chest(1, ALICE);
     var first = trade(site, BOB, Direction.BUY, NOW);
     var second = trade(site, BOB, Direction.SELL, NOW.plusSeconds(1));
@@ -134,9 +134,18 @@ final class JooqShopStoreTest {
     store.recordTrade(second, false).get();
     store.recordTrade(trade(new TradeSite.Chest(2, BOB), ALICE, Direction.BUY, NOW), false).get();
 
-    assertThat(store.takeUnnotified(ALICE).get()).containsExactly(first, second);
-    assertThat(store.takeUnnotified(ALICE).get()).isEmpty();
-    assertThat(store.takeUnnotified(BOB).get()).hasSize(1);
+    var pending = store.listUnnotified(ALICE).get();
+    assertThat(pending.stream().map(ShopStore.PendingTrade::trade).toList())
+        .containsExactly(first, second);
+    assertThat(store.listUnnotified(ALICE).get()).isEqualTo(pending);
+    assertThat(store.markNotified(ALICE, java.util.List.of(pending.getFirst().id())).get())
+        .isEqualTo(1);
+    assertThat(store.listUnnotified(ALICE).get()).containsExactly(pending.getLast());
+    assertThat(store.listUnnotified(BOB).get()).hasSize(1);
+    assertThat(store.markNotified(BOB, java.util.List.of(pending.getLast().id())).get()).isZero();
+    assertThat(store.markNotified(ALICE, java.util.List.of(pending.getLast().id())).get())
+        .isEqualTo(1);
+    assertThat(store.listUnnotified(ALICE).get()).isEmpty();
   }
 
   @Test
@@ -147,7 +156,9 @@ final class JooqShopStoreTest {
     store.recordTrade(trade(new TradeSite.Admin(6), BOB, Direction.BUY, NOW), true).get();
     store.recordTrade(trade(new TradeSite.Catalog("baker"), BOB, Direction.SELL, NOW), true).get();
 
-    assertThat(store.takeUnnotified(owner).get()).containsExactly(chest);
+    assertThat(
+            store.listUnnotified(owner).get().stream().map(ShopStore.PendingTrade::trade).toList())
+        .containsExactly(chest);
   }
 
   @Test
@@ -180,6 +191,22 @@ final class JooqShopStoreTest {
     store.deleteShop(7).get();
 
     assertThat(store.lastShopId().get()).isEqualTo(7);
+  }
+
+  @Test
+  void heldItemsNeedBothAnItemAndAQuantity() {
+    assertThatThrownBy(
+            () ->
+                database
+                    .write(
+                        dsl ->
+                            dsl.execute(
+                                "insert into shops_refund_failure (payer_kind, payer_id,"
+                                    + " payee_kind, payee_id, amount, reason, at, held_item)"
+                                    + " values ('player', 'a', 'player', 'b', 1, 'r', 0, 'coal')"))
+                    .get())
+        .isInstanceOf(ExecutionException.class)
+        .hasMessageContaining("CHECK");
   }
 
   @Test

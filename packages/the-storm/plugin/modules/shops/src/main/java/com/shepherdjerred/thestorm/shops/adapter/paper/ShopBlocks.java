@@ -145,8 +145,20 @@ public final class ShopBlocks {
   /** Every shop a broken, burnt or exploded block belongs to, as sign or container. */
   public List<SignShop> shopsAt(Block block) {
     var shops = new ArrayList<SignShop>();
-    registry.atSign(pos(block)).ifPresent(shops::add);
+    var broken = pos(block);
+    registry.atSign(broken).ifPresent(shops::add);
     shops.addAll(shopsOnContainer(block));
+    // A sign drops when its ordinary support block breaks, without a separate
+    // BlockBreakEvent for the sign. Include registered signs physically attached here.
+    for (var face :
+        List.of(BlockFace.UP, BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST)) {
+      var neighbor = block.getRelative(face);
+      registry
+          .atSign(pos(neighbor))
+          .filter(
+              shop -> supportOf(neighbor).map(ShopBlocks::pos).filter(broken::equals).isPresent())
+          .ifPresent(shops::add);
+    }
     return shops.stream().distinct().toList();
   }
 

@@ -30,11 +30,14 @@ public interface ShopStore {
   /** Logs a completed trade; completes with its log id. */
   CompletableFuture<Long> recordTrade(TradeRecord trade, boolean ownerNotified);
 
-  /**
-   * The chest-shop trades {@code owner} has not been told about, oldest first, marked as told in
-   * the same transaction so a summary is never shown twice.
-   */
-  CompletableFuture<List<TradeRecord>> takeUnnotified(UUID owner);
+  /** A pending owner notice, with the stored row id needed to acknowledge delivery. */
+  record PendingTrade(long id, TradeRecord trade) {}
+
+  /** The chest-shop trades {@code owner} has not been told about, oldest first. Read only. */
+  CompletableFuture<List<PendingTrade>> listUnnotified(UUID owner);
+
+  /** Acknowledges only the displayed rows for {@code owner}, after delivery on the main thread. */
+  CompletableFuture<Integer> markNotified(UUID owner, List<Long> ids);
 
   /**
    * How many items {@code customer} has traded with the catalogs since {@code since}, per catalog,

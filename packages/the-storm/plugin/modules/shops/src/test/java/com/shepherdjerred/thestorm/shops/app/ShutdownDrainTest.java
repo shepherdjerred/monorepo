@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.shops.app;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
+import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.shops.domain.price.ShopPrices;
 import com.shepherdjerred.thestorm.shops.domain.shop.BlockPos;
 import com.shepherdjerred.thestorm.shops.domain.shop.CreationRules;
@@ -80,6 +81,7 @@ final class ShutdownDrainTest {
             ShopPrices.buyOnly(50),
             Optional.of(new ItemFingerprint("coal", "Y29hbA==", false)),
             Instant.EPOCH);
+    registry.add(shop);
     wallets.set(BOB.account(), 100);
     wallets.holdNext();
     var trade =
@@ -128,5 +130,45 @@ final class ShutdownDrainTest {
                   .startsWith("unsettled at shutdown: shop:1:buy")
                   .contains("whether the payment committed is unknown");
             });
+  }
+
+  @Test
+  void aCatalogSellWaitingOnAllowanceDoesNotJournalUntakenItems() {
+    var items = new FakeHoldings(4, 64);
+    var deal = catalogSell(items);
+    var lease = locks.acquire(List.of(), BOB.id(), deal).orElseThrow();
+    assertThat(lease.trail().escrowHeld()).isFalse();
+
+    assertThat(drain.drain(Duration.ofMillis(1))).isEqualTo(1);
+    assertThat(items.count).isEqualTo(4);
+    assertThat(store.refundFailures)
+        .singleElement()
+        .satisfies(failure -> assertThat(failure.held()).isEmpty());
+  }
+
+  @Test
+  void aCatalogSellWaitingOnPaymentJournalsItemsActuallyInEscrow() {
+    var items = new FakeHoldings(4, 64);
+    var deal = catalogSell(items);
+    var lease = locks.acquire(List.of(), BOB.id(), deal).orElseThrow();
+    wallets.holdNext();
+    var _ = new TradeEngine(wallets, pump, journal).execute(deal, lease.trail());
+
+    assertThat(drain.drain(Duration.ofMillis(1))).isEqualTo(1);
+    assertThat(items.count).isZero();
+    assertThat(store.refundFailures)
+        .singleElement()
+        .satisfies(failure -> assertThat(failure.held()).contains(new HeldItems("emerald", 4)));
+  }
+
+  private static Deal catalogSell(Holdings items) {
+    return new Deal(
+        Direction.SELL,
+        4,
+        Crystals.of(12),
+        new Deal.Party(BOB.account(), items),
+        new Deal.Party(new AccountId.Server(), Holdings.UNLIMITED),
+        "shop:catalog:exchange:emerald:sell",
+        "emerald");
   }
 }

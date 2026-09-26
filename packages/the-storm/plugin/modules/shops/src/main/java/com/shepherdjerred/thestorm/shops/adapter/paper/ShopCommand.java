@@ -8,7 +8,6 @@ import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.shepherdjerred.thestorm.shops.app.ServerShops;
 import com.shepherdjerred.thestorm.shops.app.ShopRegistry;
 import com.shepherdjerred.thestorm.shops.domain.shop.ShopLimits;
-import com.shepherdjerred.thestorm.tracks.app.Track;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import org.bukkit.command.CommandSender;
@@ -41,7 +40,7 @@ final class ShopCommand {
         .executes(context -> status(context.getSource().getSender()))
         .then(
             Commands.argument(CATALOG, word())
-                .requires(source -> source.getSender().hasPermission(ShopsPaper.ADMIN_PERMISSION))
+                .requires(source -> source.getSender().hasPermission(ShopsPermissions.OPEN_CATALOG))
                 .suggests(
                     (context, builder) -> {
                       serverShops.catalogIds().stream().sorted().forEach(builder::suggest);
@@ -57,9 +56,7 @@ final class ShopCommand {
       sender.sendMessage(Replies.error("Only players own chest shops."));
       return 0;
     }
-    var level =
-        ShopLimits.highestLevel(
-            candidate -> player.hasPermission(Track.SHOPKEEPER.permission(candidate)));
+    var level = ShopsPermissions.shopkeeperLevel(player);
     var owned = registry.ownedBy(player.getUniqueId());
     player.sendMessage(
         Replies.info(
@@ -72,7 +69,7 @@ final class ShopCommand {
                     + " chest shops Shopkeeper "
                     + level
                     + " allows."));
-    if (player.hasPermission(ShopsPaper.ADMIN_PERMISSION)) {
+    if (player.hasPermission(ShopsPermissions.OPEN_CATALOG)) {
       registry
           .closed()
           .forEach(

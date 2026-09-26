@@ -139,26 +139,35 @@ public final class JooqShopStore implements ShopStore {
   }
 
   @Override
-  public CompletableFuture<List<TradeRecord>> takeUnnotified(UUID owner) {
+  public CompletableFuture<List<PendingTrade>> listUnnotified(UUID owner) {
     var ownerId = owner.toString();
+    return database.read(
+        dsl ->
+            dsl.selectFrom(SHOPS_TRADE)
+                .where(
+                    SHOPS_TRADE.SOURCE.eq(CHEST),
+                    SHOPS_TRADE.OWNER_ID.eq(ownerId),
+                    SHOPS_TRADE.OWNER_NOTIFIED.eq(0))
+                .orderBy(SHOPS_TRADE.ID)
+                .fetch(row -> new PendingTrade(row.getId().longValue(), toTrade(row))));
+  }
+
+  @Override
+  public CompletableFuture<Integer> markNotified(UUID owner, List<Long> ids) {
+    if (ids.isEmpty()) {
+      return CompletableFuture.completedFuture(0);
+    }
+    var storedIds = ids.stream().map(Math::toIntExact).toList();
     return database.write(
-        dsl -> {
-          var pending =
-              dsl.selectFrom(SHOPS_TRADE)
-                  .where(
-                      SHOPS_TRADE.SOURCE.eq(CHEST),
-                      SHOPS_TRADE.OWNER_ID.eq(ownerId),
-                      SHOPS_TRADE.OWNER_NOTIFIED.eq(0))
-                  .orderBy(SHOPS_TRADE.ID)
-                  .fetch();
-          if (pending.isNotEmpty()) {
+        dsl ->
             dsl.update(SHOPS_TRADE)
                 .set(SHOPS_TRADE.OWNER_NOTIFIED, 1)
-                .where(SHOPS_TRADE.ID.in(pending.getValues(SHOPS_TRADE.ID)))
-                .execute();
-          }
-          return pending.map(JooqShopStore::toTrade);
-        });
+                .where(
+                    SHOPS_TRADE.SOURCE.eq(CHEST),
+                    SHOPS_TRADE.OWNER_ID.eq(owner.toString()),
+                    SHOPS_TRADE.OWNER_NOTIFIED.eq(0),
+                    SHOPS_TRADE.ID.in(storedIds))
+                .execute());
   }
 
   @Override

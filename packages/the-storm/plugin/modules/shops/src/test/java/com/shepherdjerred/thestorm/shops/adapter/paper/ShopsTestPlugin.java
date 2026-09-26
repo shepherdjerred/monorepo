@@ -82,7 +82,7 @@ public class ShopsTestPlugin extends JavaPlugin {
     var directory = Objects.requireNonNull(ShopsTestPlugin.directory, "directory");
     copy(OWNED.resolve("shops.yml"), directory.resolve("shops.yml"));
     // Tests click faster than players; the cooldown itself is tested in ChestShopsTest.
-    rewrite(directory.resolve("shops.yml"), "clickCooldownMillis: 250", "clickCooldownMillis: 0");
+    rewrite(directory.resolve("shops.yml"), "clickCooldownMillis: 150", "clickCooldownMillis: 0");
     var catalogs = directory.resolve("shops");
     try (var files = Files.list(OWNED.resolve("shops"))) {
       Files.createDirectories(catalogs);
