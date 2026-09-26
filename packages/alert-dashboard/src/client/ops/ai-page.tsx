@@ -2,7 +2,11 @@ import { findMetric, findSection } from "@shepherdjerred/ops-model/assemble.ts";
 import { METRIC_IDS } from "@shepherdjerred/ops-model/metric-ids.ts";
 import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
-import type { Section, Signal } from "@shepherdjerred/ops-model/snapshot.ts";
+import type {
+  Section,
+  Signal,
+  SnapshotResponse,
+} from "@shepherdjerred/ops-model/snapshot.ts";
 import { Temporal } from "@js-temporal/polyfill";
 import { z } from "zod";
 
@@ -18,7 +22,6 @@ import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { formatInstant } from "#client/time.ts";
 import { useRange } from "#client/charts/use-range.ts";
 import { formatValue } from "#shared/ops-format";
-import type { SnapshotResponse } from "#shared/ops-schema";
 
 /**
  * Attributes the collector attaches to `quota-window` signals. `windowId` is

@@ -3,7 +3,10 @@ import {
   attentionSignals,
   needsMeSignals,
 } from "@shepherdjerred/ops-model/assemble.ts";
-import type { SectionId } from "@shepherdjerred/ops-model/snapshot.ts";
+import type {
+  SectionId,
+  SnapshotResponse,
+} from "@shepherdjerred/ops-model/snapshot.ts";
 import { CheckCheckIcon } from "lucide-react";
 
 import { useMarkSeen } from "./ops-api.ts";
@@ -15,7 +18,6 @@ import {
   WithSnapshot,
 } from "./ops-ui.tsx";
 import { Button } from "#components/button";
-import type { SnapshotResponse } from "#shared/ops-schema";
 
 /** Where each section's card links for its detail. */
 const SECTION_PAGES: Partial<Record<SectionId, string>> = {
