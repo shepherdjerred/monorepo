@@ -1,0 +1,89 @@
+# Mobs: levelled hostile mobs (replaces LevelledMobs).
+# Owned by the repository; the plugin never writes it. Every key is required and
+# unknown keys are errors. Mob types are entity keys without "minecraft:".
+#
+# A monster's level = a level drawn from its distance band, plus depth levels
+# underground, plus the moon's levels at night, kept between 1 and the cap.
+# Balance follows the 2023 revival (the-storm-mc/monorepo LevelledMobs
+# rules.yml, "tweak damage", Dec 2023): cap 50, depth multiplier 0.05 per 5
+# blocks below y 62, and the reduced "average challenge" multipliers. The
+# distance bands are new: the 2023 start distance of 5000 blocks suits a big
+# server, so levels here start near spawn and climb slowly for 2-3 players.
+
+levels:
+  cap: 50
+  # Rings around the world spawn, by horizontal distance in blocks.
+  distanceBands:
+    - { from: 0, min: 1, max: 1 }
+    - { from: 300, min: 1, max: 3 }
+    - { from: 1000, min: 3, max: 8 }
+    - { from: 2500, min: 8, max: 15 }
+    - { from: 5000, min: 15, max: 25 }
+    - { from: 10000, min: 25, max: 35 }
+    - { from: 20000, min: 35, max: 45 }
+    - { from: 30000, min: 45, max: 50 }
+  # Worlds not listed (the End) never level mobs. The Nether's distances count
+  # eight times, like its coordinates.
+  worlds:
+    world: { distanceScale: 1.0, depth: true, moon: true }
+    world_nether: { distanceScale: 8.0, depth: false, moon: false }
+  # Below transitionY, every `period` blocks add `multiplier` x the distance
+  # level (rounded down): a level-10 mob at y -58 gains 12 levels.
+  depth:
+    transitionY: 62
+    period: 5
+    multiplier: 0.05
+  # Levels added at night by moon phase: full, waning gibbous, last quarter,
+  # waning crescent, new, waxing crescent, first quarter, waxing gibbous.
+  moonBonusByPhase: [2, 1, 0, 0, 0, 0, 0, 1]
+
+# How much each stat grows by the cap. A level-1 mob is vanilla; the bonus
+# grows evenly to these values at the cap. Shares add that many times the base
+# (MAX_HEALTH 1.1 = 2.1x health at level 50); ARMOR and ARMOR_TOUGHNESS are
+# flat points. XP and ITEM_DROPS only apply when a player makes the kill, and
+# only stackable drops grow.
+scaling:
+  atCap:
+    MAX_HEALTH: 1.1
+    ATTACK_DAMAGE: 1.1
+    RANGED_DAMAGE: 1.1
+    CREEPER_BLAST: 0.75
+    MOVEMENT_SPEED: 0.15
+    ARMOR: 6.0
+    ARMOR_TOUGHNESS: 3.0
+    XP: 3.0
+    ITEM_DROPS: 2.0
+  # As in 2023: endermen and silverfish keep vanilla health and speed,
+  # creepers barely speed up, wither skeletons gain less health.
+  byType:
+    enderman: { MAX_HEALTH: 0.0, MOVEMENT_SPEED: 0.0 }
+    silverfish: { MAX_HEALTH: 0.0, MOVEMENT_SPEED: 0.0 }
+    creeper: { MOVEMENT_SPEED: 0.025 }
+    wither_skeleton: { MAX_HEALTH: 1.0 }
+
+# Hostile mobs that stay vanilla. Arena mobs (tagged thestorm:arena), bosses,
+# named and tamed mobs are never levelled.
+exclusions:
+  types: [warden, elder_guardian, ravager, phantom, zombie_villager]
+  # Spawner farms and plugin-spawned mobs stay vanilla.
+  spawnReasons: [SPAWNER, TRIAL_SPAWNER, SPAWNER_EGG, COMMAND, CUSTOM]
+  babies: true
+
+# Admin regions such as the spawn town. policy is BLOCK_NATURAL (no natural
+# monster spawns; others unlevelled), UNLEVELLED or LEVELLED. Each anchor is one
+# point inside a region, which must lie on protected land.
+adminRegions:
+  policy: BLOCK_NATURAL
+  # Placeholder: a point inside the spawn region, next to the essentials spawn.
+  anchors:
+    - { world: world, x: 0, y: 64, z: 0 }
+
+# "Lv 12 Zombie" over levelled mobs, shown when a player looks at them.
+nameplate:
+  enabled: true
+  alwaysVisible: false
+  colors:
+    - { from: 1, color: "#22E76B" }
+    - { from: 10, color: "#FFCD56" }
+    - { from: 20, color: "#FE803C" }
+    - { from: 30, color: "#F2003D" }

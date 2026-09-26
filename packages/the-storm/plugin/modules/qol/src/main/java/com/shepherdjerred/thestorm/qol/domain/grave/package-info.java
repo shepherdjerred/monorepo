@@ -1,4 +1,4 @@
-/** Who may open a grave, and when it spills. */
+/** Graves: who may open one and when, where one goes, and when it expires. */
 @NullMarked
 package com.shepherdjerred.thestorm.qol.domain.grave;
 
