@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.core.protection.Protection;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
@@ -53,5 +54,10 @@ final class FakeProtection implements Protection {
               ? new Decision.Denied(AEGIS)
               : Decision.allowed();
     };
+  }
+
+  @Override
+  public boolean sameLand(Location a, Location b) {
+    return Objects.equals(a.getWorld(), b.getWorld()) && inClaim(a) == inClaim(b);
   }
 }

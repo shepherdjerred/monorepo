@@ -82,6 +82,11 @@ public class SpellsTestPlugin extends JavaPlugin {
         UUID attacker, Location attackerAt, HarmTarget target, Location victimAt) {
       return at(attackerAt).isAllowed() ? at(victimAt) : at(attackerAt);
     }
+
+    @Override
+    public boolean sameLand(Location a, Location b) {
+      return Objects.equals(a.getWorld(), b.getWorld()) && (a.getX() >= 1000) == (b.getX() >= 1000);
+    }
   }
 
   @Override
