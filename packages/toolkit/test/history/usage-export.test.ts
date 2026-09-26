@@ -85,6 +85,8 @@ function result(documents: readonly HistoryDocument[]): HistorySourceResult {
       documents.map((entry) => [entry.sourceId, entry.usageEvents.length]),
     ),
     error: null,
+    complete: true,
+    sourceIds: documents.map((entry) => entry.sourceId),
   };
 }
 

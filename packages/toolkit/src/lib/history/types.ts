@@ -79,15 +79,34 @@ export type HistoryMessage = {
 export type HistorySourceResult = {
   readonly source: HistorySourceName;
   readonly available: boolean;
+  /**
+   * The complete document set when `complete` is true, otherwise only the
+   * documents whose files changed since the previous scan. `sourceIds` is
+   * always the complete set, so ingest can retire vanished documents from
+   * either shape.
+   */
   readonly documents: readonly HistoryDocument[];
   readonly fingerprint: string;
   readonly error: string | null;
+  readonly complete: boolean;
+  readonly sourceIds: readonly string[];
+};
+
+export type HistoryScanOptions = {
+  /**
+   * Bypass per-file caches and return the complete document set. The
+   * daemon passes this for reindex, where ingest rebuilds from scratch.
+   */
+  readonly force?: boolean;
 };
 
 export type HistorySource = {
   readonly name: HistorySourceName;
   readonly label: string;
-  scan: (paths: HistoryPaths) => Promise<HistorySourceResult>;
+  scan: (
+    paths: HistoryPaths,
+    options?: HistoryScanOptions,
+  ) => Promise<HistorySourceResult>;
   read: (
     paths: HistoryPaths,
     records: readonly HistoryRecord[],

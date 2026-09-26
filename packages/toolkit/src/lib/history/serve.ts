@@ -43,6 +43,7 @@ async function logLine(
 export async function scanHistorySources(
   sources: readonly HistorySource[],
   paths: HistoryPaths,
+  force = false,
 ): Promise<HistorySourceResult[]> {
   const results: HistorySourceResult[] = [];
   for (
@@ -54,7 +55,7 @@ export async function scanHistorySources(
       ...(await Promise.all(
         sources
           .slice(offset, offset + SOURCE_SCAN_CONCURRENCY)
-          .map(async (source) => source.scan(paths)),
+          .map(async (source) => source.scan(paths, { force })),
       )),
     );
   }
@@ -145,7 +146,7 @@ export async function runHistoryDaemon(): Promise<void> {
     }
     scanning = true;
     try {
-      const results = await scanHistorySources(sources, paths);
+      const results = await scanHistorySources(sources, paths, force);
       await index.ingest(results, force);
       lastScanAt = new Date().toISOString();
       await logLine(runtimePaths, "history scan complete", {
@@ -153,7 +154,10 @@ export async function runHistoryDaemon(): Promise<void> {
         sources: results.map((result) => ({
           source: result.source,
           available: result.available,
-          documents: result.documents.length,
+          documents: result.sourceIds.length,
+          changed: result.complete
+            ? result.sourceIds.length
+            : result.documents.length,
           error: result.error,
         })),
       });

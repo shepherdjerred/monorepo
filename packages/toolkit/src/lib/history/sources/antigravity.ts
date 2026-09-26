@@ -10,17 +10,22 @@ import {
 } from "./antigravity-usage.ts";
 import type { HistoryPaths } from "@shepherdjerred/toolkit/lib/history/paths.ts";
 import {
+  diffFiles,
+  incrementalResult,
   pathExists,
   readImmutableDatabase,
   rows,
   sourceReadResult,
   sourceResult,
+  statFiles,
 } from "@shepherdjerred/toolkit/lib/history/sources-shared.ts";
 import type {
   HistoryDocument,
   HistoryMessage,
   HistoryRecord,
+  HistoryScanOptions,
   HistorySource,
+  HistorySourceResult,
 } from "@shepherdjerred/toolkit/lib/history/types.ts";
 import {
   catalogCost,
@@ -248,22 +253,84 @@ async function antigravityDatabaseFiles(root: string): Promise<string[]> {
 const ANTIGRAVITY_NO_TRANSCRIPT_TEXT =
   "Antigravity session — no transcript text available locally";
 
+async function scanAntigravity(
+  paths: HistoryPaths,
+  previous: ReadonlyMap<string, string> | null,
+  force: boolean,
+): Promise<{
+  readonly result: HistorySourceResult;
+  readonly signatures: ReadonlyMap<string, string> | null;
+}> {
+  const filesByRoot = await Promise.all(
+    paths.antigravityRoots.map((root) => antigravityDatabaseFiles(root)),
+  );
+  const files = filesByRoot.flat();
+  if (files.length === 0) {
+    return {
+      result: await sourceResult("antigravity", files, () => []),
+      signatures: new Map(),
+    };
+  }
+  const { fingerprint, signatures } = await statFiles(files);
+  const diff =
+    force || previous === null ? null : diffFiles(previous, signatures);
+  // Any deletion falls back to a full re-parse (see scanClaude).
+  const full = diff === null || diff.deleted.length > 0;
+  const parseFiles = full ? files : [...diff.added, ...diff.changed].sort();
+  try {
+    const documents: HistoryDocument[] = [];
+    for (const file of parseFiles) {
+      documents.push(await scanAntigravityDatabase(file));
+    }
+    if (full) {
+      return {
+        result: {
+          source: "antigravity",
+          available: true,
+          documents,
+          fingerprint,
+          error: null,
+          complete: true,
+          sourceIds: files,
+        },
+        signatures,
+      };
+    }
+    return {
+      result: incrementalResult("antigravity", documents, files, fingerprint),
+      signatures,
+    };
+  } catch (error: unknown) {
+    return {
+      result: {
+        source: "antigravity",
+        available: false,
+        documents: [],
+        fingerprint,
+        error: error instanceof Error ? error.message : String(error),
+        complete: true,
+        sourceIds: [],
+      },
+      signatures: null,
+    };
+  }
+}
+
 export function createAntigravitySource(): HistorySource {
+  let previous: ReadonlyMap<string, string> | null = null;
   return {
     name: "antigravity",
     label: "Antigravity",
-    async scan(paths: HistoryPaths) {
-      const filesByRoot = await Promise.all(
-        paths.antigravityRoots.map((root) => antigravityDatabaseFiles(root)),
+    async scan(paths: HistoryPaths, options?: HistoryScanOptions) {
+      const { result, signatures } = await scanAntigravity(
+        paths,
+        previous,
+        options?.force ?? false,
       );
-      const files = filesByRoot.flat();
-      return sourceResult("antigravity", files, async () => {
-        const documents: HistoryDocument[] = [];
-        for (const file of files) {
-          documents.push(await scanAntigravityDatabase(file));
-        }
-        return documents;
-      });
+      if (signatures !== null) {
+        previous = signatures;
+      }
+      return result;
     },
     async read(_paths: HistoryPaths, records: readonly HistoryRecord[]) {
       return sourceReadResult(

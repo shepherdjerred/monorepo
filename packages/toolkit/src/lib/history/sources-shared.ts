@@ -93,24 +93,97 @@ export async function filesUnder(
   return files.sort();
 }
 
-async function fingerprint(files: string[]): Promise<string> {
-  const parts: string[] = [];
-  const fingerprintFiles = files.flatMap((file) => [
-    file,
-    `${file}-wal`,
-    `${file}-shm`,
-  ]);
-  for (const file of fingerprintFiles.sort()) {
-    try {
-      const info = await stat(file);
-      parts.push(`${file}:${String(info.mtimeMs)}:${String(info.size)}`);
-    } catch {
-      parts.push(`${file}:missing`);
-    }
+async function statPart(file: string): Promise<string> {
+  try {
+    const info = await stat(file);
+    return `${file}:${String(info.mtimeMs)}:${String(info.size)}`;
+  } catch {
+    return `${file}:missing`;
   }
-  return parts.join("|");
 }
 
+export type FileStats = {
+  readonly fingerprint: string;
+  readonly signatures: ReadonlyMap<string, string>;
+};
+
+async function fingerprintParts(files: readonly string[]): Promise<{
+  readonly ordered: readonly string[];
+  readonly byFile: ReadonlyMap<string, string>;
+}> {
+  const flat = files
+    .flatMap((file) => [file, `${file}-wal`, `${file}-shm`])
+    .sort();
+  const parts = new Map<string, string>();
+  const ordered: string[] = [];
+  for (const file of flat) {
+    const part = await statPart(file);
+    parts.set(file, part);
+    ordered.push(part);
+  }
+  return { ordered, byFile: parts };
+}
+
+/**
+ * Stats every file (plus SQLite `-wal`/`-shm` companions) once, returning
+ * both the whole-source fingerprint and a per-file signature for
+ * change detection. The fingerprint keeps its exact historical shape so
+ * stored source-state rows still compare.
+ */
+export async function statFiles(files: readonly string[]): Promise<FileStats> {
+  const { ordered, byFile } = await fingerprintParts(files);
+  const signatures = new Map<string, string>();
+  for (const file of files) {
+    const own = byFile.get(file);
+    const wal = byFile.get(`${file}-wal`);
+    const shm = byFile.get(`${file}-shm`);
+    if (own === undefined || wal === undefined || shm === undefined) {
+      throw new Error(`Missing fingerprint part for ${file}`);
+    }
+    signatures.set(file, [own, wal, shm].join("|"));
+  }
+  return { fingerprint: ordered.join("|"), signatures };
+}
+
+export type FileDiff = {
+  readonly added: readonly string[];
+  readonly changed: readonly string[];
+  readonly deleted: readonly string[];
+};
+
+export function diffFiles(
+  previous: ReadonlyMap<string, string> | null,
+  current: ReadonlyMap<string, string>,
+): FileDiff {
+  if (previous === null) {
+    return { added: [...current.keys()], changed: [], deleted: [] };
+  }
+  const added: string[] = [];
+  const changed: string[] = [];
+  for (const [file, signature] of current) {
+    const prior = previous.get(file);
+    if (prior === undefined) {
+      added.push(file);
+    } else if (prior !== signature) {
+      changed.push(file);
+    }
+  }
+  const deleted: string[] = [];
+  for (const file of previous.keys()) {
+    if (!current.has(file)) {
+      deleted.push(file);
+    }
+  }
+  return { added, changed, deleted };
+}
+
+/**
+ * The fingerprint is captured BEFORE parsing on purpose: what ingest
+ * compares is the file state this scan read from, so a file written
+ * mid-scan always differs on the next pass and its new content is
+ * ingested then. A post-parse fingerprint would already contain that
+ * write and ingest would skip the re-read forever.
+ */
 export async function sourceResult(
   source: HistorySourceName,
   files: string[],
@@ -123,25 +196,51 @@ export async function sourceResult(
       documents: [],
       fingerprint: "missing",
       error: null,
+      complete: true,
+      sourceIds: [],
     };
   }
+  const { fingerprint } = await statFiles(files);
   try {
+    const documents = await read();
     return {
       source,
       available: true,
-      documents: await read(),
-      fingerprint: await fingerprint(files),
+      documents,
+      fingerprint,
       error: null,
+      complete: true,
+      sourceIds: documents.map((document) => document.sourceId),
     };
   } catch (error: unknown) {
     return {
       source,
       available: false,
       documents: [],
-      fingerprint: await fingerprint(files),
+      fingerprint,
       error: error instanceof Error ? error.message : String(error),
+      complete: true,
+      sourceIds: [],
     };
   }
+}
+
+/** A scan that parsed only some files; `sourceIds` is still the full set. */
+export function incrementalResult(
+  source: HistorySourceName,
+  documents: readonly HistoryDocument[],
+  sourceIds: readonly string[],
+  fingerprint: string,
+): HistorySourceResult {
+  return {
+    source,
+    available: true,
+    documents,
+    fingerprint,
+    error: null,
+    complete: false,
+    sourceIds: [...sourceIds].sort(),
+  };
 }
 
 export function readDatabase(filePath: string): Database {

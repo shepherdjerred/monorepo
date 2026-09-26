@@ -1,7 +1,7 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
 import { createAntigravitySource } from "./sources/antigravity.ts";
-import { createCodexSource } from "./sources/codex.ts";
+import { createCodexSource } from "./sources/codex-scan.ts";
 import { createConductorSource } from "./sources/conductor.ts";
 import { createCursorSource } from "./sources/cursor.ts";
 import { createGrokSource } from "./sources/grok.ts";
@@ -15,16 +15,20 @@ import {
 import { createOpenCodeSources } from "./sources/opencode.ts";
 import type { HistoryPaths } from "./paths.ts";
 import {
+  diffFiles,
   filesUnder,
   firstText,
+  incrementalResult,
   sourceReadResult,
   sourceResult,
+  statFiles,
 } from "./sources-shared.ts";
 import { parseRecord, parseTimestamp, stringValue } from "./query/text.ts";
 import type {
   HistoryDocument,
   HistoryMessage,
   HistoryRecord,
+  HistoryScanOptions,
   HistorySource,
   HistorySourceReadResult,
   HistorySourceResult,
@@ -238,41 +242,124 @@ function claudeUsageEvents(
   );
 }
 
-async function scanClaude(paths: HistoryPaths): Promise<HistorySourceResult> {
+async function parseClaudeDocument(
+  file: string,
+  claudeProjects: string,
+): Promise<HistoryDocument> {
+  const transcript = await readClaudeTranscript(
+    file,
+    INDEXED_MESSAGE_PARSE_LIMIT,
+  );
+  const info = await stat(file);
+  const fallback = new Date(info.mtimeMs).toISOString();
+  const firstUser = openingPrompt(transcript.messages);
+  return makeHistoryDocument(
+    {
+      source: "claude",
+      sourceId: path.relative(claudeProjects, file),
+      title: firstText(
+        firstUser ?? path.basename(file, ".jsonl"),
+        "Claude Code session",
+      ),
+      path: file,
+      workspace: path.dirname(path.dirname(file)),
+      agent: "Claude Code",
+      createdAt: transcript.createdAt ?? fallback,
+      updatedAt: transcript.updatedAt ?? fallback,
+      runtimeId: transcript.runtimeId,
+      usageEvents: claudeUsageEvents(transcript.usageEntries),
+    },
+    transcript.messages,
+  );
+}
+
+async function scanClaude(
+  paths: HistoryPaths,
+  previous: ReadonlyMap<string, string> | null,
+  force: boolean,
+): Promise<{
+  readonly result: HistorySourceResult;
+  readonly signatures: ReadonlyMap<string, string> | null;
+}> {
   const files = await filesUnder(paths.claudeProjects, ".jsonl");
-  return sourceResult("claude", files, async () => {
+  if (files.length === 0) {
+    return {
+      result: await sourceResult("claude", files, () => []),
+      signatures: new Map(),
+    };
+  }
+  const { fingerprint, signatures } = await statFiles(files);
+  const diff =
+    force || previous === null ? null : diffFiles(previous, signatures);
+  // A deletion falls back to a full re-parse: retiring one document while
+  // trusting cached stats for the rest would strand a ghost id if a file
+  // ever reappeared with identical mtime+size, and deletions are rare.
+  const full = diff === null || diff.deleted.length > 0;
+  const parseFiles = full ? files : [...diff.added, ...diff.changed].sort();
+  try {
     const documents: HistoryDocument[] = [];
-    for (const file of files) {
-      const transcript = await readClaudeTranscript(
-        file,
-        INDEXED_MESSAGE_PARSE_LIMIT,
-      );
-      const info = await stat(file);
-      const fallback = new Date(info.mtimeMs).toISOString();
-      const firstUser = openingPrompt(transcript.messages);
-      documents.push(
-        makeHistoryDocument(
-          {
-            source: "claude",
-            sourceId: path.relative(paths.claudeProjects, file),
-            title: firstText(
-              firstUser ?? path.basename(file, ".jsonl"),
-              "Claude Code session",
-            ),
-            path: file,
-            workspace: path.dirname(path.dirname(file)),
-            agent: "Claude Code",
-            createdAt: transcript.createdAt ?? fallback,
-            updatedAt: transcript.updatedAt ?? fallback,
-            runtimeId: transcript.runtimeId,
-            usageEvents: claudeUsageEvents(transcript.usageEntries),
-          },
-          transcript.messages,
-        ),
-      );
+    for (const file of parseFiles) {
+      documents.push(await parseClaudeDocument(file, paths.claudeProjects));
     }
-    return documents;
-  });
+    const sourceIds = files.map((file) =>
+      path.relative(paths.claudeProjects, file),
+    );
+    // The cache holds pre-parse stats, so a file written mid-scan differs
+    // on the next pass and its new content is parsed then.
+    if (full) {
+      return {
+        result: {
+          source: "claude",
+          available: true,
+          documents,
+          fingerprint,
+          error: null,
+          complete: true,
+          sourceIds,
+        },
+        signatures,
+      };
+    }
+    return {
+      result: incrementalResult("claude", documents, sourceIds, fingerprint),
+      signatures,
+    };
+  } catch (error: unknown) {
+    return {
+      result: {
+        source: "claude",
+        available: false,
+        documents: [],
+        fingerprint,
+        error: error instanceof Error ? error.message : String(error),
+        complete: true,
+        sourceIds: [],
+      },
+      // A failed scan commits nothing: the next pass retries every file
+      // the cache does not already vouch for.
+      signatures: null,
+    };
+  }
+}
+
+export function createClaudeSource(): HistorySource {
+  let previous: ReadonlyMap<string, string> | null = null;
+  return {
+    name: "claude",
+    label: "Claude Code",
+    scan: async (paths: HistoryPaths, options?: HistoryScanOptions) => {
+      const { result, signatures } = await scanClaude(
+        paths,
+        previous,
+        options?.force ?? false,
+      );
+      if (signatures !== null) {
+        previous = signatures;
+      }
+      return result;
+    },
+    read: readClaude,
+  };
 }
 
 async function readClaude(
@@ -296,12 +383,7 @@ async function readClaude(
 export function createHistorySources(): readonly HistorySource[] {
   return [
     createConductorSource(),
-    {
-      name: "claude",
-      label: "Claude Code",
-      scan: scanClaude,
-      read: readClaude,
-    },
+    createClaudeSource(),
     createCodexSource(),
     createCursorSource(),
     ...createOpenCodeSources(),

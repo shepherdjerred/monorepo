@@ -6,11 +6,14 @@ import {
 } from "#lib/history/query/messages.ts";
 import type { HistoryPaths } from "#lib/history/paths.ts";
 import {
+  diffFiles,
   filesUnder,
   firstText,
+  incrementalResult,
   pathExists,
   sourceReadResult,
   sourceResult,
+  statFiles,
 } from "#lib/history/sources-shared.ts";
 import {
   parseRecord,
@@ -21,7 +24,9 @@ import type {
   HistoryDocument,
   HistoryMessage,
   HistoryRecord,
+  HistoryScanOptions,
   HistorySource,
+  HistorySourceResult,
   UsageEventEntry,
 } from "#lib/history/types.ts";
 import {
@@ -402,19 +407,111 @@ async function grokDocument(
   );
 }
 
+async function grokScanFiles(grokHome: string): Promise<{
+  readonly sessions: readonly string[];
+  readonly files: readonly string[];
+}> {
+  const sessions = await grokSessionFiles(grokHome);
+  const sidecars: string[] = [];
+  for (const session of sessions) {
+    const summary = path.join(path.dirname(session), "summary.json");
+    if (await pathExists(summary)) {
+      sidecars.push(summary);
+    }
+  }
+  return { sessions, files: [...sessions, ...sidecars] };
+}
+
+async function scanGrok(
+  paths: HistoryPaths,
+  previous: ReadonlyMap<string, string> | null,
+  force: boolean,
+): Promise<{
+  readonly result: HistorySourceResult;
+  readonly signatures: ReadonlyMap<string, string> | null;
+}> {
+  const { sessions, files } = await grokScanFiles(paths.grokHome);
+  if (sessions.length === 0) {
+    return {
+      result: await sourceResult("grok", [], () => []),
+      signatures: new Map(),
+    };
+  }
+  const { fingerprint, signatures } = await statFiles(files);
+  const diff =
+    force || previous === null ? null : diffFiles(previous, signatures);
+  // Any deletion falls back to a full re-parse (see scanClaude).
+  const full = diff === null || diff.deleted.length > 0;
+  const parseSessions = full
+    ? [...sessions]
+    : [
+        ...new Set(
+          [...diff.added, ...diff.changed].map((file) =>
+            path.basename(file) === "summary.json"
+              ? path.join(path.dirname(file), "updates.jsonl")
+              : file,
+          ),
+        ),
+      ]
+        .filter((file) => sessions.includes(file))
+        .sort();
+  try {
+    const documents: HistoryDocument[] = [];
+    for (const file of parseSessions) {
+      documents.push(await grokDocument(file, paths.grokHome));
+    }
+    const sourceIds = sessions.map((file) =>
+      path.relative(paths.grokHome, file),
+    );
+    if (full) {
+      return {
+        result: {
+          source: "grok",
+          available: true,
+          documents,
+          fingerprint,
+          error: null,
+          complete: true,
+          sourceIds,
+        },
+        signatures,
+      };
+    }
+    return {
+      result: incrementalResult("grok", documents, sourceIds, fingerprint),
+      signatures,
+    };
+  } catch (error: unknown) {
+    return {
+      result: {
+        source: "grok",
+        available: false,
+        documents: [],
+        fingerprint,
+        error: error instanceof Error ? error.message : String(error),
+        complete: true,
+        sourceIds: [],
+      },
+      signatures: null,
+    };
+  }
+}
+
 export function createGrokSource(): HistorySource {
+  let previous: ReadonlyMap<string, string> | null = null;
   return {
     name: "grok",
     label: "Grok",
-    async scan(paths: HistoryPaths) {
-      const files = await grokSessionFiles(paths.grokHome);
-      return sourceResult("grok", files, async () => {
-        const documents: HistoryDocument[] = [];
-        for (const file of files) {
-          documents.push(await grokDocument(file, paths.grokHome));
-        }
-        return documents;
-      });
+    async scan(paths: HistoryPaths, options?: HistoryScanOptions) {
+      const { result, signatures } = await scanGrok(
+        paths,
+        previous,
+        options?.force ?? false,
+      );
+      if (signatures !== null) {
+        previous = signatures;
+      }
+      return result;
     },
     async read(paths: HistoryPaths, records: readonly HistoryRecord[]) {
       return sourceReadResult(
