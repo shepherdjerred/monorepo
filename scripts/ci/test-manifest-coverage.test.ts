@@ -207,4 +207,27 @@ describe("unrunTestFiles", () => {
       "scripts/ci-test-manifest.json (@example/pkg): no step runs test/b.test.ts; add it to a step or to excludedSuites with the reason it runs elsewhere",
     ]);
   });
+
+  test("rejects test files in workspaces classified as testless", () => {
+    const manifestWithTestlessWorkspace: TestManifest = {
+      ...manifest([]),
+      testlessWorkspaces: [
+        {
+          package: "@example/no-tests",
+          directory: "packages/no-tests",
+          reason: "No test files exist.",
+        },
+      ],
+    };
+
+    expect(
+      unrunTestFiles(
+        manifestWithTestlessWorkspace,
+        ["packages/no-tests/src/new.test.ts"],
+        ["packages/no-tests"],
+      ),
+    ).toEqual([
+      "scripts/ci-test-manifest.json (@example/no-tests): testless workspace contains src/new.test.ts; reclassify it so CI can account for the suite",
+    ]);
+  });
 });

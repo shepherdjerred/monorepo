@@ -11,6 +11,7 @@ import type { TestManifest, TestStep } from "./ci-reporting.ts";
 import { minimatch } from "minimatch";
 
 type Workspace = TestManifest["workspaces"][number];
+type WorkspaceDirectory = Pick<Workspace, "directory">;
 type VitestStep = Extract<TestStep, { runner: "vitest" }>;
 
 /** Vitest's default include: `**\/*.{test,spec}.?(c|m)[jt]s?(x)`. */
@@ -100,7 +101,7 @@ export function isAccountedFor(workspace: Workspace, file: string): boolean {
  * Vitest config includes as `../.buildkite/scripts`.
  */
 export function workspaceTestFiles(
-  workspace: Workspace,
+  workspace: WorkspaceDirectory,
   trackedFiles: readonly string[],
   workspaceDirectories: readonly string[],
 ): string[] {
@@ -130,7 +131,7 @@ export function unrunTestFiles(
   trackedFiles: readonly string[],
   workspaceDirectories: readonly string[],
 ): string[] {
-  return manifest.workspaces.flatMap((workspace) =>
+  const unaccountedWorkspaceTests = manifest.workspaces.flatMap((workspace) =>
     workspaceTestFiles(workspace, trackedFiles, workspaceDirectories)
       .filter((file) => !isAccountedFor(workspace, file))
       .map(
@@ -138,4 +139,12 @@ export function unrunTestFiles(
           `scripts/ci-test-manifest.json (${workspace.package}): no step runs ${file}; add it to a step or to excludedSuites with the reason it runs elsewhere`,
       ),
   );
+  const testsInTestlessWorkspaces = manifest.testlessWorkspaces.flatMap(
+    (workspace) =>
+      workspaceTestFiles(workspace, trackedFiles, workspaceDirectories).map(
+        (file) =>
+          `scripts/ci-test-manifest.json (${workspace.package}): testless workspace contains ${file}; reclassify it so CI can account for the suite`,
+      ),
+  );
+  return [...unaccountedWorkspaceTests, ...testsInTestlessWorkspaces];
 }
