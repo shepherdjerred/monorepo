@@ -1027,6 +1027,27 @@ describe("orphan schedule detection", () => {
     ).toBe(false);
   });
 
+  test("undeclared durable-chat schedules are production drift", () => {
+    expect(
+      isOrphanSchedule({
+        scheduleId: "agent-chat-morning-review",
+        memo: undefined,
+        namespace: "prod",
+        declaredIds,
+        deletedIds,
+      }),
+    ).toBe(true);
+    expect(
+      isOrphanSchedule({
+        scheduleId: "morning-review",
+        memo: { chatId: "morning-review" },
+        namespace: "prod",
+        declaredIds,
+        deletedIds,
+      }),
+    ).toBe(true);
+  });
+
   test("a declared agent-task schedule removed from SCHEDULES is still flagged", () => {
     // Regression guard: a *declared*, source-controlled schedule that runs
     // agentTaskWorkflow must NOT be silently exempted merely because of its

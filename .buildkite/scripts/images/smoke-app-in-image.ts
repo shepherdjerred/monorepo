@@ -263,6 +263,8 @@ const commands: Record<
       "iptables --version",
       "ip6tables --version",
       "setpriv --version",
+      "pkill --version",
+      "pgrep --version",
       "toolkit --version",
       "gcx --version",
       "set +e",

@@ -448,7 +448,9 @@ describe("runCodexAgentTurn", () => {
       onEvent: vi.fn(),
     });
 
-    expect(wrapperScript).toContain("'setpriv' '--reuid=1001' '--'");
+    expect(wrapperScript).toContain(
+      "'setpriv' '--reuid=1001' '--regid=1001' '--clear-groups' '--'",
+    );
     expect(wrapperScript).toContain(shellQuoteForTest(process.execPath));
     expect(wrapperScript).toContain("codex.js");
     expect(await Bun.file(wrapperPath).exists()).toBe(false);
@@ -464,6 +466,39 @@ describe("runCodexAgentTurn", () => {
       await Bun.file(path.join(providerHome, ".codex", "auth.json")).exists(),
     ).toBe(false);
     expect(await Bun.file(providerHome).exists()).toBe(false);
+  });
+
+  test("rejects subscription auth without an isolated Codex home", async () => {
+    await expect(
+      runCodexAgentTurn({
+        service: "temporal",
+        callSite: "agent-chat",
+        prompt: "continue",
+        model: "gpt-5.4",
+        maxTurns: 4,
+        turnBudgetKind: "turns",
+        cwd: "/work/session",
+        auth: {
+          kind: "chatgpt-subscription",
+          authJson: JSON.stringify({
+            auth_mode: "chatgpt",
+            tokens: { access_token: "explicit-access-token" },
+          }),
+        },
+        env: { PATH: "/bin" },
+        signal: new AbortController().signal,
+        sandboxPolicy: {
+          sandboxMode: "workspace-write",
+          networkAccessEnabled: true,
+          webSearchMode: "live",
+        },
+        resumeSessionId: "codex-session",
+        redactTokens: ["explicit-access-token"],
+        beforeEvent: () => Promise.resolve(true),
+        onEvent: vi.fn(),
+      }),
+    ).rejects.toThrow("CODEX_HOME is required");
+    expect(mocks.constructor).not.toHaveBeenCalled();
   });
 });
 

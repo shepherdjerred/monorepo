@@ -18,6 +18,15 @@ const ContainerSchema = z.object({
   args: z.array(z.string()).optional(),
   env: z.array(z.object({ name: z.string(), value: z.string().optional() })),
   securityContext: SecurityContextSchema,
+  volumeMounts: z
+    .array(
+      z.object({
+        name: z.string(),
+        mountPath: z.string(),
+        readOnly: z.boolean().optional(),
+      }),
+    )
+    .optional(),
 });
 
 const DeploymentSchema = z.object({
@@ -30,8 +39,13 @@ const DeploymentSchema = z.object({
         labels: z.record(z.string(), z.string()),
       }),
       spec: z.object({
+        automountServiceAccountToken: z.boolean(),
+        securityContext: z
+          .object({ fsGroup: z.number().optional() })
+          .optional(),
         containers: z.array(ContainerSchema),
         initContainers: z.array(ContainerSchema),
+        volumes: z.array(z.looseObject({ name: z.string() })),
       }),
     }),
   }),
@@ -70,6 +84,7 @@ const NetworkPolicySchema = z.object({
         }),
       )
       .optional(),
+    egress: z.array(z.unknown()).optional(),
   }),
 });
 
@@ -156,7 +171,38 @@ describe("Temporal agent provider network boundary", () => {
     expect(worker.securityContext).toMatchObject({
       runAsUser: 0,
       allowPrivilegeEscalation: false,
-      capabilities: { add: ["CHOWN", "DAC_OVERRIDE", "SETUID"], drop: ["ALL"] },
+      capabilities: {
+        add: ["CHOWN", "DAC_OVERRIDE", "KILL", "SETGID", "SETUID"],
+        drop: ["ALL"],
+      },
+    });
+    expect(deployment.spec.template.spec.automountServiceAccountToken).toBe(
+      false,
+    );
+    expect(
+      deployment.spec.template.spec.securityContext?.fsGroup,
+    ).toBeUndefined();
+    expect(
+      deployment.spec.template.spec.volumes.find(
+        (volume) => volume.name === "provider-hidden-service-account",
+      ),
+    ).toMatchObject({
+      projected: {
+        defaultMode: 384,
+        sources: expect.arrayContaining([
+          {
+            serviceAccountToken: {
+              path: "token",
+              expirationSeconds: 3600,
+            },
+          },
+        ]),
+      },
+    });
+    expect(worker.volumeMounts).toContainEqual({
+      name: "provider-hidden-service-account",
+      mountPath: "/var/run/secrets/kubernetes.io/serviceaccount",
+      readOnly: true,
     });
     expect(
       worker.env.find((variable) => variable.name === "AGENT_PROVIDER_UID")
@@ -205,6 +251,8 @@ describe("Temporal agent provider network boundary", () => {
     expect(agent.spec.podSelector.matchLabels["component"]).toBe(
       "agent-worker",
     );
+    expect(JSON.stringify(agent.spec.egress)).toContain("seaweedfs");
+    expect(JSON.stringify(agent.spec.egress)).toContain("8333");
     expect(
       (server.spec.ingress ?? []).some((entry) =>
         (entry.from ?? []).some(

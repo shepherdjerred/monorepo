@@ -18,6 +18,7 @@ import { log as jsonLog } from "./observability/log.ts";
 import {
   parseWorkerRole,
   type WorkerRole,
+  workerRoleRunsAgent,
 } from "./shared/infra/worker-role.ts";
 import {
   parseTemporalBootstrap,
@@ -57,6 +58,7 @@ import {
   restoreGlitterCorpusMetricsAfterWorkerStart,
   restoreSeaweedFsMetricsAfterWorkerStart,
 } from "./observability/restore-startup-metrics.ts";
+import { prepareAgentChatRuntimeRoot } from "./activities/agent/chat/runtime-root.ts";
 
 const DEFAULT_ADDRESS = "temporal-server.temporal.svc.cluster.local:7233";
 const DEFAULT_METRICS_ADDRESS = "0.0.0.0:9464";
@@ -287,6 +289,9 @@ function localReleaseCommit(value: string | undefined): string {
 
 async function main(): Promise<void> {
   const role = parseWorkerRole(Bun.env["TEMPORAL_WORKER_ROLE"]);
+  if (workerRoleRunsAgent(role)) {
+    await prepareAgentChatRuntimeRoot();
+  }
   const bootstrap = parseTemporalBootstrap(Bun.env);
   const roleContract = getWorkerRoleContract(role);
   const namespace = parseTemporalNamespace(Bun.env["TEMPORAL_NAMESPACE"]);

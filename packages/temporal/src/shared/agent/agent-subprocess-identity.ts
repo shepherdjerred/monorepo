@@ -26,5 +26,12 @@ export function providerSubprocessCommand(
   const uid = providerSubprocessUid(environment);
   return uid === undefined
     ? [...command]
-    : ["setpriv", `--reuid=${uid.toString()}`, "--", ...command];
+    : [
+        "setpriv",
+        `--reuid=${uid.toString()}`,
+        `--regid=${uid.toString()}`,
+        "--clear-groups",
+        "--",
+        ...command,
+      ];
 }

@@ -25,19 +25,19 @@ The central Scout worker also polls its unchanged `scout` queue in `beta` for
 the beta-owned Bryan Bucks analytics schedule; all other central queues are
 `prod` only.
 
-| Role              | Queue or surface        | Activity concurrency |
-| ----------------- | ----------------------- | -------------------: |
-| `control`         | schedules and HTTP APIs |                 none |
-| `home`            | `home`                  |                    4 |
-| `reports`         | `reports`               |                    4 |
-| `infra`           | `infra`                 |                    1 |
-| `repo`            | `repo-automation`       |                    1 |
-| `scout`           | `scout`                 |                    1 |
-| `agent`           | `agent-task`            |                    1 |
-| `glitter-corpus`  | `glitter-corpus`        |                    1 |
-| `glitter-context` | `glitter-context`       |                    1 |
-| `maintenance`     | `maintenance`           |                    1 |
-| `workflows`       | `monorepo-workflows`    |                 none |
+| Role              | Queue or surface                                                | Activity concurrency |
+| ----------------- | --------------------------------------------------------------- | -------------------: |
+| `control`         | schedules and HTTP APIs                                         |                 none |
+| `home`            | `home`                                                          |                    4 |
+| `reports`         | `reports`                                                       |                    4 |
+| `infra`           | `infra`                                                         |                    1 |
+| `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts` |          1 per queue |
+| `scout`           | `scout`                                                         |                    1 |
+| `agent`           | `agent-task`                                                    |                    1 |
+| `glitter-corpus`  | `glitter-corpus`                                                |                    1 |
+| `glitter-context` | `glitter-context`                                               |                    1 |
+| `maintenance`     | `maintenance`                                                   |                    1 |
+| `workflows`       | `monorepo-workflows`                                            |                 none |
 
 The production manifests land in layers. The gateway, Workflow worker, and
 domain Activity Workers deploy independently so each queue has its own
@@ -45,8 +45,10 @@ credentials, concurrency, health, and metrics boundary.
 
 The agent worker keeps the Temporal poller at UID 0 and launches provider
 subprocesses at UID 1001. The owner firewall blocks provider access to Temporal.
-The worker retains only `SETUID`, `CHOWN`, and `DAC_OVERRIDE`: it must transfer
-fresh checkouts, then read and clean up private provider-owned session files.
+The worker retains only `SETUID`, `SETGID`, `CHOWN`, `DAC_OVERRIDE`, and
+`KILL`: it must set the provider identity, transfer fresh checkouts, read and
+clean up private provider-owned session files, and terminate detached
+provider-UID processes before that shared identity is reused.
 Provider subprocesses lose these capabilities when their UID changes, and
 `allowPrivilegeEscalation: false` prevents regaining them.
 
