@@ -200,21 +200,23 @@ export async function recordMatchMvpReportRefs(
   if (messageIds.size === 0) {
     return;
   }
+  const next = ReportMessageIdsSchema.parse(Object.fromEntries(messageIds));
+  // Delivery and vote-button events can record different channels at once.
+  // Merge under PostgreSQL's row lock so neither read/modify/write loses refs.
+  const updated = await prismaClient.$executeRaw`
+    UPDATE "MatchMvpContest"
+    SET "reportMessageIds" = COALESCE("reportMessageIds", '{}'::jsonb) || ${JSON.stringify(next)}::jsonb
+    WHERE "matchId" = ${matchId}
+      AND ("reportMessageIds" IS NULL OR jsonb_typeof("reportMessageIds") = 'object')
+  `;
+  if (updated > 0) return;
   const existing = await prismaClient.matchMvpContest.findUnique({
     where: { matchId },
     select: { reportMessageIds: true },
   });
-  if (existing === null) {
-    return;
-  }
-  const merged = {
-    ...parseReportMessageIds(existing.reportMessageIds),
-    ...Object.fromEntries(messageIds),
-  };
-  await prismaClient.matchMvpContest.update({
-    where: { matchId },
-    data: { reportMessageIds: merged },
-  });
+  if (existing === null) return;
+  parseReportMessageIds(existing.reportMessageIds);
+  throw new Error(`Match MVP contest ${matchId} report refs were not updated`);
 }
 
 export async function listMatchMvpReportRefs(
