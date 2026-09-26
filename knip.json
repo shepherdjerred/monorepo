@@ -231,7 +231,7 @@
       "entry": ["src/**/*.astro"],
       "project": ["src/**/*.{ts,tsx,astro,css}", "*.ts"]
     },
-    "packages/macos-cross-site": {
+    "packages/cross-compilers-site": {
       "entry": ["src/**/*.astro"],
       "project": ["src/**/*.{ts,tsx,astro,css}", "*.ts"]
     },

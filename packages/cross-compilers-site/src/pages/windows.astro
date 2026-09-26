@@ -1,0 +1,460 @@
+---
+import { Icon } from "astro-icon/components";
+import Layout from "../layouts/Layout.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+import FeatureCard from "../components/FeatureCard.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import ProcessStep from "../components/ProcessStep.astro";
+import SectionHeader from "../components/SectionHeader.astro";
+
+const sourceUrl =
+  "https://github.com/shepherdjerred/monorepo/tree/main/packages/windows-cross-compiler";
+// Digest-pinned: the images are published by digest only. Sync with
+// packages/windows-cross-compiler/images/<image>/DIGEST.
+const image =
+  "ghcr.io/shepherdjerred/windows-cross-compiler@sha256:976070135674e22399d7384418fe975584de36fbdddceeefc09ecff3ddff2cef";
+const winuiImage =
+  "ghcr.io/shepherdjerred/windows-cross-compiler-winui@sha256:6b35945b08c90de420111c415145487de5885b6e926c7cd6d4fe54d6d4380617";
+const run = `docker run --rm -v "$PWD:/workspace" \\\n  ${image} \\\n`;
+const winuiRun = `docker run --rm -v "$PWD:/workspace" \\\n  ${winuiImage} \\\n`;
+
+const heroCode = `${run}  x86_64-pc-windows-msvc-cl /EHsc hello.cpp /Fehello.exe`;
+
+type QuickStart =
+  | { label: string; title: string; code: string }
+  | {
+      label: string;
+      title: string;
+      code: string;
+      setup: string;
+      setupLabel: string;
+    };
+
+const quickStarts: QuickStart[] = [
+  {
+    label: "C++",
+    title: "A C++ program",
+    code: heroCode,
+  },
+  {
+    label: "Rust",
+    title: "A Rust crate",
+    code: `${run}  cargo xwin build --release --target x86_64-pc-windows-msvc`,
+  },
+  {
+    label: ".NET",
+    title: "A .NET project",
+    code: `${run}  dotnet publish -c Release -r win-x64`,
+  },
+  {
+    label: "WinUI",
+    title: "A WinUI 3 app, packaged as MSIX",
+    setup: `<Import Project="$(WindowsCrossTargets)" Condition="'$(WindowsCrossTargets)' != ''" />`,
+    setupLabel: "Directory.Build.targets — import the targets last",
+    code: `${winuiRun}  dotnet build -c Release -r win-x64 -p:Platform=x64 \\\n    -p:GenerateAppxPackageOnBuild=true -p:AppxPackageDir=/workspace/AppPackages/`,
+  },
+];
+
+const features = [
+  {
+    icon: "heroicons:code-bracket",
+    title: "C & C++",
+    description:
+      "clang-cl with cl.exe arguments, MSVC CRT and Windows SDK headers and libraries already configured.",
+  },
+  {
+    icon: "heroicons:wrench-screwdriver",
+    title: "Rust",
+    description:
+      "cargo xwin builds both Windows targets against the CRT and SDK already in the image.",
+  },
+  {
+    icon: "heroicons:cube",
+    title: ".NET",
+    description:
+      "EnableWindowsTargeting is set, so net*-windows projects restore and publish for win-x64 and win-arm64.",
+  },
+  {
+    icon: "heroicons:square-3-stack-3d",
+    title: "WinUI 3 & MSIX",
+    description:
+      "Windows App SDK apps compile XAML and package as MSIX in the Wine-based image.",
+  },
+  {
+    icon: "heroicons:server-stack",
+    title: "x64 & ARM64",
+    description:
+      "Both Windows architectures from one image: x86_64 and aarch64 targets for C, Rust, and .NET.",
+  },
+  {
+    icon: "heroicons:command-line",
+    title: "CMake toolchains",
+    description:
+      "Toolchain files for clang-cl builds live under /opt/windows-cross/xwin/cmake/clang-cl/.",
+  },
+  {
+    icon: "heroicons:shield-check",
+    title: "Pinned by digest",
+    description:
+      "Images are published by digest only, recorded in images/<image>/DIGEST, so CI pulls exact bits.",
+  },
+  {
+    icon: "heroicons:document-check",
+    title: "Stock SDK tools",
+    description:
+      "Microsoft's XAML compiler, makepri, and makeappx run unmodified under Wine through generated shims.",
+  },
+];
+
+const proofPoints = [
+  { label: "Compiles", detail: "C, C++, Rust, C#" },
+  { label: "Links", detail: "MSVC CRT, Windows SDK" },
+  { label: "Packages", detail: "MSIX via stock tools" },
+  { label: "Targets", detail: "x64 and ARM64 Windows" },
+];
+
+const toolchains = [
+  "x86_64-pc-windows-msvc-cl",
+  "aarch64-pc-windows-msvc-cl",
+  "cargo xwin build --target <triple>",
+  "dotnet publish -r win-x64 | win-arm64",
+  "makensis (NSIS installers)",
+];
+
+const images = [
+  {
+    name: "windows-cross-compiler",
+    digest: "sha256:976070135674…",
+    digestUrl:
+      "https://github.com/shepherdjerred/monorepo/blob/main/packages/windows-cross-compiler/images/windows-cross-compiler/DIGEST",
+    contents:
+      "clang-cl + lld, MSVC CRT + Windows SDK, Rust + cargo-xwin, .NET SDK, NSIS",
+    hosts: "linux/amd64",
+  },
+  {
+    name: "windows-cross-compiler-winui",
+    digest: "sha256:6b35945b08c9…",
+    digestUrl:
+      "https://github.com/shepherdjerred/monorepo/blob/main/packages/windows-cross-compiler/images/windows-cross-compiler-winui/DIGEST",
+    contents:
+      "Base image plus Wine 11, .NET Framework 4.8, the XAML compiler, makepri, and makeappx",
+    hosts: "linux/amd64",
+  },
+];
+
+const limitations = [
+  {
+    title: "Packages are unsigned",
+    body: "The SDK's signtool needs the x64 MFC runtime, which Wine lacks, so a build that enables signing fails with an explicit error. Sign on Windows.",
+  },
+  {
+    title: "The WinUI image needs an amd64 host",
+    body: "Building it runs 32-bit Wine code, which Docker's Rosetta emulation on Apple silicon cannot execute.",
+  },
+  {
+    title: "Manifest string patterns unenforced",
+    body: "MSXML accepts AppX manifest schema constructs that libxml2 rejects. A compatibility patch normalizes them, so makeappx does not enforce those string patterns here.",
+  },
+  {
+    title: "APPX2101 warning for makepri",
+    body: ".NET on Linux cannot read version resources from native executables, so the manifest's build metadata omits the MakePri version.",
+  },
+];
+---
+
+<Layout
+  title="windows-cross-compiler - Build Windows apps on Linux"
+  description="Linux container images that build Windows software: C, C++, Rust, and .NET for x64 and ARM64 Windows, and WinUI 3 apps packaged as MSIX. Nothing runs on Windows."
+>
+  <Header current="windows" />
+
+  <main id="main">
+    <section
+      aria-labelledby="hero-title"
+      class="relative overflow-hidden border-b border-stone-200 dark:border-stone-800"
+    >
+      <div
+        class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--color-sky-100),transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top,rgb(14_165_233/0.12),transparent_60%)]"
+        aria-hidden="true"
+      ></div>
+      <div class="relative mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-16 sm:px-6 sm:pt-24 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+        <div class="min-w-0">
+          <p class="inline-flex items-center gap-2 rounded-full border border-stone-300 px-3 py-1 font-mono text-xs text-stone-600 dark:border-stone-700 dark:text-stone-400">
+            <span
+              class="h-1.5 w-1.5 rounded-full bg-sky-500"
+              aria-hidden="true"
+            ></span>
+            Docker images &middot; nothing runs on Windows
+          </p>
+          <h1
+            id="hero-title"
+            class="mt-6 text-4xl font-semibold tracking-tight text-stone-900 sm:text-6xl dark:text-white"
+          >
+            Build Windows apps on Linux.
+          </h1>
+          <p class="mt-6 max-w-xl text-lg leading-relaxed text-stone-600 dark:text-stone-400">
+            <code class="text-[0.9em] text-stone-800 dark:text-stone-200">
+              windows-cross-compiler
+            </code>{" "}
+            builds C, C++, Rust, and .NET for x64 and ARM64 Windows in a Linux
+            container, and packages Windows App SDK (WinUI 3) apps as MSIX.
+            Nothing runs on Windows and nothing is signed.
+          </p>
+          <div class="mt-8 flex flex-wrap items-center gap-3">
+            <a
+              href={sourceUrl}
+              class="inline-flex items-center gap-2 rounded-lg bg-stone-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200"
+            >
+              <Icon
+                name="heroicons:code-bracket"
+                class="h-4 w-4"
+                aria-hidden="true"
+              />
+              View on GitHub
+            </a>
+            <a
+              href="#quick-start"
+              class="inline-flex items-center gap-2 rounded-lg border border-stone-300 px-5 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-900"
+            >
+              More examples
+            </a>
+          </div>
+        </div>
+        <div class="min-w-0">
+          <CodeBlock code={heroCode} label="hello.cpp → x64 .exe" />
+          <p class="mt-3 font-mono text-xs text-stone-500 dark:text-stone-400">
+            Base image on linux/amd64; the WinUI image needs an amd64 host.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section
+      aria-labelledby="proof-title"
+      class="border-b border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900/40"
+    >
+      <div class="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+        <h2
+          id="proof-title"
+          class="text-sm font-semibold text-stone-900 dark:text-white"
+        >
+          Built on Linux, runs on your PC.
+        </h2>
+        <ul class="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
+          {proofPoints.map((point) => (
+            <li>
+              <p class="font-mono text-xs font-semibold uppercase tracking-wider text-sky-700 dark:text-sky-400">
+                {point.label}
+              </p>
+              <p class="mt-1 text-sm text-stone-600 dark:text-stone-400">
+                {point.detail}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <section
+      aria-labelledby="features"
+      class="mx-auto max-w-6xl px-4 py-20 sm:px-6"
+    >
+      <SectionHeader
+        id="features"
+        eyebrow="What it builds"
+        title="The Windows toolchain, in a container"
+        subtitle="Everything you would otherwise need a Windows runner for, from a single docker run."
+      />
+      <ul class="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {features.map((feature) => (
+          <FeatureCard {...feature} />
+        ))}
+      </ul>
+    </section>
+
+    <section
+      aria-labelledby="quick-start"
+      class="border-y border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900/40"
+    >
+      <div class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <SectionHeader
+          id="quick-start"
+          eyebrow="Quick start"
+          title="Mount your project and build"
+          subtitle="Images are published by digest only — pull the digest recorded in images/<image>/DIGEST. Mount your sources at /workspace."
+        />
+        <div class="mt-12 grid gap-8 lg:grid-cols-2">
+          {quickStarts.map((example) => (
+            <div class="min-w-0">
+              <h3 class="mb-3 text-sm font-semibold text-stone-900 dark:text-white">
+                {example.title}
+              </h3>
+              {"setup" in example && (
+                <div class="mb-3">
+                  <CodeBlock code={example.setup} label={example.setupLabel} />
+                </div>
+              )}
+              <CodeBlock code={example.code} label={example.label} />
+            </div>
+          ))}
+        </div>
+        <div class="mt-12">
+          <h3 class="text-sm font-semibold text-stone-900 dark:text-white">
+            Toolchains
+          </h3>
+          <ul class="mt-3 flex flex-wrap gap-2">
+            {toolchains.map((toolchain) => (
+              <li>
+                <code class="block rounded-md border border-stone-200 bg-white px-2.5 py-1 text-xs text-stone-800 dark:border-stone-800 dark:bg-stone-950 dark:text-stone-200">
+                  {toolchain}
+                </code>
+              </li>
+            ))}
+          </ul>
+          <p class="mt-3 text-sm text-stone-600 dark:text-stone-400">
+            CMake projects can use the toolchain files under
+            <code class="text-stone-800 dark:text-stone-200">
+              /opt/windows-cross/xwin/cmake/clang-cl/
+            </code>
+            .
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section
+      aria-labelledby="how-it-works"
+      class="mx-auto max-w-6xl px-4 py-20 sm:px-6"
+    >
+      <SectionHeader
+        id="how-it-works"
+        eyebrow="How it works"
+        title="Microsoft's own tools, wherever they run"
+        subtitle="Instead of reimplementing MSVC, the images assemble the CRT, SDK, and packaging tools Microsoft publishes, and run the Windows-only ones under Wine."
+      />
+      <ol class="mt-12 grid gap-8 lg:grid-cols-2">
+        <ProcessStep step={1} title="The real CRT and SDK">
+          xwin downloads the MSVC CRT and Windows SDK into the image at build
+          time; building the image accepts their license.
+        </ProcessStep>
+        <ProcessStep step={2} title="clang-cl and lld">
+          An MSVC-compatible compiler driver that takes cl.exe arguments, with
+          the target's headers and libraries already configured, plus CMake
+          toolchain files.
+        </ProcessStep>
+        <ProcessStep step={3} title="cargo xwin Rust">
+          Rust's Windows targets build against the in-image CRT and SDK, and
+          makensis is available for NSIS installers.
+        </ProcessStep>
+        <ProcessStep step={4} title="Stock WinUI tooling">
+          The .NET Framework XAML compiler (which also compiles XAML to XBF) and
+          the SDK's makepri and makeappx run through generated Wine shims,
+          driven by MSBuild targets you import last.
+        </ProcessStep>
+        <ProcessStep step={5} title="Wine, patched where needed">
+          Six targeted Wine 11 patches keep makepri and makeappx working, and
+          packaged resources are mapped from makepri dump output where the
+          resource indexer API is unavailable.
+        </ProcessStep>
+      </ol>
+    </section>
+
+    <section
+      aria-labelledby="images"
+      class="border-y border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900/40"
+    >
+      <div class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <SectionHeader
+          id="images"
+          eyebrow="Images"
+          title="One image per workload"
+          subtitle={`Pull ghcr.io/shepherdjerred/windows-cross-compiler by digest — or the Wine-based WinUI image for XAML and MSIX.`}
+        />
+        <div class="mt-10 overflow-x-auto rounded-xl border border-stone-200 bg-white dark:border-stone-800 dark:bg-stone-950">
+          <table class="w-full text-left text-xs sm:text-sm">
+            <thead class="border-b border-stone-200 text-stone-600 dark:border-stone-800 dark:text-stone-400">
+              <tr>
+                <th scope="col" class="px-3 py-3 sm:px-4 font-medium">
+                  Image
+                </th>
+                <th scope="col" class="px-3 py-3 sm:px-4 font-medium">
+                  Digest
+                </th>
+                <th scope="col" class="px-3 py-3 sm:px-4 font-medium">
+                  Contents
+                </th>
+                <th scope="col" class="px-3 py-3 sm:px-4 font-medium">
+                  Hosts
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-200 dark:divide-stone-800">
+              {images.map((row) => (
+                <tr>
+                  <th
+                    scope="row"
+                    class="whitespace-nowrap px-3 py-3 sm:px-4 font-mono font-medium text-stone-900 dark:text-white"
+                  >
+                    {row.name}
+                  </th>
+                  <td class="whitespace-nowrap px-3 py-3 sm:px-4 font-mono text-stone-700 dark:text-stone-300">
+                    {row.digest}{" "}
+                    <a
+                      href={row.digestUrl}
+                      class="font-sans text-sky-700 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300"
+                    >
+                      full
+                    </a>
+                  </td>
+                  <td class="px-3 py-3 sm:px-4 text-stone-700 dark:text-stone-300">
+                    {row.contents}
+                  </td>
+                  <td class="whitespace-nowrap px-3 py-3 sm:px-4 text-stone-700 dark:text-stone-300">
+                    {row.hosts}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p class="mt-4 text-sm text-stone-600 dark:text-stone-400">
+          Digests live in images/&lt;image&gt;/DIGEST and are refreshed by CI
+          after each publish — check the full digest before you pull.
+        </p>
+      </div>
+    </section>
+
+    <section
+      aria-labelledby="limitations"
+      class="mx-auto max-w-6xl px-4 py-20 sm:px-6"
+    >
+      <SectionHeader
+        id="limitations"
+        eyebrow="Known limitations"
+        title="What to expect"
+      />
+      <ul class="mt-10 grid gap-4 md:grid-cols-2">
+        {limitations.map((item) => (
+          <li class="rounded-xl border border-stone-200 p-5 dark:border-stone-800">
+            <div class="flex items-center gap-2">
+              <Icon
+                name="heroicons:exclamation-triangle"
+                class="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400"
+                aria-hidden="true"
+              />
+              <h3 class="text-sm font-semibold text-stone-900 dark:text-white">
+                {item.title}
+              </h3>
+            </div>
+            <p class="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-400">
+              {item.body}
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

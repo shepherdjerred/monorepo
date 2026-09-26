@@ -1,0 +1,50 @@
+---
+import { Icon } from "astro-icon/components";
+
+const links = [
+  {
+    label: "macOS image",
+    href: "https://github.com/users/shepherdjerred/packages/container/package/macos-cross-compiler",
+    icon: "heroicons:cube",
+  },
+  {
+    label: "macOS source",
+    href: "https://github.com/shepherdjerred/monorepo/tree/main/packages/macos-cross-compiler",
+    icon: "heroicons:code-bracket",
+  },
+  {
+    label: "Windows image",
+    href: "https://github.com/users/shepherdjerred/packages/container/package/windows-cross-compiler",
+    icon: "heroicons:cube",
+  },
+  {
+    label: "Windows source",
+    href: "https://github.com/shepherdjerred/monorepo/tree/main/packages/windows-cross-compiler",
+    icon: "heroicons:code-bracket",
+  },
+];
+---
+
+<footer class="border-t border-stone-200 dark:border-stone-800">
+  <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 sm:flex-row sm:px-6">
+    <p class="text-xs text-stone-600 dark:text-stone-400">
+      &copy; {new Date().getFullYear()} Jerred Shepherd. Apple, macOS, iOS,
+      Swift, and Xcode are trademarks of Apple Inc. Microsoft and Windows are
+      trademarks of Microsoft.
+    </p>
+    <nav
+      aria-label="Project links"
+      class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
+    >
+      {links.map((link) => (
+        <a
+          href={link.href}
+          class="inline-flex items-center gap-1.5 text-xs text-stone-600 transition-colors hover:text-stone-900 dark:text-stone-400 dark:hover:text-white"
+        >
+          <Icon name={link.icon} class="h-3.5 w-3.5" aria-hidden="true" />
+          {link.label}
+        </a>
+      ))}
+    </nav>
+  </div>
+</footer>

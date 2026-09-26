@@ -1,0 +1,237 @@
+---
+import { Icon } from "astro-icon/components";
+import Layout from "../layouts/Layout.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import ProcessStep from "../components/ProcessStep.astro";
+import SectionHeader from "../components/SectionHeader.astro";
+
+const macosImage = "ghcr.io/shepherdjerred/macos-cross-compiler:27";
+// Digest-pinned: the Windows images are published by digest only. Sync with
+// packages/windows-cross-compiler/images/<image>/DIGEST.
+const windowsImage =
+  "ghcr.io/shepherdjerred/windows-cross-compiler@sha256:976070135674e22399d7384418fe975584de36fbdddceeefc09ecff3ddff2cef";
+
+const heroCode = `docker run --rm -v "$PWD:/workspace" \\
+  ${macosImage} \\
+  arm64-apple-macos-clang hello.c -o hello
+
+docker run --rm -v "$PWD:/workspace" \\
+  ${windowsImage} \\
+  x86_64-pc-windows-msvc-cl /EHsc hello.cpp /Fehello.exe`;
+
+const products = [
+  {
+    icon: "heroicons:command-line",
+    name: "macOS & iOS",
+    image: "macos-cross-compiler",
+    href: "/macos",
+    description:
+      "Swift and SwiftUI apps, SwiftPM packages, C, C++, Objective-C, and Rust for macOS, iOS, and Mac Catalyst. Signed Mach-O output that matches Xcode's.",
+    points: [
+      "Swift 6.4 + SwiftUI macros",
+      "applebuild .app bundles",
+      "One tag per macOS SDK",
+    ],
+  },
+  {
+    icon: "heroicons:square-3-stack-3d",
+    name: "Windows",
+    image: "windows-cross-compiler",
+    href: "/windows",
+    description:
+      "C, C++, Rust, and .NET for x64 and ARM64 Windows, plus WinUI 3 apps packaged as MSIX. Nothing runs on Windows and nothing is signed.",
+    points: ["clang-cl + lld", "cargo xwin + .NET", "WinUI 3 via a Wine image"],
+  },
+];
+
+const proofPoints = [
+  { label: "Apple targets", detail: "macOS, iOS, Mac Catalyst" },
+  { label: "Windows targets", detail: "x64, ARM64, MSIX" },
+  { label: "Host", detail: "Any Linux container host" },
+  { label: "CI-ready", detail: "Pinned tags and digests" },
+];
+---
+
+<Layout>
+  <Header />
+
+  <main id="main">
+    <section
+      aria-labelledby="hero-title"
+      class="relative overflow-hidden border-b border-stone-200 dark:border-stone-800"
+    >
+      <div
+        class="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--color-sky-100),transparent_60%)] dark:bg-[radial-gradient(ellipse_at_top,rgb(14_165_233/0.12),transparent_60%)]"
+        aria-hidden="true"
+      ></div>
+      <div class="relative mx-auto grid max-w-6xl gap-12 px-4 pb-20 pt-16 sm:px-6 sm:pt-24 lg:grid-cols-[1fr_1.1fr] lg:items-center">
+        <div class="min-w-0">
+          <p class="inline-flex items-center gap-2 rounded-full border border-stone-300 px-3 py-1 font-mono text-xs text-stone-600 dark:border-stone-700 dark:text-stone-400">
+            <span
+              class="h-1.5 w-1.5 rounded-full bg-sky-500"
+              aria-hidden="true"
+            ></span>
+            Docker images &middot; no Mac or Windows required
+          </p>
+          <h1
+            id="hero-title"
+            class="mt-6 text-4xl font-semibold tracking-tight text-stone-900 sm:text-6xl dark:text-white"
+          >
+            Build macOS, iOS, and Windows apps on Linux.
+          </h1>
+          <p class="mt-6 max-w-xl text-lg leading-relaxed text-stone-600 dark:text-stone-400">
+            Two Linux containers that compile, link, and package native software
+            for Apple and Windows targets. Mount your sources at
+            <code class="text-[0.9em] text-stone-800 dark:text-stone-200">
+              /workspace
+            </code>
+            and build.
+          </p>
+          <div class="mt-8 flex flex-wrap items-center gap-3">
+            <a
+              href="/macos"
+              class="inline-flex items-center gap-2 rounded-lg bg-stone-900 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-stone-700 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200"
+            >
+              macOS and iOS
+            </a>
+            <a
+              href="/windows"
+              class="inline-flex items-center gap-2 rounded-lg border border-stone-300 px-5 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-900"
+            >
+              Windows
+            </a>
+          </div>
+        </div>
+        <div class="min-w-0">
+          <CodeBlock
+            code={heroCode}
+            label="Two containers, every desktop target"
+          />
+          <p class="mt-3 font-mono text-xs text-stone-500 dark:text-stone-400">
+            macOS images run on amd64 and arm64; Windows images need amd64.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section
+      aria-labelledby="proof-title"
+      class="border-b border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900/40"
+    >
+      <div class="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 sm:px-6 lg:flex-row lg:items-center lg:justify-between">
+        <h2
+          id="proof-title"
+          class="text-sm font-semibold text-stone-900 dark:text-white"
+        >
+          One Linux host, every desktop target.
+        </h2>
+        <ul class="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
+          {proofPoints.map((point) => (
+            <li>
+              <p class="font-mono text-xs font-semibold uppercase tracking-wider text-sky-700 dark:text-sky-400">
+                {point.label}
+              </p>
+              <p class="mt-1 text-sm text-stone-600 dark:text-stone-400">
+                {point.detail}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+
+    <section
+      aria-labelledby="products"
+      class="mx-auto max-w-6xl px-4 py-20 sm:px-6"
+    >
+      <SectionHeader
+        id="products"
+        eyebrow="The images"
+        title="Pick your target"
+        subtitle="Each image is a complete toolchain: compilers, SDKs, linkers, and packagers, pinned and ready to run."
+      />
+      <ul class="mt-12 grid gap-4 lg:grid-cols-2">
+        {products.map((product) => (
+          <li class="flex min-w-0 flex-col rounded-xl border border-stone-200 bg-stone-50 p-6 dark:border-stone-800 dark:bg-stone-900/50">
+            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-sky-100 dark:bg-sky-950">
+              <Icon
+                name={product.icon}
+                class="h-5 w-5 text-sky-700 dark:text-sky-400"
+                aria-hidden="true"
+              />
+            </div>
+            <h3 class="mt-4 text-lg font-semibold text-stone-900 dark:text-white">
+              {product.name}
+            </h3>
+            <p class="mt-1 font-mono text-xs text-stone-500 dark:text-stone-400">
+              ghcr.io/shepherdjerred/{product.image}
+            </p>
+            <p class="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-400">
+              {product.description}
+            </p>
+            <ul class="mt-4 space-y-1.5 text-sm text-stone-700 dark:text-stone-300">
+              {product.points.map((point) => (
+                <li class="flex items-center gap-2">
+                  <Icon
+                    name="heroicons:check"
+                    class="h-4 w-4 shrink-0 text-sky-600 dark:text-sky-400"
+                    aria-hidden="true"
+                  />
+                  {point}
+                </li>
+              ))}
+            </ul>
+            <a
+              href={product.href}
+              class="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-sky-700 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-300"
+            >
+              How {product.name} works
+              <Icon
+                name="heroicons:arrow-right"
+                class="h-4 w-4"
+                aria-hidden="true"
+              />
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="mt-6 font-mono text-xs text-stone-500 dark:text-stone-400">
+        WinUI 3 apps use a second image:
+        ghcr.io/shepherdjerred/windows-cross-compiler-winui.
+      </p>
+    </section>
+
+    <section
+      aria-labelledby="philosophy"
+      class="border-t border-stone-200 bg-stone-50 dark:border-stone-800 dark:bg-stone-900/40"
+    >
+      <div class="mx-auto max-w-6xl px-4 py-20 sm:px-6">
+        <SectionHeader
+          id="philosophy"
+          eyebrow="Shared philosophy"
+          title="Vendor tools, not imitations"
+          subtitle="Both images assemble the toolchains the vendors themselves publish, and fill only the gaps where closed binaries can't run on Linux."
+        />
+        <ol class="mt-12 grid gap-8 lg:grid-cols-3">
+          <ProcessStep step={1} title="Real SDKs">
+            Apple's macOS and iOS SDKs on one side, the MSVC CRT and Windows SDK
+            on the other. The headers and libraries your code builds against are
+            the vendors' own.
+          </ProcessStep>
+          <ProcessStep step={2} title="Mount and build">
+            Sources go in at /workspace and binaries come out. No daemons, no
+            project conversion, no Mac or Windows machine in the loop.
+          </ProcessStep>
+          <ProcessStep step={3} title="Pinned and reproducible">
+            One macOS SDK per tag, Windows images pinned by digest. CI builds
+            the same bits every time.
+          </ProcessStep>
+        </ol>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+</Layout>

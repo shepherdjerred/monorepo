@@ -112,7 +112,7 @@ packages/webring/docs/
 
 # Astro build cache
 packages/cooklang-rich-preview/.astro/
-packages/macos-cross-site/.astro/
+packages/cross-compilers-site/.astro/
 
 # ESLint config compiled output
 packages/eslint-config/local.js
