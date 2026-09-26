@@ -6,6 +6,7 @@ import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.tracks.adapter.db.JooqTrackStore;
 import com.shepherdjerred.thestorm.tracks.adapter.luckperms.LuckPermsSync;
 import com.shepherdjerred.thestorm.tracks.adapter.paper.TracksPaper;
+import com.shepherdjerred.thestorm.tracks.adapter.paper.TracksPermissions;
 import com.shepherdjerred.thestorm.tracks.adapter.paper.UseCases;
 import com.shepherdjerred.thestorm.tracks.app.LevelCache;
 import com.shepherdjerred.thestorm.tracks.app.PurchaseService;
@@ -30,6 +31,7 @@ public final class TracksModule implements StormModule {
   static final Duration SHUTDOWN_GRACE = Duration.ofSeconds(10);
 
   private @Nullable PurchaseService purchases;
+  private @Nullable TracksPermissions registered;
 
   @Override
   public String id() {
@@ -69,13 +71,21 @@ public final class TracksModule implements StormModule {
                 });
     var sessions =
         new TrackSessions(runtime, TracksPaper.loadFailedNotice(context.plugin().getServer()));
-    TracksPaper.install(
-        context, config, new UseCases(service, new TrackAdmin(runtime), sessions, cache));
+    registered =
+        TracksPaper.install(
+            context, config, new UseCases(service, new TrackAdmin(runtime), sessions, cache));
   }
 
-  /** Refuses new purchases and lets running ones finish before the database closes. */
+  /**
+   * Refuses new purchases, lets running ones finish before the database closes, and unregisters the
+   * permissions.
+   */
   @Override
   public void disable() {
+    if (registered != null) {
+      registered.unregister();
+      registered = null;
+    }
     if (purchases != null) {
       purchases.shutdown(SHUTDOWN_GRACE);
       purchases = null;
