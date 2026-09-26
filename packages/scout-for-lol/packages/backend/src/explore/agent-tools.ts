@@ -40,6 +40,7 @@ import {
   isExploreMatchSnapshotSupported,
   matchIdsInPreview,
 } from "#src/explore-match/match-view.ts";
+import { loadoutPairsInPreview } from "#src/explore-match/loadout-view.ts";
 import { scoutExploreToolCallsTotal } from "#src/metrics/explore.ts";
 import {
   reportQueryModelPreviewSummary,
@@ -55,6 +56,15 @@ import {
 import { fetchMatchSupport } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
+
+const ExploreLoadoutPairKeySchema = z.tuple([z.string(), z.string()]);
+
+function describeExploreLoadoutPairs(pairs: Set<string>): string {
+  return [...pairs]
+    .map((pair) => ExploreLoadoutPairKeySchema.parse(JSON.parse(pair)))
+    .map(([matchId, puuid]) => `(${matchId}, ${puuid})`)
+    .join(", ");
+}
 
 export type ExploreAgentParams = {
   runId: string;
@@ -101,6 +111,8 @@ export type RunState = {
   lastMatchIds: Set<string>;
   /** Every match id in the most recent query, including card-ineligible modes. */
   lastQueryMatchIds: Set<string>;
+  /** Exact participant pairs returned by the most recent participant query. */
+  lastQueryLoadoutPairs: Set<string>;
   /** Skills loaded this turn, so result messages can stop nudging. */
   loadedSkills: Set<string>;
 };
@@ -293,6 +305,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
         state.lastPreview = preview;
         state.lastVisualization = result.visualization ?? null;
         state.lastQueryMatchIds = matchIdsInPreview(preview, source);
+        state.lastQueryLoadoutPairs = loadoutPairsInPreview(preview, source);
         const cardSupportRows =
           params.surface === "web" || params.surface === "voice"
             ? await fetchMatchSupport({
@@ -327,6 +340,9 @@ export function createExploreTools(options: ExploreToolsOptions) {
             state.lastMatchIds.size === 0
               ? "This query has no supported match cards. Set matchCards to []."
               : `For this query, cards may use only these match_id values: ${[...state.lastMatchIds].join(", ")}.`,
+            state.lastQueryLoadoutPairs.size === 0
+              ? "This query has no eligible loadout cards. Set loadoutCards to []."
+              : `For this query, loadoutCards may use only these exact (match_id, puuid) pairs: ${describeExploreLoadoutPairs(state.lastQueryLoadoutPairs)}.`,
             ...(state.loadedSkills.has("visualization")
               ? []
               : [

@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   ExploreConversationSchema,
   ExploreMatchCardSchema,
+  ExploreLoadoutCardSchema,
   ExploreMessageSchema,
   ExploreTraceEntrySchema,
   ReportAiPreviewSummarySchema,
@@ -20,6 +21,7 @@ import {
 const StringArraySchema = z.array(z.string());
 const TraceArraySchema = z.array(ExploreTraceEntrySchema);
 const MatchCardsSchema = z.array(ExploreMatchCardSchema).max(5);
+const LoadoutCardsSchema = z.array(ExploreLoadoutCardSchema).max(3);
 
 export type ConversationRow = {
   id: string;
@@ -43,6 +45,7 @@ export type MessageRow = {
   preview: string | null;
   visualization: string | null;
   matchCards: string | null;
+  loadoutCards: string | null;
   guildIds: string | null;
   trace: string | null;
   createdAt: Date;
@@ -91,6 +94,9 @@ export function toMessage(
     ),
     matchCards:
       parseJsonColumn(row.matchCards, MatchCardsSchema, "matchCards") ?? [],
+    loadoutCards:
+      parseJsonColumn(row.loadoutCards, LoadoutCardsSchema, "loadoutCards") ??
+      [],
     guildIds:
       parseJsonColumn(row.guildIds, StringArraySchema, "guildIds") ?? [],
     trace: parseJsonColumn(row.trace, TraceArraySchema, "trace") ?? [],

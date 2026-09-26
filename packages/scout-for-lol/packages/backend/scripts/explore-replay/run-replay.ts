@@ -245,6 +245,9 @@ function observationSide(observation: ReplayObservation): ReplaySide {
     ...queryFactsFromTrace(observation.trace),
     toolNames: observation.trace.map((entry) => entry.toolName),
     matchCardIds: observation.matchCards.map((card) => card.match.matchId),
+    loadoutCardIds: observation.loadoutCards.map(
+      (card) => `${card.matchId}:${card.participantId.toString()}`,
+    ),
     visualizationKind: observation.visualization?.kind ?? null,
   };
 }
@@ -622,6 +625,9 @@ async function conversationCasesFor(
         toolNames: turn.baseline.trace.map((entry) => entry.toolName),
         matchCardIds: turn.baseline.matchCards.map(
           (card) => card.match.matchId,
+        ),
+        loadoutCardIds: turn.baseline.loadoutCards.map(
+          (card) => `${card.matchId}:${card.participantId.toString()}`,
         ),
         visualizationKind: turn.baseline.visualization?.kind ?? null,
       });

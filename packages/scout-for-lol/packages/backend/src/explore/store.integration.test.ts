@@ -7,6 +7,7 @@ import {
   type ExploreAttachPoint,
 } from "@scout-for-lol/data";
 import { testAccountId } from "#src/testing/test-ids.ts";
+import { testExploreLoadoutCard } from "#src/explore/loadout-card-test-fixture.ts";
 import {
   ExploreInvalidTurnError,
   ExploreNotFoundError,
@@ -67,6 +68,7 @@ const ANSWER = {
     "SELECT champion, games FROM match_participants GROUP BY champion DURING LAST 30 DAYS",
   includeVisualization: false,
   matchCards: [],
+  loadoutCards: [],
   caveats: ["Only 12 games."],
   followUps: ["How does that change by patch?"],
 };
@@ -137,6 +139,8 @@ const MATCH_CARD = ExploreMatchCardSchema.parse({
     ],
   },
 });
+
+const LOADOUT_CARD = testExploreLoadoutCard("L");
 
 /** Ask a question and answer it, returning both message ids. */
 async function askAndAnswer(input: {
@@ -308,7 +312,7 @@ describe("explore store — voice", () => {
 });
 
 describe("explore store", () => {
-  test("persists a frozen match card for the owner and shared transcript", async () => {
+  test("persists frozen match and loadout cards for the owner and shared transcript", async () => {
     const started = await startExploreTurn(prisma, {
       conversationId: null,
       userId,
@@ -323,6 +327,7 @@ describe("explore store", () => {
       preview: null,
       visualization: null,
       matchCards: [MATCH_CARD],
+      loadoutCards: [LOADOUT_CARD],
       trace: [],
     });
     const token = await shareExploreConversation(
@@ -339,6 +344,8 @@ describe("explore store", () => {
 
     expect(owner?.messages[1]?.matchCards).toEqual([MATCH_CARD]);
     expect(shared?.messages[1]?.matchCards).toEqual([MATCH_CARD]);
+    expect(owner?.messages[1]?.loadoutCards).toEqual([LOADOUT_CARD]);
+    expect(shared?.messages[1]?.loadoutCards).toEqual([LOADOUT_CARD]);
   });
 
   test("rolls back a persisted question when durable admission rejects", async () => {

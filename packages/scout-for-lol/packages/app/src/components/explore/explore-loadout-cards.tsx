@@ -1,0 +1,333 @@
+import type { ExploreLoadoutCard } from "@scout-for-lol/data";
+import { Badge } from "@scout-for-lol/design-system/components/badge";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+} from "@scout-for-lol/design-system/components/card";
+import {
+  ChampionPortrait,
+  ItemIcon,
+  RuneIcon,
+  SummonerSpellIcon,
+} from "@scout-for-lol/design-system/assets";
+
+function ItemImage(props: { itemId: number; name: string; className: string }) {
+  return (
+    <ItemIcon
+      item={props.itemId}
+      alt={props.name}
+      title={props.name}
+      optional
+      className={props.className}
+    />
+  );
+}
+
+function RuneImage(props: {
+  assetKey: string;
+  name: string;
+  className: string;
+}) {
+  return (
+    <RuneIcon
+      rune={props.assetKey}
+      alt={props.name}
+      title={props.name}
+      optional
+      className={props.className}
+    />
+  );
+}
+
+function FinalBuild(props: { card: ExploreLoadoutCard }) {
+  return (
+    <section className="space-y-2" aria-label="Final build">
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
+        Final build
+      </h4>
+      <div className="flex flex-wrap items-center gap-1.5" role="list">
+        {props.card.finalItems.map((item) => (
+          <div
+            key={item.slot}
+            role="listitem"
+            aria-label={`${item.slot === 6 ? "Trinket" : `Item slot ${String(item.slot + 1)}`}: ${item.name ?? "empty"}`}
+            title={`${item.slot === 6 ? "Trinket" : `Slot ${String(item.slot + 1)}`}: ${item.name ?? "Empty"}`}
+            className="flex flex-col items-center gap-0.5"
+          >
+            {item.itemId === null || item.name === null ? (
+              <span className="size-9 rounded border border-dashed border-scout-border bg-scout-surface" />
+            ) : (
+              <ItemImage
+                itemId={item.itemId}
+                name={item.name}
+                className="size-9 rounded border border-scout-border"
+              />
+            )}
+            {item.slot === 6 && (
+              <span className="text-[10px] text-scout-subtle">Trinket</span>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Spells(props: { card: ExploreLoadoutCard }) {
+  return (
+    <section className="space-y-2" aria-label="Summoner spells">
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
+        Spells
+      </h4>
+      <div className="flex gap-1.5">
+        {props.card.spells.map((spell) =>
+          spell.spellId === null || spell.name === null ? (
+            <span
+              key={spell.slot}
+              className="size-8 rounded border border-dashed border-scout-border"
+              aria-label={`Spell slot ${String(spell.slot)} unavailable`}
+            />
+          ) : (
+            <SummonerSpellIcon
+              key={spell.slot}
+              spell={spell.spellId}
+              alt={spell.name}
+              title={spell.name}
+              optional
+              className="size-8 rounded border border-scout-border"
+            />
+          ),
+        )}
+      </div>
+    </section>
+  );
+}
+
+function RunePage(props: { card: ExploreLoadoutCard }) {
+  const { runePage } = props.card;
+  return (
+    <section className="space-y-2" aria-label="Rune page">
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
+        Rune page
+      </h4>
+      <div className="flex flex-wrap items-center gap-2">
+        {runePage.primaryTree !== null && (
+          <RuneImage
+            assetKey={runePage.primaryTree.assetKey}
+            name={`${runePage.primaryTree.name} tree`}
+            className="size-8 rounded-full border border-scout-border"
+          />
+        )}
+        {runePage.keystone !== null && (
+          <RuneImage
+            assetKey={runePage.keystone.assetKey}
+            name={runePage.keystone.name}
+            className="size-9 rounded-full border border-amber-400/70"
+          />
+        )}
+        {runePage.primaryRunes.map((rune) => (
+          <RuneImage
+            key={rune.id}
+            assetKey={rune.assetKey}
+            name={rune.name}
+            className="size-7 rounded-full border border-scout-border"
+          />
+        ))}
+        {runePage.secondaryTree !== null && (
+          <RuneImage
+            assetKey={runePage.secondaryTree.assetKey}
+            name={`${runePage.secondaryTree.name} tree`}
+            className="ml-2 size-8 rounded-full border border-scout-border"
+          />
+        )}
+        {runePage.secondaryRunes.map((rune) => (
+          <RuneImage
+            key={rune.id}
+            assetKey={rune.assetKey}
+            name={rune.name}
+            className="size-7 rounded-full border border-scout-border"
+          />
+        ))}
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {runePage.shards.map((shard) => (
+          <Badge key={shard.slot} variant="outline" className="text-[10px]">
+            {shard.slot}: {shard.id ?? "not recorded"}
+          </Badge>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function BuildPath(props: { card: ExploreLoadoutCard }) {
+  if (!props.card.buildPathRecorded) {
+    return (
+      <section className="space-y-2" aria-label="Build path">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
+          Build path
+        </h4>
+        <p className="text-xs text-scout-subtle">
+          Timeline data is not recorded for this match. The row above is the
+          final inventory.
+        </p>
+      </section>
+    );
+  }
+  if (props.card.buildPath.length === 0) {
+    return (
+      <section className="space-y-2" aria-label="Build path">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
+          Build path
+        </h4>
+        <p className="text-xs text-scout-subtle">
+          No item purchases were recorded in the timeline.
+        </p>
+      </section>
+    );
+  }
+
+  const eventsByMinute = Map.groupBy(
+    props.card.buildPath,
+    (event) => event.minute,
+  );
+  return (
+    <section className="space-y-2" aria-label="Build path">
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
+        Build path
+      </h4>
+      <ol className="flex flex-wrap items-start gap-x-4 gap-y-3">
+        {[...eventsByMinute.entries()].map(([minute, events]) => (
+          <li key={minute} className="flex flex-col gap-1">
+            <span className="text-[10px] tabular-nums text-scout-subtle">
+              {minute.toString()}m
+            </span>
+            <ul className="flex flex-wrap items-center gap-1.5">
+              {events.map((event, index) => (
+                <li
+                  key={`${event.itemId.toString()}-${index.toString()}`}
+                  className="flex items-center gap-1"
+                  title={`${event.kind === "sold" ? "Sold" : "Bought"} ${event.name ?? `item ${event.itemId.toString()}`} at ${minute.toString()} minutes`}
+                >
+                  <ItemImage
+                    itemId={event.itemId}
+                    name={event.name ?? `Item ${event.itemId.toString()}`}
+                    className={`size-7 rounded border border-scout-border ${event.kind === "sold" ? "opacity-50" : ""}`}
+                  />
+                  {event.kind === "sold" && (
+                    <Badge variant="secondary" className="h-4 px-1 text-[9px]">
+                      Sold
+                    </Badge>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function SkillOrder(props: { card: ExploreLoadoutCard }) {
+  if (props.card.skillOrder.length === 0) {
+    return (
+      <section className="space-y-2" aria-label="Skill order">
+        <h4 className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
+          Skill order
+        </h4>
+        <p className="text-xs text-scout-subtle">
+          Skill order is not recorded in the available timeline.
+        </p>
+      </section>
+    );
+  }
+  const skillAtLevel = new Map(
+    props.card.skillOrder.map((entry) => [entry.level, entry.skill]),
+  );
+  return (
+    <section className="space-y-2" aria-label="Skill order">
+      <h4 className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
+        Skill order
+      </h4>
+      <ol className="grid grid-cols-9 gap-1.5 sm:grid-cols-[repeat(18,minmax(0,1fr))]">
+        {Array.from({ length: 18 }, (_, index) => {
+          const level = index + 1;
+          const skill = skillAtLevel.get(level);
+          return (
+            <li
+              key={level}
+              aria-label={
+                skill === undefined
+                  ? `Level ${level.toString()}`
+                  : `Level ${level.toString()}: ${skill}`
+              }
+              title={
+                skill === undefined
+                  ? `Level ${level.toString()}`
+                  : `Level ${level.toString()}: ${skill}`
+              }
+              className="flex aspect-square flex-col items-center justify-center rounded border border-scout-border bg-scout-surface text-[10px]"
+            >
+              <span className="text-scout-subtle">{level.toString()}</span>
+              {skill !== undefined && (
+                <span className="font-semibold text-scout-ink">{skill}</span>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </section>
+  );
+}
+
+function ExploreLoadoutCardView(props: { card: ExploreLoadoutCard }) {
+  const { card } = props;
+  return (
+    <Card className="border-scout-border bg-scout-surface">
+      <CardHeader className="space-y-2 pb-3">
+        <div className="flex items-center gap-3">
+          <ChampionPortrait
+            champion={card.championId}
+            alt={card.championName}
+            optional
+            className="size-10 rounded-full border border-scout-border"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-medium text-scout-ink">
+              {card.championName} loadout
+            </p>
+            <p className="truncate text-xs text-scout-subtle">{card.matchId}</p>
+          </div>
+          <Badge variant="outline">{card.size}</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4 pt-0">
+        <div className="grid gap-4 sm:grid-cols-[auto_1fr]">
+          <FinalBuild card={card} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Spells card={card} />
+            <RunePage card={card} />
+          </div>
+        </div>
+        <BuildPath card={card} />
+        <SkillOrder card={card} />
+      </CardContent>
+    </Card>
+  );
+}
+
+export function ExploreLoadoutCards(props: { cards: ExploreLoadoutCard[] }) {
+  if (props.cards.length === 0) return null;
+  return (
+    <div className="space-y-3" role="group" aria-label="Loadout cards">
+      {props.cards.map((card) => (
+        <ExploreLoadoutCardView
+          key={`${card.matchId}:${card.participantId.toString()}`}
+          card={card}
+        />
+      ))}
+    </div>
+  );
+}

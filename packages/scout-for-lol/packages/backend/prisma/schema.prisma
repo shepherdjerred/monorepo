@@ -780,6 +780,8 @@ model ExploreMessage {
   visualization  String?
   /// JSON array matching ExploreMatchCardSchema; frozen with the assistant turn.
   matchCards     String?
+  /// JSON array matching ExploreLoadoutCardSchema; frozen with the assistant turn.
+  loadoutCards   String?
   /// JSON string array of the guilds this turn's capabilities were resolved
   /// from. A conversation belongs to a person, not a guild, but a *turn* ran
   /// with a specific one and that decided which tools existed — which replay

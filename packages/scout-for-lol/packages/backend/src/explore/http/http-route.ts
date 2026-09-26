@@ -217,7 +217,8 @@ async function handleSharedTranscript(
       : {
           ...compatibleShared,
           messages: compatibleShared.messages.map(
-            ({ matchCards: _, ...message }) => message,
+            ({ matchCards: _, loadoutCards: _loadoutCards, ...message }) =>
+              message,
           ),
         };
   return Response.json(payload, {

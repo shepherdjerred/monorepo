@@ -13,10 +13,12 @@ import { z } from "zod";
 import {
   DiscordAccountIdSchema,
   DiscordGuildIdSchema,
+  ExploreLoadoutCardSchema,
   EXPLORE_INTERRUPTED_CAVEAT,
   EXPLORE_STOPPED_CAVEAT,
 } from "@scout-for-lol/data";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
+import { testExploreLoadoutCard } from "#src/explore/loadout-card-test-fixture.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 
 const trpc = await createOfflineTrpcHarness("explore-http-e2e");
@@ -31,6 +33,7 @@ const cors: Record<string, string> = {};
 const originalEnvironment = Bun.env["ENVIRONMENT"];
 
 const ErrorBody = z.object({ error: z.string() });
+const SHARED_LOADOUT_CARD = testExploreLoadoutCard("S");
 
 const { signSession } = await import("#src/trpc/jwt.ts");
 /** Headers for a request that passes session + CSRF + origin. */
@@ -78,8 +81,12 @@ async function postObserver(
   return response;
 }
 
-async function getShared(token: string): Promise<Response> {
+async function getShared(
+  token: string,
+  includeCards = false,
+): Promise<Response> {
   const url = new URL(`http://localhost/api/explore/shared/${token}`);
+  if (includeCards) url.searchParams.set("cards", "1");
   const response = await handleExploreRoute(
     new Request(url.toString(), { method: "GET" }),
     url,
@@ -142,6 +149,7 @@ async function seedSharedConversation(): Promise<string> {
         "SELECT champion, win_rate FROM match_participants GROUP BY champion DURING LAST 30 DAYS",
       caveats: JSON.stringify(["Small sample."]),
       followUps: JSON.stringify(["How about by patch?"]),
+      loadoutCards: JSON.stringify([SHARED_LOADOUT_CARD]),
       trace: JSON.stringify([
         {
           toolCallId: "call-1",
@@ -334,6 +342,7 @@ async function appendCompleteAnswer(input: {
       queryText: null,
       includeVisualization: false,
       matchCards: [],
+      loadoutCards: [],
       caveats: [],
       followUps: [],
     },
@@ -526,6 +535,7 @@ describe("explore http route — remaining surface", () => {
             // Same contract one level down: a cached client parses each
             // message strictly, and an empty array still serializes the key.
             guildIds: z.never().optional(),
+            loadoutCards: z.never().optional(),
             trace: z.array(
               z.object({
                 details: z.object({ kind: z.string() }).nullable(),
@@ -542,6 +552,21 @@ describe("explore http route — remaining surface", () => {
     expect(body.messages[1]?.content).toBe("Jinx, over 42 games.");
     expect(body.messages[1]?.trace[0]?.details?.kind).toBe("execution");
     expect(JSON.stringify(rawBody)).not.toContain("owner-only");
+  });
+
+  test("a shared transcript includes loadout cards only when cards=1", async () => {
+    const shareToken = await seedSharedConversation();
+    const response = await getShared(shareToken, true);
+    const body = z
+      .object({
+        messages: z.array(
+          z.object({
+            loadoutCards: z.array(ExploreLoadoutCardSchema).optional(),
+          }),
+        ),
+      })
+      .parse(await response.json());
+    expect(body.messages[1]?.loadoutCards).toEqual([SHARED_LOADOUT_CARD]);
   });
 
   test("an unknown or malformed share token is a 404", async () => {
