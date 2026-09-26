@@ -17,8 +17,11 @@ import java.util.concurrent.Executor;
  * player's counts are read from the trade log once per day (on join, or on their first catalog
  * trade) and then only ever added to as trades settle, so two quick trades can never both pass a
  * limit the log has not caught up with. Entries are kept until the day changes (one small map per
- * player), so leaving and rejoining never re-reads a log that is still being written. Main thread
- * only.
+ * player), so leaving and rejoining never re-reads a log that is still being written.
+ *
+ * <p>A trade whose log write fails is still counted here (the failure is logged), so the limit
+ * holds for the rest of the day. After a restart the counts come from the log alone, so such a
+ * trade would no longer count: a known, logged gap. Main thread only.
  */
 public final class DailyUsage {
 

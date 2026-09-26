@@ -49,13 +49,15 @@ tested in `CatalogTradesTest`.
 MockBukkit and the unit tests cover the logic with a fake ledger; these need the
 real server's scheduler, ledger thread and players.
 
-| Case                                                                  | Expect                                                                                       |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| Customer logs off right after clicking Buy                            | Charge refunded; nothing given to the offline inventory                                      |
-| Customer logs off right after clicking Sell, and the owner cannot pay | Items drop where the customer traded                                                         |
-| Server stops (`/stop`) with a trade in flight                         | Trade settles during shutdown, or a `shops_refund_failure` row reads "unsettled at shutdown" |
-| Owner has the shop chest open when a customer trades                  | The owner's chest screen closes; the trade settles                                           |
-| Two customers click two signs on one double chest in the same tick    | One trades, the other is told the shop is busy                                               |
+| Case                                                                  | Expect                                                                                            |
+| --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Customer logs off right after clicking Buy                            | Charge refunded; nothing given to the offline inventory                                           |
+| Customer logs off right after clicking Sell, and the owner cannot pay | Items drop where the customer traded                                                              |
+| Server stops (`/stop`) with a trade in flight                         | Trade settles during shutdown, or a `shops_refund_failure` row reads "unsettled at shutdown"      |
+| Owner has the shop chest open when a customer trades                  | The owner's chest screen closes; the trade settles                                                |
+| Two customers click two signs on one double chest in the same tick    | One trades, the other is told the shop is busy                                                    |
+| An autoclicker with empty hands or an empty wallet on a shop sign     | "Slow down" or a refusal on each click; the owner's open chest stays open                         |
+| Restart after a catalog edit makes an admin shop loop                 | An ERROR log names the shop id and location; the sign refuses trades; `/shop` lists it for admins |
 
 ## Operations
 

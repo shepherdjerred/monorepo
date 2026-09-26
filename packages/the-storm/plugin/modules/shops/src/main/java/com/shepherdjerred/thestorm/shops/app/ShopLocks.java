@@ -30,6 +30,7 @@ public final class ShopLocks {
     private final List<BlockPos> blocks;
     private final UUID customer;
     private final Deal deal;
+    private final LedgerTrail trail = new LedgerTrail();
     private boolean released;
 
     private Lease(List<BlockPos> blocks, UUID customer, Deal deal) {
@@ -41,6 +42,11 @@ public final class ShopLocks {
     /** The trade this lease guards, for journaling one that never settles. */
     public Deal deal() {
       return deal;
+    }
+
+    /** What the ledger has answered for the trade so far. */
+    public LedgerTrail trail() {
+      return trail;
     }
 
     /**

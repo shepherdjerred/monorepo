@@ -116,21 +116,34 @@ public final class CatalogTrades {
                 + ":"
                 + order.entry().itemKey()
                 + ":"
-                + order.direction().id());
+                + order.direction().id(),
+            order.entry().itemKey());
+    var goods = TradeEngine.goodsProblem(deal);
+    if (goods.isPresent()) {
+      return completedFuture(new TradeOutcome.Refused(goods.orElseThrow()));
+    }
     var lease = wiring.locks().acquire(List.of(), order.customer().id(), deal);
     if (lease.isEmpty()) {
       return completedFuture(new TradeOutcome.Refused(new TradeProblem.Busy()));
     }
-    var trade =
-        withinLimit(order, quantity)
-            .thenComposeAsync(
-                problem ->
-                    problem
-                        .<CompletableFuture<TradeOutcome>>map(
-                            refusal -> completedFuture(new TradeOutcome.Refused(refusal)))
-                        .orElseGet(() -> wiring.engine().execute(deal)),
-                wiring.mainThread());
-    // Counted and logged before the lease is released, so the customer's next trade sees it.
+    CompletableFuture<TradeOutcome> trade;
+    try {
+      trade =
+          withinLimit(order, quantity)
+              .thenComposeAsync(
+                  problem ->
+                      problem
+                          .<CompletableFuture<TradeOutcome>>map(
+                              refusal -> completedFuture(new TradeOutcome.Refused(refusal)))
+                          .orElseGet(
+                              () -> wiring.engine().execute(deal, lease.orElseThrow().trail())),
+                  wiring.mainThread());
+    } catch (RuntimeException e) {
+      lease.orElseThrow().release();
+      return CompletableFuture.failedFuture(e);
+    }
+    // Counted and logged before the lease is released, so the customer's next trade sees it. A log
+    // write that fails is logged; the in-memory count still holds until the day ends.
     return lease
         .orElseThrow()
         .releaseAfter(

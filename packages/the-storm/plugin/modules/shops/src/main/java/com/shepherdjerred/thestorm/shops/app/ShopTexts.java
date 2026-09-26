@@ -99,6 +99,8 @@ public final class ShopTexts {
       case TradeProblem.ItemNotSet() -> "This shop is not open yet.";
       case TradeProblem.OwnShop() -> "You cannot trade with your own shop.";
       case TradeProblem.Busy() -> "Another trade is still going through; try again.";
+      case TradeProblem.TooFast() -> "Slow down: one trade at a time.";
+      case TradeProblem.ShopClosed(var why) -> "This shop is closed: " + why;
       case TradeProblem.OutOfStock(var available, var needed) ->
           "Out of stock: the shop has "
               + available

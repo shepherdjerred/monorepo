@@ -39,7 +39,8 @@ final class TradeEngineTest {
         Crystals.of(50),
         new Deal.Party(ALICE, customer),
         new Deal.Party(counterparty, shopItems),
-        "shop:1:" + direction.id());
+        "shop:1:" + direction.id(),
+        "coal");
   }
 
   private TradeOutcome run(Deal deal) throws Exception {
@@ -255,7 +256,7 @@ final class TradeEngineTest {
   }
 
   @Test
-  void aSellRefundThatFailsLeavesTheItemsWithTheShopNeverTheCustomer() throws Exception {
+  void aSellRefundThatFailsKeepsTheItemsInTheLogNeverWithTheCustomer() throws Exception {
     wallets.set(OWNER, 100);
     customer.count = 16;
     // While the owner pays, the shop fills up and the customer drains the payment with /pay.
@@ -270,16 +271,76 @@ final class TradeEngineTest {
     assertThat(outcome).isInstanceOf(TradeOutcome.RefundFailed.class);
     assertThat(((TradeOutcome.RefundFailed) outcome).problem())
         .isEqualTo(new TradeProblem.ShopFull(4, 16));
+    // Nothing goes back to the customer, and nothing is dropped where nobody can reach it: the
+    // items live in the refund-failure log for staff.
     assertThat(customer.count + customer.dropped).isZero();
-    assertThat(shop.count).isEqualTo(64);
-    assertThat(shop.dropped).isEqualTo(12);
+    assertThat(shop.count).isEqualTo(60);
+    assertThat(shop.dropped).isZero();
     assertThat(store.refundFailures)
         .singleElement()
         .satisfies(
             failure -> {
               assertThat(failure.payer()).isEqualTo(ALICE);
               assertThat(failure.payee()).isEqualTo(OWNER);
+              assertThat(failure.held()).contains(new HeldItems("coal", 16));
             });
+  }
+
+  @Test
+  void aBuyRefundThatFailsHoldsNoItems() throws Exception {
+    wallets.set(ALICE, 100);
+    shop.count = 16;
+    wallets.afterNextTransfer(
+        () -> {
+          shop.count = 0;
+          wallets.set(OWNER, 0);
+        });
+
+    run(deal(Direction.BUY, OWNER, shop));
+
+    assertThat(store.refundFailures)
+        .singleElement()
+        .satisfies(failure -> assertThat(failure.held()).isEmpty());
+  }
+
+  @Test
+  void aLedgerThatThrowsWhileSellingReturnsTheEscrow() {
+    wallets.set(OWNER, 100);
+    customer.count = 16;
+    wallets.throwNext(new IllegalStateException("ledger broke"));
+
+    assertThatThrownBy(() -> run(deal(Direction.SELL, OWNER, shop)))
+        .hasRootCauseMessage("ledger broke");
+    assertThat(customer.count).isEqualTo(16);
+    assertThat(shop.count).isZero();
+  }
+
+  @Test
+  void theTrailRecordsWhatTheLedgerAnswered() throws Exception {
+    wallets.set(ALICE, 100);
+    shop.count = 16;
+    var trail = new LedgerTrail();
+    assertThat(trail.describe()).contains("unknown");
+
+    engine.execute(deal(Direction.BUY, OWNER, shop), trail).get();
+
+    assertThat(trail.describe()).isEqualTo("payment committed as ledger entry 1");
+  }
+
+  @Test
+  void affordabilityIsCheckedWithoutMovingAnything() throws Exception {
+    wallets.set(ALICE, 49);
+    shop.count = 16;
+
+    assertThat(engine.affordability(deal(Direction.BUY, OWNER, shop)).get())
+        .contains(new TradeProblem.CustomerCannotPay(49, 50));
+    assertThat(engine.affordability(deal(Direction.SELL, OWNER, shop)).get())
+        .contains(new TradeProblem.OwnerCannotPay());
+    assertThat(engine.affordability(deal(Direction.SELL, SERVER, Holdings.UNLIMITED)).get())
+        .isEmpty();
+    wallets.set(ALICE, 50);
+    assertThat(engine.affordability(deal(Direction.BUY, OWNER, shop)).get()).isEmpty();
+    assertThat(wallets.receipts()).isEmpty();
   }
 
   @Test
@@ -376,7 +437,8 @@ final class TradeEngineTest {
                     Crystals.of(1),
                     new Deal.Party(ALICE, customer),
                     new Deal.Party(OWNER, shop),
-                    "x"))
+                    "x",
+                    "coal"))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(
             () ->
@@ -386,7 +448,8 @@ final class TradeEngineTest {
                     Crystals.ZERO,
                     new Deal.Party(ALICE, customer),
                     new Deal.Party(OWNER, shop),
-                    "x"))
+                    "x",
+                    "coal"))
         .isInstanceOf(IllegalArgumentException.class);
   }
 }
