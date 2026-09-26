@@ -1,8 +1,10 @@
 package com.shepherdjerred.thestorm.arena.domain.game;
 
+import com.shepherdjerred.thestorm.arena.domain.wave.BossOrder;
 import com.shepherdjerred.thestorm.arena.domain.wave.SpawnUnit;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 /** Where a game is. */
 public sealed interface Phase {
@@ -34,10 +36,12 @@ public sealed interface Phase {
    * A wave is under way.
    *
    * @param wave the wave number
+   * @param boss a boss still waiting for room under the entity cap
    * @param queue mobs still to spawn, waiting for room under the entity cap
    * @param startedAt when the wave started, for its timeout
    */
-  record Fighting(int wave, List<SpawnUnit> queue, Instant startedAt) implements Phase {
+  record Fighting(int wave, Optional<BossOrder> boss, List<SpawnUnit> queue, Instant startedAt)
+      implements Phase {
 
     public Fighting {
       queue = List.copyOf(queue);

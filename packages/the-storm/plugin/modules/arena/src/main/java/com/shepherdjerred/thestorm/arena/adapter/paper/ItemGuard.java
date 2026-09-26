@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.bukkit.Location;
 import org.bukkit.block.BlockState;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Wolf;
 import org.bukkit.event.EventHandler;
@@ -101,7 +102,18 @@ final class ItemGuard implements Listener {
       return;
     }
     sweep(event.getPlayer().getInventory());
-    sweep(event.getInventory());
+    sweepUnlessMemberHeld(event.getInventory());
+  }
+
+  /**
+   * Sweeps an inventory an outsider has open, unless it belongs to an arena member (a staff member
+   * viewing a fighter's inventory must not delete their live kit).
+   */
+  private void sweepUnlessMemberHeld(Inventory inventory) {
+    if (inventory.getHolder() instanceof HumanEntity holder && member(holder.getUniqueId())) {
+      return;
+    }
+    sweep(inventory);
   }
 
   /** A member's own inventory, or (for a fighter) one of their arena's loot chests. */
@@ -138,7 +150,10 @@ final class ItemGuard implements Listener {
       event.setCancelled(true);
       return;
     }
-    if (member(id)) {
+    if (member(id)
+        || (event.getClickedInventory() != null
+            && event.getClickedInventory().getHolder() instanceof HumanEntity holder
+            && member(holder.getUniqueId()))) {
       return;
     }
     var current = event.getCurrentItem();
@@ -158,7 +173,7 @@ final class ItemGuard implements Listener {
       return;
     }
     sweep(event.getPlayer().getInventory());
-    sweep(event.getInventory());
+    sweepUnlessMemberHeld(event.getInventory());
   }
 
   /**

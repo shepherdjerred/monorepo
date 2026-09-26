@@ -53,6 +53,11 @@ Modules reach each other only through the other module's `app` package, and
 schedule main-thread work only through `core.schedule.Scheduler`. ArchUnit
 tests in `architecture/` enforce all of this.
 
+Arena restores keep the database snapshot until a later player login confirms
+that Paper saved the restored inventory and its matching persistent-data marker
+together. Players must reconnect before entering another arena after a restore;
+this avoids a synchronous player-data write on the server tick.
+
 ## Conventions
 
 - `@NullMarked` on every package; NullAway (JSpecify mode) runs as an error.

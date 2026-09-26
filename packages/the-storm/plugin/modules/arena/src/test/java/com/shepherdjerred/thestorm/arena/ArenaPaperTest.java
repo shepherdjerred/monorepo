@@ -152,6 +152,8 @@ final class ArenaPaperTest {
 
     assertRestored(alice);
     assertThat(presence().arenaOf(alice.getUniqueId())).isEmpty();
+    assertThat(stored()).hasSize(1);
+    harness.rejoinAfterSave(alice);
     harness.until(() -> stored().isEmpty());
   }
 
@@ -308,6 +310,8 @@ final class ArenaPaperTest {
     assertThat(alice.getHealth()).isEqualTo(9);
     assertThat(alice.getPotionEffect(PotionEffectType.HASTE)).isNotNull();
     assertThat(alice.getLocation().getX()).isEqualTo(5.5);
+    assertThat(stored()).hasSize(1);
+    harness.rejoinAfterSave(alice);
     harness.until(() -> stored().isEmpty());
   }
 

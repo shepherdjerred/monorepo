@@ -78,12 +78,25 @@ public final class JooqSnapshotStore implements SnapshotStore {
   }
 
   @Override
-  public CompletableFuture<Void> delete(UUID player) {
+  public CompletableFuture<Boolean> markRestored(UUID player, Instant at) {
+    return database.write(
+        dsl ->
+            dsl.update(ARENA_SNAPSHOTS)
+                    .set(ARENA_SNAPSHOTS.RESTORED_AT, at.toEpochMilli())
+                    .where(ARENA_SNAPSHOTS.PLAYER.eq(player.toString()))
+                    .and(ARENA_SNAPSHOTS.RESTORED_AT.isNull())
+                    .execute()
+                > 0);
+  }
+
+  @Override
+  public CompletableFuture<Void> deleteRestored(UUID player) {
     return Writes.done(
         database.write(
             dsl ->
                 dsl.deleteFrom(ARENA_SNAPSHOTS)
                     .where(ARENA_SNAPSHOTS.PLAYER.eq(player.toString()))
+                    .and(ARENA_SNAPSHOTS.RESTORED_AT.isNotNull())
                     .execute()));
   }
 
@@ -98,7 +111,12 @@ public final class JooqSnapshotStore implements SnapshotStore {
                   .fetch()
                   .stream()
                   .collect(groupingBy(ArenaSnapshotEffectsRecord::getPlayer));
-          return dsl.selectFrom(ARENA_SNAPSHOTS).orderBy(ARENA_SNAPSHOTS.TAKEN_AT).fetch().stream()
+          return dsl
+              .selectFrom(ARENA_SNAPSHOTS)
+              .where(ARENA_SNAPSHOTS.RESTORED_AT.isNull())
+              .orderBy(ARENA_SNAPSHOTS.TAKEN_AT)
+              .fetch()
+              .stream()
               .map(row -> toSnapshot(row, effects.getOrDefault(row.getPlayer(), List.of())))
               .toList();
         });

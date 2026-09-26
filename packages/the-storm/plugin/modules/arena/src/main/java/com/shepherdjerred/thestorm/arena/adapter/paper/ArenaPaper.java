@@ -79,8 +79,7 @@ public final class ArenaPaper {
     }
     var mobs = MobFactory.create(keys, content.waves());
     var snapshots =
-        new Snapshots(
-            context, new Snapshots.Parts(app.snapshots(), app.rewards(), texts, hooks.saver()));
+        new Snapshots(context, new Snapshots.Parts(app.snapshots(), app.rewards(), texts));
     var services =
         new GameRunner.Services(
             context,

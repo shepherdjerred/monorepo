@@ -112,12 +112,7 @@ final class Waves {
       }
     }
     var room = draft.setup.timing().entityCap() - alive;
-    if (wave.boss().isPresent()) {
-      var boss = wave.boss().orElseThrow();
-      draft.effect(new GameEffect.SpawnBoss(boss));
-      room -= boss.entities();
-    }
-    release(draft, new Fighting(number, wave.units(), now), room);
+    release(draft, new Fighting(number, wave.boss(), wave.units(), now), room, now);
   }
 
   private static Notice announcement(ResolvedWave wave) {
@@ -139,12 +134,21 @@ final class Waves {
   }
 
   /** Spawns as much of the queue, in order, as fits in {@code room}; the rest waits. */
-  private static void release(Draft draft, Fighting fighting, int room) {
+  private static void release(Draft draft, Fighting fighting, int room, Instant now) {
     var batch = new ArrayList<SpawnUnit>();
     var queue = fighting.queue();
     var left = room;
+    var boss = fighting.boss();
+    var startedAt = fighting.startedAt();
+    if (boss.isPresent() && boss.orElseThrow().entities() <= left) {
+      var ready = boss.orElseThrow();
+      draft.effect(new GameEffect.SpawnBoss(ready));
+      left -= ready.entities();
+      boss = Optional.empty();
+      startedAt = now;
+    }
     var taken = 0;
-    while (taken < queue.size() && queue.get(taken).entities() <= left) {
+    while (boss.isEmpty() && taken < queue.size() && queue.get(taken).entities() <= left) {
       left -= queue.get(taken).entities();
       batch.add(queue.get(taken));
       taken++;
@@ -153,21 +157,21 @@ final class Waves {
       draft.effect(new GameEffect.Spawn(batch));
     }
     draft.phase =
-        new Fighting(fighting.wave(), queue.subList(taken, queue.size()), fighting.startedAt());
+        new Fighting(fighting.wave(), boss, queue.subList(taken, queue.size()), startedAt);
   }
 
   private static void fight(Draft draft, Fighting fighting, Instant now, int alive) {
     var setup = draft.setup;
-    if (fighting.queue().isEmpty() && alive == 0) {
+    if (fighting.boss().isEmpty() && fighting.queue().isEmpty() && alive == 0) {
       cleared(draft, fighting.wave(), now);
       return;
     }
     var timedOut = !now.isBefore(fighting.startedAt().plus(setup.timing().timeout()));
-    if (timedOut && fighting.wave() < setup.table().finalWave()) {
+    if (timedOut && fighting.boss().isEmpty() && fighting.wave() < setup.table().finalWave()) {
       startWave(draft, fighting.wave() + 1, now, alive);
       return;
     }
-    release(draft, fighting, setup.timing().entityCap() - alive);
+    release(draft, fighting, setup.timing().entityCap() - alive, now);
   }
 
   private static void cleared(Draft draft, int wave, Instant now) {

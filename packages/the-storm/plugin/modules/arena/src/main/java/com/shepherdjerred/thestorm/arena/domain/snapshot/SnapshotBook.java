@@ -12,16 +12,16 @@ import java.util.UUID;
  * The snapshots of players inside arenas, and the restores still being cleaned up.
  *
  * <p>A snapshot enters the book the moment it is taken (the player is emptied in the same tick) and
- * leaves it exactly once, when it is taken for restoring, so a player is never restored twice.
- * Restoring then runs in a fixed order: put the snapshot back, save the player's data, and only
- * then delete the stored snapshot. Until that delete succeeds the player is {@link #cleaning}: a
- * new snapshot may not be taken, because a late delete would remove it.
+ * leaves it exactly once, when it is taken for restoring, so a player is never restored twice in a
+ * run. Restoring leaves the database copy intact until a later login confirms that the restored
+ * inventory and its marker reached player data together. Until the mark lands the player is {@link
+ * #cleaning}: a new snapshot may not be taken meanwhile.
  *
  * <p>After a crash the book starts empty and not {@link #loaded}; nobody may join an arena until
  * the stored snapshots are read back, so a stale kit can never overwrite a real snapshot.
  *
  * @param held player to the snapshot waiting to be restored
- * @param cleaning players restored whose stored snapshot is not yet deleted
+ * @param cleaning players restored whose stored snapshot is not yet marked restored
  * @param loaded whether the snapshots left by the last run have been read back
  */
 public record SnapshotBook(Map<UUID, Snapshot> held, Set<UUID> cleaning, boolean loaded) {
@@ -44,7 +44,7 @@ public record SnapshotBook(Map<UUID, Snapshot> held, Set<UUID> cleaning, boolean
     NOT_LOADED,
     /** The player still has a snapshot waiting to be restored. */
     RESTORE_PENDING,
-    /** The player's last restore has not finished deleting its stored snapshot. */
+    /** The player's last restore has not yet been confirmed in saved player data. */
     CLEANUP_PENDING,
   }
 
@@ -91,7 +91,7 @@ public record SnapshotBook(Map<UUID, Snapshot> held, Set<UUID> cleaning, boolean
 
   /**
    * Takes {@code player}'s snapshot out of the book for restoring; the player is then cleaning
-   * until {@link #cleaned}.
+   * until {@link #cleaned} after saved player data confirms the restore.
    */
   public Taken take(UUID player) {
     var snapshot = held.get(player);
@@ -105,7 +105,7 @@ public record SnapshotBook(Map<UUID, Snapshot> held, Set<UUID> cleaning, boolean
     return new Taken(Optional.of(snapshot), new SnapshotBook(next, nowCleaning, loaded));
   }
 
-  /** The stored snapshot of a restored player is deleted: they may join again. */
+  /** The stored snapshot of a restored player is marked restored: they may join again. */
   public SnapshotBook cleaned(UUID player) {
     if (!cleaning.contains(player)) {
       return this;

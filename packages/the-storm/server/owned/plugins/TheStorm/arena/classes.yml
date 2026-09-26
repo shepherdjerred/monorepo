@@ -600,12 +600,6 @@ classes:
         enchantments: {}
         potion: null
         slot: null
-      - material: FLINT_AND_STEEL
-        amount: 1
-        name: null
-        enchantments: {}
-        potion: null
-        slot: null
       - material: CHAINMAIL_HELMET
         amount: 1
         name: null

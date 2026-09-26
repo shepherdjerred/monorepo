@@ -128,9 +128,11 @@ public final class Arenas implements ArenaPresence {
           Texts.error(player, "The arena is still starting up; try again in a moment.");
       case CLEANUP_PENDING ->
           Texts.error(
-              player, "Your belongings from your last game are still being put away; try again.");
+              player,
+              "Your restored belongings must be saved before another arena game. Reconnect to"
+                  + " finish recovery.");
       case RESTORE_PENDING -> {
-        snapshots.recover(player);
+        snapshots.recoverWhileOnline(player);
         Texts.error(player, "Your belongings from your last game were restored first; join again.");
       }
     }
