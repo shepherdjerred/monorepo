@@ -22,6 +22,12 @@ describe("central Temporal execution metadata", () => {
     expect(executionDomainForTaskQueue(TASK_QUEUES.AGENT_CHAT_DISPATCH)).toBe(
       "agent",
     );
+    expect(executionDomainForTaskQueue(TASK_QUEUES.AGENT_CHAT_INGRESS)).toBe(
+      "platform",
+    );
+    expect(executionDomainForTaskQueue(TASK_QUEUES.AGENT_CHAT_DELIVERY)).toBe(
+      "platform",
+    );
     expect(executionDomainForTaskQueue(TASK_QUEUES.GLITTER_CORPUS)).toBe(
       "glitter",
     );
@@ -47,6 +53,12 @@ describe("central Temporal execution metadata", () => {
       ).toBe("infra");
       expect(
         executionDomainForWorkflow("agentTaskWorkflow", TASK_QUEUES.WORKFLOWS),
+      ).toBe("agent");
+      expect(
+        executionDomainForWorkflow(
+          "httpAgentChatWorkflow",
+          TASK_QUEUES.WORKFLOWS,
+        ),
       ).toBe("agent");
     });
 

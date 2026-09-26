@@ -20,6 +20,7 @@ import {
   MAX_AGENT_CHAT_PENDING_TURNS,
   agentChatWorkflowId,
   type AgentChatActivities,
+  type AgentChatCatalogEntry,
   type AgentChatCatalogState,
   type AgentChatConfig,
   type AgentChatDispatchActivities,
@@ -30,6 +31,7 @@ import {
 } from "#shared/agent/agent-chat.ts";
 import {
   bindAgentChatUpdate,
+  getAgentChatCatalogStateQuery,
   getAgentChatCatalogEntryQuery,
   getAgentChatStateQuery,
   recordAgentChatTurnUpdate,
@@ -38,6 +40,7 @@ import {
   runAgentChatTurnUpdate,
 } from "#shared/agent/agent-chat-workflow.ts";
 import {
+  bindAgentChat,
   continueAgentChat,
   listAgentChats,
   getAgentChat,
@@ -47,6 +50,7 @@ import {
 } from "#lib/agent-chat-client.ts";
 import {
   compactAgentChatCatalogState,
+  registerAndBindAgentChatCatalogEntry,
   registerAgentChatCatalogEntry,
   settleAgentChatCatalogTurn,
 } from "./agent-chat-catalog.ts";
@@ -258,6 +262,285 @@ test("settles a completed turn after its catalog entry was evicted", () => {
   expect(state.retiredChatIds).not.toContain(CONFIG.chatId);
 });
 
+test("repairs an evicted chat and binds it in one catalog mutation", () => {
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: Array.from(
+      { length: MAX_AGENT_CHAT_CATALOG_ENTRIES },
+      (_, index) => ({
+        schemaVersion: 1 as const,
+        config: {
+          ...CONFIG,
+          chatId: `resident-${String(index)}`,
+          createdAt: new Date(Date.UTC(2027, 0, 1) + index).toISOString(),
+        },
+        updatedAt: new Date(Date.UTC(2027, 0, 1) + index).toISOString(),
+        turnCount: 0,
+      }),
+    ),
+    bindings: [],
+    retiredChatIds: [CONFIG.chatId],
+  };
+  const binding = { kind: "discord" as const, channelId: "recovered-channel" };
+
+  const restored = registerAndBindAgentChatCatalogEntry(
+    state,
+    {
+      schemaVersion: 1,
+      config: CONFIG,
+      updatedAt: CONFIG.createdAt,
+      turnCount: 0,
+    },
+    binding,
+    "2027-02-01T00:00:00.000Z",
+  );
+
+  expect(restored.config.chatId).toBe(CONFIG.chatId);
+  expect(state.entries).toContainEqual(restored);
+  expect(state.bindings).toContainEqual({
+    binding,
+    chatId: CONFIG.chatId,
+    updatedAt: "2027-02-01T00:00:00.000Z",
+  });
+});
+
+test("retains the newer Discord snowflake when selections finish out of order", () => {
+  const selectedEntry: AgentChatCatalogEntry = {
+    schemaVersion: 1,
+    config: CONFIG,
+    updatedAt: CONFIG.createdAt,
+    turnCount: 0,
+  };
+  const staleEntry: AgentChatCatalogEntry = {
+    ...selectedEntry,
+    config: { ...CONFIG, chatId: "stale-discord-selection" },
+  };
+  const binding = { kind: "discord" as const, channelId: "ordered-channel" };
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: [selectedEntry, staleEntry],
+    bindings: [
+      {
+        binding,
+        chatId: selectedEntry.config.chatId,
+        updatedAt: "2015-12-07T16:13:12.216Z",
+        sourceSequence: "123456789012345679",
+      },
+    ],
+    retiredChatIds: [],
+  };
+
+  const selected = registerAndBindAgentChatCatalogEntry(
+    state,
+    staleEntry,
+    binding,
+    {
+      updatedAt: "2015-12-07T16:13:12.216Z",
+      sourceSequence: "123456789012345678",
+    },
+  );
+
+  expect(selected).toEqual(selectedEntry);
+  expect(state.bindings[0]?.chatId).toBe(selectedEntry.config.chatId);
+});
+
+test("allows a newer timestamp-only selection to replace a sequenced binding", () => {
+  const sequencedEntry: AgentChatCatalogEntry = {
+    schemaVersion: 1,
+    config: CONFIG,
+    updatedAt: CONFIG.createdAt,
+    turnCount: 0,
+  };
+  const httpEntry: AgentChatCatalogEntry = {
+    ...sequencedEntry,
+    config: { ...CONFIG, chatId: "http-selection" },
+  };
+  const binding = { kind: "discord" as const, channelId: "mixed-channel" };
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: [sequencedEntry, httpEntry],
+    bindings: [
+      {
+        binding,
+        chatId: sequencedEntry.config.chatId,
+        updatedAt: "2026-09-14T16:01:00.000Z",
+        sourceSequence: "123456789012345679",
+      },
+    ],
+    retiredChatIds: [],
+  };
+
+  const selected = registerAndBindAgentChatCatalogEntry(
+    state,
+    httpEntry,
+    binding,
+    "2026-09-14T16:02:00.000Z",
+  );
+
+  expect(selected).toEqual(httpEntry);
+  expect(state.bindings[0]).toMatchObject({
+    chatId: httpEntry.config.chatId,
+    updatedAt: "2026-09-14T16:02:00.000Z",
+  });
+});
+
+test("promotes the first sequenced selection over legacy binding state", () => {
+  const legacyEntry: AgentChatCatalogEntry = {
+    schemaVersion: 1,
+    config: CONFIG,
+    updatedAt: CONFIG.createdAt,
+    turnCount: 0,
+  };
+  const sequencedEntry: AgentChatCatalogEntry = {
+    ...legacyEntry,
+    config: { ...CONFIG, chatId: "first-sequenced-selection" },
+  };
+  const binding = { kind: "imessage" as const, conversationId: "legacy-chat" };
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: [legacyEntry, sequencedEntry],
+    bindings: [
+      {
+        binding,
+        chatId: legacyEntry.config.chatId,
+        updatedAt: "2026-09-14T16:02:00.000Z",
+      },
+    ],
+    retiredChatIds: [],
+  };
+
+  const selected = registerAndBindAgentChatCatalogEntry(
+    state,
+    sequencedEntry,
+    binding,
+    {
+      updatedAt: "2026-09-14T16:01:00.000Z",
+      sourceSequence: 42,
+      orderingVersion: 1,
+    },
+  );
+
+  expect(selected).toEqual(sequencedEntry);
+  expect(state.bindings).toEqual([
+    {
+      binding,
+      chatId: sequencedEntry.config.chatId,
+      updatedAt: "2026-09-14T16:01:00.000Z",
+      sourceSequence: 42,
+      orderingVersion: 1,
+    },
+  ]);
+});
+
+test("retains a newer versioned timestamp selection over an older sequence", () => {
+  const timestampEntry: AgentChatCatalogEntry = {
+    schemaVersion: 1,
+    config: CONFIG,
+    updatedAt: CONFIG.createdAt,
+    turnCount: 0,
+  };
+  const sequencedEntry: AgentChatCatalogEntry = {
+    ...timestampEntry,
+    config: { ...CONFIG, chatId: "older-sequenced-selection" },
+  };
+  const binding = { kind: "discord" as const, channelId: "mixed-channel" };
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: [timestampEntry, sequencedEntry],
+    bindings: [
+      {
+        binding,
+        chatId: timestampEntry.config.chatId,
+        updatedAt: "2026-09-14T16:02:00.000Z",
+        orderingVersion: 1,
+      },
+    ],
+    retiredChatIds: [],
+  };
+
+  const selected = registerAndBindAgentChatCatalogEntry(
+    state,
+    sequencedEntry,
+    binding,
+    {
+      updatedAt: "2026-09-14T16:01:00.000Z",
+      sourceSequence: "123456789012345679",
+      orderingVersion: 1,
+    },
+  );
+
+  expect(selected).toEqual(timestampEntry);
+  expect(state.bindings[0]?.chatId).toBe(timestampEntry.config.chatId);
+});
+
+test("rejects versioned binding updates without a monotonic source sequence", () => {
+  const earlierEntry: AgentChatCatalogEntry = {
+    schemaVersion: 1,
+    config: CONFIG,
+    updatedAt: CONFIG.createdAt,
+    turnCount: 0,
+  };
+  const laterEntry: AgentChatCatalogEntry = {
+    ...earlierEntry,
+    config: { ...CONFIG, chatId: "later-http-selection" },
+  };
+  const binding = { kind: "discord" as const, channelId: "http-channel" };
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: [earlierEntry, laterEntry],
+    bindings: [],
+    retiredChatIds: [],
+  };
+  const updatedAt = "2026-09-14T16:02:00.000Z";
+
+  expect(() =>
+    registerAndBindAgentChatCatalogEntry(state, laterEntry, binding, {
+      updatedAt,
+      tieBreaker: "arbitrary-id",
+      orderingVersion: 1,
+    }),
+  ).toThrow("monotonic source sequence");
+  expect(state.bindings).toEqual([]);
+});
+
+test("rejects a changed retry that reuses a binding operation identity", () => {
+  const firstEntry: AgentChatCatalogEntry = {
+    schemaVersion: 1,
+    config: CONFIG,
+    updatedAt: CONFIG.createdAt,
+    turnCount: 0,
+  };
+  const secondEntry: AgentChatCatalogEntry = {
+    ...firstEntry,
+    config: { ...CONFIG, chatId: "different-chat" },
+  };
+  const binding = { kind: "discord" as const, channelId: "retry-channel" };
+  const update = {
+    updatedAt: "2026-09-14T16:02:00.000Z",
+    sourceSequence: "123456789012345678",
+    tieBreaker: "binding-retry-1",
+    orderingVersion: 1 as const,
+  };
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: [firstEntry, secondEntry],
+    bindings: [],
+    retiredChatIds: [],
+  };
+
+  expect(
+    registerAndBindAgentChatCatalogEntry(state, firstEntry, binding, update),
+  ).toEqual(firstEntry);
+  expect(
+    registerAndBindAgentChatCatalogEntry(state, firstEntry, binding, update),
+  ).toEqual(firstEntry);
+  expect(() =>
+    registerAndBindAgentChatCatalogEntry(state, secondEntry, binding, update),
+  ).toThrow(
+    "binding operation binding-retry-1 was reused with different input",
+  );
+});
+
 async function testFreshCatalogRecovery(): Promise<void> {
   await withWorkers(async (environment) => {
     const client = environment.client.workflow;
@@ -303,6 +586,18 @@ async function testFreshCatalogRecovery(): Promise<void> {
     ).rejects.toThrow("immutable configuration");
     const recovered = await getAgentChat(client, CONFIG.chatId);
     expect(recovered?.config).toEqual(CONFIG);
+    const recoveredBinding = {
+      kind: "discord" as const,
+      channelId: "recovered-channel",
+    };
+    await bindAgentChat(client, recoveredBinding, CONFIG.chatId, {
+      updatedAt: "2026-09-14T16:00:30.000Z",
+    });
+    const resolvedRecovered = await resolveAgentChatBinding(
+      client,
+      recoveredBinding,
+    );
+    expect(resolvedRecovered?.config).toEqual(CONFIG);
     const result = await continueAgentChat({
       client,
       chatId: CONFIG.chatId,
@@ -321,11 +616,25 @@ describe("agent chat workflows", () => {
   );
   test("serializes resumable turns and deduplicates transport retries", async () => {
     await withWorkers(async (environment) => {
-      const firstRequest = request("message-1", "first");
+      const firstRequest = {
+        ...request("message-1", "first"),
+        sourceSequence: "123456789012345679",
+      };
       const first = await submitAgentChatTurn({
         client: environment.client.workflow,
         config: CONFIG,
         request: firstRequest,
+        bindSource: true,
+      });
+      const catalogState = await environment.client.workflow
+        .getHandle(AGENT_CHAT_CATALOG_WORKFLOW_ID)
+        .query(getAgentChatCatalogStateQuery);
+      expect(catalogState.bindings).toContainEqual({
+        binding: firstRequest.source,
+        chatId: CONFIG.chatId,
+        updatedAt: firstRequest.submittedAt,
+        sourceSequence: firstRequest.sourceSequence,
+        orderingVersion: 1,
       });
       const handle = environment.client.workflow.getHandle(
         agentChatWorkflowId(CONFIG.chatId),
@@ -365,6 +674,9 @@ describe("agent chat workflows", () => {
       await handle.terminate("test complete");
     });
   }, 60_000);
+});
+
+describe("agent chat admission", () => {
   test("rejects an expired turn before provider activity admission", async () => {
     const runTurn = vi.fn((input: RunAgentChatTurnInput) =>
       Promise.resolve(turnResult(input)),
@@ -396,7 +708,9 @@ describe("agent chat workflows", () => {
     );
     expect(runTurn).not.toHaveBeenCalled();
   }, 60_000);
+});
 
+describe("agent chat workflow bounds", () => {
   test("rejects excess pending turns with explicit backpressure", async () => {
     const firstStarted = Promise.withResolvers<undefined>();
     const releaseFirst = Promise.withResolvers<undefined>();

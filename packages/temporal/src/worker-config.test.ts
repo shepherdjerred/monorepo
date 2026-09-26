@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   agentActivities,
+  agentChatDeliveryActivities,
   agentChatDispatchWorkerActivities,
   agentChatReceiptWorkerActivities,
+  agentChatIngressActivities,
   reportActivities,
 } from "./activities/index.ts";
 import { TASK_QUEUES } from "./shared/task-queues.ts";
@@ -92,7 +94,10 @@ describe("Temporal worker role contracts", () => {
       runsGateway: true,
       validatesScheduleEnvironmentLocally: false,
       runsEventBridge: false,
-      workers: [],
+      workers: [
+        expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS }),
+        expect.objectContaining({ taskQueue: TASK_QUEUES.AGENT_CHAT_DELIVERY }),
+      ],
     });
     expect(getWorkerRoleContract("home")).toMatchObject({
       runsGateway: false,
@@ -121,6 +126,7 @@ describe("Temporal worker role contracts", () => {
     );
     expect(concurrency.get("home")).toBe(4);
     expect(concurrency.get("reports")).toBe(4);
+    expect(concurrency.get("control")).toBe(4);
     const serialRoles: Exclude<QueueWorkerRole, "workflows">[] = [
       "agent",
       "backup",
@@ -178,5 +184,23 @@ describe("Temporal worker role contracts", () => {
     );
     expect(reportActivities).not.toHaveProperty("runAgentTask");
     expect(reportActivities).not.toHaveProperty("prepareAgentTaskWorkdir");
+  });
+
+  it("keeps Discord delivery on the credential-owning control worker", () => {
+    expect(activityNamesFor("control")).toEqual(
+      Object.keys(agentChatIngressActivities),
+    );
+    expect(agentActivities).not.toHaveProperty(
+      "deliverDiscordAgentChatMessage",
+    );
+    const deliveryWorker = QUEUE_WORKER_DEFINITIONS.find(
+      (definition) => definition.taskQueue === TASK_QUEUES.AGENT_CHAT_DELIVERY,
+    );
+    expect(deliveryWorker).toMatchObject({
+      kind: "activity",
+      role: "control",
+      activities: agentChatDeliveryActivities,
+      maxConcurrentActivityTaskExecutions: 4,
+    });
   });
 });

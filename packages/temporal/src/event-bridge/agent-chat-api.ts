@@ -1,0 +1,504 @@
+import type { Client, WorkflowClient } from "@temporalio/client";
+import * as Sentry from "@sentry/bun";
+import { Hono } from "hono";
+import { ZodError } from "zod/v4";
+import {
+  AgentChatBindingNotFoundError,
+  AgentChatNotFoundError,
+  bindAgentChat,
+  getAgentChat,
+  listAgentChats,
+  registerAgentChat,
+  resolveAgentChatBinding,
+} from "#lib/agent-chat-client.ts";
+import {
+  AgentChatIdSchema,
+  type AgentChatBinding,
+  type AgentChatBindingUpdate,
+  type AgentChatCatalogEntry,
+  type AgentChatConfig,
+  type AgentChatTurnRequest,
+} from "#shared/agent/agent-chat.ts";
+import {
+  HttpAgentChatCommandSchema,
+  HttpAgentChatTurnIdSchema,
+  type HttpAgentChatCommand,
+  type HttpAgentChatTurnReceipt,
+  type HttpAgentChatTurnStatus,
+} from "#shared/agent/agent-chat-http.ts";
+import {
+  AgentChatTurnConflictError,
+  activateHttpAgentChatCommand,
+  cancelHttpAgentChatCommand,
+  pollHttpAgentChatCommand,
+  submitHttpAgentChatCommand,
+} from "./agent-chat-turns.ts";
+import {
+  AgentChatTimestampInFutureError,
+  validateAgentChatIngressTimestamp,
+} from "#shared/agent/agent-chat-ingress.ts";
+import {
+  BindAgentChatSchema,
+  ContinueAgentChatSchema,
+  CreateAgentChatSchema,
+  type ContinueAgentChatInput,
+} from "./agent-chat-api-schema.ts";
+import { bearerMatches, bearerToken } from "./http-auth.ts";
+
+const COMPONENT = "agent-chat-api";
+export type AgentChatApiOperations = {
+  register: (
+    client: WorkflowClient,
+    config: AgentChatConfig,
+  ) => Promise<AgentChatCatalogEntry>;
+  bind: (
+    client: WorkflowClient,
+    binding: AgentChatBinding,
+    chatId: string,
+    update: AgentChatBindingUpdate,
+  ) => Promise<AgentChatCatalogEntry>;
+  get: (
+    client: WorkflowClient,
+    chatId: string,
+  ) => Promise<AgentChatCatalogEntry | undefined>;
+  list: (client: WorkflowClient) => Promise<AgentChatCatalogEntry[]>;
+  resolve: (
+    client: WorkflowClient,
+    binding: AgentChatBinding,
+  ) => Promise<AgentChatCatalogEntry | undefined>;
+  submit: (
+    client: Client,
+    command: HttpAgentChatCommand,
+    options?: { waitForActivation?: boolean },
+  ) => Promise<HttpAgentChatTurnReceipt>;
+  activate: (client: Client, command: HttpAgentChatCommand) => Promise<void>;
+  cancel: (client: Client, turnId: string) => Promise<void>;
+  poll: (
+    client: Client,
+    turnId: string,
+  ) => Promise<HttpAgentChatTurnStatus | undefined>;
+};
+class AgentChatRegistrationConflictError extends Error {
+  public constructor(chatId: string) {
+    super(
+      `Durable agent chat ID ${chatId} was reused with different configuration`,
+    );
+    this.name = "AgentChatRegistrationConflictError";
+  }
+}
+const defaultOperations: AgentChatApiOperations = {
+  register: registerAgentChat,
+  bind: bindAgentChat,
+  get: getAgentChat,
+  list: listAgentChats,
+  resolve: resolveAgentChatBinding,
+  submit: submitHttpAgentChatCommand,
+  activate: activateHttpAgentChatCommand,
+  cancel: cancelHttpAgentChatCommand,
+  poll: pollHttpAgentChatCommand,
+};
+type AgentChatApiDependencies = {
+  operations?: AgentChatApiOperations;
+  now?: () => string;
+};
+
+function jsonLog(
+  level: "info" | "warning" | "error",
+  message: string,
+  fields: Record<string, unknown> = {},
+): void {
+  console.warn(
+    JSON.stringify({ level, msg: message, component: COMPONENT, ...fields }),
+  );
+}
+
+function unauthorized(authorization: string | undefined, token: string) {
+  return !bearerMatches(bearerToken(authorization), token);
+}
+
+const parseBody = async (request: Request): Promise<unknown> =>
+  await request.json();
+
+function configForIngress(
+  input: {
+    chatId?: string | undefined;
+    turnId?: string | undefined;
+    title: string;
+    provider: "claude" | "codex";
+    model: string;
+    source: AgentChatBinding;
+    sourceSequence: string | number;
+    maxTurnsPerMessage: number;
+  },
+  now: string,
+): AgentChatConfig {
+  const chatId =
+    input.chatId ??
+    (input.turnId === undefined
+      ? undefined
+      : `chat-http-${new Bun.CryptoHasher("sha256").update(input.turnId).digest("hex")}`);
+  if (chatId === undefined)
+    throw new TypeError(
+      "Agent chat creation requires a stable chat or turn ID",
+    );
+  return {
+    chatId,
+    title: input.title,
+    provider: input.provider,
+    model: input.model,
+    origin: input.source,
+    createdAt: now,
+    maxTurnsPerMessage: input.maxTurnsPerMessage,
+  };
+}
+
+function requestedConfigMatches(
+  existing: AgentChatConfig,
+  requested: AgentChatConfig,
+): boolean {
+  return (
+    existing.chatId === requested.chatId &&
+    existing.title === requested.title &&
+    existing.provider === requested.provider &&
+    existing.model === requested.model &&
+    JSON.stringify(existing.origin) === JSON.stringify(requested.origin) &&
+    existing.maxTurnsPerMessage === requested.maxTurnsPerMessage
+  );
+}
+
+async function findMatchingRegistration(
+  operations: AgentChatApiOperations,
+  client: WorkflowClient,
+  config: AgentChatConfig,
+): Promise<AgentChatCatalogEntry | undefined> {
+  const existing = await operations.get(client, config.chatId);
+  if (existing !== undefined) {
+    if (!requestedConfigMatches(existing.config, config)) {
+      throw new AgentChatRegistrationConflictError(config.chatId);
+    }
+    return existing;
+  }
+  return undefined;
+}
+
+async function registerIdempotently(
+  operations: AgentChatApiOperations,
+  client: WorkflowClient,
+  config: AgentChatConfig,
+): Promise<AgentChatCatalogEntry> {
+  const existing = await findMatchingRegistration(operations, client, config);
+  const registrationConfig = existing?.config ?? config;
+  try {
+    // Registration is idempotent and repairs the catalog when get() found the
+    // owner Workflow directly after a partial create.
+    return await operations.register(client, registrationConfig);
+  } catch (error: unknown) {
+    const raced = await operations.get(client, config.chatId);
+    if (raced === undefined) throw error;
+    if (!requestedConfigMatches(raced.config, config)) {
+      throw new AgentChatRegistrationConflictError(config.chatId);
+    }
+    return raced;
+  }
+}
+
+async function registerClaimedTurn(
+  operations: AgentChatApiOperations,
+  client: Client,
+  config: AgentChatConfig,
+  turnId: string,
+): Promise<AgentChatCatalogEntry> {
+  try {
+    return await registerIdempotently(operations, client.workflow, config);
+  } catch (error: unknown) {
+    if (error instanceof AgentChatRegistrationConflictError) {
+      await operations.cancel(client, turnId);
+    }
+    throw error;
+  }
+}
+
+function requestForIngress(
+  input: {
+    source: AgentChatBinding;
+    prompt?: string | undefined;
+    turnId?: string | undefined;
+    sourceSequence: string | number;
+  },
+  now: string,
+): AgentChatTurnRequest {
+  if (input.prompt === undefined || input.turnId === undefined)
+    throw new TypeError("Agent chat turn requires a prompt and turn ID");
+  return {
+    turnId: input.turnId,
+    prompt: input.prompt,
+    submittedAt: now,
+    source: input.source,
+    sourceSequence: input.sourceSequence,
+  };
+}
+
+async function resolveIngressChatId(
+  operations: AgentChatApiOperations,
+  client: WorkflowClient,
+  input: ContinueAgentChatInput,
+): Promise<string> {
+  if (input.chatId !== undefined) {
+    const explicit = await operations.get(client, input.chatId);
+    if (explicit === undefined) throw new AgentChatNotFoundError(input.chatId);
+    return explicit.config.chatId;
+  }
+  const resolved = await operations.resolve(client, input.source);
+  if (resolved === undefined) throw new AgentChatBindingNotFoundError();
+  return resolved.config.chatId;
+}
+
+function captureFailure(error: unknown, operation: string): void {
+  Sentry.withScope((scope) => {
+    scope.setTag("component", COMPONENT);
+    scope.setTag("operation", operation);
+    Sentry.captureException(error);
+  });
+  jsonLog("error", "Durable agent chat API operation failed", {
+    operation,
+    error: error instanceof Error ? error.message : String(error),
+  });
+}
+
+async function checkpointAcceptedTurn(
+  operation: string,
+  checkpoint: () => Promise<unknown>,
+): Promise<void> {
+  try {
+    await checkpoint();
+  } catch (error: unknown) {
+    // The provider turn is already durable. A catalog repair can be retried,
+    // but must not tell the ingress to resubmit an accepted turn.
+    captureFailure(error, operation);
+  }
+}
+
+export function buildAgentChatApiRoutes(
+  token: string,
+  client: Client,
+  dependencies: AgentChatApiDependencies = {},
+): Hono {
+  const app = new Hono();
+  const operations = dependencies.operations ?? defaultOperations;
+  const now = dependencies.now ?? (() => new Date().toISOString());
+
+  app.get("/agent-chats", async (c) => {
+    if (unauthorized(c.req.header("authorization"), token)) {
+      return c.text("unauthorized\n", 401);
+    }
+    try {
+      return c.json({ chats: await operations.list(client.workflow) });
+    } catch (error: unknown) {
+      captureFailure(error, "list");
+      return c.text("list failed\n", 500);
+    }
+  });
+
+  app.get("/agent-chats/:chatId", async (c) => {
+    if (unauthorized(c.req.header("authorization"), token)) {
+      return c.text("unauthorized\n", 401);
+    }
+    try {
+      const chatId = AgentChatIdSchema.parse(c.req.param("chatId"));
+      const entry = await operations.get(client.workflow, chatId);
+      return entry === undefined
+        ? c.text("chat not found\n", 404)
+        : c.json(entry);
+    } catch (error: unknown) {
+      if (error instanceof ZodError) {
+        return c.json({ error: "bad chat id", issues: error.issues }, 400);
+      }
+      captureFailure(error, "get");
+      return c.text("lookup failed\n", 500);
+    }
+  });
+
+  app.post("/agent-chats", async (c) => {
+    if (unauthorized(c.req.header("authorization"), token)) {
+      return c.text("unauthorized\n", 401);
+    }
+    try {
+      const input = CreateAgentChatSchema.parse(await parseBody(c.req.raw));
+      const currentTime = now();
+      const timestamp = input.submittedAt ?? currentTime;
+      validateAgentChatIngressTimestamp(timestamp, currentTime);
+      const config = configForIngress(input, timestamp);
+      if (input.prompt === undefined) {
+        const entry = await registerIdempotently(
+          operations,
+          client.workflow,
+          config,
+        );
+        await operations.bind(client.workflow, input.source, config.chatId, {
+          updatedAt: entry.config.createdAt,
+          sourceSequence: input.sourceSequence,
+          tieBreaker: input.bindingId,
+        });
+        return c.json({ chat: entry }, 201);
+      }
+      const turnId = HttpAgentChatTurnIdSchema.parse(input.turnId);
+      const existing = await findMatchingRegistration(
+        operations,
+        client.workflow,
+        config,
+      );
+      const claimedConfig = existing?.config ?? config;
+      const claimedCommand = HttpAgentChatCommandSchema.parse({
+        kind: "new",
+        config: claimedConfig,
+        request: requestForIngress(input, timestamp),
+      });
+      const receipt = await operations.submit(client, claimedCommand, {
+        waitForActivation: true,
+      });
+      const entry = await registerClaimedTurn(
+        operations,
+        client,
+        config,
+        turnId,
+      );
+      const activatedCommand = HttpAgentChatCommandSchema.parse({
+        kind: "new",
+        config: entry.config,
+        request: claimedCommand.request,
+      });
+      await operations.activate(client, activatedCommand);
+      await checkpointAcceptedTurn("create-bind-after-activation", async () =>
+        operations.bind(client.workflow, input.source, entry.config.chatId, {
+          updatedAt: timestamp,
+          sourceSequence: input.sourceSequence,
+        }),
+      );
+      return c.json({ chatId: config.chatId, turn: receipt }, 202);
+    } catch (error: unknown) {
+      if (error instanceof SyntaxError) return c.text("bad json\n", 400);
+      if (error instanceof ZodError) {
+        return c.json({ error: "bad payload", issues: error.issues }, 400);
+      }
+      if (error instanceof AgentChatTurnConflictError) {
+        return c.text(`${error.message}\n`, 409);
+      }
+      if (error instanceof AgentChatRegistrationConflictError) {
+        return c.text(`${error.message}\n`, 409);
+      }
+      if (error instanceof AgentChatTimestampInFutureError) {
+        return c.json({ error: error.message }, 400);
+      }
+      captureFailure(error, "create");
+      return c.text("create failed\n", 500);
+    }
+  });
+
+  app.post("/agent-chat-turns", async (c) => {
+    if (unauthorized(c.req.header("authorization"), token)) {
+      return c.text("unauthorized\n", 401);
+    }
+    try {
+      const input = ContinueAgentChatSchema.parse(await parseBody(c.req.raw));
+      validateAgentChatIngressTimestamp(input.submittedAt, now());
+      const chatId = await resolveIngressChatId(
+        operations,
+        client.workflow,
+        input,
+      );
+      const receipt = await operations.submit(
+        client,
+        HttpAgentChatCommandSchema.parse({
+          kind: "continue",
+          chatId,
+          request: requestForIngress(input, input.submittedAt),
+        }),
+      );
+      if (input.chatId !== undefined) {
+        await checkpointAcceptedTurn(
+          "continue-bind-after-submission",
+          async () =>
+            operations.bind(client.workflow, input.source, chatId, {
+              updatedAt: input.submittedAt,
+              sourceSequence: input.sourceSequence,
+            }),
+        );
+      }
+      return c.json({ turn: receipt }, 202);
+    } catch (error: unknown) {
+      if (error instanceof SyntaxError) return c.text("bad json\n", 400);
+      if (error instanceof ZodError) {
+        return c.json({ error: "bad payload", issues: error.issues }, 400);
+      }
+      if (error instanceof AgentChatBindingNotFoundError) {
+        return c.text(`${error.message}\n`, 404);
+      }
+      if (error instanceof AgentChatNotFoundError) {
+        return c.text(`${error.message}\n`, 404);
+      }
+      if (error instanceof AgentChatTurnConflictError) {
+        return c.text(`${error.message}\n`, 409);
+      }
+      if (error instanceof AgentChatTimestampInFutureError) {
+        return c.json({ error: error.message }, 400);
+      }
+      captureFailure(error, "continue");
+      return c.text("turn failed\n", 500);
+    }
+  });
+
+  app.get("/agent-chat-turns/:turnId", async (c) => {
+    if (unauthorized(c.req.header("authorization"), token)) {
+      return c.text("unauthorized\n", 401);
+    }
+    try {
+      const turnId = HttpAgentChatTurnIdSchema.parse(c.req.param("turnId"));
+      const status = await operations.poll(client, turnId);
+      if (status === undefined) return c.text("turn not found\n", 404);
+      return c.json({ turn: status }, status.status === "running" ? 202 : 200);
+    } catch (error: unknown) {
+      if (error instanceof ZodError) {
+        return c.json({ error: "bad turn id", issues: error.issues }, 400);
+      }
+      captureFailure(error, "poll");
+      return c.text("turn lookup failed\n", 500);
+    }
+  });
+
+  app.post("/agent-chats/:chatId/bindings", async (c) => {
+    if (unauthorized(c.req.header("authorization"), token)) {
+      return c.text("unauthorized\n", 401);
+    }
+    try {
+      const chatId = AgentChatIdSchema.parse(c.req.param("chatId"));
+      const input = BindAgentChatSchema.parse(await parseBody(c.req.raw));
+      validateAgentChatIngressTimestamp(input.submittedAt, now());
+      const entry = await operations.bind(
+        client.workflow,
+        input.binding,
+        chatId,
+        {
+          updatedAt: input.submittedAt,
+          sourceSequence: input.sourceSequence,
+          tieBreaker: input.bindingId,
+        },
+      );
+      return c.json(entry);
+    } catch (error: unknown) {
+      if (error instanceof SyntaxError) return c.text("bad json\n", 400);
+      if (error instanceof ZodError) {
+        return c.json({ error: "bad payload", issues: error.issues }, 400);
+      }
+      if (error instanceof AgentChatNotFoundError) {
+        return c.text(`${error.message}\n`, 404);
+      }
+      if (error instanceof AgentChatTimestampInFutureError) {
+        return c.json({ error: error.message }, 400);
+      }
+      captureFailure(error, "bind");
+      return c.text("bind failed\n", 500);
+    }
+  });
+
+  return app;
+}

@@ -15,7 +15,7 @@ worker.
 | Surface                 | Public host                     | Triggers                                     |
 | ----------------------- | ------------------------------- | -------------------------------------------- |
 | GitHub webhook receiver | `pr-bot.sjer.red`               | merge-conflict check, Buildkite build cancel |
-| Agent-task API          | `temporal-agent-tasks.sjer.red` | agent tasks (bearer-token)                   |
+| Agent-task/chat API     | `temporal-agent-tasks.sjer.red` | agent tasks and durable chats (bearer-token) |
 | Sleep webhook           | `temporal-sleep.sjer.red`       | sleep workflows (bearer-token)               |
 | Xcode Cloud webhook     | `xcode-cloud-webhook.sjer.red`  | iOS build failures → Alertmanager alerts     |
 

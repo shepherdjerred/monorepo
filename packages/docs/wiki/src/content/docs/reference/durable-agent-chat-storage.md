@@ -7,19 +7,20 @@ Chat Workflows own immutable conversation identity; the catalog retains recent d
 
 ## Catalog and execution limits
 
-| Contract                                 | Limit                                                                                 |
-| ---------------------------------------- | ------------------------------------------------------------------------------------- |
-| Recent chat entries                      | 500                                                                                   |
-| Ingress bindings                         | 500                                                                                   |
-| Recent retired IDs                       | 500                                                                                   |
-| Serialized catalog state                 | 1,000,000 UTF-8 bytes                                                                 |
-| Pending turns per chat, including active | 8                                                                                     |
-| Provider Activity admission + execution  | 1 hour queued + 2 hours executing + 30 minutes session I/O; at most one provider call |
-| Chat command wait                        | 29 hours                                                                              |
-| Receipt dispatch Activity                | 30 hours                                                                              |
-| Receipt Workflow execution               | 151 hours; admission closes 3 hours 45 minutes before expiry                          |
-| Scheduled dispatch Activity              | 152 hours; provider admission closes after 148 hours 15 minutes                       |
-| Scheduled Workflow execution             | 153 hours including shutdown margin                                                   |
+| Contract                                 | Limit                                                                                             |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Recent chat entries                      | 500                                                                                               |
+| Ingress bindings                         | 500                                                                                               |
+| Recent retired IDs                       | 500                                                                                               |
+| Serialized catalog state                 | 1,000,000 UTF-8 bytes                                                                             |
+| Pending turns per chat, including active | 8                                                                                                 |
+| Provider Activity admission + execution  | 1 hour queued + 2 hours executing + 30 minutes session I/O; at most one provider call             |
+| Chat command wait                        | 29 hours                                                                                          |
+| Receipt dispatch Activity                | 30 hours                                                                                          |
+| Receipt Workflow execution               | 151 hours; admission closes 4 hours 30 minutes before expiry                                      |
+| Ingress command settlement               | 152 hours total; up to six 29-hour attempts; provider admission closes after 147 hours 30 minutes |
+| Scheduled dispatch Activity              | 152 hours; provider admission closes after 147 hours 30 minutes                                   |
+| Scheduled Workflow execution             | 153 hours including shutdown margin                                                               |
 
 Sources: [shared contracts](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/shared/agent/agent-chat.ts), [catalog retention](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/agent-chat-catalog.ts), [turn execution](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/agent-chat.ts), [receipt admission](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/agent-chat-turn-receipt.ts), and [schedule dispatch](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/workflows/scheduled-agent-chat-turn.ts).
 
