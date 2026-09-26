@@ -1786,6 +1786,31 @@
         "vite": "^8.0.0",
       },
     },
+    "packages/storm-brain": {
+      "name": "@shepherdjerred/storm-brain",
+      "version": "1.0.0",
+      "dependencies": {
+        "@shepherdjerred/feature-flags": "workspace:*",
+        "@shepherdjerred/llm-models": "workspace:*",
+        "@shepherdjerred/llm-runtime": "workspace:*",
+        "hono": "^4.12.18",
+        "prom-client": "^15.1.3",
+        "zod": "^4.4.3",
+      },
+      "devDependencies": {
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@tsconfig/node-lts": "^24.0.0",
+        "@tsconfig/recommended": "^1.0.13",
+        "@tsconfig/strictest": "^2.0.8",
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "@vitest/coverage-istanbul": "5.0.1",
+        "eslint": "^10.7.0",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+        "vitest": "5.0.1",
+      },
+    },
     "packages/streambot": {
       "name": "@shepherdjerred/streambot",
       "version": "0.0.1",
@@ -4084,6 +4109,8 @@
     "@shepherdjerred/s3-signed-request": ["@shepherdjerred/s3-signed-request@workspace:packages/s3-signed-request"],
 
     "@shepherdjerred/seaweedfs-backup": ["@shepherdjerred/seaweedfs-backup@workspace:packages/seaweedfs-backup"],
+
+    "@shepherdjerred/storm-brain": ["@shepherdjerred/storm-brain@workspace:packages/storm-brain"],
 
     "@shepherdjerred/streambot": ["@shepherdjerred/streambot@workspace:packages/streambot"],
 

@@ -35,6 +35,11 @@
       "key": "alert-dashboard",
       "name": "Alert Dashboard",
       "description": "Ops dashboard (alert-dashboard) feature flags."
+    },
+    {
+      "key": "storm",
+      "name": "Storm",
+      "description": "The Storm Minecraft server feature flags."
     }
   ],
   "flags": [
@@ -1421,6 +1426,30 @@
       "purpose": "Enable Streambot subtitles.",
       "type": "boolean",
       "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "storm-brain-classify-enabled",
+      "owner": "storm",
+      "namespace": "storm",
+      "source": "storm-brain",
+      "purpose": "Enable the Storm brain chat classification flow.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "storm-brain-triage-enabled",
+      "owner": "storm",
+      "namespace": "storm",
+      "source": "storm-brain",
+      "purpose": "Enable the Storm brain ticket triage flow.",
+      "type": "boolean",
+      "default": false,
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []

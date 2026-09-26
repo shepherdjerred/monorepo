@@ -16,6 +16,7 @@ hold only scoped invariants that agents must keep in context.
 | [macos-cross-compiler](macos-cross-compiler/)                   | Public Docker images that build macOS, iOS, and Catalyst apps on Linux                   |
 | [temporal](temporal/)                                           | Temporal worker: scheduled automation, agent tasks, homelab audits, PR-opening refreshes |
 | [trmnl-dashboard](trmnl-dashboard/)                             | TRMNL e-ink dashboard backend aggregating home/homelab status                            |
+| [storm-brain](storm-brain/)                                     | LLM classify/triage brain for The Storm's AI staff agent (Bun + Hono)                    |
 
 ## Discord streaming
 
