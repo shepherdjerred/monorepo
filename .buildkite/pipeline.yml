@@ -2781,7 +2781,7 @@ steps:
         # only the recorded decision matters here.
         for site_lane in site-sjer-red site-resume site-webring site-cooklang \
           site-stocks site-macos-cross site-wiki site-better-skill-capped site-glitter \
-          site-ts-mc site-scout-design-system; do
+          site-ts-mc site-ts-mc-docs site-scout-design-system; do
           if bun --no-install .buildkite/scripts/selectors/ci-changed.ts "$$site_lane"; then :; fi
         done
         exit 0
