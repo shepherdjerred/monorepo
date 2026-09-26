@@ -1,9 +1,9 @@
 import type { MessageCreateOptions } from "discord.js";
+import type { DiscordGuildId } from "@scout-for-lol/data";
 import type { NotificationPolicySuppressionReason } from "@scout-for-lol/domain/notifications/intent.ts";
 import { captureHallRecordBroken } from "#src/analytics/hall.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
-import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
 import { hallRecordBreakIntentKey } from "#src/durable/match/delivery-intents.ts";
 import { hallRecordBreakDeliveries } from "#src/metrics/progression.ts";
 import { hallBreakEmbed } from "#src/progression/hall/outbox.ts";
@@ -130,19 +130,21 @@ export async function hallRecordBreakSuppressionV2(
   const enabled = await isPolicyEnabled("hall_of_fame_enabled", {
     server: announcement.guildId,
   });
-  if (!enabled) return "feature-disabled";
+  return enabled ? undefined : "feature-disabled";
+}
 
-  const channel = await fetchChannelForDelivery(target.channelId);
-  if (channel !== null) {
-    const guildId: unknown = "guildId" in channel ? channel.guildId : undefined;
-    if (guildId !== announcement.guildId) {
-      throw new MalformedAnnouncementIntentError({
-        intentKey: record.intent.key,
-        detail: `its target channel belongs to ${String(guildId)}, not ${announcement.guildId}`,
-      });
-    }
+/** Refuse a Hall send unless Discord resolved the target in the payload guild. */
+export function assertHallRecordBreakTargetGuildV2(
+  record: MatchNotificationIntentRecord,
+  resolvedGuildId: DiscordGuildId | undefined,
+): void {
+  const announcement = hallAnnouncementOf(record);
+  if (resolvedGuildId !== announcement.guildId) {
+    throw new MalformedAnnouncementIntentError({
+      intentKey: record.intent.key,
+      detail: `its target channel belongs to ${String(resolvedGuildId)}, not ${announcement.guildId}`,
+    });
   }
-  return undefined;
 }
 
 /**

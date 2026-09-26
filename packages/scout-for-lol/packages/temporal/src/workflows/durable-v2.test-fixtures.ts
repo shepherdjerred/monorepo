@@ -17,6 +17,7 @@ import type {
 import {
   beginSend,
   confirmDelivered,
+  confirmUnsentSuppression,
   markReady,
   recordFailure,
   recordUnknownDelivery,
@@ -272,11 +273,12 @@ export function scoutV2NotificationStubs(store: ScoutV2NotificationStore) {
       input: ScoutIntentAttemptRefV2,
     ): ScoutNotificationDeliveryV2Result => {
       record("deliverNotificationV2");
-      // Recorded BEFORE the outcome is decided, because a send that threw
-      // still reached Discord as far as this fake is concerned — which is
-      // exactly the ambiguity the nonce exists to make visible.
-      store.sends.push(input.attemptNonce);
       const scripted = nextScripted(store);
+      // A suppressed outcome is a confirmed pre-send refusal. The other
+      // scripted outcomes may have reached Discord, including a throw.
+      if (scripted.outcome !== "suppressed") {
+        store.sends.push(input.attemptNonce);
+      }
       if (scripted.outcome === "throw") {
         throw ApplicationFailure.nonRetryable(
           "the send did not answer",
@@ -318,6 +320,15 @@ export function scoutV2NotificationStubs(store: ScoutV2NotificationStore) {
         return applyIntentTransition(
           store,
           recordFailure(intent, { attemptNonce, failure: delivery.failure }),
+        );
+      }
+      if (delivery.outcome === "suppressed") {
+        return applyIntentTransition(
+          store,
+          confirmUnsentSuppression(intent, {
+            attemptNonce,
+            reason: delivery.reason,
+          }),
         );
       }
       return applyIntentTransition(

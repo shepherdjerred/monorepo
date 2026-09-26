@@ -61,8 +61,11 @@ Bun.env["DATABASE_URL"] = testDatabase.dbUrl;
 const { prisma } = testDatabase;
 
 const { prisma: activityPrisma } = await import("#src/database/index.ts");
-const { beginNotificationSendV2, markNotificationReadyV2 } =
-  await import("#src/temporal/v2/notification-transitions.ts");
+const {
+  beginNotificationSendV2,
+  markNotificationReadyV2,
+  recordNotificationOutcomeV2,
+} = await import("#src/temporal/v2/notification-transitions.ts");
 
 afterAll(async () => {
   await prisma.$disconnect();
@@ -218,5 +221,33 @@ describe("beginNotificationSendV2 under the Hall policy", () => {
       attemptNonce: NONCE,
     });
     expect(result.attemptCount).toBe(1);
+    expect(stubs.retireIfAudienceGoneV2).toHaveBeenCalledTimes(1);
+    expect(stubs.fetchChannelForDelivery).not.toHaveBeenCalled();
+  });
+
+  test("records a guild opt-out discovered after the attempt began", async () => {
+    stubs.isPolicyEnabled.mockResolvedValue(true);
+    const key = await mint("hall-record-break", "ready");
+    await beginNotificationSendV2({
+      stage: STAGE,
+      intentKey: key,
+      attemptNonce: NONCE,
+    });
+
+    const result = await recordNotificationOutcomeV2({
+      stage: STAGE,
+      intentKey: key,
+      attemptNonce: NONCE,
+      delivery: { outcome: "suppressed", reason: "feature-disabled" },
+    });
+
+    expect(result.state).toEqual({
+      kind: "suppressed",
+      reason: "feature-disabled",
+    });
+    expect(await storedState(key)).toEqual({
+      state: { kind: "suppressed", reason: "feature-disabled" },
+      attemptCount: 1,
+    });
   });
 });

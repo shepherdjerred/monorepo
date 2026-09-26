@@ -7,7 +7,7 @@ import { prisma } from "#src/database/index.ts";
 import { transitionIntent } from "#src/database/durable/intent-repository.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { hallRecordBreakSuppressionV2 } from "#src/temporal/v2/notification/hall-record-break-notification.ts";
-import { UndeliverableContentError } from "#src/temporal/v2/notification/undeliverable-content.ts";
+import { MalformedAnnouncementIntentError } from "#src/temporal/v2/notification/announcement-codecs.ts";
 
 /**
  * Whether the intent's KIND forbids sending it now, and why.
@@ -39,7 +39,7 @@ async function kindSuppressionOfV2(
         // which the send's pre-send phase parks terminally as
         // `content-unavailable`. Deciding it here would need the very payload
         // that is broken, so the policy defers to the phase built to say so.
-        if (error instanceof UndeliverableContentError) return undefined;
+        if (error instanceof MalformedAnnouncementIntentError) return undefined;
         throw error;
       }
     case "postmatch":

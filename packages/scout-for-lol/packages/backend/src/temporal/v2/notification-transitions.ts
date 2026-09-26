@@ -2,6 +2,7 @@ import type { NotificationIntent } from "@scout-for-lol/domain/notifications/int
 import {
   beginSend,
   confirmDelivered,
+  confirmUnsentSuppression,
   markReady,
   recordFailure,
   recordUnknownDelivery,
@@ -172,6 +173,12 @@ function outcomeTransition(
     case "failed":
       return (intent) =>
         recordFailure(intent, { attemptNonce, failure: delivery.failure });
+    case "suppressed":
+      return (intent) =>
+        confirmUnsentSuppression(intent, {
+          attemptNonce,
+          reason: delivery.reason,
+        });
     case "unknown": {
       const observedAt = toIsoInstant(new Date());
       return (intent) =>

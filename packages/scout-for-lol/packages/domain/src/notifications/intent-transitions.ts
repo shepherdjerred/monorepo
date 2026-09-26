@@ -323,6 +323,39 @@ export function suppress(
   return suppressUnattempted(intent, args.reason);
 }
 
+/** Confirm a policy refusal observed inside this attempt before any send. */
+export function confirmUnsentSuppression(
+  intent: NotificationIntent,
+  args: {
+    attemptNonce: NotificationAttemptNonce;
+    reason: NotificationPolicySuppressionReason;
+  },
+): NotificationTransitionResult {
+  const state = intent.state;
+  switch (state.kind) {
+    case "sending":
+      return state.attemptNonce === args.attemptNonce
+        ? applied(
+            withState(intent, { kind: "suppressed", reason: args.reason }),
+          )
+        : conflict("attempt-nonce-mismatch");
+    case "pending":
+    case "ready":
+      return conflict("invalid-source-state");
+    case "unknown-delivery":
+      return conflict("unknown-delivery-requires-operator");
+    case "delivered":
+    case "suppressed":
+    case "expired":
+    case "permission-denied":
+      return conflict("terminal-state");
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
 /**
  * The guard every reasoned, clock-free suppression shares: move an intent
  * nobody is sending to `suppressed` under one reason, and never re-target a

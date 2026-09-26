@@ -727,6 +727,13 @@ delivery by `notification/kind-policy.ts`, in `markNotificationReadyV2` and
 again in `beginNotificationSendV2` (after the recovery gate, before the
 audience check): a guild that turned the Hall off gets the intent suppressed
 `feature-disabled` through the domain's `suppress`, and no attempt is minted.
+The delivery Activity checks the flag again immediately before the Discord
+request. If it changed after the attempt began, the Activity confirms that no
+request left and `confirmUnsentSuppression` records the same terminal reason
+against that attempt's nonce. Channel lookup stays with audience retirement
+before the attempt; the delivery Activity also verifies that Discord resolved
+the target in the envelope's guild and parks a mismatch as terminal
+`content-unavailable` without sending.
 The delivery counter and the `hall_record_broken` analytics event run in the
 best-effort post-delivery follow-up.
 

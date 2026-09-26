@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
+import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 import type * as NotificationArtifactModule from "#src/temporal/v2/notification/notification-artifact.ts";
+import { hallBreakRecords } from "#src/temporal/v2/notification/hall-record-break.test-fixtures.ts";
 import {
   attemptRef,
   CHANNEL_ID,
@@ -33,6 +35,14 @@ const stubs = vi.hoisted(() => ({
   generateMatchReport: vi.fn(),
   fetchChannelForDelivery: vi.fn(),
   send: vi.fn(),
+  isPolicyEnabled: vi.fn(),
+}));
+
+vi.mock("#src/configuration/flags.ts", async () => ({
+  ...(await vi.importActual<Record<string, unknown>>(
+    "#src/configuration/flags.ts",
+  )),
+  isPolicyEnabled: stubs.isPolicyEnabled,
 }));
 
 vi.mock("#src/temporal/v2/notification-reads.ts", () => ({
@@ -91,6 +101,7 @@ const { deliverNotificationV2 } =
 beforeEach(() => {
   vi.clearAllMocks();
   stubs.fetchChannelForDelivery.mockResolvedValue({ guildId: undefined });
+  stubs.isPolicyEnabled.mockResolvedValue(true);
   stubs.buildSettlementNotificationMessageV2.mockResolvedValue({
     content: "the pool settled",
     embeds: [],
@@ -279,11 +290,19 @@ describe("the dare-summary-shaped path", () => {
   });
 });
 
+const HALL_INTENT_KEY = NotificationIntentKeySchema.parse(
+  "hall-record-break:NA1_9301:100000000000000001",
+);
+
+function hallAttemptRef() {
+  return { ...attemptRef(), intentKey: HALL_INTENT_KEY };
+}
+
 function hallRecordWith(records: unknown[]): unknown {
   return {
     matchId: "NA1_9301",
     intent: {
-      key: intentKey,
+      key: HALL_INTENT_KEY,
       kind: "hall-record-break",
       origin: { kind: "live" },
       target: { kind: "channel", channelId: CHANNEL_ID },
@@ -303,6 +322,25 @@ function hallRecordWith(records: unknown[]): unknown {
 describe("the hall-shaped path", () => {
   // The hall arm is NOT mocked here: what is pinned is the real arm's
   // refusal reaching the delivery as a definite, terminal non-send.
+  test("delivers a Hall record only to its resolved guild", async () => {
+    stubs.requireIntentRecordV2.mockResolvedValue(
+      hallRecordWith(hallBreakRecords()),
+    );
+    stubs.resolveNotificationGateV2.mockResolvedValue({
+      decision: "permitted",
+    });
+    stubs.fetchChannelForDelivery.mockResolvedValue({
+      guildId: "100000000000000001",
+    });
+    stubs.send.mockResolvedValue({ id: "100000000000000779" });
+
+    expect(await deliverNotificationV2(hallAttemptRef())).toEqual({
+      outcome: "delivered",
+      messageId: "100000000000000779",
+    });
+    expect(stubs.send).toHaveBeenCalledTimes(1);
+  });
+
   test("an announcement whose every record was retired parks as content-unavailable, unsent", async () => {
     stubs.requireIntentRecordV2.mockResolvedValue(
       hallRecordWith([
@@ -330,9 +368,46 @@ describe("the hall-shaped path", () => {
       decision: "permitted",
     });
 
-    const result = await deliverNotificationV2(attemptRef());
+    const result = await deliverNotificationV2(hallAttemptRef());
 
     expect(result).toEqual({
+      outcome: "failed",
+      failure: { classification: "terminal", reason: "content-unavailable" },
+    });
+    expect(stubs.send).not.toHaveBeenCalled();
+  });
+
+  test("records a late guild opt-out as a definite non-send", async () => {
+    stubs.requireIntentRecordV2.mockResolvedValue(
+      hallRecordWith(hallBreakRecords()),
+    );
+    stubs.resolveNotificationGateV2.mockResolvedValue({
+      decision: "permitted",
+    });
+    stubs.fetchChannelForDelivery.mockResolvedValue({
+      guildId: "100000000000000001",
+    });
+    stubs.isPolicyEnabled.mockResolvedValue(false);
+
+    expect(await deliverNotificationV2(hallAttemptRef())).toEqual({
+      outcome: "suppressed",
+      reason: "feature-disabled",
+    });
+    expect(stubs.send).not.toHaveBeenCalled();
+  });
+
+  test("refuses a Hall target resolved in another guild", async () => {
+    stubs.requireIntentRecordV2.mockResolvedValue(
+      hallRecordWith(hallBreakRecords()),
+    );
+    stubs.resolveNotificationGateV2.mockResolvedValue({
+      decision: "permitted",
+    });
+    stubs.fetchChannelForDelivery.mockResolvedValue({
+      guildId: "100000000000000002",
+    });
+
+    expect(await deliverNotificationV2(hallAttemptRef())).toEqual({
       outcome: "failed",
       failure: { classification: "terminal", reason: "content-unavailable" },
     });

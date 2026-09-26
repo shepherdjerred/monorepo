@@ -162,6 +162,25 @@ describe("the V2 notification intent machine", () => {
     expect(store.calls).not.toContain("afterNotificationDeliveredV2");
   }, 60_000);
 
+  test("records a late policy refusal without a Discord send or follow-up", async () => {
+    const store = createNotificationStore({
+      script: [{ outcome: "suppressed", reason: "feature-disabled" }],
+    });
+    const stubs = scoutV2NotificationStubs(store);
+    await startWorkers({ realtime: stubs, background: stubs });
+
+    const result = await notify("notification-late-policy-refusal");
+
+    expect(result).toMatchObject({
+      data: {
+        state: { kind: "suppressed", reason: "feature-disabled" },
+        attemptCount: 1,
+      },
+    });
+    expect(store.sends).toHaveLength(0);
+    expect(store.calls).not.toContain("afterNotificationDeliveredV2");
+  }, 60_000);
+
   test("commits the attempt nonce before the send and the outcome after it", async () => {
     const store = createNotificationStore();
     const stubs = scoutV2NotificationStubs(store);

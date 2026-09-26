@@ -22,7 +22,6 @@ import {
 
 const stubs = vi.hoisted(() => ({
   isPolicyEnabled: vi.fn(),
-  fetchChannelForDelivery: vi.fn(),
   captureHallRecordBroken: vi.fn(),
   inc: vi.fn(),
 }));
@@ -34,12 +33,6 @@ vi.mock("#src/configuration/flags.ts", async () => {
     )),
     isPolicyEnabled: stubs.isPolicyEnabled,
   };
-});
-vi.mock("#src/discord/utils/channel.ts", async () => {
-  const actual = await vi.importActual<Record<string, unknown>>(
-    "#src/discord/utils/channel.ts",
-  );
-  return { ...actual, fetchChannelForDelivery: stubs.fetchChannelForDelivery };
 });
 vi.mock("#src/analytics/hall.ts", () => ({
   captureHallRecordBroken: stubs.captureHallRecordBroken,
@@ -57,6 +50,7 @@ const { hallRecordBreakAnnouncementEnvelope } =
   await import("#src/temporal/v2/notification/announcement-codecs.ts");
 const {
   afterHallRecordBreakDeliveredV2,
+  assertHallRecordBreakTargetGuildV2,
   buildHallRecordBreakNotificationMessageV2,
   hallRecordBreakSuppressionV2,
 } =
@@ -98,7 +92,6 @@ function withRecords(records: unknown[]): unknown {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  stubs.fetchChannelForDelivery.mockResolvedValue({ guildId: hallGuildId });
   stubs.captureHallRecordBroken.mockResolvedValue(undefined);
 });
 
@@ -183,7 +176,6 @@ describe("the hall record-break policy", () => {
     expect(stubs.isPolicyEnabled).toHaveBeenCalledWith("hall_of_fame_enabled", {
       server: hallGuildId,
     });
-    expect(stubs.fetchChannelForDelivery).not.toHaveBeenCalled();
   });
 
   test("permits the send while the guild has the Hall on", async () => {
@@ -192,17 +184,13 @@ describe("the hall record-break policy", () => {
     expect(await hallRecordBreakSuppressionV2(hallRecord())).toBeUndefined();
   });
 
-  test("refuses a target channel in another guild before sending", async () => {
-    stubs.isPolicyEnabled.mockResolvedValue(true);
-    stubs.fetchChannelForDelivery.mockResolvedValue({
-      guildId: "100000000000000002",
-    });
-    await expect(hallRecordBreakSuppressionV2(hallRecord())).rejects.toThrow(
-      MalformedAnnouncementIntentError,
-    );
-    expect(stubs.isPolicyEnabled).toHaveBeenCalledWith("hall_of_fame_enabled", {
-      server: hallGuildId,
-    });
+  test("refuses a target channel in another guild at the send boundary", () => {
+    expect(() =>
+      assertHallRecordBreakTargetGuildV2(
+        hallRecord(),
+        DiscordGuildIdSchema.parse("100000000000000002"),
+      ),
+    ).toThrow(MalformedAnnouncementIntentError);
   });
 });
 
