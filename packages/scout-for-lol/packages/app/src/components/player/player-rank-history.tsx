@@ -1,4 +1,5 @@
 import { format as echartsFormat } from "echarts";
+import { useState, type ReactNode } from "react";
 import { z } from "zod";
 import {
   leaguePointsToRankLabel,
@@ -113,24 +114,48 @@ export function PlayerRankHistoryPanel(props: {
 
 export function PlayerRankHistoryCard(props: { history: RankHistoryView }) {
   const { history } = props;
+  const [period, setPeriod] = useState<RankHistoryPeriod>("season");
+  const granularity = periodGranularity(period);
   return (
     <section className="space-y-3">
       <div>
         <h2 className="text-xl font-semibold">Ranked history</h2>
         <p className="text-sm text-scout-subtle">
           Live post-match snapshots Scout recorded for{" "}
-          {history.currentSplit.displayName}. This is not a Riot career graph,
-          and it does not change with the game filters below.
+          {history.currentSplit.displayName},{" "}
+          {granularity === "game"
+            ? "plotted per game"
+            : "plotted as daily closes"}
+          . This is not a Riot career graph, and it does not change with the
+          game filters below.
         </p>
       </div>
       <Tabs defaultValue="solo">
-        <TabsList aria-label="Ranked queues">
-          {QUEUE_TABS.map((tab) => (
-            <TabsTrigger key={tab.queue} value={tab.queue}>
-              {tab.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <TabsList aria-label="Ranked queues">
+            {QUEUE_TABS.map((tab) => (
+              <TabsTrigger key={tab.queue} value={tab.queue}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          <div role="group" aria-label="History period" className="flex gap-1">
+            {RANK_HISTORY_PERIOD_ORDER.map((value) => (
+              <Button
+                key={value}
+                type="button"
+                size="sm"
+                variant={value === period ? "secondary" : "ghost"}
+                aria-pressed={value === period}
+                onClick={() => {
+                  setPeriod(value);
+                }}
+              >
+                {periodLabel(value)}
+              </Button>
+            ))}
+          </div>
+        </div>
         {QUEUE_TABS.map((tab) => (
           <TabsContent key={tab.queue} value={tab.queue} className="space-y-4">
             <QueueRankHistory
@@ -138,6 +163,7 @@ export function PlayerRankHistoryCard(props: { history: RankHistoryView }) {
               splitName={history.currentSplit.displayName}
               start={asDate(history.currentSplit.start)}
               end={asDate(history.currentSplit.end)}
+              period={period}
               queue={history.queues[tab.queue]}
             />
           </TabsContent>
@@ -152,24 +178,38 @@ function QueueRankHistory(props: {
   splitName: string;
   start: Date;
   end: Date;
+  period: RankHistoryPeriod;
   queue: QueueRankHistoryView;
 }) {
-  const hasCurrent = queueHasCurrentPoints(props.queue);
+  const range = periodRange(props.period, props.start, props.end);
+  const prepared = preparePeriodSeries(props.queue.series, props.period, range);
+  const hasVisible = prepared.some((entry) => entry.points.length > 0);
+  let body: ReactNode;
+  if (!queueHasCurrentPoints(props.queue)) {
+    body = (
+      <p className="text-sm text-scout-subtle">
+        Scout has no ranked snapshots for this queue in {props.splitName}. Rank
+        history starts when Scout processes a live ranked game.
+      </p>
+    );
+  } else if (hasVisible) {
+    body = (
+      <RankHistoryChart
+        title={`${props.queueLabel} · ${props.splitName}`}
+        range={range}
+        series={prepared}
+      />
+    );
+  } else {
+    body = (
+      <p className="text-sm text-scout-subtle">
+        {emptyRangeMessage(props.period)}
+      </p>
+    );
+  }
   return (
     <>
-      {hasCurrent ? (
-        <RankHistoryChart
-          title={`${props.queueLabel} · ${props.splitName}`}
-          start={props.start}
-          end={props.end}
-          series={props.queue.series}
-        />
-      ) : (
-        <p className="text-sm text-scout-subtle">
-          Scout has no ranked snapshots for this queue in {props.splitName}.
-          Rank history starts when Scout processes a live ranked game.
-        </p>
-      )}
+      {body}
       {props.queue.previous.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-sm font-medium text-muted-foreground">
@@ -203,10 +243,160 @@ function QueueRankHistory(props: {
   );
 }
 
+/**
+ * Right edge of the ranked-history x-axis.
+ *
+ * The backend reports the split window, whose end is in the future
+ * mid-split; rendering it verbatim stretches the axis past today and
+ * compresses the real snapshots into the left half.
+ */
+export function graphXAxisMax(end: Date, now: Date = new Date()): number {
+  return Math.min(end.getTime(), now.getTime());
+}
+
+/**
+ * End-of-day snapshots, one per local calendar day.
+ *
+ * A season chart at per-game fidelity is unreadable — an active day holds
+ * half a dozen ±20 LP swings that render as vertical noise. The daily close
+ * keeps every plotted point a real observed rank (the last snapshot of the
+ * day) instead of fabricating smoothed values between games. Input must be
+ * time-sorted, which the backend guarantees.
+ */
+export function dailyClosePoints(
+  points: readonly RankHistoryPointView[],
+): RankHistoryPointView[] {
+  const byDay = new Map<string, RankHistoryPointView>();
+  for (const point of points) {
+    const at = asDate(point.at);
+    byDay.set(
+      `${at.getFullYear().toString()}-${at.getMonth().toString()}-${at.getDate().toString()}`,
+      point,
+    );
+  }
+  return [...byDay.values()];
+}
+
+/**
+ * One account's snapshots as a step line.
+ *
+ * Points arrive already filtered and grouped for the selected period. A
+ * snapshot holds until the next observation, so the value jumps at each
+ * point (`step: "end"`) instead of ramping diagonally between games the way
+ * a plain connected line would.
+ */
+export function rankHistoryLineSeries(
+  series: QueueRankHistoryView["series"][number],
+) {
+  return {
+    name: series.accountLabel,
+    type: "line" as const,
+    step: "end" as const,
+    showSymbol: series.points.length <= 40,
+    data: series.points.map((point) => ({
+      value: [asDate(point.at).getTime(), point.leaguePoints],
+      rankLabel: rankToString(point.rank),
+    })),
+  };
+}
+
+const DAY_MS = 86_400_000;
+
+export const RANK_HISTORY_PERIOD_ORDER = ["7d", "30d", "season"] as const;
+export type RankHistoryPeriod = (typeof RANK_HISTORY_PERIOD_ORDER)[number];
+export type RankHistoryGranularity = "game" | "day";
+
+const RANK_HISTORY_PERIOD_CONFIG: Record<
+  RankHistoryPeriod,
+  {
+    label: string;
+    days: number | undefined;
+    granularity: RankHistoryGranularity;
+  }
+> = {
+  "7d": { label: "7D", days: 7, granularity: "game" },
+  "30d": { label: "30D", days: 30, granularity: "day" },
+  season: { label: "Season", days: undefined, granularity: "day" },
+};
+
+export function periodLabel(period: RankHistoryPeriod): string {
+  return RANK_HISTORY_PERIOD_CONFIG[period].label;
+}
+
+export function periodGranularity(
+  period: RankHistoryPeriod,
+): RankHistoryGranularity {
+  return RANK_HISTORY_PERIOD_CONFIG[period].granularity;
+}
+
+/**
+ * Visible x-range for a period: the trailing window, or the whole split.
+ * The start never precedes the split start, so a young season shows a
+ * short window instead of empty weeks.
+ */
+export function periodRange(
+  period: RankHistoryPeriod,
+  splitStart: Date,
+  splitEnd: Date,
+  now: Date = new Date(),
+): { start: Date; end: Date } {
+  const end = new Date(graphXAxisMax(splitEnd, now));
+  const days = RANK_HISTORY_PERIOD_CONFIG[period].days;
+  if (days === undefined) {
+    return { start: splitStart, end };
+  }
+  return {
+    start: new Date(
+      Math.max(splitStart.getTime(), end.getTime() - days * DAY_MS),
+    ),
+    end,
+  };
+}
+
+export function groupPointsByGranularity(
+  points: readonly RankHistoryPointView[],
+  granularity: RankHistoryGranularity,
+): RankHistoryPointView[] {
+  return granularity === "game" ? [...points] : dailyClosePoints(points);
+}
+
+export function pointsInRange(
+  points: readonly RankHistoryPointView[],
+  start: Date,
+  end: Date,
+): RankHistoryPointView[] {
+  return points.filter((point) => {
+    const at = asDate(point.at).getTime();
+    return at >= start.getTime() && at <= end.getTime();
+  });
+}
+
+/** Filter every series to the period window, then group to its granularity. */
+export function preparePeriodSeries(
+  series: QueueRankHistoryView["series"],
+  period: RankHistoryPeriod,
+  range: { start: Date; end: Date },
+): QueueRankHistoryView["series"] {
+  const granularity = periodGranularity(period);
+  return series.map((entry) => ({
+    accountLabel: entry.accountLabel,
+    points: groupPointsByGranularity(
+      pointsInRange(entry.points, range.start, range.end),
+      granularity,
+    ),
+  }));
+}
+
+export function emptyRangeMessage(period: RankHistoryPeriod): string {
+  const days = RANK_HISTORY_PERIOD_CONFIG[period].days;
+  return days === undefined
+    ? "Scout has no ranked snapshots in view for this queue."
+    : `Scout recorded no ranked games in the last ${days.toString()} days.`;
+}
+
 function RankHistoryChart(props: {
   title: string;
-  start: Date;
-  end: Date;
+  range: { start: Date; end: Date };
   series: QueueRankHistoryView["series"];
 }) {
   const values = props.series.flatMap((series) =>
@@ -214,15 +404,17 @@ function RankHistoryChart(props: {
   );
   const bounds = yBounds(values);
   const showLegend = props.series.length > 1;
+  const xMin = props.range.start.getTime();
+  const xMax = props.range.end.getTime();
   return (
     <ProfileEchartsHost
       title={props.title}
       revision={[
         bounds.max,
         bounds.min,
-        props.end,
+        xMin,
+        xMax,
         props.series,
-        props.start,
         props.title,
         showLegend,
       ]}
@@ -242,8 +434,8 @@ function RankHistoryChart(props: {
         },
         xAxis: {
           type: "time",
-          min: props.start.getTime(),
-          max: props.end.getTime(),
+          min: xMin,
+          max: xMax,
           axisLabel: {
             hideOverlap: true,
             fontFamily: VISUALIZATION_BODY_FONT,
@@ -258,15 +450,7 @@ function RankHistoryChart(props: {
             formatter: (value: number) => leaguePointsToRankLabel(value),
           },
         },
-        series: props.series.map((series) => ({
-          name: series.accountLabel,
-          type: "line" as const,
-          showSymbol: series.points.length <= 40,
-          data: series.points.map((point) => ({
-            value: [asDate(point.at).getTime(), point.leaguePoints],
-            rankLabel: rankToString(point.rank),
-          })),
-        })),
+        series: props.series.map((series) => rankHistoryLineSeries(series)),
       }}
     />
   );
