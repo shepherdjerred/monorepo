@@ -4,7 +4,6 @@
  */
 export const MAIN_DEPLOY_STEPS = [
   "images",
-  "macos-cross-compiler",
   "sites",
   "publish",
   "trmnl-publish",
@@ -24,5 +23,4 @@ export const MAIN_DEPLOY_STEPS = [
   "version-commit-back",
   "ci-base-refresh",
   "ci-playwright-refresh",
-  "windows-cross-compiler-refresh",
 ] as const;

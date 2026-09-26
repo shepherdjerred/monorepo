@@ -228,11 +228,7 @@ for (const forbidden of ["curl ", "jq ", "BUILDKITE_API_TOKEN"]) {
     fail(`runtime CI selector restored unavailable dependency ${forbidden}`);
   }
 }
-for (const required of [
-  '"ci-changed-base"',
-  "scripts/lib/s3-static-site.ts",
-  "scripts/lib/run.ts",
-]) {
+for (const required of ['"ci-changed-base"', "scripts/lib/run.ts"]) {
   if (!ciChangedConfiguration.includes(required)) {
     fail(`runtime CI selector is missing ${required}`);
   }

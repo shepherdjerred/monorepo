@@ -10,18 +10,6 @@ const REFRESH_CONTRACTS = [
     "ci-playwright",
     "ci-playwright-candidate.json",
   ],
-  [
-    "windows-cross-compiler-refresh",
-    "windows-cross-compiler",
-    "windows-cross-compiler",
-    "windows-cross-compiler-candidate.json",
-  ],
-  [
-    "windows-cross-compiler-refresh",
-    "windows-cross-compiler",
-    "windows-cross-compiler-winui",
-    "windows-cross-compiler-winui-candidate.json",
-  ],
 ] as const satisfies readonly (readonly [string, string, string, string])[];
 
 export function validateCiImageRefreshContracts(
