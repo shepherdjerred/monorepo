@@ -19,9 +19,9 @@ import { ExploreMatchCardSchema } from "#src/model/reports/explore-match-card.ts
 
 export const EXPLORE_REQUEST_MAX_BYTES = 16 * 1024;
 export const EXPLORE_QUESTION_MAX_LENGTH = 2000;
-export const EXPLORE_MAX_STEPS = 14;
-export const EXPLORE_MAX_TOOL_CALLS = 30;
-export const EXPLORE_MAX_PREVIEW_CALLS = 8;
+export const EXPLORE_MAX_STEPS = 30;
+export const EXPLORE_MAX_TOOL_CALLS = 60;
+export const EXPLORE_MAX_PREVIEW_CALLS = 20;
 export const EXPLORE_MAX_OUTPUT_TOKENS = 4000;
 export const EXPLORE_TIMEOUT_MS = 180_000;
 /**

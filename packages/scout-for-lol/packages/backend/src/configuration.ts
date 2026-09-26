@@ -277,11 +277,19 @@ function computeConfiguration() {
       .asString(),
     reportDuckDbThreads: env
       .get("REPORT_DUCKDB_THREADS")
-      .default("2")
+      .default("4")
       .asIntPositive(),
     reportDuckDbMemoryLimit: env
       .get("REPORT_DUCKDB_MEMORY_LIMIT")
-      .default("512MB")
+      .default("3GB")
+      .asString(),
+    // Where a query that outgrows memory_limit spills, and how much it may.
+    // Unset keeps DuckDB's in-memory default (no spilling); the pods that
+    // serve reports and Explore set it to a scratch volume.
+    reportDuckDbTempDir: getOptionalEnvVar("REPORT_DUCKDB_TEMP_DIR"),
+    reportDuckDbMaxTempSize: env
+      .get("REPORT_DUCKDB_MAX_TEMP_SIZE")
+      .default("7GiB")
       .asString(),
     openRouterApiKey: getOptionalEnvVar("OPENROUTER_API_KEY"),
     reportAiModel: getOptionalEnvVar("REPORT_AI_MODEL", "gpt-5.6-sol"),
@@ -452,6 +460,12 @@ const configuration: Configuration = {
   },
   get reportDuckDbMemoryLimit() {
     return getConfiguration().reportDuckDbMemoryLimit;
+  },
+  get reportDuckDbTempDir() {
+    return getConfiguration().reportDuckDbTempDir;
+  },
+  get reportDuckDbMaxTempSize() {
+    return getConfiguration().reportDuckDbMaxTempSize;
   },
   get openRouterApiKey() {
     return getConfiguration().openRouterApiKey;

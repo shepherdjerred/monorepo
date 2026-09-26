@@ -1,7 +1,14 @@
 import { describe, expect, test } from "vitest";
-import { ReportAiModelPreviewSummarySchema } from "@scout-for-lol/data";
+import {
+  EXPLORE_MODEL_PREVIEW_MAX_ROWS,
+  REPORT_AI_PREVIEW_MAX_ROWS,
+  ReportAiModelPreviewSummarySchema,
+} from "@scout-for-lol/data";
 import { compileScoutQl } from "@scout-for-lol/data/model/scoutql/parse/compile.ts";
-import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
+import {
+  reportQueryModelPreviewSummary,
+  reportQueryPreviewSummary,
+} from "#src/reports/ai/report-query-preview-summary.ts";
 import type { ReportQueryResult } from "#src/reports/query/query-types.ts";
 
 const BOUND = "game_creation_at >= CURRENT_TIMESTAMP - INTERVAL 30 DAY";
@@ -69,24 +76,34 @@ describe("reportQueryPreviewSummary", () => {
         `SELECT COUNT(*) AS games FROM match_participants WHERE ${BOUND} GROUP BY champion LIMIT 25 RENDER table`,
       ),
       columns: ["label", "games"],
-      rows: Array.from({ length: 13 }, (_, index) => ({
+      rows: Array.from({ length: 60 }, (_, index) => ({
         label: `Champion ${index.toString()}`,
         dimensions: [`Champion ${index.toString()}`],
         keys: [`Champion ${index.toString()}`],
         mentionIdentity: null,
         values: [{ column: "games", value: index }],
       })),
-      rowsScanned: 13,
+      rowsScanned: 60,
       range: RANGE,
     };
 
     const preview = reportQueryPreviewSummary(result);
-    expect(preview.rows).toHaveLength(10);
+    expect(REPORT_AI_PREVIEW_MAX_ROWS).toBe(10);
+    expect(preview.rows).toHaveLength(REPORT_AI_PREVIEW_MAX_ROWS);
     expect(preview.visualizationRows).toHaveLength(12);
-    expect(preview.rowsReturned).toBe(13);
+    expect(preview.rowsReturned).toBe(60);
     expect(preview.visualizationRows.at(-1)?.label).toBe("Champion 11");
     expect(ReportAiModelPreviewSummarySchema.parse(preview)).not.toHaveProperty(
       "visualizationRows",
     );
+
+    const exploreModelPreview = reportQueryModelPreviewSummary(result);
+    expect(exploreModelPreview.rows).toHaveLength(
+      EXPLORE_MODEL_PREVIEW_MAX_ROWS,
+    );
+    expect(exploreModelPreview.rowsReturned).toBe(60);
+    expect(
+      ReportAiModelPreviewSummarySchema.parse(exploreModelPreview),
+    ).toEqual(exploreModelPreview);
   });
 });

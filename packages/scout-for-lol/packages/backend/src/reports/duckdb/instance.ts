@@ -25,7 +25,12 @@ export class ReportQueryTimeoutError extends Error {
   }
 }
 
-export const DEFAULT_QUERY_TIMEOUT_MS = 15_000;
+/**
+ * Generous on purpose: Explore and reports answer open questions over the
+ * whole lake, and a slow correct answer beats a fast refusal.
+ */
+export const DEFAULT_QUERY_TIMEOUT_MS = 60_000;
+const MAX_CONCURRENT_REPORT_QUERIES = 2;
 
 export type DuckDBSession = {
   /** Run a statement and return its rows as unvalidated objects. */
@@ -45,6 +50,69 @@ async function loadDuckDB(): Promise<DuckDBModule> {
 
 let instancePromise: Promise<DuckDBInstance> | undefined;
 
+type SemaphoreWaiter = {
+  token: object;
+  resolve: () => void;
+};
+
+class AsyncSemaphore {
+  #active = 0;
+  readonly #waiters: SemaphoreWaiter[] = [];
+
+  constructor(readonly limit: number) {}
+
+  async acquire(signal?: AbortSignal): Promise<() => void> {
+    if (signal?.aborted === true) {
+      throw new DOMException("DuckDB query aborted.", "AbortError");
+    }
+
+    if (this.#active < this.limit) {
+      this.#active++;
+    } else {
+      await new Promise<void>((resolve, reject) => {
+        let settled = false;
+        const waiterToken = {};
+        const onAbort = () => {
+          if (settled) return;
+          settled = true;
+          const index = this.#waiters.findIndex(
+            (waiter) => waiter.token === waiterToken,
+          );
+          if (index !== -1) this.#waiters.splice(index, 1);
+          reject(new DOMException("DuckDB query aborted.", "AbortError"));
+        };
+        const waiter: SemaphoreWaiter = {
+          token: waiterToken,
+          resolve: () => {
+            if (settled) return;
+            settled = true;
+            signal?.removeEventListener("abort", onAbort);
+            resolve();
+          },
+        };
+        this.#waiters.push(waiter);
+        signal?.addEventListener("abort", onAbort, { once: true });
+        if (signal?.aborted === true) onAbort();
+      });
+    }
+
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      const next = this.#waiters.shift();
+      if (next === undefined) {
+        this.#active--;
+      } else {
+        // Hand the existing slot directly to the next waiter.
+        next.resolve();
+      }
+    };
+  }
+}
+
+const reportQuerySemaphore = new AsyncSemaphore(MAX_CONCURRENT_REPORT_QUERIES);
+
 async function getInstance(): Promise<DuckDBInstance> {
   instancePromise ??= (async () => {
     const duckdb = await loadDuckDB();
@@ -54,16 +122,31 @@ async function getInstance(): Promise<DuckDBInstance> {
     const configuredThreads: unknown = configuration.reportDuckDbThreads;
     const configuredMemory: unknown = configuration.reportDuckDbMemoryLimit;
     const threads = (
-      typeof configuredThreads === "number" ? configuredThreads : 2
+      typeof configuredThreads === "number" ? configuredThreads : 4
     ).toString();
     const memoryLimit =
-      typeof configuredMemory === "string" ? configuredMemory : "512MB";
+      typeof configuredMemory === "string" ? configuredMemory : "3GB";
+    const configuredTempDir: unknown = configuration.reportDuckDbTempDir;
+    const configuredMaxTemp: unknown = configuration.reportDuckDbMaxTempSize;
+    // A query larger than memory_limit spills here instead of failing.
+    const spill =
+      typeof configuredTempDir === "string"
+        ? {
+            temp_directory: configuredTempDir,
+            max_temp_directory_size:
+              typeof configuredMaxTemp === "string"
+                ? configuredMaxTemp
+                : "7GiB",
+          }
+        : {};
     logger.info(
-      `Creating DuckDB instance (threads=${threads}, memory_limit=${memoryLimit})`,
+      `Creating DuckDB instance (threads=${threads}, memory_limit=${memoryLimit}, temp_directory=${spill.temp_directory ?? "none"})`,
     );
     return await duckdb.DuckDBInstance.create(":memory:", {
       threads,
       memory_limit: memoryLimit,
+      preserve_insertion_order: "false",
+      ...spill,
     });
   })();
   return await instancePromise;
@@ -77,6 +160,18 @@ async function getInstance(): Promise<DuckDBInstance> {
 export async function withDuckDBConnection<T>(
   fn: (session: DuckDBSession) => Promise<T>,
   options: { timeoutMs?: number; abortSignal?: AbortSignal } = {},
+): Promise<T> {
+  const release = await reportQuerySemaphore.acquire(options.abortSignal);
+  try {
+    return await withDuckDBConnectionSlot(fn, options);
+  } finally {
+    release();
+  }
+}
+
+async function withDuckDBConnectionSlot<T>(
+  fn: (session: DuckDBSession) => Promise<T>,
+  options: { timeoutMs?: number; abortSignal?: AbortSignal },
 ): Promise<T> {
   const timeoutMs = options.timeoutMs ?? DEFAULT_QUERY_TIMEOUT_MS;
   const duckdb = await loadDuckDB();
