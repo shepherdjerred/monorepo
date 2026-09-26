@@ -155,6 +155,13 @@
       "file": "MobArena-0.109.jar"
     },
     {
+      "name": "Multiverse-Core",
+      "version": "5.8.0",
+      "url": "https://cdn.modrinth.com/data/3wmN97b8/versions/bzFXz39N/multiverse-core-5.8.0.jar",
+      "sha256": "c527d9e21a25a71cb2442ac1f1bfd3a8a1efb7d89e0cb0e6a94f600304fde6c1",
+      "file": "Multiverse-Core-5.8.0.jar"
+    },
+    {
       "name": "PlaceholderAPI",
       "version": "2.12.3",
       "url": "https://cdn.modrinth.com/data/lKEzGugV/versions/pIvQcXW8/PlaceholderAPI-2.12.3.jar",

@@ -47,8 +47,6 @@ plugins/LiteBans/h2.yml
 plugins/LiteBans/messages.yml
 plugins/LiteBans/server.yml
 plugins/LiteBans/templates.yml
-plugins/Multiverse-Core/config.yml
-plugins/Multiverse-Core/worlds.yml
 
 # CraftBook 3 configs; CraftBook5 keeps its own in plugins/CraftBook5.
 plugins/CraftBook/config.yml
