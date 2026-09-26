@@ -36,6 +36,10 @@ resource "aws_s3_bucket" "ts_mc" {
   bucket = "ts-mc"
 }
 
+resource "aws_s3_bucket" "ts_mc_docs" {
+  bucket = "ts-mc-docs"
+}
+
 resource "aws_s3_bucket" "webring" {
   bucket = "webring"
 }

@@ -34,6 +34,15 @@ resource "cloudflare_dns_record" "ts_mc_net_cname_bluemap" {
   proxied = true
 }
 
+resource "cloudflare_dns_record" "ts_mc_net_cname_docs" {
+  zone_id = cloudflare_zone.ts_mc_net.id
+  ttl     = 1
+  name    = "docs"
+  type    = "CNAME"
+  content = "3cbdc9a6-9e79-412d-8fe1-60117fecd4d3.cfargotunnel.com"
+  proxied = true
+}
+
 # storage.ts-mc.net CNAME is auto-managed by Cloudflare R2 custom domain
 
 # FastMail DKIM

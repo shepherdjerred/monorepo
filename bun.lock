@@ -2173,6 +2173,22 @@
         "vite": "^8.0.0",
       },
     },
+    "packages/ts-mc-docs": {
+      "name": "@shepherdjerred/ts-mc-docs",
+      "version": "1.0.0",
+      "dependencies": {
+        "@astrojs/check": "^0.9.10",
+        "@astrojs/sitemap": "^3.7.3",
+        "@astrojs/starlight": "^0.42.0",
+        "astro": "^7.3.3",
+        "sharp": "^0.35.0",
+      },
+      "devDependencies": {
+        "@types/bun": "1.4.2",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "typescript": "^6.0.3",
+      },
+    },
     "packages/version-catalog": {
       "name": "@shepherdjerred/version-catalog",
       "version": "1.0.0",
@@ -4096,6 +4112,8 @@
     "@shepherdjerred/trmnl-dashboard": ["@shepherdjerred/trmnl-dashboard@workspace:packages/trmnl-dashboard"],
 
     "@shepherdjerred/ts-mc": ["@shepherdjerred/ts-mc@workspace:packages/ts-mc"],
+
+    "@shepherdjerred/ts-mc-docs": ["@shepherdjerred/ts-mc-docs@workspace:packages/ts-mc-docs"],
 
     "@shepherdjerred/version-catalog": ["@shepherdjerred/version-catalog@workspace:packages/version-catalog"],
 
