@@ -6,7 +6,11 @@ import {
 } from "@shepherdjerred/ops-model/assemble.ts";
 import type { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
 import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
-import { parseOpsIngest } from "@shepherdjerred/ops-model/snapshot.ts";
+import {
+  parseOpsIngest,
+  SnapshotResponseSchema,
+  type SnapshotResponse,
+} from "@shepherdjerred/ops-model/snapshot.ts";
 import { Temporal } from "@js-temporal/polyfill";
 
 import type {
@@ -29,7 +33,6 @@ import {
   SeriesInputSchema,
   SeriesResponseSchema,
   ServiceDetailSchema,
-  SnapshotResponseSchema,
   type ChangeListInput,
   type ChangeView,
   type CursorConsumer,
@@ -37,7 +40,6 @@ import {
   type SeriesInput,
   type SeriesResponse,
   type ServiceDetail,
-  type SnapshotResponse,
 } from "#shared/ops-schema";
 import { JsonTextSchema } from "#shared/json-text";
 import {

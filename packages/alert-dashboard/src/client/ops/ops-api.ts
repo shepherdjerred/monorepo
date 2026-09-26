@@ -4,6 +4,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import type { z } from "zod";
+import { SnapshotResponseSchema } from "@shepherdjerred/ops-model/snapshot.ts";
 
 import {
   CursorResponseSchema,
@@ -11,7 +12,6 @@ import {
   OpsErrorSchema,
   SeriesResponseSchema,
   ServiceDetailSchema,
-  SnapshotResponseSchema,
   type CursorResponse,
   type DigestKind,
   type OpsError,
