@@ -892,6 +892,11 @@
       "package": "@shepherdjerred/ts-mc",
       "directory": "packages/ts-mc",
       "reason": "Static Astro site; no test files exist."
+    },
+    {
+      "package": "@shepherdjerred/ts-mc-docs",
+      "directory": "packages/ts-mc-docs",
+      "reason": "Static Astro site; no test files exist."
     }
   ],
   "separateTests": [
