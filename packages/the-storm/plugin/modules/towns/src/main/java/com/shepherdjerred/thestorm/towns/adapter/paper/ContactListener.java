@@ -34,7 +34,11 @@ final class ContactListener implements Listener {
   /** How far (in blocks) a death drop spawns from where its owner died. */
   private static final double DROP_REACH = 3.0;
 
-  static final Act TAKE = new Act(Action.OPEN_CONTAINER, Subject.ENTITY);
+  /**
+   * Picking up an item lying on someone's land. Items on the ground are not in a container, so they
+   * stay the land's, opened to outsiders by the public-entities flag.
+   */
+  static final Act TAKE = new Act(Action.INTERACT_ENTITY, Subject.ENTITY);
 
   private final Guard guard;
   private final Server server;

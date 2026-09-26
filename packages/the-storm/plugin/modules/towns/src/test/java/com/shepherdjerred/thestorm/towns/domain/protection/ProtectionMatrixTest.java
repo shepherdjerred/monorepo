@@ -24,8 +24,10 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * The full decision matrix: every action, for every relation a player can have to town A's land, on
- * every kind of land. Each expectation is written out below rather than derived, so a change to any
- * rule shows up as a changed line in this table.
+ * every kind of land. Every claim of town A here trusts {@code TRUSTED} (see {@code /claim trust}),
+ * an outsider who may then build, open containers and use switches but nothing else. Each
+ * expectation is written out below rather than derived, so a change to any rule shows up as a
+ * changed line in this table.
  *
  * <p>Columns, left to right:
  *
@@ -33,8 +35,9 @@ import org.junit.jupiter.params.provider.MethodSource;
  *   <li>{@code W}: wilderness;
  *   <li>{@code A}: a claim of town A with every flag off;
  *   <li>{@code Ao}: a claim of town A with only the flag that opens this action to outsiders (see
- *       {@link OutsiderAccess}; teleports and homes have none, so every flag is on);
- *   <li>{@code Ab}: a claim of town A with every flag on except that one;
+ *       {@link OutsiderAccess}); for actions no flag opens (teleports and homes), every flag is on;
+ *   <li>{@code Ab}: a claim of town A with every flag on except that one; for actions no flag
+ *       opens, every flag is off;
  *   <li>{@code R}: an admin region allowing nothing;
  *   <li>{@code Ra}: an admin region allowing this action on any subject.
  * </ul>
@@ -47,66 +50,77 @@ final class ProtectionMatrixTest {
       BUILD             OWNER      + +  +  + - +
       BUILD             ASSISTANT  + +  +  + - +
       BUILD             MEMBER     + +  +  + - +
+      BUILD             TRUSTED    + +  +  + - +
       BUILD             OUTSIDER   + -  +  - - +
       BUILD             NOMAD      + -  +  - - +
       BUILD             BYPASS     + +  +  + + +
       BREAK             OWNER      + +  +  + - +
       BREAK             ASSISTANT  + +  +  + - +
       BREAK             MEMBER     + +  +  + - +
+      BREAK             TRUSTED    + +  +  + - +
       BREAK             OUTSIDER   + -  +  - - +
       BREAK             NOMAD      + -  +  - - +
       BREAK             BYPASS     + +  +  + + +
       INTERACT          OWNER      + +  +  + - +
       INTERACT          ASSISTANT  + +  +  + - +
       INTERACT          MEMBER     + +  +  + - +
+      INTERACT          TRUSTED    + +  +  + - +
       INTERACT          OUTSIDER   + -  +  - - +
       INTERACT          NOMAD      + -  +  - - +
       INTERACT          BYPASS     + +  +  + + +
       OPEN_CONTAINER    OWNER      + +  +  + - +
       OPEN_CONTAINER    ASSISTANT  + +  +  + - +
       OPEN_CONTAINER    MEMBER     + +  +  + - +
+      OPEN_CONTAINER    TRUSTED    + +  +  + - +
       OPEN_CONTAINER    OUTSIDER   + -  +  - - +
       OPEN_CONTAINER    NOMAD      + -  +  - - +
       OPEN_CONTAINER    BYPASS     + +  +  + + +
       USE_REDSTONE      OWNER      + +  +  + - +
       USE_REDSTONE      ASSISTANT  + +  +  + - +
       USE_REDSTONE      MEMBER     + +  +  + - +
+      USE_REDSTONE      TRUSTED    + +  +  + - +
       USE_REDSTONE      OUTSIDER   + -  +  - - +
       USE_REDSTONE      NOMAD      + -  +  - - +
       USE_REDSTONE      BYPASS     + +  +  + + +
       DAMAGE_ENTITY     OWNER      + +  +  + - +
       DAMAGE_ENTITY     ASSISTANT  + +  +  + - +
       DAMAGE_ENTITY     MEMBER     + +  +  + - +
+      DAMAGE_ENTITY     TRUSTED    + -  +  - - +
       DAMAGE_ENTITY     OUTSIDER   + -  +  - - +
       DAMAGE_ENTITY     NOMAD      + -  +  - - +
       DAMAGE_ENTITY     BYPASS     + +  +  + + +
       INTERACT_ENTITY   OWNER      + +  +  + - +
       INTERACT_ENTITY   ASSISTANT  + +  +  + - +
       INTERACT_ENTITY   MEMBER     + +  +  + - +
+      INTERACT_ENTITY   TRUSTED    + -  +  - - +
       INTERACT_ENTITY   OUTSIDER   + -  +  - - +
       INTERACT_ENTITY   NOMAD      + -  +  - - +
       INTERACT_ENTITY   BYPASS     + +  +  + + +
       PLACE_ENTITY      OWNER      + +  +  + - +
       PLACE_ENTITY      ASSISTANT  + +  +  + - +
       PLACE_ENTITY      MEMBER     + +  +  + - +
+      PLACE_ENTITY      TRUSTED    + +  +  + - +
       PLACE_ENTITY      OUTSIDER   + -  +  - - +
       PLACE_ENTITY      NOMAD      + -  +  - - +
       PLACE_ENTITY      BYPASS     + +  +  + + +
       ATTACK_PLAYER     OWNER      + -  +  - - +
       ATTACK_PLAYER     ASSISTANT  + -  +  - - +
       ATTACK_PLAYER     MEMBER     + -  +  - - +
+      ATTACK_PLAYER     TRUSTED    + -  +  - - +
       ATTACK_PLAYER     OUTSIDER   + -  +  - - +
       ATTACK_PLAYER     NOMAD      + -  +  - - +
       ATTACK_PLAYER     BYPASS     + -  +  - - +
       TELEPORT_INTO     OWNER      + +  +  + - +
       TELEPORT_INTO     ASSISTANT  + +  +  + - +
       TELEPORT_INTO     MEMBER     + +  +  + - +
+      TELEPORT_INTO     TRUSTED    + -  -  - - +
       TELEPORT_INTO     OUTSIDER   + -  -  - - +
       TELEPORT_INTO     NOMAD      + -  -  - - +
       TELEPORT_INTO     BYPASS     + +  +  + + +
       SET_HOME          OWNER      + +  +  + - +
       SET_HOME          ASSISTANT  + +  +  + - +
       SET_HOME          MEMBER     + +  +  + - +
+      SET_HOME          TRUSTED    + -  -  - - +
       SET_HOME          OUTSIDER   + -  -  - - +
       SET_HOME          NOMAD      + -  -  - - +
       SET_HOME          BYPASS     + +  +  + + +
@@ -114,12 +128,14 @@ final class ProtectionMatrixTest {
 
   private static final List<String> COLUMNS = List.of("W", "A", "Ao", "Ab", "R", "Ra");
 
-  private final ProtectionEngine engine = new ProtectionEngine(Fixtures.trust());
+  private final ProtectionEngine engine =
+      new ProtectionEngine(Fixtures.trust(), PvpPreferences.EVERYONE);
 
   enum Relation {
     OWNER,
     ASSISTANT,
     MEMBER,
+    TRUSTED,
     OUTSIDER,
     NOMAD,
     BYPASS;
@@ -129,6 +145,7 @@ final class ProtectionMatrixTest {
         case OWNER -> Actor.player(Fixtures.OWNER);
         case ASSISTANT -> Actor.player(Fixtures.ASSISTANT);
         case MEMBER -> Actor.player(Fixtures.MEMBER);
+        case TRUSTED -> Actor.player(Fixtures.TRUSTED_OUTSIDER);
         case OUTSIDER -> Actor.player(OTHER_TOWN_OWNER);
         case NOMAD -> Actor.player(Fixtures.NOMAD);
         case BYPASS -> new Actor(Fixtures.NOMAD, true);
@@ -197,18 +214,19 @@ final class ProtectionMatrixTest {
   }
 
   private static Land landFor(String column, Action action) {
-    var opening = OutsiderAccess.flagFor(action);
+    var all = EnumSet.allOf(ClaimFlag.class);
+    var opening = OutsiderAccess.opening(action);
     return switch (column) {
       case "W" -> new Land.Wilderness();
-      case "A" -> Fixtures.land(TOWN_A);
+      case "A" -> Fixtures.trustedLand(TOWN_A, Set.of());
       case "Ao" ->
-          opening
-              .map(flag -> (Land) Fixtures.land(TOWN_A, flag))
-              .orElseGet(() -> Fixtures.landWithFlags(TOWN_A, EnumSet.allOf(ClaimFlag.class)));
+          opening instanceof OutsiderAccess.Opening.ByFlag(var flag)
+              ? Fixtures.trustedLand(TOWN_A, Set.of(flag))
+              : Fixtures.trustedLand(TOWN_A, all);
       case "Ab" ->
-          opening
-              .map(flag -> (Land) Fixtures.landWithFlags(TOWN_A, Fixtures.allFlagsBut(flag)))
-              .orElseGet(() -> Fixtures.landWithFlags(TOWN_A, EnumSet.allOf(ClaimFlag.class)));
+          opening instanceof OutsiderAccess.Opening.ByFlag(var flag)
+              ? Fixtures.trustedLand(TOWN_A, Fixtures.allFlagsBut(flag))
+              : Fixtures.trustedLand(TOWN_A, Set.of());
       case "R" -> new Land.RegionLand(Fixtures.region("spawn"));
       case "Ra" ->
           new Land.RegionLand(Fixtures.region("spawn", Fixtures.allow(action, Subject.ANY)));
@@ -294,7 +312,8 @@ final class ProtectionMatrixTest {
             (player, claim, act) -> {
               asked.add(claim.townId());
               return TrustLevel.OUTSIDER;
-            });
+            },
+            PvpPreferences.EVERYONE);
 
     engine.decide(
         Actor.player(MEMBER), new Act(Action.BUILD, Subject.BLOCK), Fixtures.land(TOWN_A));
@@ -308,7 +327,8 @@ final class ProtectionMatrixTest {
         new ProtectionEngine(
             (player, claim, act) -> {
               throw new AssertionError("bypass must not consult trust");
-            });
+            },
+            PvpPreferences.EVERYONE);
 
     assertThat(
             engine

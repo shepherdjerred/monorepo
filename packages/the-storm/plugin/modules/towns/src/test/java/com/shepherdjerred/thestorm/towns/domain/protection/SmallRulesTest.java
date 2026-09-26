@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.towns.domain.Fixtures;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
+import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlags;
 import java.util.Arrays;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
@@ -14,24 +15,50 @@ final class SmallRulesTest {
 
   @Test
   void eachPublicFlagOpensItsActions() {
-    assertThat(OutsiderAccess.flagFor(Action.BUILD)).contains(ClaimFlag.PUBLIC_BUILD);
-    assertThat(OutsiderAccess.flagFor(Action.BREAK)).contains(ClaimFlag.PUBLIC_BUILD);
-    assertThat(OutsiderAccess.flagFor(Action.PLACE_ENTITY)).contains(ClaimFlag.PUBLIC_BUILD);
-    assertThat(OutsiderAccess.flagFor(Action.OPEN_CONTAINER)).contains(ClaimFlag.PUBLIC_CONTAINERS);
-    assertThat(OutsiderAccess.flagFor(Action.INTERACT)).contains(ClaimFlag.PUBLIC_SWITCHES);
-    assertThat(OutsiderAccess.flagFor(Action.USE_REDSTONE)).contains(ClaimFlag.PUBLIC_SWITCHES);
-    assertThat(OutsiderAccess.flagFor(Action.DAMAGE_ENTITY)).contains(ClaimFlag.PUBLIC_ENTITIES);
-    assertThat(OutsiderAccess.flagFor(Action.INTERACT_ENTITY)).contains(ClaimFlag.PUBLIC_ENTITIES);
-    assertThat(OutsiderAccess.flagFor(Action.ATTACK_PLAYER)).contains(ClaimFlag.PVP);
-    assertThat(OutsiderAccess.flagFor(Action.TELEPORT_INTO)).isEmpty();
-    assertThat(OutsiderAccess.flagFor(Action.SET_HOME)).isEmpty();
+    assertThat(OutsiderAccess.opening(Action.BUILD)).isEqualTo(flag(ClaimFlag.PUBLIC_BUILD));
+    assertThat(OutsiderAccess.opening(Action.BREAK)).isEqualTo(flag(ClaimFlag.PUBLIC_BUILD));
+    assertThat(OutsiderAccess.opening(Action.PLACE_ENTITY)).isEqualTo(flag(ClaimFlag.PUBLIC_BUILD));
+    assertThat(OutsiderAccess.opening(Action.INTERACT)).isEqualTo(flag(ClaimFlag.PUBLIC_SWITCHES));
+    assertThat(OutsiderAccess.opening(Action.USE_REDSTONE))
+        .isEqualTo(flag(ClaimFlag.PUBLIC_SWITCHES));
+    assertThat(OutsiderAccess.opening(Action.DAMAGE_ENTITY))
+        .isEqualTo(flag(ClaimFlag.PUBLIC_ENTITIES));
+    assertThat(OutsiderAccess.opening(Action.INTERACT_ENTITY))
+        .isEqualTo(flag(ClaimFlag.PUBLIC_ENTITIES));
+    assertThat(OutsiderAccess.opening(Action.ATTACK_PLAYER)).isEqualTo(flag(ClaimFlag.PVP));
+    assertThat(OutsiderAccess.opening(Action.TELEPORT_INTO))
+        .isEqualTo(new OutsiderAccess.Opening.Never());
+    assertThat(OutsiderAccess.opening(Action.SET_HOME))
+        .isEqualTo(new OutsiderAccess.Opening.Never());
+  }
+
+  @Test
+  void containersWithoutLocksFollowPublicBuild() {
+    assertThat(OutsiderAccess.opening(Action.OPEN_CONTAINER))
+        .isEqualTo(flag(ClaimFlag.PUBLIC_BUILD));
+    assertThat(OutsiderAccess.opens(Action.OPEN_CONTAINER, ClaimFlags.none())).isFalse();
+    assertThat(OutsiderAccess.opens(Action.OPEN_CONTAINER, ClaimFlags.of(ClaimFlag.PUBLIC_BUILD)))
+        .isTrue();
+    assertThat(OutsiderAccess.opens(Action.TELEPORT_INTO, ClaimFlags.of(ClaimFlag.values())))
+        .isFalse();
+    assertThat(OutsiderAccess.opens(Action.BUILD, ClaimFlags.of(ClaimFlag.PUBLIC_BUILD))).isTrue();
+    assertThat(OutsiderAccess.opens(Action.BUILD, ClaimFlags.none())).isFalse();
+  }
+
+  private static OutsiderAccess.Opening flag(ClaimFlag flag) {
+    return new OutsiderAccess.Opening.ByFlag(flag);
   }
 
   @Test
   void noFlagOpensAnythingToOutsidersWithoutBeingAPublicOrPvpFlag() {
     var opening =
         Arrays.stream(Action.values())
-            .flatMap(action -> OutsiderAccess.flagFor(action).stream())
+            .map(OutsiderAccess::opening)
+            .flatMap(
+                open ->
+                    open instanceof OutsiderAccess.Opening.ByFlag(var flag)
+                        ? java.util.stream.Stream.of(flag)
+                        : java.util.stream.Stream.empty())
             .distinct()
             .toList();
     assertThat(opening)

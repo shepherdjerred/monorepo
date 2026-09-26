@@ -126,7 +126,48 @@ final class KindsTest {
     var someone = UUID.randomUUID();
     assertThat(EntityKinds.victim(cow, someone)).isEqualTo(new Victim.Protected(Subject.ANIMAL));
     assertThat(EntityKinds.victim(zombie, someone)).isEqualTo(new Victim.Unprotected());
-    assertThat(EntityKinds.victim(player, someone)).isEqualTo(new Victim.OtherPlayer());
+    assertThat(EntityKinds.victim(player, someone))
+        .isEqualTo(new Victim.OtherPlayer(player.getUniqueId()));
     assertThat(EntityKinds.victim(player, player.getUniqueId())).isEqualTo(new Victim.Self());
+  }
+
+  @Test
+  void lockableContainers() {
+    for (var container :
+        new Material[] {
+          Material.CHEST,
+          Material.TRAPPED_CHEST,
+          Material.BARREL,
+          Material.SHULKER_BOX,
+          Material.BLUE_SHULKER_BOX,
+          Material.COPPER_CHEST,
+          Material.WAXED_COPPER_CHEST,
+          Material.FURNACE,
+          Material.BLAST_FURNACE,
+          Material.SMOKER,
+          Material.BREWING_STAND,
+          Material.HOPPER,
+          Material.DROPPER,
+          Material.DISPENSER,
+          Material.CRAFTER,
+          Material.OAK_SHELF,
+        }) {
+      assertThat(kinds.isLockable(container)).as("%s", container).isTrue();
+    }
+    for (var other :
+        new Material[] {
+          Material.ENDER_CHEST, Material.LECTERN, Material.JUKEBOX, Material.BEACON, Material.STONE
+        }) {
+      assertThat(kinds.isLockable(other)).as("%s", other).isFalse();
+    }
+    assertThat(kinds.isRedstoneDriven(Material.DROPPER)).isTrue();
+    assertThat(kinds.isRedstoneDriven(Material.CRAFTER)).isTrue();
+    assertThat(kinds.isRedstoneDriven(Material.HOPPER)).isFalse();
+  }
+
+  @Test
+  void aBeaconIsAMachineNotAContainerAndTheCreakingHeartHasItsOwnSubject() {
+    assertThat(kinds.use(Material.BEACON)).contains(new Act(Action.INTERACT, Subject.BLOCK));
+    assertThat(kinds.subject(Material.CREAKING_HEART)).isEqualTo(Subject.CREAKING_HEART);
   }
 }

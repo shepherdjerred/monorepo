@@ -11,11 +11,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.towns.domain.Fixtures;
+import com.shepherdjerred.thestorm.towns.domain.land.Claim;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
+import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlags;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
+import com.shepherdjerred.thestorm.towns.domain.protection.Act;
+import com.shepherdjerred.thestorm.towns.domain.protection.Action;
+import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
 import com.shepherdjerred.thestorm.towns.domain.protection.TrustLevel;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
+import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,12 +59,43 @@ final class TownsStateTest {
   }
 
   @Test
-  void trustComesFromMembership() {
-    assertThat(state.trustOf(OWNER, TOWN_A)).isEqualTo(TrustLevel.OWNER);
-    assertThat(state.trustOf(ASSISTANT, TOWN_A)).isEqualTo(TrustLevel.TRUSTED);
-    assertThat(state.trustOf(OTHER_TOWN_OWNER, TOWN_A)).isEqualTo(TrustLevel.OUTSIDER);
-    assertThat(state.trustOf(NOMAD, TOWN_A)).isEqualTo(TrustLevel.OUTSIDER);
-    assertThatThrownBy(() -> state.trustOf(OWNER, UUID.randomUUID()))
+  void trustComesFromMembershipAndClaimTrust() {
+    var build = new Act(Action.BUILD, Subject.BLOCK);
+    var claim = claim(TOWN_A, 10, 10).withTrust(NOMAD, true);
+    assertThat(state.trustOf(OWNER, claim, build)).isEqualTo(TrustLevel.OWNER);
+    assertThat(state.trustOf(ASSISTANT, claim, build)).isEqualTo(TrustLevel.TRUSTED);
+    assertThat(state.trustOf(OTHER_TOWN_OWNER, claim, build)).isEqualTo(TrustLevel.OUTSIDER);
+    assertThat(state.trustOf(NOMAD, claim, build)).isEqualTo(TrustLevel.TRUSTED);
+    assertThat(state.trustOf(NOMAD, claim, new Act(Action.DAMAGE_ENTITY, Subject.ANIMAL)))
+        .isEqualTo(TrustLevel.OUTSIDER);
+    var unknown = new Claim(Fixtures.chunk(0, 0), UUID.randomUUID(), ClaimFlags.none());
+    assertThatThrownBy(() -> state.trustOf(OWNER, unknown, build))
+        .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  void aReplacedTownMovesItsMembersAndName() {
+    var renamed = Fixtures.townA().renamed("Arcadia").withoutMember(ASSISTANT);
+    state.replaceTown(renamed);
+
+    assertThat(state.named("aegis")).isEmpty();
+    assertThat(state.named("ARCADIA")).contains(renamed);
+    assertThat(state.townOf(ASSISTANT)).isEmpty();
+    assertThat(state.townIdOf(OWNER)).contains(TOWN_A);
+    assertThat(state.townIdOf(ASSISTANT)).isEmpty();
+  }
+
+  @Test
+  void aReplacedTownMayNotTakeAnotherTownsNameOrMembers() {
+    assertThatThrownBy(() -> state.replaceTown(Fixtures.townA().renamed("Bastion")))
+        .isInstanceOf(IllegalStateException.class);
+    assertThatThrownBy(
+            () -> state.replaceTown(Fixtures.townA().withMember(OTHER_TOWN_OWNER, TownRole.MEMBER)))
+        .isInstanceOf(IllegalStateException.class);
+    assertThatThrownBy(
+            () ->
+                state.replaceTown(
+                    Town.found(UUID.randomUUID(), "Nowhere", Fixtures.FOUNDED, NOMAD)))
         .isInstanceOf(IllegalStateException.class);
   }
 

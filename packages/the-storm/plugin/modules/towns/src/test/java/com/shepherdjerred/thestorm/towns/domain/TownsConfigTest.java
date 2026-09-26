@@ -25,8 +25,19 @@ final class TownsConfigTest {
       claims:
         worlds: [world]
         buffer: 2
-        maxClaimsPerTown: 64
+        limits:
+          base: 16
+          governorBonus: [8, 16, 32, 48, 64]
         defaultFlags: [PUBLIC_SWITCHES]
+      membership:
+        inviteExpiryMinutes: 1440
+        transferConfirmSeconds: 60
+      locks:
+        maxPerPlayer: 64
+        autoLockOnPlace: true
+      pvp:
+        toggleCooldownHours: 168
+        combatLockSeconds: 30
       denialCooldownMillis: 2000
       grief:
         witherBufferChunks: 8
@@ -44,6 +55,9 @@ final class TownsConfigTest {
           allow:
             - action: INTERACT
               subjects: [DOOR]
+          mobSpawns:
+            limited: false
+            allow: []
       """;
 
   private static boolean parses(String yaml) {
@@ -82,6 +96,12 @@ final class TownsConfigTest {
       strings = {
         "denialCooldownMillis: 2000\n",
         "  thrownItemMemoryTicks: 100\n",
+        "  autoLockOnPlace: true\n",
+        "  toggleCooldownHours: 168\n",
+        "  combatLockSeconds: 30\n",
+        "  transferConfirmSeconds: 60\n",
+        "    limited: false\n",
+        "  governorBonus: [8, 16, 32, 48, 64]\n",
         "  buffer: 2\n",
         "        subjects: [DOOR]\n",
         "      cuboids: []\n",
@@ -111,7 +131,19 @@ final class TownsConfigTest {
         "action: INTERACT|action: FLY",
         "buffer: 2|buffer: -1",
         "buffer: 2|buffer: 17",
-        "maxClaimsPerTown: 64|maxClaimsPerTown: 0",
+        "base: 16|base: 0",
+        "governorBonus: [8, 16, 32, 48, 64]|governorBonus: [8, 16, 32, 48]",
+        "governorBonus: [8, 16, 32, 48, 64]|governorBonus: [8, 16, 4, 48, 64]",
+        "governorBonus: [8, 16, 32, 48, 64]|governorBonus: [-1, 16, 32, 48, 64]",
+        "inviteExpiryMinutes: 1440|inviteExpiryMinutes: 0",
+        "transferConfirmSeconds: 60|transferConfirmSeconds: 0",
+        "maxPerPlayer: 64|maxPerPlayer: 0",
+        "autoLockOnPlace: true|autoLockOnPlace: maybe",
+        "toggleCooldownHours: 168|toggleCooldownHours: -1",
+        "combatLockSeconds: 30|combatLockSeconds: -1",
+        "limited: false|limited: maybe",
+        "allow: []|allow: [CUSTOM]",
+        "limited: false\n      allow: []|limited: true\n      allow: [not a reason]",
         "worlds: [world]|worlds: []",
         "raidRadiusBlocks: 64|raidRadiusBlocks: 300",
         "thrownItemMemoryTicks: 100|thrownItemMemoryTicks: -1",
@@ -140,6 +172,9 @@ final class TownsConfigTest {
                       from: {x: 0, y: 0, z: 0}
                       to: {x: 1, y: 1, z: 1}
                 allow: []
+                mobSpawns:
+                  limited: false
+                  allow: []
             """;
     assertThat(parses(twice)).isFalse();
   }

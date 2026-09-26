@@ -1,15 +1,18 @@
 package com.shepherdjerred.thestorm.towns.app;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimAttempt;
 import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimProblem;
 import com.shepherdjerred.thestorm.towns.domain.claiming.Claiming;
 import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
 import com.shepherdjerred.thestorm.towns.domain.land.Claim;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
 import com.shepherdjerred.thestorm.towns.domain.town.Founding;
+import com.shepherdjerred.thestorm.towns.domain.town.PlayerRef;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import com.shepherdjerred.thestorm.towns.domain.town.TownProblem;
 import com.shepherdjerred.thestorm.towns.domain.town.TownRules;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -17,164 +20,184 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * The towns use cases. Each validates against the in-memory state, applies the change there at once
- * (so protection follows immediately), and writes it to storage. Main thread only.
+ * Founding and deleting towns, and their land: claims, flags and claim trust. Each use case
+ * validates against the in-memory state, applies the change there at once (so protection follows
+ * immediately), and saves it through {@link Settling}. Main thread only.
  *
- * <p>While a change is being saved, its town, its players and its chunk are busy: other changes to
- * them are refused, so no change is ever validated against a state that might still be undone. If a
- * save fails, every change is refused while the whole state is reloaded from storage, the one
- * source of truth; nothing is patched back by hand.
+ * <p>A claim is checked against the owner's live Governor level when they are online, and that
+ * level is stored with the claim, so the town's limit holds while they are away.
  */
 public final class TownService {
 
-  private final TownsState state;
-  private final TownsStore store;
+  private final Settling settling;
   private final Claiming claiming;
-  private final Clocks clocks;
-  private final Set<UUID> busyTowns = new HashSet<>();
-  private final Set<UUID> busyPlayers = new HashSet<>();
-  private final Set<ChunkPos> busyChunks = new HashSet<>();
-  private boolean reloading;
+  private final OwnerLevels levels;
 
-  public TownService(TownsState state, TownsStore store, Claiming claiming, Clocks clocks) {
-    this.state = state;
-    this.store = store;
+  public TownService(Settling settling, Claiming claiming, OwnerLevels levels) {
+    this.settling = settling;
     this.claiming = claiming;
-    this.clocks = clocks;
+    this.levels = levels;
   }
 
-  public Result<Change<Town>, List<TownProblem>> found(UUID founder, String name) {
-    if (reloading || busyPlayers.contains(founder)) {
+  public Settling settling() {
+    return settling;
+  }
+
+  /** Founds a town owned by {@code founder}, whose Governor level is {@code governorLevel}. */
+  public Result<Change<Town>, List<TownProblem>> found(
+      UUID founder, String name, int governorLevel) {
+    if (settling.isPlayerBusy(founder)) {
       return Result.err(List.of(new TownProblem.Busy()));
     }
+    var clocks = settling.clocks();
     var founding =
-        new Founding(founder, name, TownRules.newId(clocks.random()), clocks.time().instant());
-    return TownRules.found(founding, state)
+        new Founding(
+            founder,
+            name,
+            TownRules.newId(clocks.random()),
+            clocks.time().instant(),
+            governorLevel);
+    return TownRules.found(founding, state())
         .map(
             town -> {
-              state.addTown(town);
-              var busy = Busy.of(town, Set.of());
-              return persist(town, store.createTown(town), busy);
+              state().addTown(town);
+              return settling.persist(
+                  town, settling.store().createTown(town), Settling.Busy.of(town, Set.of()));
             });
   }
 
-  public Result<Change<Town>, List<TownProblem>> disband(UUID player, String confirmation) {
-    if (reloading || busyPlayers.contains(player)) {
-      return Result.err(List.of(new TownProblem.Busy()));
-    }
-    return TownRules.disband(player, confirmation, state)
+  /** The town {@code player} may delete now, confirmed by repeating its name. */
+  public Result<Town, List<TownProblem>> checkDisband(UUID player, String confirmation) {
+    return TownRules.disband(player, confirmation, state())
         .flatMap(
             town ->
-                busyTowns.contains(town.id())
+                settling.isBusy(Settling.Busy.of(town, Set.of()))
                     ? Result.<Town, List<TownProblem>>err(List.of(new TownProblem.Busy()))
-                    : Result.ok(town))
+                    : Result.ok(town));
+  }
+
+  /**
+   * Deletes {@code player}'s town. Callers pay out its treasury first (see {@link Treasury}), so
+   * this is only the land and membership.
+   */
+  public Result<Change<Town>, List<TownProblem>> disband(UUID player, String confirmation) {
+    return checkDisband(player, confirmation)
         .map(
             town -> {
-              var claims = state.removeTown(town.id());
+              var claims = state().removeTown(town.id());
               var chunks = new HashSet<ChunkPos>();
               claims.forEach(claim -> chunks.add(claim.chunk()));
-              return persist(town, store.deleteTown(town.id()), Busy.of(town, chunks));
+              return settling.persist(
+                  town,
+                  settling.store().deleteTown(town.id()),
+                  Settling.Busy.of(town, chunks),
+                  () -> settling.events().removed(town.id()));
             });
   }
 
   public Result<Change<Claim>, List<ClaimProblem>> claim(UUID player, ChunkPos chunk) {
-    return busyFor(player, chunk)
-        .flatMap(ok -> Claiming.attempt(player, state.townOf(player), chunk, state))
-        .flatMap(claiming::claim)
-        .map(
-            claim -> {
-              state.addClaim(claim);
-              return persist(claim, store.addClaim(claim, clocks.time().instant()), Busy.of(claim));
+    return attempt(player, chunk)
+        .flatMap(
+            attempt -> {
+              var town = withLiveLevel(attempt.town());
+              var fresh = new ClaimAttempt(player, town, chunk, attempt.map());
+              return claiming.claim(fresh).map(claim -> save(claim, town, attempt.town()));
             });
   }
 
+  private Change<Claim> save(Claim claim, Town town, Town stored) {
+    state().addClaim(claim);
+    CompletableFuture<Void> write = settling.store().addClaim(claim, now());
+    if (town.governorLevel() != stored.governorLevel()) {
+      state().replaceTown(town);
+      write = CompletableFuture.allOf(write, settling.store().saveTown(town));
+    }
+    return settling.persist(
+        claim, write, Settling.Busy.of(claim), () -> settling.events().landChanged(claim.townId()));
+  }
+
   public Result<Change<Claim>, List<ClaimProblem>> unclaim(UUID player, ChunkPos chunk) {
-    return busyFor(player, chunk)
-        .flatMap(ok -> Claiming.attempt(player, state.townOf(player), chunk, state))
+    return attempt(player, chunk)
         .flatMap(claiming::unclaim)
         .map(
             claim -> {
-              state.removeClaim(claim.chunk());
-              return persist(claim, store.removeClaim(claim.chunk()), Busy.of(claim));
+              state().removeClaim(claim.chunk());
+              return settling.persist(
+                  claim,
+                  settling.store().removeClaim(claim.chunk()),
+                  Settling.Busy.of(claim),
+                  () -> settling.events().landChanged(claim.townId()));
             });
   }
 
   public Result<Change<Claim>, List<ClaimProblem>> setFlag(
       UUID player, ChunkPos chunk, ClaimFlag flag, boolean on) {
-    return busyFor(player, chunk)
-        .flatMap(ok -> Claiming.attempt(player, state.townOf(player), chunk, state))
+    return attempt(player, chunk)
         .flatMap(attempt -> claiming.setFlag(attempt, flag, on))
-        .map(
-            claim -> {
-              state.replaceClaim(claim);
-              return persist(claim, store.saveFlags(claim), Busy.of(claim));
-            });
+        .map(this::replace);
+  }
+
+  /** Trusts {@code target} (when {@code on}) on the claim at {@code chunk}, or stops trusting. */
+  public Result<Change<Claim>, List<ClaimProblem>> trust(
+      UUID player, ChunkPos chunk, PlayerRef target, boolean on) {
+    return attempt(player, chunk)
+        .flatMap(attempt -> claiming.trust(attempt, target, on))
+        .map(this::replace);
+  }
+
+  private Change<Claim> replace(Claim claim) {
+    state().replaceClaim(claim);
+    return settling.persist(claim, settling.store().saveClaim(claim), Settling.Busy.of(claim));
+  }
+
+  /**
+   * Records {@code level} as the Governor level of {@code player}'s town if they own one and it
+   * changed, so its limit holds while they are away. Skipped while the town is busy; the next
+   * login, logout or claim records it.
+   */
+  public void recordGovernorLevel(UUID player, int level) {
+    var town = state().townOf(player);
+    if (town.isEmpty()
+        || !town.get().owner().equals(player)
+        || town.get().governorLevel() == level
+        || settling.isBusy(Settling.Busy.of(town.get(), Set.of()))) {
+      return;
+    }
+    var updated = town.get().withGovernorLevel(level);
+    state().replaceTown(updated);
+    var _ =
+        settling.persist(
+            updated, settling.store().saveTown(updated), Settling.Busy.of(updated, Set.of()));
+  }
+
+  /** {@code town} with its owner's live Governor level when they are online. */
+  public Town withLiveLevel(Town town) {
+    var live = levels.liveLevel(town.owner());
+    return live.isPresent() ? town.withGovernorLevel(live.getAsInt()) : town;
+  }
+
+  /** The most chunks {@code town} may hold now. */
+  public int maxClaims(Town town) {
+    return claiming.limits().maxClaims(withLiveLevel(town));
+  }
+
+  private Result<ClaimAttempt, List<ClaimProblem>> attempt(UUID player, ChunkPos chunk) {
+    if (settling.isPlayerBusy(player) || settling.isChunkBusy(chunk)) {
+      return Result.err(List.of(new ClaimProblem.Busy()));
+    }
+    return Claiming.attempt(player, state().townOf(player), chunk, state());
+  }
+
+  private TownsState state() {
+    return settling.state();
+  }
+
+  private Instant now() {
+    return settling.clocks().time().instant();
   }
 
   /** True while a save is outstanding or the state is being reloaded, for tests and status. */
   public boolean isSettling() {
-    return reloading || !busyTowns.isEmpty() || !busyChunks.isEmpty() || !busyPlayers.isEmpty();
-  }
-
-  private Result<Boolean, List<ClaimProblem>> busyFor(UUID player, ChunkPos chunk) {
-    var town = state.townOf(player).map(Town::id);
-    var busy =
-        reloading
-            || busyPlayers.contains(player)
-            || busyChunks.contains(chunk)
-            || town.filter(busyTowns::contains).isPresent();
-    return busy ? Result.err(List.of(new ClaimProblem.Busy())) : Result.ok(true);
-  }
-
-  private <T> Change<T> persist(T value, CompletableFuture<Void> write, Busy busy) {
-    busyTowns.add(busy.town());
-    busyPlayers.addAll(busy.players());
-    busyChunks.addAll(busy.chunks());
-    var saved = new CompletableFuture<Void>();
-    var _ =
-        write.whenCompleteAsync(
-            (ok, failure) -> {
-              busyTowns.remove(busy.town());
-              busyPlayers.removeAll(busy.players());
-              busyChunks.removeAll(busy.chunks());
-              if (failure == null) {
-                saved.complete(null);
-                return;
-              }
-              reload(saved, failure);
-            },
-            clocks.mainThread());
-    return new Change<>(value, saved);
-  }
-
-  /** Reloads the stored truth after a failed save; {@code saved} fails once memory matches it. */
-  private void reload(CompletableFuture<Void> saved, Throwable failure) {
-    reloading = true;
-    var _ =
-        store
-            .loadAll()
-            .whenCompleteAsync(
-                (snapshot, loadFailure) -> {
-                  if (loadFailure != null) {
-                    clocks.reloadFailed().accept(loadFailure);
-                  } else {
-                    state.reload(snapshot);
-                    reloading = false;
-                  }
-                  saved.completeExceptionally(failure);
-                },
-                clocks.mainThread());
-  }
-
-  /** What a change keeps busy until it is saved. */
-  private record Busy(UUID town, Set<UUID> players, Set<ChunkPos> chunks) {
-
-    static Busy of(Town town, Set<ChunkPos> chunks) {
-      return new Busy(town.id(), Set.copyOf(town.members().keySet()), Set.copyOf(chunks));
-    }
-
-    static Busy of(Claim claim) {
-      return new Busy(claim.townId(), Set.of(), Set.of(claim.chunk()));
-    }
+    return settling.isSettling();
   }
 }

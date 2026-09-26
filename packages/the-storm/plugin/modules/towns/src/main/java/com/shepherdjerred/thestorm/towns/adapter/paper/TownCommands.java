@@ -6,13 +6,17 @@ import static com.mojang.brigadier.arguments.StringArgumentType.getString;
 import static com.mojang.brigadier.arguments.StringArgumentType.word;
 
 import com.mojang.brigadier.Command;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
 import com.shepherdjerred.thestorm.towns.app.Change;
 import com.shepherdjerred.thestorm.towns.app.TownService;
 import com.shepherdjerred.thestorm.towns.app.TownsState;
+import com.shepherdjerred.thestorm.towns.app.Treasury;
 import com.shepherdjerred.thestorm.towns.domain.Explanations;
 import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimProblem;
 import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
@@ -21,6 +25,7 @@ import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import com.shepherdjerred.thestorm.towns.domain.town.TownProblem;
+import com.shepherdjerred.thestorm.tracks.app.Track;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import java.util.Arrays;
@@ -35,19 +40,21 @@ import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
 
 /**
- * {@code /town create|delete}, {@code /claim}, {@code /claim info}, {@code /claim flag} and {@code
- * /unclaim}. Changes apply at once; the player hears back once they are saved, or that they were
- * undone if saving failed.
+ * {@code /town create|delete|rename|info|list} (with the membership and treasury subcommands of
+ * {@link MemberCommands} and {@link TreasuryCommands}), {@code /claim}, {@code /claim
+ * info|flag|trust|untrust} and {@code /unclaim}. Changes apply at once; the player hears back once
+ * they are saved, or that they were undone if saving failed.
  */
 final class TownCommands {
 
-  private static final String NAME = "name";
+  static final String NAME = "name";
+  static final String PLAYER = "player";
   private static final String FLAG = "flag";
   private static final String VALUE = "value";
 
   private final TownService towns;
   private final TownsState state;
-  private final Services runtime;
+  private final Parts parts;
 
   /**
    * The main-thread services the commands use.
@@ -55,41 +62,98 @@ final class TownCommands {
    * @param scheduler completes saves back onto the main thread
    * @param logger records failed saves
    */
-  record Services(Scheduler scheduler, ComponentLogger logger) {}
+  record Services(Scheduler scheduler, ComponentLogger logger) {
 
-  TownCommands(TownService towns, TownsState state, Services runtime) {
+    /** Tells {@code player} {@code success} once {@code saved} completes, or that it was undone. */
+    void whenSaved(Player player, CompletableFuture<Void> saved, Component success) {
+      var _ =
+          saved.whenCompleteAsync(
+              (ok, failure) -> {
+                if (failure != null) {
+                  logger.error("Saving a towns change failed; it was undone", failure);
+                  player.sendMessage(
+                      Notices.error("That could not be saved, so it was undone. Try again."));
+                  return;
+                }
+                player.sendMessage(success);
+              },
+              scheduler.mainThread());
+    }
+
+    /**
+     * Reports a town change: problems at once; success once saved. The success message is built
+     * now, while every town it names certainly exists, and only sent later.
+     */
+    void report(
+        Player player,
+        Result<Change<Town>, List<TownProblem>> result,
+        Function<Town, Component> message) {
+      switch (result) {
+        case Result.Ok<Change<Town>, List<TownProblem>>(var change) ->
+            whenSaved(player, change.saved(), message.apply(change.value()));
+        case Result.Err<Change<Town>, List<TownProblem>>(var problems) -> refuse(player, problems);
+      }
+    }
+
+    void refuse(Player player, List<TownProblem> problems) {
+      problems.forEach(problem -> player.sendMessage(Notices.error(Explanations.explain(problem))));
+    }
+  }
+
+  /**
+   * What the commands use besides the towns themselves.
+   *
+   * @param members membership subcommands
+   * @param treasuryCommands treasury subcommands
+   * @param treasury pays out a deleted town's treasury
+   * @param levels players' Governor levels
+   * @param runtime reports saves
+   */
+  record Parts(
+      MemberCommands members,
+      TreasuryCommands treasuryCommands,
+      Treasury treasury,
+      GovernorLevels levels,
+      Services runtime) {}
+
+  TownCommands(TownService towns, TownsState state, Parts parts) {
     this.towns = towns;
     this.state = state;
-    this.runtime = runtime;
+    this.parts = parts;
   }
 
   void register(Commands commands) {
-    commands.register(town(), "Founds, shows or deletes your town");
+    commands.register(town(), "Founds, runs, shows or deletes your town");
     commands.register(claim(), "Claims the chunk you stand in for your town");
     commands.register(unclaim(), "Gives up the chunk you stand in");
   }
 
   private LiteralCommandNode<CommandSourceStack> town() {
-    return Commands.literal("town")
-        .executes(context -> asPlayer(context, this::showTown))
-        .then(
-            Commands.literal("create")
-                .then(
-                    Commands.argument(NAME, word())
-                        .executes(
-                            context ->
-                                asPlayer(
-                                    context, player -> found(player, getString(context, NAME))))))
-        .then(
-            Commands.literal("delete")
-                .executes(context -> asPlayer(context, player -> disband(player, "")))
-                .then(
-                    Commands.argument(NAME, word())
-                        .executes(
-                            context ->
-                                asPlayer(
-                                    context, player -> disband(player, getString(context, NAME))))))
-        .build();
+    LiteralArgumentBuilder<CommandSourceStack> town =
+        Commands.literal("town")
+            .executes(context -> asPlayer(context, this::showTown))
+            .then(
+                Commands.literal("create")
+                    .then(
+                        Commands.argument(NAME, word())
+                            .executes(
+                                context ->
+                                    asPlayer(
+                                        context,
+                                        player -> found(player, getString(context, NAME))))))
+            .then(
+                Commands.literal("delete")
+                    .executes(context -> asPlayer(context, player -> delete(player, "")))
+                    .then(
+                        Commands.argument(NAME, word())
+                            .executes(
+                                context ->
+                                    asPlayer(
+                                        context,
+                                        player -> delete(player, getString(context, NAME))))));
+    parts.members().attach(town);
+    parts.treasuryCommands().attach(town);
+    return town.build();
   }
 
   private LiteralCommandNode<CommandSourceStack> claim() {
@@ -119,7 +183,20 @@ final class TownCommands {
                                                     player,
                                                     getString(context, FLAG),
                                                     getBool(context, VALUE)))))))
+        .then(trustCommand("trust", true))
+        .then(trustCommand("untrust", false))
         .build();
+  }
+
+  private LiteralArgumentBuilder<CommandSourceStack> trustCommand(String literal, boolean on) {
+    return Commands.literal(literal)
+        .then(
+            Commands.argument(PLAYER, word())
+                .suggests(TownCommands::suggestOnline)
+                .executes(
+                    context ->
+                        asPlayer(
+                            context, player -> trustHere(player, getString(context, PLAYER), on))));
   }
 
   private LiteralCommandNode<CommandSourceStack> unclaim() {
@@ -135,37 +212,51 @@ final class TownCommands {
           Notices.info("You are not in a town. Found one with /town create <name>."));
       return;
     }
-    var found = town.get();
-    var role = found.roleOf(player.getUniqueId()).orElseThrow();
-    player.sendMessage(
-        Notices.info(
-            found.name()
-                + ": you are its "
-                + role.name().toLowerCase(Locale.ROOT)
-                + "; "
-                + found.members().size()
-                + " member(s), "
-                + state.claimCount(found.id())
-                + " chunk(s)."));
+    parts.members().info(player, town.get());
   }
 
-  private void found(Player player, String name) {
+  /** Founds a town; needs Governor I. */
+  void found(Player player, String name) {
+    if (!player.hasPermission(Track.GOVERNOR.permission(1))) {
+      player.sendMessage(
+          Notices.error(
+              "Founding a town takes Governor I. Train it with the Governor trainer or /perks."));
+      return;
+    }
+    var level = parts.levels().of(player);
     onTown(
         player,
-        towns.found(player.getUniqueId(), name),
+        towns.found(player.getUniqueId(), name, level),
         town ->
             Notices.success(
                 "Founded " + town.name() + ". Stand in a chunk and type /claim to claim it."));
   }
 
-  private void disband(Player player, String confirmation) {
+  /** Deletes the player's town, paying its treasury to them first. */
+  void delete(Player player, String confirmation) {
     var claims = state.townOf(player.getUniqueId()).map(town -> state.claimCount(town.id()));
-    onTown(
-        player,
-        towns.disband(player.getUniqueId(), confirmation),
-        town ->
-            Notices.success(
-                "Deleted " + town.name() + " and released its " + claims.orElse(0) + " chunk(s)."));
+    var _ =
+        parts
+            .treasury()
+            .delete(player.getUniqueId(), confirmation)
+            .whenComplete(
+                (result, failure) -> {
+                  if (failure != null) {
+                    parts.runtime().logger().error("Deleting a town failed", failure);
+                    player.sendMessage(Notices.error("The town could not be deleted; try again."));
+                    return;
+                  }
+                  onTown(
+                      player,
+                      result,
+                      town ->
+                          Notices.success(
+                              "Deleted "
+                                  + town.name()
+                                  + " and released its "
+                                  + claims.orElse(0)
+                                  + " chunk(s). Its treasury is yours."));
+                });
   }
 
   private void claimHere(Player player) {
@@ -215,6 +306,28 @@ final class TownCommands {
                     + "."));
   }
 
+  /** Trusts (or stops trusting) the named player on the chunk {@code player} stands in. */
+  void trustHere(Player player, String name, boolean on) {
+    var chunk = chunkOf(player);
+    parts
+        .members()
+        .names()
+        .resolve(
+            player,
+            name,
+            target ->
+                onClaim(
+                    player,
+                    towns.trust(player.getUniqueId(), chunk, target, on),
+                    claim ->
+                        Notices.success(
+                            on
+                                ? target.name()
+                                    + " may now build, open containers and use switches on this"
+                                    + " chunk."
+                                : target.name() + " is no longer trusted on this chunk.")));
+  }
+
   private void describeHere(Player player) {
     var location = Guard.position(player);
     var land =
@@ -234,7 +347,10 @@ final class TownCommands {
               + nameOf(claim)
               + ". Flags: "
               + Explanations.describe(claim.flags())
-              + ".";
+              + "."
+              + (claim.trusted().isEmpty()
+                  ? ""
+                  : " " + claim.trusted().size() + " outsider(s) are trusted here.");
       case Land.RegionLand(var region) ->
           "This is " + region.name() + ", an admin region; it cannot be claimed.";
     };
@@ -252,27 +368,17 @@ final class TownCommands {
         .orElseThrow(() -> new IllegalStateException("no town " + townId + " holds a claim"));
   }
 
-  private static ChunkPos chunkOf(Player player) {
+  static ChunkPos chunkOf(Player player) {
     var location = Guard.position(player);
     return ChunkPos.ofBlock(
         Guard.world(location).getName(), location.getBlockX(), location.getBlockZ());
   }
 
-  /**
-   * Reports a town change: problems at once; success once saved. The success message is built now,
-   * while every town it names certainly exists, and only sent later.
-   */
   private void onTown(
       Player player,
       Result<Change<Town>, List<TownProblem>> result,
       Function<Town, Component> message) {
-    switch (result) {
-      case Result.Ok<Change<Town>, List<TownProblem>>(var change) ->
-          whenSaved(player, change.saved(), message.apply(change.value()));
-      case Result.Err<Change<Town>, List<TownProblem>>(var problems) ->
-          problems.forEach(
-              problem -> player.sendMessage(Notices.error(Explanations.explain(problem))));
-    }
+    parts.runtime().report(player, result, message);
   }
 
   private void onClaim(
@@ -281,7 +387,7 @@ final class TownCommands {
       Function<Claim, Component> message) {
     switch (result) {
       case Result.Ok<Change<Claim>, List<ClaimProblem>>(var change) ->
-          whenSaved(player, change.saved(), message.apply(change.value()));
+          parts.runtime().whenSaved(player, change.saved(), message.apply(change.value()));
       case Result.Err<Change<Claim>, List<ClaimProblem>>(var problems) ->
           problems.forEach(
               problem ->
@@ -289,27 +395,23 @@ final class TownCommands {
     }
   }
 
-  private void whenSaved(Player player, CompletableFuture<Void> saved, Component success) {
-    var _ =
-        saved.whenCompleteAsync(
-            (ok, failure) -> {
-              if (failure != null) {
-                runtime.logger().error("Saving a towns change failed; it was undone", failure);
-                player.sendMessage(
-                    Notices.error("That could not be saved, so it was undone. Try again."));
-                return;
-              }
-              player.sendMessage(success);
-            },
-            runtime.scheduler().mainThread());
-  }
-
-  private static int asPlayer(CommandContext<CommandSourceStack> context, Consumer<Player> action) {
+  static int asPlayer(CommandContext<CommandSourceStack> context, Consumer<Player> action) {
     if (context.getSource().getSender() instanceof Player player) {
       action.accept(player);
     } else {
       context.getSource().getSender().sendMessage(Notices.error("Only players can do that."));
     }
     return Command.SINGLE_SUCCESS;
+  }
+
+  /** Suggests the names of online players. */
+  static CompletableFuture<Suggestions> suggestOnline(
+      CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
+    var server = context.getSource().getSender().getServer();
+    server.getOnlinePlayers().stream()
+        .map(Player::getName)
+        .filter(name -> name.toLowerCase(Locale.ROOT).startsWith(builder.getRemainingLowerCase()))
+        .forEach(builder::suggest);
+    return builder.buildFuture();
   }
 }

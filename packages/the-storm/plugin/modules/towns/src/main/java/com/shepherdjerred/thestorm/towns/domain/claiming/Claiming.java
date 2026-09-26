@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
 import com.shepherdjerred.thestorm.towns.domain.land.Claim;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
+import com.shepherdjerred.thestorm.towns.domain.town.PlayerRef;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import java.util.List;
 import java.util.Optional;
@@ -16,17 +17,19 @@ import java.util.UUID;
 public final class Claiming {
 
   private final ClaimPolicy policy;
+  private final ClaimLimits limits;
   private final List<ClaimRule> claimRules;
   private final List<ClaimRule> manageRules;
   private final List<ClaimRule> unclaimRules;
 
-  /** Claiming with {@code policy}'s flat per-town cap. */
+  /** Claiming with {@code policy}'s limits: a base plus the owner's Governor bonus. */
   public Claiming(ClaimPolicy policy) {
-    this(policy, ClaimLimits.flat(policy.maxClaimsPerTown()));
+    this(policy, policy.limits());
   }
 
   public Claiming(ClaimPolicy policy, ClaimLimits limits) {
     this.policy = policy;
+    this.limits = limits;
     this.claimRules =
         List.of(
             new ManagerRule(),
@@ -38,6 +41,11 @@ public final class Claiming {
             new LimitRule(limits));
     this.manageRules = List.of(new ManagerRule(), new OwnClaimRule());
     this.unclaimRules = List.of(new ManagerRule(), new OwnClaimRule(), new ConnectedRemovalRule());
+  }
+
+  /** How many chunks each town may hold. */
+  public ClaimLimits limits() {
+    return limits;
   }
 
   /** The attempt of {@code player}, who must be in a town, on {@code chunk}. */
@@ -63,6 +71,30 @@ public final class Claiming {
   public Result<Claim, List<ClaimProblem>> setFlag(
       ClaimAttempt attempt, ClaimFlag flag, boolean on) {
     return check(manageRules, attempt).map(ok -> held(attempt).withFlag(flag, on));
+  }
+
+  /**
+   * The claim trusting {@code player} (when {@code on}) or no longer trusting them. Only for
+   * players outside the town: members already have their rank's rights.
+   */
+  public Result<Claim, List<ClaimProblem>> trust(
+      ClaimAttempt attempt, PlayerRef player, boolean on) {
+    return check(manageRules, attempt)
+        .flatMap(
+            ok -> {
+              var claim = held(attempt);
+              if (attempt.town().roleOf(player.id()).isPresent()) {
+                return Result.err(List.of(new ClaimProblem.TrustsMember(player.name())));
+              }
+              var trusted = claim.trusted().contains(player.id());
+              if (on && trusted) {
+                return Result.err(List.of(new ClaimProblem.AlreadyTrusted(player.name())));
+              }
+              if (!on && !trusted) {
+                return Result.err(List.of(new ClaimProblem.NotTrusted(player.name())));
+              }
+              return Result.ok(claim.withTrust(player.id(), on));
+            });
   }
 
   private static Claim held(ClaimAttempt attempt) {

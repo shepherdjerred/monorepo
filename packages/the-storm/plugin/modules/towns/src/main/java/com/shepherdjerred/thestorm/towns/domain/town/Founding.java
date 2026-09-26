@@ -10,5 +10,6 @@ import java.util.UUID;
  * @param name the name they chose
  * @param id the new town's id
  * @param at when
+ * @param governorLevel the founder's Governor level now
  */
-public record Founding(UUID founder, String name, UUID id, Instant at) {}
+public record Founding(UUID founder, String name, UUID id, Instant at, int governorLevel) {}

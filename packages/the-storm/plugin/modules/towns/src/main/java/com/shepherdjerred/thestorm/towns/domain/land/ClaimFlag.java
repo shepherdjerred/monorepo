@@ -1,6 +1,10 @@
 package com.shepherdjerred.thestorm.towns.domain.land;
 
-/** A switch on one claimed chunk. Off is always the protective setting. */
+/**
+ * A switch on one claimed chunk. Off is always the protective setting. There is no container flag:
+ * an unlocked container someone placed is anyone's to open, locks guard the rest, and other
+ * containers (carts, composters, chests nobody placed) open to outsiders with public-build.
+ */
 public enum ClaimFlag {
   /** Players may fight each other here. */
   PVP,
@@ -10,10 +14,8 @@ public enum ClaimFlag {
   FIRE_SPREAD,
   /** Endermen, ravagers, withers, silverfish and door-breaking zombies may change blocks here. */
   MOB_GRIEFING,
-  /** Outsiders may build, break and place entities here. */
+  /** Outsiders may build, break, place entities and open containers the town guards here. */
   PUBLIC_BUILD,
-  /** Outsiders may open containers here. */
-  PUBLIC_CONTAINERS,
   /** Outsiders may use doors, buttons, levers and redstone components here. */
   PUBLIC_SWITCHES,
   /** Outsiders may use and hurt animals, villagers, item frames and armor stands here. */

@@ -8,15 +8,42 @@ claims:
   worlds: [world]
   # Chunks that must separate one town's claims from another's, on both axes.
   buffer: 2
-  # The most chunks one town may hold, until town levels and the plot bank
-  # replace this flat cap.
-  maxClaimsPerTown: 64
+  # The most chunks a town may hold: `base`, plus the bonus for its owner's
+  # Governor level (one entry each for Governor I to V, never falling). The
+  # owner's level is the one last seen while they were online.
+  #
+  #   Governor:   -   I   II  III  IV   V
+  #   chunks:    16  24   32   48  64  80
+  limits:
+    base: 16
+    governorBonus: [8, 16, 32, 48, 64]
   # Flags a new claim starts with; every flag not listed is off. Server rule:
   # PvP is on in new claims (towns may turn it off with /claim flag pvp false);
   # spawn stays PvP-off and the wilderness PvP-on. Flags: PVP, EXPLOSIONS,
-  # FIRE_SPREAD, MOB_GRIEFING, PUBLIC_BUILD, PUBLIC_CONTAINERS, PUBLIC_SWITCHES,
-  # PUBLIC_ENTITIES.
+  # FIRE_SPREAD, MOB_GRIEFING, PUBLIC_BUILD, PUBLIC_SWITCHES, PUBLIC_ENTITIES.
+  # There is no container flag: anyone may open an unlocked container anywhere,
+  # and /lock protects the rest.
   defaultFlags: [PVP]
+
+membership:
+  # How long an invitation may be accepted. Invitations are kept in memory, so
+  # a restart withdraws them.
+  inviteExpiryMinutes: 1440
+  # How long an owner has to confirm handing their town over.
+  transferConfirmSeconds: 60
+
+locks:
+  # The most locks one player may hold; a double chest counts once.
+  maxPerPlayer: 64
+  # Lock newly placed containers for their placer; /unlock makes one public.
+  autoLockOnPlace: true
+
+pvp:
+  # How long after changing their own PvP (/pvp on|off) a player must wait to
+  # change it again (168 hours is one week).
+  toggleCooldownHours: 168
+  # Damage between players prevents either player changing their switch briefly.
+  combatLockSeconds: 30
 
 # How long before a player is told about the same refusal again.
 denialCooldownMillis: 2000
@@ -42,9 +69,13 @@ grief:
 # INTERACT_ENTITY, PLACE_ENTITY, ATTACK_PLAYER, TELEPORT_INTO, SET_HOME.
 # Subjects: DOOR, TRAPDOOR, FENCE_GATE, BUTTON, LEVER, PRESSURE_PLATE,
 # TRIPWIRE, BELL, BED, RESPAWN_ANCHOR, ANVIL, CONTAINER, LECTERN, SIGN, CAKE,
-# REDSTONE_COMPONENT, FARMLAND, BLOCK, PLAYER, VEHICLE, ANIMAL, VILLAGER,
-# ITEM_FRAME, ARMOR_STAND, ENTITY, ENDER_PEARL, CHORUS_FRUIT, LOCATION, or ANY
-# on its own for all of them.
+# REDSTONE_COMPONENT, FARMLAND, CREAKING_HEART, BLOCK, PLAYER, VEHICLE, ANIMAL,
+# VILLAGER, ITEM_FRAME, ARMOR_STAND, ENTITY, ENDER_PEARL, CHORUS_FRUIT,
+# LOCATION, or ANY on its own for all of them.
+#
+# `mobSpawns` says which creature spawns a region lets through: `limited: false`
+# lets every spawn (then `allow` must be empty); `limited: true` lets only the
+# spawn reasons in `allow`.
 regions:
   # Spawn around the windmill. PLACEHOLDER coordinates: replace with the real
   # chunk range around the windmill before the module is switched on.
@@ -71,6 +102,10 @@ regions:
         subjects: [VILLAGER, VEHICLE]
       - action: TELEPORT_INTO
         subjects: [LOCATION]
+    # Creatures spawn at spawn as anywhere else.
+    mobSpawns:
+      limited: false
+      allow: []
   # The Mob Arena. PLACEHOLDER coordinates: replace with the arena's real box.
   - id: arena
     name: Arena
@@ -85,3 +120,16 @@ regions:
         subjects: [DOOR, TRAPDOOR, FENCE_GATE, BUTTON, LEVER, PRESSURE_PLATE]
       - action: TELEPORT_INTO
         subjects: [LOCATION]
+      # The creaking boss is beaten by breaking its creaking heart; every other
+      # block stays unbreakable.
+      - action: BREAK
+        subjects: [CREAKING_HEART]
+    # Only the arena's own waves and bosses (spawned by the arena module with
+    # reason CUSTOM), what they bring with them (evoker vexes, zombie
+    # reinforcements, split slimes, jockeys and mounts) and staff summons
+    # appear inside; nothing wanders in. Reasons are Paper's
+    # CreatureSpawnEvent.SpawnReason names.
+    mobSpawns:
+      limited: true
+      allow:
+        [CUSTOM, COMMAND, SPELL, REINFORCEMENTS, SLIME_SPLIT, JOCKEY, MOUNT]
