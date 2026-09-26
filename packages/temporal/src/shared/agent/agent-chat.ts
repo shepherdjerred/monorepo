@@ -361,8 +361,7 @@ export function agentChatWorkflowId(chatId: string): string {
 
 export function agentChatBindingKey(binding: AgentChatBinding): string {
   const parsed = AgentChatBindingSchema.parse(binding);
-  if (parsed.kind === "imessage") {
-    return `imessage:${parsed.conversationId}`;
-  }
-  return `discord:${parsed.channelId}:${parsed.threadId ?? "channel"}`;
+  return parsed.kind === "imessage"
+    ? `imessage:${parsed.conversationId}`
+    : `discord:${parsed.channelId}:${parsed.threadId ?? "channel"}`;
 }
