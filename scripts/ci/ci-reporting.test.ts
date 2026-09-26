@@ -160,6 +160,36 @@ describe("CI reporting boundaries", () => {
       assertExcludedSuitesAreUncovered(manifest);
     }).toThrow(/excluded suite but a reporting step already runs it/);
   });
+
+  test("allows a documented suite excluded by a broad Vitest filter", () => {
+    const manifest = TestManifestSchema.parse({
+      $schema: "./ci-test-manifest.schema.json",
+      version: 2,
+      workspaces: [
+        {
+          package: "package",
+          directory: "packages/package",
+          steps: [
+            {
+              runner: "vitest",
+              args: ["src", "--exclude", "src/emulator/audio.test.ts"],
+            },
+          ],
+          excludedSuites: [
+            {
+              path: "src/emulator/audio.test.ts",
+              reason: "Runs in a dedicated image verification stage.",
+            },
+          ],
+        },
+      ],
+      testlessWorkspaces: [],
+      separateTests: [],
+    });
+    expect(() => {
+      assertExcludedSuitesAreUncovered(manifest);
+    }).not.toThrow();
+  });
 });
 
 describe("CI test reporting", () => {

@@ -42,7 +42,11 @@ describe("vitestSelection", () => {
           "src/slow.test.ts",
         ],
       }),
-    ).toEqual({ filters: ["src"], excludes: ["src/slow.test.ts"] });
+    ).toEqual({
+      filters: ["src"],
+      excludes: ["src/slow.test.ts"],
+      directories: [],
+    });
   });
 
   test("ignores flags and inline option values", () => {
@@ -51,7 +55,26 @@ describe("vitestSelection", () => {
         runner: "vitest",
         args: ["--no-file-parallelism", "--testTimeout=5000"],
       }),
-    ).toEqual({ filters: [], excludes: [] });
+    ).toEqual({ filters: [], excludes: [], directories: [] });
+  });
+
+  test("retains a Vitest root directory in either CLI form", () => {
+    expect(
+      vitestSelection({
+        runner: "vitest",
+        args: [
+          "--dir",
+          "src",
+          "--dir=test",
+          "--exclude=src/slow.test.ts",
+          "a.test.ts",
+        ],
+      }),
+    ).toEqual({
+      filters: ["a.test.ts"],
+      excludes: ["src/slow.test.ts"],
+      directories: ["src", "test"],
+    });
   });
 });
 
@@ -61,14 +84,67 @@ describe("isAccountedFor", () => {
     expect(isAccountedFor(entry, "anything/x.test.ts")).toBe(true);
   });
 
+  test("a --dir option restricts which files the step can account for", () => {
+    const entry = workspace({
+      steps: [{ runner: "vitest", args: ["--dir", "src"] }],
+    });
+    expect(isAccountedFor(entry, "src/a.test.ts")).toBe(true);
+    expect(isAccountedFor(entry, "test/a.test.ts")).toBe(false);
+  });
+
   test("a filter selects files whose path contains it", () => {
     expect(isAccountedFor(workspace(), "src/a.test.ts")).toBe(true);
     expect(isAccountedFor(workspace(), "scripts/a.test.ts")).toBe(false);
   });
 
-  test("an explicit --exclude accounts for the file", () => {
+  test("an explicit --exclude does not claim the file was run", () => {
     const entry = workspace({
-      steps: [{ runner: "vitest", args: ["--exclude", "src/wasm.test.ts"] }],
+      steps: [
+        {
+          runner: "vitest",
+          args: ["src", "--exclude", "src/wasm.test.ts"],
+        },
+      ],
+    });
+    expect(isAccountedFor(entry, "src/wasm.test.ts")).toBe(false);
+  });
+
+  test("a later step can account for a file excluded by another step", () => {
+    const entry = workspace({
+      steps: [
+        {
+          runner: "vitest",
+          args: ["src", "--exclude", "src/wasm.test.ts"],
+        },
+        { runner: "vitest", args: ["src/wasm.test.ts"] },
+      ],
+    });
+    expect(isAccountedFor(entry, "src/wasm.test.ts")).toBe(true);
+  });
+
+  test("a glob exclusion does not claim workflow tests are run", () => {
+    const entry = workspace({
+      steps: [
+        {
+          runner: "vitest",
+          args: ["src", "--exclude", "src/workflows/**/*.test.ts"],
+        },
+      ],
+    });
+    expect(isAccountedFor(entry, "src/workflows/agent.test.ts")).toBe(false);
+  });
+
+  test("a documented dedicated lane accounts for an excluded file", () => {
+    const entry = workspace({
+      steps: [
+        {
+          runner: "vitest",
+          args: ["src", "--exclude", "src/wasm.test.ts"],
+        },
+      ],
+      excludedSuites: [
+        { path: "src/wasm.test.ts", reason: "Runs in the wasm image stage." },
+      ],
     });
     expect(isAccountedFor(entry, "src/wasm.test.ts")).toBe(true);
   });
@@ -104,11 +180,15 @@ describe("workspaceTestFiles", () => {
     ).toEqual(["scripts/a.test.ts"]);
   });
 
-  test("gives the root scripts workspace the .buildkite tests", () => {
+  test("gives the root scripts workspace only .buildkite/scripts tests", () => {
     expect(
       workspaceTestFiles(
         workspace({ directory: "scripts" }),
-        ["scripts/a.test.ts", ".buildkite/scripts/b.test.ts"],
+        [
+          "scripts/a.test.ts",
+          ".buildkite/scripts/b.test.ts",
+          ".buildkite/other.test.ts",
+        ],
         ["scripts"],
       ),
     ).toEqual(["a.test.ts", "../.buildkite/scripts/b.test.ts"]);

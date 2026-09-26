@@ -4,10 +4,11 @@
  * A package's own `test` script and its manifest steps are written separately,
  * so a suite added to one silently never runs in CI. This check reads the
  * tracked test files instead of either list: each one must be selected by a
- * Vitest step, dropped by a step's explicit `--exclude`, or named in the
- * workspace's `excludedSuites` with the reason it runs elsewhere.
+ * Vitest step or named in the workspace's `excludedSuites` with the reason it
+ * runs elsewhere. A CLI `--exclude` alone is not evidence that a test runs.
  */
 import type { TestManifest, TestStep } from "./ci-reporting.ts";
+import { minimatch } from "minimatch";
 
 type Workspace = TestManifest["workspaces"][number];
 type VitestStep = Extract<TestStep, { runner: "vitest" }>;
@@ -32,16 +33,26 @@ const OPTIONS_WITH_VALUES = new Set([
 type VitestSelection = {
   readonly filters: readonly string[];
   readonly excludes: readonly string[];
+  readonly directories: readonly string[];
 };
 
 export function vitestSelection(step: VitestStep): VitestSelection {
   const filters: string[] = [];
   const excludes: string[] = [];
+  const directories: string[] = [];
   const args = step.args ?? [];
   for (let index = 0; index < args.length; index++) {
     const arg = args[index] ?? "";
     if (!arg.startsWith("--")) {
       filters.push(arg);
+      continue;
+    }
+    if (arg.startsWith("--dir=")) {
+      directories.push(arg.slice("--dir=".length));
+      continue;
+    }
+    if (arg.startsWith("--exclude=")) {
+      excludes.push(arg.slice("--exclude=".length));
       continue;
     }
     if (arg.includes("=") || !OPTIONS_WITH_VALUES.has(arg)) continue;
@@ -50,8 +61,9 @@ export function vitestSelection(step: VitestStep): VitestSelection {
       throw new Error(`Vitest option ${arg} has no value`);
     }
     if (arg === "--exclude") excludes.push(value);
+    if (arg === "--dir") directories.push(value);
   }
-  return { filters, excludes };
+  return { filters, excludes, directories };
 }
 
 function isUnder(file: string, path: string): boolean {
@@ -65,21 +77,27 @@ export function isAccountedFor(workspace: Workspace, file: string): boolean {
   if (excluded.some((suite) => isUnder(file, suite.path))) return true;
   return workspace.steps.some((step) => {
     if (step.runner !== "vitest") return false;
-    const { filters, excludes } = vitestSelection(step);
-    // Vitest matches positional filters as substrings of the file path; an
-    // explicit --exclude is a documented decision not to run the file here.
+    const { filters, excludes, directories } = vitestSelection(step);
+    // `--dir` is the Vitest root and limits which files this step can discover.
+    if (
+      directories.length > 0 &&
+      !directories.some((directory) => isUnder(file, directory))
+    ) {
+      return false;
+    }
+    // An explicit exclusion is not evidence that this file runs elsewhere.
+    if (excludes.some((exclude) => minimatch(file, exclude))) return false;
+    // Vitest matches positional filters as substrings of the file path.
     return (
-      excludes.some((exclude) => file.includes(exclude)) ||
-      filters.length === 0 ||
-      filters.some((filter) => file.includes(filter))
+      filters.length === 0 || filters.some((filter) => file.includes(filter))
     );
   });
 }
 
 /**
  * Test files a workspace owns, relative to it. Nested workspaces own their own
- * files. The root scripts workspace also owns `.buildkite/`, which its Vitest
- * config includes as `../.buildkite/scripts`.
+ * files. The root scripts workspace also owns `.buildkite/scripts/`, which its
+ * Vitest config includes as `../.buildkite/scripts`.
  */
 export function workspaceTestFiles(
   workspace: Workspace,
@@ -99,7 +117,7 @@ export function workspaceTestFiles(
       files.push(file.slice(workspace.directory.length + 1));
     } else if (
       workspace.directory === "scripts" &&
-      isUnder(file, ".buildkite")
+      isUnder(file, ".buildkite/scripts")
     ) {
       files.push(`../${file}`);
     }
