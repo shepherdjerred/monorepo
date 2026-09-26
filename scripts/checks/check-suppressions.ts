@@ -17,6 +17,11 @@ const SUPPRESSION_PATTERNS = [
   // Rust suppressions
   /#\[allow\(/,
   /#!\[allow\(/,
+  // Java suppressions (packages/the-storm): javac/Error Prone/NullAway,
+  // PMD and Checkstyle escape hatches.
+  /@SuppressWarnings\(/,
+  /\bNOPMD\b/,
+  /CHECKSTYLE:\s*OFF/i,
   // Shell hygiene patterns (error swallowing, token-in-URL)
   /\|\| true/,
   /2>\/dev\/null/,

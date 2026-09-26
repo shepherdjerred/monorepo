@@ -1,0 +1,24 @@
+# Owned by the repository and written on every boot; the plugin never saves it.
+# Every module must be listed. A missing or unknown key stops the plugin.
+# A module is switched on in the same change that retires the third-party
+# plugin it replaces.
+modules:
+  economy: false
+  messages: false
+  chat: false
+  discord: false
+  essentials: false
+  shops: false
+  shards: false
+  towns: false
+  tracks: false
+  mechanics: false
+  spells: false
+  npcs: false
+  quests: false
+  arena: false
+  mobs: false
+  qol: false
+  skills: false
+  seasonal: false
+  world: false

@@ -164,6 +164,7 @@
     "packages/temporal",
     "packages/temporal-observability",
     "packages/terraform-provider-asuswrt",
+    "packages/the-storm",
     "packages/toolkit",
     "packages/trmnl-dashboard",
     "packages/version-catalog",

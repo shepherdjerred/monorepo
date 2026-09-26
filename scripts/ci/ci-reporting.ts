@@ -39,6 +39,13 @@ const StepSchema = z.discriminatedUnion("runner", [
     .strict(),
   z
     .object({
+      runner: z.literal("gradle"),
+      name: z.string().min(1).optional(),
+      args: z.array(z.string()).min(1),
+    })
+    .strict(),
+  z
+    .object({
       runner: z.literal("command"),
       name: z.string().min(1),
       command: z.array(z.string()).min(1),
@@ -176,6 +183,7 @@ export function coverageArtifactFilename(step: TestStep): string | undefined {
         ? undefined
         : "coverage.cobertura.xml";
     case "cargo":
+    case "gradle":
     case "command":
       return undefined;
   }
@@ -207,6 +215,7 @@ function stepTargetPaths(step: TestStep): readonly string[] {
     case "go":
     case "cargo":
     case "dotnet":
+    case "gradle":
       return step.args;
     case "command":
       return step.command;

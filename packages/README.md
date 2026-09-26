@@ -74,6 +74,7 @@ hold only scoped invariants that agents must keep in context.
 | ----------------------------------------------- | ------------------------------------------------------------ |
 | [better-skill-capped](better-skill-capped/)     | Web client rebuilding Skill Capped's catalog UI              |
 | [cooklang-for-obsidian](cooklang-for-obsidian/) | Obsidian plugin rendering `.cook` recipes with rich previews |
+| [the-storm](the-storm/)                         | Paper plugin for The Storm (ts-mc.net) Minecraft server      |
 
 ## Infrastructure & tooling
 

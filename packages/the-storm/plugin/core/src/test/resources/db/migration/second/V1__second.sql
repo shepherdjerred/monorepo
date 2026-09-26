@@ -1,0 +1,1 @@
+CREATE TABLE second_things (id INTEGER PRIMARY KEY);

@@ -487,7 +487,12 @@
     {
       "package": "@scout-for-lol/design-audit",
       "directory": "packages/scout-for-lol/packages/design-audit",
-      "steps": [{ "runner": "vitest", "args": ["src"] }]
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ]
     },
     {
       "package": "@scout-for-lol/frontend",
@@ -765,22 +770,38 @@
     {
       "package": "@shepherdjerred/config",
       "directory": "packages/config",
-      "steps": [{ "runner": "vitest" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/feature-flags",
       "directory": "packages/feature-flags",
-      "steps": [{ "runner": "vitest" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/ops-model",
       "directory": "packages/ops-model",
-      "steps": [{ "runner": "vitest" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/ops-clients",
       "directory": "packages/ops-clients",
-      "steps": [{ "runner": "vitest" }]
+      "steps": [
+        {
+          "runner": "vitest"
+        }
+      ]
     },
     {
       "package": "@shepherdjerred/version-catalog",
@@ -843,6 +864,16 @@
       "steps": [
         {
           "runner": "vitest"
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/the-storm",
+      "directory": "packages/the-storm",
+      "steps": [
+        {
+          "runner": "gradle",
+          "args": ["-p", "plugin", "test"]
         }
       ]
     }
