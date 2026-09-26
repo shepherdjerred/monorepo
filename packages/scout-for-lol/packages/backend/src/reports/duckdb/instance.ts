@@ -161,9 +161,42 @@ export async function withDuckDBConnection<T>(
   fn: (session: DuckDBSession) => Promise<T>,
   options: { timeoutMs?: number; abortSignal?: AbortSignal } = {},
 ): Promise<T> {
-  const release = await reportQuerySemaphore.acquire(options.abortSignal);
+  const timeoutMs = options.timeoutMs ?? DEFAULT_QUERY_TIMEOUT_MS;
+  const deadline = Date.now() + timeoutMs;
+  const acquireController = new AbortController();
+  const acquisition = { timedOut: false };
+  const timer = setTimeout(() => {
+    acquisition.timedOut = true;
+    acquireController.abort();
+  }, timeoutMs);
+  const abortWaiting = () => {
+    acquireController.abort();
+  };
+  options.abortSignal?.addEventListener("abort", abortWaiting, { once: true });
+  if (options.abortSignal?.aborted === true) {
+    abortWaiting();
+  }
+
+  let release: (() => void) | undefined;
   try {
-    return await withDuckDBConnectionSlot(fn, options);
+    try {
+      release = await reportQuerySemaphore.acquire(acquireController.signal);
+    } catch (error: unknown) {
+      if (acquisition.timedOut) {
+        throw new ReportQueryTimeoutError(timeoutMs);
+      }
+      throw error;
+    }
+  } finally {
+    clearTimeout(timer);
+    options.abortSignal?.removeEventListener("abort", abortWaiting);
+  }
+
+  try {
+    return await withDuckDBConnectionSlot(fn, {
+      ...options,
+      timeoutMs: Math.max(0, deadline - Date.now()),
+    });
   } finally {
     release();
   }

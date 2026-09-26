@@ -261,6 +261,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
           scope: turn.scope,
           askerGuildIds: turn.guildIds,
           queryText: validation.formattedQueryText,
+          abortSignal: params.abortSignal,
           onPlan: (plan) => {
             source = plan.source;
             planFacts.emptyReason = emptyResultReason(plan);

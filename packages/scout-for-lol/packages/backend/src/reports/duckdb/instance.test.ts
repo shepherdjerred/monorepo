@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { closeDuckDB, withDuckDBConnection } from "./instance.ts";
+import {
+  closeDuckDB,
+  ReportQueryTimeoutError,
+  withDuckDBConnection,
+} from "./instance.ts";
 
 /**
  * The instance is a process-wide singleton the server keeps for its lifetime.
@@ -61,6 +65,45 @@ describe("withDuckDBConnection concurrency", () => {
 
     expect(maximumActive).toBe(2);
     expect(started).toBe(3);
+  });
+
+  test("includes semaphore wait in the query timeout", async () => {
+    const queryGate = Promise.withResolvers<undefined>();
+    const twoStarted = Promise.withResolvers<undefined>();
+    let started = 0;
+    const blockers = Array.from(
+      { length: 2 },
+      async () =>
+        await withDuckDBConnection(async () => {
+          started++;
+          if (started === 2) twoStarted.resolve(undefined);
+          await queryGate.promise;
+          return [];
+        }),
+    );
+
+    await twoStarted.promise;
+    const queued = withDuckDBConnection(async () => [], { timeoutMs: 20 });
+    try {
+      await expect(queued).rejects.toBeInstanceOf(ReportQueryTimeoutError);
+    } finally {
+      queryGate.resolve(undefined);
+      await Promise.all(blockers);
+    }
+  });
+
+  test("interrupts an in-flight query when its caller aborts", async () => {
+    const controller = new AbortController();
+    const query = withDuckDBConnection(
+      async (session) =>
+        await session.run(
+          "SELECT COUNT(*) FROM range(200000000) a, range(50) b",
+        ),
+      { abortSignal: controller.signal },
+    );
+    setTimeout(() => controller.abort(), 50);
+
+    await expect(query).rejects.toThrow(/aborted/i);
   });
 
   test("disables insertion order preservation on the shared instance", async () => {

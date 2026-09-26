@@ -57,6 +57,34 @@ afterAll(async () => {
   await prisma.$disconnect();
 });
 
+describe("executeReportQuery cancellation", () => {
+  test("passes caller abort through to DuckDB before it starts work", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [temporalMatch("NA1_ABORT", now.toISOString(), false)],
+    });
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(
+      executeReportQuery({
+        prisma,
+        scope: guildScope(serverId),
+        queryText: `
+          SELECT COUNT(*) AS games
+          FROM match_participants
+          WHERE queue IN ('solo') AND ${BOUND}
+          GROUP BY player
+          ORDER BY games DESC
+          LIMIT 10
+        `,
+        now,
+        abortSignal: controller.signal,
+      }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+  });
+});
+
 describe("executeReportQuery", () => {
   test("runs a leaderboard query from the report lake", async () => {
     await writeTestLake(lakeDir, {

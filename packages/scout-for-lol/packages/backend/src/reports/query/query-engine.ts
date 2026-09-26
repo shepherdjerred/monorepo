@@ -46,6 +46,8 @@ export type ExecuteReportQueryParams = {
   now?: Date;
   onPlan?: ((plan: ScoutQlPlan) => void) | undefined;
   rangeOverride?: TemporalRange;
+  /** Stops in-flight lake reads when the caller stops or times out its work. */
+  abortSignal?: AbortSignal | undefined;
   /** The Discord servers a global-scope asker belongs to. Guild-scoped reports
    * resolve aliases from their own scope, including scheduled reports. */
   askerGuildIds?: string[] | undefined;
@@ -180,6 +182,7 @@ async function runReportQueryPlan(
     limit,
     playerPuuids,
     playerIds,
+    abortSignal: params.abortSignal,
   });
   const context = resolveTemporalContext(plan, range);
   if (context === null) {
@@ -201,6 +204,7 @@ async function runReportQueryPlan(
           limit,
           playerPuuids,
           playerIds,
+          abortSignal: params.abortSignal,
         });
   return resultFromPlanRows({
     plan,
