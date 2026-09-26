@@ -42,14 +42,14 @@ hold only scoped invariants that agents must keep in context.
 
 ## Websites
 
-| Package                                         | Description                                                  |
-| ----------------------------------------------- | ------------------------------------------------------------ |
-| [sjer.red](sjer.red/)                           | Personal website (Astro)                                     |
-| [resume](resume/)                               | LaTeX resume, built and deployed from CI                     |
-| [stocks-sjer-red](stocks-sjer-red/)             | PC-component investment portfolio tracker (Astro)            |
-| [cooklang-rich-preview](cooklang-rich-preview/) | Marketing site for the Cooklang Rich Preview Obsidian plugin |
-| [glitter](glitter/)                             | Glitter Boys friend-group site                               |
-| [macos-cross-site](macos-cross-site/)           | Marketing site for the macos-cross-compiler Docker image     |
+| Package                                         | Description                                                    |
+| ----------------------------------------------- | -------------------------------------------------------------- |
+| [sjer.red](sjer.red/)                           | Personal website (Astro)                                       |
+| [resume](resume/)                               | LaTeX resume, built and deployed from CI                       |
+| [stocks-sjer-red](stocks-sjer-red/)             | PC-component investment portfolio tracker (Astro)              |
+| [cooklang-rich-preview](cooklang-rich-preview/) | Marketing site for the Cooklang Rich Preview Obsidian plugin   |
+| [glitter](glitter/)                             | Glitter Boys friend-group site                                 |
+| [cross-compilers-site](cross-compilers-site/)   | Marketing site for the macOS and Windows cross-compiler images |
 
 ## Libraries
 

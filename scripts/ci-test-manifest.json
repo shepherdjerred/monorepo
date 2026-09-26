@@ -869,8 +869,8 @@
       "reason": "Static marketing site; no test files exist."
     },
     {
-      "package": "@shepherdjerred/macos-cross-site",
-      "directory": "packages/macos-cross-site",
+      "package": "@shepherdjerred/cross-compilers-site",
+      "directory": "packages/cross-compilers-site",
       "reason": "Static marketing site; no test files exist."
     },
     {

@@ -336,7 +336,7 @@ packages/windows-cross-compiler:build
 packages/code-review:build
 packages/architecture:build
 packages/cooklang-rich-preview:test
-packages/macos-cross-site:test
+packages/cross-compilers-site:test
 packages/stocks-sjer-red:test
 packages/discord-video-stream:lint
 packages/discord-plays-mario-kart/packages/common:test
