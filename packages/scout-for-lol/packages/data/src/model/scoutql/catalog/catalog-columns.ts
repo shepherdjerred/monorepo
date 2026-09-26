@@ -87,7 +87,7 @@ const LOADOUT = new Set(LOADOUT_COLUMNS);
 const ASSET_COLUMNS: ReadonlyMap<string, ScoutQlColumnInfo["asset"]> = new Map([
   ["champion_id", "champion"],
   ["champion_name", "champion"],
-  ...[0, 1, 2, 3, 4, 5].map((slot): [string, ScoutQlColumnInfo["asset"]] => [
+  ...[0, 1, 2, 3, 4, 5, 6].map((slot): [string, ScoutQlColumnInfo["asset"]] => [
     `item${slot.toString()}`,
     "item",
   ]),
