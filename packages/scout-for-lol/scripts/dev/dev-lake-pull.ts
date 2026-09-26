@@ -1,4 +1,4 @@
-import { mkdir, rm, rename } from "node:fs/promises";
+import { mkdir, rm, rename, stat } from "node:fs/promises";
 import path from "node:path";
 import {
   USAGE,
@@ -156,11 +156,22 @@ async function extractEntry(input: EntryPull): Promise<void> {
  * shell metacharacters would run something else entirely. The count is the
  * evidence a transfer arrived whole, so it must not depend on how the path is
  * spelled.
+ *
+ * Most entries are table directories, but `manifest.json` is a lone file, and
+ * globbing it as a directory fails — so a file counts as one and a missing
+ * path as zero.
  */
-async function localFileCount(dir: string): Promise<number> {
+export async function localFileCount(target: string): Promise<number> {
+  const info = await stat(target).catch(() => null);
+  if (info === null) {
+    return 0;
+  }
+  if (!info.isDirectory()) {
+    return 1;
+  }
   let total = 0;
   for await (const _entry of new Bun.Glob("**/*").scan({
-    cwd: dir,
+    cwd: target,
     onlyFiles: true,
     dot: true,
   })) {
@@ -305,4 +316,6 @@ async function main(): Promise<void> {
   );
 }
 
-await main();
+if (import.meta.main) {
+  await main();
+}
