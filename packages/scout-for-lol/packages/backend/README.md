@@ -41,6 +41,22 @@ bun run compact:report-lake  # Manually fold/rebuild the DuckDB report lake
 
 ### Durable Temporal work
 
+Community MVP votes commit a `MatchMvpTallyRefresh` row in the same database
+transaction as the ballot. One row per match and guild tracks the desired and
+applied tally revisions. The gateway attempts a prompt edit after acknowledging
+the voter; the `mvp-tally-refresh` Temporal Schedule sweeps pending rows each
+minute on beta and production, including rows left by a gateway restart.
+Workers claim a short database lease, replace the tally embed idempotently,
+and leave a newer revision pending if another vote arrives during the edit.
+An unavailable report is retried for 24 hours after the latest vote, then
+recorded as `report-unavailable`. A later vote reopens that request.
+
+Operators can inspect `"MatchMvpTallyRefresh"` for `pending = true` rows and
+`lastErrorCode` values `awaiting-report`, `discord-edit-failed`, or
+`report-unavailable`. Compare `desiredRevision` with `appliedRevision` before
+closing an incident; a recorded vote alone does not prove the Discord tally
+was edited.
+
 Detached prediction and parlay work is inserted once before its Temporal
 workflow starts. Reconciliation starts only never-accepted `queued` rows.
 After Temporal exhausts the activity's four-attempt budget, the row remains

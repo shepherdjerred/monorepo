@@ -137,7 +137,7 @@ async function refreshOnce(
   input: { matchId: MatchId; serverId: DiscordGuildId },
   prismaClient: ExtendedPrismaClient,
   editMessage: MvpTallyMessageEdit,
-): Promise<void> {
+): Promise<boolean> {
   const roster = await loadMatchMvpRoster(input.matchId, prismaClient);
   if (roster === undefined) {
     throw new Error(
@@ -153,7 +153,7 @@ async function refreshOnce(
     logger.info(
       `No delivered match reports to update for ${input.matchId} in ${input.serverId}`,
     );
-    return;
+    return false;
   }
   await recordMatchMvpReportRefs(
     input.matchId,
@@ -210,20 +210,25 @@ async function refreshOnce(
       `No delivered match reports in ${input.serverId} to update for ${input.matchId}`,
     );
   }
+  return updated > 0;
 }
 
 export async function refreshMvpTallyMessages(
   input: { matchId: MatchId; serverId: DiscordGuildId },
   prismaClient: ExtendedPrismaClient = prisma,
   editMessage: MvpTallyMessageEdit = defaultEditMessage,
-): Promise<void> {
+): Promise<boolean> {
   const matchId = MatchIdSchema.parse(input.matchId);
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
-  await enqueuePerKey(
+  return await enqueuePerKey(
     tallyRefreshTails,
     refreshKey(matchId, serverId),
     async () => {
-      await refreshOnce({ matchId, serverId }, prismaClient, editMessage);
+      return await refreshOnce(
+        { matchId, serverId },
+        prismaClient,
+        editMessage,
+      );
     },
   );
 }

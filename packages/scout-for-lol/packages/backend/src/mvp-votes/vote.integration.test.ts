@@ -43,6 +43,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
+  await db.matchMvpTallyRefresh.deleteMany();
   await db.matchMvpVote.deleteMany();
   await db.matchMvpContest.deleteMany();
   await db.account.deleteMany();

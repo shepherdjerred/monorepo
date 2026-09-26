@@ -262,35 +262,59 @@ export async function upsertMatchMvpVote(
   const nominee = nomineeAt(roster, input.nomineeIndex);
   const justification =
     input.justification === undefined ? null : input.justification;
-  const row = await prismaClient.matchMvpVote.upsert({
-    where: {
-      matchId_serverId_voterDiscordId_category: {
+  const row = await prismaClient.$transaction(async (tx) => {
+    const stored = await tx.matchMvpVote.upsert({
+      where: {
+        matchId_serverId_voterDiscordId_category: {
+          matchId: input.matchId,
+          serverId: input.serverId,
+          voterDiscordId: input.voterDiscordId,
+          category: input.category,
+        },
+      },
+      create: {
         matchId: input.matchId,
         serverId: input.serverId,
         voterDiscordId: input.voterDiscordId,
         category: input.category,
+        nomineeIndex: input.nomineeIndex,
+        nomineePuuid: nominee.puuid,
+        nomineeTeamId: nominee.teamId,
+        voterPuuid: input.voterPuuid,
+        voterTeamId: input.voterTeamId,
+        justification,
       },
-    },
-    create: {
-      matchId: input.matchId,
-      serverId: input.serverId,
-      voterDiscordId: input.voterDiscordId,
-      category: input.category,
-      nomineeIndex: input.nomineeIndex,
-      nomineePuuid: nominee.puuid,
-      nomineeTeamId: nominee.teamId,
-      voterPuuid: input.voterPuuid,
-      voterTeamId: input.voterTeamId,
-      justification,
-    },
-    update: {
-      nomineeIndex: input.nomineeIndex,
-      nomineePuuid: nominee.puuid,
-      nomineeTeamId: nominee.teamId,
-      voterPuuid: input.voterPuuid,
-      voterTeamId: input.voterTeamId,
-      justification,
-    },
+      update: {
+        nomineeIndex: input.nomineeIndex,
+        nomineePuuid: nominee.puuid,
+        nomineeTeamId: nominee.teamId,
+        voterPuuid: input.voterPuuid,
+        voterTeamId: input.voterTeamId,
+        justification,
+      },
+    });
+    await tx.matchMvpTallyRefresh.upsert({
+      where: {
+        matchId_serverId: {
+          matchId: input.matchId,
+          serverId: input.serverId,
+        },
+      },
+      create: {
+        matchId: input.matchId,
+        serverId: input.serverId,
+        desiredRevision: 1,
+      },
+      update: {
+        desiredRevision: { increment: 1 },
+        pending: true,
+        nextAttemptAt: new Date(),
+        requestedAt: new Date(),
+        attemptCount: 0,
+        lastErrorCode: null,
+      },
+    });
+    return stored;
   });
   return parseStoredVote(row);
 }
