@@ -2,7 +2,11 @@ import { Codex } from "@openai/codex-sdk";
 import { createCodexConfig } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 
-import { AgentOutputSchema, type AgentOutput } from "#src/domain/schemas.ts";
+import {
+  AgentOutputSchema,
+  AgentOutputWireSchema,
+  type AgentOutput,
+} from "#src/domain/schemas.ts";
 import { agentEnvironment } from "#src/agent/environment.ts";
 
 export async function runCodexTurn(input: {
@@ -32,7 +36,14 @@ export async function runCodexTurn(input: {
     workingDirectory: "/workspace",
   });
   const result = await thread.run(input.prompt, {
-    outputSchema: z.toJSONSchema(AgentOutputSchema),
+    outputSchema: z.toJSONSchema(AgentOutputWireSchema),
   });
-  return AgentOutputSchema.parse(JSON.parse(result.finalResponse));
+  const wire = AgentOutputWireSchema.parse(JSON.parse(result.finalResponse));
+  return AgentOutputSchema.parse({
+    ...wire,
+    visualTargets: wire.visualTargets.map((target) => ({
+      ...target,
+      waitForSelector: target.waitForSelector ?? undefined,
+    })),
+  });
 }
