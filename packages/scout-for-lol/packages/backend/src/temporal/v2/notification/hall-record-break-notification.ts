@@ -3,6 +3,8 @@ import type { NotificationPolicySuppressionReason } from "@scout-for-lol/domain/
 import { captureHallRecordBroken } from "#src/analytics/hall.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
+import { hallRecordBreakIntentKey } from "#src/durable/match/delivery-intents.ts";
 import { hallRecordBreakDeliveries } from "#src/metrics/progression.ts";
 import { hallBreakEmbed } from "#src/progression/hall/outbox.ts";
 import {
@@ -64,6 +66,21 @@ function hallAnnouncementOf(
       detail: `its announcement names ${announcement.riotMatchId}, but the intent row belongs to ${record.matchId}`,
     });
   }
+  if (
+    record.intent.key !==
+    hallRecordBreakIntentKey(record.matchId, announcement.guildId)
+  ) {
+    throw new MalformedAnnouncementIntentError({
+      intentKey: record.intent.key,
+      detail: "its guild or match disagrees with the Hall intent key",
+    });
+  }
+  if (record.intent.target.kind !== "channel") {
+    throw new MalformedAnnouncementIntentError({
+      intentKey: record.intent.key,
+      detail: "a Hall announcement must target a guild channel",
+    });
+  }
   return announcement;
 }
 
@@ -103,6 +120,23 @@ export async function hallRecordBreakSuppressionV2(
   record: MatchNotificationIntentRecord,
 ): Promise<NotificationPolicySuppressionReason | undefined> {
   const announcement = hallAnnouncementOf(record);
+  const target = record.intent.target;
+  if (target.kind !== "channel") {
+    throw new MalformedAnnouncementIntentError({
+      intentKey: record.intent.key,
+      detail: "a Hall announcement must target a guild channel",
+    });
+  }
+  const channel = await fetchChannelForDelivery(target.channelId);
+  if (channel !== null) {
+    const guildId: unknown = "guildId" in channel ? channel.guildId : undefined;
+    if (guildId !== announcement.guildId) {
+      throw new MalformedAnnouncementIntentError({
+        intentKey: record.intent.key,
+        detail: `its target channel belongs to ${String(guildId)}, not ${announcement.guildId}`,
+      });
+    }
+  }
   const enabled = await isPolicyEnabled("hall_of_fame_enabled", {
     server: announcement.guildId,
   });

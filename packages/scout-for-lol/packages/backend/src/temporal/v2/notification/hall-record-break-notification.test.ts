@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { NotificationIntentSchema } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
@@ -21,6 +22,7 @@ import {
 
 const stubs = vi.hoisted(() => ({
   isPolicyEnabled: vi.fn(),
+  fetchChannelForDelivery: vi.fn(),
   captureHallRecordBroken: vi.fn(),
   inc: vi.fn(),
 }));
@@ -30,6 +32,12 @@ vi.mock("#src/configuration/flags.ts", async () => {
     "#src/configuration/flags.ts",
   );
   return { ...actual, isPolicyEnabled: stubs.isPolicyEnabled };
+});
+vi.mock("#src/discord/utils/channel.ts", async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    "#src/discord/utils/channel.ts",
+  );
+  return { ...actual, fetchChannelForDelivery: stubs.fetchChannelForDelivery };
 });
 vi.mock("#src/analytics/hall.ts", () => ({
   captureHallRecordBroken: stubs.captureHallRecordBroken,
@@ -88,6 +96,7 @@ function withRecords(records: unknown[]): unknown {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  stubs.fetchChannelForDelivery.mockResolvedValue({ guildId: hallGuildId });
   stubs.captureHallRecordBroken.mockResolvedValue(undefined);
 });
 
@@ -147,6 +156,19 @@ describe("the hall record-break message", () => {
       ),
     ).toThrow(MalformedAnnouncementIntentError);
   });
+
+  test("a guild that disagrees with the durable Hall key is refused", () => {
+    const record = hallRecord();
+    record.intent.key = NotificationIntentKeySchema.parse(
+      hallRecordBreakIntentKey(
+        hallRiotMatchId,
+        DiscordGuildIdSchema.parse("100000000000000002"),
+      ),
+    );
+    expect(() => buildHallRecordBreakNotificationMessageV2(record)).toThrow(
+      MalformedAnnouncementIntentError,
+    );
+  });
 });
 
 describe("the hall record-break policy", () => {
@@ -165,6 +187,16 @@ describe("the hall record-break policy", () => {
     stubs.isPolicyEnabled.mockResolvedValue(true);
 
     expect(await hallRecordBreakSuppressionV2(hallRecord())).toBeUndefined();
+  });
+
+  test("refuses a target channel in another guild before the flag check", async () => {
+    stubs.fetchChannelForDelivery.mockResolvedValue({
+      guildId: "100000000000000002",
+    });
+    await expect(hallRecordBreakSuppressionV2(hallRecord())).rejects.toThrow(
+      MalformedAnnouncementIntentError,
+    );
+    expect(stubs.isPolicyEnabled).not.toHaveBeenCalled();
   });
 });
 

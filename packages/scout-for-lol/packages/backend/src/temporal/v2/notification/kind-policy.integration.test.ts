@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import {
   NotificationIntentKeySchema,
+  RiotMatchIdSchema,
   type NotificationIntentKey,
 } from "@scout-for-lol/domain/identity/brands.ts";
 import {
@@ -20,7 +21,6 @@ import { hallRecordBreakAnnouncementEnvelope } from "#src/temporal/v2/notificati
 import {
   hallBreakRecords,
   hallGuildId,
-  hallRiotMatchId,
 } from "#src/temporal/v2/notification/hall-record-break.test-fixtures.ts";
 
 /**
@@ -36,6 +36,7 @@ import {
  */
 const stubs = vi.hoisted(() => ({
   isPolicyEnabled: vi.fn(),
+  fetchChannelForDelivery: vi.fn(),
   retireIfAudienceGoneV2: vi.fn(),
 }));
 
@@ -44,6 +45,12 @@ vi.mock("#src/configuration/flags.ts", async () => {
     "#src/configuration/flags.ts",
   );
   return { ...actual, isPolicyEnabled: stubs.isPolicyEnabled };
+});
+vi.mock("#src/discord/utils/channel.ts", async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    "#src/discord/utils/channel.ts",
+  );
+  return { ...actual, fetchChannelForDelivery: stubs.fetchChannelForDelivery };
 });
 vi.mock("#src/temporal/v2/notification/intent-audience.ts", () => ({
   retireIfAudienceGoneV2: stubs.retireIfAudienceGoneV2,
@@ -67,6 +74,7 @@ const NONCE = NotificationAttemptNonceSchema.parse("kind-policy-attempt");
 
 beforeEach(() => {
   vi.clearAllMocks();
+  stubs.fetchChannelForDelivery.mockResolvedValue({ guildId: hallGuildId });
   stubs.retireIfAudienceGoneV2.mockResolvedValue(undefined);
 });
 
@@ -77,13 +85,14 @@ async function mint(
   state: "pending" | "ready",
 ): Promise<NotificationIntentKey> {
   seq += 1;
+  const matchId = RiotMatchIdSchema.parse(`NA1_9301${String(seq)}`);
   const key = NotificationIntentKeySchema.parse(
     kind === "hall-record-break"
-      ? `${hallRecordBreakIntentKey(hallRiotMatchId, hallGuildId)}-${String(seq)}`
-      : `postmatch-discord:${hallRiotMatchId}:${testChannelId(String(seq))}`,
+      ? hallRecordBreakIntentKey(matchId, hallGuildId)
+      : `postmatch-discord:${matchId}:${testChannelId(String(seq))}`,
   );
   const outcome = await upsertIntent(prisma, {
-    matchId: hallRiotMatchId,
+    matchId,
     intent: NotificationIntentSchema.parse({
       key,
       kind,
@@ -96,8 +105,11 @@ async function mint(
         ? {
             announcement: hallRecordBreakAnnouncementEnvelope({
               guildId: hallGuildId,
-              riotMatchId: hallRiotMatchId,
-              records: hallBreakRecords(),
+              riotMatchId: matchId,
+              records: hallBreakRecords().map((record) => ({
+                ...record,
+                matchId,
+              })),
             }),
           }
         : {}),
