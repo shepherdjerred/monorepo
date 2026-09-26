@@ -24,7 +24,7 @@ function issue(input: {
     createdAt: input.createdAt ?? "2026-01-01T00:00:00.000Z",
     state: { name: "Todo", type: input.stateType ?? "unstarted" },
     labels: {
-      nodes: (input.labels ?? ["agent:ready", "agent:codex"]).map((name) => ({
+      nodes: (input.labels ?? ["agent:codex"]).map((name) => ({
         name,
       })),
     },
@@ -32,24 +32,34 @@ function issue(input: {
 }
 
 describe("Linear queue selection", () => {
-  test("requires ready and exactly one provider", () => {
+  test("a lone provider label is enough, in any team or state", () => {
     expect(providerForIssue(issue({ identifier: "SJ-1" }))).toBe("codex");
+    expect(isEligibleIssue(issue({ identifier: "SJ-1" }))).toBe(true);
+    for (const stateType of ["triage", "backlog", "unstarted", "started"]) {
+      expect(
+        isEligibleIssue(
+          issue({ identifier: "SJ-1", stateType, labels: ["agent:codex"] }),
+        ),
+      ).toBe(true);
+    }
     expect(
       isEligibleIssue(
         issue({
           identifier: "SJ-2",
-          labels: ["agent:ready"],
+          labels: ["agent:codex", "agent:needs-human"],
         }),
       ),
     ).toBe(false);
-    expect(
-      isEligibleIssue(
-        issue({
-          identifier: "SJ-3",
-          labels: ["agent:ready", "agent:codex", "agent:needs-human"],
-        }),
-      ),
-    ).toBe(false);
+    expect(isEligibleIssue(issue({ identifier: "SJ-3", labels: [] }))).toBe(
+      false,
+    );
+    for (const stateType of ["completed", "canceled"]) {
+      expect(
+        isEligibleIssue(
+          issue({ identifier: "SJ-4", stateType, labels: ["agent:codex"] }),
+        ),
+      ).toBe(false);
+    }
   });
 
   test("chooses highest priority, then oldest", () => {

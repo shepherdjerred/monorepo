@@ -30,16 +30,15 @@ not copy them into the repository or the runner configuration.
 Create the four team labels once:
 
 ```bash
-toolkit linear label create --team SJ --name agent:ready --color '#5E6AD2' \
-  --description 'Ready for the local coding queue'
 toolkit linear label create --team SJ --name agent:codex --color '#059669' \
   --description 'Use the Codex SDK'
 toolkit linear label create --team SJ --name agent:needs-human --color '#DC2626' \
   --description 'Parked until Jerred requeues it'
 ```
 
-The runner accepts only `Todo` issues with `agent:ready` and exactly one
-provider label. It chooses the highest priority, then the oldest issue.
+Applying `agent:codex` is the entire enqueue action. The runner accepts
+issues in any team and any non-terminal state carrying exactly one provider
+label. It chooses the highest priority, then the oldest issue.
 
 ## 3. Write the local configuration
 
@@ -77,12 +76,14 @@ from a temporary Herdr worktree is rejected.
 
 ## 5. Enqueue a small task
 
-Write a bounded issue with an observable finish line. Add `agent:ready` and one
-of `agent:codex`, then leave it in `Todo`.
+Write a bounded issue with an observable finish line. Add `agent:codex` and
+leave the issue wherever it is. The next reconcile claims it, moves it to
+`In Progress`, and creates a draft PR. The provider label stays on for the
+whole task and is removed on merge.
 
 The [Linear integration](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/integrations/linear.ts)
 and [reconciler](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/reconcile.ts)
-move it to `In Progress`, remove `agent:ready`, and create a draft PR. Visual
+move it to `In Progress` and create a draft PR. Visual
 changes use [Docker capture](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/host/docker.ts)
 and [host evidence upload](https://github.com/shepherdjerred/monorepo/blob/main/packages/justin-principal-engineer/src/host/evidence.ts):
 the host uploads only the resulting trusted PNG when the agent returns a known
@@ -107,12 +108,12 @@ Inspect the reason in Linear or local status:
 bun packages/justin-principal-engineer/src/cli.ts daemon status
 ```
 
-Resolve the external problem or add the missing decision. In Linear, move the
-issue to `Todo`, remove `agent:needs-human`, and add `agent:ready` while keeping
-exactly one provider label.
+Resolve the external problem or add the missing decision. In Linear, remove
+`agent:needs-human`. The provider label is still on the issue, so the next
+reconcile requeues it directly.
 
 The runner restores the phase recorded before parking and reuses the task clone.
-Other ready issues can run while this task remains parked.
+Other queued issues can run while this task remains parked.
 
 ## Related
 

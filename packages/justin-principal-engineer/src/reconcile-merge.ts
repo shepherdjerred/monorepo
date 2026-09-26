@@ -60,7 +60,7 @@ export async function mergeTask(input: {
       }
       await github.merge(pr.number, pr.headRefOid);
     }
-    await input.linear.complete(state.issue.identifier, pr.url);
+    await input.linear.complete(state.issue, pr.url);
     await input.save(state, "done", {
       latestHeadSha: pr.headRefOid,
       resumePhase: null,

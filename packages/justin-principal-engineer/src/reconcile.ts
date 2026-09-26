@@ -202,7 +202,7 @@ export class Reconciler {
         if (output.status !== "no_change") {
           throw new Error(`Agent reported ${output.status} without a change`);
         }
-        await this.linear.completeNoChange(state.issue.identifier);
+        await this.linear.completeNoChange(state.issue);
         await this.save(state, "done", {
           lastAgentOutput: persistedOutput,
           pendingFeedback: [],

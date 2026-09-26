@@ -32,11 +32,12 @@ export function providerForIssue(issue: LinearIssue): Provider | undefined {
   return providers.length === 1 ? providers[0] : undefined;
 }
 
+const TERMINAL_STATE_TYPES = new Set(["completed", "canceled"]);
+
 export function isEligibleIssue(issue: LinearIssue): boolean {
   const issueLabels = labels(issue);
   return (
-    issue.state.type === "unstarted" &&
-    issueLabels.has(LABEL_READY) &&
+    !TERMINAL_STATE_TYPES.has(issue.state.type) &&
     !issueLabels.has(LABEL_NEEDS_HUMAN) &&
     providerForIssue(issue) !== undefined
   );
@@ -82,10 +83,17 @@ export class LinearClient {
     const output = await this.command([
       "issue",
       "query",
-      "--team",
-      this.team,
+      "--all-teams",
+      "--label",
+      "agent:codex",
+      "--state",
+      "triage",
+      "--state",
+      "backlog",
       "--state",
       "unstarted",
+      "--state",
+      "started",
       "--limit",
       "0",
       "--json",
@@ -119,16 +127,28 @@ export class LinearClient {
     );
   }
 
+  private finishArgs(
+    issue: LinearIssue,
+    state: string,
+    stripProvider: boolean,
+  ): string[] {
+    const args = ["issue", "update", issue.identifier, "--state", state];
+    const present = labels(issue);
+    const removable = [LABEL_NEEDS_HUMAN, LABEL_READY];
+    const provider = providerForIssue(issue);
+    if (stripProvider && provider !== undefined) {
+      removable.push(`agent:${provider}`);
+    }
+    for (const label of removable) {
+      if (present.has(label)) args.push("--remove-label", label);
+    }
+    return args;
+  }
+
   public async claim(issue: LinearIssue): Promise<void> {
-    await this.command([
-      "issue",
-      "update",
-      issue.identifier,
-      "--state",
-      "In Progress",
-      "--remove-label",
-      LABEL_READY,
-    ]);
+    // The provider label stays on through the whole task so that clearing
+    // agent:needs-human requeues without relabeling. Only legacy labels go.
+    await this.command(this.finishArgs(issue, "In Progress", false));
     await this.comment(
       issue.identifier,
       "Claimed by `justin-principal-engineer`. Work will continue in short, durable turns; this process is not holding an agent open while it waits.",
@@ -146,31 +166,15 @@ export class LinearClient {
     await this.comment(identifier, `Human input needed: ${reason}`);
   }
 
-  public async complete(identifier: string, prUrl: string): Promise<void> {
-    await this.command([
-      "issue",
-      "update",
-      identifier,
-      "--state",
-      "Done",
-      "--remove-label",
-      LABEL_NEEDS_HUMAN,
-    ]);
-    await this.comment(identifier, `Merged: ${prUrl}`);
+  public async complete(issue: LinearIssue, prUrl: string): Promise<void> {
+    await this.command(this.finishArgs(issue, "Done", true));
+    await this.comment(issue.identifier, `Merged: ${prUrl}`);
   }
 
-  public async completeNoChange(identifier: string): Promise<void> {
-    await this.command([
-      "issue",
-      "update",
-      identifier,
-      "--state",
-      "Done",
-      "--remove-label",
-      LABEL_NEEDS_HUMAN,
-    ]);
+  public async completeNoChange(issue: LinearIssue): Promise<void> {
+    await this.command(this.finishArgs(issue, "Done", true));
     await this.comment(
-      identifier,
+      issue.identifier,
       "No change needed; the requested state was already present.",
     );
   }
