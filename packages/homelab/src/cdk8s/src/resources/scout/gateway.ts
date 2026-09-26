@@ -1,3 +1,4 @@
+import { addAnthropicFederation } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import {
   Cpu,
   Deployment,
@@ -110,7 +111,7 @@ export type ScoutGatewayDeploymentOptions = {
    * `voiceStateAccess` to `combined` and `gateway` only, because the subsystem
    * reads an active voice connection's audio. This is the pod that runs
    * `/scout join`, so it is the pod that needs the credential — carrying it on
-   * the application pod instead would leave `OPENAI_API_KEY_FILE` pointing at a
+   * the application pod instead would leave `VOICE_OPENAI_API_KEY_FILE` pointing at a
    * path that does not exist here.
    */
   readonly voiceSecretMount?: {
@@ -307,6 +308,10 @@ export function createScoutGatewayDeployment(
   // would relabel the lake out from under the publisher.
   applyZfsVolumeSelinuxRelabeling(deployment, options.selinuxLevel);
 
+  // Discord commands run model calls on this role too, with the same stage
+  // identity as the application pod: the federation rule trusts every service
+  // account in the namespace.
+  addAnthropicFederation(deployment, { workload: `scout-${stage}` });
   setRevisionHistoryLimit(deployment);
 
   new Service(chart, `scout-gateway-service-${stage}`, {

@@ -20,7 +20,7 @@ async function main(): Promise<void> {
   const output = await runCodexTurn({
     prompt: input.prompt,
     model: input.model,
-    apiKey: requireCredential("OPENROUTER_API_KEY"),
+    apiKey: requireCredential("OPENAI_API_KEY"),
   });
   process.stdout.write(`JPE_RESULT:${JSON.stringify(output)}\n`);
 }

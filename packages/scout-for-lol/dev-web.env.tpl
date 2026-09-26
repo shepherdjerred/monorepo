@@ -50,11 +50,13 @@ SCOUT_DEV_CONSUMER_PREVIEW=true
 SCOUT_DEV_CONSUMER_GUILD_ID=1337623164146155593
 
 # ── AI (report editor + explore) ──────────────────────────────────────
-# Every model call now goes through OpenRouter, so without this the backend
-# still starts (unresolvedSecrets() does not validate the AI key) but every
+# Scout calls OpenAI and Google directly. Without these the backend still
+# starts (unresolvedSecrets() does not validate the AI keys) but every
 # report-editor and Explore turn fails at the model call. Same BETA item as the
-# secrets above, and the same field the deployed beta backend reads.
-OPENROUTER_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/OPENROUTER_API_KEY
+# secrets above, and the same fields the deployed beta backend reads, so local
+# spend counts against the beta projects' hard caps.
+OPENAI_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/OPENAI_API_KEY
+GEMINI_API_KEY=op://v64ocnykdqju4ui6j6pua56xw4/rtu44pohnp5ixdp2njuv5f6t2e/GEMINI_API_KEY
 BETTING_PARLAY_AI_MODEL=gpt-5.6-sol
 
 # dev:web derives DEV_USER_GUILDS and EXPLORE_GUILD_ALLOWLIST from the local

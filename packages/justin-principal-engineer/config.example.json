@@ -24,7 +24,7 @@
   },
   "agents": {
     "codex": {
-      "openRouterApiKey": "op://Automation/OpenRouter/credential",
+      "openAiApiKey": "op://Automation/OpenAI/credential",
       "model": "gpt-5.6-luna"
     }
   },

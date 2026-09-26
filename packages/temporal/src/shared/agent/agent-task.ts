@@ -258,7 +258,7 @@ const AgentTaskWireFollowUpSchema = z
   .object({
     title: z.string().min(1),
     prompt: z.string().min(1),
-    // New generated follow-ups execute through the Codex/OpenRouter path.
+    // New generated follow-ups execute through the Codex SDK path.
     // Claude remains accepted only by the legacy result schema for replay.
     provider: z.literal("codex").nullable(),
     runAt: z.iso.datetime({ offset: true }).nullable(),

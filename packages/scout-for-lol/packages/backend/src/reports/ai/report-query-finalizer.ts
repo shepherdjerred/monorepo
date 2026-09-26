@@ -2,7 +2,7 @@ import {
   generateValidatedObject,
   StructuredOutputUsageError,
   type GenerateValidatedObjectResult,
-  type OpenRouterRuntime,
+  type LlmRuntime,
 } from "@shepherdjerred/llm-runtime";
 import { REPORT_AI_MAX_OUTPUT_TOKENS } from "@scout-for-lol/data";
 import { recordTokenUsage } from "#src/league/review/openai-budget.ts";
@@ -34,7 +34,7 @@ function chargeFinalizerTokens(
  * counters are moved before the error propagates.
  */
 export async function finalizeReportDraft(input: {
-  runtime: OpenRouterRuntime;
+  runtime: LlmRuntime;
   model: string;
   runId: string;
   prompt: string;

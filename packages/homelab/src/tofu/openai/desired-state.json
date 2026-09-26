@@ -40,6 +40,21 @@
     "pokemon": {
       "project_id": "proj_WSOt43df4BHtErRdEWXM7c25",
       "name": "Pokemon"
+    },
+    "scout-beta": {
+      "name": "Scout for LoL (beta)"
+    },
+    "buildkite": {
+      "name": "Buildkite CI"
+    },
+    "birmel-active-2026-09": {
+      "name": "Birmel"
+    },
+    "scout-prod-active-2026-09": {
+      "name": "Scout for LoL (prod)"
+    },
+    "temporal-active-2026-09": {
+      "name": "Temporal"
     }
   },
   "openai_service_accounts": {
@@ -73,6 +88,56 @@
           "vault_field": "OPENAI_API_KEY"
         }
       ]
+    },
+    "birmel-prod-2026-09": {
+      "project_key": "birmel-active-2026-09",
+      "name": "birmel prod 2026-09",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "w5c27dzybxor3j6dzl7lub2soe",
+          "vault_field": "OPENAI_API_KEY"
+        }
+      ]
+    },
+    "scout-prod-2026-09": {
+      "project_key": "scout-prod-active-2026-09",
+      "name": "scout prod 2026-09",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "pacrc4wfbtct4y3qazkvazop5a",
+          "vault_field": "OPENAI_API_KEY"
+        }
+      ]
+    },
+    "scout-beta-2026-09": {
+      "project_key": "scout-beta",
+      "name": "scout beta 2026-09",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "rtu44pohnp5ixdp2njuv5f6t2e",
+          "vault_field": "OPENAI_API_KEY"
+        }
+      ]
+    },
+    "temporal-prod-2026-09": {
+      "project_key": "temporal-active-2026-09",
+      "name": "temporal prod 2026-09",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "mjgnqqh37jxyzseqrddde2jgaq",
+          "vault_field": "OPENAI_API_KEY"
+        }
+      ]
+    },
+    "buildkite-release-2026-09": {
+      "project_key": "buildkite",
+      "name": "buildkite release 2026-09",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "2r6nqphyvaegtnbjgcg4avff3m",
+          "vault_field": "OPENAI_API_KEY"
+        }
+      ]
     }
   },
   "openai_organization_users": {
@@ -91,6 +156,51 @@
       "notification_channel_type": "email",
       "notification_channel_recipients": ["openai@sjer.red"],
       "notification_channel_subject_prefix": "scout-openai"
+    },
+    "birmel-monthly": {
+      "project_key": "birmel-active-2026-09",
+      "threshold_amount": 5,
+      "currency": "USD",
+      "interval": "month",
+      "notification_channel_type": "email",
+      "notification_channel_recipients": ["openai@sjer.red"],
+      "notification_channel_subject_prefix": "birmel-openai"
+    },
+    "scout-prod-monthly": {
+      "project_key": "scout-prod-active-2026-09",
+      "threshold_amount": 15,
+      "currency": "USD",
+      "interval": "month",
+      "notification_channel_type": "email",
+      "notification_channel_recipients": ["openai@sjer.red"],
+      "notification_channel_subject_prefix": "scout-prod-openai"
+    },
+    "scout-beta-monthly": {
+      "project_key": "scout-beta",
+      "threshold_amount": 5,
+      "currency": "USD",
+      "interval": "month",
+      "notification_channel_type": "email",
+      "notification_channel_recipients": ["openai@sjer.red"],
+      "notification_channel_subject_prefix": "scout-beta-openai"
+    },
+    "temporal-monthly": {
+      "project_key": "temporal-active-2026-09",
+      "threshold_amount": 20,
+      "currency": "USD",
+      "interval": "month",
+      "notification_channel_type": "email",
+      "notification_channel_recipients": ["openai@sjer.red"],
+      "notification_channel_subject_prefix": "temporal-openai"
+    },
+    "buildkite-monthly": {
+      "project_key": "buildkite",
+      "threshold_amount": 5,
+      "currency": "USD",
+      "interval": "month",
+      "notification_channel_type": "email",
+      "notification_channel_recipients": ["openai@sjer.red"],
+      "notification_channel_subject_prefix": "buildkite-openai"
     }
   },
   "openai_groups": {},
@@ -104,7 +214,68 @@
   "openai_project_groups": {},
   "openai_project_group_roles": {},
   "openai_project_data_retention": {},
-  "openai_project_model_permissions": {},
+  "openai_project_model_permissions": {
+    "birmel": {
+      "project_key": "birmel-active-2026-09",
+      "mode": "allow_list",
+      "model_ids": [
+        "gpt-5.4-mini",
+        "gpt-5.4-nano",
+        "gpt-5.6-luna",
+        "gpt-5.6-sol",
+        "gpt-5.6-terra",
+        "text-embedding-3-small"
+      ]
+    },
+    "scout-prod": {
+      "project_key": "scout-prod-active-2026-09",
+      "mode": "allow_list",
+      "model_ids": [
+        "gpt-5.4-mini",
+        "gpt-5.4-nano",
+        "gpt-5.6-luna",
+        "gpt-5.6-sol",
+        "gpt-5.6-terra",
+        "text-embedding-3-small"
+      ]
+    },
+    "scout-beta": {
+      "project_key": "scout-beta",
+      "mode": "allow_list",
+      "model_ids": [
+        "gpt-5.4-mini",
+        "gpt-5.4-nano",
+        "gpt-5.6-luna",
+        "gpt-5.6-sol",
+        "gpt-5.6-terra",
+        "text-embedding-3-small"
+      ]
+    },
+    "temporal": {
+      "project_key": "temporal-active-2026-09",
+      "mode": "allow_list",
+      "model_ids": [
+        "gpt-5.4-mini",
+        "gpt-5.4-nano",
+        "gpt-5.6-luna",
+        "gpt-5.6-sol",
+        "gpt-5.6-terra",
+        "text-embedding-3-small"
+      ]
+    },
+    "buildkite": {
+      "project_key": "buildkite",
+      "mode": "allow_list",
+      "model_ids": [
+        "gpt-5.4-mini",
+        "gpt-5.4-nano",
+        "gpt-5.6-luna",
+        "gpt-5.6-sol",
+        "gpt-5.6-terra",
+        "text-embedding-3-small"
+      ]
+    }
+  },
   "openai_project_hosted_tool_permissions": {},
   "openai_project_spend_limits": {
     "scout-active-monthly-2026-09": {
@@ -115,6 +286,36 @@
     },
     "scout-monthly": {
       "project_key": "scout",
+      "threshold_amount": 2500,
+      "currency": "USD",
+      "interval": "month"
+    },
+    "birmel-monthly": {
+      "project_key": "birmel-active-2026-09",
+      "threshold_amount": 1000,
+      "currency": "USD",
+      "interval": "month"
+    },
+    "scout-beta-monthly": {
+      "project_key": "scout-beta",
+      "threshold_amount": 1000,
+      "currency": "USD",
+      "interval": "month"
+    },
+    "temporal-monthly": {
+      "project_key": "temporal-active-2026-09",
+      "threshold_amount": 4000,
+      "currency": "USD",
+      "interval": "month"
+    },
+    "buildkite-monthly": {
+      "project_key": "buildkite",
+      "threshold_amount": 1000,
+      "currency": "USD",
+      "interval": "month"
+    },
+    "scout-prod-monthly": {
+      "project_key": "scout-prod-active-2026-09",
       "threshold_amount": 2500,
       "currency": "USD",
       "interval": "month"

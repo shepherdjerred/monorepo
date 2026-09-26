@@ -152,7 +152,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
-    memo: "Weekly LLM model-catalog cross-check vs models.dev, LiteLLM, and OpenRouter (opens a PR on drift)",
+    memo: "Weekly LLM model-catalog cross-check vs models.dev and LiteLLM (opens a PR on drift)",
   },
   {
     id: "scout-season-refresh-weekly",
@@ -168,7 +168,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     // Two 30-minute research attempts, their 5-minute backoff, and both
     // possible three-attempt report deliveries fit inside this bound.
     workflowExecutionTimeout: "90 minutes",
-    memo: "Weekly LoL season-date drift check (Codex SDK Luna through OpenRouter → PR if drifted)",
+    memo: "Weekly LoL season-date drift check (Codex SDK Luna on OpenAI → PR if drifted)",
   },
   {
     id: "scout-showcase-refresh-weekly",
@@ -357,7 +357,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     requiredEnvironment: [
       "GLITTER_DISCORD_GUILD_ID",
       ...GLITTER_CORPUS_STORAGE_ENV,
-      "OPENROUTER_API_KEY",
+      "OPENAI_API_KEY",
       "GITHUB_APP_ID",
       "GITHUB_APP_INSTALLATION_ID",
       "GITHUB_APP_PRIVATE_KEY",

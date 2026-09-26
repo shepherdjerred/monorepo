@@ -58,10 +58,10 @@ test("forces every runtime-selected fixed-corpus lane", () => {
 test("accepts only one exact main-only platform apply request", () => {
   expect(
     requestedPlatformTofuApply({
-      TOFU_PLATFORM_APPLY: "openrouter",
+      TOFU_PLATFORM_APPLY: "discord",
       BUILDKITE_BRANCH: "main",
     }),
-  ).toBe("openrouter");
+  ).toBe("discord");
   expect(requestedPlatformTofuApply({})).toBeUndefined();
   expect(() =>
     requestedPlatformTofuApply({

@@ -46,8 +46,11 @@ stable image SHA with `--stable-build-id` on the first `start` command.
 For a scheduled workflow, pause the exact schedule before changing the bundle.
 After the candidate canary succeeds, trigger one bounded run and confirm the
 workflow completes before resuming the schedule. This is especially important
-for the complimentary OpenAI monitor: its Activity runs on the isolated
-`billing` queue, while the schedule starts on `monorepo-workflows`.
+for the billed LLM cost reconciliation: its Activity runs on the isolated
+`billing` queue, while the schedule starts on `monorepo-workflows`. A new
+schedule whose Workflow type only exists in the candidate should register with
+`initialPauseNote`, as `llm-billed-cost-hourly` does, so it cannot fail on the
+stable bundle and trip the alerts that gate `advance`.
 
 Inspect the candidate without changing routing:
 
@@ -140,26 +143,24 @@ Image commit-back retains a Workflow candidate whenever stable and candidate
 differ, so a new build cannot replace an in-flight candidate and will not
 advance the track again until this post-rollback reset lands.
 
-## Verify the complimentary OpenAI monitor
+## Verify the billed LLM cost reconciliation
 
-The monitor is healthy only when all three signals agree: the billing Activity
-has completed, official Usage and Costs data is current, and Scout review
-telemetry reports `byok="true"`. Check the current-day gauges and alert state in
-Prometheus after OpenAI's ingestion delay:
+The reconciliation is healthy when the billing Activity has completed and both
+providers report current billed cost. After the candidate carries the
+`runLlmBilledCostReconciliation` Workflow, unpause `llm-billed-cost-hourly`,
+trigger one run, and check Prometheus:
 
 ```promql
-sum by (model, service_tier, type) (openai_project_usage_tokens)
-max(openai_project_cost_usd)
-time() - max(openai_usage_reconciliation_last_success_timestamp_seconds)
-ALERTS{alertname=~"OpenAiComplimentary.*|ScoutOpenAiNotByok"}
+sum by (provider, account, window) (llm_billed_cost_usd)
+time() - max by (provider) (llm_billed_reconciliation_last_success_timestamp_seconds)
+ALERTS{alertname=~"LlmBilled.*"}
 ```
 
-`ScoutOpenAiNotByok` matches the production scrape label
-`exported_service="scout-for-lol-backend"` and `byok="false|unknown"`.
-`OpenAiComplimentaryMonitorStale` selects the billing worker by
+`LlmBilledReconciliationStale` selects the billing worker by
 `namespace="temporal",container="temporal-billing-worker"`; pod-name prefixes
-are not stable scrape labels. Any `default` service-tier tokens or non-zero
-official project cost is actionable, even when the cause is quota exhaustion.
+are not stable scrape labels. See
+[Attribute LLM spend](/how-to/attribute-llm-spend/#compare-live-and-billed-spend)
+for how to read billed against live cost.
 
 ## Native diagnostics
 

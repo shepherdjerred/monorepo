@@ -8,7 +8,6 @@ public final class APIPlatformModel {
   public private(set) var isRefreshing = false
   public private(set) var cacheErrorMessage: String?
 
-  private let openRouter: OpenRouterAPIClient
   private let openAI: OpenAIAPIClient
   private let anthropic: AnthropicAPIClient
   private let credentials: APIPlatformCredentialStore
@@ -21,7 +20,6 @@ public final class APIPlatformModel {
 
   public init(
     settings: AppSettings,
-    openRouter: OpenRouterAPIClient = OpenRouterAPIClient(),
     openAI: OpenAIAPIClient = OpenAIAPIClient(),
     anthropic: AnthropicAPIClient = AnthropicAPIClient(),
     credentials: APIPlatformCredentialStore = APIPlatformCredentialStore(),
@@ -29,7 +27,6 @@ public final class APIPlatformModel {
     providerTimeout: Duration = .seconds(25)
   ) {
     self.settings = settings
-    self.openRouter = openRouter
     self.openAI = openAI
     self.anthropic = anthropic
     self.credentials = credentials
@@ -188,7 +185,6 @@ public final class APIPlatformModel {
       }
       let snapshot = try await Self.fetch(
         platform: platform,
-        openRouter: openRouter,
         openAI: openAI,
         anthropic: anthropic,
         token: token,
@@ -222,7 +218,6 @@ public final class APIPlatformModel {
 
   nonisolated private static func fetch(
     platform: APIPlatformID,
-    openRouter: OpenRouterAPIClient,
     openAI: OpenAIAPIClient,
     anthropic: AnthropicAPIClient,
     token: String,
@@ -231,8 +226,6 @@ public final class APIPlatformModel {
     try await withThrowingTaskGroup(of: APIPlatformSnapshot.self) { group in
       group.addTask {
         switch platform {
-        case .openRouter:
-          try await openRouter.fetchSnapshot(token: token)
         case .openAI:
           try await openAI.fetchSnapshot(token: token)
         case .anthropic:

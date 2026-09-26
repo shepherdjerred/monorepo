@@ -1,12 +1,12 @@
 # Monarch
 
-AI-powered transaction categorizer for [Monarch Money](https://www.monarchmoney.com/). Fetches transactions via the Monarch API, enriches them with data from external sources (Amazon, Venmo, Bilt/Conservice, USAA, Seattle City Light, Apple receipts, Costco, Workday payslips, Schwab equity awards), classifies them with stable catalog models through OpenRouter, and optionally applies the changes back. The full pipeline design lives in [ARCHITECTURE.md](ARCHITECTURE.md).
+AI-powered transaction categorizer for [Monarch Money](https://www.monarchmoney.com/). Fetches transactions via the Monarch API, enriches them with data from external sources (Amazon, Venmo, Bilt/Conservice, USAA, Seattle City Light, Apple receipts, Costco, Workday payslips, Schwab equity awards), classifies them with stable catalog models called directly on their provider, and optionally applies the changes back. The full pipeline design lives in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Setup
 
 Set the following environment variables:
 
-- `OPENROUTER_API_KEY` (required, except for `--notes-only`) -- service-specific OpenRouter API key
+- Credentials for the provider your `--model` routes to (required, except for `--notes-only` and `--derived-only`): `OPENAI_API_KEY` for GPT models, `ANTHROPIC_API_KEY` for Claude
 - `CONSERVICE_COOKIES` (optional) -- fallback for `--conservice-cookies`
 
 Authenticate to Monarch with a browser session:
@@ -60,7 +60,7 @@ General:
 | `--output <path>`          | Save proposed changes to JSON                        |
 | `--checkpoint-file <path>` | Override Tier 2 recovery checkpoint path             |
 | `--force-fetch`            | Re-fetch transactions even if cached                 |
-| `--skip-research`          | Disable OpenRouter web search for merchants          |
+| `--skip-research`          | Disable provider web search for merchants            |
 | `--rebuild-kb`             | Rebuild the merchant knowledge base from scratch     |
 | `--skip-enrich`            | Skip the enrichment pipeline                         |
 | `--suggest`                | Print verification suggestions (default: true)       |
@@ -94,7 +94,7 @@ search setting, or batch size changed.
 
 Structured classifications use the shared Zod finalizer. Invalid output is
 repaired without replaying web searches or local tier-3 tools. Research is
-enabled by default through OpenRouter and can be disabled with
+enabled by default through the model provider's own web search and can be disabled with
 `--skip-research`.
 
 ## Data Sources
@@ -155,7 +155,7 @@ into tier-1 defaults.
   `--apply`, after writing a vault backup) delete duplicate transactions
   created when an account re-link backfills history an earlier connection
   already synced.
-- `OPENROUTER_API_KEY=... bun run scripts/match-emails.ts [--apply] [--limit N]
+- `OPENAI_API_KEY=... bun run scripts/match-emails.ts [--apply] [--limit N]
 [--rebuild-index]` -- match MailMate emails to transactions via the shared
   email index (`src/lib/mail/`): a DuckDB date-window join plus token-affinity
   scoring shortlists candidate emails per transaction, the model judges each

@@ -89,9 +89,9 @@ and does not add a toolkit command.
 | pokeemerald-data    | daily 04:30 | deterministic                    | PR                                                                          |
 | protobufjs v8 watch | Mon 09:00   | deterministic                    | heartbeat email                                                             |
 
-Ordinary LLM summaries use the shared OpenRouter runtime. The deterministic
-`llm-catalog-refresh` sync compares the reviewable repository catalog with
-models.dev, LiteLLM, and OpenRouter's text, image, and embedding catalogs. It
+Ordinary LLM summaries use the shared direct-provider runtime. The
+deterministic `llm-catalog-refresh` sync compares the reviewable repository
+catalog with models.dev and LiteLLM. It
 fails when a current ordinary-inference route disappears instead of silently
 changing model identity.
 

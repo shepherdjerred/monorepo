@@ -1,5 +1,5 @@
 import type { HomelabAuditCollection } from "./homelab-audit-collectors.ts";
-import { generateBoundedSynthesis } from "#activities/agent/openrouter-runtime.ts";
+import { generateBoundedSynthesis } from "#activities/agent/synthesis-runtime.ts";
 
 export async function synthesizeHomelabAuditEvidence(
   collection: HomelabAuditCollection,

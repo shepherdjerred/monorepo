@@ -133,9 +133,9 @@ export async function callTextModel(params: {
   if (response.outputTokens !== undefined) {
     trace.tokensCompletion = response.outputTokens;
   }
-  if (response.openRouter !== undefined) {
-    trace.transport = "openrouter";
-    trace.openRouter = response.openRouter;
+  if (response.provider !== undefined) {
+    trace.transport = response.provider.provider;
+    trace.provider = response.provider;
   }
 
   return { text, trace };

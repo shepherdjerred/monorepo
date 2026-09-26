@@ -1,27 +1,34 @@
 import { context, propagation, trace } from "@opentelemetry/api";
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
-import { getModel, requireOpenRouterRoute } from "@shepherdjerred/llm-models";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createOpenAI } from "@ai-sdk/openai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import {
+  getModel,
+  requireNativeRoute,
+  type NativeRoute,
+  type Provider,
+} from "@shepherdjerred/llm-models";
 import { RepositoryOpenTelemetry } from "@shepherdjerred/llm-observability/ai-sdk-telemetry";
-import {
-  attributionHeaders,
-  createAttributedFetch,
-  type AttributedResponseObservation,
-} from "./attributed-fetch.ts";
-import {
-  OpenRouterMetricsTelemetry,
-  recordRouterResponse,
-  runtimeMetrics,
-} from "./metrics.ts";
-import {
-  defaultOpenRouterRuntimeLogger,
-  logOpenRouterResponse,
-} from "./logging.ts";
+import { createFederatedAnthropicFetch } from "./anthropic-federation.ts";
+import { LlmMetricsTelemetry, runtimeMetrics } from "./metrics.ts";
+import { defaultLlmRuntimeLogger } from "./logging.ts";
 import type {
   CallOptionsInput,
+  LlmRuntimeOptions,
   ModelRequirements,
-  OpenRouterRuntimeOptions,
   RequiredModelCapability,
+  RuntimeFetch,
 } from "./types.ts";
+
+/**
+ * `@ai-sdk/anthropic` refuses to construct without some credential, and it
+ * falls back to `ANTHROPIC_API_KEY` when none is passed. Under federation the
+ * real credential is attached per-request by the fetch wrapper, so we hand the
+ * provider an obviously-inert token instead of letting it reach for the
+ * environment. If this string ever appears in an Authorization header, the
+ * fetch wrapper did not run.
+ */
+const FEDERATION_PLACEHOLDER_TOKEN = "federation-token-attached-per-request";
 
 function requireCapability(
   modelId: string,
@@ -39,9 +46,7 @@ function traceFields(input: CallOptionsInput): Record<string, string> {
   const traceId = input.traceContext?.traceId ?? activeSpanContext?.traceId;
   const parentSpanId =
     input.traceContext?.parentSpanId ?? activeSpanContext?.spanId;
-  const fields: Record<string, string> = {
-    generation_name: input.workload,
-  };
+  const fields: Record<string, string> = { generation_name: input.workload };
   if (traceId !== undefined) fields["trace_id"] = traceId;
   if (parentSpanId !== undefined) fields["parent_span_id"] = parentSpanId;
   if (input.traceContext?.traceName !== undefined) {
@@ -50,107 +55,194 @@ function traceFields(input: CallOptionsInput): Record<string, string> {
   return fields;
 }
 
-function modelSettings(requirements: ModelRequirements) {
-  return {
-    usage: { include: true },
-    structuredOutputs: { strict: true },
-    provider: {
-      allow_fallbacks: false,
-      data_collection: "deny" as const,
-      require_parameters:
-        requirements.capabilities?.some(
-          (capability) =>
-            capability === "tools" || capability === "structuredOutputs",
-        ) ?? false,
-    },
-  };
-}
-
-function resolveModel(modelId: string, requirements: ModelRequirements) {
-  const route = requireOpenRouterRoute(modelId, requirements.endpoint);
+function resolveRoute(
+  modelId: string,
+  requirements: ModelRequirements,
+): NativeRoute {
+  const route = requireNativeRoute(modelId, requirements.endpoint);
   for (const capability of requirements.capabilities ?? []) {
     requireCapability(modelId, capability);
   }
   return route;
 }
 
+type ProviderClients = {
+  openai: ReturnType<typeof createOpenAI>;
+  anthropic: ReturnType<typeof createAnthropic>;
+  google: ReturnType<typeof createGoogleGenerativeAI>;
+};
+
 /**
- * Record metrics and a log line for one observed OpenRouter response.
- *
- * Callers invoke this fire-and-forget, so it must never reject: a throwing
- * metrics registry or caller-supplied logger would otherwise surface as an
- * unhandled rejection and can take the process down. Failures are reported on
- * the console rather than through `logger`, which is one of the things that
- * may have just thrown.
+ * A provider and its client as a discriminated pair, so a caller that switches
+ * on `provider` gets the right client type in each arm. A bare
+ * `{ provider: Provider; client: ProviderClients[Provider] }` would widen the
+ * client to the union and hide every provider-specific tool.
  */
-async function recordObservedResponse(input: {
-  metrics: ReturnType<typeof runtimeMetrics> | undefined;
-  observation: Promise<AttributedResponseObservation>;
-  service: string;
-  logger: NonNullable<OpenRouterRuntimeOptions["logger"]>;
-}): Promise<void> {
-  try {
-    const observation = await input.observation;
-    recordRouterResponse(input.metrics, {
-      service: input.service,
-      ...observation,
-    });
-    logOpenRouterResponse({
-      logger: input.logger,
-      observation,
-      service: input.service,
-    });
-  } catch (error: unknown) {
-    console.warn(
-      JSON.stringify({
-        timestamp: new Date().toISOString(),
-        level: "error",
-        message: "OpenRouter response observation failed",
-        service: input.service,
-        error: error instanceof Error ? error.message : String(error),
-      }),
+type ProviderHandle = {
+  [P in Provider]: { provider: P; client: ProviderClients[P] };
+}[Provider];
+
+/**
+ * The AI SDK types its `fetch` hook as the full `typeof fetch`, which in Bun
+ * carries `preconnect`. Our public `RuntimeFetch` is deliberately the smaller
+ * request/response shape so tests and callers can pass a plain function, so it
+ * gets adapted here rather than widening the public type.
+ */
+function asFetchFunction(runtimeFetch: RuntimeFetch): typeof fetch {
+  const adapted: typeof fetch = async (input, init) =>
+    runtimeFetch(input, init);
+  adapted.preconnect = globalThis.fetch.preconnect;
+  return adapted;
+}
+
+/**
+ * Build providers lazily and once.
+ *
+ * Lazily, because a service that only ever calls OpenAI should not have to
+ * hold Anthropic or Google configuration — it only fails if it actually asks
+ * for a model routed there. Once, because the Anthropic wrapper caches a
+ * federated token and rebuilding it per call would re-exchange a single-use
+ * JWT on every request.
+ */
+function createProviderClients(options: LlmRuntimeOptions): {
+  get: <P extends Provider>(provider: P) => ProviderClients[P];
+} {
+  const baseFetch: RuntimeFetch | undefined = options.fetch;
+  const cache: { [P in Provider]?: ProviderClients[P] } = {};
+
+  const builders: {
+    [P in Provider]: () => ProviderClients[P];
+  } = {
+    openai: () => {
+      const credentials = options.credentials.openai;
+      if (credentials === undefined) {
+        throw new Error(
+          `${options.service}: model routes to OpenAI but no OpenAI credentials were configured`,
+        );
+      }
+      return createOpenAI({
+        apiKey: credentials.apiKey,
+        ...(baseFetch !== undefined && { fetch: asFetchFunction(baseFetch) }),
+      });
+    },
+    anthropic: () => {
+      const credentials = options.credentials.anthropic;
+      if (credentials === undefined) {
+        throw new Error(
+          `${options.service}: model routes to Anthropic but no Anthropic credentials were configured`,
+        );
+      }
+      if (credentials.kind === "apiKey") {
+        return createAnthropic({
+          apiKey: credentials.apiKey,
+          ...(baseFetch !== undefined && { fetch: asFetchFunction(baseFetch) }),
+        });
+      }
+      return createAnthropic({
+        authToken: FEDERATION_PLACEHOLDER_TOKEN,
+        fetch: asFetchFunction(
+          createFederatedAnthropicFetch(credentials, {
+            fetch: baseFetch ?? fetch,
+          }),
+        ),
+      });
+    },
+    google: () => {
+      const credentials = options.credentials.google;
+      if (credentials === undefined) {
+        throw new Error(
+          `${options.service}: model routes to Google but no Google credentials were configured`,
+        );
+      }
+      return createGoogleGenerativeAI({
+        apiKey: credentials.apiKey,
+        ...(baseFetch !== undefined && { fetch: asFetchFunction(baseFetch) }),
+      });
+    },
+  };
+
+  return {
+    get<P extends Provider>(provider: P): ProviderClients[P] {
+      const existing = cache[provider];
+      if (existing !== undefined) return existing;
+      const built = builders[provider]();
+      cache[provider] = built;
+      return built;
+    },
+  };
+}
+
+/**
+ * Refuse to run federated and keyed at the same time.
+ *
+ * The Anthropic SDKs rank `ANTHROPIC_API_KEY` above every federation tier, so a
+ * leftover key silently wins and a deployment that believes it migrated is
+ * still authenticating with a static secret. Our own fetch wrapper does not
+ * consult the environment, but a key sitting in the pod is still evidence the
+ * migration is half-done — and the Codex and Claude agent paths in this repo
+ * DO read it. Fail loudly at construction rather than let it rot.
+ */
+function assertNoShadowingAnthropicKey(options: LlmRuntimeOptions): void {
+  if (options.credentials.anthropic?.kind !== "federation") return;
+  const shadow = Bun.env["ANTHROPIC_API_KEY"];
+  if (shadow !== undefined && shadow.trim() !== "") {
+    throw new Error(
+      `${options.service}: ANTHROPIC_API_KEY is set while Anthropic credentials are federated. ` +
+        `Unset it everywhere this workload runs — a static key shadows federation in the Anthropic SDKs.`,
     );
   }
 }
 
-export function createOpenRouterRuntime(options: OpenRouterRuntimeOptions) {
-  if (options.apiKey.trim() === "") {
-    throw new Error("OpenRouter API key must not be empty");
-  }
+/**
+ * Ask the provider to enforce the JSON schemas we send.
+ *
+ * The gateway took one `structuredOutputs.strict` flag for every model. OpenAI
+ * wants `strictJsonSchema` in its own provider options, and Anthropic and
+ * Google validate tool arguments against the schema without a flag. Without
+ * this, OpenAI silently accepts a tool call whose arguments do not match the
+ * schema, which turns a provider-side rejection into a runtime parse failure
+ * further downstream.
+ */
+/**
+ * OpenAI-only call options. The AI SDK hands `providerOptions.openai` to the
+ * OpenAI provider alone, so a prompt cache key is inert on other providers.
+ *
+ * `strictJsonSchema` needs the model to be known OpenAI; `promptCacheKey` is
+ * OpenAI's own cache partition, which the Responses API otherwise derives per
+ * request, so calls sharing a long prefix across sessions would never reuse it.
+ */
+function callProviderOptions(input: CallOptionsInput): {
+  providerOptions?: {
+    openai: { strictJsonSchema?: true; promptCacheKey?: string };
+  };
+} {
+  const strict =
+    input.model !== undefined &&
+    requireNativeRoute(input.model).provider === "openai";
+  const openai = {
+    ...(strict ? { strictJsonSchema: true as const } : {}),
+    ...(input.promptCacheKey === undefined
+      ? {}
+      : { promptCacheKey: input.promptCacheKey }),
+  };
+  return Object.keys(openai).length === 0
+    ? {}
+    : { providerOptions: { openai } };
+}
+
+export function createLlmRuntime(options: LlmRuntimeOptions) {
+  assertNoShadowingAnthropicKey(options);
+
   const metrics = runtimeMetrics(options.metricsRegister);
-  const logger = options.logger ?? defaultOpenRouterRuntimeLogger;
-  const responseObservations = new Map<
-    string,
-    Promise<AttributedResponseObservation>
-  >();
-  const provider = createOpenRouter({
-    apiKey: options.apiKey,
-    appName: options.appName,
-    compatibility: "strict",
-    headers: { "X-OpenRouter-Metadata": "enabled" },
-    fetch: createAttributedFetch(options.fetch ?? fetch, (input) => {
-      if (input.observationId !== undefined) {
-        responseObservations.set(input.observationId, input.observation);
-      }
-      // Fire-and-forget by design: recording must never block or fail a
-      // provider call. recordObservedResponse absorbs its own failures.
-      void recordObservedResponse({
-        metrics,
-        observation: input.observation,
-        service: options.service,
-        logger,
-      });
-    }),
-  });
+  const logger = options.logger ?? defaultLlmRuntimeLogger;
+  const providers = createProviderClients(options);
+
   const openTelemetry = new RepositoryOpenTelemetry({
     service: options.service,
     usage: true,
     providerMetadata: true,
     schema: true,
-    enrichSpan: () => ({
-      "llm.service": options.service,
-      "gen_ai.system": "openrouter",
-    }),
+    enrichSpan: () => ({ "llm.service": options.service }),
   });
 
   return {
@@ -158,52 +250,52 @@ export function createOpenRouterRuntime(options: OpenRouterRuntimeOptions) {
       modelId: string,
       capabilities: readonly RequiredModelCapability[] = [],
     ) {
-      const requirements = { endpoint: "language", capabilities } as const;
-      const route = resolveModel(modelId, requirements);
-      return provider.chat(route.modelId, modelSettings(requirements));
+      const route = resolveRoute(modelId, {
+        endpoint: "language",
+        capabilities,
+      });
+      return providers.get(route.provider).languageModel(route.modelId);
     },
     embeddingModel(modelId: string) {
-      const requirements = { endpoint: "embedding" } as const;
-      const route = resolveModel(modelId, requirements);
-      return provider.textEmbeddingModel(
-        route.modelId,
-        modelSettings(requirements),
-      );
+      const route = resolveRoute(modelId, { endpoint: "embedding" });
+      if (route.provider !== "openai") {
+        throw new Error(
+          `Model ${modelId} routes embeddings to ${route.provider}, which this runtime does not wire up`,
+        );
+      }
+      return providers.get("openai").embeddingModel(route.modelId);
     },
     imageModel(modelId: string) {
-      const requirements = { endpoint: "image" } as const;
-      const route = resolveModel(modelId, requirements);
-      return provider.imageModel(route.modelId, modelSettings(requirements));
+      const route = resolveRoute(modelId, { endpoint: "image" });
+      if (route.provider !== "google") {
+        throw new Error(
+          `Model ${modelId} routes images to ${route.provider}, which this runtime does not wire up`,
+        );
+      }
+      return providers.get("google").imageModel(route.modelId);
     },
-    tools: provider.tools,
+    /** The provider client behind a model, for provider-specific tools. */
+    providerFor(modelId: string): ProviderHandle {
+      const { provider } = requireNativeRoute(modelId);
+      switch (provider) {
+        case "openai": {
+          return { provider, client: providers.get("openai") };
+        }
+        case "anthropic": {
+          return { provider, client: providers.get("anthropic") };
+        }
+        case "google": {
+          return { provider, client: providers.get("google") };
+        }
+      }
+    },
     callOptions(input: CallOptionsInput) {
       const carrier: Record<string, string> = {};
       propagation.inject(context.active(), carrier);
       const routerTrace = traceFields(input);
-      const headers: Record<string, string> = {
-        ...carrier,
-        ...attributionHeaders({
-          workload: input.workload,
-          sessionId: input.sessionId,
-          traceId: routerTrace["trace_id"],
-          parentSpanId: routerTrace["parent_span_id"],
-          traceName: routerTrace["trace_name"],
-          observationId: input.observationId,
-        }),
-        ...(input.sessionId === undefined
-          ? {}
-          : { "x-session-id": input.sessionId }),
-      };
       return {
-        headers,
-        ...(input.promptCacheKey === undefined
-          ? {}
-          : {
-              // Spread into the request body by the OpenRouter provider.
-              providerOptions: {
-                openrouter: { prompt_cache_key: input.promptCacheKey },
-              },
-            }),
+        ...callProviderOptions(input),
+        headers: carrier,
         include: { requestBody: true, responseBody: true },
         telemetry: {
           isEnabled: true,
@@ -212,7 +304,7 @@ export function createOpenRouterRuntime(options: OpenRouterRuntimeOptions) {
           functionId: input.workload,
           integrations: [
             openTelemetry,
-            new OpenRouterMetricsTelemetry({
+            new LlmMetricsTelemetry({
               metrics,
               service: options.service,
               workload: input.workload,
@@ -223,18 +315,9 @@ export function createOpenRouterRuntime(options: OpenRouterRuntimeOptions) {
         },
       };
     },
-    async responseObservation(observationId: string) {
-      const observation = responseObservations.get(observationId);
-      if (observation === undefined) return;
-      try {
-        return await observation;
-      } finally {
-        responseObservations.delete(observationId);
-      }
-    },
     service: options.service,
     metrics,
   };
 }
 
-export type OpenRouterRuntime = ReturnType<typeof createOpenRouterRuntime>;
+export type LlmRuntime = ReturnType<typeof createLlmRuntime>;

@@ -3,7 +3,11 @@ import {
   DareParaphraseCorpusSchema,
   type DareParaphraseCorpus,
 } from "@scout-for-lol/data";
-import { createOpenRouterRuntime } from "@shepherdjerred/llm-runtime";
+import {
+  createLlmRuntime,
+  providerCredentialsFromEnv,
+  requireCredentialsFor,
+} from "@shepherdjerred/llm-runtime";
 import { darePlanSemanticIssues } from "#src/betting/dares/evaluation/dare-contract-compiler-v2.ts";
 import { prepareDareDraftV2 } from "#src/betting/dares/lifecycle/dare-draft-v2.ts";
 import {
@@ -68,7 +72,7 @@ function evalPrompt(input: {
 }
 
 async function evaluateParaphrase(
-  runtime: ReturnType<typeof createOpenRouterRuntime>,
+  runtime: ReturnType<typeof createLlmRuntime>,
   entry: DareParaphraseCorpus["cases"][number],
   paraphrase: string,
 ) {
@@ -155,13 +159,10 @@ async function evaluateParaphrase(
 }
 
 async function main(): Promise<void> {
-  const apiKey = Bun.env["OPENROUTER_API_KEY"];
-  if (apiKey === undefined || apiKey.trim() === "") {
-    throw new Error("OPENROUTER_API_KEY is required for Dare v2 model evals.");
-  }
+  requireCredentialsFor(DARE_V2_EVAL_MODEL);
   const { corpus, raw } = await loadCorpus();
-  const runtime = createOpenRouterRuntime({
-    apiKey,
+  const runtime = createLlmRuntime({
+    credentials: providerCredentialsFromEnv(),
     service: "scout-dare-v2-evals",
     appName: "Scout Dare v2 Evals",
   });

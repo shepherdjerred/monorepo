@@ -282,7 +282,9 @@ function applyResultMetaAttrs(
   if (acc.totalCostUsd !== undefined) {
     // Subscription-equivalent API price, not cash spent. Kept on the span
     // because it is useful when reading one trace; deliberately absent from
-    // `llm_cost_usd_total`, which means OpenRouter cash and nothing else.
+    // `llm_cost_usd_total`, which counts metered provider spend and nothing
+    // else — mixing a subscription's notional price into it would inflate the
+    // series the budget alerts read.
     attrs["llm.cost_usd"] = acc.totalCostUsd;
   }
   if (acc.numTurns !== undefined) {

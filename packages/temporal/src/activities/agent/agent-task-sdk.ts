@@ -104,8 +104,8 @@ export async function runAgentTaskSdk(
     turnBudgetKind: "tool-steps",
     cwd: input.config.workdir,
     auth: {
-      kind: "openrouter",
-      apiKey: input.env["OPENROUTER_API_KEY"] ?? "",
+      kind: "openai-api-key",
+      apiKey: input.env["OPENAI_API_KEY"] ?? "",
     },
     env: input.env,
     signal: input.signal,

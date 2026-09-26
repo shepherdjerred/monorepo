@@ -33,7 +33,7 @@ Create the four team labels once:
 toolkit linear label create --team SJ --name agent:ready --color '#5E6AD2' \
   --description 'Ready for the local coding queue'
 toolkit linear label create --team SJ --name agent:codex --color '#059669' \
-  --description 'Use Codex SDK through OpenRouter'
+  --description 'Use the Codex SDK'
 toolkit linear label create --team SJ --name agent:needs-human --color '#DC2626' \
   --description 'Parked until Jerred requeues it'
 ```

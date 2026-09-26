@@ -85,8 +85,6 @@ async function main(): Promise<void> {
     "-e",
     `DISCORD_CLIENT_ID=${"1".repeat(18)}`,
     "-e",
-    "OPENROUTER_API_KEY=smoke-test-dummy",
-    "-e",
     "DATABASE_URL=file:/app/data/smoke-test.db",
     // Production runs FEATURE_FLAGS_MODE=flipt, which this sandbox cannot
     // reach. The variable has no default on purpose, so boot needs it set.

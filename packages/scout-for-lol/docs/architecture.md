@@ -307,7 +307,8 @@ Required environment variables by component:
 | `APPLICATION_ID`          | Backend   | Yes                    |
 | `RIOT_API_KEY`            | Backend   | Yes                    |
 | `DATABASE_URL`            | Backend   | Yes                    |
-| `OPENROUTER_API_KEY`      | Backend   | No (disables AI)       |
+| `OPENAI_API_KEY`          | Backend   | No (disables AI)       |
+| `GEMINI_API_KEY`          | Backend   | No (images fail)       |
 | `BETTING_PARLAY_AI_MODEL` | Backend   | No (`gpt-5.6-sol`)     |
 | `S3_BUCKET_NAME`          | Backend   | No (disables storage)  |
 | `SENTRY_DSN`              | Backend   | No (disables tracking) |
@@ -343,7 +344,7 @@ occupies one global slot. The versioned generation context stores the exact 20
 candidates for audit, and structured model output is rejected unless every
 target is in that list and bound to its listed subject or team.
 
-GPT-5.6 Sol then generates a versioned 2–6 leg criteria tree through OpenRouter
+GPT-5.6 Sol then generates a versioned 2–6 leg criteria tree through OpenAI
 with medium reasoning, a 4,096-token initial output limit, a 6,144-token
 truncated retry limit, and a shared 60-second deadline. It receives anonymous
 lobby and recent-form context plus only the shortlist. The first pass chooses
@@ -375,7 +376,7 @@ time fields render as `MM:SS` without wrapping minutes at 60.
 Prompt rendering, semantic validation, catalog coverage, and evaluation run in
 ordinary offline tests. Run the opt-in production prompt acceptance suite with
 `bun --cwd packages/scout-for-lol/packages/backend run test:parlay:live`; it
-requires `OPENROUTER_API_KEY` and fails rather than skipping when absent.
+requires `OPENAI_API_KEY` and fails rather than skipping when absent.
 
 ## Next Steps
 

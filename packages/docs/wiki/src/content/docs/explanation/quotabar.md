@@ -32,7 +32,7 @@ flowchart LR
 
 The subscription side of the app tracks quota only. It does not show provider
 API rate cards, notifications, or a full usage dashboard. Its separate API view
-reports configured OpenRouter, OpenAI, and Anthropic usage, while local quota
+reports configured OpenAI and Anthropic usage, while local quota
 samples power the subscription History graph.
 The popover includes a personal subscription-spend reminder: $200/month each
 for Claude Code and Codex, $20/month each for Google AI Pro and Cursor Pro,
@@ -54,7 +54,7 @@ and rendered by the
 
 The `API & routers` segment is separate from these subscription quotas.
 It reports billed API spend, not remaining subscription windows.
-OpenRouter, OpenAI, and Anthropic each use a privileged admin or management key.
+OpenAI and Anthropic each use a privileged admin key.
 Brim uses those keys only for read-only billing requests.
 Those keys never replace Claude, Codex, or ChatGPT subscription sign-ins.
 

@@ -1,7 +1,6 @@
 public import Foundation
 
 public enum APIPlatformID: String, CaseIterable, Codable, Equatable, Identifiable, Sendable {
-  case openRouter = "openrouter"
   case openAI = "openai"
   case anthropic
 
@@ -9,7 +8,6 @@ public enum APIPlatformID: String, CaseIterable, Codable, Equatable, Identifiabl
 
   public var displayName: String {
     switch self {
-    case .openRouter: "OpenRouter"
     case .openAI: "OpenAI"
     case .anthropic: "Anthropic"
     }
@@ -17,7 +15,6 @@ public enum APIPlatformID: String, CaseIterable, Codable, Equatable, Identifiabl
 
   public var credentialAccount: String {
     switch self {
-    case .openRouter: "openrouter-management"
     case .openAI: "openai-admin"
     case .anthropic: "anthropic-admin"
     }
@@ -25,7 +22,6 @@ public enum APIPlatformID: String, CaseIterable, Codable, Equatable, Identifiabl
 
   public var credentialLabel: String {
     switch self {
-    case .openRouter: "OpenRouter Management API key"
     case .openAI: "OpenAI Admin API key"
     case .anthropic: "Anthropic Admin API key"
     }
@@ -33,7 +29,6 @@ public enum APIPlatformID: String, CaseIterable, Codable, Equatable, Identifiabl
 
   public var credentialHelpURL: URL? {
     switch self {
-    case .openRouter: URL(string: "https://openrouter.ai/settings/management-keys")
     case .openAI: URL(string: "https://developers.openai.com/api/docs/guides/admin-apis")
     case .anthropic: URL(string: "https://platform.claude.com/settings/admin-keys")
     }
@@ -41,9 +36,6 @@ public enum APIPlatformID: String, CaseIterable, Codable, Equatable, Identifiabl
 
   public var spendFootnote: String {
     switch self {
-    case .openRouter:
-      "Monthly spend is OpenRouter API-key usage and includes estimated BYOK spend. "
-        + "Projection uses the current local calendar pace."
     case .openAI:
       "Monthly spend is OpenAI organization API cost for the current local calendar month. "
         + "This is not ChatGPT subscription usage."

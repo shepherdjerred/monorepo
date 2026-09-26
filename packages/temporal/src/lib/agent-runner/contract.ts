@@ -34,15 +34,15 @@ export const SandboxPolicySchema = z.object({
 export type SandboxPolicy = z.infer<typeof SandboxPolicySchema>;
 
 /**
- * Codex authentication is explicit: existing automation can route through an
- * OpenRouter API key, while durable chats pass the complete short-lived
+ * Codex authentication is explicit: automation authenticates with the owning
+ * OpenAI project's API key, while durable chats pass the complete short-lived
  * ChatGPT subscription auth document. The adapter passes its access token to
  * the official App Server over private stdin with ephemeral credential storage.
  * It never writes subscription credentials into the provider's session home.
  */
 export type CodexAgentTurnAuth =
   | {
-      readonly kind: "openrouter";
+      readonly kind: "openai-api-key";
       readonly apiKey: string;
     }
   | {

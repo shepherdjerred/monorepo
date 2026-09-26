@@ -45,7 +45,7 @@ import { freshrssActivities } from "./maintenance/freshrss.ts";
 import { scoutBryanBucksActivities } from "./scout/scout-bryan-bucks.ts";
 import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
 import { seaweedFsBackupActivities } from "./homelab/seaweedfs-backup.ts";
-import { openAiComplimentaryUsageActivities } from "./agent/openai-complimentary-usage.ts";
+import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
 
 export const homeActivities = {
@@ -126,5 +126,5 @@ export const backupWorkerActivities = {
 };
 
 export const billingActivities = {
-  ...openAiComplimentaryUsageActivities,
+  ...llmBilledCostActivities,
 };

@@ -19,6 +19,7 @@ export type StackDefinition = {
 
 export type TofuStack =
   | "anthropic"
+  | "anthropic-federation"
   | "argocd"
   | "arr"
   | "asuswrt"
@@ -27,8 +28,8 @@ export type TofuStack =
   | "cloudflare-tokens"
   | "discord"
   | "github"
+  | "google"
   | "openai"
-  | "openrouter"
   | "posthog"
   | "seaweedfs"
   | "tailscale";
@@ -53,6 +54,26 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
         source: "ANTHROPIC_ADMIN_API_KEY",
         target: "ANTHROPIC_ADMIN_API_KEY",
       },
+      {
+        source: "TOFU_STATE_ENCRYPTION_PASSPHRASE",
+        target: "TF_VAR_tofu_state_encryption_passphrase",
+      },
+    ],
+  },
+  // Operator-applied only. Federation endpoints accept nothing but a
+  // short-lived `org:admin` OAuth token minted with `ant auth login`, so there is
+  // no credential CI could hold; workspaces still take the Admin API key.
+  "anthropic-federation": {
+    platform: "anthropic-federation",
+    encrypted: true,
+    credentials: [
+      {
+        source: "ANTHROPIC_ADMIN_API_KEY",
+        target: "ANTHROPIC_ADMIN_API_KEY",
+      },
+      { source: "ANTHROPIC_AUTH_TOKEN", target: "ANTHROPIC_AUTH_TOKEN" },
+      // Names the 1Password account whose desktop app authorizes the item writes.
+      { source: "OP_ACCOUNT", target: "OP_ACCOUNT" },
       {
         source: "TOFU_STATE_ENCRYPTION_PASSPHRASE",
         target: "TF_VAR_tofu_state_encryption_passphrase",
@@ -140,6 +161,22 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
       { source: "TOFU_GITHUB_TOKEN", target: "TF_VAR_github_token" },
     ],
   },
+  // Operator-applied only, authenticated by the operator's own Application
+  // Default Credentials (found through HOME). Without a Google Cloud
+  // organization only a user account can create projects, so there is no
+  // bootstrap key CI could hold that would do this stack's job.
+  google: {
+    platform: "google",
+    encrypted: true,
+    credentials: [
+      // Names the 1Password account whose desktop app authorizes the item writes.
+      { source: "OP_ACCOUNT", target: "OP_ACCOUNT" },
+      {
+        source: "TOFU_STATE_ENCRYPTION_PASSPHRASE",
+        target: "TF_VAR_tofu_state_encryption_passphrase",
+      },
+    ],
+  },
   openai: {
     platform: "openai",
     encrypted: true,
@@ -149,24 +186,6 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
       {
         source: "OPENAI_CERTIFICATE_VALUES_JSON",
         target: "TF_VAR_openai_certificate_values",
-      },
-      {
-        source: "TOFU_STATE_ENCRYPTION_PASSPHRASE",
-        target: "TF_VAR_tofu_state_encryption_passphrase",
-      },
-    ],
-  },
-  openrouter: {
-    platform: "openrouter",
-    encrypted: true,
-    credentials: [
-      {
-        source: "OPENROUTER_MANAGEMENT_KEY",
-        target: "OPENROUTER_MANAGEMENT_KEY",
-      },
-      {
-        source: "OPENROUTER_BYOK_KEYS_JSON",
-        target: "TF_VAR_openrouter_byok_keys",
       },
       {
         source: "TOFU_STATE_ENCRYPTION_PASSPHRASE",
@@ -212,6 +231,7 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
 
 const TOFU_STACKS: readonly TofuStack[] = [
   "anthropic",
+  "anthropic-federation",
   "argocd",
   "arr",
   "asuswrt",
@@ -220,8 +240,8 @@ const TOFU_STACKS: readonly TofuStack[] = [
   "cloudflare-tokens",
   "discord",
   "github",
+  "google",
   "openai",
-  "openrouter",
   "posthog",
   "seaweedfs",
   "tailscale",

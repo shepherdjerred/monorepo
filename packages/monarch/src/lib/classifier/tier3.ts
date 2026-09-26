@@ -2,7 +2,7 @@ import { stepCountIs, ToolLoopAgent } from "ai";
 import {
   generateValidatedObject,
   StructuredOutputUsageError,
-  openRouterWebSearchTool,
+  webSearchTool,
   type GenerateValidatedObjectResult,
 } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
@@ -148,14 +148,14 @@ async function runToolLoop(
   prompt: string,
   toolContext: ToolContext,
 ): Promise<Tier3Result> {
-  const openRouter = getRuntime();
+  const llm = getRuntime();
   const modelId = getModelId();
   const tracker = getTracker();
   const localTools = createTier3Tools(toolContext);
   const tools = isWebSearchEnabled()
     ? {
         ...localTools,
-        web_search: openRouterWebSearchTool(openRouter, 3),
+        web_search: webSearchTool(llm, modelId, 3),
       }
     : localTools;
   const agent = new ToolLoopAgent({
@@ -163,12 +163,12 @@ async function runToolLoop(
     instructions:
       "Research the transaction with the available tools. Build concise evidence for a later structured finalizer; do not rely on prose JSON parsing.",
     model: isWebSearchEnabled()
-      ? openRouter.languageModel(modelId, ["tools", "webSearch"])
-      : openRouter.languageModel(modelId, ["tools"]),
+      ? llm.languageModel(modelId, ["tools", "webSearch"])
+      : llm.languageModel(modelId, ["tools"]),
     tools,
     stopWhen: stepCountIs(5),
     maxOutputTokens: 4096,
-    ...openRouter.callOptions({ workload: "monarch.tier3.tool-loop" }),
+    ...llm.callOptions({ workload: "monarch.tier3.tool-loop" }),
   });
   const research = await agent.generate({ prompt });
   const researchInputTokens = research.usage.inputTokens ?? 0;
@@ -183,7 +183,7 @@ async function runToolLoop(
     })),
   ).slice(-60_000);
   const finalized = await finalizeTier3({
-    runtime: openRouter,
+    runtime: llm,
     modelId,
     tracker,
     prompt,

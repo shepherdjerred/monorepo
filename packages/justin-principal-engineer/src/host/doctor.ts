@@ -98,7 +98,7 @@ export async function doctor(input: {
 
   await Promise.all([
     readOpReference(input.config.buildkite.apiToken, input.run),
-    readOpReference(input.config.agents.codex.openRouterApiKey, input.run),
+    readOpReference(input.config.agents.codex.openAiApiKey, input.run),
   ]);
   const github = await createGitHubAuth(input.config, input.paths, input.run);
   try {

@@ -4,8 +4,8 @@ import { schedulesInNamespace } from "./schedule-types.ts";
 
 export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
   {
-    id: "openai-complimentary-usage-hourly",
-    workflowType: "runOpenAiComplimentaryUsageReconciliation",
+    id: "llm-billed-cost-hourly",
+    workflowType: "runLlmBilledCostReconciliation",
     args: [],
     timing: {
       kind: "cron",
@@ -15,7 +15,13 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "10 minutes",
-    memo: "Hourly official OpenAI complimentary-token usage and cost reconciliation",
+    memo: "Hourly billed-spend reconciliation from the OpenAI and Anthropic cost reports, per project and workspace",
+    // Registered paused: until the Workflow candidate carrying
+    // runLlmBilledCostReconciliation takes traffic, a run would land on the
+    // stable bundle, fail, and raise the Temporal alerts that block the
+    // rollout's own advance gates. Unpause once the candidate reaches 100%.
+    initialPauseNote:
+      "Awaiting Workflow candidate promotion with runLlmBilledCostReconciliation",
   },
   {
     id: "report-freshness-monitor",

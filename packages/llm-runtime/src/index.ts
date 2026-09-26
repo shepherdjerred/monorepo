@@ -2,10 +2,10 @@ import type { z } from "zod";
 import {
   addTokenBreakdown as innerAddTokenBreakdown,
   emptyTokenBreakdown as innerEmptyTokenBreakdown,
-  parseOpenRouterMetadata as innerParseOpenRouterMetadata,
+  parseNativeUsage as innerParseNativeUsage,
   tokenBreakdown as innerTokenBreakdown,
-} from "./metadata.ts";
-import { createOpenRouterRuntime as innerCreateOpenRouterRuntime } from "./runtime.ts";
+} from "./usage.ts";
+import { createLlmRuntime as innerCreateLlmRuntime } from "./runtime.ts";
 import {
   MAX_CORRECTIVE_PROMPT_CHARS as INNER_MAX_CORRECTIVE_PROMPT_CHARS,
   MAX_SEMANTIC_ATTEMPTS as INNER_MAX_SEMANTIC_ATTEMPTS,
@@ -13,29 +13,43 @@ import {
   StructuredOutputExhaustionError as InnerStructuredOutputExhaustionError,
   StructuredOutputTransportError as InnerStructuredOutputTransportError,
   StructuredOutputUsageError as InnerStructuredOutputUsageError,
-  type AggregateOpenRouterUsage as InnerAggregateOpenRouterUsage,
+  type AggregateLlmUsage as InnerAggregateLlmUsage,
+  type AnthropicCredentials as InnerAnthropicCredentials,
   type CallOptionsInput as InnerCallOptionsInput,
   type GenerateValidatedObjectInput as InnerGenerateValidatedObjectInput,
   type GenerateValidatedObjectResult as InnerGenerateValidatedObjectResult,
+  type GoogleCredentials as InnerGoogleCredentials,
+  type LlmCallMetadata as InnerLlmCallMetadata,
+  type LlmRuntimeOptions as InnerLlmRuntimeOptions,
+  type LlmRuntimeLogger as InnerLlmRuntimeLogger,
+  type LlmRuntimeLogRecord as InnerLlmRuntimeLogRecord,
   type ModelRequirements as InnerModelRequirements,
-  type OpenRouterCallMetadata as InnerOpenRouterCallMetadata,
-  type OpenRouterRouterAttempt as InnerOpenRouterRouterAttempt,
-  type OpenRouterRuntimeOptions as InnerOpenRouterRuntimeOptions,
-  type OpenRouterRuntimeLogger as InnerOpenRouterRuntimeLogger,
-  type OpenRouterRuntimeLogRecord as InnerOpenRouterRuntimeLogRecord,
-  type OpenRouterTokenBreakdown as InnerOpenRouterTokenBreakdown,
+  type ProviderCredentials as InnerProviderCredentials,
   type RuntimeTraceContext as InnerRuntimeTraceContext,
   type StructuredOutputAttempt as InnerStructuredOutputAttempt,
+  type TokenBreakdown as InnerTokenBreakdown,
 } from "./types.ts";
-import { generateValidatedObject as innerGenerateValidatedObject } from "./validated-object.ts";
-import { openRouterWebSearchTool as innerOpenRouterWebSearchTool } from "./openrouter-tools.ts";
 import {
-  createOpenRouterCodexConfig as innerCreateOpenRouterCodexConfig,
-  OPENROUTER_API_BASE_URL as INNER_OPENROUTER_API_BASE_URL,
-  type OpenRouterCodexConfig as InnerOpenRouterCodexConfig,
+  providerCredentialsFromEnv as innerProviderCredentialsFromEnv,
+  requireCredentialsFor as innerRequireCredentialsFor,
+} from "./credentials.ts";
+import { generateValidatedObject as innerGenerateValidatedObject } from "./validated-object.ts";
+import { webSearchTool as innerWebSearchTool } from "./web-search.ts";
+import {
+  reasoningProviderOptions as innerReasoningProviderOptions,
+  toolLoopProviderOptions as innerToolLoopProviderOptions,
+  type ProviderOptions as InnerProviderOptions,
+} from "./provider-options.ts";
+import {
+  createCodexConfig as innerCreateCodexConfig,
+  type CodexConfig as InnerCodexConfig,
 } from "./codex.ts";
 
 type Identity<T> = { [KEY in keyof T]: T[KEY] };
+/** Identity that distributes, so a union keeps its members. */
+type IdentityUnion<T> = T extends unknown
+  ? { [KEY in keyof T]: T[KEY] }
+  : never;
 const passthrough = <T>(value: T): T => value;
 
 export const REQUIRED_MODEL_CAPABILITIES = passthrough(
@@ -76,7 +90,8 @@ export class StructuredOutputTransportError extends StructuredOutputUsageError {
     this.name = "StructuredOutputTransportError";
   }
 }
-export type AggregateOpenRouterUsage = Identity<InnerAggregateOpenRouterUsage>;
+export type AggregateLlmUsage = Identity<InnerAggregateLlmUsage>;
+export type AnthropicCredentials = IdentityUnion<InnerAnthropicCredentials>;
 export type CallOptionsInput = Identity<InnerCallOptionsInput>;
 export type GenerateValidatedObjectInput<SCHEMA extends z.ZodType> = Identity<
   InnerGenerateValidatedObjectInput<SCHEMA>
@@ -84,27 +99,40 @@ export type GenerateValidatedObjectInput<SCHEMA extends z.ZodType> = Identity<
 export type GenerateValidatedObjectResult<SCHEMA extends z.ZodType> = Identity<
   InnerGenerateValidatedObjectResult<SCHEMA>
 >;
+export type GoogleCredentials = Identity<InnerGoogleCredentials>;
 export type ModelRequirements = Identity<InnerModelRequirements>;
-export type OpenRouterCallMetadata = Identity<InnerOpenRouterCallMetadata>;
-export type OpenRouterRouterAttempt = Identity<InnerOpenRouterRouterAttempt>;
-export type OpenRouterRuntimeOptions = Identity<InnerOpenRouterRuntimeOptions>;
-export type OpenRouterRuntimeLogRecord =
-  Identity<InnerOpenRouterRuntimeLogRecord>;
-export type OpenRouterRuntimeLogger = (
-  record: OpenRouterRuntimeLogRecord,
-) => ReturnType<InnerOpenRouterRuntimeLogger>;
-export type OpenRouterTokenBreakdown = Identity<InnerOpenRouterTokenBreakdown>;
+export type LlmCallMetadata = Identity<InnerLlmCallMetadata>;
+export type LlmRuntimeOptions = Identity<InnerLlmRuntimeOptions>;
+export type LlmRuntimeLogRecord = Identity<InnerLlmRuntimeLogRecord>;
+export type LlmRuntimeLogger = (
+  record: LlmRuntimeLogRecord,
+) => ReturnType<InnerLlmRuntimeLogger>;
+export type ProviderCredentials = Identity<InnerProviderCredentials>;
 export type RuntimeTraceContext = Identity<InnerRuntimeTraceContext>;
 export type StructuredOutputAttempt = Identity<InnerStructuredOutputAttempt>;
-export type OpenRouterCodexConfig = Identity<InnerOpenRouterCodexConfig>;
-export const OPENROUTER_API_BASE_URL: string = passthrough(
-  INNER_OPENROUTER_API_BASE_URL,
-);
+export type TokenBreakdown = Identity<InnerTokenBreakdown>;
+export type CodexConfig = Identity<InnerCodexConfig>;
+export type ProviderOptions = Identity<InnerProviderOptions>;
+export type ReasoningEffort = Parameters<
+  typeof innerReasoningProviderOptions
+>[2];
 
-export function createOpenRouterCodexConfig(
-  ...args: Parameters<typeof innerCreateOpenRouterCodexConfig>
-): OpenRouterCodexConfig {
-  return innerCreateOpenRouterCodexConfig(...args);
+export function reasoningProviderOptions(
+  ...args: Parameters<typeof innerReasoningProviderOptions>
+): ReturnType<typeof innerReasoningProviderOptions> {
+  return innerReasoningProviderOptions(...args);
+}
+
+export function toolLoopProviderOptions(
+  ...args: Parameters<typeof innerToolLoopProviderOptions>
+): ReturnType<typeof innerToolLoopProviderOptions> {
+  return innerToolLoopProviderOptions(...args);
+}
+
+export function createCodexConfig(
+  ...args: Parameters<typeof innerCreateCodexConfig>
+): CodexConfig {
+  return innerCreateCodexConfig(...args);
 }
 
 export function addTokenBreakdown(
@@ -119,10 +147,10 @@ export function emptyTokenBreakdown(): ReturnType<
   return innerEmptyTokenBreakdown();
 }
 
-export function parseOpenRouterMetadata(
-  ...args: Parameters<typeof innerParseOpenRouterMetadata>
-): ReturnType<typeof innerParseOpenRouterMetadata> {
-  return innerParseOpenRouterMetadata(...args);
+export function parseNativeUsage(
+  ...args: Parameters<typeof innerParseNativeUsage>
+): ReturnType<typeof innerParseNativeUsage> {
+  return innerParseNativeUsage(...args);
 }
 
 export function tokenBreakdown(
@@ -131,22 +159,34 @@ export function tokenBreakdown(
   return innerTokenBreakdown(...args);
 }
 
-export function openRouterWebSearchTool(
-  ...args: Parameters<typeof innerOpenRouterWebSearchTool>
-): ReturnType<typeof innerOpenRouterWebSearchTool> {
-  return innerOpenRouterWebSearchTool(...args);
+export function webSearchTool(
+  ...args: Parameters<typeof innerWebSearchTool>
+): ReturnType<typeof innerWebSearchTool> {
+  return innerWebSearchTool(...args);
 }
 
-export function createOpenRouterRuntime(
-  ...args: Parameters<typeof innerCreateOpenRouterRuntime>
-): ReturnType<typeof innerCreateOpenRouterRuntime> {
-  return innerCreateOpenRouterRuntime(...args);
+export function providerCredentialsFromEnv(
+  ...args: Parameters<typeof innerProviderCredentialsFromEnv>
+): ReturnType<typeof innerProviderCredentialsFromEnv> {
+  return innerProviderCredentialsFromEnv(...args);
 }
 
-export type OpenRouterRuntime = ReturnType<typeof innerCreateOpenRouterRuntime>;
+export function requireCredentialsFor(
+  ...args: Parameters<typeof innerRequireCredentialsFor>
+): ReturnType<typeof innerRequireCredentialsFor> {
+  innerRequireCredentialsFor(...args);
+}
+
+export function createLlmRuntime(
+  ...args: Parameters<typeof innerCreateLlmRuntime>
+): ReturnType<typeof innerCreateLlmRuntime> {
+  return innerCreateLlmRuntime(...args);
+}
+
+export type LlmRuntime = ReturnType<typeof innerCreateLlmRuntime>;
 
 export async function generateValidatedObject<SCHEMA extends z.ZodType>(
-  runtime: OpenRouterRuntime,
+  runtime: LlmRuntime,
   input: GenerateValidatedObjectInput<SCHEMA>,
 ): Promise<GenerateValidatedObjectResult<SCHEMA>> {
   try {

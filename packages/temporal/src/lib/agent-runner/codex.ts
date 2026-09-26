@@ -6,7 +6,7 @@ import {
 } from "@openai/codex-sdk";
 import { createCodexJsonlParser } from "@shepherdjerred/llm-observability/codex-jsonl";
 import { attachCodexTrace } from "@shepherdjerred/llm-observability/wrappers/codex";
-import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
+import { createCodexConfig } from "@shepherdjerred/llm-runtime";
 import { register } from "#observability/metrics.ts";
 import { redactSecrets } from "#shared/redact.ts";
 import type {
@@ -19,9 +19,9 @@ import { SandboxPolicySchema, TurnBudgetKindSchema } from "./contract.ts";
 import { agentTurnExecutionError } from "./errors.ts";
 import { cleanupCodexRun } from "./codex-cleanup.ts";
 import {
-  prepareCodexOpenRouterHome,
+  prepareCodexApiKeyHome,
   prepareCodexSubscriptionHome,
-  rollbackCodexOpenRouterHome,
+  rollbackCodexApiKeyHome,
   restoreCodexSubscriptionParentMode,
 } from "./codex-home.ts";
 import type { ProviderHomeParentMode } from "./provider-home.ts";
@@ -97,14 +97,14 @@ async function prepareCodex(
   const childEnvironment = Object.fromEntries(
     Object.entries(input.env).filter(([key]) => !isProviderCredentialKey(key)),
   );
-  if (input.auth.kind === "openrouter") {
-    const providerHome = await prepareCodexOpenRouterHome({
+  if (input.auth.kind === "openai-api-key") {
+    const providerHome = await prepareCodexApiKeyHome({
       environment: childEnvironment,
       providerUid,
       resumeSessionId: input.resumeSessionId,
     });
     try {
-      const openRouter = createOpenRouterCodexConfig({
+      const codexConfig = createCodexConfig({
         apiKey: input.auth.apiKey,
         modelId: input.model,
         env: {
@@ -115,14 +115,11 @@ async function prepareCodex(
       const providerPath = await providerPathOverride(input);
       return {
         options: {
-          ...openRouter.codexOptions,
-          config: {
-            ...CODEX_TOOL_ENVIRONMENT_CONFIG,
-            ...openRouter.providerConfig,
-          },
+          ...codexConfig.codexOptions,
+          config: CODEX_TOOL_ENVIRONMENT_CONFIG,
           ...providerPath.pathOverride,
         },
-        model: openRouter.routeModelId,
+        model: codexConfig.routeModelId,
         providerWrapperDirectory: providerPath.wrapperDirectory,
         providerHomeDirectory: providerHome.providerHomeDirectory,
         subscriptionHome: providerHome.subscriptionHome,
@@ -130,11 +127,11 @@ async function prepareCodex(
       };
     } catch (error: unknown) {
       try {
-        await rollbackCodexOpenRouterHome(providerHome);
+        await rollbackCodexApiKeyHome(providerHome);
       } catch (cleanupError: unknown) {
         throw new AggregateError(
           [error],
-          "Codex OpenRouter setup cleanup failed",
+          "Codex API-key setup cleanup failed",
           { cause: cleanupError },
         );
       }

@@ -35,30 +35,42 @@ const RULES: readonly ArchitectureRule[] = [
     pattern: /@(?:mastra|voltagent)\//,
   },
   {
+    id: "openrouter",
+    description:
+      "OpenRouter is retired; inference calls OpenAI, Anthropic, and Google directly through @shepherdjerred/llm-runtime",
+    pattern: /@openrouter\/|openrouter\.ai\b|\bOPENROUTER_[A-Z_]+/,
+  },
+  {
     id: "direct-provider-sdk",
     description:
-      "ordinary inference uses @shepherdjerred/llm-runtime, not a direct provider SDK",
+      "ordinary inference uses @shepherdjerred/llm-runtime, the one place provider SDKs are constructed",
     pattern:
       /(?:(?:from|import\s*\(|require\s*\()\s*["'](?:@ai-sdk\/(?:amazon-bedrock|anthropic|azure|google|google-vertex|groq|mistral|openai|openai-compatible|xai)|@anthropic-ai\/sdk|@google\/(?:genai|generative-ai)|groq-sdk|openai)["']|["'](?:@ai-sdk\/(?:amazon-bedrock|anthropic|azure|google|google-vertex|groq|mistral|openai|openai-compatible|xai)|@anthropic-ai\/sdk|@google\/(?:genai|generative-ai)|groq-sdk|openai)["']\s*:)/,
   },
   {
     id: "provider-api-key",
     description:
-      "deployed inference credentials use OpenRouter except for reviewed native-provider workloads",
+      "provider credentials are read by @shepherdjerred/llm-runtime and wired only by reviewed deployment and credential paths",
     pattern:
       /\b(?:ANTHROPIC_API_KEY|CLAUDE_CODE_OAUTH_TOKEN|CODEX_ACCESS_TOKEN|CODEX_API_KEY|GEMINI_API_KEY|GOOGLE_GENERATIVE_AI_API_KEY|GROQ_API_KEY|OPENAI_API_KEY|XAI_API_KEY)\b/,
   },
   {
+    id: "federation-shadowing-key",
+    description:
+      "a deployed ANTHROPIC_API_KEY silently outranks workload identity federation; federated workloads must never receive one",
+    pattern: /\bANTHROPIC_API_KEY\b/,
+  },
+  {
     id: "direct-provider-endpoint",
     description:
-      "ordinary inference must not target a provider endpoint directly",
+      "ordinary inference reaches providers through @shepherdjerred/llm-runtime, not a hand-built endpoint",
     pattern:
       /(?:\b(?:ANTHROPIC|GEMINI|GOOGLE_GENERATIVE_AI|GROQ|OPENAI|XAI)_BASE_URL\b|https:\/\/(?:api\.(?:anthropic|groq|openai|x\.ai)\.com|generativelanguage\.googleapis\.com))/,
   },
   {
     id: "legacy-agent-sdk",
     description:
-      "deployed coding agents use the Codex SDK through OpenRouter, not the Claude Agent SDK",
+      "deployed coding agents use the Codex SDK, not the Claude Agent SDK",
     pattern:
       /(?:(?:from|import\s*\(|require\s*\()\s*["']@anthropic-ai\/claude-agent-sdk["']|["']@anthropic-ai\/claude-agent-sdk["']\s*:)/,
   },
@@ -95,6 +107,10 @@ const CREDENTIAL_SANITIZER_PATHS = new Set([
   // (mirroring the user's fish wrappers). It never reads the credentials.
   "packages/toolkit/src/lib/brim/fish.ts",
 ]);
+// pr-fleet scrubs every provider credential from the environment it hands to
+// agent subprocesses. It never reads them.
+const PR_FLEET_CREDENTIAL_REDACTION_PATH =
+  "packages/pr-fleet-controller/src/cli/credential-redaction.ts";
 const POKEMON_CODEX_SUBSCRIPTION_PATHS = new Set([
   "packages/discord-plays-pokemon/config.example.toml",
   "packages/discord-plays-pokemon/packages/backend/src/goal/codex/codex-auth.ts",
@@ -114,14 +130,6 @@ const DURABLE_AGENT_CLAUDE_SDK_PATHS = new Set([
   "packages/temporal/package.json",
   "packages/temporal/src/lib/agent-runner/claude.ts",
 ]);
-// The shared Codex-through-OpenRouter config factory. The Codex CLI mandates
-// the CODEX_API_KEY env var name for custom providers (`env_key`), and the
-// value routed through it is the OpenRouter key — not a native OpenAI
-// credential. Only this factory may name it outside the reviewed adapters.
-const CODEX_OPENROUTER_CONFIG_PATHS = new Set([
-  "packages/llm-runtime/src/codex.ts",
-]);
-
 // These homelab files describe provider-specific OpenTofu resources and their
 // credential handoffs. They are infrastructure metadata, not inference paths.
 const HOMELAB_PLATFORM_METADATA_PATHS = new Set([
@@ -129,12 +137,64 @@ const HOMELAB_PLATFORM_METADATA_PATHS = new Set([
   "packages/homelab/scripts/tofu/tofu-stack-manifest.ts",
 ]);
 
+// The shared runtime is the one place a provider SDK is constructed and a
+// provider credential is read. Its chokepoint property is what makes catalog
+// cost accounting and capability validation reliable for every consumer.
+const LLM_RUNTIME_ROOT = "packages/llm-runtime/";
+// The Scout review workbench runs in the operator's browser with keys the
+// operator pastes in; it cannot use the server-side runtime.
+const SCOUT_WORKBENCH_ROOT = "packages/scout-for-lol/packages/frontend/";
+
+// Deployment manifests and bootstrap surfaces that hand each workload its own
+// per-app, per-environment provider credential. Anthropic is federated in
+// production, so these hold OpenAI and Gemini keys only.
+const PROVIDER_CREDENTIAL_WIRING_PATHS = new Set([
+  ".buildkite/pipeline.yml",
+  ".buildkite/scripts/images/smoke-app-in-image.ts",
+  // Wires the per-workload Gemini key and Anthropic federation identifiers
+  // that the operator-applied OpenTofu stacks write to 1Password.
+  "packages/homelab/src/cdk8s/src/misc/llm-provider-credentials.ts",
+  "packages/homelab/src/cdk8s/src/resources/birmel/index.ts",
+  "packages/homelab/src/cdk8s/src/resources/temporal/workers/operations-workers.ts",
+  "packages/homelab/src/cdk8s/src/resources/temporal/workers/worker.ts",
+  "packages/scout-for-lol/dev-web.env.tpl",
+  // Justin hands its project key to the Codex SDK inside the agent container.
+  "packages/justin-principal-engineer/src/container-entry.ts",
+  "packages/justin-principal-engineer/src/host/docker.ts",
+  // Operator CLIs document the key they read through providerCredentialsFromEnv.
+  "packages/monarch/scripts/match-emails.ts",
+  "packages/scout-for-lol/packages/backend/src/league/review/test-reviews.ts",
+  "packages/scout-for-lol/packages/backend/src/league/review/test-reviews-utils.ts",
+  "packages/temporal/scripts/glitter/run-glitter-context-refresh-local.ts",
+  // Browser automation test harness seeds a placeholder for config parsing.
+  "packages/birmel/src/agent-tools/tools/automation/test-setup.ts",
+]);
+
+// Codex SDK runs and the release refiner authenticate with their own OpenAI
+// project key. The Codex SDK takes the key directly, not through llm-runtime.
+const CODEX_AND_RELEASE_CREDENTIAL_PATHS = new Set([
+  "packages/temporal/src/activities/agent/agent-task-sdk.ts",
+  "packages/temporal/src/activities/homelab/homelab-audit-preflight.ts",
+  "packages/temporal/src/activities/homelab/homelab-audit.ts",
+  "packages/temporal/src/activities/scout/scout-season-refresh-codex.ts",
+  "packages/temporal/src/schedules/schedule-definitions.ts",
+  "scripts/checks/ci/check-ci-env.ts",
+  "scripts/release/release.ts",
+]);
+
+// Local-development bootstrap may name a static Anthropic key: CI and local
+// runs cannot federate. Nothing deployed may.
+function isLocalBootstrapFile(filePath: string): boolean {
+  const basename = path.basename(filePath);
+  return basename.endsWith(".env.example") || basename === "example.env";
+}
+
 const WHISPER_TRANSCRIPTION_ADAPTER =
   "packages/homelab/src/cdk8s/src/resources/torrents/whisperbridge.ts";
 // These voice assistants run one OpenAI Realtime turn through the native
 // @openai/agents SDK. Realtime's WebSocket transport is not available through
-// OpenRouter/llm-runtime, so only their named configuration, runtime, and
-// operator-probe surfaces may hold the dedicated project credential.
+// llm-runtime, so only their named configuration, runtime, and operator-probe
+// surfaces may hold the dedicated voice project credential.
 const OPENAI_NATIVE_REALTIME_PATHS = new Set([
   "packages/homelab/src/cdk8s/src/resources/streambot/streambot.ts",
   "packages/homelab/src/cdk8s/src/resources/scout/index.ts",
@@ -149,8 +209,8 @@ const OPENAI_NATIVE_REALTIME_PATHS = new Set([
   "packages/scout-for-lol/packages/backend/src/configuration.ts",
   "packages/scout-for-lol/packages/backend/src/voice-assistant/runtime.ts",
 ]);
-// OpenRouter and llm-runtime do not expose OpenAI's speech-to-text or
-// text-to-speech REST APIs. Keep that native transport inside the shared voice
+// llm-runtime does not expose OpenAI's speech-to-text or text-to-speech REST
+// APIs. Keep that native transport inside the shared voice
 // package so application code can only consume the reviewed typed adapter.
 const OPENAI_NATIVE_VOICE_AUDIO_PATHS = new Set([
   "packages/voice-assistant/src/openai-audio.ts",
@@ -172,10 +232,15 @@ const BRIM_API_BILLING_ALLOWED_URLS = new Set([
 ]);
 const DIRECT_PROVIDER_URL =
   /https:\/\/(?:api\.(?:anthropic|groq|openai|x\.ai)\.com|generativelanguage\.googleapis\.com)[^"'\\\s]*/g;
-// The billing monitor uses OpenAI's official organization Usage and Costs APIs
-// as the payment authority; this is not an inference path.
-const OPENAI_BILLING_RECONCILIATION_PATH =
-  "packages/temporal/src/shared/openai-complimentary-usage.ts";
+// The billed-cost reconciliation reads the OpenAI Costs/Usage and Anthropic
+// Cost Report admin APIs as the payment authority; this is not an inference
+// path.
+const LLM_BILLING_RECONCILIATION_PATH =
+  "packages/temporal/src/shared/llm-billing.ts";
+// The federation audience is Anthropic's API origin by definition; the pod
+// never calls it from here.
+const WORKLOAD_IDENTITY_MANIFEST_PATH =
+  "packages/homelab/src/cdk8s/src/misc/llm-provider-credentials.ts";
 const NATIVE_SDK_CONTRACT_TEST =
   "scripts/release/release-agent-sdk-contract.test.ts";
 
@@ -199,50 +264,78 @@ function brimBillingLineIsAllowed(source: string): boolean {
   );
 }
 
+type Exemption = (filePath: string, source: string) => boolean;
+
+function inSet(paths: ReadonlySet<string>): Exemption {
+  return (filePath) => paths.has(filePath);
+}
+
+function isPath(expected: string): Exemption {
+  return (filePath) => filePath === expected;
+}
+
+function underRoot(root: string): Exemption {
+  return (filePath) => filePath.startsWith(root);
+}
+
+const inLlmRuntime = underRoot(LLM_RUNTIME_ROOT);
+
+// Each rule's reviewed exceptions. A rule with no entry has none.
+const RULE_EXEMPTIONS: Readonly<Record<string, readonly Exemption[]>> = {
+  "federation-shadowing-key": [
+    inLlmRuntime,
+    isLocalBootstrapFile,
+    isTestOrFixture,
+    inSet(CREDENTIAL_SANITIZER_PATHS),
+    inSet(HOMELAB_PLATFORM_METADATA_PATHS),
+    isPath(PR_FLEET_CREDENTIAL_REDACTION_PATH),
+  ],
+  "provider-api-key": [
+    inLlmRuntime,
+    isLocalBootstrapFile,
+    isTestOrFixture,
+    inSet(PROVIDER_CREDENTIAL_WIRING_PATHS),
+    inSet(CODEX_AND_RELEASE_CREDENTIAL_PATHS),
+    isPath(PR_FLEET_CREDENTIAL_REDACTION_PATH),
+    inSet(CREDENTIAL_SANITIZER_PATHS),
+    inSet(POKEMON_CODEX_SUBSCRIPTION_PATHS),
+    inSet(DURABLE_AGENT_CREDENTIAL_PATHS),
+    inSet(HOMELAB_PLATFORM_METADATA_PATHS),
+    isPath(WHISPER_TRANSCRIPTION_ADAPTER),
+    inSet(OPENAI_NATIVE_REALTIME_PATHS),
+  ],
+  "direct-provider-sdk": [
+    inLlmRuntime,
+    underRoot(SCOUT_WORKBENCH_ROOT),
+    inSet(STREAMBOT_VOICE_TTS_PATHS),
+    isPath("packages/homelab/scripts/platform-desired-state.ts"),
+  ],
+  "legacy-agent-sdk": [isTestOrFixture, inSet(DURABLE_AGENT_CLAUDE_SDK_PATHS)],
+  "direct-provider-endpoint": [
+    // Brim's billing file is allowed line by line, only for the two billing
+    // URLs; every other exemption names a whole reviewed file.
+    (filePath, source) =>
+      filePath === BRIM_API_BILLING_ENDPOINTS &&
+      brimBillingLineIsAllowed(source),
+    inLlmRuntime,
+    isTestOrFixture,
+    isPath(WHISPER_TRANSCRIPTION_ADAPTER),
+    isPath(SUBSCRIPTION_QUOTA_ENDPOINTS),
+    isPath(LLM_BILLING_RECONCILIATION_PATH),
+    isPath(WORKLOAD_IDENTITY_MANIFEST_PATH),
+    inSet(OPENAI_NATIVE_VOICE_AUDIO_PATHS),
+  ],
+  "agent-cli-dependency": [isPath(NATIVE_SDK_CONTRACT_TEST)],
+};
+
 function isAllowedViolation(
   rule: ArchitectureRule,
   filePath: string,
   source: string,
 ): boolean {
-  if (CHECK_IMPLEMENTATION_PATHS.has(filePath)) return true;
-
-  if (rule.id === "provider-api-key") {
-    return (
-      isTestOrFixture(filePath) ||
-      CREDENTIAL_SANITIZER_PATHS.has(filePath) ||
-      POKEMON_CODEX_SUBSCRIPTION_PATHS.has(filePath) ||
-      DURABLE_AGENT_CREDENTIAL_PATHS.has(filePath) ||
-      CODEX_OPENROUTER_CONFIG_PATHS.has(filePath) ||
-      HOMELAB_PLATFORM_METADATA_PATHS.has(filePath) ||
-      filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
-      OPENAI_NATIVE_REALTIME_PATHS.has(filePath)
-    );
-  }
-
-  if (rule.id === "direct-provider-sdk") {
-    return (
-      STREAMBOT_VOICE_TTS_PATHS.has(filePath) ||
-      filePath === "packages/homelab/scripts/platform-desired-state.ts"
-    );
-  }
-
-  if (rule.id === "legacy-agent-sdk") {
-    return (
-      isTestOrFixture(filePath) || DURABLE_AGENT_CLAUDE_SDK_PATHS.has(filePath)
-    );
-  }
-
-  if (rule.id === "direct-provider-endpoint") {
-    return filePath === BRIM_API_BILLING_ENDPOINTS
-      ? brimBillingLineIsAllowed(source)
-      : filePath === WHISPER_TRANSCRIPTION_ADAPTER ||
-          filePath === SUBSCRIPTION_QUOTA_ENDPOINTS ||
-          filePath === OPENAI_BILLING_RECONCILIATION_PATH ||
-          OPENAI_NATIVE_VOICE_AUDIO_PATHS.has(filePath);
-  }
-
   return (
-    rule.id === "agent-cli-dependency" && filePath === NATIVE_SDK_CONTRACT_TEST
+    CHECK_IMPLEMENTATION_PATHS.has(filePath) ||
+    (RULE_EXEMPTIONS[rule.id] ?? []).some((exempt) => exempt(filePath, source))
   );
 }
 
@@ -384,7 +477,7 @@ export async function checkAiArchitecture(): Promise<void> {
     );
   }
   console.log(
-    `AI architecture: ${files.length.toString()} active files satisfy the OpenRouter/native SDK policy`,
+    `AI architecture: ${files.length.toString()} active files satisfy the direct-provider runtime policy`,
   );
 }
 

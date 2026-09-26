@@ -101,26 +101,27 @@ export type TextGenerationClient = {
     finishReason: string | undefined;
     inputTokens: number | undefined;
     outputTokens: number | undefined;
-    openRouter?: OpenRouterGenerationMetadata | undefined;
+    provider?: ProviderGenerationMetadata | undefined;
   }>;
 };
 
-export type OpenRouterGenerationMetadata = {
-  generationId?: string | undefined;
+/**
+ * What a first-party provider reports about one generation.
+ *
+ * The gateway-era shape carried routing (upstream provider, route, region,
+ * fallback attempts) and the cash it charged. Calling a provider directly
+ * removes the routing entirely — there is nothing between us and the model —
+ * and providers report tokens rather than money, so cost is what the catalog
+ * prices those tokens at. Historical dataset records keep the old `openRouter`
+ * key; nothing validates these traces at read time, so old and new coexist.
+ */
+export type ProviderGenerationMetadata = {
+  provider: string;
+  responseId?: string | undefined;
   requestedModel: string;
   resolvedModel?: string | undefined;
-  upstreamProvider?: string | undefined;
-  route?: string | undefined;
-  region?: string | undefined;
-  fallbackAttempts: number;
-  attempts: readonly {
-    provider: string;
-    model: string;
-    status: number;
-  }[];
-  actualCostUsd?: number | undefined;
-  upstreamCostUsd?: number | undefined;
-  routerMetadataPresent: boolean;
+  serviceTier?: string | undefined;
+  catalogCostUsd?: number | undefined;
 };
 
 /** Provider-neutral image-generation boundary for dependency injection. */
@@ -179,9 +180,9 @@ export type PipelinePromptsInput = {
  * AI clients input for the pipeline
  */
 export type PipelineClientsInput = {
-  /** OpenRouter-backed client for text generation. */
+  /** Shared-runtime client for text generation. */
   text: TextGenerationClient;
-  /** OpenRouter-backed client for image generation (optional). */
+  /** Shared-runtime client for image generation (optional). */
   image?: ImageGenerationClient;
 };
 
@@ -222,8 +223,12 @@ export type StageTrace = {
   durationMs: number;
   tokensPrompt?: number;
   tokensCompletion?: number;
-  transport?: "openrouter";
-  openRouter?: OpenRouterGenerationMetadata;
+  /**
+   * Who served the generation. Was always `"openrouter"`; now the provider
+   * itself. Historical records keep the old value.
+   */
+  transport?: string;
+  provider?: ProviderGenerationMetadata;
 };
 
 /**

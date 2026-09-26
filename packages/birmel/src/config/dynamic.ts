@@ -234,14 +234,14 @@ function createSnapshot(
       activityTrackingEnabled: config.activityTracking.enabled,
       electionsEnabled: config.elections.enabled,
       imageGenerationEnabled: config.imageGeneration.enabled,
-      llmModel: config.openRouter.model,
-      classifierModel: config.openRouter.classifierModel,
-      memoryModel: config.openRouter.memoryModel,
-      embeddingModel: config.openRouter.embeddingModel,
-      imageModel: config.openRouter.imageModel,
+      llmModel: config.llm.model,
+      classifierModel: config.llm.classifierModel,
+      memoryModel: config.llm.memoryModel,
+      embeddingModel: config.llm.embeddingModel,
+      imageModel: config.llm.imageModel,
       personaStyleModel: config.persona.styleModel,
-      reasoningEffort: config.openRouter.reasoningEffort,
-      maxTokens: config.openRouter.maxTokens,
+      reasoningEffort: config.llm.reasoningEffort,
+      maxTokens: config.llm.maxTokens,
       agentMaxSteps: config.agent.maxSteps,
       agentResponseTimeoutMs: config.agent.responseTimeoutMs,
       agentAuxiliaryTimeoutMs: config.agent.auxiliaryTimeoutMs,
@@ -264,14 +264,14 @@ function applySnapshot(snapshot: Snapshot, config: Config): void {
   config.activityTracking.enabled = snapshot.get("activityTrackingEnabled");
   config.elections.enabled = snapshot.get("electionsEnabled");
   config.imageGeneration.enabled = snapshot.get("imageGenerationEnabled");
-  config.openRouter.model = snapshot.get("llmModel");
-  config.openRouter.classifierModel = snapshot.get("classifierModel");
-  config.openRouter.memoryModel = snapshot.get("memoryModel");
-  config.openRouter.embeddingModel = snapshot.get("embeddingModel");
-  config.openRouter.imageModel = snapshot.get("imageModel");
+  config.llm.model = snapshot.get("llmModel");
+  config.llm.classifierModel = snapshot.get("classifierModel");
+  config.llm.memoryModel = snapshot.get("memoryModel");
+  config.llm.embeddingModel = snapshot.get("embeddingModel");
+  config.llm.imageModel = snapshot.get("imageModel");
   config.persona.styleModel = snapshot.get("personaStyleModel");
-  config.openRouter.reasoningEffort = snapshot.get("reasoningEffort");
-  config.openRouter.maxTokens = snapshot.get("maxTokens");
+  config.llm.reasoningEffort = snapshot.get("reasoningEffort");
+  config.llm.maxTokens = snapshot.get("maxTokens");
   config.agent.maxSteps = snapshot.get("agentMaxSteps");
   config.agent.responseTimeoutMs = snapshot.get("agentResponseTimeoutMs");
   config.agent.auxiliaryTimeoutMs = snapshot.get("agentAuxiliaryTimeoutMs");

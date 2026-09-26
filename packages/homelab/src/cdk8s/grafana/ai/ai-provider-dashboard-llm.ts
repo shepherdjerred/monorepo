@@ -22,7 +22,7 @@ export function addLlmPanels(
     createTimeseriesPanel({
       title: "LLM Requests",
       description:
-        "Logical requests across OpenRouter, Claude Agent SDK, and Codex SDK using stable catalog model ids and bounded workload labels.",
+        "Logical requests across the direct OpenAI, Anthropic, and Google providers, the Claude Agent SDK, and the Codex SDK, using stable catalog model ids and bounded workload labels.",
       targets: [
         {
           query: `sum by (service, workload, provider, model, outcome) (rate(llm_requests_total{${llmFilter}}[5m])) or on() vector(0)`,
@@ -63,7 +63,7 @@ export function addLlmPanels(
     createTimeseriesPanel({
       title: "Token Rate",
       description:
-        "Input, output, cached-input, cache-write, and reasoning token rates across gateway and native SDK accounting.",
+        "Input, output, cached-input, cache-write, and reasoning token rates as the providers report them.",
       targets: [
         {
           query: `sum by (service, model, type) (rate(llm_tokens_total{${llmFilter}}[5m])) or on() vector(0)`,
@@ -77,17 +77,13 @@ export function addLlmPanels(
 
   builder.withPanel(
     createTimeseriesPanel({
-      title: "Cost Rate and Discrepancy",
+      title: "Live Cost Rate by Provider",
       description:
-        "OpenRouter cost only, by accounting type: actual charged cost, canonical catalog cost, and upstream inference cost. The discrepancy series is actual minus catalog. The Claude Agent SDK and Codex SDK bill against subscriptions and deliberately contribute no cost series, so their spend is not represented here -- see their token panels instead.",
+        "Catalog price applied to provider-reported tokens, per request, by provider and model. Providers return tokens, never dollars, so this is an estimate that moves immediately. It cannot see OpenAI complimentary data-sharing tokens or uninstrumented traffic (Codex, voice); compare against the billed row below. The Claude Agent SDK and Codex SDK bill against subscriptions and contribute no cost series.",
       targets: [
         {
-          query: `sum by (service, workload, model, type) (rate(llm_cost_usd_total{${llmFilter}}[5m])) or on() vector(0)`,
-          legend: "{{service}} {{workload}} {{model}} {{type}}",
-        },
-        {
-          query: `sum by (service, workload, model) (rate(llm_cost_usd_total{${llmFilter},type="actual"}[5m])) - sum by (service, workload, model) (rate(llm_cost_usd_total{${llmFilter},type="catalog"}[5m]))`,
-          legend: "{{service}} {{workload}} {{model}} actual-catalog",
+          query: `sum by (provider, model) (rate(llm_cost_usd_total{${llmFilter},type="catalog"}[5m])) or on() vector(0)`,
+          legend: "{{provider}} {{model}}",
         },
       ],
       gridPos: { x: 12, y: 49, w: 12, h: 8 },
@@ -99,56 +95,15 @@ export function addLlmPanels(
     createTimeseriesPanel({
       title: "Top Cost by Feature (24h)",
       description:
-        "Rolling 24h billed spend per workload. Sums each accounting type across pod lifetimes first, then takes the larger of OpenRouter's charged cost and upstream inference cost, so BYOK routes -- which bill nothing through OpenRouter and read as $0 under an actual-only query -- are counted, and a deploy inside the window does not discard the shorter pod's spend.",
+        "Rolling 24h live spend per workload. Sums across pod lifetimes first, so a deploy inside the window does not discard the shorter pod's spend.",
       targets: [
         {
-          query: `topk(10, sum by (service, workload) (max by (service, workload, model) (sum by (service, workload, model, type) (increase(llm_cost_usd_total{${llmFilter},type=~"actual|upstream"}[24h]))))) or on() vector(0)`,
+          query: `topk(10, sum by (service, workload) (increase(llm_cost_usd_total{${llmFilter},type="catalog"}[24h]))) or on() vector(0)`,
           legend: "{{service}} {{workload}}",
         },
       ],
-      gridPos: { x: 0, y: 57, w: 24, h: 8 },
+      gridPos: { x: 0, y: 57, w: 12, h: 8 },
       unit: "currencyUSD",
-    }),
-  );
-
-  builder.withRow(
-    new dashboard.RowBuilder("Routing and Structured Output").gridPos({
-      x: 0,
-      y: 65,
-      w: 24,
-      h: 1,
-    }),
-  );
-
-  builder.withPanel(
-    createTimeseriesPanel({
-      title: "Resolved Upstream Providers",
-      description:
-        "OpenRouter route attempts by resolved upstream provider and result. Error attempts followed by success are provider fallbacks.",
-      targets: [
-        {
-          query: `sum by (service, model, upstream_provider, outcome) (rate(llm_router_attempts_total{${llmFilter}}[5m])) or on() vector(0)`,
-          legend: "{{service}} {{model}} {{upstream_provider}} {{outcome}}",
-        },
-      ],
-      gridPos: { x: 0, y: 66, w: 12, h: 8 },
-      unit: "ops",
-    }),
-  );
-
-  builder.withPanel(
-    createTimeseriesPanel({
-      title: "Fallback Attempts",
-      description:
-        "Failed upstream route attempts that OpenRouter had to route around before a successful response.",
-      targets: [
-        {
-          query: `sum by (service, model, upstream_provider) (rate(llm_router_attempts_total{${llmFilter},outcome="error"}[5m])) or on() vector(0)`,
-          legend: "{{service}} {{model}} {{upstream_provider}}",
-        },
-      ],
-      gridPos: { x: 12, y: 66, w: 12, h: 8 },
-      unit: "ops",
     }),
   );
 
@@ -163,88 +118,89 @@ export function addLlmPanels(
           legend: "{{service}} {{workload}} {{model}} {{outcome}}",
         },
       ],
-      gridPos: { x: 0, y: 74, w: 12, h: 8 },
-      unit: "ops",
-    }),
-  );
-
-  builder.withPanel(
-    createTimeseriesPanel({
-      title: "Missing Router Metadata",
-      description:
-        "Successful gateway responses where the JSON or final SSE chunk did not carry OpenRouter router metadata.",
-      targets: [
-        {
-          query: `sum by (service, workload, model) (rate(llm_openrouter_metadata_missing_total{${llmFilter}}[5m])) or on() vector(0)`,
-          legend: "{{service}} {{workload}} {{model}}",
-        },
-      ],
-      gridPos: { x: 12, y: 74, w: 12, h: 8 },
+      gridPos: { x: 12, y: 57, w: 12, h: 8 },
       unit: "ops",
     }),
   );
 
   builder.withRow(
-    new dashboard.RowBuilder("Broadcast Archive and Tempo").gridPos({
+    new dashboard.RowBuilder("Provider-Billed Spend").gridPos({
       x: 0,
-      y: 82,
+      y: 65,
       w: 24,
       h: 1,
     }),
   );
 
+  // Billed series come from the hourly Temporal reconciliation of the OpenAI
+  // Costs and Anthropic Cost Report APIs. They are gauges for a UTC-day window,
+  // not counters, and carry per-account labels rather than workload labels.
   builder.withPanel(
     createTimeseriesPanel({
-      title: "Broadcast Deliveries",
+      title: "Live vs Billed Cost (7 days)",
       description:
-        "Authenticated OpenRouter Broadcast deliveries by success, duplicate, validation, archive, and forwarding outcome.",
+        "Live catalog cost against what OpenAI and Anthropic report they will charge, both over roughly the last seven days. The billed window starts at UTC midnight six days ago, so live covers up to one extra day; read the gap as a trend, not to the cent. Billed below live is expected: OpenAI data-sharing complimentary tokens are free and appear only in the billed figure. Billed above live means uninstrumented traffic (Codex, voice) or a stale catalog price. Google is not billed here yet: its spend is visible only through the AI Studio cap and Cloud Billing budgets.",
       targets: [
         {
-          query:
-            "sum by (outcome) (rate(openrouter_broadcast_requests_total[5m])) or on() vector(0)",
-          legend: "{{outcome}}",
+          query: `sum by (provider) (llm_billed_cost_usd{window="7d"}) or on() vector(0)`,
+          legend: "billed {{provider}}",
+        },
+        {
+          query: `sum by (provider) (increase(llm_cost_usd_total{type="catalog"}[7d])) or on() vector(0)`,
+          legend: "live {{provider}}",
         },
       ],
-      gridPos: { x: 0, y: 83, w: 8, h: 8 },
-      unit: "reqps",
+      gridPos: { x: 0, y: 66, w: 12, h: 8 },
+      unit: "currencyUSD",
     }),
   );
 
   builder.withPanel(
     createTimeseriesPanel({
-      title: "Broadcast Archive and Forward Operations",
+      title: "Billed Cost by Account",
       description:
-        "S3 archival, Tempo forwarding, and duplicate detection operations. Any error outcome blocks webhook success.",
+        "Current UTC-day and trailing 7-day cost per OpenAI project and Anthropic workspace, as the providers bill it. Each account has its own provider-side hard cap; this is how close it is.",
       targets: [
         {
-          query:
-            "sum by (operation, outcome) (rate(openrouter_broadcast_operations_total[5m])) or on() vector(0)",
-          legend: "{{operation}} {{outcome}}",
+          query: `sum by (provider, account, window) (llm_billed_cost_usd) or on() vector(0)`,
+          legend: "{{provider}} {{account}} {{window}}",
         },
       ],
-      gridPos: { x: 8, y: 83, w: 8, h: 8 },
-      unit: "ops",
+      gridPos: { x: 12, y: 66, w: 12, h: 8 },
+      unit: "currencyUSD",
     }),
   );
 
   builder.withPanel(
     createTimeseriesPanel({
-      title: "Broadcast Latency and Last Success Age",
+      title: "OpenAI Billed Tokens by Service Tier",
       description:
-        "p95 complete archive-plus-forward latency and seconds since the last successful end-to-end delivery.",
+        "Current UTC-day tokens from OpenAI's organization Usage API, by project, model, and service tier. Complimentary data-sharing tokens appear here with no matching cost.",
       targets: [
         {
           query:
-            "histogram_quantile(0.95, sum by (le) (rate(openrouter_broadcast_request_duration_seconds_bucket[5m])))",
-          legend: "p95 latency",
-        },
-        {
-          query:
-            "time() - max(openrouter_broadcast_last_success_timestamp_seconds)",
-          legend: "last success age",
+            'sum by (account, model, service_tier, type) (llm_billed_tokens{provider="openai"}) or on() vector(0)',
+          legend: "{{account}} {{model}} {{service_tier}} {{type}}",
         },
       ],
-      gridPos: { x: 16, y: 83, w: 8, h: 8 },
+      gridPos: { x: 0, y: 74, w: 12, h: 8 },
+      unit: "short",
+    }),
+  );
+
+  builder.withPanel(
+    createTimeseriesPanel({
+      title: "Billed Reconciliation Freshness",
+      description:
+        "Seconds since the last successful billed-cost reconciliation per provider. LlmBilledReconciliationStale fires past two hours.",
+      targets: [
+        {
+          query:
+            "time() - max by (provider) (llm_billed_reconciliation_last_success_timestamp_seconds)",
+          legend: "{{provider}} last success age",
+        },
+      ],
+      gridPos: { x: 12, y: 74, w: 12, h: 8 },
       unit: "s",
     }),
   );
@@ -252,7 +208,7 @@ export function addLlmPanels(
   builder.withRow(
     new dashboard.RowBuilder("Attribution").gridPos({
       x: 0,
-      y: 91,
+      y: 82,
       w: 24,
       h: 1,
     }),
@@ -260,83 +216,6 @@ export function addLlmPanels(
 
   builder.withPanel(createSubjectTokenPanel());
   builder.withPanel(createSubjectCallPanel());
-
-  builder.withRow(
-    new dashboard.RowBuilder("OpenAI Complimentary Inference").gridPos({
-      x: 0,
-      y: 100,
-      w: 24,
-      h: 1,
-    }),
-  );
-
-  builder.withPanel(
-    createTimeseriesPanel({
-      title: "OpenRouter BYOK Request Rate",
-      description:
-        "Successful OpenRouter language requests by provider-reported BYOK state. Scout reviews should remain byok=true.",
-      targets: [
-        {
-          query:
-            "sum by (service, workload, model, upstream_provider, byok) (rate(llm_openrouter_byok_requests_total[5m])) or on() vector(0)",
-          legend:
-            "{{service}} {{workload}} {{model}} {{upstream_provider}} byok={{byok}}",
-        },
-      ],
-      gridPos: { x: 0, y: 101, w: 12, h: 8 },
-      unit: "reqps",
-    }),
-  );
-
-  builder.withPanel(
-    createTimeseriesPanel({
-      title: "Official OpenAI Tokens by Service Tier",
-      description:
-        "Current UTC-day tokens from OpenAI's organization Usage API after the ingestion cutoff.",
-      targets: [
-        {
-          query:
-            "sum by (model, service_tier, type) (openai_project_usage_tokens) or on() vector(0)",
-          legend: "{{model}} {{service_tier}} {{type}}",
-        },
-      ],
-      gridPos: { x: 12, y: 101, w: 12, h: 8 },
-      unit: "short",
-    }),
-  );
-
-  builder.withPanel(
-    createTimeseriesPanel({
-      title: "Official OpenAI Project Cost",
-      description:
-        "Current UTC-day cost from OpenAI's organization Costs API; this is the billing authority.",
-      targets: [
-        {
-          query: "max(openai_project_cost_usd) or on() vector(0)",
-          legend: "official cost",
-        },
-      ],
-      gridPos: { x: 0, y: 109, w: 12, h: 8 },
-      unit: "currencyUSD",
-    }),
-  );
-
-  builder.withPanel(
-    createTimeseriesPanel({
-      title: "OpenAI Reconciliation Freshness",
-      description:
-        "Seconds since the last complete Usage, Costs, metrics, and Alertmanager reconciliation.",
-      targets: [
-        {
-          query:
-            "time() - max(openai_usage_reconciliation_last_success_timestamp_seconds)",
-          legend: "last success age",
-        },
-      ],
-      gridPos: { x: 12, y: 109, w: 12, h: 8 },
-      unit: "s",
-    }),
-  );
 }
 
 /**
@@ -349,11 +228,11 @@ export function addLlmPanels(
  *
  * Tempo also caps a metrics query at a 3h range server-side, so these panels
  * answer "who is spending right now", not "who spent this month". For a longer
- * window, query Loki for `llm.openrouter.response` records carrying
- * `actualCostUsd` and join them to these spans on `traceId`.
+ * window, query Loki for `llm.provider.response` records carrying
+ * `catalogCostUsd` and join them to these spans on `traceId`.
  */
 const ATTRIBUTION_NOTE =
-  "Selects gen_ai.* spans, which carry both the subject and the usage: OpenTelemetry does not inherit attributes down a trace, so a query matching the attribution span above them would find no tokens to sum, and would count one span per interaction rather than one per model call. Subject ids are span attributes, never metric labels, so this panel reads Tempo and inherits Tempo's 30-day retention and 3h metrics-query cap. For spend over a longer window, join Loki's llm.openrouter.response cost records to these spans on traceId.";
+  "Selects gen_ai.* spans, which carry both the subject and the usage: OpenTelemetry does not inherit attributes down a trace, so a query matching the attribution span above them would find no tokens to sum, and would count one span per interaction rather than one per model call. Subject ids are span attributes, never metric labels, so this panel reads Tempo and inherits Tempo's 30-day retention and 3h metrics-query cap. For spend over a longer window, join Loki's llm.provider.response cost records to these spans on traceId.";
 
 function createSubjectTokenPanel() {
   return new timeseries.PanelBuilder()
@@ -373,7 +252,7 @@ function createSubjectTokenPanel() {
     .unit("short")
     .lineWidth(2)
     .fillOpacity(10)
-    .gridPos({ x: 0, y: 92, w: 12, h: 8 });
+    .gridPos({ x: 0, y: 83, w: 12, h: 8 });
 }
 
 function createSubjectCallPanel() {
@@ -394,5 +273,5 @@ function createSubjectCallPanel() {
     .unit("short")
     .lineWidth(2)
     .fillOpacity(10)
-    .gridPos({ x: 12, y: 92, w: 12, h: 8 });
+    .gridPos({ x: 12, y: 83, w: 12, h: 8 });
 }

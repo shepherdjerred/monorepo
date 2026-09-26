@@ -274,7 +274,7 @@ test("redacts secrets inside body attributes on the forwarded span", async () =>
 
   await tracer.startActiveSpan("gen_ai.chat", async (span) => {
     span.setAttributes({
-      "gen_ai.system": "openrouter",
+      "gen_ai.system": "openai",
       "gen_ai.request.model": "gpt-5-mini",
       "gen_ai.input.messages": JSON.stringify([
         {

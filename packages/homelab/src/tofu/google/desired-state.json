@@ -1,0 +1,34 @@
+{
+  "$schema": "../platform-desired-state.schema.json",
+  "platform": "google",
+  "google_billing_account_id": "01D511-F70137-084AF1",
+  "google_quota_project_id": "sjerred-llm-admin",
+  "google_workloads": {
+    "birmel-prod": {
+      "project_id": "sjerred-llm-birmel-prod",
+      "display_name": "LLM birmel prod",
+      "monthly_budget_usd": 10,
+      "ai_studio_spend_cap_usd": 10,
+      "gemini_key_revision": 1,
+      "onepassword_item_title": "llm-gemini-birmel-prod",
+      "gemini_quota_limits": {
+        "gemini-3-pro-image": {
+          "requests_per_minute": 10
+        }
+      }
+    },
+    "scout-beta": {
+      "project_id": "sjerred-llm-scout-beta",
+      "display_name": "LLM scout beta",
+      "monthly_budget_usd": 5,
+      "ai_studio_spend_cap_usd": 5,
+      "gemini_key_revision": 1,
+      "onepassword_item_title": "llm-gemini-scout-beta",
+      "gemini_quota_limits": {
+        "gemini-2.5-flash-preview-image": {
+          "requests_per_minute": 10
+        }
+      }
+    }
+  }
+}

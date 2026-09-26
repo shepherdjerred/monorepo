@@ -1,7 +1,7 @@
 import { afterEach, expect, test } from "vitest";
 import { Registry } from "prom-client";
 import {
-  createOpenRouterRuntime,
+  createLlmRuntime,
   MAX_SEMANTIC_ATTEMPTS,
   StructuredOutputExhaustionError,
 } from "@shepherdjerred/llm-runtime";
@@ -16,20 +16,28 @@ const COMPLETION_TOKENS = 11;
 
 function invalidDraftResponse(): Response {
   return Response.json({
-    id: "gen-finalizer-test",
-    model: "openai/gpt-5.6-sol",
-    choices: [
+    id: "resp_finalizer_test",
+    object: "response",
+    model: "gpt-5.6-sol",
+    status: "completed",
+    output: [
       {
-        index: 0,
+        type: "message",
+        id: "msg_finalizer_test",
+        role: "assistant",
+        status: "completed",
         // Structurally wrong for ReportAiFinalDraftSchema, so every semantic
         // attempt fails validation and the retry budget is exhausted.
-        message: { role: "assistant", content: '{"queryText":42}' },
-        finish_reason: "stop",
+        content: [
+          { type: "output_text", text: '{"queryText":42}', annotations: [] },
+        ],
       },
     ],
     usage: {
-      prompt_tokens: PROMPT_TOKENS,
-      completion_tokens: COMPLETION_TOKENS,
+      input_tokens: PROMPT_TOKENS,
+      input_tokens_details: { cached_tokens: 0 },
+      output_tokens: COMPLETION_TOKENS,
+      output_tokens_details: { reasoning_tokens: 0 },
       total_tokens: PROMPT_TOKENS + COMPLETION_TOKENS,
     },
   });
@@ -42,8 +50,8 @@ afterEach(() => {
 test("charges every billable attempt when the finalizer exhausts its retries", async () => {
   resetBudgetStateForTests();
   let requests = 0;
-  const runtime = createOpenRouterRuntime({
-    apiKey: "test-key",
+  const runtime = createLlmRuntime({
+    credentials: { openai: { apiKey: "test-key" } },
     service: "scout-finalizer-test",
     appName: "Scout finalizer test",
     metricsRegister: new Registry(),

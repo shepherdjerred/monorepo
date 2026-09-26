@@ -1,5 +1,8 @@
 import { describe, expect, test } from "vitest";
-import { classifyLlmProviderIssue } from "./provider-metrics.ts";
+import {
+  classifyLlmProviderIssue,
+  providerForError,
+} from "./provider-metrics.ts";
 
 describe("classifyLlmProviderIssue", () => {
   test("classifies insufficient quota 429s as quota issues", () => {
@@ -12,7 +15,7 @@ describe("classifyLlmProviderIssue", () => {
     expect(issue).toBe("quota");
   });
 
-  test("classifies OpenRouter credit failures as quota issues", () => {
+  test("classifies credit failures as quota issues", () => {
     expect(
       classifyLlmProviderIssue({
         statusCode: 402,
@@ -21,13 +24,34 @@ describe("classifyLlmProviderIssue", () => {
     ).toBe("quota");
   });
 
-  test("classifies OpenRouter weekly-limit 403s as quota issues", () => {
+  test("classifies provider hard spend caps as quota issues", () => {
+    expect(
+      classifyLlmProviderIssue({
+        status: 429,
+        message:
+          "You exceeded your current quota, please check your plan and billing details.",
+        error: { type: "insufficient_quota" },
+      }),
+    ).toBe("quota");
+    expect(
+      classifyLlmProviderIssue({
+        status: 400,
+        message:
+          "You have reached your specified API usage limits. You will regain access on 2026-10-01 at 00:00 UTC.",
+      }),
+    ).toBe("quota");
+  });
+
+  test("no longer treats a router weekly key limit as a quota", () => {
+    // OpenRouter's per-key weekly limit was the old cap. A 403 now means an
+    // authorization problem, which retrying or waiting does not fix either,
+    // but it is not a spend cap and must not be reported as one.
     expect(
       classifyLlmProviderIssue({
         status: 403,
         message: "Key limit exceeded: weekly limit reached for this key",
       }),
-    ).toBe("quota");
+    ).toBeNull();
   });
 
   test("classifies generic 429s as rate-limit issues", () => {
@@ -86,5 +110,40 @@ describe("classifyLlmProviderIssue", () => {
     const issue = classifyLlmProviderIssue(new Error("connection reset"));
 
     expect(issue).toBeNull();
+  });
+});
+
+describe("providerForError", () => {
+  test("names the provider from the failed request's URL", () => {
+    expect(
+      providerForError({ url: "https://api.anthropic.com/v1/messages" }),
+    ).toBe("anthropic");
+    expect(
+      providerForError({
+        url: "https://aiplatform.googleapis.com/v1/projects/p/locations/global",
+      }),
+    ).toBe("google");
+  });
+
+  test("looks through retry wrappers and causes", () => {
+    // The AI SDK's RetryError carries the real APICallError as lastError.
+    expect(
+      providerForError({
+        name: "AI_RetryError",
+        lastError: { url: "https://api.openai.com/v1/responses" },
+      }),
+    ).toBe("openai");
+    expect(
+      providerForError(
+        new Error("wrapped", {
+          cause: { url: "https://api.openai.com/v1/responses" },
+        }),
+      ),
+    ).toBe("openai");
+  });
+
+  test("admits it does not know rather than guessing from configuration", () => {
+    expect(providerForError(new Error("no url here"))).toBe("unknown");
+    expect(providerForError({ url: "not a url" })).toBe("unknown");
   });
 });

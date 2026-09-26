@@ -28,7 +28,9 @@ import {
  * API settings schema
  */
 export const ApiSettingsSchema = z.object({
-  openRouterApiKey: z.string().optional(),
+  openaiApiKey: z.string().optional(),
+  anthropicApiKey: z.string().optional(),
+  googleApiKey: z.string().optional(),
   s3BucketName: z.string().optional(),
   awsAccessKeyId: z.string().optional(),
   awsSecretAccessKey: z.string().optional(),
@@ -251,28 +253,17 @@ const StageTraceSchema = z.object({
   durationMs: z.number(),
   tokensPrompt: z.number().optional(),
   tokensCompletion: z.number().optional(),
-  transport: z.literal("openrouter").optional(),
-  openRouter: z
+  // Who served the generation. Was always "openrouter"; now the provider. Left
+  // as a free string so history saved before the cutover still parses.
+  transport: z.string().optional(),
+  provider: z
     .object({
-      generationId: z.string().optional(),
+      provider: z.string(),
+      responseId: z.string().optional(),
       requestedModel: z.string(),
       resolvedModel: z.string().optional(),
-      upstreamProvider: z.string().optional(),
-      route: z.string().optional(),
-      region: z.string().optional(),
-      fallbackAttempts: z.number().int().nonnegative(),
-      attempts: z
-        .array(
-          z.object({
-            provider: z.string(),
-            model: z.string(),
-            status: z.number().int(),
-          }),
-        )
-        .readonly(),
-      actualCostUsd: z.number().nonnegative().optional(),
-      upstreamCostUsd: z.number().nonnegative().optional(),
-      routerMetadataPresent: z.boolean(),
+      serviceTier: z.string().optional(),
+      catalogCostUsd: z.number().nonnegative().optional(),
     })
     .optional(),
 });

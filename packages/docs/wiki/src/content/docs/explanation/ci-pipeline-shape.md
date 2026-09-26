@@ -34,7 +34,7 @@ any two of them would lose information the pipeline is built to preserve.
   identity plus only that stack's provider identity. The dependency chain
   preserves release ordering while the job boundary prevents one provider's
   configuration from running with another provider's credential. OpenAI,
-  Anthropic, Discord, OpenRouter, and Cloudflare token management add a second
+  Anthropic, Discord, and Cloudflare token management add a second
   serialized group: PRs validate them without credentials or a backend, while
   main gives each no-retry job only its platform credential and unique state
   passphrase. Ordinary main builds plan only; an exact-stack

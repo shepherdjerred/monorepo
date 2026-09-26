@@ -91,7 +91,7 @@ test("traceClaudeAgent accumulates assistant messages and result usage", async (
   expect(metrics).toContain('outcome="success"');
   // The Claude Agent SDK bills against a subscription, so it contributes token
   // samples but must never contribute a cost sample. The counter itself stays
-  // registered because the OpenRouter path shares it; what must be absent is any
+  // registered because the direct-provider path shares it; what must be absent is any
   // `llm_cost_usd_total` series carrying this transport's labels.
   expect(metrics).toContain('type="cached_input"');
   expect(metrics).not.toMatch(/^llm_cost_usd_total\{/m);

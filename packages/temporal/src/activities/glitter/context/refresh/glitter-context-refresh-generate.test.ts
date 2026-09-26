@@ -173,7 +173,7 @@ const completeEvidence = {
 };
 
 describe("Glitter generated style-card schemas", () => {
-  test("use strict Zod contracts for OpenRouter structured output", () => {
+  test("use strict Zod contracts for provider structured output", () => {
     expect(StyleChunkSummarySchema.safeParse(goodChunkSummary).success).toBe(
       true,
     );

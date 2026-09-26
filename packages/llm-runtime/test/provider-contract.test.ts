@@ -1,7 +1,10 @@
-import { embed, generateImage, generateText, streamText, tool } from "ai";
+import { embed, generateText, streamText, tool } from "ai";
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
-import { createOpenRouterRuntime } from "@shepherdjerred/llm-runtime";
+import {
+  createLlmRuntime,
+  generateValidatedObject,
+} from "@shepherdjerred/llm-runtime";
 
 type ContractFetch = (
   input: Parameters<typeof fetch>[0],
@@ -9,8 +12,8 @@ type ContractFetch = (
 ) => Promise<Response>;
 
 function runtime(fetcher: ContractFetch) {
-  return createOpenRouterRuntime({
-    apiKey: "test-key",
+  return createLlmRuntime({
+    credentials: { openai: { apiKey: "sk-test" } },
     service: "contract-test",
     appName: "Contract Test",
     fetch: fetcher,
@@ -24,255 +27,265 @@ function requestBody(init: RequestInit | undefined): unknown {
   return JSON.parse(init.body);
 }
 
-function usage() {
+/** Request URL without stringifying a Request/URL object by coercion. */
+function requestUrl(input: Parameters<typeof fetch>[0]): string {
+  if (typeof input === "string") return input;
+  return input instanceof URL ? input.href : input.url;
+}
+
+/** OpenAI Responses API usage, which is what `languageModel()` speaks. */
+function responsesUsage() {
   return {
-    prompt_tokens: 3,
-    completion_tokens: 2,
-    total_tokens: 5,
-    cost: 0.00005,
-    cost_details: { upstream_inference_cost: 0.00004 },
+    input_tokens: 12,
+    input_tokens_details: { cached_tokens: 4, cache_write_tokens: 0 },
+    output_tokens: 5,
+    output_tokens_details: { reasoning_tokens: 2 },
+    total_tokens: 17,
   };
 }
 
-describe("AI SDK 7 and OpenRouter provider contracts", () => {
-  test("streams text through the attributed OpenRouter transport", async () => {
-    let body: unknown;
-    const sse = [
-      'data: {"id":"gen-stream","model":"openai/gpt-5.6-luna","provider":"Provider A","choices":[{"index":0,"delta":{"role":"assistant","content":"hel"},"finish_reason":null}]}',
-      'data: {"id":"gen-stream","model":"openai/gpt-5.6-luna","provider":"Provider A","choices":[{"index":0,"delta":{"content":"lo"},"finish_reason":"stop"}],"usage":{"prompt_tokens":3,"completion_tokens":2,"total_tokens":5,"cost":0.00005,"cost_details":{"upstream_inference_cost":0.00004}},"openrouter_metadata":{"requested":"openai/gpt-5.6-luna","is_byok":true,"attempt":1,"attempts":[{"provider":"Provider A","model":"openai/gpt-5.6-luna","status":200}]}}',
-      "data: [DONE]",
-      "",
-    ].join("\n\n");
-    const openRouter = runtime((_input, init) => {
-      body = requestBody(init);
-      return Promise.resolve(
-        new Response(sse, {
-          headers: { "Content-Type": "text/event-stream" },
-        }),
-      );
-    });
-
-    const result = streamText({
-      model: openRouter.languageModel("gpt-5.6-luna"),
-      prompt: "Say hello.",
-      ...openRouter.callOptions({ workload: "contract.stream" }),
-    });
-
-    expect(await result.text).toBe("hello");
-    expect(
-      z.object({ model: z.string(), stream: z.literal(true) }).parse(body),
-    ).toMatchObject({
-      model: "openai/gpt-5.6-luna",
-      stream: true,
-    });
+function textResponse(text: string): Response {
+  return Response.json({
+    id: "resp_test",
+    object: "response",
+    model: "gpt-5.6-luna",
+    status: "completed",
+    output: [
+      {
+        type: "message",
+        id: "msg_test",
+        role: "assistant",
+        status: "completed",
+        content: [{ type: "output_text", text, annotations: [] }],
+      },
+    ],
+    usage: responsesUsage(),
   });
+}
 
-  test("decodes and executes strict local tool calls", async () => {
+describe("AI SDK 7 first-party provider contracts", () => {
+  test("generates text against OpenAI's Responses API", async () => {
+    let url: string | undefined;
     let body: unknown;
-    let executedValue: string | undefined;
-    const openRouter = runtime((_input, init) => {
+    const llm = runtime((input, init) => {
+      url = requestUrl(input);
       body = requestBody(init);
-      return Promise.resolve(
-        Response.json({
-          id: "gen-tool",
-          model: "openai/gpt-5.6-luna",
-          provider: "Provider A",
-          choices: [
-            {
-              index: 0,
-              message: {
-                role: "assistant",
-                content: null,
-                tool_calls: [
-                  {
-                    id: "call-1",
-                    type: "function",
-                    function: {
-                      name: "echo",
-                      arguments: '{"value":"hello"}',
-                    },
-                  },
-                ],
-              },
-              finish_reason: "tool_calls",
-            },
-          ],
-          usage: usage(),
-        }),
-      );
+      return Promise.resolve(textResponse("hello"));
     });
 
     const result = await generateText({
-      model: openRouter.languageModel("gpt-5.6-luna", ["tools"]),
-      prompt: "Echo hello.",
-      tools: {
-        echo: tool({
-          description: "Echo a value.",
-          inputSchema: z.object({ value: z.string() }),
-          strict: true,
-          execute: ({ value }) => {
-            executedValue = value;
-            return { value };
-          },
-        }),
-      },
-      ...openRouter.callOptions({ workload: "contract.tools" }),
+      model: llm.languageModel("gpt-5.6-luna"),
+      prompt: "hi",
+      ...llm.callOptions({ workload: "contract.text" }),
     });
 
-    expect(executedValue).toBe("hello");
-    expect(result.toolCalls[0]?.toolName).toBe("echo");
+    expect(result.text).toBe("hello");
+    // The catalog's native route id is the API model name; no gateway prefix.
+    expect(body).toMatchObject({ model: "gpt-5.6-luna" });
+    expect(url).toContain("api.openai.com");
+    expect(url).not.toContain("openrouter");
+    // Cache reads arrive as a separate, non-overlapping count.
+    expect(result.usage.inputTokenDetails.cacheReadTokens).toBe(4);
+  });
+
+  test("streams text", async () => {
+    const sse = [
+      'data: {"type":"response.created","response":{"id":"resp_stream","object":"response","model":"gpt-5.6-luna","status":"in_progress","output":[]}}',
+      'data: {"type":"response.output_item.added","output_index":0,"item":{"type":"message","id":"msg_1","role":"assistant","status":"in_progress","content":[]}}',
+      'data: {"type":"response.output_text.delta","item_id":"msg_1","output_index":0,"content_index":0,"delta":"hel"}',
+      'data: {"type":"response.output_text.delta","item_id":"msg_1","output_index":0,"content_index":0,"delta":"lo"}',
+      `data: {"type":"response.completed","response":{"id":"resp_stream","object":"response","model":"gpt-5.6-luna","status":"completed","output":[{"type":"message","id":"msg_1","role":"assistant","status":"completed","content":[{"type":"output_text","text":"hello","annotations":[]}]}],"usage":${JSON.stringify(responsesUsage())}}}`,
+      "",
+    ].join("\n\n");
+
+    const llm = runtime(() =>
+      Promise.resolve(
+        new Response(sse, {
+          headers: { "Content-Type": "text/event-stream" },
+        }),
+      ),
+    );
+
+    const result = streamText({
+      model: llm.languageModel("gpt-5.6-luna"),
+      prompt: "hi",
+      ...llm.callOptions({ workload: "contract.stream" }),
+    });
+
+    let text = "";
+    for await (const chunk of result.textStream) text += chunk;
+    expect(text).toBe("hello");
+  });
+
+  test("sends tool schemas the provider can validate", async () => {
+    let body: unknown;
+    const llm = runtime((_input, init) => {
+      body = requestBody(init);
+      return Promise.resolve(textResponse("done"));
+    });
+
+    await generateText({
+      model: llm.languageModel("gpt-5.6-luna", ["tools"]),
+      prompt: "look it up",
+      tools: {
+        lookup: tool({
+          description: "look something up",
+          inputSchema: z.object({ id: z.string() }),
+          execute: ({ id }) => Promise.resolve({ id }),
+        }),
+      },
+      ...llm.callOptions({ workload: "contract.tools", model: "gpt-5.6-luna" }),
+    });
+
     const parsed = z
       .object({
-        provider: z.object({ require_parameters: z.literal(true) }).loose(),
         tools: z.array(
-          z.object({
-            type: z.literal("function"),
-            function: z.object({
-              name: z.literal("echo"),
-              strict: z.literal(true),
-            }),
-          }),
+          z
+            .object({
+              name: z.string(),
+              parameters: z.record(z.string(), z.unknown()),
+            })
+            .loose(),
         ),
       })
       .loose()
       .parse(body);
-    expect(parsed.tools).toHaveLength(1);
+    expect(parsed.tools[0]?.name).toBe("lookup");
+    expect(parsed.tools[0]?.parameters).toMatchObject({
+      properties: { id: { type: "string" } },
+      required: ["id"],
+    });
   });
 
-  test("embeds text through the catalog embedding endpoint", async () => {
+  test("asks OpenAI to enforce structured-output schemas strictly", async () => {
+    // `strictJsonSchema` is what makes the Responses API reject a response that
+    // does not match the schema, rather than handing back prose we would have
+    // to parse and repair. Tool-call strictness is a per-tool property and is
+    // not governed by this flag.
     let body: unknown;
-    const openRouter = runtime((_input, init) => {
+    const llm = runtime((_input, init) => {
       body = requestBody(init);
       return Promise.resolve(
         Response.json({
-          id: "embed-1",
+          id: "resp_obj",
+          object: "response",
+          model: "gpt-5.6-luna",
+          status: "completed",
+          output: [
+            {
+              type: "message",
+              id: "msg_obj",
+              role: "assistant",
+              status: "completed",
+              content: [
+                {
+                  type: "output_text",
+                  text: JSON.stringify({ answer: "yes" }),
+                  annotations: [],
+                },
+              ],
+            },
+          ],
+          usage: responsesUsage(),
+        }),
+      );
+    });
+
+    await generateValidatedObject(llm, {
+      model: "gpt-5.6-luna",
+      schema: z.object({ answer: z.string() }),
+      schemaName: "answer",
+      prompt: "is it?",
+      workload: "contract.object",
+    });
+
+    const parsed = z
+      .object({
+        text: z.object({
+          format: z.object({ type: z.string(), strict: z.boolean() }).loose(),
+        }),
+      })
+      .loose()
+      .parse(body);
+    expect(parsed.text.format).toMatchObject({
+      type: "json_schema",
+      strict: true,
+    });
+  });
+
+  test("embeds through the catalog embedding endpoint", async () => {
+    let url: string | undefined;
+    let body: unknown;
+    const llm = runtime((input, init) => {
+      url = requestUrl(input);
+      body = requestBody(init);
+      return Promise.resolve(
+        Response.json({
           object: "list",
-          model: "openai/text-embedding-3-small",
-          provider: "Provider A",
-          data: [{ object: "embedding", embedding: [0.1, 0.2], index: 0 }],
-          usage: { prompt_tokens: 2, total_tokens: 2, cost: 0.000001 },
+          data: [{ object: "embedding", index: 0, embedding: [0.1, 0.2] }],
+          model: "text-embedding-3-small",
+          usage: { prompt_tokens: 3, total_tokens: 3 },
         }),
       );
     });
 
     const result = await embed({
-      model: openRouter.embeddingModel("text-embedding-3-small"),
+      model: llm.embeddingModel("text-embedding-3-small"),
       value: "hello",
-      ...openRouter.callOptions({ workload: "contract.embedding" }),
+      ...llm.callOptions({ workload: "contract.embed" }),
     });
 
     expect(result.embedding).toEqual([0.1, 0.2]);
-    expect(result.usage.tokens).toBe(2);
-    expect(
-      z
-        .object({
-          model: z.literal("openai/text-embedding-3-small"),
-          input: z.array(z.literal("hello")),
-          provider: z.object({ data_collection: z.literal("deny") }).loose(),
-        })
-        .parse(body),
-    ).toBeDefined();
-  });
-
-  test("generates images through the catalog image endpoint", async () => {
-    let body: unknown;
-    const openRouter = runtime((_input, init) => {
-      body = requestBody(init);
-      return Promise.resolve(
-        Response.json({
-          created: 1,
-          data: [{ b64_json: "AQID" }],
-          usage: {
-            prompt_tokens: 3,
-            completion_tokens: 1,
-            total_tokens: 4,
-          },
-        }),
-      );
-    });
-    const { headers } = openRouter.callOptions({
-      workload: "contract.image",
-    });
-
-    const result = await generateImage({
-      model: openRouter.imageModel("gemini-2.5-flash-image"),
-      prompt: "A tiny test image.",
-      headers,
-    });
-
-    expect(result.image.base64).toBe("AQID");
-    expect(
-      z
-        .object({
-          model: z.literal("google/gemini-2.5-flash-image"),
-          prompt: z.literal("A tiny test image."),
-          provider: z.object({ data_collection: z.literal("deny") }).loose(),
-          trace: z.object({
-            generation_name: z.literal("contract.image"),
-          }),
-        })
-        .parse(body),
-    ).toBeDefined();
+    expect(url).toContain("/embeddings");
+    expect(body).toMatchObject({ model: "text-embedding-3-small" });
   });
 
   test("propagates cancellation to the provider fetch", async () => {
-    let observedAbort = false;
-    const openRouter = runtime((_input, init) => {
-      const signal = init?.signal;
-      if (signal === undefined || signal === null) {
-        throw new Error("expected an abort signal");
-      }
-      return new Promise((_resolve, reject) => {
-        const rejectCancelled = (): void => {
-          observedAbort = true;
-          reject(new Error("provider fetch cancelled"));
-        };
-        if (signal.aborted) {
-          rejectCancelled();
-          return;
-        }
-        signal.addEventListener("abort", rejectCancelled, { once: true });
-      });
-    });
+    const controller = new AbortController();
+    let sawAbort = false;
+    const llm = runtime(
+      (_input, init) =>
+        new Promise((_resolve, reject) => {
+          const abort = () => {
+            sawAbort = true;
+            reject(new DOMException("aborted", "AbortError"));
+          };
+          if (init?.signal?.aborted === true) {
+            abort();
+            return;
+          }
+          init?.signal?.addEventListener("abort", abort);
+        }),
+    );
 
-    await expect(
-      generateText({
-        model: openRouter.languageModel("gpt-5.6-luna"),
-        prompt: "Wait.",
-        abortSignal: AbortSignal.timeout(5),
-        maxRetries: 0,
-        ...openRouter.callOptions({ workload: "contract.cancel" }),
-      }),
-    ).rejects.toThrow();
-    expect(observedAbort).toBe(true);
+    const pending = generateText({
+      model: llm.languageModel("gpt-5.6-luna"),
+      prompt: "hi",
+      abortSignal: controller.signal,
+      maxRetries: 0,
+      ...llm.callOptions({ workload: "contract.cancel" }),
+    });
+    // Abort after a turn of the event loop so the provider fetch has started;
+    // the harness also handles an already-aborted signal.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    controller.abort();
+    await expect(pending).rejects.toThrow();
+    expect(sawAbort).toBe(true);
   });
 });
 
 describe("prompt caching", () => {
-  test("sends a prompt cache key in the request body when one is given", async () => {
+  test("sends OpenAI's prompt cache key in the request body when one is given", async () => {
     let body: unknown;
-    const openRouter = runtime((_input, init) => {
+    const llm = runtime((_input, init) => {
       body = requestBody(init);
-      return Promise.resolve(
-        Response.json({
-          id: "gen-cache",
-          model: "openai/gpt-5.6-luna",
-          choices: [
-            {
-              index: 0,
-              message: { role: "assistant", content: "hello" },
-              finish_reason: "stop",
-            },
-          ],
-          usage: { prompt_tokens: 1, completion_tokens: 1, total_tokens: 2 },
-        }),
-      );
+      return Promise.resolve(textResponse("hello"));
     });
 
     await generateText({
-      model: openRouter.languageModel("gpt-5.6-luna"),
+      model: llm.languageModel("gpt-5.6-luna"),
       prompt: "Say hello.",
-      ...openRouter.callOptions({
+      ...llm.callOptions({
         workload: "contract.cache",
         sessionId: "turn-1",
         promptCacheKey: "contract.cache:v1",
@@ -283,5 +296,18 @@ describe("prompt caching", () => {
       z.object({ prompt_cache_key: z.string() }).loose().parse(body)
         .prompt_cache_key,
     ).toBe("contract.cache:v1");
+  });
+
+  test("keeps strict schemas alongside the cache key for an OpenAI model", () => {
+    const llm = runtime(() => Promise.resolve(textResponse("unused")));
+    expect(
+      llm.callOptions({
+        workload: "contract.cache",
+        model: "gpt-5.6-luna",
+        promptCacheKey: "contract.cache:v1",
+      }).providerOptions,
+    ).toEqual({
+      openai: { strictJsonSchema: true, promptCacheKey: "contract.cache:v1" },
+    });
   });
 });

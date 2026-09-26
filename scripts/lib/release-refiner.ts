@@ -1,5 +1,5 @@
 import { Codex } from "@openai/codex-sdk";
-import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
+import { createCodexConfig } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 
 import { runAllowExit, type RunOptions, type RunResult } from "./run.ts";
@@ -16,7 +16,6 @@ const AGENT_CREDENTIAL_ENVIRONMENT = [
   "CODEX_ID_TOKEN",
   "CODEX_REFRESH_TOKEN",
   "OPENAI_API_KEY",
-  "OPENROUTER_API_KEY",
 ];
 const OUTPUT_TAIL_LIMIT = 16_384;
 const REFINER_RESULT_START = "<!-- release-refiner-result -->";
@@ -87,7 +86,7 @@ export type RunReleaseRefinerInput = {
   root: string;
   prompt: string;
   env: Record<string, string>;
-  openRouterApiKey: string;
+  openAiApiKey: string;
   execute?: RefinerCommandRunner;
   runCodex?: ReleaseAgentRunner;
 };
@@ -197,7 +196,7 @@ const AGENT_PROCESS_ENVIRONMENT_KEYS = new Set([
  * The SDK replaces the child environment wholesale rather than layering onto
  * `process.env` the way `run()` does, so passing only the git-auth env would
  * drop the CI image's mise `PATH`. Copy only the allowlisted process/TLS
- * settings, then add the git auth this run needs. The OpenRouter key is passed
+ * settings, then add the git auth this run needs. The OpenAI key is passed
  * through the Codex SDK constructor and never inherited by tool subprocesses.
  */
 export function refinerSdkEnv(
@@ -217,22 +216,21 @@ export function refinerSdkEnv(
 async function runCodexSdk(
   input: RunReleaseRefinerInput,
 ): Promise<ReleaseAgentOutcome> {
-  const openRouter = createOpenRouterCodexConfig({
-    apiKey: input.openRouterApiKey,
+  const codexConfig = createCodexConfig({
+    apiKey: input.openAiApiKey,
     modelId: CODEX_MODEL,
     env: refinerSdkEnv(input, {}),
   });
   const codex = new Codex({
-    ...openRouter.codexOptions,
+    ...codexConfig.codexOptions,
     config: {
-      ...openRouter.providerConfig,
       project_doc_max_bytes: 0,
       features: { apps: false, plugins: false, multi_agent: false },
     },
   });
   const thread = codex.startThread({
     approvalPolicy: "never",
-    model: openRouter.routeModelId,
+    model: codexConfig.routeModelId,
     modelReasoningEffort: "medium",
     networkAccessEnabled: true,
     sandboxMode: "danger-full-access",
@@ -242,7 +240,7 @@ async function runCodexSdk(
   });
   const result = await thread.run(input.prompt);
   console.log(
-    `Codex release refiner completed (model=${openRouter.catalogModelId}, ${String(result.usage?.input_tokens ?? 0)} input tokens, ${String(result.usage?.output_tokens ?? 0)} output tokens).`,
+    `Codex release refiner completed (model=${codexConfig.catalogModelId}, ${String(result.usage?.input_tokens ?? 0)} input tokens, ${String(result.usage?.output_tokens ?? 0)} output tokens).`,
   );
   return { kind: "completed", output: result.finalResponse };
 }

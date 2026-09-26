@@ -1,7 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { z } from "zod";
 import {
-  createOpenRouterRuntime,
+  createLlmRuntime,
   generateValidatedObject,
 } from "@shepherdjerred/llm-runtime";
 import { TurnAnswerSchema } from "@shepherdjerred/birmel/agent-runtime/contracts.ts";
@@ -11,11 +11,14 @@ import { ClassificationSchema } from "@shepherdjerred/birmel/discord/should-resp
 const JsonRecordSchema = z.record(z.string(), z.unknown());
 const PropertiesSchema = z.record(z.string(), z.unknown());
 const RequiredSchema = z.array(z.string());
+// OpenAI's Responses API carries the structured-output schema under
+// `text.format`, where the chat-completions shape used `response_format`.
 const RequestBodySchema = z
   .object({
-    response_format: z.object({
-      type: z.literal("json_schema"),
-      json_schema: z.object({ schema: z.unknown() }).loose(),
+    text: z.object({
+      format: z
+        .object({ type: z.literal("json_schema"), schema: z.unknown() })
+        .loose(),
     }),
   })
   .loose();
@@ -42,20 +45,26 @@ function expectCompleteRequiredArrays(node: unknown, path = "$schema"): void {
   }
 }
 
-function openRouterResponse(content: string): Response {
+function responsesApiResponse(content: string): Response {
   return Response.json({
-    id: "gen-schema-test",
-    model: "openai/gpt-5.6-luna",
-    choices: [
+    id: "resp_schema_test",
+    object: "response",
+    model: "gpt-5.6-luna",
+    status: "completed",
+    output: [
       {
-        index: 0,
-        message: { role: "assistant", content },
-        finish_reason: "stop",
+        type: "message",
+        id: "msg_schema_test",
+        role: "assistant",
+        status: "completed",
+        content: [{ type: "output_text", text: content, annotations: [] }],
       },
     ],
     usage: {
-      prompt_tokens: 12,
-      completion_tokens: 4,
+      input_tokens: 12,
+      input_tokens_details: { cached_tokens: 0 },
+      output_tokens: 4,
+      output_tokens_details: { reasoning_tokens: 0 },
       total_tokens: 16,
     },
   });
@@ -70,8 +79,8 @@ function recordingRuntime(
   responses: string[],
   recordRequestBody: (body: string) => void,
 ) {
-  return createOpenRouterRuntime({
-    apiKey: "test-key",
+  return createLlmRuntime({
+    credentials: { openai: { apiKey: "test-key" } },
     service: "birmel-schema-test",
     appName: "birmel-schema-test",
     fetch: Object.assign(
@@ -87,7 +96,7 @@ function recordingRuntime(
         if (response === undefined) {
           throw new Error("unexpected structured-output request");
         }
-        return openRouterResponse(response);
+        return responsesApiResponse(response);
       },
       {
         preconnect: (_url: string | URL) => {
@@ -137,8 +146,7 @@ describe("Birmel provider structured-output schemas", () => {
 
     expect(bodies).toHaveLength(3);
     for (const body of bodies) {
-      const schema =
-        RequestBodySchema.parse(body).response_format.json_schema.schema;
+      const schema = RequestBodySchema.parse(body).text.format.schema;
       expectCompleteRequiredArrays(schema);
     }
   });

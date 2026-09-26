@@ -1,0 +1,38 @@
+{
+  "$schema": "../platform-desired-state.schema.json",
+  "platform": "anthropic-federation",
+  "anthropic_federation_workspaces": {
+    "beta": {
+      "name": "beta"
+    },
+    "prod": {
+      "name": "prod"
+    }
+  },
+  "anthropic_federation_issuer": {
+    "name": "homelab-talos",
+    "issuer_url": "https://192.168.1.81:6443",
+    "jwks_keys_json": "[{\"use\":\"sig\",\"kty\":\"RSA\",\"kid\":\"5pbT9hary011zm1AUA6SyBJ4hsl7r1ZIj5AZngXyTMk\",\"alg\":\"RS256\",\"n\":\"vVM-m42XL4JPmQ7o1inpILfoA-e3eFNWSqh5ByXMKiMaauqrraUNZQ1R5ZEBRU4CGx6aWa3VG67qPiZCvCiAm1QPG9bWwHoJUA0e8tQW9f0pqf_NpBR90oUscY_pF17_BNk7aTxPCmmSs7IUX22TzqANQqR430HRWGU_bAUvkfmQpmXQK01DZHksjnk2Jl3k8mwlVCY-jwYJx0JDyjDXTI2aWwkgEYu8SbMraf_K0o0xxo-0QuSjKCHhuV64-clzNUulRNo9eZ13tw7SGTTtiaM0WVV4sbL9t3-J7_40eE9OModjUIVBWGflgL2TUzBc9JSL8qSer7ycHOw7H5r7mZfPWkmRswrQ1ERLZg7f_FzreBEsVd1xiq5z0Qnd_6bMFVDqUMVCwjhfoKSnAH6yqyzYNnT_mvIcAbfd-OyNSd7g_lcvyfWDgBzUzBxU-plq8S39_aa_-1Y0hyOEaeDVTkPDJDh9U8EYt7IrlB1wKgfKkXk0s5SBDvHDTMWk5ul4udRX1QLJ2K_3SDhnMmiRFPRLwJ-u3_4fbSKZajA2_NJjA3WHhHTYg5E8FSSDXstn3itmuUlW9jrmIywFWhx2hmq6G_w2vd6fh0B5JUds2K5S7ZDD91o5Bz0MsLO3DQhzPprd2Fsa5wUAd6wzbLsj9mnNHg_nOsdGpIKa1oKKwAM\",\"e\":\"AQAB\"}]",
+    "max_jwt_lifetime_seconds": 3600
+  },
+  "anthropic_federation_workloads": {
+    "birmel-prod": {
+      "workspace_key": "prod",
+      "namespace": "birmel",
+      "token_lifetime_seconds": 1200,
+      "onepassword_item_title": "llm-anthropic-federation-birmel-prod"
+    },
+    "scout-beta": {
+      "workspace_key": "beta",
+      "namespace": "scout-beta",
+      "token_lifetime_seconds": 1200,
+      "onepassword_item_title": "llm-anthropic-federation-scout-beta"
+    },
+    "scout-prod": {
+      "workspace_key": "prod",
+      "namespace": "scout-prod",
+      "token_lifetime_seconds": 1200,
+      "onepassword_item_title": "llm-anthropic-federation-scout-prod"
+    }
+  }
+}

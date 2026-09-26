@@ -61,7 +61,7 @@ export const generateImageTool = createTool({
       }
 
       const runtime = getLlmRuntime();
-      const imageModel = config.openRouter.imageModel;
+      const imageModel = config.llm.imageModel;
       const requestContext = getRequestContext();
 
       if (

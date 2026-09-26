@@ -99,12 +99,12 @@ common:
         secretKeyRef:
           name: buildkite-npm-credentials
           key: NPM_TOKEN
-  - grant_release_openrouter: &grant_release_openrouter
-      name: OPENROUTER_API_KEY
+  - grant_release_openai: &grant_release_openai
+      name: OPENAI_API_KEY
       valueFrom:
         secretKeyRef:
-          name: buildkite-release-openrouter-credentials
-          key: OPENROUTER_API_KEY
+          name: buildkite-release-openai-credentials
+          key: OPENAI_API_KEY
   - grant_trmnl: &grant_trmnl
       name: TRMNL_API_KEY
       valueFrom:
@@ -237,24 +237,6 @@ common:
         secretKeyRef:
           name: discord-minecraft-credentials
           key: DISCORD_BOT_TOKEN
-  - grant_openrouter_management_key: &grant_openrouter_management_key
-      name: OPENROUTER_MANAGEMENT_KEY
-      valueFrom:
-        secretKeyRef:
-          name: openrouter-tofu-credentials
-          key: OPENROUTER_MANAGEMENT_KEY
-  - grant_openrouter_byok_keys: &grant_openrouter_byok_keys
-      name: OPENROUTER_BYOK_KEYS_JSON
-      valueFrom:
-        secretKeyRef:
-          name: openrouter-tofu-credentials
-          key: OPENROUTER_BYOK_KEYS_JSON
-  - grant_openrouter_tofu_state: &grant_openrouter_tofu_state
-      name: TOFU_STATE_ENCRYPTION_PASSPHRASE
-      valueFrom:
-        secretKeyRef:
-          name: openrouter-tofu-credentials
-          key: TOFU_STATE_ENCRYPTION_PASSPHRASE
   - grant_cloudflare_tokens_admin: &grant_cloudflare_tokens_admin
       name: CLOUDFLARE_API_TOKEN
       valueFrom:
@@ -2515,10 +2497,11 @@ steps:
         - "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json"
         - "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts"
         - "packages/homelab/src/tofu/anthropic/**"
+        - "packages/homelab/src/tofu/anthropic-federation/**"
         - "packages/homelab/src/tofu/cloudflare-tokens/**"
         - "packages/homelab/src/tofu/discord/**"
+        - "packages/homelab/src/tofu/google/**"
         - "packages/homelab/src/tofu/openai/**"
-        - "packages/homelab/src/tofu/openrouter/**"
         - "packages/homelab/src/tofu/platform-desired-state.schema.json"
         - "scripts/lib/run.ts"
         - "scripts/lib/transient.ts"
@@ -2528,7 +2511,7 @@ steps:
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
       export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
-      for stack in openai anthropic discord openrouter cloudflare-tokens; do
+      for stack in openai anthropic anthropic-federation google discord cloudflare-tokens; do
         flock -x /buildkite/tofu-plugin-cache/.lock \
           bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts "$$stack" validate
       done
@@ -3526,52 +3509,6 @@ steps:
                   - *grant_discord_scout_prod_token
                   - *grant_discord_minecraft_token
 
-  - label: ":terraform: OpenTofu plan / opt-in apply — OpenRouter"
-    key: tofu-platform-openrouter
-    timeout_in_minutes: 60
-    if: build.branch == pipeline.default_branch
-    depends_on: homelab-release-admission
-    concurrency: 1
-    concurrency_group: monorepo/tofu-platform-credentials
-    command: |
-      requested_platform=$${TOFU_PLATFORM_APPLY:-}
-      if [ -n "$$requested_platform" ] && [ "$$requested_platform" != "openrouter" ]; then exit 0; fi
-      release_admission=$$(bun --no-install .buildkite/scripts/admission/homelab-release-admission.ts consume)
-      if [ "$$release_admission" = "superseded" ]; then exit 0; fi
-      if [ "$$release_admission" != "admitted" ]; then
-        echo "invalid homelab release admission outcome: $$release_admission"
-        exit 1
-      fi
-      if ! bun --no-install .buildkite/scripts/selectors/ci-changed.ts tofu-platforms; then exit 0; fi
-      . .buildkite/scripts/toolchain.sh
-      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter homelab --production
-      export TF_PLUGIN_CACHE_DIR=/buildkite/tofu-plugin-cache
-      flock -x /buildkite/tofu-plugin-cache/.lock \
-        bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts openrouter plan
-      if [ "$$requested_platform" = "openrouter" ]; then
-        flock -x /buildkite/tofu-plugin-cache/.lock \
-          bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts openrouter apply
-      fi
-    plugins:
-      - kubernetes:
-          <<: *pod_tofu_kubernetes
-          metadata:
-            labels:
-              ci.sjer.red/step-key: tofu-platform-openrouter
-          podSpecPatch:
-            <<: *pod_tofu_pod_spec
-            containers:
-              - *checkout_container
-              - <<: *pod_tofu_container
-                env:
-                  - *env_buildkite_shell
-                  - *grant_github_download
-                  - *grant_seaweedfs_state_access
-                  - *grant_seaweedfs_state_secret
-                  - *grant_openrouter_management_key
-                  - *grant_openrouter_byok_keys
-                  - *grant_openrouter_tofu_state
-
   - label: ":terraform: OpenTofu plan / opt-in apply — Cloudflare API tokens"
     key: tofu-platform-cloudflare-tokens
     timeout_in_minutes: 60
@@ -3897,7 +3834,7 @@ steps:
                   - *grant_github_app_id
                   - *grant_github_app_installation_id
                   - *grant_github_app_private_key
-                  - *grant_release_openrouter
+                  - *grant_release_openai
 
   # Version commit-back: rewrites versions.ts tag@digest pins from the digests
   # the images step recorded in build meta-data, and opens the auto-merge bump
@@ -4073,7 +4010,6 @@ steps:
       - tofu-platform-openai
       - tofu-platform-anthropic
       - tofu-platform-discord
-      - tofu-platform-openrouter
       - tofu-platform-cloudflare-tokens
       - argocd-sync
       - scout-beta-release

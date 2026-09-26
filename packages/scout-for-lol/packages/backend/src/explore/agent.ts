@@ -29,7 +29,7 @@ import { riotHistoryExploreEnabled } from "#src/explore/tools/riot-history-tools
 import { hydrateExploreMatchCards } from "#src/explore-match/match-view.ts";
 import { clashExploreEnabled } from "#src/league/clash/access.ts";
 import { resolveHallCapability } from "#src/explore/tools/hall-tools.ts";
-import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
+import { getLlmRuntime } from "#src/league/review/ai-clients.ts";
 import {
   assertWithinBudget,
   recordTokenUsage,
@@ -62,9 +62,9 @@ async function streamExploreAgentInternal(
   params: ExploreAgentParams,
 ): Promise<ExploreAgentResult> {
   const model = exploreModel();
-  const runtime = getOpenRouterRuntime();
+  const runtime = getLlmRuntime();
   if (runtime === undefined) {
-    throw new Error("OPENROUTER_API_KEY is required for explore");
+    throw new Error("OpenAI credentials are required for explore");
   }
   assertWithinBudget();
 
@@ -128,11 +128,10 @@ async function streamExploreAgentInternal(
     }),
     stopWhen: stepCountIs(EXPLORE_MAX_STEPS),
     // Most current models (every GPT-5.x, most Claude) declare
-    // supportsTemperature: false, and the runtime asks OpenRouter for
-    // `require_parameters` whenever a call needs tools or structured output.
-    // Sending temperature to a model that does not accept it therefore leaves
-    // zero eligible endpoints and the whole turn fails with a 404 "No endpoints
-    // found that can handle the requested parameters" — not a soft downgrade.
+    // supportsTemperature: false, and the provider rejects the parameter
+    // outright: OpenAI answers a reasoning model's temperature with a 400
+    // "Unsupported parameter", so the whole turn fails rather than soft
+    // downgrading.
     ...(modelSupportsParameter(model, "temperature")
       ? { temperature: 0.2 }
       : {}),

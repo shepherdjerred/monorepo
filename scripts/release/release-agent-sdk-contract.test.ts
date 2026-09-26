@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { Codex } from "@openai/codex-sdk";
-import { createOpenRouterCodexConfig } from "@shepherdjerred/llm-runtime";
+import { createCodexConfig } from "@shepherdjerred/llm-runtime";
 import { z } from "zod";
 
 const ScriptsPackageSchema = z.looseObject({
@@ -10,10 +10,10 @@ const ScriptsPackageSchema = z.looseObject({
 describe("release refiner native SDK contract", () => {
   test("loads the native agent SDK entrypoints", () => {
     expect(typeof Codex).toBe("function");
-    expect(typeof createOpenRouterCodexConfig).toBe("function");
+    expect(typeof createCodexConfig).toBe("function");
   });
 
-  test("pins Codex SDK and the shared OpenRouter adapter", async () => {
+  test("pins Codex SDK and the shared runtime Codex adapter", async () => {
     const manifest = ScriptsPackageSchema.parse(
       await Bun.file(`${import.meta.dir}/../package.json`).json(),
     );

@@ -13,21 +13,24 @@ export const legacyTofuPaths = [
 export const platformTofuPaths = [
   "packages/homelab/scripts/tofu/tofu-stack-manifest.ts",
   "packages/homelab/src/tofu/anthropic",
+  "packages/homelab/src/tofu/anthropic-federation",
   "packages/homelab/src/tofu/cloudflare-tokens",
   "packages/homelab/src/tofu/discord",
+  "packages/homelab/src/tofu/google",
   "packages/homelab/src/tofu/openai",
-  "packages/homelab/src/tofu/openrouter",
   "packages/homelab/src/tofu/platform-desired-state.schema.json",
   "packages/homelab/scripts/platform-desired-state.ts",
   "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts",
   "packages/homelab/src/cdk8s/onepassword-vault-snapshot.json",
 ] as const;
 
+// Stacks Buildkite can plan and apply. anthropic-federation and google are
+// operator-applied (an org:admin OAuth token and a user's ADC respectively),
+// so they validate in CI but never appear here.
 export const platformTofuStacks = [
   "openai",
   "anthropic",
   "discord",
-  "openrouter",
   "cloudflare-tokens",
 ] as const;
 

@@ -76,7 +76,7 @@ export const SERIES_PRESET_IDS = [
   "ai-tokens-by-tool",
   "ai-quota",
   "cluster-llm-cost",
-  "openai-project-cost",
+  "provider-billed-cost",
   "prs-open",
   "prs-merged",
   "renovate-pending",

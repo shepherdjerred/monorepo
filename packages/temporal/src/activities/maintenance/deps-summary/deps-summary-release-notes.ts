@@ -4,7 +4,7 @@ import { createGitHubAppInstallationToken } from "#lib/github-app-token.ts";
 import type { DependencyChange } from "#shared/deps-summary-types.ts";
 import { ociManifestAttempt } from "./deps-summary-oci.ts";
 import { dependencyNoteText } from "./deps-summary-text.ts";
-import { generateBoundedSynthesis } from "#activities/agent/openrouter-runtime.ts";
+import { generateBoundedSynthesis } from "#activities/agent/synthesis-runtime.ts";
 
 const REPO_SLUG = "shepherdjerred/monorepo";
 

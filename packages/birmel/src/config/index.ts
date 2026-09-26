@@ -47,8 +47,7 @@ function loadCoreConfig(environment: Environment) {
       token: environment["DISCORD_TOKEN"] ?? "",
       clientId: environment["DISCORD_CLIENT_ID"] ?? "",
     },
-    openRouter: {
-      apiKey: environment["OPENROUTER_API_KEY"] ?? "",
+    llm: {
       model: environment["LLM_MODEL"] ?? "gpt-5.6-sol",
       classifierModel: environment["LLM_CLASSIFIER_MODEL"] ?? "gpt-5.4-nano",
       memoryModel: environment["LLM_MEMORY_MODEL"] ?? "gpt-5.4-nano",

@@ -1,24 +1,25 @@
 import { generateText } from "ai";
 import {
-  createOpenRouterRuntime,
+  createLlmRuntime,
+  providerCredentialsFromEnv,
   generateValidatedObject,
   StructuredOutputUsageError,
-  openRouterWebSearchTool,
-  type OpenRouterRuntime,
+  webSearchTool,
+  type LlmRuntime,
 } from "@shepherdjerred/llm-runtime";
 import type { z } from "zod";
 import { buildSystemPrompt } from "./prompt.ts";
 import type { UsageSummary } from "../usage.ts";
 import { createUsageTracker } from "../usage.ts";
 
-let runtime: OpenRouterRuntime | undefined;
+let runtime: LlmRuntime | undefined;
 let modelId = "claude-sonnet-5";
 let tracker: ReturnType<typeof createUsageTracker> | undefined;
 let webSearchEnabled = false;
 
-export function initLlm(apiKey: string, model?: string): void {
-  runtime = createOpenRouterRuntime({
-    apiKey,
+export function initLlm(model?: string): void {
+  runtime = createLlmRuntime({
+    credentials: providerCredentialsFromEnv(),
     service: "monarch",
     appName: "Monarch Transaction Classifier",
   });
@@ -35,7 +36,7 @@ export function getUsageSummary(): UsageSummary {
   return tracker.getSummary();
 }
 
-export function getRuntime(): OpenRouterRuntime {
+export function getRuntime(): LlmRuntime {
   if (runtime === undefined) throw new Error("Call initLlm() first");
   return runtime;
 }
@@ -61,7 +62,7 @@ async function researchPrompt(userPrompt: string): Promise<{
   evidence: string;
   usage: LlmResponse["usage"];
 }> {
-  const openRouter = getRuntime();
+  const llm = getRuntime();
   if (!webSearchEnabled) {
     return {
       evidence: "Research disabled.",
@@ -69,15 +70,15 @@ async function researchPrompt(userPrompt: string): Promise<{
     };
   }
   const result = await generateText({
-    model: openRouter.languageModel(modelId, ["tools", "webSearch"]),
+    model: llm.languageModel(modelId, ["tools", "webSearch"]),
     system:
       "Research unfamiliar merchants for a personal-finance classification task. Return concise factual evidence only; do not attempt to emit the final JSON contract.",
     prompt: userPrompt,
     tools: {
-      web_search: openRouterWebSearchTool(openRouter, 20),
+      web_search: webSearchTool(llm, modelId, 20),
     },
     maxOutputTokens: 4096,
-    ...openRouter.callOptions({ workload: "monarch.batch.research" }),
+    ...llm.callOptions({ workload: "monarch.batch.research" }),
   });
   const usage = {
     inputTokens: result.usage.inputTokens ?? 0,
@@ -91,11 +92,11 @@ export async function callLlmAndParseWithUsage<T>(
   prompt: string,
   schema: z.ZodType<T>,
 ): Promise<{ result: T; usage: LlmResponse["usage"] }> {
-  const openRouter = getRuntime();
+  const llm = getRuntime();
   const research = await researchPrompt(prompt);
   let finalized;
   try {
-    finalized = await generateValidatedObject(openRouter, {
+    finalized = await generateValidatedObject(llm, {
       model: modelId,
       schema,
       schemaName: "monarch_classification",

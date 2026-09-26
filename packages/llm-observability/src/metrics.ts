@@ -11,8 +11,9 @@ const metricsByRegister = new WeakMap<Registry, CommonLlmMetrics>();
 
 /**
  * Return the repository-wide bounded-cardinality LLM instruments for a
- * registry. OpenRouter and native coding-agent SDKs deliberately share these
- * collectors so a service can expose both without duplicate registration.
+ * registry. First-party provider calls and native coding-agent SDKs
+ * deliberately share these collectors so a service can expose both without
+ * duplicate registration.
  */
 export function commonLlmMetrics(register: Registry): CommonLlmMetrics {
   const existing = metricsByRegister.get(register);
