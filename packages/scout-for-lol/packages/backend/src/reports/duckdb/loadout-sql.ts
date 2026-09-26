@@ -44,7 +44,13 @@ const SPELL_JOINS = [SPELL1, SPELL2];
 /** In name order, so a pair or a build reads the same whatever slots held it. */
 function sortedNames(joins: NameJoin[]): string {
   const names = joins.map((join) => `${join.alias}.name`).join(", ");
-  return `array_to_string(list_sort([${names}]), ' + ')`;
+  const unknownPopulatedIds = joins
+    .map(
+      (join) =>
+        `(m.${join.idColumn} IS NOT NULL AND m.${join.idColumn} <> 0 AND ${join.alias}.name IS NULL)`,
+    )
+    .join(" OR ");
+  return `CASE WHEN ${unknownPopulatedIds} THEN NULL ELSE array_to_string(list_sort([${names}]), ' + ') END`;
 }
 
 const NAME_COLUMNS: Record<string, { joins: NameJoin[]; sql: string }> = {

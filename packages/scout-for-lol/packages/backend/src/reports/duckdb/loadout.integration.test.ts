@@ -27,7 +27,8 @@ import {
  *
  * Mira plays three games. G1 and G2 are Conqueror with Flash + Ignite (G2
  * with the spells on the other keys); G3 is Electrocute with Flash +
- * Teleport. G1 won holding Infinity Edge and a Long Sword.
+ * Teleport; G4 contains an unknown nonzero item and spell id. G1 won holding
+ * Infinity Edge and a Long Sword.
  */
 
 const SERVER_ID = testGuildId("784");
@@ -70,6 +71,11 @@ beforeAll(async () => {
           perk0: 8112,
         },
       }),
+      game(3, {
+        win: true,
+        items: [1036, 999_999],
+        loadout: { summoner1_id: 14, summoner2_id: 999_999 },
+      }),
     ],
   });
 });
@@ -102,7 +108,10 @@ describe("loadout columns", () => {
       outputs: [COUNT_OUTPUT, WIN_RATE],
       groupings: [{ kind: "column", column: "keystone", name: "keystone" }],
     });
-    expect(result).toEqual({ Conqueror: [2, 0.5], Electrocute: [1, 1] });
+    expect(result).toEqual({
+      Conqueror: [3, 2 / 3],
+      Electrocute: [1, 1],
+    });
   });
 
   test("a spell pair reads the same on either key", async () => {
@@ -110,7 +119,11 @@ describe("loadout columns", () => {
       outputs: [COUNT_OUTPUT],
       groupings: [{ kind: "column", column: "spells", name: "spells" }],
     });
-    expect(result).toEqual({ "Flash + Ignite": [2], "Flash + Teleport": [1] });
+    expect(result).toEqual({
+      "Flash + Ignite": [2],
+      "Flash + Teleport": [1],
+      unknown: [1],
+    });
   });
 
   test("the final build, as names in name order", async () => {
@@ -120,7 +133,10 @@ describe("loadout columns", () => {
       groupings: [{ kind: "column", column: "items", name: "items" }],
     });
     // G3 held nothing, so its build has no name.
-    expect(result).toEqual({ "Infinity Edge + Long Sword": [1], unknown: [1] });
+    expect(result).toEqual({
+      "Infinity Edge + Long Sword": [1],
+      unknown: [2],
+    });
   });
 
   test("a raw id filters like any column", async () => {
@@ -151,7 +167,7 @@ describe("a lake built before the loadout columns existed", () => {
 
   test("an ordinary query still reads it", async () => {
     const { rows } = await query({ outputs: [COUNT_OUTPUT] }, oldFiles);
-    expect(rows.map((row) => number_(row["expr_0"]))).toEqual([3]);
+    expect(rows.map((row) => number_(row["expr_0"]))).toEqual([4]);
   });
 
   test("a query naming a loadout column fails loudly until the rebuild", async () => {
