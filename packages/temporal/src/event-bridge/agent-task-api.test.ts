@@ -90,6 +90,14 @@ describe("buildAgentTaskApiApp", () => {
     expect(start).not.toHaveBeenCalled();
   });
 
+  it("mounts durable chat routes on the served gateway", async () => {
+    const app = buildAgentTaskApiApp(TOKEN, fakeClient(), makeStartMock());
+
+    const response = await app.fetch(new Request("http://test/agent-chats"));
+
+    expect(response.status).toBe(401);
+  });
+
   it("rejects unauthenticated agent task creation", async () => {
     const start = makeStartMock();
     const app = buildAgentTaskApiApp(TOKEN, fakeClient(), start);
