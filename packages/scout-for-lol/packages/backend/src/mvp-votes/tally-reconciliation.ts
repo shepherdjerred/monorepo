@@ -85,7 +85,7 @@ export async function reconcileMvpTallyRefresh(
     });
     if (completed.count === 0) {
       // A vote committed during the edit. Preserve its pending request.
-      await prismaClient.matchMvpTallyRefresh.updateMany({
+      const retained = await prismaClient.matchMvpTallyRefresh.updateMany({
         where: key,
         data: {
           appliedRevision: request.desiredRevision,
@@ -93,13 +93,23 @@ export async function reconcileMvpTallyRefresh(
           leaseUntil: null,
         },
       });
+      if (retained.count === 0) {
+        // Another worker claimed the row while this Discord edit was in flight.
+        // Its newer edit may already have finished, so make the current revision
+        // pending again without changing the other worker's lease. This fences
+        // a late stale edit by ensuring a subsequent sweep republishes the tally.
+        await prismaClient.matchMvpTallyRefresh.updateMany({
+          where: { matchId, serverId },
+          data: { pending: true, nextAttemptAt: new Date() },
+        });
+      }
     }
   } catch (error) {
     const delayMs = Math.min(
       15_000 * 2 ** Math.min(request.attemptCount, 6),
       300_000,
     );
-    await prismaClient.matchMvpTallyRefresh.updateMany({
+    const failed = await prismaClient.matchMvpTallyRefresh.updateMany({
       where: key,
       data: {
         leaseToken: null,
@@ -108,6 +118,14 @@ export async function reconcileMvpTallyRefresh(
         nextAttemptAt: new Date(Date.now() + delayMs),
       },
     });
+    if (failed.count === 0) {
+      // A multi-message refresh may have edited some targets before failing.
+      // Reconcile once more if another worker finished after this claim lapsed.
+      await prismaClient.matchMvpTallyRefresh.updateMany({
+        where: { matchId, serverId },
+        data: { pending: true, nextAttemptAt: new Date() },
+      });
+    }
     logger.warn(
       `MVP tally edit will retry for ${matchId} in ${serverId}`,
       error,

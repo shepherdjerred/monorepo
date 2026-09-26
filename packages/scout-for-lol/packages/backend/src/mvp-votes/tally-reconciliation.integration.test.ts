@@ -83,6 +83,78 @@ describe("durable MVP tally refresh", () => {
     ).resolves.toMatchObject({ appliedRevision: 2, pending: false });
   });
 
+  test("requeues the current tally when a stale edit finishes after losing its lease", async () => {
+    await vote(1);
+    let releaseFirst!: () => void;
+    let firstStarted!: () => void;
+    const firstStartedPromise = new Promise<void>((resolve) => {
+      firstStarted = resolve;
+    });
+    const firstEditGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    let visibleRevision = 0;
+    const first = reconcileMvpTallyRefresh(key, db, async () => {
+      firstStarted();
+      await firstEditGate;
+      visibleRevision = 1;
+      return true;
+    });
+    await firstStartedPromise;
+    await vote(2);
+    await db.matchMvpTallyRefresh.update({
+      where,
+      data: { leaseUntil: new Date(0), nextAttemptAt: new Date(0) },
+    });
+    await reconcileMvpTallyRefresh(key, db, async () => {
+      visibleRevision = 2;
+      return true;
+    });
+    releaseFirst();
+    await first;
+    expect(visibleRevision).toBe(1);
+    await expect(
+      db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+    ).resolves.toMatchObject({ desiredRevision: 2, pending: true });
+    await reconcilePendingMvpTallyRefreshes(db, async () => {
+      visibleRevision = 2;
+      return true;
+    });
+    expect(visibleRevision).toBe(2);
+    await expect(
+      db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+    ).resolves.toMatchObject({ appliedRevision: 2, pending: false });
+  });
+
+  test("requeues after a stale multi-message edit partially fails", async () => {
+    await vote(1);
+    let releaseFirst!: () => void;
+    let firstStarted!: () => void;
+    const firstStartedPromise = new Promise<void>((resolve) => {
+      firstStarted = resolve;
+    });
+    const firstEditGate = new Promise<void>((resolve) => {
+      releaseFirst = resolve;
+    });
+    const first = reconcileMvpTallyRefresh(key, db, async () => {
+      firstStarted();
+      await firstEditGate;
+      throw new Error("A later Discord target failed");
+    });
+    await firstStartedPromise;
+    await vote(2);
+    await db.matchMvpTallyRefresh.update({
+      where,
+      data: { leaseUntil: new Date(0), nextAttemptAt: new Date(0) },
+    });
+    await reconcileMvpTallyRefresh(key, db, async () => true);
+    releaseFirst();
+    await first;
+    await expect(
+      db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+    ).resolves.toMatchObject({ desiredRevision: 2, pending: true });
+  });
+
   test("retries a failed edit and recovers an expired worker lease", async () => {
     await vote(1);
     await reconcileMvpTallyRefresh(key, db, async () => {
