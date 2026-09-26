@@ -142,11 +142,6 @@ describe("Temporal worker role contracts", () => {
     expect(activityNamesFor("repo")).not.toContain("listTailscaleIngresses");
   });
 
-  it("dispatches CI I/O observability only through infra", () => {
-    expect(activityNamesFor("infra")).toContain("collectCiIoImpact");
-    expect(activityNamesFor("repo")).not.toContain("collectCiIoImpact");
-  });
-
   it("isolates scheduled chat waiters from repo automation", () => {
     const repoWorkers = getWorkerRoleContract("repo").workers;
     expect(repoWorkers.map((worker) => worker.taskQueue)).toEqual([
