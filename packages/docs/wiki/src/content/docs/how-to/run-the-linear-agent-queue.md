@@ -38,7 +38,10 @@ toolkit linear label create --team SJ --name agent:needs-human --color '#DC2626'
 
 Applying `agent:codex` is the entire enqueue action. The runner accepts
 issues in any team and any non-terminal state carrying exactly one provider
-label. It chooses the highest priority, then the oldest issue.
+label. It chooses the highest priority, then the oldest issue. Linear
+scopes labels to teams, so repeat the two creates above for every team
+you queue from; parking a task needs `agent:needs-human` in the issue's
+own team.
 
 ## 3. Write the local configuration
 
