@@ -1,0 +1,257 @@
+# Owned by the repository; the plugin never writes it.
+# The radiant quest board, after the 2017 Dynamic Quest Board design: each
+# player gets a few daily and weekly quests drawn from these templates (counts
+# in quests.yml), offered and handed in at the board NPC. Each target row has
+# a difficulty, a range of amounts, a reward per unit and estimated minutes
+# per unit. Stars = 1 + floor(difficulty x amount / 10), capped at 5; each star
+# above one adds 10% to the reward, and 4+ stars also pay a quest point. The
+# linter checks every row at its minimum and maximum against the budget.
+
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+quests: {}
+
+templates:
+  bounty:
+    period: daily
+    kind: kill
+    name: "Bounty: {amount} {target}"
+    offer: The Storm Watch has posted a bounty. {target}s have been seen near town; kill {amount} of them and report back to the board.
+    accept: Good hunting.
+    decline: The bounty stays up until midnight.
+    finish: The Watch thanks you. Here's the bounty.
+    baseReward: 40
+    targets:
+      - {
+          id: ZOMBIE,
+          difficulty: 1.0,
+          min: 8,
+          max: 16,
+          reward: 4,
+          minutes: 0.5,
+        }
+      - {
+          id: SKELETON,
+          difficulty: 1.2,
+          min: 6,
+          max: 12,
+          reward: 5,
+          minutes: 0.6,
+        }
+      - {
+          id: SPIDER,
+          difficulty: 1.0,
+          min: 6,
+          max: 12,
+          reward: 4,
+          minutes: 0.5,
+        }
+      - {
+          id: CREEPER,
+          difficulty: 1.5,
+          min: 4,
+          max: 8,
+          reward: 7,
+          minutes: 0.8,
+        }
+  night-watch:
+    period: daily
+    kind: kill
+    name: "Night Watch: {amount} {target}"
+    offer: Something nastier has been prowling after dark. Hunt down {amount} {target}s and report back to the board.
+    accept: Stay out of the dark if you can help it. You can't, can you.
+    decline: Maybe someone braver will take it.
+    finish: The night's a little safer. Here's your pay.
+    baseReward: 40
+    targets:
+      - {
+          id: ENDERMAN,
+          difficulty: 2.0,
+          min: 2,
+          max: 5,
+          reward: 15,
+          minutes: 1.5,
+        }
+      - { id: WITCH, difficulty: 2.5, min: 1, max: 3, reward: 20, minutes: 2.0 }
+      - {
+          id: DROWNED,
+          difficulty: 1.5,
+          min: 4,
+          max: 8,
+          reward: 8,
+          minutes: 0.8,
+        }
+  provisions:
+    period: daily
+    kind: deliver
+    name: "Provisions: {amount} {target}"
+    offer: The tavern is running short on {target}. Bring {amount} to the board and Nat will pay for them.
+    accept: Nat will be glad of it.
+    decline: I'll leave it on the board.
+    finish: That'll keep the tavern going. Here's your pay.
+    baseReward: 40
+    targets:
+      - {
+          id: WHEAT,
+          difficulty: 0.2,
+          min: 16,
+          max: 48,
+          reward: 1,
+          minutes: 0.15,
+        }
+      - {
+          id: CARROT,
+          difficulty: 0.2,
+          min: 16,
+          max: 48,
+          reward: 1,
+          minutes: 0.15,
+        }
+      - {
+          id: POTATO,
+          difficulty: 0.2,
+          min: 16,
+          max: 48,
+          reward: 1,
+          minutes: 0.15,
+        }
+      - { id: BREAD, difficulty: 0.4, min: 8, max: 24, reward: 2, minutes: 0.3 }
+      - {
+          id: COOKED_BEEF,
+          difficulty: 0.5,
+          min: 8,
+          max: 16,
+          reward: 3,
+          minutes: 0.5,
+        }
+  timber:
+    period: daily
+    kind: deliver
+    name: "Timber: {amount} {target}"
+    offer: The builders need {target}. Bring {amount} to the board.
+    accept: The builders will thank you.
+    decline: The wood won't chop itself.
+    finish: Good, solid timber. Here's your pay.
+    baseReward: 40
+    targets:
+      - {
+          id: OAK_LOG,
+          difficulty: 0.2,
+          min: 16,
+          max: 48,
+          reward: 1,
+          minutes: 0.1,
+        }
+      - {
+          id: SPRUCE_LOG,
+          difficulty: 0.2,
+          min: 16,
+          max: 48,
+          reward: 1,
+          minutes: 0.1,
+        }
+      - {
+          id: BIRCH_LOG,
+          difficulty: 0.2,
+          min: 16,
+          max: 48,
+          reward: 1,
+          minutes: 0.1,
+        }
+  ore-run:
+    period: daily
+    kind: deliver
+    name: "Ore Run: {amount} {target}"
+    offer: Thomas is short on {target} at the forge. Bring {amount} to the board.
+    accept: Mind the lava down there.
+    decline: The forge can wait. A little.
+    finish: Thomas will be pleased. Here's your pay.
+    baseReward: 40
+    targets:
+      - { id: COAL, difficulty: 0.3, min: 16, max: 32, reward: 2, minutes: 0.2 }
+      - {
+          id: IRON_INGOT,
+          difficulty: 1.0,
+          min: 8,
+          max: 16,
+          reward: 6,
+          minutes: 0.6,
+        }
+      - {
+          id: REDSTONE,
+          difficulty: 0.5,
+          min: 16,
+          max: 32,
+          reward: 2,
+          minutes: 0.3,
+        }
+      - {
+          id: LAPIS_LAZULI,
+          difficulty: 0.6,
+          min: 8,
+          max: 24,
+          reward: 3,
+          minutes: 0.4,
+        }
+  guard-duty:
+    period: weekly
+    kind: kill
+    name: "Guard Duty: {amount} {target}"
+    offer: This week's guard duty. The Storm Watch needs {amount} {target}s cleared from around town. Report back to the board when it's done.
+    accept: The Watch is counting on you this week.
+    decline: Someone else will have to stand the watch.
+    finish: A week's guard duty, done. The Watch pays well.
+    baseReward: 150
+    targets:
+      - {
+          id: ZOMBIE,
+          difficulty: 1.0,
+          min: 40,
+          max: 60,
+          reward: 6,
+          minutes: 0.5,
+        }
+      - {
+          id: SKELETON,
+          difficulty: 1.2,
+          min: 30,
+          max: 50,
+          reward: 7,
+          minutes: 0.6,
+        }
+  supply-run:
+    period: weekly
+    kind: deliver
+    name: "Supply Run: {amount} {target}"
+    offer: The town's stores need {target} this week. Bring {amount} to the board before the week is out.
+    accept: Take your time. Well, a week of it.
+    decline: The stores will stay empty, then.
+    finish: The stores are full again. Here's your pay.
+    baseReward: 150
+    targets:
+      - {
+          id: IRON_INGOT,
+          difficulty: 1.0,
+          min: 32,
+          max: 48,
+          reward: 5,
+          minutes: 0.6,
+        }
+      - {
+          id: GOLD_INGOT,
+          difficulty: 1.5,
+          min: 16,
+          max: 24,
+          reward: 8,
+          minutes: 1.0,
+        }
+      - {
+          id: DIAMOND,
+          difficulty: 6.0,
+          min: 3,
+          max: 6,
+          reward: 60,
+          minutes: 6.0,
+        }
