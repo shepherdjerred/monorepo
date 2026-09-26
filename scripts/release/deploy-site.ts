@@ -139,10 +139,10 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     immutablePrefixes: ["_astro/"],
   },
   {
-    bucket: "macos-cross",
+    bucket: "cross-compilers",
     name: "cross-compilers-site",
     aliases: ["macos-cross-site"],
-    url: "https://macos-cross.sjer.red",
+    url: "https://cross-compilers.sjer.red",
     buildDir: "packages/cross-compilers-site",
     buildCmd: "bun --no-install run astro build",
     distDir: "packages/cross-compilers-site/dist",
