@@ -171,10 +171,9 @@ export function agentChatSessionManifestKey(input: {
 export function agentChatProviderAdmissionKey(input: {
   prefix: string;
   chatId: string;
-  turnNumber: number;
   turnId: string;
 }): string {
-  return `${turnRoot(input.prefix, input.chatId, input.turnNumber, input.turnId)}/provider-admitted`;
+  return `${sessionRoot(input.prefix, input.chatId)}/admissions/${sha256(new TextEncoder().encode(input.turnId))}`;
 }
 
 function sha256(bytes: Uint8Array): string {
@@ -222,7 +221,7 @@ function bytesEqual(left: Uint8Array, right: Uint8Array): boolean {
   );
 }
 
-class AmbiguousManifestPublicationError extends Error {
+export class AmbiguousManifestPublicationError extends Error {
   override readonly name = "AmbiguousManifestPublicationError";
 }
 
@@ -321,6 +320,7 @@ export async function pushAgentChatSessionBundle(input: {
         const resolvedFilePath = await realpath(filePath);
         assertWithinSessionHome(resolvedSessionHome, resolvedFilePath);
         const relativePath = path.relative(input.sessionHome, filePath);
+        safeDestination(input.sessionHome, relativePath);
         bundleBytes += file.size;
         requireBundleBudget(bundleBytes, files.length);
         const checkpoint = await pushSessionCheckpoint({

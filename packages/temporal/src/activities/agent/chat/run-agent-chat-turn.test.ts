@@ -235,7 +235,7 @@ describe("runAgentChatTurnWithDependencies", () => {
       if (leakCredential) {
         await expect(firstTurn).rejects.toThrow("credential");
         expect([...store.objects.keys()]).toEqual([
-          expect.stringContaining("/provider-admitted"),
+          expect.stringContaining("/admissions/"),
         ]);
         return;
       }
@@ -468,6 +468,89 @@ describe("agent chat provider admission boundaries", () => {
 });
 
 describe("agent chat provider admission races", () => {
+  test("does not sweep a live provider owned by an overlapping retry", async () => {
+    const baseDirectory = await temporaryDirectories.create();
+    const store = memoryAgentChatStore();
+    let releaseProvider: (() => void) | undefined;
+    const providerMayFinish = new Promise<void>((resolve) => {
+      releaseProvider = resolve;
+    });
+    const provider = vi.fn<typeof runAgentTurn>(async (input) => {
+      await providerMayFinish;
+      return successfulCodexProvider(input);
+    });
+    const ownerCleanup = vi.fn<() => Promise<void>>(() => Promise.resolve());
+    const owner = runAgentChatTurnWithDependencies(
+      codexTurnInput("overlapping-owner", "overlapping-owner-turn"),
+      {
+        ...providerMustNotRunDependencies(
+          baseDirectory,
+          () => new Date("2026-09-14T20:01:00.000Z"),
+        ),
+        store,
+        sourceEnv: codexAuthEnvironment(),
+        runTurn: provider,
+        terminateProviderSubprocesses: ownerCleanup,
+      },
+    );
+    await vi.waitFor(() => expect(provider).toHaveBeenCalledOnce());
+
+    const retryCleanup = vi.fn<() => Promise<void>>(() => Promise.resolve());
+    await expect(
+      runAgentChatTurnWithDependencies(
+        codexTurnInput("overlapping-owner", "overlapping-owner-turn"),
+        {
+          ...providerMustNotRunDependencies(
+            baseDirectory,
+            () => new Date("2026-09-14T20:01:00.000Z"),
+          ),
+          store,
+          sourceEnv: codexAuthEnvironment(),
+          attempt: 2,
+          terminateProviderSubprocesses: retryCleanup,
+        },
+      ),
+    ).rejects.toMatchObject({
+      type: "AgentChatPublicationCheckpointMissing",
+      nonRetryable: true,
+    });
+    expect(retryCleanup).not.toHaveBeenCalled();
+
+    if (releaseProvider === undefined)
+      throw new Error("Provider was not started");
+    releaseProvider();
+    await expect(owner).resolves.toMatchObject({ finalText: "checkpointed" });
+  });
+});
+
+describe("agent chat ambiguous provider admissions", () => {
+  test("continues after its own ambiguous admission write", async () => {
+    const baseDirectory = await temporaryDirectories.create();
+    const store = memoryAgentChatStore();
+    const create = store.create;
+    store.create = async (key, body) => {
+      await create(key, body);
+      throw new Error("admission response lost");
+    };
+    const provider = vi.fn(successfulCodexProvider);
+
+    await expect(
+      runAgentChatTurnWithDependencies(
+        codexTurnInput("ambiguous-admission", "ambiguous-admission-turn"),
+        {
+          ...providerMustNotRunDependencies(
+            baseDirectory,
+            () => new Date("2026-09-14T20:01:00.000Z"),
+          ),
+          store,
+          sourceEnv: codexAuthEnvironment(),
+          runTurn: provider,
+        },
+      ),
+    ).resolves.toMatchObject({ finalText: "checkpointed" });
+    expect(provider).toHaveBeenCalledOnce();
+  });
+
   test("admits only one of two overlapping activity attempts", async () => {
     const baseDirectory = await temporaryDirectories.create();
     const store = memoryAgentChatStore();
@@ -559,7 +642,9 @@ describe("agent chat provider admission races", () => {
     });
     expect(dependencies.onProviderAdmission).toHaveBeenCalledOnce();
   });
+});
 
+describe("agent chat provider runtime cleanup", () => {
   test("removes runtime files when provider process cleanup fails", async () => {
     const baseDirectory = await temporaryDirectories.create();
     const cleanup = vi
