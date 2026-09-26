@@ -1,0 +1,47 @@
+# Owned by the repository; the plugin never writes it.
+# Quest engine settings. The quests themselves, factions, variables, regions
+# and board templates are content under plugins/TheStorm/quests/.
+
+# Daily quests reset at local midnight, weekly ones at the start of the week.
+timezone: America/Los_Angeles
+weekStartsOn: MONDAY
+
+# The content linter refuses a quest that can pay more crystals than
+# allowance + crystalsPerMinute x its estimatedMinutes, along its richest path.
+budget:
+  crystalsPerMinute: 25
+  allowance: 100
+
+# Players this close to a kill or pickup who have the same objective active
+# get the credit too. Everything is soloable; this only helps groups.
+party:
+  radius: 24
+
+# The radiant board: each player gets this many daily and weekly quests,
+# drawn from the templates, offered and handed in at this NPC.
+board:
+  npc: quest-board
+  dailies: 3
+  weeklies: 1
+
+# How often (ticks) held items, track levels, time limits, the board, quest
+# markers and the tracking sidebar are re-checked for online players.
+refreshTicks: 40
+
+# Creatures quests spawn despawn after this many seconds.
+spawnedMobSeconds: 300
+
+# The most objective lines the tracking sidebar shows.
+sidebarLines: 8
+
+# How many players /quests top lists.
+topSize: 10
+
+# Fixed dialogue buttons (content supplies what NPCs say).
+labels:
+  accept: Accept
+  decline: Not now
+  handIn: Hand over
+  back: Back
+  goodbye: Goodbye
+  menu: "What can I do for you?"

@@ -1,0 +1,184 @@
+package com.shepherdjerred.thestorm.quests.adapter.paper;
+
+import com.shepherdjerred.thestorm.quests.app.QuestService;
+import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
+import com.shepherdjerred.thestorm.quests.domain.engine.CraftCount;
+import com.shepherdjerred.thestorm.quests.domain.engine.PlacedBlocks;
+import com.shepherdjerred.thestorm.quests.domain.engine.QuestEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import org.bukkit.Location;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.player.PlayerFishEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
+
+/**
+ * Turns what players do into quest events. Everything listens at MONITOR and ignores cancelled
+ * events, so only what really happened counts. Kills and pickups are shared with players within the
+ * party radius.
+ */
+final class QuestListener implements Listener {
+
+  /** How many player-placed blocks are remembered so breaking them does not count. */
+  static final int PLACED_MEMORY = 4096;
+
+  private final QuestService service;
+  private final QuestContent content;
+  private final SidebarDisplay sidebars;
+  private final double partyRadius;
+  private final PlacedBlocks placed = new PlacedBlocks(PLACED_MEMORY);
+
+  QuestListener(
+      QuestService service, QuestContent content, SidebarDisplay sidebars, double partyRadius) {
+    this.service = service;
+    this.content = content;
+    this.sidebars = sidebars;
+    this.partyRadius = partyRadius;
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR)
+  void onJoin(PlayerJoinEvent event) {
+    var _ = service.join(event.getPlayer().getUniqueId());
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR)
+  void onQuit(PlayerQuitEvent event) {
+    service.quit(event.getPlayer().getUniqueId());
+    sidebars.forget(event.getPlayer().getUniqueId());
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onDeath(EntityDeathEvent event) {
+    var killer = event.getEntity().getKiller();
+    if (killer == null || event.getEntity() instanceof Player) {
+      return;
+    }
+    service.event(
+        killer.getUniqueId(),
+        new QuestEvent.Killed(event.getEntity().getType().name()),
+        nearby(killer));
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onPickup(EntityPickupItemEvent event) {
+    if (!(event.getEntity() instanceof Player player)) {
+      return;
+    }
+    var stack = event.getItem().getItemStack();
+    service.event(
+        player.getUniqueId(),
+        new QuestEvent.Collected(ItemStacks.facts(stack), stack.getAmount()),
+        nearby(player));
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onCraft(CraftItemEvent event) {
+    if (!(event.getWhoClicked() instanceof Player player)) {
+      return;
+    }
+    var result = event.getRecipe().getResult();
+    var ingredients = new ArrayList<Integer>();
+    for (var stack : Locations.slots(event.getInventory().getMatrix())) {
+      if (stack != null && !stack.getType().isAir()) {
+        ingredients.add(stack.getAmount());
+      }
+    }
+    var made =
+        CraftCount.of(event.isShiftClick(), result.getAmount(), ingredients, room(player, result));
+    if (made > 0) {
+      service.event(
+          player.getUniqueId(), new QuestEvent.Crafted(ItemStacks.facts(result), made), List.of());
+    }
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onFish(PlayerFishEvent event) {
+    if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH
+        && event.getCaught() instanceof Item caught) {
+      service.event(
+          event.getPlayer().getUniqueId(),
+          new QuestEvent.Fished(ItemStacks.facts(caught.getItemStack())),
+          List.of());
+    }
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onBreak(BlockBreakEvent event) {
+    if (placed.broken(position(event.getBlock()))) {
+      service.event(
+          event.getPlayer().getUniqueId(),
+          new QuestEvent.Mined(event.getBlock().getType().name()),
+          List.of());
+    }
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onPlace(BlockPlaceEvent event) {
+    placed.placed(position(event.getBlockPlaced()));
+    service.event(
+        event.getPlayer().getUniqueId(),
+        new QuestEvent.Placed(event.getBlockPlaced().getType().name()),
+        List.of());
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onMove(PlayerMoveEvent event) {
+    if (!event.hasChangedBlock()) {
+      return;
+    }
+    var to = event.getTo();
+    var world = to.getWorld().getKey().asString();
+    var inside =
+        content.regions().values().stream()
+            .filter(region -> region.contains(world, to.getX(), to.getY(), to.getZ()))
+            .map(region -> region.id())
+            .collect(Collectors.toUnmodifiableSet());
+    if (!inside.isEmpty()) {
+      service.event(event.getPlayer().getUniqueId(), new QuestEvent.Reached(inside), List.of());
+    }
+  }
+
+  /** Online players within the party radius of {@code player}, in the same world. */
+  private List<UUID> nearby(Player player) {
+    if (partyRadius <= 0) {
+      return List.of();
+    }
+    return Locations.of(player).getNearbyPlayers(partyRadius).stream()
+        .filter(other -> !other.equals(player))
+        .map(Player::getUniqueId)
+        .toList();
+  }
+
+  private static int room(Player player, ItemStack result) {
+    var room = 0;
+    for (var stack : Locations.slots(player.getInventory().getStorageContents())) {
+      if (stack == null || stack.getType().isAir()) {
+        room += result.getMaxStackSize();
+      } else if (stack.isSimilar(result)) {
+        room += Math.max(0, stack.getMaxStackSize() - stack.getAmount());
+      }
+    }
+    return room;
+  }
+
+  private static PlacedBlocks.Position position(Block block) {
+    Location at = block.getLocation();
+    return new PlacedBlocks.Position(
+        block.getWorld().getKey().asString(), at.getBlockX(), at.getBlockY(), at.getBlockZ());
+  }
+}
