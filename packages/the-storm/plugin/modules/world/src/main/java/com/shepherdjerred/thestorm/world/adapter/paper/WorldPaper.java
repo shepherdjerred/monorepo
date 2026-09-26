@@ -50,6 +50,7 @@ public final class WorldPaper {
 
   private static WorldType type(String preset) {
     return switch (preset) {
+      case "normal" -> WorldType.NORMAL;
       case "large_biomes" -> WorldType.LARGE_BIOMES;
       case "amplified" -> WorldType.AMPLIFIED;
       default -> throw new IllegalStateException("unknown world preset: " + preset);

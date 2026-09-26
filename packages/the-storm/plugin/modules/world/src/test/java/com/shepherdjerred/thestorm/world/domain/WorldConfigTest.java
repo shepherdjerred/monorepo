@@ -21,7 +21,12 @@ final class WorldConfigTest {
                   throw new AssertionError(err.toString());
                 });
     assertThat(config.sleepPercentage()).isEqualTo(50);
-    assertThat(config.worlds()).extracting(WorldSpec::name).containsExactly("wilds", "peaks");
+    assertThat(config.worlds())
+        .extracting(WorldSpec::name)
+        .containsExactly("wilds", "peaks", "mining");
+    assertThat(config.worlds())
+        .extracting(WorldSpec::preset)
+        .containsExactly("large_biomes", "amplified", "normal");
     assertThat(SleepFraction.skips(1, 2, config.sleepPercentage())).isTrue();
   }
 }

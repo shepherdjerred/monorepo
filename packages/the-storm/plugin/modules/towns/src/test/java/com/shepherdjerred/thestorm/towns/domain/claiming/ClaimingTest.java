@@ -35,6 +35,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 /** Claiming, unclaiming and flag changes: adjacency, buffers, regions, worlds, roles, limits. */
 final class ClaimingTest {
@@ -190,12 +191,12 @@ final class ClaimingTest {
     assertThat(claimAs(OWNER, Fixtures.townA(), chunk(x, z)).isOk()).isTrue();
   }
 
-  @Test
-  void onlyListedWorldsCanBeClaimed() {
-    var result = claimAs(OWNER, Fixtures.townA(), new ChunkPos("world_the_end", 0, 0));
+  @ParameterizedTest
+  @ValueSource(strings = {"world_nether", "world_the_end", "wilds", "peaks", "mining"})
+  void onlyTheMainWorldCanBeClaimed(String world) {
+    var result = claimAs(OWNER, Fixtures.townA(), new ChunkPos(world, 0, 0));
 
-    assertThat(problems(result))
-        .containsExactly(new ClaimProblem.WorldNotClaimable("world_the_end"));
+    assertThat(problems(result)).containsExactly(new ClaimProblem.WorldNotClaimable(world));
   }
 
   @Test
