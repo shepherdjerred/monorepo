@@ -60,6 +60,10 @@ export class CommandHandler {
       return;
     }
     if (group === "playback") {
+      if (sub === "sports") {
+        await this.handleSports(interaction);
+        return;
+      }
       await this.media.runPlayback(sub, interaction);
       return;
     }
@@ -157,6 +161,9 @@ export class CommandHandler {
       case "sources":
         await this.handleSources(interaction);
         return true;
+      case "sports":
+        await this.handleSports(interaction);
+        return true;
       case "help":
         await interaction.reply(helpText(this.deps.config.voice.enabled));
         return true;
@@ -234,6 +241,23 @@ export class CommandHandler {
       AbortSignal.timeout(SOURCES_TIMEOUT_MS),
     );
     await interaction.replyPaginated(sourcesPages(sources, query));
+  }
+
+  private async handleSports(interaction: CommandInteraction): Promise<void> {
+    await interaction.defer();
+    try {
+      const listing = await this.playback.listSports(
+        interaction.userId,
+        AbortSignal.timeout(SOURCES_TIMEOUT_MS),
+      );
+      await interaction.editReply(listing);
+    } catch (error) {
+      if (error instanceof PlaybackCommandBoundaryError) {
+        await interaction.editReply(error.message);
+        return;
+      }
+      throw error;
+    }
   }
 
   private async handleSkip(interaction: CommandInteraction): Promise<void> {

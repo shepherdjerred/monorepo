@@ -257,7 +257,7 @@ describe("resolveSource re-checks a pre-resolved item against its real input", (
       config,
       { kind: "url", url: "https://example.invalid/mislabelled" },
       NEVER_ABORT,
-      videoTypedButAudioOnly(audioOnlyPath),
+      { preResolved: videoTypedButAudioOnly(audioOnlyPath) },
     );
     expect(resolved.mediaKind).toBe("music");
     // The second input MUST go with it: the music pipeline runs one input with `-vn`, so a
@@ -286,11 +286,13 @@ describe("resolveSource re-checks a pre-resolved item against its real input", (
       { kind: "url", url: "https://example.invalid/signed" },
       NEVER_ABORT,
       {
-        title: "Signed But Audio Only",
-        ffmpegInput: signedAudioUrl,
-        mediaKind: "video",
-        ffmpegInputHeaders: { [REQUIRED_HEADER]: REQUIRED_VALUE },
-        chapters: [],
+        preResolved: {
+          title: "Signed But Audio Only",
+          ffmpegInput: signedAudioUrl,
+          mediaKind: "video",
+          ffmpegInputHeaders: { [REQUIRED_HEADER]: REQUIRED_VALUE },
+          chapters: [],
+        },
       },
     );
     expect(resolved.mediaKind).toBe("music");
@@ -302,11 +304,13 @@ describe("resolveSource re-checks a pre-resolved item against its real input", (
       { kind: "url", url: "https://example.invalid/signed-video" },
       NEVER_ABORT,
       {
-        title: "Signed Video",
-        ffmpegInput: signedVideoUrl,
-        mediaKind: "video",
-        ffmpegInputHeaders: { [REQUIRED_HEADER]: REQUIRED_VALUE },
-        chapters: [],
+        preResolved: {
+          title: "Signed Video",
+          ffmpegInput: signedVideoUrl,
+          mediaKind: "video",
+          ffmpegInputHeaders: { [REQUIRED_HEADER]: REQUIRED_VALUE },
+          chapters: [],
+        },
       },
     );
     expect(resolved.mediaKind).toBe("video");
@@ -319,7 +323,7 @@ describe("resolveSource re-checks a pre-resolved item against its real input", (
       config,
       { kind: "url", url: "https://example.invalid/fine" },
       NEVER_ABORT,
-      videoTypedButAudioOnly(videoPath),
+      { preResolved: videoTypedButAudioOnly(videoPath) },
     );
     expect(resolved.mediaKind).toBe("video");
     expect(resolved.audioInput).toBe("https://cdn.invalid/second-input");

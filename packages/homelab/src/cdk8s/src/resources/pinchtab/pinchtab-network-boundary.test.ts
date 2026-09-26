@@ -48,6 +48,23 @@ const NetworkPolicySchema = z.object({
   kind: z.literal("NetworkPolicy"),
   metadata: z.object({ name: z.string() }),
   spec: z.object({
+    ingress: z
+      .array(
+        z.object({
+          from: z.array(
+            z.object({
+              namespaceSelector: z
+                .object({ matchLabels: z.record(z.string(), z.string()) })
+                .optional(),
+              podSelector: z
+                .object({ matchLabels: z.record(z.string(), z.string()) })
+                .optional(),
+            }),
+          ),
+          ports: z.array(z.object({ port: z.number(), protocol: z.string() })),
+        }),
+      )
+      .optional(),
     egress: z.array(
       z.object({
         ports: z
@@ -125,6 +142,32 @@ describe("PinchTab network boundary", () => {
     const ports = policy.spec.egress.flatMap((entry) => entry.ports ?? []);
     expect(ports).toContainEqual({ port: 443, protocol: "TCP" });
     expect(ports).not.toContainEqual({ port: 80, protocol: "TCP" });
+  });
+
+  test("admits Streambot only from its media namespace pod on PinchTab's API port", () => {
+    const policy = resources().flatMap((resource) => {
+      const parsed = NetworkPolicySchema.safeParse(resource);
+      return parsed.success &&
+        parsed.data.metadata.name === "pinchtab-ingress-netpol"
+        ? [parsed.data]
+        : [];
+    })[0];
+    if (policy == null) {
+      throw new Error("PinchTab ingress NetworkPolicy must be synthesized");
+    }
+    const streambotRules = (policy.spec.ingress ?? []).filter((rule) =>
+      rule.from.some(
+        (peer) => peer.podSelector?.matchLabels["app"] === "streambot",
+      ),
+    );
+    expect(streambotRules).toHaveLength(1);
+    expect(streambotRules[0]?.from).toContainEqual({
+      namespaceSelector: {
+        matchLabels: { "kubernetes.io/metadata.name": "media" },
+      },
+      podSelector: { matchLabels: { app: "streambot" } },
+    });
+    expect(streambotRules[0]?.ports).toEqual([{ port: 9867, protocol: "TCP" }]);
   });
 
   test("keeps the API available while liveness recovers Chrome", () => {

@@ -61,6 +61,21 @@ The matching slash groups are `/stream playback`, `/stream history`, and
 `/stream personal`. Assistant V2 and durable history are independently guarded
 by typed Flipt flags and default off outside their rollout targets.
 
+Sports listings and live sports playback are a separate, default-off Flipt
+feature. `/stream playback sports` lists the provider entries for today; voice
+can list them on request, and a game title tries StreamEast before TVSportsLive
+unless a provider is named. Future events are informational and are never
+queued. Playback uses the stable provider page as the source identity, resolves
+the live HLS input at play time through PinchTab, and requires ffprobe to confirm
+both audio and video. HLS URLs are not written to media history. Live sports
+offer play, skip/stop, and volume controls only. The bot needs PinchTab's
+`PINCHTAB_BASE_URL` and `PINCHTAB_TOKEN`; the homelab deployment supplies the
+service address and the shared 1Password-backed token. See
+[`sports-service.ts`](src/sports/sports-service.ts) for matching,
+[`sports-resolver.ts`](src/sports/sports-resolver.ts) for runtime resolution,
+and the [managed flag inventory](../feature-flags/FLAG-INVENTORY.md) for rollout
+scope.
+
 Active playback sessions also expose an end-to-end voice diagnostic path. Each
 wake candidate owns one correlated trace from Discord receive and local
 verification through OpenAI, tool execution, reply drain, and terminal

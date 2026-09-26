@@ -71,6 +71,7 @@ export type VoiceCommandPort = {
   readonly listChapters: () => string | Promise<string>;
   readonly getQueue: () => string | Promise<string>;
   readonly getNowPlaying: () => string | Promise<string>;
+  readonly listSports?: (signal: AbortSignal) => string | Promise<string>;
   /** Optional rollout gate for newly added assistant-v2 controls. */
   readonly isAssistantV2Enabled?: () => Promise<boolean>;
   /** Monotonic version incremented when the current turn asks for a numbered selection. */
@@ -88,6 +89,7 @@ export function bindPlaybackVoiceCommandPort(
       const spokenCommand = observed.spokenCommand();
       const result = await service.play({
         ...input,
+        provider: input.provider ?? "auto",
         userId,
         signal,
         spoken: true,
@@ -140,6 +142,7 @@ export function bindPlaybackVoiceCommandPort(
     listChapters: () => service.listChapters(),
     getQueue: () => service.getQueue(),
     getNowPlaying: () => service.getNowPlaying(),
+    listSports: (signal) => service.listSports(userId, signal),
     isAssistantV2Enabled: () => service.isAssistantV2Enabled(userId),
     clarificationVersion: () => service.clarificationVersion(),
   };
@@ -412,5 +415,24 @@ export function createStreambotVoiceTools(
       execute: (input) =>
         invoke("get_now_playing", false, input, () => commands.getNowPlaying()),
     }),
+    ...(commands.listSports === undefined
+      ? []
+      : [
+          tool({
+            name: "list_sports",
+            description:
+              "List live and later-today sports streams from the supported providers. This does not start playback.",
+            parameters: voiceToolSchemas.listSports,
+            execute: (input) =>
+              invoke(
+                "list_sports",
+                false,
+                input,
+                () =>
+                  commands.listSports?.(transactionSignal) ??
+                  "Sports listings are not available.",
+              ),
+          }),
+        ]),
   ];
 }

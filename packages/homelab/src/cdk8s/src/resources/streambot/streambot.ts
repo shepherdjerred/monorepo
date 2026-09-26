@@ -76,6 +76,22 @@ export function createStreambotDeployment(
     openAiItem.name,
   );
 
+  // Streambot uses the same PinchTab bearer token as the browser service, but its own
+  // profile. The token is synced into the media namespace through this declared 1Password item.
+  const pinchtabItem = new OnePasswordItem(chart, "streambot-pinchtab-1p", {
+    spec: {
+      itemPath: vaultItemPath("t2dgtdx47yd2gegad6zeelzylu"),
+    },
+    metadata: {
+      name: "streambot-pinchtab-token",
+    },
+  });
+  const pinchtabSecret = Secret.fromSecretName(
+    chart,
+    "streambot-pinchtab-token-secret",
+    pinchtabItem.name,
+  );
+
   // Mirror the shared SeaweedFS credentials into the media namespace. Voice
   // diagnostics use a private, lifecycle-managed bucket and never make the
   // audio part of logs or telemetry.
@@ -145,6 +161,13 @@ export function createStreambotDeployment(
         FLIPT_URL: EnvValue.fromValue(
           "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
         ),
+        PINCHTAB_BASE_URL: EnvValue.fromValue(
+          "http://pinchtab.pinchtab.svc.cluster.local:9867",
+        ),
+        PINCHTAB_TOKEN: EnvValue.fromSecretValue({
+          secret: pinchtabSecret,
+          key: "PINCHTAB_TOKEN",
+        }),
         PEER_USERBOT_IDS: EnvValue.fromValue(peerUserbotIds("streambot")),
         // Enables movie/TV poster art on the now-playing embed for local files. Sourced from the
         // dedicated streambot-tmdb item. Required — the item must carry TMDB_API_KEY or the pod

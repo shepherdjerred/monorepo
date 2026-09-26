@@ -128,7 +128,11 @@ async function main(): Promise<void> {
       return Promise.resolve();
     },
     resolveSource: (input, signal) =>
-      resolveSource(config, input.source, signal, input.preResolved),
+      resolveSource(config, input.source, signal, {
+        ...(input.preResolved === undefined
+          ? {}
+          : { preResolved: input.preResolved }),
+      }),
     library: () => library,
     resolvePlaySource: (source, signal) =>
       resolveSource(config, source, signal),

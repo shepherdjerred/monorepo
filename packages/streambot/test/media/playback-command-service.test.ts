@@ -127,6 +127,24 @@ describe("PlaybackCommandService", () => {
     expect(events).toEqual([]);
   });
 
+  test("does not let a source override bypass the sports feature gate", async () => {
+    const { service, events, resolvedKinds } = createService();
+    await expect(
+      service.play({
+        query: "Bears vs Packers",
+        source: "auto",
+        placement: "queue",
+        userId: USER,
+        sourceOverride: {
+          kind: "url",
+          url: "https://v2.streameast.ga/nfl/bears-vs-packers/",
+        },
+      }),
+    ).rejects.toThrow("Sports streams are not enabled here.");
+    expect(resolvedKinds).toEqual([]);
+    expect(events).toEqual([]);
+  });
+
   test("blocked sources shame publicly and deny tersely by voice", async () => {
     const { service, events, announcements } = createService();
     await expect(

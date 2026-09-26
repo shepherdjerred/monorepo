@@ -40,6 +40,7 @@ export function createSessionVoiceAssistant(
       ...(deps.featureGate === undefined
         ? {}
         : { featureGate: deps.featureGate }),
+      ...(deps.sports === undefined ? {} : { sports: deps.sports }),
     },
     announce: (message) => deps.announce(session.statusChannelId, message),
     holdTeardown: () => session.teardownHold.acquire(),

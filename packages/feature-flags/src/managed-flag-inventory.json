@@ -1318,6 +1318,61 @@
       "thresholdRollouts": []
     },
     {
+      "key": "streambot-sports-streaming-enabled",
+      "owner": "streambot",
+      "namespace": "streambot",
+      "source": "streambot-media-assistant",
+      "purpose": "Enable provider event listings and live sports playback from supported sports sources.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [
+        {
+          "segmentKey": "streambot-guild-1337623164146155593",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "1337623164146155593"
+            }
+          ],
+          "result": true
+        },
+        {
+          "segmentKey": "streambot-guild-208425771172102144",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "server",
+              "operator": "eq",
+              "value": "208425771172102144"
+            }
+          ],
+          "result": true
+        },
+        {
+          "segmentKey": "streambot-user-160509172704739328",
+          "segmentOperator": "OR_SEGMENT_OPERATOR",
+          "matchType": "ALL_SEGMENT_MATCH_TYPE",
+          "constraints": [
+            {
+              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+              "property": "user",
+              "operator": "eq",
+              "value": "160509172704739328"
+            }
+          ],
+          "result": true
+        }
+      ],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-idle-timeout-seconds",
       "owner": "streambot",
       "namespace": "streambot",
