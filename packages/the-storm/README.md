@@ -232,6 +232,11 @@ same-day limit, natural despawn, and next-day rotation. Roll back by setting
 `merchant.enabled` to `false`; a trader already spawned can remain until its
 native despawn. Keep this feature off until that placement and gameplay check.
 
+Arena restores keep the database snapshot until a later player login confirms
+that Paper saved the restored inventory and its matching persistent-data marker
+together. Players must reconnect before entering another arena after a restore;
+this avoids a synchronous player-data write on the server tick.
+
 ## Conventions
 
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating

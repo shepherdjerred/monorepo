@@ -6,7 +6,6 @@ import com.shepherdjerred.thestorm.arena.adapter.db.JooqRewardStore;
 import com.shepherdjerred.thestorm.arena.adapter.db.JooqSnapshotStore;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ArenaPaper;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ChunkKeeper;
-import com.shepherdjerred.thestorm.arena.adapter.paper.PlayerSaver;
 import com.shepherdjerred.thestorm.arena.adapter.paper.ServerHooks;
 import com.shepherdjerred.thestorm.arena.app.ArenaPresence;
 import com.shepherdjerred.thestorm.arena.app.ArenaRecords;
@@ -36,12 +35,10 @@ public final class ArenaModule implements StormModule {
   public ArenaModule() {
     this(
         context ->
-            new ServerHooks(
-                ChunkKeeper.shared(context.services().require(ChunkTickets.class)),
-                PlayerSaver.paper()));
+            new ServerHooks(ChunkKeeper.shared(context.services().require(ChunkTickets.class))));
   }
 
-  /** For tests, which run where chunk tickets and player saves are not available. */
+  /** For tests, which run where chunk tickets are not available. */
   ArenaModule(Function<ModuleContext, ServerHooks> hooks) {
     this.hooks = hooks;
   }

@@ -99,20 +99,21 @@ final class PlayerStates {
   }
 
   /**
-   * Closes whatever the player has open and puts the item on their cursor into their inventory, so
-   * nothing in a crafting grid or on the cursor is missed by a snapshot.
+   * Closes the open inventory and moves the cursor into storage. Returns false, keeping any cursor
+   * overflow with the player, when the inventory cannot hold it for a complete snapshot.
    */
-  static void settle(Player player) {
+  static boolean settle(Player player) {
     var cursor = player.getItemOnCursor();
     player.setItemOnCursor(null);
     player.closeInventory();
     if (!cursor.isEmpty()) {
-      player
-          .getInventory()
-          .addItem(cursor)
-          .values()
-          .forEach(left -> player.getWorld().dropItem(Places.at(player), left));
+      var overflow = player.getInventory().addItem(cursor.clone());
+      if (!overflow.isEmpty()) {
+        player.setItemOnCursor(overflow.values().iterator().next());
+        return false;
+      }
     }
+    return true;
   }
 
   /**

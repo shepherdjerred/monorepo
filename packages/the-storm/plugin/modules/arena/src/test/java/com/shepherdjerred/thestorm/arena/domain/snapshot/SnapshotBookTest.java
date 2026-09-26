@@ -73,12 +73,11 @@ final class SnapshotBookTest {
   }
 
   /**
-   * The restore order: take the snapshot (put it back and save the player), and only after the
-   * stored copy is deleted may a new snapshot be taken. A delete still in flight would otherwise
-   * remove the new one.
+   * The restore order: take the snapshot and put it back; only once the stored copy is marked
+   * restored may a new snapshot be taken.
    */
   @Test
-  void aRestoredPlayerMayNotJoinUntilTheStoredSnapshotIsDeleted() {
+  void aRestoredPlayerMayNotJoinUntilTheStoredSnapshotIsMarkedRestored() {
     var restored = loaded().withHeld(snapshot(ALICE, "colosseum")).take(ALICE).book();
 
     assertThat(restored.holds(ALICE)).isFalse();

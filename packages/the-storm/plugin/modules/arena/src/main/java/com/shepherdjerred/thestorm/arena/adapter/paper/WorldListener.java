@@ -48,6 +48,9 @@ final class WorldListener implements Listener {
 
   private static final int TNT_FUSE_TICKS = 40;
 
+  /** How far from its summoner a vanilla zombie reinforcement can appear, in blocks. */
+  private static final int REINFORCEMENT_REACH = 48;
+
   private final Arenas arenas;
   private final Keys keys;
 
@@ -194,6 +197,26 @@ final class WorldListener implements Listener {
       default -> {
         // Only offspring are adopted; the arena tags its own spawns itself.
       }
+    }
+  }
+
+  /**
+   * Reinforcements summoned by arena zombies can land outside the region (they spawn up to about 40
+   * blocks away); near a running arena those never spawn.
+   */
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
+  void onStrayReinforcement(CreatureSpawnEvent event) {
+    if (event.getSpawnReason() != SpawnReason.REINFORCEMENTS) {
+      return;
+    }
+    var location = event.getLocation();
+    var near =
+        arenas.all().stream()
+            .filter(runner -> runner.game().phase().running())
+            .filter(runner -> !runner.world().contains(location))
+            .anyMatch(runner -> runner.world().near(location, REINFORCEMENT_REACH));
+    if (near) {
+      event.setCancelled(true);
     }
   }
 
