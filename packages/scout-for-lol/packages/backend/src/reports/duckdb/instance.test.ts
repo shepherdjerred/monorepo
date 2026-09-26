@@ -33,3 +33,43 @@ describe("closeDuckDB", () => {
     await expect(closeDuckDB()).resolves.toBeUndefined();
   });
 });
+
+describe("withDuckDBConnection concurrency", () => {
+  test("keeps at most two report queries active per process", async () => {
+    let active = 0;
+    let maximumActive = 0;
+    let started = 0;
+    const queryGate = Promise.withResolvers<boolean>();
+    const twoStarted = Promise.withResolvers<boolean>();
+
+    const run = async () =>
+      await withDuckDBConnection(async () => {
+        active++;
+        maximumActive = Math.max(maximumActive, active);
+        started++;
+        if (started === 2) twoStarted.resolve(true);
+        await queryGate.promise;
+        active--;
+        return [];
+      });
+
+    const queries = [run(), run(), run()];
+    await twoStarted.promise;
+    expect(started).toBe(2);
+    queryGate.resolve(true);
+    await Promise.all(queries);
+
+    expect(maximumActive).toBe(2);
+    expect(started).toBe(3);
+  });
+
+  test("disables insertion order preservation on the shared instance", async () => {
+    const result = await withDuckDBConnection(async (session) =>
+      session.run(
+        "select current_setting('preserve_insertion_order') as enabled",
+      ),
+    );
+
+    expect(result).toEqual([{ enabled: false }]);
+  });
+});
