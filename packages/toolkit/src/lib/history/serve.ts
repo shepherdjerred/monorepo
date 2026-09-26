@@ -17,7 +17,12 @@ import {
 } from "./ipc.ts";
 import type { HistoryPaths, HistoryRuntimePaths } from "./paths.ts";
 import type { HistoryDaemonState } from "./ipc.ts";
-import type { HistorySource, HistorySourceResult } from "./types.ts";
+import type {
+  HistorySource,
+  HistorySourceName,
+  HistorySourceResult,
+  HistorySourceStatus,
+} from "./types.ts";
 
 const INTERVAL_SECONDS = 30;
 const SOURCE_SCAN_CONCURRENCY = 2;
@@ -38,6 +43,27 @@ async function logLine(
     mode: 0o600,
   });
   await chmod(logPath, 0o600);
+}
+
+/**
+ * Sources that must block a destructive reindex: a failing source with
+ * indexed documents would lose them when the schema is dropped, and its
+ * cache would then only ever re-emit subsequently changed files. Missing
+ * sources (no error) and failing sources with nothing indexed are safe.
+ */
+export function rebuildBlockers(
+  results: readonly HistorySourceResult[],
+  statuses: readonly HistorySourceStatus[],
+): readonly HistorySourceName[] {
+  const indexed = new Map(
+    statuses.map((status) => [status.source, status.indexedDocuments]),
+  );
+  return results
+    .filter(
+      (result) =>
+        result.error !== null && (indexed.get(result.source) ?? 0) > 0,
+    )
+    .map((result) => result.source);
 }
 
 export async function scanHistorySources(
@@ -147,10 +173,27 @@ export async function runHistoryDaemon(): Promise<void> {
     scanning = true;
     try {
       const results = await scanHistorySources(sources, paths, force);
-      await index.ingest(results, force);
+      let effectiveForce = force;
+      if (force) {
+        const blocked = rebuildBlockers(results, index.statuses(labels));
+        if (blocked.length > 0) {
+          effectiveForce = false;
+          await logLine(runtimePaths, "history reindex refused rebuild", {
+            reason:
+              "sources failing with indexed documents; ingesting without dropping the schema",
+            sources: blocked,
+          });
+        }
+      }
+      await index.ingest(results, effectiveForce);
+      // Caches advance only now that the results are indexed: a dropped
+      // scan must re-read the same files next pass.
+      for (const source of sources) {
+        source.commitScan?.();
+      }
       lastScanAt = new Date().toISOString();
       await logLine(runtimePaths, "history scan complete", {
-        force,
+        force: effectiveForce,
         sources: results.map((result) => ({
           source: result.source,
           available: result.available,

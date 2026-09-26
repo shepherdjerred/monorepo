@@ -15,23 +15,24 @@ import {
 import { createOpenCodeSources } from "./sources/opencode.ts";
 import type { HistoryPaths } from "./paths.ts";
 import {
-  diffFiles,
+  createStagedScanner,
+  failedScanResult,
   filesUnder,
   firstText,
+  fullScanResult,
   incrementalResult,
+  planFileScan,
   sourceReadResult,
   sourceResult,
-  statFiles,
+  type StagedScan,
 } from "./sources-shared.ts";
 import { parseRecord, parseTimestamp, stringValue } from "./query/text.ts";
 import type {
   HistoryDocument,
   HistoryMessage,
   HistoryRecord,
-  HistoryScanOptions,
   HistorySource,
   HistorySourceReadResult,
-  HistorySourceResult,
   UsageEventEntry,
 } from "./types.ts";
 import {
@@ -277,87 +278,42 @@ async function scanClaude(
   paths: HistoryPaths,
   previous: ReadonlyMap<string, string> | null,
   force: boolean,
-): Promise<{
-  readonly result: HistorySourceResult;
-  readonly signatures: ReadonlyMap<string, string> | null;
-}> {
+): Promise<StagedScan<ReadonlyMap<string, string>>> {
   const files = await filesUnder(paths.claudeProjects, ".jsonl");
   if (files.length === 0) {
     return {
       result: await sourceResult("claude", files, () => []),
-      signatures: new Map(),
+      staged: new Map(),
     };
   }
-  const { fingerprint, signatures } = await statFiles(files);
-  const diff =
-    force || previous === null ? null : diffFiles(previous, signatures);
-  // A deletion falls back to a full re-parse: retiring one document while
-  // trusting cached stats for the rest would strand a ghost id if a file
-  // ever reappeared with identical mtime+size, and deletions are rare.
-  const full = diff === null || diff.deleted.length > 0;
-  const parseFiles = full ? files : [...diff.added, ...diff.changed].sort();
+  const plan = await planFileScan(files, previous, force);
   try {
     const documents: HistoryDocument[] = [];
-    for (const file of parseFiles) {
+    for (const file of plan.parseFiles) {
       documents.push(await parseClaudeDocument(file, paths.claudeProjects));
     }
     const sourceIds = files.map((file) =>
       path.relative(paths.claudeProjects, file),
     );
-    // The cache holds pre-parse stats, so a file written mid-scan differs
-    // on the next pass and its new content is parsed then.
-    if (full) {
-      return {
-        result: {
-          source: "claude",
-          available: true,
-          documents,
-          fingerprint,
-          error: null,
-          complete: true,
-          sourceIds,
-        },
-        signatures,
-      };
-    }
     return {
-      result: incrementalResult("claude", documents, sourceIds, fingerprint),
-      signatures,
+      result: plan.full
+        ? fullScanResult("claude", documents, sourceIds, plan.fingerprint)
+        : incrementalResult("claude", documents, sourceIds, plan.fingerprint),
+      staged: plan.signatures,
     };
   } catch (error: unknown) {
     return {
-      result: {
-        source: "claude",
-        available: false,
-        documents: [],
-        fingerprint,
-        error: error instanceof Error ? error.message : String(error),
-        complete: true,
-        sourceIds: [],
-      },
-      // A failed scan commits nothing: the next pass retries every file
-      // the cache does not already vouch for.
-      signatures: null,
+      result: failedScanResult("claude", plan.fingerprint, error),
+      staged: null,
     };
   }
 }
 
 export function createClaudeSource(): HistorySource {
-  let previous: ReadonlyMap<string, string> | null = null;
   return {
     name: "claude",
     label: "Claude Code",
-    scan: async (paths: HistoryPaths, options?: HistoryScanOptions) => {
-      const { result, signatures } = await scanClaude(
-        paths,
-        previous,
-        options?.force ?? false,
-      );
-      if (signatures !== null) {
-        previous = signatures;
-      }
-      return result;
-    },
+    ...createStagedScanner(scanClaude),
     read: readClaude,
   };
 }

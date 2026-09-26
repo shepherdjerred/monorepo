@@ -107,6 +107,14 @@ export type HistorySource = {
     paths: HistoryPaths,
     options?: HistoryScanOptions,
   ) => Promise<HistorySourceResult>;
+  /**
+   * Advances the source's incremental cache to its last scan. Called only
+   * after that scan's results were ingested: a scan whose results are
+   * dropped (a failed sibling scan, a failed ingest) must not advance, so
+   * the next scan re-reads the same files. Sources without a cache omit
+   * this and always scan fully.
+   */
+  commitScan?: () => void;
   read: (
     paths: HistoryPaths,
     records: readonly HistoryRecord[],

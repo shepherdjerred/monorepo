@@ -3,9 +3,12 @@ import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { z } from "zod";
+import type { HistoryPaths } from "./paths.ts";
 import type {
   HistoryDocument,
   HistoryMessage,
+  HistoryScanOptions,
+  HistorySource,
   HistorySourceName,
   HistorySourceReadResult,
   HistorySourceResult,
@@ -240,6 +243,114 @@ export function incrementalResult(
     error: null,
     complete: false,
     sourceIds: [...sourceIds].sort(),
+  };
+}
+
+/** A scan that parsed every file. */
+export function fullScanResult(
+  source: HistorySourceName,
+  documents: readonly HistoryDocument[],
+  sourceIds: readonly string[],
+  fingerprint: string,
+): HistorySourceResult {
+  return {
+    source,
+    available: true,
+    documents,
+    fingerprint,
+    error: null,
+    complete: true,
+    sourceIds: [...sourceIds],
+  };
+}
+
+/** A scan that failed before producing documents; advances nothing. */
+export function failedScanResult(
+  source: HistorySourceName,
+  fingerprint: string,
+  error: unknown,
+): HistorySourceResult {
+  return {
+    source,
+    available: false,
+    documents: [],
+    fingerprint,
+    error: error instanceof Error ? error.message : String(error),
+    complete: true,
+    sourceIds: [],
+  };
+}
+
+export type FileScanPlan = {
+  readonly fingerprint: string;
+  readonly signatures: ReadonlyMap<string, string>;
+  readonly full: boolean;
+  readonly parseFiles: readonly string[];
+};
+
+/**
+ * Decides which files a scan must parse: everything on the first scan,
+ * after `force`, or when any file vanished (retiring one document while
+ * trusting cached stats for the rest would strand a ghost id if a file
+ * ever reappeared with identical mtime+size, and deletions are rare);
+ * otherwise only added and changed files. The returned signatures are
+ * pre-parse, so a file written mid-scan differs on the next pass and its
+ * new content is parsed then.
+ */
+export async function planFileScan(
+  files: readonly string[],
+  previous: ReadonlyMap<string, string> | null,
+  force: boolean,
+): Promise<FileScanPlan> {
+  const { fingerprint, signatures } = await statFiles(files);
+  const diff =
+    force || previous === null ? null : diffFiles(previous, signatures);
+  const full = diff === null || diff.deleted.length > 0;
+  return {
+    fingerprint,
+    signatures,
+    full,
+    parseFiles: full ? [...files] : [...diff.added, ...diff.changed].sort(),
+  };
+}
+
+export type StagedScan<TState> = {
+  readonly result: HistorySourceResult;
+  readonly staged: TState | null;
+};
+
+/**
+ * Two-phase incremental scanning: `scan` stages the next cache state for
+ * its files, and `commitScan` advances to it — called only after the
+ * results were ingested. A failed scan stages nothing, so the next scan
+ * retries from the last committed state.
+ */
+export function createStagedScanner<TState>(
+  scan: (
+    paths: HistoryPaths,
+    committed: TState | null,
+    force: boolean,
+  ) => Promise<StagedScan<TState>>,
+): Pick<HistorySource, "scan" | "commitScan"> {
+  let committed: TState | null = null;
+  let staged: TState | null = null;
+  return {
+    scan: async (paths: HistoryPaths, options?: HistoryScanOptions) => {
+      const { result, staged: next } = await scan(
+        paths,
+        committed,
+        options?.force ?? false,
+      );
+      if (next !== null) {
+        staged = next;
+      }
+      return result;
+    },
+    commitScan: () => {
+      if (staged !== null) {
+        committed = staged;
+      }
+    },
   };
 }
 

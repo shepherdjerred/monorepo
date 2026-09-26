@@ -8,8 +8,15 @@ import {
   defaultHistoryRuntimePaths,
   type HistoryPaths,
 } from "#lib/history/paths.ts";
+import { rebuildBlockers } from "#lib/history/serve.ts";
 import { createHistorySources } from "#lib/history/sources.ts";
-import type { HistorySource } from "#lib/history/types.ts";
+import type {
+  HistoryScanOptions,
+  HistorySource,
+  HistorySourceName,
+  HistorySourceResult,
+  HistorySourceStatus,
+} from "#lib/history/types.ts";
 import { writeAntigravityFixture } from "./history-fixtures/antigravity.ts";
 import { writeClaudeFixture } from "./history-fixtures/claude.ts";
 import {
@@ -44,6 +51,58 @@ function source(name: string): HistorySource {
     throw new Error(`History source ${name} was not registered`);
   }
   return found;
+}
+
+/** Scans and commits, mirroring the daemon's scan → ingest → commit loop. */
+async function scanned(
+  adapter: HistorySource,
+  historyPaths: HistoryPaths,
+  options?: HistoryScanOptions,
+): Promise<HistorySourceResult> {
+  const result = await adapter.scan(historyPaths, options);
+  adapter.commitScan?.();
+  return result;
+}
+
+function statusFixture(
+  sourceName: HistorySourceName,
+  indexedDocuments: number,
+): HistorySourceStatus {
+  return {
+    source: sourceName,
+    label: sourceName,
+    available: true,
+    indexedDocuments,
+    lastScanAt: null,
+    error: null,
+  };
+}
+
+function resultFixture(
+  sourceName: HistorySourceName,
+  values: { readonly available: boolean; readonly error: string | null },
+): HistorySourceResult {
+  return {
+    source: sourceName,
+    available: values.available,
+    documents: [],
+    fingerprint: "fixture",
+    error: values.error,
+    complete: true,
+    sourceIds: [],
+  };
+}
+
+function expectUnchangedRescan(
+  first: HistorySourceResult,
+  second: HistorySourceResult,
+): void {
+  expect(second.error).toBeNull();
+  expect(second.available).toBe(true);
+  expect(second.complete).toBe(false);
+  expect(second.documents).toEqual([]);
+  expect(second.fingerprint).toBe(first.fingerprint);
+  expect([...second.sourceIds].sort()).toEqual([...first.sourceIds].sort());
 }
 
 async function writeClaudeSession(
@@ -165,7 +224,7 @@ afterAll(async () => {
 describe("incremental claude scans", () => {
   test("claude rescan without changes returns no documents", async () => {
     const claude = source("claude");
-    const first = await claude.scan(paths);
+    const first = await scanned(claude, paths);
     expect(first.error).toBeNull();
     expect(first.complete).toBe(true);
     expect(first.documents.length).toBeGreaterThan(0);
@@ -173,24 +232,19 @@ describe("incremental claude scans", () => {
       first.documents.map((document) => document.sourceId).sort(),
     );
 
-    const second = await claude.scan(paths);
-    expect(second.error).toBeNull();
-    expect(second.available).toBe(true);
-    expect(second.complete).toBe(false);
-    expect(second.documents).toEqual([]);
-    expect(second.fingerprint).toBe(first.fingerprint);
-    expect([...second.sourceIds].sort()).toEqual([...first.sourceIds].sort());
+    const second = await scanned(claude, paths);
+    expectUnchangedRescan(first, second);
   });
 
   test("claude rescan does not read unchanged files", async () => {
     const claude = source("claude");
-    const first = await claude.scan(paths);
+    const first = await scanned(claude, paths);
     expect(first.error).toBeNull();
     const projects = paths.claudeProjects;
     const file = path.join(projects, "project/session.jsonl");
     await chmod(file, 0o000);
     try {
-      const second = await claude.scan(paths);
+      const second = await scanned(claude, paths);
       expect(second.error).toBeNull();
       expect(second.complete).toBe(false);
       expect(second.documents).toEqual([]);
@@ -209,7 +263,7 @@ describe("incremental claude scans", () => {
       claudeProjects: path.join(fixtureRoot, "claude-reparse/projects"),
     };
     const claude = source("claude");
-    const first = await claude.scan(scoped);
+    const first = await scanned(claude, scoped);
     expect(first.documents).toHaveLength(2);
 
     await Bun.write(
@@ -222,7 +276,7 @@ describe("incremental claude scans", () => {
       })}\n`,
     );
 
-    const second = await claude.scan(scoped);
+    const second = await scanned(claude, scoped);
     expect(second.error).toBeNull();
     expect(second.complete).toBe(false);
     expect(second.documents.map((document) => document.sourceId)).toEqual([
@@ -237,8 +291,8 @@ describe("incremental claude scans", () => {
 
   test("claude force scan returns the complete set", async () => {
     const claude = source("claude");
-    await claude.scan(paths);
-    const forced = await claude.scan(paths, { force: true });
+    await scanned(claude, paths);
+    const forced = await scanned(claude, paths, { force: true });
     expect(forced.error).toBeNull();
     expect(forced.complete).toBe(true);
     expect(forced.documents.length).toBeGreaterThan(0);
@@ -246,27 +300,38 @@ describe("incremental claude scans", () => {
       forced.documents.map((document) => document.sourceId).sort(),
     );
   });
+
+  test("uncommitted scans do not advance the cache", async () => {
+    const claude = source("claude");
+    const first = await claude.scan(paths);
+    expect(first.complete).toBe(true);
+    // No commit: the daemon drops results when a sibling scan or ingest
+    // fails, so the next scan must re-read the same files.
+    const second = await claude.scan(paths);
+    expect(second.complete).toBe(true);
+    expect(second.documents).toHaveLength(first.documents.length);
+    claude.commitScan?.();
+    const third = await claude.scan(paths);
+    expect(third.complete).toBe(false);
+    expect(third.documents).toEqual([]);
+  });
 });
 
 describe("incremental codex scans", () => {
   test("codex rescan without changes returns no documents", async () => {
     const codex = source("codex");
-    const first = await codex.scan(paths);
+    const first = await scanned(codex, paths);
     expect(first.error).toBeNull();
     expect(first.complete).toBe(true);
     expect(first.documents.length).toBeGreaterThan(0);
 
-    const second = await codex.scan(paths);
-    expect(second.error).toBeNull();
-    expect(second.complete).toBe(false);
-    expect(second.documents).toEqual([]);
-    expect(second.fingerprint).toBe(first.fingerprint);
-    expect([...second.sourceIds].sort()).toEqual([...first.sourceIds].sort());
+    const second = await scanned(codex, paths);
+    expectUnchangedRescan(first, second);
   });
 
   test("codex re-derives only the thread whose session changed", async () => {
     const codex = source("codex");
-    const first = await codex.scan(paths);
+    const first = await scanned(codex, paths);
     expect(first.error).toBeNull();
     const before = first.documents.find(
       (document) => document.sourceId === `${codexThreadDb}:t1`,
@@ -292,7 +357,7 @@ describe("incremental codex scans", () => {
     const previous = await Bun.file(rollout).text();
     await Bun.write(rollout, `${previous}${JSON.stringify(extra)}\n`);
 
-    const second = await codex.scan(paths);
+    const second = await scanned(codex, paths);
     expect(second.error).toBeNull();
     expect(second.complete).toBe(false);
     expect(second.documents.map((document) => document.sourceId)).toEqual([
@@ -313,10 +378,10 @@ describe("incremental grok and antigravity scans", () => {
   test("grok and antigravity rescans without changes return no documents", async () => {
     for (const name of ["grok", "antigravity"] as const) {
       const adapter = source(name);
-      const first = await adapter.scan(paths);
+      const first = await scanned(adapter, paths);
       expect(first.error).toBeNull();
       expect(first.complete).toBe(true);
-      const second = await adapter.scan(paths);
+      const second = await scanned(adapter, paths);
       expect(second.error).toBeNull();
       expect(second.complete).toBe(false);
       expect(second.documents).toEqual([]);
@@ -362,8 +427,8 @@ describe("incremental ingest convergence", () => {
     );
     const incremental = await HistoryIndex.open(incrementalRuntime);
     await incremental.ingest([
-      await claude.scan(scoped),
-      await codexSource.scan(scoped),
+      await scanned(claude, scoped),
+      await scanned(codexSource, scoped),
     ]);
 
     // Mutate in two steps: first without deletions (incremental), then
@@ -437,14 +502,14 @@ describe("incremental ingest convergence", () => {
       threadDb.close();
     }
 
-    const claudeSecond = await claude.scan(scoped);
-    const codexSecond = await codexSource.scan(scoped);
+    const claudeSecond = await scanned(claude, scoped);
+    const codexSecond = await scanned(codexSource, scoped);
     expect(claudeSecond.complete).toBe(false);
     expect(codexSecond.complete).toBe(false);
     await incremental.ingest([claudeSecond, codexSecond]);
 
     await rm(path.join(claudeDir, "drop.jsonl"));
-    const claudeThird = await claude.scan(scoped);
+    const claudeThird = await scanned(claude, scoped);
     expect(claudeThird.complete).toBe(true);
     expect(claudeThird.sourceIds).not.toContain("project/drop.jsonl");
     await incremental.ingest([claudeThird]);
@@ -457,13 +522,61 @@ describe("incremental ingest convergence", () => {
     const freshClaude = source("claude");
     const freshCodex = source("codex");
     await rebuilt.ingest([
-      await freshClaude.scan(scoped),
-      await freshCodex.scan(scoped),
+      await scanned(freshClaude, scoped),
+      await scanned(freshCodex, scoped),
     ]);
     rebuilt.close();
 
     expect(dumpIndex(incrementalRuntime.indexDb)).toEqual(
       dumpIndex(rebuiltRuntime.indexDb),
     );
+  });
+});
+
+describe("reindex rebuild guard", () => {
+  test("a failing source with indexed documents blocks the rebuild", () => {
+    expect(
+      rebuildBlockers(
+        [
+          resultFixture("codex", {
+            available: false,
+            error: "database is locked",
+          }),
+        ],
+        [statusFixture("codex", 1801)],
+      ),
+    ).toEqual(["codex"]);
+  });
+
+  test("a failing source with nothing indexed does not block", () => {
+    expect(
+      rebuildBlockers(
+        [
+          resultFixture("codex", {
+            available: false,
+            error: "database is locked",
+          }),
+        ],
+        [statusFixture("codex", 0)],
+      ),
+    ).toEqual([]);
+  });
+
+  test("a missing source without an error does not block", () => {
+    expect(
+      rebuildBlockers(
+        [resultFixture("conductor", { available: false, error: null })],
+        [statusFixture("conductor", 12)],
+      ),
+    ).toEqual([]);
+  });
+
+  test("healthy sources do not block", () => {
+    expect(
+      rebuildBlockers(
+        [resultFixture("claude", { available: true, error: null })],
+        [statusFixture("claude", 761)],
+      ),
+    ).toEqual([]);
   });
 });

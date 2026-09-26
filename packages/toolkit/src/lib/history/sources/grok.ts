@@ -6,14 +6,17 @@ import {
 } from "#lib/history/query/messages.ts";
 import type { HistoryPaths } from "#lib/history/paths.ts";
 import {
-  diffFiles,
+  createStagedScanner,
+  failedScanResult,
   filesUnder,
   firstText,
+  fullScanResult,
   incrementalResult,
   pathExists,
+  planFileScan,
   sourceReadResult,
   sourceResult,
-  statFiles,
+  type StagedScan,
 } from "#lib/history/sources-shared.ts";
 import {
   parseRecord,
@@ -24,9 +27,7 @@ import type {
   HistoryDocument,
   HistoryMessage,
   HistoryRecord,
-  HistoryScanOptions,
   HistorySource,
-  HistorySourceResult,
   UsageEventEntry,
 } from "#lib/history/types.ts";
 import {
@@ -426,27 +427,21 @@ async function scanGrok(
   paths: HistoryPaths,
   previous: ReadonlyMap<string, string> | null,
   force: boolean,
-): Promise<{
-  readonly result: HistorySourceResult;
-  readonly signatures: ReadonlyMap<string, string> | null;
-}> {
+): Promise<StagedScan<ReadonlyMap<string, string>>> {
   const { sessions, files } = await grokScanFiles(paths.grokHome);
   if (sessions.length === 0) {
     return {
       result: await sourceResult("grok", [], () => []),
-      signatures: new Map(),
+      staged: new Map(),
     };
   }
-  const { fingerprint, signatures } = await statFiles(files);
-  const diff =
-    force || previous === null ? null : diffFiles(previous, signatures);
-  // Any deletion falls back to a full re-parse (see scanClaude).
-  const full = diff === null || diff.deleted.length > 0;
-  const parseSessions = full
+  const plan = await planFileScan(files, previous, force);
+  // A changed sidecar re-parses its owning session file.
+  const parseSessions = plan.full
     ? [...sessions]
     : [
         ...new Set(
-          [...diff.added, ...diff.changed].map((file) =>
+          plan.parseFiles.map((file) =>
             path.basename(file) === "summary.json"
               ? path.join(path.dirname(file), "updates.jsonl")
               : file,
@@ -463,56 +458,25 @@ async function scanGrok(
     const sourceIds = sessions.map((file) =>
       path.relative(paths.grokHome, file),
     );
-    if (full) {
-      return {
-        result: {
-          source: "grok",
-          available: true,
-          documents,
-          fingerprint,
-          error: null,
-          complete: true,
-          sourceIds,
-        },
-        signatures,
-      };
-    }
     return {
-      result: incrementalResult("grok", documents, sourceIds, fingerprint),
-      signatures,
+      result: plan.full
+        ? fullScanResult("grok", documents, sourceIds, plan.fingerprint)
+        : incrementalResult("grok", documents, sourceIds, plan.fingerprint),
+      staged: plan.signatures,
     };
   } catch (error: unknown) {
     return {
-      result: {
-        source: "grok",
-        available: false,
-        documents: [],
-        fingerprint,
-        error: error instanceof Error ? error.message : String(error),
-        complete: true,
-        sourceIds: [],
-      },
-      signatures: null,
+      result: failedScanResult("grok", plan.fingerprint, error),
+      staged: null,
     };
   }
 }
 
 export function createGrokSource(): HistorySource {
-  let previous: ReadonlyMap<string, string> | null = null;
   return {
     name: "grok",
     label: "Grok",
-    async scan(paths: HistoryPaths, options?: HistoryScanOptions) {
-      const { result, signatures } = await scanGrok(
-        paths,
-        previous,
-        options?.force ?? false,
-      );
-      if (signatures !== null) {
-        previous = signatures;
-      }
-      return result;
-    },
+    ...createStagedScanner(scanGrok),
     async read(paths: HistoryPaths, records: readonly HistoryRecord[]) {
       return sourceReadResult(
         "grok",

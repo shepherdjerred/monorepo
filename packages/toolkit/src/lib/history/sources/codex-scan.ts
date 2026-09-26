@@ -1,18 +1,20 @@
 import { INDEXED_MESSAGE_PARSE_LIMIT } from "@shepherdjerred/toolkit/lib/history/query/messages.ts";
 import type { HistoryPaths } from "@shepherdjerred/toolkit/lib/history/paths.ts";
 import {
+  createStagedScanner,
   diffFiles,
+  failedScanResult,
   filesUnder,
+  fullScanResult,
   incrementalResult,
   pathExists,
   sourceResult,
   statFiles,
+  type StagedScan,
 } from "@shepherdjerred/toolkit/lib/history/sources-shared.ts";
 import type {
   HistoryDocument,
-  HistoryScanOptions,
   HistorySource,
-  HistorySourceResult,
 } from "@shepherdjerred/toolkit/lib/history/types.ts";
 import {
   assembleCodexDocuments,
@@ -229,11 +231,6 @@ async function codexScanShape(
   return { layout, fingerprint, signatures, full, changed };
 }
 
-type FinishedCodexScan = {
-  readonly result: HistorySourceResult;
-  readonly cache: CodexScanCache;
-};
-
 function finishFullCodexScan(input: {
   readonly assembled: AssembledCodexDocuments;
   readonly sourceIds: readonly string[];
@@ -242,7 +239,7 @@ function finishFullCodexScan(input: {
   readonly sessionUsage: ReadonlyMap<string, CodexSessionUsage>;
   readonly threadMeta: ReadonlyMap<string, ReadonlyMap<string, string>>;
   readonly catalogOverlay: ReadonlyMap<string, string>;
-}): FinishedCodexScan {
+}): StagedScan<CodexScanCache> {
   const emittedHash = new Map<string, string>();
   for (const document of [
     ...input.assembled.catalogDocuments,
@@ -252,21 +249,18 @@ function finishFullCodexScan(input: {
     emittedHash.set(document.sourceId, hashCodexDocument(document));
   }
   return {
-    result: {
-      source: "codex",
-      available: true,
-      documents: [
+    result: fullScanResult(
+      "codex",
+      [
         ...input.assembled.threadDocuments,
         ...input.assembled.catalogDocuments,
         ...input.assembled.historyDocuments,
         ...input.assembled.placeholderDocuments,
       ],
-      fingerprint: input.fingerprint,
-      error: null,
-      complete: true,
-      sourceIds: [...input.sourceIds],
-    },
-    cache: {
+      input.sourceIds,
+      input.fingerprint,
+    ),
+    staged: {
       fileStats: new Map(input.signatures),
       sessionUsage: new Map(input.sessionUsage),
       threadMeta: new Map(input.threadMeta),
@@ -285,7 +279,7 @@ function finishIncrementalCodexScan(input: {
   readonly threadMeta: ReadonlyMap<string, ReadonlyMap<string, string>>;
   readonly catalogOverlay: ReadonlyMap<string, string>;
   readonly previous: CodexScanCache | null;
-}): FinishedCodexScan {
+}): StagedScan<CodexScanCache> {
   const emittedHash = new Map(input.previous?.emittedHash);
   const documents: HistoryDocument[] = [...input.assembled.threadDocuments];
   for (const document of [
@@ -312,7 +306,7 @@ function finishIncrementalCodexScan(input: {
       input.sourceIds,
       input.fingerprint,
     ),
-    cache: {
+    staged: {
       fileStats: new Map(input.signatures),
       sessionUsage: new Map(input.sessionUsage),
       threadMeta: new Map(input.threadMeta),
@@ -326,7 +320,7 @@ async function runCodexScan(
   paths: HistoryPaths,
   previous: CodexScanCache | null,
   shape: CodexScanShape,
-): Promise<FinishedCodexScan> {
+): Promise<StagedScan<CodexScanCache>> {
   const { layout, full, changed } = shape;
   const sessionUsage = new Map(previous?.sessionUsage);
   const threadMeta = new Map(
@@ -430,51 +424,29 @@ async function scanCodex(
   paths: HistoryPaths,
   previous: CodexScanCache | null,
   force: boolean,
-): Promise<{
-  readonly result: HistorySourceResult;
-  readonly cache: CodexScanCache | null;
-}> {
+): Promise<StagedScan<CodexScanCache>> {
   const shape = await codexScanShape(paths, previous, force);
   if (shape === null) {
     return {
       result: await sourceResult("codex", [], () => []),
-      cache: emptyCodexScanCache(),
+      staged: emptyCodexScanCache(),
     };
   }
   try {
     return await runCodexScan(paths, previous, shape);
   } catch (error: unknown) {
     return {
-      result: {
-        source: "codex",
-        available: false,
-        documents: [],
-        fingerprint: shape.fingerprint,
-        error: error instanceof Error ? error.message : String(error),
-        complete: true,
-        sourceIds: [],
-      },
-      cache: null,
+      result: failedScanResult("codex", shape.fingerprint, error),
+      staged: null,
     };
   }
 }
 
 export function createCodexSource(): HistorySource {
-  let previous: CodexScanCache | null = null;
   return {
     name: "codex",
     label: "Codex",
-    scan: async (paths: HistoryPaths, options?: HistoryScanOptions) => {
-      const { result, cache } = await scanCodex(
-        paths,
-        previous,
-        options?.force ?? false,
-      );
-      if (cache !== null) {
-        previous = cache;
-      }
-      return result;
-    },
+    ...createStagedScanner(scanCodex),
     read: readCodex,
   };
 }
