@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
 import { ITEM_SLOT_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.ts";
+import { MATCH_REBUILD_GATED_COLUMNS } from "@scout-for-lol/data/model/reports/match-rebuild-gated-columns.ts";
 import type { LakeFiles } from "#src/reports/duckdb/lake.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -16,10 +17,8 @@ import {
 } from "#src/testing/run-compiled-plan.ts";
 
 /**
- * The final-inventory slot columns (item0..item6) arrive with a lake schema
- * change, and a deploy publishes before the rebuild that writes them. Match
- * reads leave the slots out (MATCH_READ_COLUMNS), so a build written before
- * they existed must keep serving every ordinary query meanwhile.
+ * New inventory, spell, rune, and augment fields arrive with lake schema
+ * changes. Ordinary match reads omit these until a rebuild publishes.
  */
 
 const SERVER_ID = testGuildId("784");
@@ -49,7 +48,7 @@ beforeAll(async () => {
   const parquet = path.join(dir, "matches.parquet");
   await withDuckDBConnection(async (session) => {
     await session.run(
-      `COPY (SELECT * EXCLUDE (${ITEM_SLOT_COLUMNS.join(", ")}) FROM read_json(?, format='newline_delimited')) TO '${parquet}' (FORMAT PARQUET)`,
+      `COPY (SELECT * EXCLUDE (${[...ITEM_SLOT_COLUMNS, ...MATCH_REBUILD_GATED_COLUMNS].join(", ")}) FROM read_json(?, format='newline_delimited')) TO '${parquet}' (FORMAT PARQUET)`,
       [session.list(seeded.matchesStaging)],
     );
   });

@@ -297,7 +297,52 @@ describe("flatten", () => {
       expect(row.month).toBe(
         new Date(match.info.gameCreation).toISOString().slice(0, 7),
       );
+      expect(row.item0).toBe(participant.item0);
+      expect(row.item6).toBe(participant.item6);
+      expect(row.summoner_spell_1_id).toBe(participant.summoner1Id);
+      const primary = participant.perks.styles.find(
+        (style) => style.description === "primaryStyle",
+      );
+      const hasRunePage = (primary?.style ?? 0) > 0;
+      expect(row.primary_rune_style_id).toBe(
+        hasRunePage ? primary?.style : null,
+      );
+      expect(row.primary_rune_0_id).toBe(
+        hasRunePage ? (primary?.selections[0]?.perk ?? null) : null,
+      );
     }
+  });
+
+  test("maps Riot's all-zero rune sentinel to an unavailable rune page", async () => {
+    const match = await loadMatchFixture();
+    const first = match.info.participants[0];
+    if (first === undefined) throw new Error("fixture participant missing");
+    const zeroRunes = RawMatchSchema.parse({
+      ...match,
+      info: {
+        ...match.info,
+        participants: [
+          {
+            ...first,
+            perks: {
+              styles: first.perks.styles.map((style) => ({
+                ...style,
+                style: 0,
+                selections: style.selections.map((selection) => ({
+                  ...selection,
+                  perk: 0,
+                })),
+              })),
+              statPerks: { offense: 0, flex: 0, defense: 0 },
+            },
+          },
+        ],
+      },
+    });
+    const row = flattenMatch(zeroRunes)[0];
+    expect(row?.primary_rune_style_id).toBeNull();
+    expect(row?.secondary_rune_0_id).toBeNull();
+    expect(row?.stat_perk_defense_id).toBeNull();
   });
 
   test("flattens normalized teams and bans for ordinary SQL joins", async () => {
@@ -382,6 +427,37 @@ describe("flatten", () => {
     expect(rows.length).toBe(1);
     expect(rows[0]?.puuid).toBe("real-puuid");
     expect(rows[0]?.game_start_at).toBeNull();
+  });
+});
+
+test("retains Arena placement, subteam, and nonzero augment IDs", async () => {
+  const match = await loadMatchFixture();
+  const first = match.info.participants[0];
+  if (first === undefined) throw new Error("fixture participant missing");
+  const arena = RawMatchSchema.parse({
+    ...match,
+    info: {
+      ...match.info,
+      queueId: 1700,
+      gameMode: "CHERRY",
+      participants: [
+        {
+          ...first,
+          playerSubteamId: 3,
+          placement: 2,
+          subteamPlacement: 2,
+          playerAugment1: 4001,
+          playerAugment2: 0,
+        },
+      ],
+    },
+  });
+  expect(flattenMatch(arena)[0]).toMatchObject({
+    player_subteam_id: 3,
+    placement: 2,
+    subteam_placement: 2,
+    augment_1_id: 4001,
+    augment_2_id: null,
   });
 });
 

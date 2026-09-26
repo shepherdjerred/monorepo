@@ -16,7 +16,9 @@ import {
   resolveQueueTypeFromGame,
 } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
+import { participantAugmentLakeFields } from "#src/report-lake/arena.ts";
 import { lakeMonth, lakeTimestamp } from "#src/report-lake/schema.ts";
+import { participantLoadoutLakeRow } from "#src/report-lake/loadout.ts";
 
 /**
  * Flatten raw Riot documents into report-lake rows.
@@ -84,6 +86,7 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
     individual_position: participant.individualPosition,
     lane: participant.lane ?? null,
     role: participant.role ?? null,
+    ...participantLoadoutLakeRow(participant),
     win: participant.win,
     surrendered: participantSurrendered(participant),
     early_surrendered: participantEarlySurrendered(participant),
@@ -156,6 +159,7 @@ export function flattenMatch(match: RawMatch): MatchLakeRow[] {
     item4: participant.item4,
     item5: participant.item5,
     item6: participant.item6,
+    ...participantAugmentLakeFields(participant),
   }));
 }
 
