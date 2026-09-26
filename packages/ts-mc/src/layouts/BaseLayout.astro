@@ -1,0 +1,51 @@
+---
+import "@styles/global.css";
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "The Storm — polished Minecraft survival." } =
+  Astro.props;
+const ogImage = "https://ts-mc.net/social.png";
+---
+
+<!doctype html>
+<html lang="en" style="background:#101010;color:#f2f2f2">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#101010" />
+    <meta property="og:url" content="https://ts-mc.net" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta property="twitter:domain" content="ts-mc.net" />
+    <meta property="twitter:url" content="https://ts-mc.net" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{title}</title>
+    <script is:inline src="/posthog.js" defer></script>
+    <style is:inline>
+      :root {
+        color-scheme: dark;
+      }
+      html,
+      body {
+        background: #101010;
+        color: #f2f2f2;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen antialiased">
+    <slot />
+  </body>
+</html>
