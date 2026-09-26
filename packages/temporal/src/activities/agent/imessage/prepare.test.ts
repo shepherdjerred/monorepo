@@ -97,12 +97,14 @@ describe("iMessage chat preparation", () => {
     ).toMatchObject({ kind: "turn", command: { chatId: "discord-chat" } });
   });
   test("selects a recovered chat without resetting its catalog metadata", async () => {
-    mocks.get.mockResolvedValue({
+    const chat = {
       schemaVersion: 1,
       config: { chatId: "scheduled-chat" },
       updatedAt: "2026-09-16T00:00:00.000Z",
       turnCount: 17,
-    });
+    };
+    mocks.get.mockResolvedValue(chat);
+    mocks.bind.mockResolvedValue(chat);
     expect(
       await prepareImessageCommand({
         ...BASE,
@@ -151,5 +153,19 @@ describe("iMessage chat preparation", () => {
       content: expect.stringContaining("Unknown chat"),
     });
     expect(mocks.bind).not.toHaveBeenCalled();
+  });
+  test("acknowledges the binding that wins source ordering", async () => {
+    mocks.get.mockResolvedValue({ config: { chatId: "requested-chat" } });
+    mocks.bind.mockResolvedValue({ config: { chatId: "incumbent-chat" } });
+
+    const result = await prepareImessageCommand({
+      ...BASE,
+      action: { kind: "use", chatId: "requested-chat" },
+    });
+
+    expect(result).toMatchObject({
+      kind: "message",
+      content: "Selected incumbent-chat. Send ordinary text to continue.",
+    });
   });
 });

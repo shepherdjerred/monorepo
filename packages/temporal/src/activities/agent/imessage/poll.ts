@@ -34,7 +34,7 @@ async function highestBlueBubblesRowId(lastRowId: number): Promise<number> {
   // and accidentally classify it as pre-activation history.
   const messages = parseBlueBubblesMessages(
     await blueBubblesRequest("/api/v1/message/query", {
-      with: ["chats"],
+      with: ["chats", "handle"],
       limit: 1,
       sort: "DESC",
       where: [
@@ -54,13 +54,13 @@ async function initialBlueBubblesPage(cursor: BlueBubblesCursor): Promise<{
   lastRowId: number;
   initializationHighWaterRowId?: number;
 }> {
-  const snapshotHighWater = cursor.initialized
-    ? undefined
-    : (cursor.initializationHighWaterRowId ??
-      (await highestBlueBubblesRowId(cursor.lastRowId)));
+  const snapshotHighWater =
+    ("initializationHighWaterRowId" in cursor
+      ? cursor.initializationHighWaterRowId
+      : undefined) ?? (await highestBlueBubblesRowId(cursor.lastRowId));
   const messages = parseBlueBubblesMessages(
     await blueBubblesRequest("/api/v1/message/query", {
-      with: ["chats"],
+      with: ["chats", "handle"],
       limit: BLUEBUBBLES_QUERY_LIMIT,
       sort: "DESC",
       where: [
@@ -68,21 +68,17 @@ async function initialBlueBubblesPage(cursor: BlueBubblesCursor): Promise<{
           statement: "message.ROWID > :cursor",
           args: { cursor: cursor.lastRowId },
         },
-        ...(snapshotHighWater === undefined
-          ? []
-          : [
-              {
-                statement: "message.ROWID <= :initializationHighWater",
-                args: { initializationHighWater: snapshotHighWater },
-              },
-            ]),
+        {
+          statement: "message.ROWID <= :initializationHighWater",
+          args: { initializationHighWater: snapshotHighWater },
+        },
       ],
     }),
   );
   if (messages.length === 0) {
     return {
       initialized: true,
-      lastRowId: snapshotHighWater ?? cursor.lastRowId,
+      lastRowId: snapshotHighWater,
     };
   }
   const next = Math.max(...messages.map((message) => message.originalROWID));
@@ -92,7 +88,7 @@ async function initialBlueBubblesPage(cursor: BlueBubblesCursor): Promise<{
       "BlueBubblesInitializationDidNotAdvance",
     );
   }
-  if (snapshotHighWater !== undefined && next > snapshotHighWater) {
+  if (next > snapshotHighWater) {
     throw ApplicationFailure.nonRetryable(
       "BlueBubbles initialization crossed its high-water mark",
       "BlueBubblesInitializationHighWaterViolated",
@@ -102,9 +98,7 @@ async function initialBlueBubblesPage(cursor: BlueBubblesCursor): Promise<{
   return {
     initialized,
     lastRowId: next,
-    ...(initialized
-      ? {}
-      : { initializationHighWaterRowId: snapshotHighWater ?? next }),
+    ...(initialized ? {} : { initializationHighWaterRowId: snapshotHighWater }),
   };
 }
 
@@ -142,7 +136,7 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
   }
   const messages = parseBlueBubblesMessages(
     await blueBubblesRequest("/api/v1/message/query", {
-      with: ["chats"],
+      with: ["chats", "handle"],
       limit: BLUEBUBBLES_QUERY_LIMIT,
       sort: "ASC",
       where: [

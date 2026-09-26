@@ -52,6 +52,7 @@ describe("durable BlueBubbles polling", () => {
     expect(mocks.request).toHaveBeenCalledWith(
       "/api/v1/message/query",
       expect.objectContaining({
+        with: ["chats", "handle"],
         where: [{ statement: "message.ROWID > :cursor", args: { cursor: 10 } }],
       }),
     );
@@ -60,8 +61,9 @@ describe("durable BlueBubbles polling", () => {
   test("establishes an initial ROWID watermark without replaying history", async () => {
     mocks.request.mockImplementation(async (_route: string, body: unknown) => {
       const input = QueryBodySchema.parse(body);
-      if (isHighWaterQuery(input)) return [message(75)];
-      return [message(50), message(75), message(60)];
+      return isHighWaterQuery(input)
+        ? [message(75)]
+        : [message(50), message(75), message(60)];
     });
     const result = await pollBlueBubblesMessages({
       ...CURSOR,
@@ -75,7 +77,7 @@ describe("durable BlueBubbles polling", () => {
       commands: [],
     });
     expect(mocks.request).toHaveBeenLastCalledWith("/api/v1/message/query", {
-      with: ["chats"],
+      with: ["chats", "handle"],
       limit: 1000,
       sort: "DESC",
       where: [
@@ -90,12 +92,14 @@ describe("durable BlueBubbles polling", () => {
   test("freezes initialization before admitting messages that arrive during it", async () => {
     mocks.request.mockImplementation(async (_route: string, body: unknown) => {
       const input = QueryBodySchema.parse(body);
-      if (isHighWaterQuery(input)) return [message(1000)];
       const cursor = input.where[0]?.args["cursor"];
-      if (cursor === 0)
-        return Array.from({ length: 1000 }, (_, index) => message(index + 1));
-      if (cursor === 1000 && input.where.length === 2) return [];
-      return [message(1001)];
+      return isHighWaterQuery(input)
+        ? [message(1000)]
+        : cursor === 0
+          ? Array.from({ length: 1000 }, (_, index) => message(index + 1))
+          : cursor === 1000 && input.where.length === 2
+            ? []
+            : [message(1001)];
     });
 
     const first = await pollBlueBubblesMessages({
@@ -217,22 +221,35 @@ describe("durable BlueBubbles polling", () => {
       });
     },
   );
+});
+
+describe("disabled BlueBubbles polling", () => {
   test.each([
     { enabled: false, owners: ["owner"] },
     { enabled: true, owners: [] },
   ])("advances the watermark when disabled or unowned", async (config) => {
     mocks.config.mockResolvedValue(config);
-    mocks.request.mockResolvedValue([message(50), message(75)]);
+    mocks.request.mockImplementation(async (_route: string, body: unknown) =>
+      isHighWaterQuery(QueryBodySchema.parse(body))
+        ? [message(75)]
+        : [message(50), message(75)],
+    );
     const result = await pollBlueBubblesMessages(CURSOR);
     expect(result).toMatchObject({
       lastRowId: 75,
       commands: [],
     });
     expect(result.startedAt).toBe(CURSOR.startedAt);
-    expect(mocks.request).toHaveBeenCalledWith(
+    expect(mocks.request).toHaveBeenLastCalledWith(
       "/api/v1/message/query",
       expect.objectContaining({
-        where: [{ statement: "message.ROWID > :cursor", args: { cursor: 10 } }],
+        where: [
+          { statement: "message.ROWID > :cursor", args: { cursor: 10 } },
+          {
+            statement: "message.ROWID <= :initializationHighWater",
+            args: { initializationHighWater: 75 },
+          },
+        ],
       }),
     );
   });
