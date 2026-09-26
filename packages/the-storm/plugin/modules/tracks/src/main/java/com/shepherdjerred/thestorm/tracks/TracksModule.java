@@ -6,10 +6,12 @@ import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.tracks.adapter.db.JooqTrackStore;
 import com.shepherdjerred.thestorm.tracks.adapter.luckperms.LuckPermsSync;
 import com.shepherdjerred.thestorm.tracks.adapter.paper.TracksPaper;
+import com.shepherdjerred.thestorm.tracks.adapter.paper.TracksPermissions;
 import com.shepherdjerred.thestorm.tracks.adapter.paper.UseCases;
 import com.shepherdjerred.thestorm.tracks.app.LevelCache;
 import com.shepherdjerred.thestorm.tracks.app.PurchaseService;
 import com.shepherdjerred.thestorm.tracks.app.TrackAdmin;
+import com.shepherdjerred.thestorm.tracks.app.TrackGroupDeclarations;
 import com.shepherdjerred.thestorm.tracks.app.TrackLevels;
 import com.shepherdjerred.thestorm.tracks.app.TrackPurchases;
 import com.shepherdjerred.thestorm.tracks.app.TrackRuntime;
@@ -30,6 +32,9 @@ public final class TracksModule implements StormModule {
   static final Duration SHUTDOWN_GRACE = Duration.ofSeconds(10);
 
   private @Nullable PurchaseService purchases;
+  private @Nullable TrackGroupDeclarations declarations;
+  private @Nullable TrackRuntime runtime;
+  private @Nullable TracksPermissions registered;
 
   @Override
   public String id() {
@@ -46,36 +51,59 @@ public final class TracksModule implements StormModule {
     var cache = new LevelCache();
     var runtime =
         new TrackRuntime(
-            store, permissions, cache, context.scheduler(), context.time(), context.logger());
+            store,
+            permissions,
+            cache,
+            new TrackRuntime.RuntimeServices(
+                context.scheduler(), context.time(), context.logger()));
+    this.runtime = runtime;
+    var groups =
+        new TrackGroupDeclarations(
+            permissions,
+            context.scheduler(),
+            context.logger(),
+            () ->
+                context
+                    .plugin()
+                    .getServer()
+                    .getOnlinePlayers()
+                    .forEach(player -> runtime.syncPermissions(player.getUniqueId())));
+    declarations = groups;
     var service =
         new PurchaseService(
-            runtime, wallets, PurchaseRules.standard(config.pricing(), config.purchaseCooldown()));
+            runtime,
+            wallets,
+            PurchaseRules.standard(config.pricing(), config.purchaseCooldown()),
+            groups::ready);
     purchases = service;
     context.services().provide(TrackLevels.class, cache);
     context.services().provide(TrackPurchases.class, service);
-    var _ =
-        permissions
-            .declareGroups()
-            .whenComplete(
-                (ignored, failure) -> {
-                  if (failure != null) {
-                    context
-                        .logger()
-                        .error(
-                            "Could not declare the track groups in LuckPerms; levels grant no"
-                                + " permissions until this succeeds",
-                            failure);
-                  }
-                });
+    groups.start();
     var sessions =
         new TrackSessions(runtime, TracksPaper.loadFailedNotice(context.plugin().getServer()));
-    TracksPaper.install(
-        context, config, new UseCases(service, new TrackAdmin(runtime), sessions, cache));
+    registered =
+        TracksPaper.install(
+            context, config, new UseCases(service, new TrackAdmin(runtime), sessions, cache));
   }
 
-  /** Refuses new purchases and lets running ones finish before the database closes. */
+  /**
+   * Refuses new purchases, lets running ones finish before the database closes, and unregisters the
+   * permissions.
+   */
   @Override
   public void disable() {
+    if (declarations != null) {
+      declarations.stop();
+      declarations = null;
+    }
+    if (runtime != null) {
+      runtime.stop();
+      runtime = null;
+    }
+    if (registered != null) {
+      registered.unregister();
+      registered = null;
+    }
     if (purchases != null) {
       purchases.shutdown(SHUTDOWN_GRACE);
       purchases = null;

@@ -48,6 +48,7 @@ public final class TrackSessions {
 
   /** {@code player} left. */
   public void quit(UUID player) {
+    runtime.stopPermissions(player);
     runtime.cache().quit(player);
   }
 

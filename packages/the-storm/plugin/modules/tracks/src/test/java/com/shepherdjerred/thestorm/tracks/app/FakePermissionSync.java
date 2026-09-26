@@ -20,6 +20,7 @@ public final class FakePermissionSync implements PermissionSync {
   private int declared;
   private int applied;
   private boolean fail;
+  private int failedDeclarations;
 
   public FakePermissionSync(TrackStore store) {
     this.store = store;
@@ -42,9 +43,23 @@ public final class FakePermissionSync implements PermissionSync {
     fail = true;
   }
 
+  /** Resume successful permission writes after simulating an outage. */
+  public synchronized void recover() {
+    fail = false;
+  }
+
+  /** Fail the next group declaration attempts. */
+  public synchronized void failNextDeclarations(int count) {
+    failedDeclarations = count;
+  }
+
   @Override
   public synchronized CompletableFuture<Void> declareGroups() {
     declared++;
+    if (failedDeclarations > 0) {
+      failedDeclarations--;
+      return CompletableFuture.failedFuture(new IllegalStateException("LuckPerms is down"));
+    }
     return completedFuture(null);
   }
 

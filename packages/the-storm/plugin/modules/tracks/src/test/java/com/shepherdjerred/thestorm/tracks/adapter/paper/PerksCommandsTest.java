@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.Set;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.permissions.PermissionDefault;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -191,6 +192,50 @@ final class PerksCommandsTest {
     var lines = awaitLine(alice, "Sovereign");
     assertThat(lines.getFirst()).startsWith("[Tracks]: Governor: Found and grow a town.");
     assertThat(lines).contains(" - I Founder", "     Found a town.");
+  }
+
+  @Test
+  void anOperatorWithNoTrackGroupsHasNoTrackLevel() throws Exception {
+    var owner = join("Owner");
+    owner.setOp(true);
+
+    for (var track : Track.values()) {
+      for (var level = 1; level <= Track.MAX_LEVEL; level++) {
+        assertThat(owner.hasPermission(track.permission(level)))
+            .as("op holds %s", track.permission(level))
+            .isFalse();
+      }
+      assertThat(plugin.cache.level(owner, track)).isZero();
+    }
+    assertThat(plugin.cache.isLoaded(owner.getUniqueId())).isTrue();
+  }
+
+  @Test
+  void theAdminPermissionIsForOperatorsOnly() throws Exception {
+    var player = join("Alice");
+    var owner = join("Owner");
+    owner.setOp(true);
+
+    assertThat(player.hasPermission(PerksAdminCommands.ADMIN_PERMISSION)).isFalse();
+    assertThat(owner.hasPermission(PerksAdminCommands.ADMIN_PERMISSION)).isTrue();
+  }
+
+  @Test
+  void everyTrackPermissionIsRegisteredDefaultingToNobodyAndRemovedOnDisable() {
+    var plugins = server.getPluginManager();
+    for (var track : Track.values()) {
+      for (var level = 1; level <= Track.MAX_LEVEL; level++) {
+        var permission = plugins.getPermission(track.permission(level));
+        assertThat(permission).as(track.permission(level)).isNotNull();
+        assertThat(Objects.requireNonNull(permission).getDefault())
+            .isEqualTo(PermissionDefault.FALSE);
+      }
+    }
+
+    plugins.disablePlugin(plugin);
+
+    assertThat(plugins.getPermission(Track.GOVERNOR.permission(1))).isNull();
+    assertThat(plugins.getPermission(PerksAdminCommands.ADMIN_PERMISSION)).isNull();
   }
 
   @Test

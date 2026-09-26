@@ -32,6 +32,30 @@ final class LevelCacheTest {
   }
 
   @Test
+  void isLoadedOnlyOnceTheProgressHasLoaded() {
+    assertThat(cache.isLoaded(ALICE)).isFalse();
+
+    var token = cache.joined(ALICE);
+    assertThat(cache.isLoaded(ALICE)).isFalse();
+    cache.failed(ALICE, token);
+    assertThat(cache.isLoaded(ALICE)).isFalse();
+    cache.loaded(ALICE, token, owning(MECHANIC, 1));
+    assertThat(cache.isLoaded(ALICE)).isTrue();
+
+    cache.quit(ALICE);
+    assertThat(cache.isLoaded(ALICE)).isFalse();
+  }
+
+  @Test
+  void anUntrainedPlayerWhoHasLoadedIsLoaded() {
+    var token = cache.joined(ALICE);
+    cache.loaded(ALICE, token, com.shepherdjerred.thestorm.tracks.domain.TrackProgress.empty());
+
+    assertThat(cache.isLoaded(ALICE)).isTrue();
+    assertThat(cache.level(ALICE, MECHANIC)).isZero();
+  }
+
+  @Test
   void aLoadForAnOfflinePlayerIsIgnored() {
     cache.loaded(ALICE, 1, owning(MECHANIC, 2));
 

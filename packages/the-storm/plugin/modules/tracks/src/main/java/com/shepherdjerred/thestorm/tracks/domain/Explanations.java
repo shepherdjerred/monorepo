@@ -69,6 +69,8 @@ public final class Explanations {
       case PurchaseProblem.StillLoading() ->
           "Your tracks are still loading; try again in a moment.";
       case PurchaseProblem.LoadFailed() -> LOAD_FAILED;
+      case PurchaseProblem.PermissionsUnavailable() ->
+          "Track permissions are temporarily unavailable; no crystals were charged. Try again shortly.";
       case PurchaseProblem.ShuttingDown() -> "The server is stopping; train again once it is back.";
       case PurchaseProblem.AlreadyBuying() ->
           "You are already buying a level; wait for it to finish.";

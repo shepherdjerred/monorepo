@@ -14,7 +14,11 @@ final class TestRuntime implements InstantSource {
   final LevelCache cache = new LevelCache();
   final FakeScheduler scheduler = new FakeScheduler();
   final TrackRuntime runtime =
-      new TrackRuntime(store, permissions, cache, scheduler, this, NOPLogger.NOP_LOGGER);
+      new TrackRuntime(
+          store,
+          permissions,
+          cache,
+          new TrackRuntime.RuntimeServices(scheduler, this, NOPLogger.NOP_LOGGER));
   private Instant now = Progressions.NOW;
 
   @Override

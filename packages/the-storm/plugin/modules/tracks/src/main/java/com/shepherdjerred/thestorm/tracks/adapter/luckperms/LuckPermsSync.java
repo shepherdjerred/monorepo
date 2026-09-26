@@ -42,7 +42,12 @@ public final class LuckPermsSync implements PermissionSync {
     for (var declaration : LuckPermsPlan.declarations()) {
       chain =
           chain
-              .thenCompose(ignored -> groups.createAndLoadGroup(declaration.name()))
+              .thenCompose(ignored -> groups.loadGroup(declaration.name()))
+              .thenCompose(
+                  existing ->
+                      existing
+                          .map(CompletableFuture::completedFuture)
+                          .orElseGet(() -> groups.createAndLoadGroup(declaration.name())))
               .thenCompose(
                   group -> {
                     for (var node : declaration.nodes()) {
