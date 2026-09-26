@@ -58,6 +58,7 @@ final class TownsConfigTest {
     assertThat(config.regions())
         .extracting(region -> region.id())
         .containsExactly("spawn", "arena");
+    assertThat(config.claims().worlds()).containsExactly("world");
     assertThat(config.claims().defaultFlags()).containsExactly(ClaimFlag.PVP);
     var spawn = regions.byId("spawn").orElseThrow();
     assertThat(spawn.permits(new Act(Action.INTERACT, Subject.DOOR))).isTrue();

@@ -11,3 +11,8 @@ worlds:
   - name: peaks
     preset: amplified
     rtp: true
+  # This resource world is disposable; its quarterly reset is managed by
+  # Temporal only after a backup and while the server is stopped.
+  - name: mining
+    preset: normal
+    rtp: true
