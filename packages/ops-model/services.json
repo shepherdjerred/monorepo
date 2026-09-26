@@ -228,6 +228,14 @@
       "grafanaDashboards": ["alert-dashboard"]
     },
     {
+      "id": "storm-brain",
+      "title": "Storm brain",
+      "kind": "workload",
+      "package": "storm-brain",
+      "namespaces": ["storm-brain"],
+      "argoApps": ["storm-brain"]
+    },
+    {
       "id": "home",
       "title": "Home Assistant",
       "kind": "workload",

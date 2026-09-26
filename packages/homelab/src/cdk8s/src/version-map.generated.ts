@@ -67,6 +67,7 @@ export const VersionMapSchema = z
     "shepherdjerred/starlight-karma-bot/prod": z.string(),
     "shepherdjerred/birmel": z.string(),
     "shepherdjerred/alert-dashboard": z.string(),
+    "shepherdjerred/storm-brain": z.string(),
     "shepherdjerred/discord-plays-pokemon": z.string(),
     "shepherdjerred/discord-plays-mario-kart": z.string(),
     "freshrss/freshrss": z.string(),
