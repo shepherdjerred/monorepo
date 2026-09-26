@@ -1,0 +1,88 @@
+# The Town Blacksmith, John. Buys metal from miners and sells tools and armor.
+# See reynolds-supplies.yml for the entry format.
+id: blacksmith
+name: The Town Blacksmith
+greeting: >-
+  John sets down his hammer. "Iron in, iron out. Bring me ore and I'll pay
+  fair."
+entries:
+  - item: iron_ingot
+    quantity: 8
+    buy: 96
+    sell: 32
+    dailyLimit: 256
+  - item: gold_ingot
+    quantity: 8
+    buy: 160
+    sell: 56
+    dailyLimit: 128
+  - item: copper_ingot
+    quantity: 16
+    buy: 64
+    sell: 16
+    dailyLimit: 512
+  - item: diamond
+    quantity: 1
+    buy: null
+    sell: 60
+    dailyLimit: 16
+  - item: flint
+    quantity: 16
+    buy: 16
+    sell: null
+    dailyLimit: null
+  - item: arrow
+    quantity: 32
+    buy: 32
+    sell: null
+    dailyLimit: null
+  - item: shield
+    quantity: 1
+    buy: 45
+    sell: null
+    dailyLimit: null
+  - item: iron_sword
+    quantity: 1
+    buy: 50
+    sell: null
+    dailyLimit: null
+  - item: iron_pickaxe
+    quantity: 1
+    buy: 60
+    sell: null
+    dailyLimit: null
+  - item: iron_axe
+    quantity: 1
+    buy: 60
+    sell: null
+    dailyLimit: null
+  - item: iron_shovel
+    quantity: 1
+    buy: 30
+    sell: null
+    dailyLimit: null
+  - item: iron_helmet
+    quantity: 1
+    buy: 65
+    sell: null
+    dailyLimit: null
+  - item: iron_chestplate
+    quantity: 1
+    buy: 110
+    sell: null
+    dailyLimit: null
+  - item: iron_leggings
+    quantity: 1
+    buy: 95
+    sell: null
+    dailyLimit: null
+  - item: iron_boots
+    quantity: 1
+    buy: 50
+    sell: null
+    dailyLimit: null
+  - item: anvil
+    quantity: 1
+    buy: 400
+    sell: null
+    dailyLimit: null

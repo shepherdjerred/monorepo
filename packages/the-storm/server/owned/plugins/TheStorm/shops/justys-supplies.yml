@@ -1,0 +1,73 @@
+# Justy's Supplies: seeds, saplings and field tools. See reynolds-supplies.yml
+# for the entry format.
+id: justys-supplies
+name: Justy's Supplies
+greeting: >-
+  Justy is sorting seed packets. "Plant something today. You'll thank yourself
+  when the wind picks up."
+entries:
+  - item: wheat_seeds
+    quantity: 16
+    buy: 8
+    sell: null
+    dailyLimit: null
+  - item: carrot
+    quantity: 16
+    buy: 24
+    sell: 8
+    dailyLimit: 640
+  - item: potato
+    quantity: 16
+    buy: 24
+    sell: 8
+    dailyLimit: 640
+  - item: melon_seeds
+    quantity: 4
+    buy: 16
+    sell: null
+    dailyLimit: null
+  - item: pumpkin_seeds
+    quantity: 4
+    buy: 16
+    sell: null
+    dailyLimit: null
+  - item: sugar_cane
+    quantity: 8
+    buy: 16
+    sell: null
+    dailyLimit: null
+  - item: bone_meal
+    quantity: 16
+    buy: 24
+    sell: null
+    dailyLimit: null
+  - item: oak_sapling
+    quantity: 4
+    buy: 12
+    sell: null
+    dailyLimit: null
+  - item: bucket
+    quantity: 1
+    buy: 40
+    sell: null
+    dailyLimit: null
+  - item: shears
+    quantity: 1
+    buy: 30
+    sell: null
+    dailyLimit: null
+  - item: fishing_rod
+    quantity: 1
+    buy: 20
+    sell: null
+    dailyLimit: null
+  - item: name_tag
+    quantity: 1
+    buy: 250
+    sell: null
+    dailyLimit: null
+  - item: saddle
+    quantity: 1
+    buy: 300
+    sell: null
+    dailyLimit: null
