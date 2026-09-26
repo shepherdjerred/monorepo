@@ -6,7 +6,6 @@ import {
   setHandler,
   workflowInfo,
 } from "@temporalio/workflow";
-import { z } from "zod";
 import {
   AgentChatBindingSchema,
   AgentChatBindingConflictError,
@@ -37,17 +36,15 @@ import {
   settleAgentChatTurnUpdate,
 } from "#shared/agent/agent-chat-workflow.ts";
 import {
-  retainBindingOperation,
-  retainedOperationEntry,
-  sameBindingOperation,
-} from "./agent-chat-catalog/binding-operations.ts";
-import {
   assertDistinctSourceOrdering,
   existingBindingWins,
-} from "./agent-chat-catalog/ordering.ts";
+  retainedOperationEntry,
+  retainBindingOperation,
+  sameBindingOperation,
+} from "./agent-chat-catalog/binding-ordering.ts";
 
-const SOURCE_EPOCH_TIMESTAMP_ORDERING_PATCH =
-  "agent-chat-source-epoch-timestamp-ordering-v1";
+const REGISTER_AND_BIND_PRECEDENCE_PATCH =
+  "agent-chat-register-and-bind-precedence-v1";
 
 function catalogStateBytes(state: AgentChatCatalogState): number {
   return new TextEncoder().encode(JSON.stringify(state)).byteLength;
@@ -286,21 +283,11 @@ export function settleAgentChatCatalogTurn(
   const entry = registerAgentChatCatalogEntry(state, rawEntry);
   return recordTurn(state, entry.config.chatId, turnCount, updatedAt);
 }
-type BindAgentChatCatalogEntryInput = {
-  binding: AgentChatBinding;
-  chatId: string;
-  update: AgentChatBindingUpdateInput;
-  sourceEpochTimestampOrdering?: boolean;
-};
-
 function bind(
   state: AgentChatCatalogState,
-  {
-    binding: rawBinding,
-    chatId: rawChatId,
-    update: rawUpdate,
-    sourceEpochTimestampOrdering = true,
-  }: BindAgentChatCatalogEntryInput,
+  rawBinding: AgentChatBinding,
+  rawChatId: string,
+  rawUpdate: AgentChatBindingUpdateInput,
 ): AgentChatCatalogEntry {
   const binding = AgentChatBindingSchema.parse(rawBinding);
   const update = parseBindingUpdate(rawUpdate);
@@ -351,61 +338,51 @@ function bind(
   return entry;
 }
 
-const RegisterAndBindAgentChatCatalogEntryUpdateSchema = z.strictObject({
-  update: z.union([z.string(), AgentChatBindingUpdateSchema]),
-  sourceEpochTimestampOrdering: z.boolean(),
-});
-type RegisterAndBindAgentChatCatalogEntryUpdate = z.infer<
-  typeof RegisterAndBindAgentChatCatalogEntryUpdateSchema
->;
+type RegisterAndBindAgentChatCatalogEntryInput = {
+  state: AgentChatCatalogState;
+  entry: AgentChatCatalogEntry;
+  binding: AgentChatBinding;
+  update: AgentChatBindingUpdateInput;
+  precedenceBeforeRegistration?: boolean;
+};
 
-export function registerAndBindAgentChatCatalogEntry(
-  state: AgentChatCatalogState,
-  rawEntry: AgentChatCatalogEntry,
-  rawBinding: AgentChatBinding,
-  rawUpdate:
-    AgentChatBindingUpdateInput | RegisterAndBindAgentChatCatalogEntryUpdate,
-): AgentChatCatalogEntry {
-  const versionedUpdate =
-    RegisterAndBindAgentChatCatalogEntryUpdateSchema.safeParse(rawUpdate);
-  const { update: updateInput, sourceEpochTimestampOrdering = true } =
-    versionedUpdate.success
-      ? versionedUpdate.data
-      : {
-          update: z
-            .union([z.string(), AgentChatBindingUpdateSchema])
-            .parse(rawUpdate),
-        };
-  const binding = AgentChatBindingSchema.parse(rawBinding);
-  const update = parseBindingUpdate(updateInput);
-  const bindingKey = agentChatBindingKey(binding);
+export function registerAndBindAgentChatCatalogEntry({
+  state,
+  entry: rawEntry,
+  binding: rawBinding,
+  update: rawUpdate,
+  precedenceBeforeRegistration = true,
+}: RegisterAndBindAgentChatCatalogEntryInput): AgentChatCatalogEntry {
   const candidate = AgentChatCatalogEntrySchema.parse(rawEntry);
+  const binding = AgentChatBindingSchema.parse(rawBinding);
+  const update = parseBindingUpdate(rawUpdate);
   const next = AgentChatCatalogBindingSchema.parse({
     binding,
     chatId: candidate.config.chatId,
     ...update,
   });
-  const retained = retainedOperationEntry(state, bindingKey, next);
-  if (retained !== undefined) return retained;
-  const existing = state.bindings.find(
-    (current) => agentChatBindingKey(current.binding) === bindingKey,
+  const retained = retainedOperationEntry(
+    state,
+    agentChatBindingKey(binding),
+    next,
   );
-  assertDistinctSourceOrdering(existing, next, sourceEpochTimestampOrdering);
-  if (
-    existing !== undefined &&
-    existingBindingWins(existing, next, sourceEpochTimestampOrdering)
-  ) {
-    const selected = entryForBinding(state, existing.chatId);
-    retainBindingOperation(state, next, selected.config.chatId);
-    return selected;
+  if (retained !== undefined) return retained;
+  if (precedenceBeforeRegistration) {
+    const existing = state.bindings.find(
+      (current) =>
+        agentChatBindingKey(current.binding) === agentChatBindingKey(binding),
+    );
+    assertDistinctSourceOrdering(existing, next);
+    if (existing !== undefined && existingBindingWins(existing, next)) {
+      return entryForBinding(state, existing.chatId);
+    }
   }
-  const entry = registerAgentChatCatalogEntry(state, rawEntry, bindingKey);
-  return bind(state, {
-    binding,
-    chatId: entry.config.chatId,
-    update: updateInput,
-    sourceEpochTimestampOrdering,
-  });
+  const entry = registerAgentChatCatalogEntry(
+    state,
+    rawEntry,
+    agentChatBindingKey(binding),
+  );
+  return bind(state, binding, entry.config.chatId, update);
 }
 
 function resolve(
@@ -435,22 +412,16 @@ export async function agentChatCatalogWorkflow(
     settleAgentChatCatalogTurn(state, entry, turnCount, updatedAt),
   );
   setHandler(registerAndBindAgentChatUpdate, (entry, binding, update) =>
-    registerAndBindAgentChatCatalogEntry(state, entry, binding, {
+    registerAndBindAgentChatCatalogEntry({
+      state,
+      entry,
+      binding,
       update,
-      sourceEpochTimestampOrdering: patched(
-        SOURCE_EPOCH_TIMESTAMP_ORDERING_PATCH,
-      ),
+      precedenceBeforeRegistration: patched(REGISTER_AND_BIND_PRECEDENCE_PATCH),
     }),
   );
   setHandler(bindAgentChatUpdate, (binding, chatId, update) =>
-    bind(state, {
-      binding,
-      chatId,
-      update,
-      sourceEpochTimestampOrdering: patched(
-        SOURCE_EPOCH_TIMESTAMP_ORDERING_PATCH,
-      ),
-    }),
+    bind(state, binding, chatId, update),
   );
   setHandler(resolveAgentChatBindingQuery, (binding) =>
     resolve(state, binding),

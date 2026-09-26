@@ -349,6 +349,28 @@ describe("The Storm companion pilot rollout", () => {
   });
 });
 
+describe("durable iMessage ingress rollout", () => {
+  test("stages the feature in beta before production", () => {
+    const betaFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "beta",
+      "temporal",
+    ).find(
+      (candidate) => candidate.key === "temporal-agent-chat-imessage-enabled",
+    );
+    const prodFlag = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "prod",
+      "temporal",
+    ).find(
+      (candidate) => candidate.key === "temporal-agent-chat-imessage-enabled",
+    );
+
+    expect(betaFlag?.default).toBe(true);
+    expect(prodFlag?.default).toBe(false);
+  });
+});
+
 describe("pet dashboard rollout", () => {
   test("keeps the pet dashboard off by default and in beta while prod stays rolled out", () => {
     const declared = managedFlagInventory.flags.find(

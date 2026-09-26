@@ -13,75 +13,124 @@ import {
 } from "#shared/agent/agent-chat-imessage.ts";
 
 const BLUEBUBBLES_QUERY_LIMIT = 1000;
+const BlueBubblesMessagesSchema = z
+  .array(BlueBubblesMessageSchema)
+  .max(BLUEBUBBLES_QUERY_LIMIT);
 
-async function initialBlueBubblesRowId(
-  initialWatermark: number,
-): Promise<number> {
-  let watermark = initialWatermark;
-  for (;;) {
-    const messages = z
-      .array(BlueBubblesMessageSchema)
-      .max(BLUEBUBBLES_QUERY_LIMIT)
-      .parse(
-        await blueBubblesRequest("/api/v1/message/query", {
-          with: ["chats"],
-          limit: BLUEBUBBLES_QUERY_LIMIT,
-          sort: "DESC",
-          where: [
-            {
-              statement: "message.ROWID > :cursor",
-              args: { cursor: watermark },
-            },
-          ],
-        }),
-      );
-    if (messages.length === 0) return watermark;
-    const next = Math.max(...messages.map((message) => message.originalROWID));
-    if (next <= watermark) {
-      throw new Error("BlueBubbles initialization did not advance its ROWID");
-    }
-    watermark = next;
-    if (messages.length < BLUEBUBBLES_QUERY_LIMIT) return watermark;
+function parseBlueBubblesMessages(value: unknown) {
+  const result = BlueBubblesMessagesSchema.safeParse(value);
+  if (!result.success) {
+    throw ApplicationFailure.nonRetryable(
+      "BlueBubbles returned an invalid message payload; cursor was not advanced",
+      "BlueBubblesInvalidMessagePayload",
+    );
   }
+  return result.data;
+}
+
+async function initialBlueBubblesPage(cursor: BlueBubblesCursor): Promise<{
+  initialized: boolean;
+  lastRowId: number;
+  initializationHighWaterRowId?: number;
+}> {
+  const snapshotHighWater = cursor.initialized
+    ? undefined
+    : cursor.initializationHighWaterRowId;
+  const messages = parseBlueBubblesMessages(
+    await blueBubblesRequest("/api/v1/message/query", {
+      with: ["chats"],
+      limit: BLUEBUBBLES_QUERY_LIMIT,
+      sort: "DESC",
+      where: [
+        {
+          statement: "message.ROWID > :cursor",
+          args: { cursor: cursor.lastRowId },
+        },
+        ...(snapshotHighWater === undefined
+          ? []
+          : [
+              {
+                statement: "message.ROWID <= :initializationHighWater",
+                args: { initializationHighWater: snapshotHighWater },
+              },
+            ]),
+      ],
+    }),
+  );
+  if (messages.length === 0) {
+    return {
+      initialized: true,
+      lastRowId: snapshotHighWater ?? cursor.lastRowId,
+    };
+  }
+  const next = Math.max(...messages.map((message) => message.originalROWID));
+  if (next <= cursor.lastRowId) {
+    throw ApplicationFailure.nonRetryable(
+      "BlueBubbles initialization did not advance its ROWID",
+      "BlueBubblesInitializationDidNotAdvance",
+    );
+  }
+  if (snapshotHighWater !== undefined && next > snapshotHighWater) {
+    throw ApplicationFailure.nonRetryable(
+      "BlueBubbles initialization crossed its high-water mark",
+      "BlueBubblesInitializationHighWaterViolated",
+    );
+  }
+  const initialized = messages.length < BLUEBUBBLES_QUERY_LIMIT;
+  return {
+    initialized,
+    lastRowId: next,
+    ...(initialized
+      ? {}
+      : { initializationHighWaterRowId: snapshotHighWater ?? next }),
+  };
 }
 
 export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
   const cursor = BlueBubblesCursorSchema.parse(rawCursor);
   const config = await imessageIngressConfig();
   if (!config.enabled || config.owners.length === 0) {
-    const latestRowId = await initialBlueBubblesRowId(cursor.lastRowId);
+    const progress = await initialBlueBubblesPage(cursor);
     return BlueBubblesPollResultSchema.parse({
       startedAt: cursor.startedAt,
-      initialized: true,
-      lastRowId: Math.max(cursor.lastRowId, latestRowId),
+      initialized: progress.initialized,
+      lastRowId: progress.lastRowId,
+      ...(progress.initializationHighWaterRowId === undefined
+        ? {}
+        : {
+            initializationHighWaterRowId: progress.initializationHighWaterRowId,
+          }),
       commands: [],
     });
   }
   const initializing = !cursor.initialized;
   if (initializing) {
+    const progress = await initialBlueBubblesPage(cursor);
     return BlueBubblesPollResultSchema.parse({
       startedAt: cursor.startedAt,
-      initialized: true,
-      lastRowId: await initialBlueBubblesRowId(0),
+      initialized: progress.initialized,
+      lastRowId: progress.lastRowId,
+      ...(progress.initializationHighWaterRowId === undefined
+        ? {}
+        : {
+            initializationHighWaterRowId: progress.initializationHighWaterRowId,
+          }),
       commands: [],
     });
   }
-  const messages = z
-    .array(BlueBubblesMessageSchema)
-    .max(BLUEBUBBLES_QUERY_LIMIT)
-    .parse(
-      await blueBubblesRequest("/api/v1/message/query", {
-        with: ["chats"],
-        limit: BLUEBUBBLES_QUERY_LIMIT,
-        sort: "ASC",
-        where: [
-          {
-            statement: "message.ROWID > :cursor",
-            args: { cursor: cursor.lastRowId },
-          },
-        ],
-      }),
-    );
+  const messages = parseBlueBubblesMessages(
+    await blueBubblesRequest("/api/v1/message/query", {
+      with: ["chats"],
+      limit: BLUEBUBBLES_QUERY_LIMIT,
+      sort: "ASC",
+      where: [
+        {
+          statement: "message.ROWID > :cursor",
+          args: { cursor: cursor.lastRowId },
+        },
+      ],
+    }),
+  );
   // The API sorts by message time, not ROWID. A full page cannot safely advance a ROWID cursor.
   if (messages.length === BLUEBUBBLES_QUERY_LIMIT)
     throw ApplicationFailure.nonRetryable(
@@ -92,7 +141,10 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
     .toSorted((left, right) => left.originalROWID - right.originalROWID)
     .slice(0, 50);
   if (batch.some((message) => message.originalROWID <= cursor.lastRowId))
-    throw new Error("BlueBubbles returned a message outside the cursor query");
+    throw ApplicationFailure.nonRetryable(
+      "BlueBubbles returned a message outside the cursor query",
+      "BlueBubblesCursorQueryViolated",
+    );
   const commands = batch.flatMap((message) => {
     const command = blueBubblesCommand(message, config.owners);
     return command === undefined ? [] : [command];

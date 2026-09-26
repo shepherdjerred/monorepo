@@ -1,6 +1,4 @@
-// Temporal requires workflows to be exported from a single entry point.
-// These wrapper functions delegate to the actual workflow implementations
-// to satisfy the no-re-exports lint rule.
+// Temporal requires wrappers rather than re-exports from its entry point.
 import { fetchSkillCappedManifest as _fetchSkillCappedManifest } from "./homelab/fetcher.ts";
 import { generateDependencySummary as _generateDependencySummary } from "./deps-summary.ts";
 import { runDnsAudit as _runDnsAudit } from "./homelab/dns-audit.ts";
@@ -178,31 +176,24 @@ export function workerDeploymentCanaryWorkflow(
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
 }
-
 export async function runKometaWorkflow(): Promise<void> {
   return runKometaWorkflowImplementation();
 }
-
 export async function runMainVulnScanWorkflow(): Promise<void> {
   return runMainVulnScanWorkflowImplementation();
 }
-
 export async function runCiIoTelemetry(): Promise<void> {
   return _runCiIoTelemetry();
 }
-
 export async function runLinkRotScanWorkflow(): Promise<void> {
   return runLinkRotScanWorkflowImplementation();
 }
-
 export async function runScheduleRehearsalWorkflow(): Promise<ScheduleRehearsalResult> {
   return runScheduleRehearsalWorkflowImplementation();
 }
-
 export async function runBunCacheGcWorkflow(): Promise<void> {
   return runBunCacheGcWorkflowImplementation();
 }
-
 export async function runUvCachePruneWorkflow(): Promise<void> {
   return runUvCachePruneWorkflowImplementation();
 }

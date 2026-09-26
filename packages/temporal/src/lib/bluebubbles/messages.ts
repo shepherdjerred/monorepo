@@ -6,11 +6,13 @@ import {
 
 // BlueBubbles/macOS chat.db uses 43 for groups and 45 for direct messages.
 const BLUEBUBBLES_DIRECT_CHAT_STYLE = 45;
+// ImessageCommandSchema uses RFC 3339 timestamps with four-digit years.
+const MAX_BLUEBUBBLES_DATE_MS = 253_402_300_799_999;
 
 export const BlueBubblesMessageSchema = z.object({
   originalROWID: z.number().int().positive(),
   guid: z.string().min(1).max(200),
-  dateCreated: z.number().int().nonnegative(),
+  dateCreated: z.number().int().nonnegative().max(MAX_BLUEBUBBLES_DATE_MS),
   isFromMe: z.boolean(),
   text: z.string().nullable(),
   handle: z.object({ address: z.string() }).nullable(),

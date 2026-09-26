@@ -27,11 +27,8 @@ describe("iMessage configuration boundaries", () => {
     flag.mockImplementation((names: { key: string }) =>
       Promise.resolve({
         value:
-          names.key === "enabled"
-            ? false
-            : names.key === "owners"
-              ? "owner"
-              : "fixed-model",
+          names.key !== "enabled" &&
+          (names.key === "owners" ? "owner" : "fixed-model"),
       }),
     );
     expect(await imessageIngressConfig()).toEqual({
