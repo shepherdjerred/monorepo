@@ -1575,7 +1575,6 @@
         "@scout-for-lol/report": "workspace:*",
         "@sentry/browser": "^10.0.0",
         "@shepherdjerred/llm-models": "workspace:*",
-        "@shepherdjerred/llm-runtime": "workspace:*",
         "@tailwindcss/typography": "^0.5.16",
         "@tailwindcss/vite": "^4.2.4",
         "ai": "^7.0.114",
