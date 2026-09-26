@@ -113,6 +113,7 @@ it, record its sha256 in `plugins.json`, and run the smoke and boot checks.
 | Lunamatic       | 2.0.8                                | `Lunamatic-2.0.8.jar`           | [cdn.modrinth.com](https://cdn.modrinth.com/data/uA289E2d/versions/F4QSC1D9/Lunamatic-2.0.8-all.jar)                   | No replacing module planned yet                                                     |
 | mcMMO           | 2.3.002-SNAPSHOT (Jenkins build 363) | `mcMMO-2.3.002-b363.jar`        | [popicraft.net](https://popicraft.net/jenkins/job/mcMMO/363/artifact/target/mcMMO.jar)                                 | Until the `skills` module. Was hand-placed on the volume. See the warning below     |
 | MobArena        | 0.109                                | `MobArena-0.109.jar`            | [github.com](https://github.com/garbagemule/MobArena/releases/download/0.109/MobArena-0.109.jar)                       | Until the `arena` module                                                            |
+| Multiverse-Core | 5.8.0                                | `Multiverse-Core-5.8.0.jar`     | [cdn.modrinth.com](https://cdn.modrinth.com/data/3wmN97b8/versions/bzFXz39N/multiverse-core-5.8.0.jar)                 | Until the `world` module can create the extra worlds                                |
 | PlaceholderAPI  | 2.12.3                               | `PlaceholderAPI-2.12.3.jar`     | [cdn.modrinth.com](https://cdn.modrinth.com/data/lKEzGugV/versions/pIvQcXW8/PlaceholderAPI-2.12.3.jar)                 | Until `core`                                                                        |
 | Plan            | 5.8 build 3605                       | `Plan-5.8-build-3605.jar`       | [cdn.modrinth.com](https://cdn.modrinth.com/data/wJQfHhxh/versions/VCtXebje/Plan-5.8-build-3605.jar)                   | Removed in Phase 1 without a replacement                                            |
 | ProtocolLib     | 5.4.0                                | `ProtocolLib-5.4.0.jar`         | [github.com](https://github.com/dmulloy2/ProtocolLib/releases/download/5.4.0/ProtocolLib.jar)                          | Until `core`                                                                        |
@@ -135,8 +136,7 @@ both are pinned by sha256 in `plugins.json`.
 > (new URL and sha256) or host the jar; the `skills` module replaces mcMMO
 > later.
 
-Removed from the former set: Multiverse-Core (one survival world, vanilla
-nether and end), LWCX (container locks; the `towns` module will protect
+Removed from the former set: LWCX (container locks; the `towns` module will protect
 containers inside claims, and its `lwc.db` stays on the volume) and
 LiteBans (a paid jar; only its config was shipped).
 
@@ -207,7 +207,8 @@ copy onto the volume, and where its content lives now.
 | `VentureChat/commands.yml`, `Messages.yml`                                                                                 | Defaults                                      |                                                                                                                                      |
 | `Vault`, `WorldEdit`, `WorldGuard`, `XConomy`, `PlaceholderAPI` files                                                      | Defaults                                      |                                                                                                                                      |
 | `ChestSort/*`                                                                                                              | Removed                                       | They configure JEFF Media's ChestSort; the installed ChestSort 1.1 (AshKiano) has no config                                          |
-| `BetterSleeping4/*`, `BlueSlimeCore/*`, `DisableVillagerTrade/*`, `LiteBans/*`, `Multiverse-Core/*`                        | Removed                                       | No such plugin is installed                                                                                                          |
+| `Multiverse-Core/*`                                                                                                        | Runtime                                       | Kept until the `world` module takes ownership of extra worlds                                                                        |
+| `BetterSleeping4/*`, `BlueSlimeCore/*`, `DisableVillagerTrade/*`, `LiteBans/*`                                             | Removed                                       | No such plugin is installed                                                                                                          |
 
 `owned/plugins/TheStorm/*.yml` is TheStorm's own configuration, written by the
 module work and loaded strictly by the plugin.
@@ -244,14 +245,12 @@ The first release onto the existing `minecraft-tsmc` volume:
    not prune.
 6. **First wake.** Expect in the log: `[storm-entrypoint] removed stale …` for
    the `remove.list` files, `REMOVE_OLD_MODS` deleting every top-level jar
-   (including the hand-placed mcMMO and LWCX jars and Multiverse-Core), and
-   all 29 plugins enabling. mcMMO upgrades its stored data in place.
+   (including the hand-placed mcMMO and LWCX jars), then installing the pinned
+   Multiverse-Core jar and all 30 plugins enabling. mcMMO upgrades its stored data in place.
 7. **In game:** `/setspawn` at the windmill (the pinned spawn was removed),
    `/settpr` if random teleport has no centre, check that DiscordSRV relays
-   chat and that bluemap.ts-mc.net renders. (Dropping Multiverse loses
-   nothing: its only extra world, `world_amplified`, was already unreachable,
-   because its folder is gone from the volume and its autoload was turned off
-   in e0a72baa90.)
+   chat and that bluemap.ts-mc.net renders. Multiverse remains installed until
+   the `world` module is ready to create `wilds`, `peaks`, and `mining`.
 
 Rolling back to the old chart is not a clean revert: the hand-placed mcMMO and
 LWCX jars are gone and must come back from the Velero backup.

@@ -160,7 +160,7 @@ docker run --rm --user 1000:3000 --group-add 2000 \
 boot legacy
 
 for stale in plugins/Essentials/spawn.yml plugins/Chunky/tasks/world.properties \
-  plugins/Multiverse-Core plugins/LWCX-2.2.9.jar; do
+  plugins/LWCX-2.2.9.jar; do
   on_volume test ! -e "/data/$stale" || fail "legacy: stale $stale is still there"
 done
 on_volume grep -qxF plugins/Essentials/spawn.yml /data/.the-storm-removed ||
