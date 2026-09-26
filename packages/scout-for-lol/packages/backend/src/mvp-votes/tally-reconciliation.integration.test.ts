@@ -34,6 +34,14 @@ async function vote(nomineeIndex: number) {
   );
 }
 
+async function expireClaimAfterAnotherVote(): Promise<void> {
+  await vote(2);
+  await db.matchMvpTallyRefresh.update({
+    where,
+    data: { leaseUntil: new Date(0), nextAttemptAt: new Date(0) },
+  });
+}
+
 afterAll(async () => {
   await db.$disconnect();
 });
@@ -85,32 +93,22 @@ describe("durable MVP tally refresh", () => {
 
   test("requeues the current tally when a stale edit finishes after losing its lease", async () => {
     await vote(1);
-    let releaseFirst!: () => void;
-    let firstStarted!: () => void;
-    const firstStartedPromise = new Promise<void>((resolve) => {
-      firstStarted = resolve;
-    });
-    const firstEditGate = new Promise<void>((resolve) => {
-      releaseFirst = resolve;
-    });
+    const started = Promise.withResolvers<boolean>();
+    const editGate = Promise.withResolvers<boolean>();
     let visibleRevision = 0;
     const first = reconcileMvpTallyRefresh(key, db, async () => {
-      firstStarted();
-      await firstEditGate;
+      started.resolve(true);
+      await editGate.promise;
       visibleRevision = 1;
       return true;
     });
-    await firstStartedPromise;
-    await vote(2);
-    await db.matchMvpTallyRefresh.update({
-      where,
-      data: { leaseUntil: new Date(0), nextAttemptAt: new Date(0) },
-    });
+    await started.promise;
+    await expireClaimAfterAnotherVote();
     await reconcileMvpTallyRefresh(key, db, async () => {
       visibleRevision = 2;
       return true;
     });
-    releaseFirst();
+    editGate.resolve(true);
     await first;
     expect(visibleRevision).toBe(1);
     await expect(
@@ -128,27 +126,17 @@ describe("durable MVP tally refresh", () => {
 
   test("requeues after a stale multi-message edit partially fails", async () => {
     await vote(1);
-    let releaseFirst!: () => void;
-    let firstStarted!: () => void;
-    const firstStartedPromise = new Promise<void>((resolve) => {
-      firstStarted = resolve;
-    });
-    const firstEditGate = new Promise<void>((resolve) => {
-      releaseFirst = resolve;
-    });
+    const started = Promise.withResolvers<boolean>();
+    const editGate = Promise.withResolvers<boolean>();
     const first = reconcileMvpTallyRefresh(key, db, async () => {
-      firstStarted();
-      await firstEditGate;
+      started.resolve(true);
+      await editGate.promise;
       throw new Error("A later Discord target failed");
     });
-    await firstStartedPromise;
-    await vote(2);
-    await db.matchMvpTallyRefresh.update({
-      where,
-      data: { leaseUntil: new Date(0), nextAttemptAt: new Date(0) },
-    });
+    await started.promise;
+    await expireClaimAfterAnotherVote();
     await reconcileMvpTallyRefresh(key, db, async () => true);
-    releaseFirst();
+    editGate.resolve(true);
     await first;
     await expect(
       db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
