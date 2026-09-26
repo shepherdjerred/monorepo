@@ -131,34 +131,40 @@ export class LinearClient {
     );
   }
 
-  private labelIdsCache: Map<string, string> | null = null;
+  private readonly labelIdsCache = new Map<string, Map<string, string>>();
 
-  private async labelIds(): Promise<Map<string, string>> {
-    if (this.labelIdsCache === null) {
-      const output = await this.command([
-        "label",
-        "list",
-        "--team",
-        this.team,
-        "--json",
-      ]);
-      const parsed = TeamLabelsSchema.parse(JSON.parse(output));
-      this.labelIdsCache = new Map(
-        parsed.nodes.map(({ id, name }) => [name, id] as const),
-      );
-    }
-    return this.labelIdsCache;
+  private issueTeam(issue: LinearIssue): string {
+    return issue.team?.key ?? this.team;
+  }
+
+  private async labelIds(team: string): Promise<Map<string, string>> {
+    const cached = this.labelIdsCache.get(team);
+    if (cached !== undefined) return cached;
+    const output = await this.command([
+      "label",
+      "list",
+      "--team",
+      team,
+      "--json",
+    ]);
+    const parsed = TeamLabelsSchema.parse(JSON.parse(output));
+    const ids = new Map(
+      parsed.nodes.map(({ id, name }) => [name, id] as const),
+    );
+    this.labelIdsCache.set(team, ids);
+    return ids;
   }
 
   private async mutateLabels(input: {
     nodeId: string;
+    team: string;
     add: readonly string[];
     remove: readonly string[];
   }): Promise<void> {
-    // Label names resolve inside the issue's own team, so cross-team issues
-    // must be mutated by label ID from the runner's home team instead.
+    // Label names resolve inside the issue's own team, so issues are
+    // mutated by label ID resolved from that same team.
     if (input.add.length === 0 && input.remove.length === 0) return;
-    const ids = await this.labelIds();
+    const ids = await this.labelIds(input.team);
     const toIds = (names: readonly string[]): string[] =>
       names.map((name) => {
         const id = ids.get(name);
@@ -171,7 +177,7 @@ export class LinearClient {
       });
     await this.command([
       "api",
-      "mutation($id: String!, $add: [ID!], $remove: [ID!]) { issueUpdate(input: {id: $id, addedLabelIds: $add, removedLabelIds: $remove}) { success } }",
+      "mutation($id: String!, $add: [String!], $remove: [String!]) { issueUpdate(id: $id, input: {addedLabelIds: $add, removedLabelIds: $remove}) { success } }",
       "--variables-json",
       JSON.stringify({
         id: input.nodeId,
@@ -200,6 +206,7 @@ export class LinearClient {
     const present = labels(issue);
     await this.mutateLabels({
       nodeId: issue.id,
+      team: this.issueTeam(issue),
       add: [],
       remove: present.has(LABEL_READY) ? [LABEL_READY] : [],
     });
@@ -213,6 +220,7 @@ export class LinearClient {
     if (!labels(issue).has(LABEL_NEEDS_HUMAN)) {
       await this.mutateLabels({
         nodeId: issue.id,
+        team: this.issueTeam(issue),
         add: [LABEL_NEEDS_HUMAN],
         remove: [],
       });
@@ -224,6 +232,7 @@ export class LinearClient {
     await this.setState(issue.identifier, "Done");
     await this.mutateLabels({
       nodeId: issue.id,
+      team: this.issueTeam(issue),
       add: [],
       remove: this.removableLabels(issue),
     });
@@ -234,6 +243,7 @@ export class LinearClient {
     await this.setState(issue.identifier, "Done");
     await this.mutateLabels({
       nodeId: issue.id,
+      team: this.issueTeam(issue),
       add: [],
       remove: this.removableLabels(issue),
     });

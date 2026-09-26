@@ -16,6 +16,7 @@ function issue(input: {
   createdAt?: string;
   labels?: string[];
   stateType?: string;
+  teamKey?: string;
 }): LinearIssue {
   return {
     id: input.identifier,
@@ -24,6 +25,7 @@ function issue(input: {
     description: null,
     url: `https://linear.app/example/issue/${input.identifier}`,
     priority: input.priority ?? 0,
+    team: { key: input.teamKey ?? "SJ" },
     createdAt: input.createdAt ?? "2026-01-01T00:00:00.000Z",
     state: { name: "Todo", type: input.stateType ?? "unstarted" },
     labels: {
@@ -88,13 +90,15 @@ function recordingRunner(recorded: string[][]): CommandRunner {
   return async (args) => {
     recorded.push([...args]);
     if (args[2] === "label") {
+      const team = args[args.indexOf("--team") + 1] ?? "SJ";
+      const prefix = team === "SJ" ? "sj" : team.toLowerCase();
       return {
         exitCode: 0,
         stdout: JSON.stringify({
           nodes: [
-            { id: "codex-id", name: "agent:codex" },
-            { id: "needs-human-id", name: "agent:needs-human" },
-            { id: "ready-id", name: "agent:ready" },
+            { id: `${prefix}-codex-id`, name: "agent:codex" },
+            { id: `${prefix}-needs-human-id`, name: "agent:needs-human" },
+            { id: `${prefix}-ready-id`, name: "agent:ready" },
           ],
         }),
         stderr: "",
@@ -141,9 +145,29 @@ describe("Linear label mutations", () => {
       "reason",
     );
     expect(recorded.flat()).not.toContain("--add-label");
+    const call = recorded.find((args) => args[2] === "api");
+    expect(call?.[3]).toContain("issueUpdate(id: $id, input:");
     expect(apiVariables(recorded)).toEqual({
       id: "AI-3",
-      add: ["needs-human-id"],
+      add: ["sj-needs-human-id"],
+      remove: [],
+    });
+  });
+
+  test("needsHuman resolves IDs from the issue's own team", async () => {
+    const recorded: string[][] = [];
+    const client = new LinearClient("SJ", recordingRunner(recorded));
+    await client.needsHuman(
+      issue({
+        identifier: "AI-3",
+        teamKey: "AI",
+        labels: ["agent:codex"],
+      }),
+      "reason",
+    );
+    expect(apiVariables(recorded)).toEqual({
+      id: "AI-3",
+      add: ["ai-needs-human-id"],
       remove: [],
     });
   });
@@ -158,7 +182,7 @@ describe("Linear label mutations", () => {
     expect(apiVariables(recorded)).toEqual({
       id: "AI-3",
       add: [],
-      remove: ["ready-id"],
+      remove: ["sj-ready-id"],
     });
   });
 
@@ -172,7 +196,7 @@ describe("Linear label mutations", () => {
     expect(apiVariables(recorded)).toEqual({
       id: "AI-3",
       add: [],
-      remove: ["codex-id"],
+      remove: ["sj-codex-id"],
     });
   });
 });

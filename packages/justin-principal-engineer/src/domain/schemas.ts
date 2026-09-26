@@ -23,6 +23,7 @@ export const LinearIssueSchema = z.object({
   description: z.string().nullable().default(null),
   url: z.url(),
   priority: z.number().int(),
+  team: z.object({ key: z.string().min(1) }).optional(),
   createdAt: z.string().min(1),
   state: z.object({
     name: z.string().min(1),
