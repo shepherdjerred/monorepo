@@ -1,9 +1,10 @@
 # @shepherdjerred/code-review
 
 Provider-neutral library for reasoning about automated PR code review: which
-bot posts reviews (Codex, Greptile, …), whether it has finished reviewing the
-head commit, and whether its unresolved findings should block. It is the single
-shared vocabulary behind the `review-gate` Buildkite step
+bots post reviews (Codex, Greptile, Qodo, CodeRabbit), whether each has
+finished reviewing the head commit, and whether their unresolved findings
+should block. It is the single shared vocabulary behind the `review-gate`
+Buildkite step
 ([scripts/review/wait-for-review.ts](../../scripts/review/wait-for-review.ts)) and the PR
 fleet controller ([packages/pr-fleet-controller](../pr-fleet-controller/)).
 
@@ -22,7 +23,15 @@ A `ReviewProvider` (see `src/types.ts`) declares everything consumers need:
   - `review-at-head`: the provider posts a PR review whose
     `commit_id === head`; because a clean PR leaves no review artifact,
     `cleanSignal: "thumbsup-reaction"` detects "reviewed, nothing to flag"
-    (Codex).
+    (Codex). `cleanSignal: "none"` declares the provider always posts a
+    review object, so a missing review means "not reviewed yet" (CodeRabbit).
+- **`parseReviewBodyFindings`** — parses findings that live only in the
+  provider's review bodies (CodeRabbit's "outside diff range" sections, which
+  the platform would not let it post inline) into threads ahead of
+  attribution, so they share their review's ordinal and merge with their
+  thread copies via `findingKey`. Only badged findings may be emitted;
+  severity-less sections (nitpicks) never block. `null` for providers whose
+  every finding is an addressable thread.
   - `issue-comment`: the provider maintains findings in a persistent issue
     comment and posts a separate acknowledgement naming each reviewed head
     (Qodo). Consumers reuse that same comment snapshot when parsing findings.
@@ -61,12 +70,25 @@ gate rather than being trusted; when the error carries a recognised block
 reason (e.g. `usage-limited`), the failure names the operator's remediation
 instead of asking for a re-trigger.
 
+`evaluateMultiGate` combines one pass across providers: any `passed` provider
+passes the gate unless an unresolved, current, provider-authored P0 stands
+anywhere — a P0 vetoes the whole gate and fails fast, even while other
+providers are still reviewing. Otherwise any `waiting` provider keeps the gate
+waiting. When every provider failed, unanimous provider-side blocks stay on
+the soft-fail path (`blockedReason` set → exit 42); a single findings failure
+among them fails hard (exit 1) with the blocked providers noted as ignored.
+A block is never a pass: no review happened.
+
 ## Providers
 
 Registered in `src/providers/registry.ts`: **`codex`** (the default,
-`DEFAULT_PROVIDER_ID`), **`greptile`**, and **`qodo`**. `resolveProvider(id)`
-throws on an unknown id — a typo'd `REVIEW_PROVIDER` env var fails loudly
-instead of gating against the wrong bot.
+`DEFAULT_PROVIDER_ID`), **`greptile`**, **`qodo`**, and **`coderabbit`**.
+`resolveProvider(id)` throws on an unknown id — a typo'd provider id fails
+loudly instead of gating against the wrong bot. The CI gate selects its
+enabled set with `REVIEW_PROVIDERS` (comma-separated; the resolver default is
+`codex`). Every enabled provider must have its GitHub App installed and
+reviewing: silence is neither a pass nor a block, so a missing provider holds
+each PR at the deadline instead of passing it.
 
 ## Entry points
 

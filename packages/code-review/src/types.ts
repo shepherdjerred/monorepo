@@ -126,7 +126,8 @@ export type ReviewIssueComment = {
  *   the head once its latest review's `commit_id === head`. Providers in this
  *   mode leave no artifact on a clean PR, so `cleanSignal` says how to detect
  *   "reviewed, nothing to flag" — currently a 👍 reaction from the provider
- *   (Codex).
+ *   (Codex), or `"none"` when the provider always posts a review object and a
+ *   missing review means "not reviewed yet" (CodeRabbit).
  * - `issue-comment`: the provider maintains findings in a review issue comment
  *   and posts an independent acknowledgement naming each reviewed head. A
  *   clean review with no acknowledgement falls back to the comment's
@@ -134,7 +135,7 @@ export type ReviewIssueComment = {
  */
 export type CompletionStrategy =
   | { kind: "check-run"; namePattern: RegExp }
-  | { kind: "review-at-head"; cleanSignal: "thumbsup-reaction" }
+  | { kind: "review-at-head"; cleanSignal: "thumbsup-reaction" | "none" }
   | {
       kind: "issue-comment";
       marker: string;
@@ -211,6 +212,29 @@ export type ReviewRequestStrategy = {
   command: string;
 };
 
+/**
+ * One provider review with the body needed to parse findings that live only
+ * in the review itself (never as addressable threads). A structural subset of
+ * `ProviderReview` so the GitHub layer can pass its own records straight in.
+ */
+export type ProviderReviewSnapshot = {
+  id: string;
+  submittedAt: string | null;
+  body: string | null;
+};
+
+/**
+ * A finding parsed out of a provider review body, still needing review
+ * attribution. `thread.raisedInReview` must be null here: the caller assigns
+ * the ordinal in the same pass as the addressable threads, so a body finding
+ * and its thread copy share one review position.
+ */
+export type UnattributedBodyFinding = {
+  thread: ReviewThread;
+  reviewId: string;
+  reviewSubmittedAt: string | null;
+};
+
 /** A registered code-review provider. */
 export type ReviewProvider = {
   /** Stable id used in config/metrics/logs, e.g. `"greptile"`, `"codex"`. */
@@ -254,6 +278,21 @@ export type ReviewProvider = {
    * folded into another. `null` for providers that post each finding once.
    */
   findingKey: ((thread: ReviewThread) => string | null) | null;
+  /**
+   * Parse findings that live only in the provider's review bodies — findings
+   * the platform would not let it post inline (CodeRabbit's "outside diff
+   * range" sections). The caller attributes each finding to its review in the
+   * same ordinal space as the addressable threads and merges thread/body
+   * copies via {@link ReviewProvider.findingKey}. `null` for providers whose
+   * every finding is an addressable thread. Only findings with a recognised
+   * severity may be emitted; severity-less sections (nitpicks) never block and
+   * must not inflate finding counts.
+   */
+  parseReviewBodyFindings:
+    | ((
+        reviews: readonly ProviderReviewSnapshot[],
+      ) => readonly UnattributedBodyFinding[])
+    | null;
   /** How the gate detects the provider finished reviewing the head commit. */
   completion: CompletionStrategy;
   /** How the provider signals a deliberate skip, or null if it has none. */

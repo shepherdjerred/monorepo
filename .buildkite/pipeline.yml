@@ -2041,19 +2041,28 @@ steps:
                     mountPath: /buildkite/git-mirrors
                     readOnly: true
 
-  # The blocking required gate is Codex: it must finish reviewing the exact PR
-  # head, and every unresolved finding at the configured severity must be
-  # addressed. Qodo remains available as an optional provider for manual
-  # investigation, but is not part of the PR status until re-enabled here.
+  # The blocking required gate is the multi-provider review gate: ONE enabled
+  # provider must finish reviewing the exact PR head with no blocking findings,
+  # while an unresolved P0 from ANY enabled provider vetoes the pass.
+  # REVIEW_PROVIDERS selects the enabled set. Every provider named here MUST
+  # have its GitHub App installed and reviewing: an enabled provider that never
+  # reviews holds every PR at the deadline (60 minutes) and then fails the
+  # build, because silence is neither a pass nor a block. Out-of-credits
+  # providers never pass: one blocked provider is ignored while the rest
+  # review, and unanimous blocks soft-fail with exit 42.
+  # The step label still names Codex because validate-pipeline-clarity requires
+  # that scope in the label; rename the label with the validator, not around
+  # it, when the wording changes.
   # This budget stays above wait-for-review.ts's own deadline plus its install,
-  # so the script always reports which provider and head it gave up on rather
+  # so the script always reports which providers and head it gave up on rather
   # than Buildkite killing the pod first.
   #
   # The gate soft-fails on exactly one status: 42, which it exits with only when
-  # Codex declared it could not review this head because of its usage limit
-  # (REVIEW_GATE_BLOCKED_EXIT_CODE in @shepherdjerred/code-review). review-gate.sh
-  # then annotates the build to rely on Greptile. Findings, unresolved threads,
-  # timeouts, and every other error exit with another status and fail the build.
+  # EVERY enabled provider declared it could not review this head because of
+  # usage limits (REVIEW_GATE_BLOCKED_EXIT_CODE in
+  # @shepherdjerred/code-review). review-gate.sh then annotates the build.
+  # Findings, unresolved threads, timeouts, and every other error exit with
+  # another status and fail the build.
   # select-pr-pipeline.ts rejects any other soft_fail shape on this step.
   #
   # The gate runs LAST. Its hard failure still fails the build, but only after
@@ -2098,7 +2107,7 @@ steps:
     soft_fail:
       - exit_status: 42
     env:
-      REVIEW_PROVIDER: codex
+      REVIEW_PROVIDERS: codex,qodo,greptile,coderabbit
     command: |
       . .buildkite/scripts/toolchain.sh
       .buildkite/scripts/review-gate.sh

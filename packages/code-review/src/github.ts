@@ -29,6 +29,7 @@ import { ALWAYS_BLOCKING_PRIORITY } from "./gate.ts";
 import {
   attributeRaisedInReview,
   type ParsedReviewThread,
+  appendReviewBodyFindings,
   parseThreadPage,
   parseReviewPage,
   type ProviderReview,
@@ -132,6 +133,11 @@ export async function fetchReviewThreads(input: {
     if (!page.hasNextPage || page.endCursor === null) break;
     reviewCursor = page.endCursor;
   }
+  // Providers whose findings live partly in the review itself (CodeRabbit's
+  // outside-diff sections) contribute body findings before attribution, so a
+  // body finding shares its review's ordinal — and merges with its thread
+  // copy — instead of drifting into a review position of its own.
+  appendReviewBodyFindings(parsed, providerReviews, input.provider);
   // Attribution needs every page: a thread's ordinal is its review's position
   // among all of this provider's reviews, including clean reviews that opened
   // no thread and therefore do not appear in `parsed`.
@@ -535,12 +541,19 @@ async function resolveReviewAtHeadState(input: {
       blockedReason: null,
     };
   }
-  const thumbsUp = await fetchProviderThumbsUp({
-    repo,
-    number: prNumber,
-    token,
-    provider,
-  });
+  // Providers without a clean signal always post a review object, so a missing
+  // review means "not reviewed yet" — skip the reaction lookup entirely rather
+  // than letting another reviewer's 👍 satisfy this provider's gate.
+  const completion = provider.completion;
+  const thumbsUp =
+    completion.kind === "review-at-head" && completion.cleanSignal === "none"
+      ? null
+      : await fetchProviderThumbsUp({
+          repo,
+          number: prNumber,
+          token,
+          provider,
+        });
   // A 👍 reaction carries no commit SHA, so it only counts as "reviewed clean
   // at head" when it can be independently tied to the current head: the
   // reaction must have been created at/after the head was pushed. A reaction

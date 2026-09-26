@@ -29,6 +29,7 @@ export const codexProvider: ReviewProvider = {
   // nothing to recognise a second copy of.
   parseFindingTitle: null,
   findingKey: null,
+  parseReviewBodyFindings: null,
   completion: { kind: "review-at-head", cleanSignal: "thumbsup-reaction" },
   detectSkip: null,
   // When the account's review quota is exhausted Codex answers with an issue

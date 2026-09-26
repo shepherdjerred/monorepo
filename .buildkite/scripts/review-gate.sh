@@ -62,8 +62,8 @@ if [[ ! -f "$WAIT_SCRIPT" ]]; then
   exit 1
 fi
 
-# Exit status 42 is the gate's "the provider declared it cannot review at all"
-# (quota exhaustion) status, REVIEW_GATE_BLOCKED_EXIT_CODE in
+# Exit status 42 is the gate's "every enabled provider declared it cannot
+# review at all" (quota exhaustion) status, REVIEW_GATE_BLOCKED_EXIT_CODE in
 # @shepherdjerred/code-review. The pipeline step soft-fails on exactly that
 # status so the rest of CI still reports; every other non-zero status (findings,
 # unresolved threads, timeouts, errors) fails the build. Keep 42 in sync with
@@ -78,8 +78,8 @@ else
 fi
 
 if [[ "$GATE_STATUS" -eq "$QUOTA_EXIT_STATUS" ]]; then
-  PROVIDER_NAME="${REVIEW_PROVIDER:-codex}"
+  PROVIDER_NAMES="${REVIEW_PROVIDERS:-${REVIEW_PROVIDER:-codex}}"
   buildkite-agent annotate --style warning --context review-gate-quota \
-    "**${PROVIDER_NAME} review skipped: out of quota.** The review gate soft-failed because ${PROVIDER_NAME} reported its usage limit for this head, so no review ran. Rely on Greptile's review for this PR, or add ${PROVIDER_NAME} credits and re-run the gate step to get a ${PROVIDER_NAME} review."
+    "**Review providers skipped: out of quota.** The review gate soft-failed because every enabled provider (${PROVIDER_NAMES}) reported its usage limit for this head, so no review ran. Add credits and re-run the gate step to get a review."
 fi
 exit "$GATE_STATUS"
