@@ -37,8 +37,8 @@ final class QolConfigTest {
                   throw new AssertionError(problems);
                 });
 
-    assertThat(config.graves().lockedFor()).isEqualTo(Duration.ofMinutes(15));
-    assertThat(config.graves().policy().expireAfter()).isEqualTo(Duration.ofDays(3));
+    assertThat(config.graves().lockedFor()).isEqualTo(Duration.ofHours(2));
+    assertThat(config.graves().policy().expireAfter()).isEqualTo(Duration.ofDays(7));
     assertThat(config.combat().tagFor()).isEqualTo(Duration.ofSeconds(15));
     assertThat(config.combat().killOnLogout()).isTrue();
     assertThat(config.sleep().percent()).isEqualTo(50);
@@ -49,15 +49,14 @@ final class QolConfigTest {
   @CsvSource(
       delimiter = '|',
       value = {
-        "lockedFor: PT15M|lockedFor: PT-1M|negative",
-        "expireAfter: PT72H|expireAfter: PT10M|longer",
+        "lockedFor: PT2H|lockedFor: PT-1M|negative",
+        "expireAfter: P7D|expireAfter: PT10M|longer",
         "searchRadius: 4|searchRadius: 0|searchRadius",
         "searchRadius: 4|searchRadius: 9|searchRadius",
         "tagFor: PT15S|tagFor: PT0S|tagFor",
         "{player} logged out|Someone logged out|{player}",
-        "percent: 50|percent: 0|percent",
+        "percent: 50|percent: -1|percent",
         "percent: 50|percent: 101|percent",
-        "\"The night passes. Good morning!\"|\" \"|morningMessage",
         "sneakPunch: true|sneakPunch: sometimes|sneakPunch",
       })
   void badValuesAreRejected(String from, String to, String mentioned) throws IOException {

@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -32,6 +33,7 @@ final class GraveOpening {
   private final GraveStore store;
   private final GraveRegistry registry;
   private final GravePolicy policy;
+  private final ServerHooks hooks;
   private final GraveUpkeep upkeep;
 
   GraveOpening(QolRuntime runtime, GraveParts parts, GraveUpkeep upkeep) {
@@ -39,6 +41,7 @@ final class GraveOpening {
     this.store = parts.store();
     this.registry = parts.registry();
     this.policy = parts.policy();
+    this.hooks = parts.hooks();
     this.upkeep = upkeep;
   }
 
@@ -47,10 +50,14 @@ final class GraveOpening {
       Say.error(player, Say.GRAVES, "Graves are still loading; try again in a moment.");
       return;
     }
+    if (registry.isPending(id)) {
+      Say.info(player, Say.GRAVES, "This grave is still being dug; try again in a moment.");
+      return;
+    }
     var found = registry.get(id);
     if (found.isEmpty()) {
       // A leftover block whose grave is already gone.
-      GraveBlocks.clear(block, id);
+      GraveBlocks.clear(block, id, runtime.server().createBlockData(Material.AIR));
       Say.info(player, Say.GRAVES, "This grave is empty.");
       return;
     }
@@ -72,6 +79,10 @@ final class GraveOpening {
   }
 
   void describe(Player player, UUID id) {
+    if (registry.isPending(id)) {
+      Say.info(player, Say.GRAVES, "This grave is still being dug.");
+      return;
+    }
     var found = registry.get(id);
     if (found.isEmpty()) {
       Say.info(player, Say.GRAVES, "This grave is empty.");
@@ -144,6 +155,8 @@ final class GraveOpening {
     var removed = indexes(taken.items());
     registry.get(id).ifPresent(contents -> registry.put(contents.without(removed)));
     var dropped = give(player, taken.items(), all);
+    // The stacks already left storage: save the inventory now so a crash cannot roll it back.
+    hooks.saveData().accept(player);
     tell(player, grave, taken, dropped);
     if (taken.remaining() == 0) {
       upkeep.remove(id);

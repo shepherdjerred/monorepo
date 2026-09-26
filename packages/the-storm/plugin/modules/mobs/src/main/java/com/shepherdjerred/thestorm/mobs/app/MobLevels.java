@@ -7,10 +7,10 @@ import org.bukkit.entity.LivingEntity;
 /**
  * Levelled mobs, published by the mobs module. Main thread only.
  *
- * <p>Mobs that must never be levelled should carry the persistent-data key {@code thestorm:arena}
- * (any type) before they are added to the world, for example from the consumer of {@code
- * World#spawn}; the arena does this for its waves. A mob that was levelled anyway can be put back
- * to vanilla with {@link #strip}.
+ * <p>Mobs that must never be levelled should carry the persistent-data key {@code
+ * thestorm:arena_entity} (any type) before they are added to the world, for example from the
+ * consumer of {@code World#spawn}; the arena does this for its waves. A mob that was levelled
+ * anyway can be put back to vanilla with {@link #strip}.
  */
 public interface MobLevels {
 

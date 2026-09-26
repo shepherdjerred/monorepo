@@ -5,44 +5,38 @@ import com.shepherdjerred.thestorm.qol.app.CombatTracker;
 import com.shepherdjerred.thestorm.qol.domain.config.QolConfig;
 import com.shepherdjerred.thestorm.qol.domain.text.DurationText;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.entity.AreaEffectCloud;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
+import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.Tameable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 /**
- * Combat tags: a hit between two players (in melee or with a projectile) tags both. A tagged player
- * sees a countdown above their hotbar, cannot teleport, and dies if they log out (their items go to
- * a grave), unless staff or the server removed them.
+ * Combat tags: a damaging hit between two players tags both. The attacker may be the player, their
+ * projectile, their tamed pet, TNT they lit or a lingering potion they threw. A tagged player sees
+ * a countdown above their hotbar, cannot teleport, and dies if they disconnect or time out (their
+ * items go to a grave); kicks, bans and server errors never kill.
  */
 final class CombatListener implements Listener {
 
-  /** Removals that are not the player's choice, so they never cost a life. */
-  private static final Set<PlayerKickEvent.Cause> NOT_THEIR_CHOICE =
-      EnumSet.of(
-          PlayerKickEvent.Cause.PLUGIN,
-          PlayerKickEvent.Cause.KICKED,
-          PlayerKickEvent.Cause.BANNED,
-          PlayerKickEvent.Cause.IP_BANNED,
-          PlayerKickEvent.Cause.WHITELIST,
-          PlayerKickEvent.Cause.RESTART_COMMAND);
+  /** Quits that are the player's own doing. */
+  private static final Set<PlayerQuitEvent.QuitReason> CHOSEN_QUITS =
+      EnumSet.of(PlayerQuitEvent.QuitReason.DISCONNECTED, PlayerQuitEvent.QuitReason.TIMED_OUT);
 
   private final QolRuntime runtime;
   private final CombatTracker tracker;
   private final QolConfig.Combat config;
-  private final Set<UUID> removed = new HashSet<>();
 
   CombatListener(QolRuntime runtime, CombatTracker tracker, QolConfig.Combat config) {
     this.runtime = runtime;
@@ -50,10 +44,10 @@ final class CombatListener implements Listener {
     this.config = config;
   }
 
-  /** Only hits that land: protection (PvP off here, or for either player) cancels earlier. */
+  /** Only hits that land and hurt: protection (PvP off for either player) cancels earlier. */
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onHit(EntityDamageByEntityEvent event) {
-    if (!(event.getEntity() instanceof Player victim)) {
+    if (!(event.getEntity() instanceof Player victim) || !(event.getFinalDamage() > 0)) {
       return;
     }
     var attacker = attacker(event.getDamager());
@@ -72,12 +66,23 @@ final class CombatListener implements Listener {
     }
   }
 
-  private static Optional<Player> attacker(Entity damager) {
+  /** The player behind whatever did the damage, where the game records one. */
+  static Optional<Player> attacker(Entity damager) {
     if (damager instanceof Player player) {
       return Optional.of(player);
     }
-    if (damager instanceof Projectile projectile && projectile.getShooter() instanceof Player p) {
-      return Optional.of(p);
+    if (damager instanceof Projectile projectile
+        && projectile.getShooter() instanceof Player shooter) {
+      return Optional.of(shooter);
+    }
+    if (damager instanceof Tameable pet && pet.getOwner() instanceof Player owner) {
+      return Optional.of(owner);
+    }
+    if (damager instanceof TNTPrimed tnt && tnt.getSource() instanceof Player lighter) {
+      return Optional.of(lighter);
+    }
+    if (damager instanceof AreaEffectCloud cloud && cloud.getSource() instanceof Player thrower) {
+      return Optional.of(thrower);
     }
     return Optional.empty();
   }
@@ -87,22 +92,17 @@ final class CombatListener implements Listener {
     tracker.clear(event.getEntity().getUniqueId());
   }
 
-  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-  void onKick(PlayerKickEvent event) {
-    if (NOT_THEIR_CHOICE.contains(event.getCause())) {
-      removed.add(event.getPlayer().getUniqueId());
-    }
-  }
-
   /** First, so the death (and its grave) happens before anything else handles the logout. */
   @EventHandler(priority = EventPriority.LOWEST)
   void onQuit(PlayerQuitEvent event) {
     var player = event.getPlayer();
     var id = player.getUniqueId();
-    var removedByServer = removed.remove(id);
     var tagged = tracker.inCombat(id);
     tracker.clear(id);
-    if (!tagged || removedByServer || !config.killOnLogout() || player.isDead()) {
+    if (!tagged
+        || !config.killOnLogout()
+        || !CHOSEN_QUITS.contains(event.getReason())
+        || player.isDead()) {
       return;
     }
     player.setHealth(0);

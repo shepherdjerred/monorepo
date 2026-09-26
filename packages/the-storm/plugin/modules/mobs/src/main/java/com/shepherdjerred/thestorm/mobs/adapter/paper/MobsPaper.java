@@ -35,6 +35,14 @@ public final class MobsPaper {
    */
   public static MobsPaper start(
       ModuleContext context, MobsConfig config, Supplier<Protection> protection) {
+    return start(context, config, protection, ExtraLoot.lootTables(context.random()));
+  }
+
+  /**
+   * {@link #start(ModuleContext, MobsConfig, Supplier)} with extra drops rolled by {@code loot}.
+   */
+  static MobsPaper start(
+      ModuleContext context, MobsConfig config, Supplier<Protection> protection, ExtraLoot loot) {
     requireKnownNames(config);
     var server = context.plugin().getServer();
     var regions =
@@ -50,7 +58,7 @@ public final class MobsPaper {
     List<Listener> listeners =
         List.of(
             new SpawnListener(rules, levels, regions, context.random()),
-            new StrengthListener(levels, context.random()));
+            new StrengthListener(levels, loot, context.random()));
     listeners.forEach(
         listener -> server.getPluginManager().registerEvents(listener, context.plugin()));
     return new MobsPaper(listeners, levels);
@@ -76,7 +84,7 @@ public final class MobsPaper {
     Arrays.stream(CreatureSpawnEvent.SpawnReason.values()).forEach(r -> reasons.add(r.name()));
     requireKnown("mob type", config.exclusions().types(), types);
     requireKnown("mob type", config.scaling().byType().keySet(), types);
-    requireKnown("spawn reason", config.exclusions().spawnReasons(), reasons);
+    requireKnown("spawn reason", config.exclusions().levelledReasons(), reasons);
   }
 
   private static void requireKnown(String what, Set<String> named, Set<String> known) {

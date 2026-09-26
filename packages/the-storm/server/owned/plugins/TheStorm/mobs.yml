@@ -22,11 +22,12 @@ levels:
     - { from: 10000, min: 25, max: 35 }
     - { from: 20000, min: 35, max: 45 }
     - { from: 30000, min: 45, max: 50 }
-  # Worlds not listed (the End) never level mobs. The Nether's distances count
-  # eight times, like its coordinates.
+  # Worlds not listed (the End) never level mobs. Nether distances count four
+  # times, so its rings climb faster than the overworld's without matching its
+  # 8:1 coordinates (a short portal trip would otherwise reach the top bands).
   worlds:
     world: { distanceScale: 1.0, depth: true, moon: true }
-    world_nether: { distanceScale: 8.0, depth: false, moon: false }
+    world_nether: { distanceScale: 4.0, depth: false, moon: false }
   # Below transitionY, every `period` blocks add `multiplier` x the distance
   # level (rounded down): a level-10 mob at y -58 gains 12 levels.
   depth:
@@ -40,8 +41,11 @@ levels:
 # How much each stat grows by the cap. A level-1 mob is vanilla; the bonus
 # grows evenly to these values at the cap. Shares add that many times the base
 # (MAX_HEALTH 1.1 = 2.1x health at level 50); ARMOR and ARMOR_TOUGHNESS are
-# flat points. XP and ITEM_DROPS only apply when a player makes the kill, and
-# only stackable drops grow.
+# flat points. XP and ITEM_DROPS are paid only for a kill a player earned (they
+# dealt most of the damage and struck the final blow themselves, in melee or
+# with a projectile). ITEM_DROPS is extra rolls of the mob's own loot table
+# (0.5 = one extra roll half the time at the cap); what a mob carried or picked
+# up is never multiplied. Both are lower than 2023's 3.0 and 2.0.
 scaling:
   atCap:
     MAX_HEALTH: 1.1
@@ -51,8 +55,8 @@ scaling:
     MOVEMENT_SPEED: 0.15
     ARMOR: 6.0
     ARMOR_TOUGHNESS: 3.0
-    XP: 3.0
-    ITEM_DROPS: 2.0
+    XP: 1.0
+    ITEM_DROPS: 0.5
   # As in 2023: endermen and silverfish keep vanilla health and speed,
   # creepers barely speed up, wither skeletons gain less health.
   byType:
@@ -61,12 +65,15 @@ scaling:
     creeper: { MOVEMENT_SPEED: 0.025 }
     wither_skeleton: { MAX_HEALTH: 1.0 }
 
-# Hostile mobs that stay vanilla. Arena mobs (tagged thestorm:arena), bosses,
-# named and tamed mobs are never levelled.
+# Hostile mobs that stay vanilla. Arena mobs (tagged thestorm:arena_entity),
+# bosses, named and tamed mobs are never levelled.
 exclusions:
   types: [warden, elder_guardian, ravager, phantom, zombie_villager]
-  # Spawner farms and plugin-spawned mobs stay vanilla.
-  spawnReasons: [SPAWNER, TRIAL_SPAWNER, SPAWNER_EGG, COMMAND, CUSTOM]
+  # An allowlist: only mobs the world spawns by itself are levelled. Spawners,
+  # eggs, raids, slime splits, portals, reinforcements, lightning, commands,
+  # plugins and any reason a future version adds stay vanilla, so no farm can
+  # breed levelled mobs.
+  levelledReasons: [NATURAL, JOCKEY, MOUNT, PATROL]
   babies: true
 
 # Admin regions such as the spawn town. policy is BLOCK_NATURAL (no natural

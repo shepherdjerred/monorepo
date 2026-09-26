@@ -5,6 +5,9 @@ import java.util.random.RandomGenerator;
 /**
  * Larger rewards for levelled mobs. Fractions round up with their own probability, so a 1.5 times
  * reward of 1 gives 1 or 2 equally often and averages 1.5.
+ *
+ * <p>Rewards are only paid for a fair kill ({@link #earned}), and extra items only ever come from
+ * extra rolls of the mob's own loot table: what the mob carried or picked up is never multiplied.
  */
 public final class Rewards {
 
@@ -20,19 +23,28 @@ public final class Rewards {
   }
 
   /**
-   * The size of a dropped stack of {@code amount} with an {@link Stat#ITEM_DROPS} bonus. Only
-   * stackable items grow, and never past a full stack: gear, tools and other single items are never
-   * copied.
+   * How many extra times the mob's loot table is rolled for an {@link Stat#ITEM_DROPS} bonus: a
+   * bonus of 0.4 rolls once 40% of the time, 1.5 rolls once or twice.
    */
-  public static int dropAmount(int amount, int maxStack, double bonus, RandomGenerator random) {
+  public static int extraRolls(double bonus, RandomGenerator random) {
     requireBonus(bonus);
-    if (amount < 1 || maxStack < 1) {
-      throw new IllegalArgumentException("need a positive amount and stack size");
+    return roundRandomly(bonus, random);
+  }
+
+  /**
+   * Whether a kill earns the level's rewards: players dealt most of the damage (more than
+   * everything else together) and a player struck the final blow in melee or with a projectile.
+   * Kill chambers, fall traps, lava and pets doing the work pay vanilla.
+   *
+   * @param playerDamage damage dealt by players' own hits and projectiles
+   * @param otherDamage damage from everything else
+   * @param playerFinalBlow whether the killing blow was a player's hit or projectile
+   */
+  public static boolean earned(double playerDamage, double otherDamage, boolean playerFinalBlow) {
+    if (!(playerDamage >= 0) || !(otherDamage >= 0)) {
+      throw new IllegalArgumentException("damage must not be negative");
     }
-    if (maxStack == 1) {
-      return amount;
-    }
-    return Math.min(maxStack, Math.max(amount, roundRandomly(amount * (1 + bonus), random)));
+    return playerFinalBlow && playerDamage > otherDamage;
   }
 
   /** {@code value} rounded down, plus one with probability equal to its fraction. */

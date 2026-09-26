@@ -1,88 +1,81 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
 import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
-import com.shepherdjerred.thestorm.qol.domain.sleep.SleepVote;
-import java.util.List;
-import org.bukkit.GameMode;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+import org.bukkit.GameRules;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerBedEnterEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.world.WorldLoadEvent;
 
 /**
- * The sleep vote: when enough of a world's present players are asleep, the night (or storm) passes.
- * Players marked AFK are left out unless they are in bed.
+ * The sleep vote is vanilla's: every overworld gets the configured {@code
+ * players_sleeping_percentage}, and players marked AFK are set to be ignored for sleeping (unless
+ * they are in bed) so an idle player never keeps the night going. Vanilla also clears the weather
+ * when the night is skipped. Only the ignore flags qol set are ever cleared. Main thread only.
  */
 final class SleepListener implements Listener {
 
   private final QolRuntime runtime;
-  private final SleepVote vote;
   private final AfkStatus afk;
-  private final String morningMessage;
+  private final int percent;
+  private final Set<UUID> ignoredByUs = new HashSet<>();
 
-  SleepListener(QolRuntime runtime, SleepVote vote, AfkStatus afk, String morningMessage) {
+  SleepListener(QolRuntime runtime, AfkStatus afk, int percent) {
     this.runtime = runtime;
-    this.vote = vote;
     this.afk = afk;
-    this.morningMessage = morningMessage;
+    this.percent = percent;
   }
 
-  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-  void onBed(PlayerBedEnterEvent event) {
-    var sleeper = event.getPlayer();
-    // The player is in bed from the next tick, if the bed let them in at all.
-    runtime
-        .scheduler()
-        .runOnMainThread(
-            () -> {
-              if (!sleeper.isOnline() || !sleeper.isSleeping()) {
-                return;
-              }
-              var world = sleeper.getWorld();
-              var tally = vote.tally(sleepers(world));
-              for (var player : world.getPlayers()) {
-                Say.info(
-                    player,
-                    Say.SLEEP,
-                    sleeper.getName()
-                        + " is sleeping ("
-                        + tally.sleeping()
-                        + "/"
-                        + tally.needed()
-                        + " needed to skip the night).");
-              }
-            });
+  /** Sets the rule on every loaded overworld. */
+  void start() {
+    runtime.server().getWorlds().forEach(this::setRule);
   }
 
-  /** Every second: skips the night in any world where enough players are fast asleep. */
+  @EventHandler(priority = EventPriority.MONITOR)
+  void onWorldLoad(WorldLoadEvent event) {
+    setRule(event.getWorld());
+  }
+
+  private void setRule(World world) {
+    if (world.getEnvironment() == World.Environment.NORMAL) {
+      world.setGameRule(GameRules.PLAYERS_SLEEPING_PERCENTAGE, percent);
+    }
+  }
+
+  /** Every second: AFK players are left out of the count; players back from AFK count again. */
   void tick() {
-    for (var world : runtime.server().getWorlds()) {
-      var players = world.getPlayers();
-      if (players.stream().noneMatch(Player::isSleeping)) {
-        continue;
-      }
-      if (vote.tally(sleepers(world)).skips()) {
-        world.setFullTime(SleepVote.nextMorning(world.getFullTime()));
-        world.setStorm(false);
-        world.setThundering(false);
-        for (var player : players) {
-          Say.success(player, Say.SLEEP, morningMessage);
-        }
+    for (var player : runtime.server().getOnlinePlayers()) {
+      var id = player.getUniqueId();
+      var leaveOut = afk.isAfk(id) && !player.isSleeping();
+      if (leaveOut && !player.isSleepingIgnored()) {
+        player.setSleepingIgnored(true);
+        ignoredByUs.add(id);
+      } else if (!leaveOut && ignoredByUs.remove(id)) {
+        player.setSleepingIgnored(false);
       }
     }
   }
 
-  private List<SleepVote.Sleeper> sleepers(World world) {
-    return world.getPlayers().stream()
-        .map(
-            player ->
-                new SleepVote.Sleeper(
-                    player.isSleeping(),
-                    player.isDeeplySleeping(),
-                    afk.isAfk(player.getUniqueId()),
-                    player.getGameMode() == GameMode.SPECTATOR || player.isSleepingIgnored()))
-        .toList();
+  @EventHandler(priority = EventPriority.MONITOR)
+  void onQuit(PlayerQuitEvent event) {
+    release(event.getPlayer());
+  }
+
+  /** Clears every flag qol set (the module is stopping). */
+  void stop() {
+    runtime.server().getOnlinePlayers().forEach(this::release);
+    ignoredByUs.clear();
+  }
+
+  private void release(Player player) {
+    if (ignoredByUs.remove(player.getUniqueId())) {
+      player.setSleepingIgnored(false);
+    }
   }
 }

@@ -89,24 +89,31 @@ final class ScalingTest {
 
   @ParameterizedTest
   @CsvSource({
-    // amount, bonus, random point, result (in stacks of 64)
-    "2, 1.0, 0, 4",
-    "2, 0.25, 0.6, 2",
-    "2, 0.25, 0.4, 3",
-    "40, 1.0, 0, 64",
-    "64, 2.0, 0, 64",
-    "3, 0, 0, 3",
+    // bonus, random point, extra rolls
+    "0, 0, 0",
+    "0.5, 0.49, 1",
+    "0.5, 0.5, 0",
+    "1.0, 0.99, 1",
+    "1.5, 0.2, 2",
+    "1.5, 0.7, 1",
   })
-  void stackableDropsGrowButNeverPastAFullStack(
-      int amount, double bonus, double point, int result) {
-    assertThat(Rewards.dropAmount(amount, 64, bonus, FixedRandom.at(point))).isEqualTo(result);
+  void extraLootRollsRoundTheBonusWithItsOwnProbability(double bonus, double point, int rolls) {
+    assertThat(Rewards.extraRolls(bonus, FixedRandom.at(point))).isEqualTo(rolls);
   }
 
-  @Test
-  void unstackableDropsAreNeverCopiedAndSmallStacksCapAtTheirSize() {
-    assertThat(Rewards.dropAmount(1, 1, 2.0, FixedRandom.lowest())).isEqualTo(1);
-    assertThat(Rewards.dropAmount(3, 16, 1.0, FixedRandom.lowest())).isEqualTo(6);
-    assertThat(Rewards.dropAmount(12, 16, 1.0, FixedRandom.lowest())).isEqualTo(16);
+  @ParameterizedTest
+  @CsvSource({
+    // player damage, other damage, player final blow, earned
+    "20, 0, true, true",
+    "11, 9, true, true",
+    "10, 10, true, false",
+    "5, 15, true, false",
+    "20, 0, false, false",
+    "0, 0, true, false",
+  })
+  void onlyAKillPlayersMostlyEarnedPaysMore(
+      double player, double other, boolean finalBlow, boolean earned) {
+    assertThat(Rewards.earned(player, other, finalBlow)).isEqualTo(earned);
   }
 
   @Test
@@ -114,8 +121,9 @@ final class ScalingTest {
     var random = FixedRandom.lowest();
     assertThatThrownBy(() -> Rewards.xp(-1, 0, random)).hasMessageContaining("negative");
     assertThatThrownBy(() -> Rewards.xp(1, -1, random)).hasMessageContaining("bonus");
-    assertThatThrownBy(() -> Rewards.dropAmount(0, 64, 0, random)).hasMessageContaining("positive");
-    assertThatThrownBy(() -> Rewards.dropAmount(1, 64, Double.POSITIVE_INFINITY, random))
+    assertThatThrownBy(() -> Rewards.extraRolls(Double.POSITIVE_INFINITY, random))
         .hasMessageContaining("bonus");
+    assertThatThrownBy(() -> Rewards.earned(-1, 0, true)).hasMessageContaining("negative");
+    assertThatThrownBy(() -> Rewards.earned(0, Double.NaN, true)).hasMessageContaining("negative");
   }
 }

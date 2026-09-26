@@ -68,7 +68,8 @@ final class GraveValuesTest {
   }
 
   static final Grave GRAVE =
-      new Grave(UUID.randomUUID(), UUID.randomUUID(), "Alice", DEATH, Instant.EPOCH);
+      new Grave(
+          UUID.randomUUID(), UUID.randomUUID(), "Alice", DEATH, Instant.EPOCH, "minecraft:air");
 
   @Test
   void contentsWithoutTakenStacksKeepTheRest() {
@@ -121,8 +122,18 @@ final class GraveValuesTest {
     assertThatThrownBy(() -> new GraveItem(0, OptionalInt.of(-1), item(1)))
         .hasMessageContaining("slot");
     assertThatThrownBy(
-            () -> new Grave(UUID.randomUUID(), UUID.randomUUID(), "", DEATH, Instant.EPOCH))
+            () ->
+                new Grave(
+                    UUID.randomUUID(),
+                    UUID.randomUUID(),
+                    "",
+                    DEATH,
+                    Instant.EPOCH,
+                    "minecraft:air"))
         .hasMessageContaining("ownerName");
+    assertThatThrownBy(
+            () -> new Grave(UUID.randomUUID(), UUID.randomUUID(), "Al", DEATH, Instant.EPOCH, " "))
+        .hasMessageContaining("replaced");
   }
 
   @Test

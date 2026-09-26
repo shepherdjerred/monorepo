@@ -11,13 +11,13 @@ import com.shepherdjerred.thestorm.qol.app.GraveRegistry;
 import com.shepherdjerred.thestorm.qol.app.store.GraveStore;
 import com.shepherdjerred.thestorm.qol.domain.config.QolConfig;
 import com.shepherdjerred.thestorm.qol.domain.grave.GravePlacement;
-import com.shepherdjerred.thestorm.qol.domain.sleep.SleepVote;
 import com.shepherdjerred.thestorm.qol.domain.text.DurationText;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
@@ -29,20 +29,23 @@ public final class QolPaper {
   private static final Duration EVERY_SECOND = Duration.ofSeconds(1);
   private static final Duration GRAVE_SWEEP = Duration.ofSeconds(30);
 
-  private final List<Listener> listeners;
-  private final List<Cancellable> tasks;
+  private final List<Listener> listeners = new ArrayList<>();
+  private final List<Cancellable> tasks = new ArrayList<>();
   private final QolPermissions permissions;
   private final CombatTracker combat;
+  private final SleepListener sleep;
+  private final ComponentLogger logger;
+  private boolean stopped;
 
   private QolPaper(
-      List<Listener> listeners,
-      List<Cancellable> tasks,
       QolPermissions permissions,
-      CombatTracker combat) {
-    this.listeners = List.copyOf(listeners);
-    this.tasks = List.copyOf(tasks);
+      CombatTracker combat,
+      SleepListener sleep,
+      ComponentLogger logger) {
     this.permissions = permissions;
     this.combat = combat;
+    this.sleep = sleep;
+    this.logger = logger;
   }
 
   /**
@@ -51,7 +54,7 @@ public final class QolPaper {
    * @param store grave storage
    * @param graves the graves in memory
    * @param combat combat tags
-   * @param protection land protection, for chest sorting
+   * @param protection land protection, for grave spots and chest sorting
    * @param guards essentials' teleport guards, for the combat guard
    * @param afk essentials' away status, for the sleep vote
    */
@@ -64,11 +67,11 @@ public final class QolPaper {
       AfkStatus afk) {}
 
   public static QolPaper start(ModuleContext context, QolConfig config, App app) {
-    return start(context, config, app, GraveFace.OWNER);
+    return start(context, config, app, ServerHooks.PAPER);
   }
 
-  /** {@link #start(ModuleContext, QolConfig, App)} with grave heads wearing {@code face}. */
-  static QolPaper start(ModuleContext context, QolConfig config, App app, GraveFace face) {
+  /** {@link #start(ModuleContext, QolConfig, App)} with the given server calls. */
+  static QolPaper start(ModuleContext context, QolConfig config, App app, ServerHooks hooks) {
     var server = context.plugin().getServer();
     var runtime = new QolRuntime(server, context.scheduler(), context.time(), context.logger());
     var permissions = new QolPermissions(server.getPluginManager());
@@ -81,19 +84,16 @@ public final class QolPaper {
             app.graves(),
             new GravePlacement(config.graves().searchRadius()),
             policy,
-            face);
+            app.protection(),
+            hooks);
     var safe = new LastSafeSpots();
     var upkeep = new GraveUpkeep(runtime, parts);
     var deaths = new GraveDeaths(runtime, parts, safe, context.random());
     var opening = new GraveOpening(runtime, parts, upkeep);
     var sorting = new ContainerSorting(app.protection());
     var combat = new CombatListener(runtime, app.combat(), config.combat());
-    var sleep =
-        new SleepListener(
-            runtime,
-            new SleepVote(config.sleep().percent()),
-            app.afk(),
-            config.sleep().morningMessage());
+    var sleep = new SleepListener(runtime, app.afk(), config.sleep().percent());
+    var paper = new QolPaper(permissions, app.combat(), sleep, context.logger());
 
     app.guards()
         .add(
@@ -115,27 +115,36 @@ public final class QolPaper {
         .registerEventHandler(
             LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
 
-    var listeners = new ArrayList<Listener>();
-    listeners.add(new GraveListener(deaths, opening, upkeep, safe));
-    listeners.add(new GraveShield());
-    listeners.add(combat);
-    listeners.add(sleep);
+    paper.listeners.add(new GraveListener(deaths, opening, upkeep, safe));
+    paper.listeners.add(new GraveShield());
+    paper.listeners.add(combat);
+    paper.listeners.add(sleep);
     if (config.sort().sneakPunch()) {
-      listeners.add(new SortListener(sorting));
+      paper.listeners.add(new SortListener(sorting));
     }
-    listeners.forEach(
+    paper.listeners.forEach(
         listener -> server.getPluginManager().registerEvents(listener, context.plugin()));
+    sleep.start();
 
     var scheduler = context.scheduler();
-    var tasks =
+    paper.tasks.addAll(
         List.of(
             scheduler.repeatOnMainThread(
                 EVERY_SECOND, EVERY_SECOND, () -> server.getOnlinePlayers().forEach(safe::sample)),
             scheduler.repeatOnMainThread(EVERY_SECOND, EVERY_SECOND, combat::tick),
             scheduler.repeatOnMainThread(EVERY_SECOND, EVERY_SECOND, sleep::tick),
-            scheduler.repeatOnMainThread(GRAVE_SWEEP, GRAVE_SWEEP, upkeep::sweep));
-    upkeep.load();
-    return new QolPaper(listeners, tasks, permissions, app.combat());
+            scheduler.repeatOnMainThread(GRAVE_SWEEP, GRAVE_SWEEP, upkeep::sweep)));
+    upkeep.load(paper::gravesUnreadable);
+    return paper;
+  }
+
+  /** Graves could not be read: qol stops rather than run graves on a partial picture. */
+  private void gravesUnreadable() {
+    logger.error(
+        Component.text(
+            "qol stopped: graves could not be loaded from storage. Deaths drop items as vanilla"
+                + " until the server restarts with working storage."));
+    stop();
   }
 
   /**
@@ -143,9 +152,14 @@ public final class QolPaper {
    * teleport guard, which cannot be removed and allows every teleport once the tags are cleared.
    */
   public void stop() {
+    if (stopped) {
+      return;
+    }
+    stopped = true;
     tasks.forEach(Cancellable::cancel);
     listeners.forEach(HandlerList::unregisterAll);
     permissions.unregister();
     combat.clearAll();
+    sleep.stop();
   }
 }

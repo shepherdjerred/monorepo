@@ -14,6 +14,7 @@ import java.util.OptionalInt;
 import java.util.UUID;
 import org.bukkit.ExplosionResult;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Creeper;
@@ -21,10 +22,12 @@ import org.bukkit.entity.Item;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,12 +53,18 @@ final class GravesPaperTest {
     return harness.world.getBlockAt(0, 5, 0);
   }
 
-  /** Alice, carrying a sword, a stack of dirt and a helmet, dies at 0, 5, 0. */
-  PlayerMock aliceDies() {
+  /** Alice, carrying a sword, a stack of dirt and a helmet, at 0, 5, 0. */
+  PlayerMock aliceWithKit() {
     var alice = harness.playerAt("Alice", 0, 0);
     alice.getInventory().setItem(0, new ItemStack(Material.DIAMOND_SWORD));
     alice.getInventory().setItem(5, new ItemStack(Material.DIRT, 64));
     alice.getInventory().setHelmet(new ItemStack(Material.IRON_HELMET));
+    return alice;
+  }
+
+  /** Alice dies with her kit and her grave is saved. */
+  PlayerMock aliceDies() {
+    var alice = aliceWithKit();
     alice.setHealth(0);
     harness.until(() -> harness.graves.ownedBy(alice.getUniqueId()).size() == 1);
     return alice;
@@ -70,6 +79,20 @@ final class GravesPaperTest {
                 player, Action.RIGHT_CLICK_BLOCK, null, block, BlockFace.UP, EquipmentSlot.HAND));
   }
 
+  static ItemStack arenaItem(Material type) {
+    var stack = new ItemStack(type);
+    var meta = stack.getItemMeta();
+    meta.getPersistentDataContainer()
+        .set(new NamespacedKey("thestorm", "arena_item"), PersistentDataType.BOOLEAN, true);
+    stack.setItemMeta(meta);
+    return stack;
+  }
+
+  /** The stacks in every saved grave, in storage. */
+  int storedStacks() {
+    return harness.store.loadAll().join().stream().mapToInt(c -> c.items().size()).sum();
+  }
+
   @Test
   void aDeathLeavesAGraveHoldingTheDropsWithTheirSlots() {
     var alice = aliceDies();
@@ -80,14 +103,42 @@ final class GravesPaperTest {
     assertThat(harness.awaitMessage(alice, "Your items are in a grave at 0, 5, 0 in world"))
         .isNotEmpty();
     assertThat(alice.getInventory().isEmpty()).isTrue();
+    assertThat(harness.saved).contains(alice.getUniqueId());
   }
 
   void holdsAlicesKit(GraveContents contents) {
     assertThat(contents.grave().ownerName()).isEqualTo("Alice");
     assertThat(contents.grave().pos()).isEqualTo(new GravePos("world", 0, 5, 0));
+    assertThat(contents.grave().replaced()).isEqualTo("minecraft:air");
     assertThat(contents.items())
         .extracting(GraveItem::slot)
         .containsExactlyInAnyOrder(OptionalInt.of(0), OptionalInt.of(5), OptionalInt.of(39));
+  }
+
+  /** Records what drops a death ends with, after every listener. */
+  static final class DropSpy implements org.bukkit.event.Listener {
+    final List<ItemStack> drops = new ArrayList<>();
+
+    @org.bukkit.event.EventHandler(priority = org.bukkit.event.EventPriority.MONITOR)
+    void onDeath(PlayerDeathEvent event) {
+      drops.addAll(event.getDrops().stream().filter(s -> s != null && !s.isEmpty()).toList());
+    }
+  }
+
+  DropSpy spyOnDrops() {
+    var spy = new DropSpy();
+    harness
+        .server
+        .getPluginManager()
+        .registerEvents(spy, org.mockbukkit.mockbukkit.MockBukkit.createMockPlugin());
+    return spy;
+  }
+
+  @Test
+  void buriedItemsLeaveTheDropList() {
+    var spy = spyOnDrops();
+    aliceDies();
+    assertThat(spy.drops).isEmpty();
   }
 
   @Test
@@ -100,9 +151,42 @@ final class GravesPaperTest {
   }
 
   @Test
+  void arenaItemsNeverGoIntoAGrave() {
+    var spy = spyOnDrops();
+    var bob = harness.playerAt("Bob", 3, 3);
+    bob.getInventory().setItem(0, arenaItem(Material.IRON_SWORD));
+    bob.getInventory().setItem(1, new ItemStack(Material.DIRT, 5));
+
+    bob.setHealth(0);
+    harness.until(() -> harness.graves.ownedBy(bob.getUniqueId()).size() == 1);
+
+    assertThat(harness.graves.all())
+        .singleElement()
+        .satisfies(c -> assertThat(c.items()).hasSize(1));
+    assertThat(spy.drops)
+        .singleElement()
+        .satisfies(s -> assertThat(ArenaTags.isArenaItem(s)).isTrue());
+  }
+
+  @Test
+  void aDeathCarryingOnlyArenaItemsLeavesNoGrave() {
+    var spy = spyOnDrops();
+    var bob = harness.playerAt("Bob", 3, 3);
+    bob.getInventory().setItem(0, arenaItem(Material.IRON_SWORD));
+
+    bob.setHealth(0);
+    harness.server.getScheduler().performTicks(5);
+
+    assertThat(harness.graves.all()).isEmpty();
+    assertThat(harness.world.getBlockAt(3, 5, 3).getType()).isEqualTo(Material.AIR);
+    assertThat(spy.drops).hasSize(1);
+  }
+
+  @Test
   void theOwnerGetsEverythingBackIntoTheSameSlots() {
     var alice = aliceDies();
     alice.respawn();
+    harness.saved.clear();
 
     rightClick(alice, graveBlock());
     harness.until(() -> harness.graves.all().isEmpty());
@@ -113,6 +197,7 @@ final class GravesPaperTest {
     assertThat(inventory.getHelmet()).isEqualTo(new ItemStack(Material.IRON_HELMET));
     assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
     assertThat(harness.store.loadAll().join()).isEmpty();
+    assertThat(harness.saved).contains(alice.getUniqueId());
   }
 
   @Test
@@ -123,10 +208,25 @@ final class GravesPaperTest {
     rightClick(bob, graveBlock());
 
     assertThat(QolHarness.messages(bob))
-        .anySatisfy(m -> assertThat(m).contains("Alice's grave. It opens to everyone in 15m"));
+        .anySatisfy(m -> assertThat(m).contains("Alice's grave. It opens to everyone in 2h"));
     assertThat(harness.graves.all())
         .singleElement()
         .satisfies(c -> assertThat(c.items()).hasSize(3));
+  }
+
+  @Test
+  void anOperatorWithoutTheNodeIsLockedOutToo() {
+    aliceDies();
+    var op = harness.playerAt("Op", 2, 0);
+    op.setOp(true);
+
+    assertThat(op.hasPermission(QolPermissions.GRAVES_ADMIN)).isFalse();
+    rightClick(op, graveBlock());
+
+    assertThat(QolHarness.messages(op))
+        .anySatisfy(m -> assertThat(m).contains("opens to everyone"));
+    assertThat(op.hasPermission(QolPermissions.GRAVES)).isTrue();
+    assertThat(op.hasPermission(QolPermissions.SORT)).isTrue();
   }
 
   @Test
@@ -136,7 +236,7 @@ final class GravesPaperTest {
     for (var slot = 1; slot < 36; slot++) {
       bob.getInventory().setItem(slot, new ItemStack(Material.STONE, 64));
     }
-    harness.clock.advance(Duration.ofMinutes(15));
+    harness.clock.advance(Duration.ofHours(2));
 
     rightClick(bob, graveBlock());
     harness.awaitMessage(bob, "2 are left");
@@ -145,12 +245,73 @@ final class GravesPaperTest {
     assertThat(harness.graves.all())
         .singleElement()
         .satisfies(c -> assertThat(c.items()).hasSize(2));
-    assertThat(harness.store.loadAll().join())
-        .singleElement()
-        .satisfies(c -> assertThat(c.items()).hasSize(2));
+    assertThat(storedStacks()).isEqualTo(2);
 
     rightClick(bob, graveBlock());
     assertThat(QolHarness.messages(bob)).contains("[Graves]: Your inventory is full.");
+  }
+
+  @Test
+  void clickingAGraveBeingSavedLeavesItsHead() {
+    var alice = aliceWithKit();
+    var bob = harness.playerAt("Bob", 2, 0);
+    alice.setHealth(0);
+
+    rightClick(bob, graveBlock());
+
+    assertThat(QolHarness.messages(bob))
+        .contains("[Graves]: This grave is still being dug; try again in a moment.");
+    assertThat(GraveBlocks.idAt(graveBlock())).isPresent();
+    harness.until(() -> harness.graves.all().size() == 1);
+    assertThat(GraveBlocks.idAt(graveBlock())).isPresent();
+  }
+
+  @Test
+  void dyingAgainWhileTheFirstGraveIsSavingNeverDoublesItems() {
+    var alice = aliceWithKit();
+    alice.setHealth(0);
+    alice.respawn();
+    alice.getInventory().setItem(3, new ItemStack(Material.APPLE, 2));
+    alice.setHealth(0);
+
+    harness.until(() -> harness.graves.ownedBy(alice.getUniqueId()).size() == 2);
+
+    assertThat(storedStacks()).isEqualTo(4);
+    assertThat(harness.graves.all()).extracting(c -> c.grave().pos()).doesNotHaveDuplicates();
+    assertThat(alice.getInventory().isEmpty()).isTrue();
+  }
+
+  @Test
+  void aFailedSaveGivesTheItemsBackOnce() {
+    harness.store.failCreate = true;
+    var alice = aliceWithKit();
+
+    alice.setHealth(0);
+    harness.awaitMessage(alice, "could not be saved");
+    harness.server.getScheduler().performTicks(5);
+
+    var inventory = alice.getInventory();
+    var total =
+        java.util.Arrays.stream(inventory.getContents())
+            .filter(s -> s != null && !s.isEmpty())
+            .mapToInt(ItemStack::getAmount)
+            .sum();
+    assertThat(total).isEqualTo(1 + 64 + 1);
+    assertThat(harness.graves.all()).isEmpty();
+    assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
+    assertThat(harness.store.loadAll().join()).isEmpty();
+  }
+
+  @Test
+  void stoppingWhileAGraveIsSavingKeepsExactlyOneCopy() {
+    aliceWithKit().setHealth(0);
+
+    harness.close();
+    harness = QolHarness.start(directory);
+
+    assertThat(harness.store.loadAll().join())
+        .singleElement()
+        .satisfies(c -> assertThat(c.items()).hasSize(3));
   }
 
   @Test
@@ -172,12 +333,58 @@ final class GravesPaperTest {
   }
 
   @Test
+  void gravesGoOnlyWhereTheOwnerMayBuild() {
+    harness.land.noBuilding = location -> location.getBlockX() <= 0;
+    var alice = aliceWithKit();
+
+    alice.setHealth(0);
+    harness.until(() -> harness.graves.ownedBy(alice.getUniqueId()).size() == 1);
+
+    var pos = harness.graves.all().getFirst().grave().pos();
+    assertThat(pos).isEqualTo(new GravePos("world", 1, 5, 0));
+    assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
+  }
+
+  @Test
+  void withNowhereToBuildTheGraveGoesWhereTheOwnerDied() {
+    harness.land.noBuilding = location -> true;
+    var alice = aliceWithKit();
+
+    alice.setHealth(0);
+    harness.until(() -> harness.graves.ownedBy(alice.getUniqueId()).size() == 1);
+
+    assertThat(harness.graves.all().getFirst().grave().pos())
+        .isEqualTo(new GravePos("world", 0, 5, 0));
+  }
+
+  @Test
+  void gravesNeverReplaceWaterOrLight() {
+    graveBlock().setType(Material.WATER);
+    harness.world.getBlockAt(-1, 5, 0).setType(Material.LIGHT);
+    var alice = aliceWithKit();
+
+    alice.setHealth(0);
+    harness.until(() -> harness.graves.ownedBy(alice.getUniqueId()).size() == 1);
+
+    var pos = harness.graves.all().getFirst().grave().pos();
+    assertThat(pos).isNotIn(new GravePos("world", 0, 5, 0), new GravePos("world", -1, 5, 0));
+    assertThat(graveBlock().getType()).isEqualTo(Material.WATER);
+    assertThat(harness.world.getBlockAt(-1, 5, 0).getType()).isEqualTo(Material.LIGHT);
+  }
+
+  @Test
   void aGraveWhoseBlockWasLostGetsItBackWhenItsChunkLoads() {
     var id = new UUID(0, 7);
     var owner = new UUID(0, 8);
     var grave =
         new GraveContents(
-            new Grave(id, owner, "Carol", new GravePos("world", 4, 5, 4), harness.clock.instant()),
+            new Grave(
+                id,
+                owner,
+                "Carol",
+                new GravePos("world", 4, 5, 4),
+                harness.clock.instant(),
+                "minecraft:air"),
             List.of(
                 new GraveItem(
                     0, OptionalInt.empty(), ItemCodec.encode(new ItemStack(Material.APPLE, 3)))));
@@ -197,10 +404,9 @@ final class GravesPaperTest {
   }
 
   @Test
-  void anExpiredGraveBreaksOpenAndDropsWhatIsLeft() {
-    aliceDies();
-    harness.clock.advance(Duration.ofDays(3));
-    harness.world.loadChunk(0, 0);
+  void anExpiredGraveBreaksOpenInItsOwnChunkAndTellsTheOwner() {
+    var alice = aliceDies();
+    harness.clock.advance(Duration.ofDays(7));
 
     harness.server.getScheduler().performTicks(30 * 20 + 1);
     harness.until(() -> harness.graves.all().isEmpty());
@@ -208,6 +414,23 @@ final class GravesPaperTest {
     assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
     assertThat(harness.world.getEntitiesByClass(Item.class)).hasSize(3);
     assertThat(harness.store.loadAll().join()).isEmpty();
+    assertThat(harness.awaitMessage(alice, "broke open after 7d")).isNotEmpty();
+  }
+
+  @Test
+  void anOfflineOwnerHearsAboutTheirExpiredGraveWhenTheyJoin() {
+    var alice = aliceDies();
+    var id = alice.getUniqueId();
+    alice.disconnect();
+    harness.clock.advance(Duration.ofDays(7));
+
+    harness.server.getScheduler().performTicks(30 * 20 + 1);
+    harness.until(() -> harness.graves.all().isEmpty());
+
+    var back = new PlayerMock(harness.server, "Alice", id);
+    harness.server.addPlayer(back);
+    assertThat(harness.awaitMessage(back, "broke open after 7d")).isNotEmpty();
+    assertThat(harness.store.takeNotices(id).join()).isEmpty();
   }
 
   @Test
@@ -220,8 +443,7 @@ final class GravesPaperTest {
 
     assertThat(QolHarness.messages(alice))
         .contains(
-            "[Graves]: Your graves:",
-            "[Graves]: 1. 0, 5, 0 in world: only you can open it for 15m");
+            "[Graves]: Your graves:", "[Graves]: 1. 0, 5, 0 in world: only you can open it for 2h");
   }
 
   @Test
@@ -243,7 +465,18 @@ final class GravesPaperTest {
 
     assertThat(QolHarness.messages(bob))
         .contains(
-            "[Graves]: Alice's grave holds 3 stacks: only Alice can open it for 15m. Right-click"
+            "[Graves]: Alice's grave holds 3 stacks: only Alice can open it for 2h. Right-click"
                 + " to open it.");
+  }
+
+  @Test
+  void unreadableStorageStopsQol() {
+    harness.close();
+    harness = QolHarness.start(directory, true);
+
+    harness.until(
+        () ->
+            PlayerDeathEvent.getHandlerList().getRegisteredListeners().length == 0
+                && !harness.graves.isLoaded());
   }
 }

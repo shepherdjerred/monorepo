@@ -1,25 +1,20 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
-import org.bukkit.entity.Player;
-import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.event.world.ChunkLoadEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
-/** Deaths make graves; clicks open or describe them; loading chunks restores their blocks. */
+/**
+ * Deaths make graves; clicks open or describe them; loading chunks restores their blocks; joining
+ * players hear what happened to their graves while they were away.
+ */
 final class GraveListener implements Listener {
 
   private final GraveDeaths deaths;
@@ -34,7 +29,7 @@ final class GraveListener implements Listener {
     this.safe = safe;
   }
 
-  /** After other plugins have added or removed drops. */
+  /** After other plugins (the arena clears its drops at LOWEST) have changed the drops. */
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
   void onDeath(PlayerDeathEvent event) {
     deaths.died(event);
@@ -43,12 +38,11 @@ final class GraveListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
     safe.sample(event.getPlayer());
+    upkeep.deliverNotices(event.getPlayer());
   }
 
-  /** Last, after a combat logout may have killed the player. */
   @EventHandler(priority = EventPriority.MONITOR)
   void onQuit(PlayerQuitEvent event) {
-    deaths.quit(event.getPlayer());
     safe.forget(event.getPlayer().getUniqueId());
   }
 
@@ -77,54 +71,5 @@ final class GraveListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR)
   void onChunkLoad(ChunkLoadEvent event) {
     upkeep.chunkLoaded(event.getChunk());
-  }
-
-  // While a grave is being saved its owner still holds the items, so none may leave the inventory.
-
-  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-  void onDrop(PlayerDropItemEvent event) {
-    holdIfSaving(event.getPlayer(), event);
-  }
-
-  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-  void onClick(InventoryClickEvent event) {
-    if (event.getWhoClicked() instanceof Player player) {
-      holdIfSaving(player, event);
-    }
-  }
-
-  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-  void onDrag(InventoryDragEvent event) {
-    if (event.getWhoClicked() instanceof Player player) {
-      holdIfSaving(player, event);
-    }
-  }
-
-  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-  void onPlace(BlockPlaceEvent event) {
-    holdIfSaving(event.getPlayer(), event);
-  }
-
-  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-  void onSwap(PlayerSwapHandItemsEvent event) {
-    holdIfSaving(event.getPlayer(), event);
-  }
-
-  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
-  void onPickup(EntityPickupItemEvent event) {
-    if (event.getEntity() instanceof Player player) {
-      holdIfSaving(player, event);
-    }
-  }
-
-  @EventHandler(priority = EventPriority.LOW)
-  void onUse(PlayerInteractEvent event) {
-    holdIfSaving(event.getPlayer(), event);
-  }
-
-  private void holdIfSaving(Player player, Cancellable event) {
-    if (deaths.isPending(player.getUniqueId())) {
-      event.setCancelled(true);
-    }
   }
 }

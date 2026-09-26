@@ -26,7 +26,8 @@ final class QolPermissions {
 
   void register() {
     add(GRAVES, "Use /graves to list your graves", PermissionDefault.TRUE);
-    add(GRAVES_ADMIN, "Open any grave, even while it is locked", PermissionDefault.OP);
+    // A bypass, so never given by default (not even to operators): grant it through LuckPerms.
+    add(GRAVES_ADMIN, "Open any grave, even while it is locked", PermissionDefault.FALSE);
     add(SORT, "Sort containers with /sort or a sneaking punch", PermissionDefault.TRUE);
   }
 

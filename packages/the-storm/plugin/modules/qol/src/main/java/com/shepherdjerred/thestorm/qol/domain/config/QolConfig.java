@@ -58,19 +58,16 @@ public record QolConfig(Graves graves, Combat combat, Sleep sleep, Sort sort) {
   }
 
   /**
-   * The sleep vote.
+   * The sleep vote, run by vanilla's {@code players_sleeping_percentage} rule; players marked AFK
+   * are left out of the count.
    *
-   * @param percent the share (1-100) of counted players who must sleep
-   * @param morningMessage told to the world's players when the night is skipped
+   * @param percent the share (0-100) of a world's counted players who must sleep
    */
-  public record Sleep(int percent, String morningMessage) {
+  public record Sleep(int percent) {
 
     public Sleep {
-      if (percent < 1 || percent > 100) {
-        throw new IllegalArgumentException("percent must be 1-100: " + percent);
-      }
-      if (morningMessage.isBlank()) {
-        throw new IllegalArgumentException("morningMessage must not be blank");
+      if (percent < 0 || percent > 100) {
+        throw new IllegalArgumentException("percent must be 0-100: " + percent);
       }
     }
   }

@@ -16,9 +16,12 @@ public enum Stat {
   ARMOR(Kind.POINTS),
   /** Armor toughness points added. */
   ARMOR_TOUGHNESS(Kind.POINTS),
-  /** Experience dropped when a player kills the mob, as a share. */
+  /** Experience dropped when a player earns the kill, as a share. */
   XP(Kind.SHARE),
-  /** Stackable item drops when a player kills the mob, as a share. */
+  /**
+   * Extra rolls of the mob's own loot table when a player earns the kill: 0.5 is one extra roll
+   * half the time.
+   */
   ITEM_DROPS(Kind.SHARE);
 
   /** How a stat's value is read. */

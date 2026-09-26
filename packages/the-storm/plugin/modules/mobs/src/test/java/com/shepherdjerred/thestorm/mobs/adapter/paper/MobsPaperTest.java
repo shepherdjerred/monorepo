@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
+import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
@@ -14,6 +15,7 @@ import com.shepherdjerred.thestorm.core.protection.Protection;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.mobs.MobsModule;
 import com.shepherdjerred.thestorm.mobs.app.MobLevels;
+import com.shepherdjerred.thestorm.mobs.domain.config.MobsConfig;
 import com.shepherdjerred.thestorm.mobs.domain.scaling.Stat;
 import com.shepherdjerred.thestorm.mobs.testing.FixedRandom;
 import java.io.IOException;
@@ -29,13 +31,18 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Cow;
+import org.bukkit.entity.Drowned;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Slime;
 import org.bukkit.entity.Zombie;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityTransformEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -98,6 +105,16 @@ final class MobsPaperTest {
   WorldMock world;
   StormDatabase database;
   MobLevels levels;
+  private @Nullable MobsPaper started;
+  final FixedRandom random = FixedRandom.highest();
+  int lootRolls;
+
+  /** The mob's loot table, as a test double: one rotten flesh per roll. */
+  final ExtraLoot loot =
+      (mob, killer) -> {
+        lootRolls++;
+        return List.of(new ItemStack(Material.ROTTEN_FLESH));
+      };
 
   @BeforeEach
   void start() throws IOException {
@@ -109,23 +126,26 @@ final class MobsPaperTest {
     var services = new Services();
     services.provide(Protection.class, new SpawnRegion());
     enabling =
-        plugin ->
-            new MobsModule()
-                .enable(
-                    new ModuleContext(
-                        plugin,
-                        plugin.getLifecycleManager(),
-                        new PaperScheduler(plugin),
-                        database,
-                        services,
-                        directory,
-                        InstantSource.system(),
-                        FixedRandom.highest(),
-                        plugin.getComponentLogger()));
+        plugin -> {
+          var context =
+              new ModuleContext(
+                  plugin,
+                  plugin.getLifecycleManager(),
+                  new PaperScheduler(plugin),
+                  database,
+                  services,
+                  directory,
+                  InstantSource.system(),
+                  random,
+                  plugin.getComponentLogger());
+          var config = ConfigFiles.load(directory.resolve("mobs.yml"), MobsConfig.class);
+          started =
+              MobsPaper.start(context, config, () -> services.require(Protection.class), loot);
+        };
     MockBukkit.loadWith(
         HarnessPlugin.class,
         new PluginDescriptionFile("TheStorm", "1", HarnessPlugin.class.getName()));
-    levels = services.require(MobLevels.class);
+    levels = present(started).levels();
   }
 
   @AfterEach
@@ -193,7 +213,10 @@ final class MobsPaperTest {
             zombie ->
                 zombie
                     .getPersistentDataContainer()
-                    .set(MobKeys.ARENA, PersistentDataType.BOOLEAN, true));
+                    .set(
+                        new NamespacedKey("thestorm", "arena_entity"),
+                        PersistentDataType.BOOLEAN,
+                        true));
     assertThat(levels.levelOf(arena)).isEmpty();
   }
 
@@ -231,36 +254,155 @@ final class MobsPaperTest {
     assertThat(plain(name)).isEqualTo("Gerald");
   }
 
-  @Test
-  void playerKillsOfLevelledMobsGiveMoreExperienceAndStackableDrops() {
-    var zombie = world.spawn(at(3000), Zombie.class, SpawnReason.NATURAL);
-    zombie.setKiller(server.addPlayer());
-    var drops =
-        new ArrayList<>(
-            List.of(new ItemStack(Material.ROTTEN_FLESH, 2), new ItemStack(Material.IRON_SWORD)));
-    var death =
-        new EntityDeathEvent(
-            zombie, DamageSource.builder(DamageType.PLAYER_ATTACK).build(), drops, 10);
+  /** A level-50 zombie: far out and deep, with the lowest roll so every fraction rounds up. */
+  Zombie capped() {
+    random.moveTo(0.1);
+    var zombie = world.spawn(at(40_000), Zombie.class, SpawnReason.NATURAL);
+    assertThat(levels.levelOf(zombie)).hasValue(50);
+    return zombie;
+  }
 
+  static DamageSource hitBy(Player player) {
+    return DamageSource.builder(DamageType.PLAYER_ATTACK)
+        .withCausingEntity(player)
+        .withDirectEntity(player)
+        .build();
+  }
+
+  EntityDeathEvent die(Zombie zombie, DamageSource source, List<ItemStack> drops) {
+    var death = new EntityDeathEvent(zombie, source, new ArrayList<>(drops), 10);
     server.getPluginManager().callEvent(death);
-
-    // Level 23 of 50: XP x(1 + 3.0 * 22/49) = 23.5, drops x(1 + 2.0 * 22/49) = 3.8; the highest
-    // roll never rounds up.
-    assertThat(death.getDroppedExp()).isEqualTo(23);
-    assertThat(drops.get(0).getAmount()).isEqualTo(3);
-    assertThat(drops.get(1).getAmount()).isEqualTo(1);
+    return death;
   }
 
   @Test
-  void killsWithoutAPlayerPayVanilla() {
-    var zombie = world.spawn(at(3000), Zombie.class, SpawnReason.NATURAL);
-    var death =
-        new EntityDeathEvent(
-            zombie, DamageSource.builder(DamageType.LAVA).build(), new ArrayList<>(), 10);
+  void anEarnedKillPaysMoreExperienceAndExtraLootTableRolls() {
+    var zombie = capped();
+    var player = server.addPlayer();
+    KillLedger.record(zombie, true, 20);
 
-    server.getPluginManager().callEvent(death);
+    var death = die(zombie, hitBy(player), List.of(new ItemStack(Material.ROTTEN_FLESH)));
+
+    // At the cap: XP x(1 + 1.0), and ITEM_DROPS 0.5 is one extra roll (the roll draws 0.1).
+    assertThat(death.getDroppedExp()).isEqualTo(20);
+    assertThat(lootRolls).isEqualTo(1);
+    assertThat(death.getDrops())
+        .containsExactly(
+            new ItemStack(Material.ROTTEN_FLESH), new ItemStack(Material.ROTTEN_FLESH));
+  }
+
+  @Test
+  void whatAMobPickedUpIsNeverMultiplied() {
+    var zombie = capped();
+    var diamonds = new ItemStack(Material.DIAMOND, 32);
+    zombie.getEquipment().setItemInMainHand(diamonds);
+    var player = server.addPlayer();
+    KillLedger.record(zombie, true, 20);
+
+    var death = die(zombie, hitBy(player), List.of(diamonds));
+
+    var diamondsDropped =
+        death.getDrops().stream()
+            .filter(stack -> stack.getType() == Material.DIAMOND)
+            .mapToInt(ItemStack::getAmount)
+            .sum();
+    assertThat(diamondsDropped).isEqualTo(32);
+    assertThat(death.getDrops())
+        .filteredOn(stack -> stack.getType() != Material.DIAMOND)
+        .containsOnly(new ItemStack(Material.ROTTEN_FLESH));
+  }
+
+  @Test
+  void killsWithoutAPlayersFinalBlowPayVanilla() {
+    var zombie = capped();
+    KillLedger.record(zombie, true, 20);
+
+    var lava = die(zombie, DamageSource.builder(DamageType.LAVA).build(), List.of());
+
+    assertThat(lava.getDroppedExp()).isEqualTo(10);
+    assertThat(lootRolls).isZero();
+  }
+
+  @Test
+  void killsMostlyDoneByTrapsOrPetsPayVanilla() {
+    var zombie = capped();
+    var player = server.addPlayer();
+    KillLedger.record(zombie, false, 18);
+    KillLedger.record(zombie, true, 2);
+
+    var death = die(zombie, hitBy(player), List.of());
 
     assertThat(death.getDroppedExp()).isEqualTo(10);
+    assertThat(lootRolls).isZero();
+  }
+
+  @Test
+  void theLedgerKeepsPlayerAndOtherDamageApart() {
+    var zombie = capped();
+    var player = server.addPlayer();
+
+    KillLedger.record(zombie, true, 4);
+    KillLedger.record(zombie, true, 1.5);
+    KillLedger.record(zombie, false, 3);
+    KillLedger.record(zombie, false, 0);
+
+    assertThat(KillLedger.playerDamage(zombie)).isEqualTo(5.5);
+    assertThat(KillLedger.otherDamage(zombie)).isEqualTo(3);
+    assertThat(KillLedger.playerHit(player)).contains(player);
+    assertThat(KillLedger.playerHit(zombie)).isEmpty();
+    assertThat(KillLedger.finalBlow(hitBy(player))).contains(player);
+    assertThat(KillLedger.finalBlow(DamageSource.builder(DamageType.FALL).build())).isEmpty();
+  }
+
+  @Test
+  void onlyTheWorldsOwnSpawnsAreLevelled() {
+    assertThat(levels.levelOf(world.spawn(at(3000), Zombie.class, SpawnReason.JOCKEY))).isPresent();
+    for (var reason :
+        List.of(
+            SpawnReason.REINFORCEMENTS,
+            SpawnReason.SLIME_SPLIT,
+            SpawnReason.RAID,
+            SpawnReason.NETHER_PORTAL,
+            SpawnReason.SPAWNER,
+            SpawnReason.DISPENSE_EGG)) {
+      assertThat(levels.levelOf(world.spawn(at(3000), Zombie.class, reason))).isEmpty();
+    }
+  }
+
+  @Test
+  void aConvertedMobKeepsItsLevelUnderItsOwnName() {
+    var zombie = world.spawn(at(3000), Zombie.class, SpawnReason.NATURAL);
+    var drowned = world.spawn(at(3000), Drowned.class, SpawnReason.DROWNED);
+    // Conversion copies the zombie's name and data onto the drowned.
+    drowned.customName(zombie.customName());
+    drowned.getPersistentDataContainer().set(MobKeys.LEVEL, PersistentDataType.INTEGER, 23);
+
+    server
+        .getPluginManager()
+        .callEvent(
+            new EntityTransformEvent(
+                zombie, List.of(drowned), EntityTransformEvent.TransformReason.DROWNED));
+
+    assertThat(levels.levelOf(drowned)).hasValue(23);
+    assertThat(drowned.customName()).isEqualTo(((LevelApplier) levels).nameplate(drowned, 23));
+    assertThat(drowned.customName()).isNotEqualTo(zombie.customName());
+  }
+
+  @Test
+  void splitSlimesDropTheirInheritedLevel() {
+    var zombie = world.spawn(at(3000), Zombie.class, SpawnReason.NATURAL);
+    var slime = world.spawn(at(3000), Slime.class, SpawnReason.SLIME_SPLIT);
+    slime.customName(zombie.customName());
+    slime.getPersistentDataContainer().set(MobKeys.LEVEL, PersistentDataType.INTEGER, 23);
+
+    server
+        .getPluginManager()
+        .callEvent(
+            new EntityTransformEvent(
+                zombie, List.of(slime), EntityTransformEvent.TransformReason.SPLIT));
+
+    assertThat(levels.levelOf(slime)).isEmpty();
+    assertThat(slime.customName()).isNull();
   }
 
   @Test
