@@ -1872,6 +1872,10 @@
     },
     "packages/tasknotes-macos": {
       "name": "tasknotes-macos",
+      "devDependencies": {
+        "@vitest/coverage-istanbul": "5.0.1",
+        "vitest": "5.0.1",
+      },
     },
     "packages/tasknotes-server": {
       "name": "tasknotes-server",
