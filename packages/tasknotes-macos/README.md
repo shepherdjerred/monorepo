@@ -69,13 +69,15 @@ Security → Accessibility. Do not use the Developer ID release identity or an
 ad-hoc signature: their runner signature is not accepted for UI testing, or
 changes on every build and loses the trust grant.
 
-`lint` participates in the repository's Linux CI verify graph because
-SwiftLint ships a static Linux binary. Changed TaskNotes paths also select the
-hard `tasknotes-native` Buildkite lane after Linux `verify`; it validates the
-Swift bindings, runs `mac:verify` and `mac:analyze`, and executes all six UI
-flows with the one preflight-discovered Apple Development certificate. The
-root lefthook `pre-commit` hook still runs the fast local subset, and
-`mac:verify` remains the focused pre-PR command.
+`lint` and `test` participate in the repository's Linux CI verify graph:
+SwiftLint ships a static Linux binary, and the Vitest suite covers only the
+platform-independent `scripts/` helpers. The Swift suites need a Swift
+toolchain and the Rust XCFramework, so they stay on the hard `tasknotes-native`
+Buildkite lane after Linux `verify`, which changed TaskNotes paths also
+select; it validates the Swift bindings, runs `mac:verify` and `mac:analyze`,
+and executes all six UI flows with the one preflight-discovered Apple
+Development certificate. The root lefthook `pre-commit` hook still runs the
+fast local subset, and `mac:verify` remains the focused pre-PR command.
 
 See [AGENTS.md](AGENTS.md) for the host/threading invariants that must remain in
 context. The architecture and command reference live on this page; the release
