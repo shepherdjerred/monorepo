@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.quests.domain.state;
 import static java.util.Collections.unmodifiableMap;
 
 import com.shepherdjerred.thestorm.quests.domain.model.Action.NpcMark;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -22,6 +23,7 @@ import java.util.function.UnaryOperator;
  * @param tracked the quest shown in the sidebar, if any
  * @param board the radiant quest board
  * @param marks markers quests pinned above NPCs, shown when no quest needs the NPC
+ * @param discoveries the first pickup time for each revealed collection
  */
 public record PlayerQuests(
     UUID player,
@@ -32,7 +34,8 @@ public record PlayerQuests(
     long points,
     Optional<String> tracked,
     Board board,
-    Map<String, NpcMark> marks) {
+    Map<String, NpcMark> marks,
+    Map<String, Instant> discoveries) {
 
   public PlayerQuests {
     active = sorted(active);
@@ -40,6 +43,7 @@ public record PlayerQuests(
     variables = sorted(variables);
     reputation = sorted(reputation);
     marks = sorted(marks);
+    discoveries = sorted(discoveries);
     for (var entry : active.entrySet()) {
       if (!entry.getKey().equals(entry.getValue().quest())) {
         throw new IllegalArgumentException("active quests are keyed by their id");
@@ -50,7 +54,16 @@ public record PlayerQuests(
   /** A player who has never done a quest. */
   public static PlayerQuests empty(UUID player) {
     return new PlayerQuests(
-        player, Map.of(), Map.of(), Map.of(), Map.of(), 0, Optional.empty(), Board.EMPTY, Map.of());
+        player,
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        Map.of(),
+        0,
+        Optional.empty(),
+        Board.EMPTY,
+        Map.of(),
+        Map.of());
   }
 
   public Optional<ActiveQuest> active(String quest) {
@@ -87,7 +100,8 @@ public record PlayerQuests(
         points,
         tracked,
         board,
-        marks);
+        marks,
+        discoveries);
   }
 
   public PlayerQuests withoutCompletion(String quest) {
@@ -100,7 +114,8 @@ public record PlayerQuests(
         points,
         tracked,
         board,
-        marks);
+        marks,
+        discoveries);
   }
 
   public PlayerQuests withVariable(String name, long value) {
@@ -113,7 +128,8 @@ public record PlayerQuests(
         points,
         tracked,
         board,
-        marks);
+        marks,
+        discoveries);
   }
 
   public PlayerQuests withReputation(String faction, long value) {
@@ -126,28 +142,83 @@ public record PlayerQuests(
         points,
         tracked,
         board,
-        marks);
+        marks,
+        discoveries);
   }
 
   public PlayerQuests withPoints(long value) {
     return new PlayerQuests(
-        player, active, completions, variables, reputation, value, tracked, board, marks);
+        player,
+        active,
+        completions,
+        variables,
+        reputation,
+        value,
+        tracked,
+        board,
+        marks,
+        discoveries);
   }
 
   public PlayerQuests withTracked(Optional<String> quest) {
     return new PlayerQuests(
-        player, active, completions, variables, reputation, points, quest, board, marks);
+        player,
+        active,
+        completions,
+        variables,
+        reputation,
+        points,
+        quest,
+        board,
+        marks,
+        discoveries);
   }
 
   public PlayerQuests withBoard(Board next) {
     return new PlayerQuests(
-        player, active, completions, variables, reputation, points, tracked, next, marks);
+        player,
+        active,
+        completions,
+        variables,
+        reputation,
+        points,
+        tracked,
+        next,
+        marks,
+        discoveries);
   }
 
   public PlayerQuests withMark(String npc, NpcMark mark) {
     var next = mark == NpcMark.NONE ? remove(marks, npc) : put(marks, npc, mark);
     return new PlayerQuests(
-        player, active, completions, variables, reputation, points, tracked, board, next);
+        player,
+        active,
+        completions,
+        variables,
+        reputation,
+        points,
+        tracked,
+        board,
+        next,
+        discoveries);
+  }
+
+  /** Records a first pickup, preserving the original discovery time. */
+  public PlayerQuests discover(String id, Instant at) {
+    if (discoveries.containsKey(id)) {
+      return this;
+    }
+    return new PlayerQuests(
+        player,
+        active,
+        completions,
+        variables,
+        reputation,
+        points,
+        tracked,
+        board,
+        marks,
+        put(discoveries, id, at));
   }
 
   private PlayerQuests withActiveMap(UnaryOperator<Map<String, ActiveQuest>> change) {
@@ -160,7 +231,8 @@ public record PlayerQuests(
         points,
         tracked,
         board,
-        marks);
+        marks,
+        discoveries);
   }
 
   private static <V> Map<String, V> sorted(Map<String, V> map) {

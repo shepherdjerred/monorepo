@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.quests.app.QuestStore.PendingWorld;
 import com.shepherdjerred.thestorm.quests.app.QuestStore.Status;
 import com.shepherdjerred.thestorm.quests.domain.board.BoardQuests;
 import com.shepherdjerred.thestorm.quests.domain.config.QuestsConfig;
+import com.shepherdjerred.thestorm.quests.domain.content.Collections;
 import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
 import com.shepherdjerred.thestorm.quests.domain.engine.Catalog;
 import com.shepherdjerred.thestorm.quests.domain.engine.Effect;
@@ -55,6 +56,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
    * What the service needs.
    *
    * @param content the quest content
+   * @param collections authored first-pickup discoveries
    * @param config quests.yml
    * @param store where state is kept
    * @param world the server
@@ -67,6 +69,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
    */
   public record Wiring(
       QuestContent content,
+      Collections collections,
       QuestsConfig config,
       QuestStore store,
       QuestWorld world,
@@ -83,6 +86,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
   private final Map<UUID, PlayerQuests> sessions = new HashMap<>();
   private final Map<UUID, CompletableFuture<Void>> loading = new HashMap<>();
   private final Map<UUID, CompletableFuture<Void>> saving = new HashMap<>();
+  private final Map<UUID, Set<String>> deferredDiscoveries = new HashMap<>();
   private final Map<UUID, ArrayDeque<Runnable>> queued = new HashMap<>();
   private final Map<UUID, Long> generations = new HashMap<>();
   private final Set<UUID> departing = new HashSet<>();
@@ -138,6 +142,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
                   handinNoticeSent.remove(player);
                   sessions.put(player, loaded.state());
                   deliverPending(player);
+                  flushDiscoveries(player);
                   refresh(player);
                 },
                 wiring.mainThread())
@@ -164,6 +169,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
       return;
     }
     deliverPending(player);
+    flushDiscoveries(player);
     refresh(player);
   }
 
@@ -389,7 +395,59 @@ public final class QuestService implements QuestHooks, QuestProgress {
       refresh(player);
       return Optional.empty();
     }
-    return Optional.of(Journal.journal(state, catalog(state), lookup, wiring.content().factions()));
+    return Optional.of(
+        Journal.journal(
+            state,
+            catalog(state),
+            lookup,
+            new Journal.Content(
+                wiring.content().factions(),
+                wiring.collections(),
+                wiring.content().quests().keySet())));
+  }
+
+  /** Reveals authored collection entries after an eligible main-world pickup. */
+  public void discover(UUID player, String material) {
+    var matching = wiring.collections().matching(material);
+    if (matching.isEmpty()) {
+      return;
+    }
+    if (loading.containsKey(player)
+        || state(player).isEmpty()
+        || wiring.world().facts(player).isEmpty()) {
+      deferredDiscoveries.computeIfAbsent(player, ignored -> new HashSet<>()).add(material);
+      if (!loading.containsKey(player)
+          && !sessions.containsKey(player)
+          && wiring.world().facts(player).isPresent()) {
+        var _ = join(player);
+      }
+      return;
+    }
+    withContext(
+        player,
+        (state, context) -> {
+          var next = state;
+          var effects = new ArrayList<Effect>();
+          for (var entry : matching) {
+            if (!next.discoveries().containsKey(entry.id())) {
+              next = next.discover(entry.id(), wiring.time().instant());
+              effects.add(new Effect.Discovered(entry.name()));
+            }
+          }
+          if (!effects.isEmpty()) {
+            commit(player, state, new Outcome(next, effects), context.catalog());
+          }
+        });
+  }
+
+  private void flushDiscoveries(UUID player) {
+    if (state(player).isEmpty() || wiring.world().facts(player).isEmpty()) {
+      return;
+    }
+    var materials = deferredDiscoveries.remove(player);
+    if (materials != null) {
+      materials.forEach(material -> discover(player, material));
+    }
   }
 
   /** The players with the most quest points. */
@@ -665,6 +723,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
       }
       var state = sessions.get(player);
       if (state != null && wiring.world().facts(player).isPresent()) {
+        flushDiscoveries(player);
         present(player, state);
       }
     }

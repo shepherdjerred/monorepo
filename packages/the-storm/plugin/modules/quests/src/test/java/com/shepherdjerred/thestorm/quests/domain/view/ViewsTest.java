@@ -278,7 +278,15 @@ final class ViewsTest {
                 "town",
                 "Spawn Town",
                 List.of(new Faction.Rank("Neighbour", 5), new Faction.Rank("Friend", 15))));
-    var view = Journal.journal(state, context.catalog(), LOOKUP, factions);
+    var view =
+        Journal.journal(
+            state,
+            context.catalog(),
+            LOOKUP,
+            new Journal.Content(
+                factions,
+                new com.shepherdjerred.thestorm.quests.domain.content.Collections(Map.of()),
+                Set.of("smith")));
     assertThat(view.active()).containsExactly("smith");
     assertThat(view.body())
         .contains("» Quest smith")
@@ -298,9 +306,39 @@ final class ViewsTest {
 
   @Test
   void anEmptyJournalPointsAtQuestGivers() {
-    var view = Journal.journal(empty(), context(facts).catalog(), LOOKUP, Map.of());
+    var view =
+        Journal.journal(
+            empty(),
+            context(facts).catalog(),
+            LOOKUP,
+            new Journal.Content(
+                Map.of(),
+                new com.shepherdjerred.thestorm.quests.domain.content.Collections(Map.of()),
+                Set.of()));
     assertThat(view.body()).contains("You have no quests");
     assertThat(view.active()).isEmpty();
+  }
+
+  @Test
+  void rotatingBoardSlotsDoNotEnterTheAuthoredDiary() {
+    var smith = deliverQuest("smith", "thomas");
+    var board = deliverQuest("daily-1", "thomas");
+    var catalog = context(facts, smith, board).catalog();
+    var finished =
+        new com.shepherdjerred.thestorm.quests.domain.state.Completion(1, java.time.Instant.EPOCH);
+    var state = empty().withCompletion("smith", finished).withCompletion("daily-1", finished);
+
+    var view =
+        Journal.journal(
+            state,
+            catalog,
+            LOOKUP,
+            new Journal.Content(
+                Map.of(),
+                new com.shepherdjerred.thestorm.quests.domain.content.Collections(Map.of()),
+                Set.of("smith")));
+
+    assertThat(view.body()).contains("Completed: 1", "Quest smith").doesNotContain("Quest daily-1");
   }
 
   @Test

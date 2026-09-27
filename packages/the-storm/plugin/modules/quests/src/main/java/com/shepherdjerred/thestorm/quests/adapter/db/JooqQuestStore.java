@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.quests.adapter.db;
 import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_ACTIVE;
 import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_BOARD;
 import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_COMPLETION;
+import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_DISCOVERY;
 import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_MARKER;
 import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_OBJECTIVE;
 import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_PENDING_WORLD;
@@ -204,7 +205,8 @@ public final class JooqQuestStore implements QuestStore {
                             entry.getStars(),
                             entry.getReward(),
                             entry.getMinutes()))),
-        marks(dsl, id));
+        marks(dsl, id),
+        discoveries(dsl, id));
   }
 
   private static Map<String, ActiveQuest> active(DSLContext dsl, String id) {
@@ -258,6 +260,15 @@ public final class JooqQuestStore implements QuestStore {
             row ->
                 marks.put(row.getNpc(), NpcMark.valueOf(row.getMark().toUpperCase(Locale.ROOT))));
     return marks;
+  }
+
+  private static Map<String, Instant> discoveries(DSLContext dsl, String id) {
+    var discoveries = new TreeMap<String, Instant>();
+    dsl.selectFrom(QUESTS_DISCOVERY)
+        .where(QUESTS_DISCOVERY.PLAYER_ID.eq(id))
+        .forEach(
+            row -> discoveries.put(row.getCollection(), Instant.ofEpochMilli(row.getFirstAt())));
+    return discoveries;
   }
 
   private static Map<String, Long> pairs(Map<String, Long> fetched) {
@@ -343,6 +354,15 @@ public final class JooqQuestStore implements QuestStore {
                     .set(QUESTS_MARKER.PLAYER_ID, id)
                     .set(QUESTS_MARKER.NPC, npc)
                     .set(QUESTS_MARKER.MARK, mark.name().toLowerCase(Locale.ROOT))
+                    .execute());
+    state
+        .discoveries()
+        .forEach(
+            (collection, first) ->
+                dsl.insertInto(QUESTS_DISCOVERY)
+                    .set(QUESTS_DISCOVERY.PLAYER_ID, id)
+                    .set(QUESTS_DISCOVERY.COLLECTION, collection)
+                    .set(QUESTS_DISCOVERY.FIRST_AT, first.toEpochMilli())
                     .execute());
   }
 }
