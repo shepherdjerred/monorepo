@@ -10,11 +10,17 @@ import {
 } from "./antigravity-usage.ts";
 import type { HistoryPaths } from "@shepherdjerred/toolkit/lib/history/paths.ts";
 import {
+  createStagedScanner,
+  failedScanResult,
+  fullScanResult,
+  incrementalResult,
   pathExists,
+  planFileScan,
   readImmutableDatabase,
   rows,
   sourceReadResult,
   sourceResult,
+  type StagedScan,
 } from "@shepherdjerred/toolkit/lib/history/sources-shared.ts";
 import type {
   HistoryDocument,
@@ -248,23 +254,46 @@ async function antigravityDatabaseFiles(root: string): Promise<string[]> {
 const ANTIGRAVITY_NO_TRANSCRIPT_TEXT =
   "Antigravity session — no transcript text available locally";
 
+async function scanAntigravity(
+  paths: HistoryPaths,
+  previous: ReadonlyMap<string, string> | null,
+  force: boolean,
+): Promise<StagedScan<ReadonlyMap<string, string>>> {
+  const filesByRoot = await Promise.all(
+    paths.antigravityRoots.map((root) => antigravityDatabaseFiles(root)),
+  );
+  const files = filesByRoot.flat();
+  if (files.length === 0) {
+    return {
+      result: await sourceResult("antigravity", files, () => []),
+      staged: new Map(),
+    };
+  }
+  const plan = await planFileScan(files, previous, force);
+  try {
+    const documents: HistoryDocument[] = [];
+    for (const file of plan.parseFiles) {
+      documents.push(await scanAntigravityDatabase(file));
+    }
+    return {
+      result: plan.full
+        ? fullScanResult("antigravity", documents, files, plan.fingerprint)
+        : incrementalResult("antigravity", documents, files, plan.fingerprint),
+      staged: plan.signatures,
+    };
+  } catch (error: unknown) {
+    return {
+      result: failedScanResult("antigravity", plan.fingerprint, error),
+      staged: null,
+    };
+  }
+}
+
 export function createAntigravitySource(): HistorySource {
   return {
     name: "antigravity",
     label: "Antigravity",
-    async scan(paths: HistoryPaths) {
-      const filesByRoot = await Promise.all(
-        paths.antigravityRoots.map((root) => antigravityDatabaseFiles(root)),
-      );
-      const files = filesByRoot.flat();
-      return sourceResult("antigravity", files, async () => {
-        const documents: HistoryDocument[] = [];
-        for (const file of files) {
-          documents.push(await scanAntigravityDatabase(file));
-        }
-        return documents;
-      });
-    },
+    ...createStagedScanner(scanAntigravity),
     async read(_paths: HistoryPaths, records: readonly HistoryRecord[]) {
       return sourceReadResult(
         "antigravity",

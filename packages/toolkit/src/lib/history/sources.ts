@@ -1,7 +1,7 @@
 import { stat } from "node:fs/promises";
 import path from "node:path";
 import { createAntigravitySource } from "./sources/antigravity.ts";
-import { createCodexSource } from "./sources/codex.ts";
+import { createCodexSource } from "./sources/codex-scan.ts";
 import { createConductorSource } from "./sources/conductor.ts";
 import { createCursorSource } from "./sources/cursor.ts";
 import { createGrokSource } from "./sources/grok.ts";
@@ -15,10 +15,16 @@ import {
 import { createOpenCodeSources } from "./sources/opencode.ts";
 import type { HistoryPaths } from "./paths.ts";
 import {
+  createStagedScanner,
+  failedScanResult,
   filesUnder,
   firstText,
+  fullScanResult,
+  incrementalResult,
+  planFileScan,
   sourceReadResult,
   sourceResult,
+  type StagedScan,
 } from "./sources-shared.ts";
 import { parseRecord, parseTimestamp, stringValue } from "./query/text.ts";
 import type {
@@ -27,7 +33,6 @@ import type {
   HistoryRecord,
   HistorySource,
   HistorySourceReadResult,
-  HistorySourceResult,
   UsageEventEntry,
 } from "./types.ts";
 import {
@@ -238,41 +243,79 @@ function claudeUsageEvents(
   );
 }
 
-async function scanClaude(paths: HistoryPaths): Promise<HistorySourceResult> {
+async function parseClaudeDocument(
+  file: string,
+  claudeProjects: string,
+): Promise<HistoryDocument> {
+  const transcript = await readClaudeTranscript(
+    file,
+    INDEXED_MESSAGE_PARSE_LIMIT,
+  );
+  const info = await stat(file);
+  const fallback = new Date(info.mtimeMs).toISOString();
+  const firstUser = openingPrompt(transcript.messages);
+  return makeHistoryDocument(
+    {
+      source: "claude",
+      sourceId: path.relative(claudeProjects, file),
+      title: firstText(
+        firstUser ?? path.basename(file, ".jsonl"),
+        "Claude Code session",
+      ),
+      path: file,
+      workspace: path.dirname(path.dirname(file)),
+      agent: "Claude Code",
+      createdAt: transcript.createdAt ?? fallback,
+      updatedAt: transcript.updatedAt ?? fallback,
+      runtimeId: transcript.runtimeId,
+      usageEvents: claudeUsageEvents(transcript.usageEntries),
+    },
+    transcript.messages,
+  );
+}
+
+async function scanClaude(
+  paths: HistoryPaths,
+  previous: ReadonlyMap<string, string> | null,
+  force: boolean,
+): Promise<StagedScan<ReadonlyMap<string, string>>> {
   const files = await filesUnder(paths.claudeProjects, ".jsonl");
-  return sourceResult("claude", files, async () => {
+  if (files.length === 0) {
+    return {
+      result: await sourceResult("claude", files, () => []),
+      staged: new Map(),
+    };
+  }
+  const plan = await planFileScan(files, previous, force);
+  try {
     const documents: HistoryDocument[] = [];
-    for (const file of files) {
-      const transcript = await readClaudeTranscript(
-        file,
-        INDEXED_MESSAGE_PARSE_LIMIT,
-      );
-      const info = await stat(file);
-      const fallback = new Date(info.mtimeMs).toISOString();
-      const firstUser = openingPrompt(transcript.messages);
-      documents.push(
-        makeHistoryDocument(
-          {
-            source: "claude",
-            sourceId: path.relative(paths.claudeProjects, file),
-            title: firstText(
-              firstUser ?? path.basename(file, ".jsonl"),
-              "Claude Code session",
-            ),
-            path: file,
-            workspace: path.dirname(path.dirname(file)),
-            agent: "Claude Code",
-            createdAt: transcript.createdAt ?? fallback,
-            updatedAt: transcript.updatedAt ?? fallback,
-            runtimeId: transcript.runtimeId,
-            usageEvents: claudeUsageEvents(transcript.usageEntries),
-          },
-          transcript.messages,
-        ),
-      );
+    for (const file of plan.parseFiles) {
+      documents.push(await parseClaudeDocument(file, paths.claudeProjects));
     }
-    return documents;
-  });
+    const sourceIds = files.map((file) =>
+      path.relative(paths.claudeProjects, file),
+    );
+    return {
+      result: plan.full
+        ? fullScanResult("claude", documents, sourceIds, plan.fingerprint)
+        : incrementalResult("claude", documents, sourceIds, plan.fingerprint),
+      staged: plan.signatures,
+    };
+  } catch (error: unknown) {
+    return {
+      result: failedScanResult("claude", plan.fingerprint, error),
+      staged: null,
+    };
+  }
+}
+
+export function createClaudeSource(): HistorySource {
+  return {
+    name: "claude",
+    label: "Claude Code",
+    ...createStagedScanner(scanClaude),
+    read: readClaude,
+  };
 }
 
 async function readClaude(
@@ -296,12 +339,7 @@ async function readClaude(
 export function createHistorySources(): readonly HistorySource[] {
   return [
     createConductorSource(),
-    {
-      name: "claude",
-      label: "Claude Code",
-      scan: scanClaude,
-      read: readClaude,
-    },
+    createClaudeSource(),
     createCodexSource(),
     createCursorSource(),
     ...createOpenCodeSources(),

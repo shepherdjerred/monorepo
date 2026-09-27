@@ -6,11 +6,17 @@ import {
 } from "#lib/history/query/messages.ts";
 import type { HistoryPaths } from "#lib/history/paths.ts";
 import {
+  createStagedScanner,
+  failedScanResult,
   filesUnder,
   firstText,
+  fullScanResult,
+  incrementalResult,
   pathExists,
+  planFileScan,
   sourceReadResult,
   sourceResult,
+  type StagedScan,
 } from "#lib/history/sources-shared.ts";
 import {
   parseRecord,
@@ -402,20 +408,75 @@ async function grokDocument(
   );
 }
 
+async function grokScanFiles(grokHome: string): Promise<{
+  readonly sessions: readonly string[];
+  readonly files: readonly string[];
+}> {
+  const sessions = await grokSessionFiles(grokHome);
+  const sidecars: string[] = [];
+  for (const session of sessions) {
+    const summary = path.join(path.dirname(session), "summary.json");
+    if (await pathExists(summary)) {
+      sidecars.push(summary);
+    }
+  }
+  return { sessions, files: [...sessions, ...sidecars] };
+}
+
+async function scanGrok(
+  paths: HistoryPaths,
+  previous: ReadonlyMap<string, string> | null,
+  force: boolean,
+): Promise<StagedScan<ReadonlyMap<string, string>>> {
+  const { sessions, files } = await grokScanFiles(paths.grokHome);
+  if (sessions.length === 0) {
+    return {
+      result: await sourceResult("grok", [], () => []),
+      staged: new Map(),
+    };
+  }
+  const plan = await planFileScan(files, previous, force);
+  // A changed sidecar re-parses its owning session file.
+  const parseSessions = plan.full
+    ? [...sessions]
+    : [
+        ...new Set(
+          plan.parseFiles.map((file) =>
+            path.basename(file) === "summary.json"
+              ? path.join(path.dirname(file), "updates.jsonl")
+              : file,
+          ),
+        ),
+      ]
+        .filter((file) => sessions.includes(file))
+        .sort();
+  try {
+    const documents: HistoryDocument[] = [];
+    for (const file of parseSessions) {
+      documents.push(await grokDocument(file, paths.grokHome));
+    }
+    const sourceIds = sessions.map((file) =>
+      path.relative(paths.grokHome, file),
+    );
+    return {
+      result: plan.full
+        ? fullScanResult("grok", documents, sourceIds, plan.fingerprint)
+        : incrementalResult("grok", documents, sourceIds, plan.fingerprint),
+      staged: plan.signatures,
+    };
+  } catch (error: unknown) {
+    return {
+      result: failedScanResult("grok", plan.fingerprint, error),
+      staged: null,
+    };
+  }
+}
+
 export function createGrokSource(): HistorySource {
   return {
     name: "grok",
     label: "Grok",
-    async scan(paths: HistoryPaths) {
-      const files = await grokSessionFiles(paths.grokHome);
-      return sourceResult("grok", files, async () => {
-        const documents: HistoryDocument[] = [];
-        for (const file of files) {
-          documents.push(await grokDocument(file, paths.grokHome));
-        }
-        return documents;
-      });
-    },
+    ...createStagedScanner(scanGrok),
     async read(paths: HistoryPaths, records: readonly HistoryRecord[]) {
       return sourceReadResult(
         "grok",

@@ -27,6 +27,8 @@ function unavailable(
     documents: [],
     fingerprint: "missing",
     error,
+    complete: true,
+    sourceIds: [],
   };
 }
 
@@ -106,6 +108,8 @@ beforeAll(async () => {
       ],
       fingerprint: "codex-collision-fixture",
       error: null,
+      complete: true,
+      sourceIds: ["codex-collision"],
     },
     unavailable("cursor", "fixture cursor warning"),
     unavailable("claude", null),

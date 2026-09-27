@@ -46,10 +46,13 @@ function countDocuments(database: Database, source: HistorySourceName): number {
 }
 
 /**
- * Upsert every source's scanned documents into the index, dropping any that
- * disappeared since the last scan. A source whose fingerprint (file
+ * Upsert a source's scanned documents into the index, dropping any whose id
+ * is no longer reported. `documents` may be the complete set or only the
+ * entries changed since the previous scan; `sourceIds` is always complete
+ * and drives deletion either way. A source whose fingerprint (file
  * mtime+size hash) hasn't changed since the last successful ingest is
- * skipped entirely — this is what makes repeated scans cheap.
+ * skipped entirely — fingerprints are captured pre-parse, so a match also
+ * proves the scan parsed nothing new.
  */
 type IngestStatements = {
   readonly upsert: ReturnType<Database["prepare"]>;
@@ -197,9 +200,7 @@ function ingestSourceResult(
   const changed = sourceNeedsIngest(force, result.fingerprint, previousState);
 
   if (changed && result.available && result.error === null) {
-    const seenIds = new Set(
-      result.documents.map((document) => document.sourceId),
-    );
+    const seenIds = new Set(result.sourceIds);
     for (const document of result.documents) {
       upsertDocument(statements, document);
     }
@@ -216,7 +217,7 @@ function ingestSourceResult(
     result.source,
     result.available ? 1 : 0,
     changed && result.error === null
-      ? result.documents.length
+      ? result.sourceIds.length
       : countDocuments(database, result.source),
     result.fingerprint,
     result.error === null && result.available ? new Date().toISOString() : null,
@@ -224,16 +225,18 @@ function ingestSourceResult(
   );
 }
 
+/**
+ * Applies scanned results without opening a transaction: the caller owns
+ * the boundary so a force rebuild and its ingest commit atomically.
+ * `HistoryIndex.ingest` is the only caller.
+ */
 export function ingestResults(
   database: Database,
   results: readonly HistorySourceResult[],
   force: boolean,
 ): void {
   const statements = prepareIngestStatements(database);
-  const transaction = database.transaction(() => {
-    for (const result of results) {
-      ingestSourceResult(database, statements, result, force);
-    }
-  });
-  transaction();
+  for (const result of results) {
+    ingestSourceResult(database, statements, result, force);
+  }
 }

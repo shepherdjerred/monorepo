@@ -60,6 +60,8 @@ function result(
     documents,
     fingerprint: "fixture-v1",
     error: null,
+    complete: true,
+    sourceIds: documents.map((entry) => entry.sourceId),
   };
 }
 
@@ -337,6 +339,8 @@ describe("history index rebuilds", () => {
           documents: [],
           fingerprint: "unchanged-source",
           error: "fixture database could not be read",
+          complete: true,
+          sourceIds: [],
         },
       ],
       true,

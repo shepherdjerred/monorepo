@@ -354,6 +354,8 @@ describe("history source adapters", () => {
           documents: [],
           fingerprint: String(index),
           error: null,
+          complete: true,
+          sourceIds: [],
         };
       },
       read: async () => ({
@@ -1034,7 +1036,12 @@ describe("history index", () => {
     ).toHaveLength(0);
 
     await index.ingest([
-      { ...first, fingerprint: `${first.fingerprint}:changed`, documents: [] },
+      {
+        ...first,
+        fingerprint: `${first.fingerprint}:changed`,
+        documents: [],
+        sourceIds: [],
+      },
     ]);
     expect(
       index.search("database", { since: null, source: "claude" }),
@@ -1111,6 +1118,8 @@ describe("history index", () => {
         documents: [pricedDocument, unpricedDocument],
         fingerprint: "usage-fixture",
         error: null,
+        complete: true,
+        sourceIds: [pricedDocument.sourceId, unpricedDocument.sourceId],
       },
     ]);
 
@@ -1181,6 +1190,8 @@ describe("history index", () => {
         documents: [longLivedDocument],
         fingerprint: "usage-window-fixture",
         error: null,
+        complete: true,
+        sourceIds: [longLivedDocument.sourceId],
       },
     ]);
 

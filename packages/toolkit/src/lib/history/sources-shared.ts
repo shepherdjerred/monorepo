@@ -3,9 +3,12 @@ import { readdir, stat } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { z } from "zod";
+import type { HistoryPaths } from "./paths.ts";
 import type {
   HistoryDocument,
   HistoryMessage,
+  HistoryScanOptions,
+  HistorySource,
   HistorySourceName,
   HistorySourceReadResult,
   HistorySourceResult,
@@ -93,24 +96,97 @@ export async function filesUnder(
   return files.sort();
 }
 
-async function fingerprint(files: string[]): Promise<string> {
-  const parts: string[] = [];
-  const fingerprintFiles = files.flatMap((file) => [
-    file,
-    `${file}-wal`,
-    `${file}-shm`,
-  ]);
-  for (const file of fingerprintFiles.sort()) {
-    try {
-      const info = await stat(file);
-      parts.push(`${file}:${String(info.mtimeMs)}:${String(info.size)}`);
-    } catch {
-      parts.push(`${file}:missing`);
-    }
+async function statPart(file: string): Promise<string> {
+  try {
+    const info = await stat(file);
+    return `${file}:${String(info.mtimeMs)}:${String(info.size)}`;
+  } catch {
+    return `${file}:missing`;
   }
-  return parts.join("|");
 }
 
+export type FileStats = {
+  readonly fingerprint: string;
+  readonly signatures: ReadonlyMap<string, string>;
+};
+
+async function fingerprintParts(files: readonly string[]): Promise<{
+  readonly ordered: readonly string[];
+  readonly byFile: ReadonlyMap<string, string>;
+}> {
+  const flat = files
+    .flatMap((file) => [file, `${file}-wal`, `${file}-shm`])
+    .sort();
+  const parts = new Map<string, string>();
+  const ordered: string[] = [];
+  for (const file of flat) {
+    const part = await statPart(file);
+    parts.set(file, part);
+    ordered.push(part);
+  }
+  return { ordered, byFile: parts };
+}
+
+/**
+ * Stats every file (plus SQLite `-wal`/`-shm` companions) once, returning
+ * both the whole-source fingerprint and a per-file signature for
+ * change detection. The fingerprint keeps its exact historical shape so
+ * stored source-state rows still compare.
+ */
+export async function statFiles(files: readonly string[]): Promise<FileStats> {
+  const { ordered, byFile } = await fingerprintParts(files);
+  const signatures = new Map<string, string>();
+  for (const file of files) {
+    const own = byFile.get(file);
+    const wal = byFile.get(`${file}-wal`);
+    const shm = byFile.get(`${file}-shm`);
+    if (own === undefined || wal === undefined || shm === undefined) {
+      throw new Error(`Missing fingerprint part for ${file}`);
+    }
+    signatures.set(file, [own, wal, shm].join("|"));
+  }
+  return { fingerprint: ordered.join("|"), signatures };
+}
+
+export type FileDiff = {
+  readonly added: readonly string[];
+  readonly changed: readonly string[];
+  readonly deleted: readonly string[];
+};
+
+export function diffFiles(
+  previous: ReadonlyMap<string, string> | null,
+  current: ReadonlyMap<string, string>,
+): FileDiff {
+  if (previous === null) {
+    return { added: [...current.keys()], changed: [], deleted: [] };
+  }
+  const added: string[] = [];
+  const changed: string[] = [];
+  for (const [file, signature] of current) {
+    const prior = previous.get(file);
+    if (prior === undefined) {
+      added.push(file);
+    } else if (prior !== signature) {
+      changed.push(file);
+    }
+  }
+  const deleted: string[] = [];
+  for (const file of previous.keys()) {
+    if (!current.has(file)) {
+      deleted.push(file);
+    }
+  }
+  return { added, changed, deleted };
+}
+
+/**
+ * The fingerprint is captured BEFORE parsing on purpose: what ingest
+ * compares is the file state this scan read from, so a file written
+ * mid-scan always differs on the next pass and its new content is
+ * ingested then. A post-parse fingerprint would already contain that
+ * write and ingest would skip the re-read forever.
+ */
 export async function sourceResult(
   source: HistorySourceName,
   files: string[],
@@ -123,25 +199,161 @@ export async function sourceResult(
       documents: [],
       fingerprint: "missing",
       error: null,
+      complete: true,
+      sourceIds: [],
     };
   }
+  const { fingerprint } = await statFiles(files);
   try {
+    const documents = await read();
     return {
       source,
       available: true,
-      documents: await read(),
-      fingerprint: await fingerprint(files),
+      documents,
+      fingerprint,
       error: null,
+      complete: true,
+      sourceIds: documents.map((document) => document.sourceId),
     };
   } catch (error: unknown) {
     return {
       source,
       available: false,
       documents: [],
-      fingerprint: await fingerprint(files),
+      fingerprint,
       error: error instanceof Error ? error.message : String(error),
+      complete: true,
+      sourceIds: [],
     };
   }
+}
+
+/** A scan that parsed only some files; `sourceIds` is still the full set. */
+export function incrementalResult(
+  source: HistorySourceName,
+  documents: readonly HistoryDocument[],
+  sourceIds: readonly string[],
+  fingerprint: string,
+): HistorySourceResult {
+  return {
+    source,
+    available: true,
+    documents,
+    fingerprint,
+    error: null,
+    complete: false,
+    sourceIds: [...sourceIds].sort(),
+  };
+}
+
+/** A scan that parsed every file. */
+export function fullScanResult(
+  source: HistorySourceName,
+  documents: readonly HistoryDocument[],
+  sourceIds: readonly string[],
+  fingerprint: string,
+): HistorySourceResult {
+  return {
+    source,
+    available: true,
+    documents,
+    fingerprint,
+    error: null,
+    complete: true,
+    sourceIds: [...sourceIds],
+  };
+}
+
+/** A scan that failed before producing documents; advances nothing. */
+export function failedScanResult(
+  source: HistorySourceName,
+  fingerprint: string,
+  error: unknown,
+): HistorySourceResult {
+  return {
+    source,
+    available: false,
+    documents: [],
+    fingerprint,
+    error: error instanceof Error ? error.message : String(error),
+    complete: true,
+    sourceIds: [],
+  };
+}
+
+export type FileScanPlan = {
+  readonly fingerprint: string;
+  readonly signatures: ReadonlyMap<string, string>;
+  readonly full: boolean;
+  readonly parseFiles: readonly string[];
+};
+
+/**
+ * Decides which files a scan must parse: everything on the first scan,
+ * after `force`, or when any file vanished (retiring one document while
+ * trusting cached stats for the rest would strand a ghost id if a file
+ * ever reappeared with identical mtime+size, and deletions are rare);
+ * otherwise only added and changed files. The returned signatures are
+ * pre-parse, so a file written mid-scan differs on the next pass and its
+ * new content is parsed then.
+ */
+export async function planFileScan(
+  files: readonly string[],
+  previous: ReadonlyMap<string, string> | null,
+  force: boolean,
+): Promise<FileScanPlan> {
+  const { fingerprint, signatures } = await statFiles(files);
+  const diff =
+    force || previous === null ? null : diffFiles(previous, signatures);
+  const full = diff === null || diff.deleted.length > 0;
+  return {
+    fingerprint,
+    signatures,
+    full,
+    parseFiles: full ? [...files] : [...diff.added, ...diff.changed].sort(),
+  };
+}
+
+export type StagedScan<TState> = {
+  readonly result: HistorySourceResult;
+  readonly staged: TState | null;
+};
+
+/**
+ * Two-phase incremental scanning: `scan` stages the next cache state for
+ * its files, and `commitScan` advances to it — called only after the
+ * results were ingested. Every scan overwrites the staged slot, including
+ * a failed scan staging nothing, so a later commit can never advance to a
+ * previous scan's state for documents that were never indexed; the slot is
+ * cleared after each commit for the same reason. The next scan after a
+ * failure therefore retries from the last committed state.
+ */
+export function createStagedScanner<TState>(
+  scan: (
+    paths: HistoryPaths,
+    committed: TState | null,
+    force: boolean,
+  ) => Promise<StagedScan<TState>>,
+): Pick<HistorySource, "scan" | "commitScan"> {
+  let committed: TState | null = null;
+  let staged: TState | null = null;
+  return {
+    scan: async (paths: HistoryPaths, options?: HistoryScanOptions) => {
+      const { result, staged: next } = await scan(
+        paths,
+        committed,
+        options?.force ?? false,
+      );
+      staged = next;
+      return result;
+    },
+    commitScan: () => {
+      if (staged !== null) {
+        committed = staged;
+        staged = null;
+      }
+    },
+  };
 }
 
 export function readDatabase(filePath: string): Database {
