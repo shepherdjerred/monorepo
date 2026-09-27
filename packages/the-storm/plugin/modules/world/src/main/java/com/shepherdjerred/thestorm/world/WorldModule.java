@@ -14,8 +14,8 @@ import com.shepherdjerred.thestorm.world.app.WildWorlds;
 import com.shepherdjerred.thestorm.world.domain.WorldConfig;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.net.URI;
-import org.jspecify.annotations.Nullable;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Creates the extra overworlds, publishes {@link WildWorlds}, and optionally registers crier

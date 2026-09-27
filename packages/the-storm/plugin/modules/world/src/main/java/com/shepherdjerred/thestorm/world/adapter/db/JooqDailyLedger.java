@@ -1,6 +1,10 @@
 package com.shepherdjerred.thestorm.world.adapter.db;
 
+import static com.shepherdjerred.thestorm.world.adapter.db.generated.Tables.WORLD_DIGEST_ARRIVAL;
+import static com.shepherdjerred.thestorm.world.adapter.db.generated.Tables.WORLD_DIGEST_DAY;
 import static java.util.Objects.requireNonNull;
+import static org.jooq.impl.DSL.inline;
+import static org.jooq.impl.DSL.least;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.world.app.DailyLedger;
@@ -27,10 +31,11 @@ public final class JooqDailyLedger implements DailyLedger {
     return write(
         dsl -> {
           ensureDay(dsl, date, at);
-          dsl.execute(
-              "INSERT OR IGNORE INTO world_digest_arrival (day, player_uuid) VALUES (?, ?)",
-              date.toEpochDay(),
-              player.toString());
+          dsl.insertInto(WORLD_DIGEST_ARRIVAL)
+              .set(WORLD_DIGEST_ARRIVAL.DAY, date.toEpochDay())
+              .set(WORLD_DIGEST_ARRIVAL.PLAYER_UUID, player.toString())
+              .onConflictDoNothing()
+              .execute();
         });
   }
 
@@ -39,8 +44,10 @@ public final class JooqDailyLedger implements DailyLedger {
     return write(
         dsl -> {
           ensureDay(dsl, date, at);
-          dsl.execute(
-              "UPDATE world_digest_day SET deaths = deaths + 1 WHERE day = ?", date.toEpochDay());
+          dsl.update(WORLD_DIGEST_DAY)
+              .set(WORLD_DIGEST_DAY.DEATHS, WORLD_DIGEST_DAY.DEATHS.add(1))
+              .where(WORLD_DIGEST_DAY.DAY.eq(date.toEpochDay()))
+              .execute();
         });
   }
 
@@ -49,23 +56,20 @@ public final class JooqDailyLedger implements DailyLedger {
     return database.read(
         dsl -> {
           var day =
-              dsl.fetchOne(
-                  "SELECT first_observed_ms, deaths FROM world_digest_day WHERE day = ?",
-                  date.toEpochDay());
+              dsl.selectFrom(WORLD_DIGEST_DAY)
+                  .where(WORLD_DIGEST_DAY.DAY.eq(date.toEpochDay()))
+                  .fetchOne();
           if (day == null) {
             return Optional.empty();
           }
           var visits =
-              requireNonNull(
-                  dsl.fetchOne(
-                      "SELECT COUNT(*) AS arrivals FROM world_digest_arrival WHERE day = ?",
-                      date.toEpochDay()));
+              dsl.fetchCount(WORLD_DIGEST_ARRIVAL, WORLD_DIGEST_ARRIVAL.DAY.eq(date.toEpochDay()));
           return Optional.of(
               new DailyReport(
                   date,
-                  Instant.ofEpochMilli(requireNonNull(day.get("first_observed_ms", Long.class))),
-                  requireNonNull(visits.get("arrivals", Integer.class)),
-                  requireNonNull(day.get("deaths", Integer.class))));
+                  Instant.ofEpochMilli(requireNonNull(day.getFirstObservedMs())),
+                  visits,
+                  requireNonNull(day.getDeaths())));
         });
   }
 
@@ -82,13 +86,17 @@ public final class JooqDailyLedger implements DailyLedger {
   private static void ensureDay(DSLContext dsl, LocalDate date, Instant at) {
     var day = date.toEpochDay();
     var millis = at.toEpochMilli();
-    dsl.execute(
-        "INSERT OR IGNORE INTO world_digest_day (day, first_observed_ms, deaths) VALUES (?, ?, 0)",
-        day,
-        millis);
-    dsl.execute(
-        "UPDATE world_digest_day SET first_observed_ms = MIN(first_observed_ms, ?) WHERE day = ?",
-        millis,
-        day);
+    dsl.insertInto(WORLD_DIGEST_DAY)
+        .set(WORLD_DIGEST_DAY.DAY, day)
+        .set(WORLD_DIGEST_DAY.FIRST_OBSERVED_MS, millis)
+        .set(WORLD_DIGEST_DAY.DEATHS, 0)
+        .onConflictDoNothing()
+        .execute();
+    dsl.update(WORLD_DIGEST_DAY)
+        .set(
+            WORLD_DIGEST_DAY.FIRST_OBSERVED_MS,
+            least(WORLD_DIGEST_DAY.FIRST_OBSERVED_MS, inline(millis)))
+        .where(WORLD_DIGEST_DAY.DAY.eq(day))
+        .execute();
   }
 }
