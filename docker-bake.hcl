@@ -84,6 +84,7 @@ group "app" {
     "scout-for-lol",
     "discord-plays-pokemon",
     "discord-plays-mario-kart",
+    "storm-brain",
   ]
 }
 
@@ -179,6 +180,14 @@ target "discord-plays-mario-kart" {
   tags       = imagetags("discord-plays-mario-kart")
   cache-from = cachefrom("discord-plays-mario-kart")
   cache-to   = cacheto("discord-plays-mario-kart")
+}
+
+target "storm-brain" {
+  inherits   = ["_app"]
+  dockerfile = "packages/storm-brain/Dockerfile"
+  tags       = imagetags("storm-brain")
+  cache-from = cachefrom("storm-brain")
+  cache-to   = cacheto("storm-brain")
 }
 
 # ── Homelab infra images: self-contained contexts ────────────────────────────

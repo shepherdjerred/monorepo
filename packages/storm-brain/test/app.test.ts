@@ -5,6 +5,7 @@ import { BrainUpstreamError } from "#src/brain.ts";
 import type { BrainConfig } from "#src/config.ts";
 import { createBrainMetrics } from "#src/metrics.ts";
 import type { AggregateLlmUsage } from "@shepherdjerred/llm-runtime";
+import { triageRequestBody } from "./fixtures.ts";
 
 const TOKEN = "test-bearer-token-that-is-long-enough";
 
@@ -92,25 +93,7 @@ const classifyBody = {
   lines: [{ text: "buy gold", at: "2017-06-01T12:00:00.000Z" }],
 };
 
-const triageBody = {
-  ticket: {
-    id: 1,
-    reporter: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-    categoryId: "grief",
-    statusId: "open",
-    priorityId: "normal",
-    summary: "my wall is gone",
-    location: null,
-    createdAt: "2017-06-01T12:00:00.000Z",
-    updatedAt: "2017-06-01T12:00:00.000Z",
-    claimer: null,
-    triage: null,
-  },
-  comments: [],
-  reporterHistory: [],
-  reporterBanned: false,
-  reporterRecentChat: [],
-};
+const triageBody = triageRequestBody();
 
 function post(body: unknown, token: string | null = TOKEN) {
   return {

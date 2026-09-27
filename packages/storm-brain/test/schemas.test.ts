@@ -7,6 +7,7 @@ import {
   TriageRequestSchema,
   TriageResponseSchema,
 } from "#src/schemas.ts";
+import { triageRequestBody } from "./fixtures.ts";
 
 describe("storm-brain schemas", () => {
   test("rejects unknown keys on requests and responses", () => {
@@ -76,26 +77,6 @@ describe("storm-brain schemas", () => {
         resolutionNote: "",
       }),
     ).toThrow();
-    expect(
-      TriageRequestSchema.parse({
-        ticket: {
-          id: 1,
-          reporter: "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-          categoryId: "grief",
-          statusId: "open",
-          priorityId: "normal",
-          summary: "my wall is gone",
-          location: null,
-          createdAt: "2017-06-01T12:00:00.000Z",
-          updatedAt: "2017-06-01T12:00:00.000Z",
-          claimer: null,
-          triage: null,
-        },
-        comments: [],
-        reporterHistory: [],
-        reporterBanned: false,
-        reporterRecentChat: [],
-      }).ticket.id,
-    ).toBe(1);
+    expect(TriageRequestSchema.parse(triageRequestBody()).ticket.id).toBe(1);
   });
 });

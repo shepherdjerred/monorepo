@@ -95,6 +95,7 @@ describe("ManagedFlagInventorySchema", () => {
       "trmnl-dashboard",
       "temporal",
       "alert-dashboard",
+      "storm",
     ]);
     expect(
       materializeManagedNamespaceEnvironment(
