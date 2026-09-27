@@ -50,6 +50,7 @@ final class KindsTest {
     for (var container :
         new Material[] {
           Material.CHEST,
+          Material.ENDER_CHEST,
           Material.BARREL,
           Material.SHULKER_BOX,
           Material.COPPER_CHEST,
@@ -68,7 +69,6 @@ final class KindsTest {
         .contains(new Act(Action.USE_REDSTONE, Subject.REDSTONE_COMPONENT));
     assertThat(kinds.use(Material.CAKE)).contains(new Act(Action.BREAK, Subject.CAKE));
     assertThat(kinds.use(Material.CRAFTING_TABLE)).isEmpty();
-    assertThat(kinds.use(Material.ENDER_CHEST)).isEmpty();
     assertThat(kinds.use(Material.STONE)).isEmpty();
   }
 

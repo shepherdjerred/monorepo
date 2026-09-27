@@ -22,6 +22,7 @@ final class BlockKinds {
   private static final List<Material> CONTAINERS =
       List.of(
           Material.CHEST,
+          Material.ENDER_CHEST,
           Material.TRAPPED_CHEST,
           Material.BARREL,
           Material.FURNACE,

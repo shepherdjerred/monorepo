@@ -155,13 +155,20 @@ public final class TownService {
             .loadAll()
             .whenCompleteAsync(
                 (snapshot, loadFailure) -> {
-                  if (loadFailure != null) {
-                    clocks.reloadFailed().accept(loadFailure);
-                  } else {
-                    state.reload(snapshot);
-                    reloading = false;
+                  try {
+                    if (loadFailure != null) {
+                      clocks.reloadFailed().accept(loadFailure);
+                    } else {
+                      try {
+                        state.reload(snapshot);
+                        reloading = false;
+                      } catch (RuntimeException invalidSnapshot) {
+                        clocks.reloadFailed().accept(invalidSnapshot);
+                      }
+                    }
+                  } finally {
+                    saved.completeExceptionally(failure);
                   }
-                  saved.completeExceptionally(failure);
                 },
                 clocks.mainThread());
   }

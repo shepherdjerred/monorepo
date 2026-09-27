@@ -10,6 +10,7 @@ import io.papermc.paper.event.player.PlayerLecternPageChangeEvent;
 import io.papermc.paper.event.player.PlayerOpenSignEvent;
 import org.bukkit.Tag;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.Directional;
 import org.bukkit.entity.Hanging;
 import org.bukkit.entity.Player;
@@ -26,6 +27,7 @@ import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerHarvestBlockEvent;
 import org.bukkit.event.player.PlayerTakeLecternBookEvent;
+import org.bukkit.util.BoundingBox;
 
 /**
  * Players changing blocks directly: breaking, placing (including beds and doors that fill two
@@ -54,19 +56,17 @@ final class BlockListener implements Listener {
   /**
    * Breaking a block drops what hangs on it: torches, signs, buttons and ladders beside it and item
    * frames and paintings on it. On a border those can be on someone else's land, so they must be
-   * the player's to break too. Blocks away from a border (every neighbour on the same land) skip
-   * the check.
+   * the player's to break too. Hanging entities need their own permission even when every
+   * neighboring block belongs to the same land.
    */
   private boolean mayDropSupported(Player player, Block block) {
     var own = guard.land(block);
-    var border = false;
     for (var face : Redstone.FACES) {
       var neighbour = block.getRelative(face);
       var land = guard.land(neighbour);
       if (land.sameOwnerAs(own)) {
         continue;
       }
-      border = true;
       var type = neighbour.getType();
       if (!type.isAir()
           && !type.isSolid()
@@ -74,19 +74,27 @@ final class BlockListener implements Listener {
         return false;
       }
     }
-    return !border || mayDropHanging(player, block);
+    return mayDropHanging(player, block);
   }
 
   private boolean mayDropHanging(Player player, Block block) {
     var center = block.getLocation().add(0.5, 0.5, 0.5);
-    for (var hanging : block.getWorld().getNearbyEntitiesByType(Hanging.class, center, 1.5)) {
-      var support = hanging.getLocation().getBlock().getRelative(hanging.getAttachedFace());
+    for (var hanging : block.getWorld().getNearbyEntitiesByType(Hanging.class, center, 4.5)) {
       var act = new Act(Action.DAMAGE_ENTITY, EntityKinds.subject(hanging).orElse(Subject.ENTITY));
-      if (support.equals(block) && !guard.permits(player, act, guard.land(hanging))) {
+      if (backingBlock(hanging.getBoundingBox(), hanging.getAttachedFace(), block.getBoundingBox())
+          && !guard.permits(player, act, guard.land(hanging))) {
         return false;
       }
     }
     return true;
+  }
+
+  /** A painting can use several backing blocks; test its whole occupied support plane. */
+  static boolean backingBlock(BoundingBox hanging, BlockFace attached, BoundingBox block) {
+    return hanging
+        .clone()
+        .shift(attached.getModX(), attached.getModY(), attached.getModZ())
+        .overlaps(block);
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
