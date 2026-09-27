@@ -12,6 +12,7 @@ import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.towns.TownsModule;
 import com.shepherdjerred.thestorm.towns.app.FakeWallets;
 import com.shepherdjerred.thestorm.tracks.app.TrackLevels;
+import com.shepherdjerred.thestorm.tracks.app.Track;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -27,6 +28,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.random.RandomGenerator;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.entity.Player;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -78,7 +80,18 @@ public class TownsTestPlugin extends JavaPlugin {
     services.provide(Wallets.class, wallets);
     services.provide(CrystalFormatter.class, new Formatter());
     services.provide(
-        TrackLevels.class, (player, track) -> governor.getOrDefault(player.getUniqueId(), 0));
+        TrackLevels.class,
+        new TrackLevels() {
+          @Override
+          public int level(Player player, Track track) {
+            return governor.getOrDefault(player.getUniqueId(), 0);
+          }
+
+          @Override
+          public boolean isLoaded(UUID player) {
+            return true;
+          }
+        });
     services.provide(PlayerDirectory.class, new Directory());
     var context =
         new ModuleContext(
