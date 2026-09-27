@@ -116,7 +116,7 @@ public class QuestsTestPlugin extends JavaPlugin {
           "MONDAY",
           "world",
           new QuestsConfig.Budget(25, 100),
-          new QuestsConfig.Party(16),
+          new QuestsConfig.Party(16, 60),
           new QuestsConfig.BoardSettings("board", 0, 0),
           20,
           60,

@@ -81,7 +81,10 @@ public final class QuestsPaper {
     server
         .getPluginManager()
         .registerEvents(
-            new QuestListener(service, service.content(), sidebars, config), context.plugin());
+            new QuestListener(
+                new QuestListener.Wiring(
+                    service, service.content(), sidebars, config, context.time())),
+            context.plugin());
     var commands =
         new QuestCommands(
             new QuestCommands.Wiring(
