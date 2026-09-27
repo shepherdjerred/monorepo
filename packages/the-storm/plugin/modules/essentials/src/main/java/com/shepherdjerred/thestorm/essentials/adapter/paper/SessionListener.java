@@ -80,6 +80,7 @@ final class SessionListener implements Listener {
     presence.tpa().forget(id);
     presence.flow().left(id);
     presence.safe().forget(id);
+    arrival.kits().deliveries().quit(id);
   }
 
   private void welcome(Player player) {
