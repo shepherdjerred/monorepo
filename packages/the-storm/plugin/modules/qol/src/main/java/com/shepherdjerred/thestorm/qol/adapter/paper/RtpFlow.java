@@ -67,7 +67,9 @@ final class RtpFlow {
     }
     player.sendMessage(Messages.info("Looking for a place..."));
     search.find(
-        request(world.get(), biome), context.random(), spot -> found(player, world.get(), spot));
+        request(world.get(), biome),
+        context.random(),
+        outcome -> found(player, world.get(), outcome));
   }
 
   void moved(Player player) {
@@ -78,15 +80,22 @@ final class RtpFlow {
     warmups.hurt(player);
   }
 
-  private void found(Player player, World world, Optional<RtpSearch.Spot> spot) {
-    if (!player.isOnline() || spot.isEmpty()) {
+  private void found(Player player, World world, RtpSearch.Outcome outcome) {
+    if (!player.isOnline() || outcome.spot().isEmpty()) {
       release(player.getUniqueId());
+      if (outcome.failure() != null) {
+        context.logger().error("Could not load chunks for random teleport", outcome.failure());
+      }
       if (player.isOnline()) {
-        player.sendMessage(Messages.error("Couldn't find a safe spot. Try again."));
+        player.sendMessage(
+            Messages.error(
+                outcome.failure() == null
+                    ? "Couldn't find a safe spot. Try again."
+                    : "Could not load the destination. Try again later."));
       }
       return;
     }
-    var at = spot.get();
+    var at = outcome.spot().get();
     quote(player, new Location(world, at.x() + 0.5, at.y(), at.z() + 0.5));
   }
 
@@ -166,8 +175,11 @@ final class RtpFlow {
       return;
     }
     switch (result) {
-      case com.shepherdjerred.thestorm.core.result.Result.Ok<?, ?> ignored ->
-          finish(player, destination);
+      case com.shepherdjerred.thestorm.core.result.Result.Ok<?, ?> ignored -> {
+        if (!finish(player, destination)) {
+          refund(player.getUniqueId(), cost);
+        }
+      }
       case com.shepherdjerred.thestorm.core.result.Result.Err<?, ?> ignored -> {
         release(player.getUniqueId());
         player.sendMessage(Messages.error("That costs " + cost + " crystals."));
@@ -175,16 +187,19 @@ final class RtpFlow {
     }
   }
 
-  private void finish(Player player, Location destination) {
+  private boolean finish(Player player, Location destination) {
     release(player.getUniqueId());
     if (!player.isOnline()) {
-      return;
+      return false;
     }
     var world = destination.getWorld();
     if (world == null) {
       throw new IllegalStateException("teleport has no world");
     }
-    player.teleport(destination);
+    if (!player.teleport(destination)) {
+      player.sendMessage(Messages.error("Teleport failed. Your crystals will be returned."));
+      return false;
+    }
     var now = context.time().instant();
     memory.remember(world.getName(), destination.getBlockX(), destination.getBlockZ(), now);
     var _ =
@@ -198,6 +213,29 @@ final class RtpFlow {
                 },
                 context.scheduler().mainThread());
     player.sendMessage(Messages.info("Teleported."));
+    return true;
+  }
+
+  private void refund(UUID player, long cost) {
+    var _ =
+        wallets
+            .transfer(
+                new AccountId.Server(),
+                new AccountId.Player(player),
+                Crystals.of(cost),
+                "rtp refund")
+            .whenCompleteAsync(
+                (result, failure) -> {
+                  if (failure != null
+                      || result == null
+                      || result
+                          instanceof com.shepherdjerred.thestorm.core.result.Result.Err<?, ?>) {
+                    context
+                        .logger()
+                        .error("Could not refund failed random teleport for {}", player, failure);
+                  }
+                },
+                context.scheduler().mainThread());
   }
 
   private void release(UUID player) {

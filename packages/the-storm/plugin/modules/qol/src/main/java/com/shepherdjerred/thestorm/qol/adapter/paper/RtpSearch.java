@@ -17,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.random.RandomGenerator;
 import org.bukkit.World;
+import org.jspecify.annotations.Nullable;
 
 /** Loads two batches of chunks and keeps the farthest safe column. */
 final class RtpSearch {
@@ -35,11 +36,11 @@ final class RtpSearch {
     this.borderMargin = config.borderMargin();
   }
 
-  /** Calls {@code done} on the main thread with a block to stand on, or empty. */
-  void find(Request request, RandomGenerator random, Consumer<Optional<Spot>> done) {
+  /** Calls {@code done} on the main thread with a block to stand on, or a search failure. */
+  void find(Request request, RandomGenerator random, Consumer<Outcome> done) {
     var ring = ring(request);
     if (ring.isEmpty()) {
-      done.accept(Optional.empty());
+      done.accept(new Outcome(Optional.empty(), null));
       return;
     }
     attempt(new Pass(request, ring.get(), done), 0, random);
@@ -47,13 +48,21 @@ final class RtpSearch {
 
   private void attempt(Pass pass, int tried, RandomGenerator random) {
     if (tried >= 2) {
-      pass.done().accept(Optional.empty());
+      pass.done().accept(new Outcome(Optional.empty(), null));
       return;
     }
     var samples = shift(pass.request().site().spawn(), picker.batch(pass.ring(), random));
     var _ =
         load(pass.request().site().world(), samples)
-            .thenRunAsync(() -> choose(pass, samples, tried, random), scheduler.mainThread());
+            .whenCompleteAsync(
+                (ignored, failure) -> {
+                  if (failure != null) {
+                    pass.done().accept(new Outcome(Optional.empty(), failure));
+                  } else {
+                    choose(pass, samples, tried, random);
+                  }
+                },
+                scheduler.mainThread());
   }
 
   private void choose(Pass pass, List<BlockPoint> samples, int tried, RandomGenerator random) {
@@ -72,7 +81,7 @@ final class RtpSearch {
       attempt(pass, tried + 1, random);
       return;
     }
-    pass.done().accept(Optional.of(new Spot(point.x(), feet.get(), point.z())));
+    pass.done().accept(new Outcome(Optional.of(new Spot(point.x(), feet.get(), point.z())), null));
   }
 
   private Ground ground(Request request) {
@@ -133,7 +142,10 @@ final class RtpSearch {
   /** One search. */
   record Request(Site site, Target target) {}
 
-  private record Pass(Request request, SearchRing ring, Consumer<Optional<Spot>> done) {}
+  private record Pass(Request request, SearchRing ring, Consumer<Outcome> done) {}
+
+  /** Completed search; failure is set only when a chunk could not be loaded. */
+  record Outcome(Optional<Spot> spot, @Nullable Throwable failure) {}
 
   /** A block to stand on. */
   record Spot(int x, int y, int z) {}
