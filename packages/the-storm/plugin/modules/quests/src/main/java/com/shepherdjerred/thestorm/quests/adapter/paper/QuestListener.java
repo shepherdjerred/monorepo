@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.quests.domain.config.QuestsConfig;
 import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
 import com.shepherdjerred.thestorm.quests.domain.engine.CraftCount;
 import com.shepherdjerred.thestorm.quests.domain.engine.KillCredit;
+import com.shepherdjerred.thestorm.quests.domain.engine.PickupCredit;
 import com.shepherdjerred.thestorm.quests.domain.engine.PlacedBlocks;
 import com.shepherdjerred.thestorm.quests.domain.engine.QuestEvent;
 import java.util.ArrayList;
@@ -23,8 +24,10 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.ItemMergeEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -95,11 +98,32 @@ final class QuestListener implements Listener {
     if (!(event.getEntity() instanceof Player player) || !inMainWorld(player)) {
       return;
     }
-    var stack = event.getItem().getItemStack();
+    var item = event.getItem();
+    var stack = item.getItemStack();
+    var amount =
+        PickupCredit.amount(
+            stack.getAmount(),
+            event.getRemaining(),
+            item.getScoreboardTags().contains(PickupCredit.PLAYER_DROPPED));
+    if (amount == 0) {
+      return;
+    }
     service.event(
         player.getUniqueId(),
-        new QuestEvent.Collected(ItemStacks.facts(stack), stack.getAmount()),
+        new QuestEvent.Collected(ItemStacks.facts(stack), amount),
         nearby(player));
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onDrop(PlayerDropItemEvent event) {
+    event.getItemDrop().addScoreboardTag(PickupCredit.PLAYER_DROPPED);
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onItemMerge(ItemMergeEvent event) {
+    if (event.getEntity().getScoreboardTags().contains(PickupCredit.PLAYER_DROPPED)) {
+      event.getTarget().addScoreboardTag(PickupCredit.PLAYER_DROPPED);
+    }
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
