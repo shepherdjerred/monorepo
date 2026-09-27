@@ -7,9 +7,7 @@ import {
   visibilityToString,
 } from "@scout-for-lol/data";
 import {
-  ChannelAvailabilityMessage,
-  channelSelectDisabled,
-  channelSelectOptions,
+  ChannelSelectControl,
   type ChannelAvailability,
 } from "#src/components/channel-select-support.tsx";
 import {
@@ -124,28 +122,17 @@ export const CompetitionFormFields = withScoutForm({
           </form.AppField>
           <form.AppField name="channelId">
             {(field) => (
-              <>
-                <field.NativeSelectField
-                  id="competition-channel"
-                  label="Announcement channel"
-                  placeholder="Pick a channel"
-                  disabled={channelSelectDisabled(
-                    props.channelAvailability ?? { status: "ready" },
-                    props.channels?.length ?? 0,
-                  )}
-                  options={channelSelectOptions(
-                    field.state.value,
-                    props.channels ?? [],
-                  )}
-                  required
-                />
-                {props.channelAvailability !== undefined && (
-                  <ChannelAvailabilityMessage
-                    availability={props.channelAvailability}
-                    onRetry={props.onRetryChannels}
-                  />
+              <ChannelSelectControl
+                id="competition-channel"
+                label="Announcement channel"
+                value={field.state.value}
+                channels={props.channels ?? []}
+                availability={props.channelAvailability}
+                onRetry={props.onRetryChannels}
+                renderSelect={(selectProps) => (
+                  <field.NativeSelectField {...selectProps} />
                 )}
-              </>
+              />
             )}
           </form.AppField>
           <div className="grid gap-3 sm:grid-cols-2">

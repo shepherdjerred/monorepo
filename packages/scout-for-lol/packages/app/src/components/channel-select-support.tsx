@@ -1,4 +1,5 @@
 import { Button } from "@scout-for-lol/design-system/components/button";
+import type { ReactNode } from "react";
 
 export type DiscordChannel = { id: string; name: string };
 
@@ -49,6 +50,45 @@ export function channelSelectDisabled(
   channelCount: number,
 ): boolean {
   return availability.status === "loading" || channelCount === 0;
+}
+
+type ChannelSelectRenderProps = {
+  id: string;
+  label: string;
+  placeholder: "Pick a channel";
+  disabled: boolean;
+  options: ReturnType<typeof channelSelectOptions>;
+  required: true;
+};
+
+export function ChannelSelectControl(props: {
+  id: string;
+  label: string;
+  value: string;
+  channels: readonly DiscordChannel[];
+  availability?: ChannelAvailability | undefined;
+  onRetry?: (() => void) | undefined;
+  renderSelect: (selectProps: ChannelSelectRenderProps) => ReactNode;
+}) {
+  const availability = props.availability ?? { status: "ready" as const };
+  return (
+    <>
+      {props.renderSelect({
+        id: props.id,
+        label: props.label,
+        placeholder: "Pick a channel",
+        disabled: channelSelectDisabled(availability, props.channels.length),
+        options: channelSelectOptions(props.value, props.channels),
+        required: true,
+      })}
+      {props.availability !== undefined && (
+        <ChannelAvailabilityMessage
+          availability={props.availability}
+          onRetry={props.onRetry}
+        />
+      )}
+    </>
+  );
 }
 
 export function ChannelAvailabilityMessage(props: {

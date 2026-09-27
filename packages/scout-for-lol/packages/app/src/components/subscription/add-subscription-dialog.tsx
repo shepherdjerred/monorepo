@@ -26,8 +26,13 @@ import {
   DialogFormError,
   DialogFormFooter,
 } from "#src/components/dialog-form.tsx";
+import { channelAvailabilityForQuery } from "#src/components/channel-select-support.tsx";
 
 type Channel = { id: string; name: string };
+
+type ChannelListQuery = Parameters<typeof channelAvailabilityForQuery>[0] & {
+  refetch: () => Promise<unknown>;
+};
 
 type Props = {
   guildId: string;
@@ -130,5 +135,25 @@ export function AddSubscriptionDialog(props: Props) {
         </form.AppForm>
       </DialogContent>
     </Dialog>
+  );
+}
+
+export function AddSubscriptionDialogFromQuery(props: {
+  guildId: string;
+  channelsQuery: ChannelListQuery;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAdded: () => void;
+}) {
+  return (
+    <AddSubscriptionDialog
+      guildId={props.guildId}
+      channels={props.channelsQuery.data ?? []}
+      channelAvailability={channelAvailabilityForQuery(props.channelsQuery)}
+      onRetryChannels={() => void props.channelsQuery.refetch()}
+      open={props.open}
+      onOpenChange={props.onOpenChange}
+      onAdded={props.onAdded}
+    />
   );
 }

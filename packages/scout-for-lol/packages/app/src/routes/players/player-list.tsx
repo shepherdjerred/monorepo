@@ -8,8 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { AddSubscriptionDialog } from "#src/components/subscription/add-subscription-dialog.tsx";
-import { channelAvailabilityForQuery } from "#src/components/channel-select-support.tsx";
+import { AddSubscriptionDialogFromQuery } from "#src/components/subscription/add-subscription-dialog.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ConceptCards } from "#src/components/concept-cards.tsx";
 import {
@@ -78,8 +77,6 @@ export function PlayerList() {
       { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
     ),
   );
-  const channelAvailability = channelAvailabilityForQuery(channelsQuery);
-
   if (guildId === undefined) {
     return <p className="text-sm text-scout-danger">Missing guild id</p>;
   }
@@ -229,11 +226,9 @@ export function PlayerList() {
         }}
       />
 
-      <AddSubscriptionDialog
+      <AddSubscriptionDialogFromQuery
         guildId={guildId}
-        channels={channelsQuery.data ?? []}
-        channelAvailability={channelAvailability}
-        onRetryChannels={() => void channelsQuery.refetch()}
+        channelsQuery={channelsQuery}
         open={isAddOpen}
         onOpenChange={setAddOpen}
         onAdded={() => {

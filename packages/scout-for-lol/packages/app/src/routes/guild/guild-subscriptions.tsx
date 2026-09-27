@@ -12,8 +12,7 @@ import { MoreHorizontal } from "lucide-react";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta, track } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { AddSubscriptionDialog } from "#src/components/subscription/add-subscription-dialog.tsx";
-import { channelAvailabilityForQuery } from "#src/components/channel-select-support.tsx";
+import { AddSubscriptionDialogFromQuery } from "#src/components/subscription/add-subscription-dialog.tsx";
 import {
   SubscriptionChannelDialog,
   type SubscriptionChannelAction,
@@ -104,7 +103,6 @@ export function GuildSubscriptions() {
       { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
     ),
   );
-  const channelAvailability = channelAvailabilityForQuery(channelsQuery);
   const subsValue = Loaded.fromQuery(subsQuery, ["guild.subscriptions"]);
   const removeMutation = useMutation(
     trpc.subscription.remove.mutationOptions({
@@ -430,11 +428,9 @@ export function GuildSubscriptions() {
         }}
       />
 
-      <AddSubscriptionDialog
+      <AddSubscriptionDialogFromQuery
         guildId={guildId}
-        channels={channelsQuery.data ?? []}
-        channelAvailability={channelAvailability}
-        onRetryChannels={() => void channelsQuery.refetch()}
+        channelsQuery={channelsQuery}
         open={isAddOpen}
         onOpenChange={setAddOpen}
         onAdded={() => {

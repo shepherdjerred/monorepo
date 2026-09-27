@@ -6,9 +6,7 @@ import { ChevronDown } from "lucide-react";
 import { DEFAULT_REPORT_CRON } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
-  ChannelAvailabilityMessage,
-  channelSelectDisabled,
-  channelSelectOptions,
+  ChannelSelectControl,
   type ChannelAvailability,
 } from "#src/components/channel-select-support.tsx";
 import {
@@ -171,28 +169,17 @@ export const ReportFormFields = withScoutForm({
           </form.AppField>
           <form.AppField name="channelId">
             {(field) => (
-              <>
-                <field.NativeSelectField
-                  id="report-channel"
-                  label="Delivery channel"
-                  placeholder="Pick a channel"
-                  disabled={channelSelectDisabled(
-                    props.channelAvailability ?? { status: "ready" },
-                    props.channels?.length ?? 0,
-                  )}
-                  options={channelSelectOptions(
-                    field.state.value,
-                    props.channels ?? [],
-                  )}
-                  required
-                />
-                {props.channelAvailability !== undefined && (
-                  <ChannelAvailabilityMessage
-                    availability={props.channelAvailability}
-                    onRetry={props.onRetryChannels}
-                  />
+              <ChannelSelectControl
+                id="report-channel"
+                label="Delivery channel"
+                value={field.state.value}
+                channels={props.channels ?? []}
+                availability={props.channelAvailability}
+                onRetry={props.onRetryChannels}
+                renderSelect={(selectProps) => (
+                  <field.NativeSelectField {...selectProps} />
                 )}
-              </>
+              />
             )}
           </form.AppField>
         </FormSection>
