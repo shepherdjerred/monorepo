@@ -3,6 +3,8 @@ package com.shepherdjerred.thestorm.economy.adapter.paper;
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.Services;
+import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
+import com.shepherdjerred.thestorm.core.players.SqlPlayerDirectory;
 import com.shepherdjerred.thestorm.core.schedule.PaperScheduler;
 import com.shepherdjerred.thestorm.economy.EconomyModule;
 import java.io.IOException;
@@ -27,7 +29,12 @@ public class EconomyTestPlugin extends JavaPlugin {
   static @Nullable Path directory;
 
   final Services services = new Services();
+  private @Nullable SqlPlayerDirectory players;
   private @Nullable StormDatabase database;
+
+  SqlPlayerDirectory players() {
+    return Objects.requireNonNull(players, "player directory");
+  }
 
   @Override
   public void onEnable() {
@@ -39,6 +46,9 @@ public class EconomyTestPlugin extends JavaPlugin {
     }
     var database = StormDatabase.open(directory.resolve("t.db"));
     this.database = database;
+    database.migrate("core", SqlPlayerDirectory.class.getClassLoader());
+    players = new SqlPlayerDirectory(database);
+    services.provide(PlayerDirectory.class, players);
     var context =
         new ModuleContext(
             this,
