@@ -2,9 +2,19 @@ import path from "node:path";
 import { realpath, stat } from "node:fs/promises";
 import mineflayer from "mineflayer";
 import type { Bot } from "mineflayer";
+import {
+  initFeatureFlags,
+  shutdownFeatureFlags,
+} from "@shepherdjerred/feature-flags";
+import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { loadBootstrap, loadPilotConfig } from "./config.ts";
 import type { PilotConfig } from "./config.ts";
-import { humanPlayers, inPilotWindow, onlinePlayers } from "./policy.ts";
+import {
+  humanPlayers,
+  inPilotWindow,
+  onlinePlayers,
+  privateAuthCacheMode,
+} from "./policy.ts";
 import { RconClient } from "./rcon.ts";
 
 const CONFIG = new URL("../pilot.json", import.meta.url).pathname;
@@ -73,7 +83,27 @@ async function run(): Promise<void> {
   if (command !== "--check" && command !== "--run") {
     throw new Error("usage: bun run pilot --check | --run");
   }
-  const config = await loadPilotConfig(CONFIG);
+  await initFeatureFlags({
+    onInitializationFailure: (message) => {
+      console.warn(`companion pilot flag source unavailable: ${message}`);
+    },
+  });
+  try {
+    await runWithFlags(command);
+  } finally {
+    await shutdownFeatureFlags();
+  }
+}
+
+async function runWithFlags(command: "--check" | "--run"): Promise<void> {
+  const config = await loadPilotConfig(
+    CONFIG,
+    createFlagConfigSource({
+      targetingKey: "the-storm-companion-alt-1",
+      kinds: { enabled: "boolean" },
+      attributes: { pilot: "alt-1" },
+    }),
+  );
   const inWindow = inPilotWindow(config, new Date());
   if (command === "--check") {
     process.stdout.write(
@@ -98,7 +128,7 @@ async function run(): Promise<void> {
     uid === undefined ||
     !cache.isDirectory() ||
     cache.uid !== uid ||
-    (cache.mode & 0o077) !== 0
+    !privateAuthCacheMode(cache.mode)
   ) {
     throw new Error(
       "Microsoft auth cache directory must be private (mode 0700)",
@@ -124,6 +154,12 @@ async function run(): Promise<void> {
     const before = humanPlayers(await rcon.command("list"), botPlayerName);
     if (before.length === 0) {
       process.stdout.write("pilot skipped: no human online\n");
+      return;
+    }
+    if (!inPilotWindow(config, new Date())) {
+      process.stdout.write(
+        "pilot skipped: window closed before authentication\n",
+      );
       return;
     }
     const bot = mineflayer.createBot({

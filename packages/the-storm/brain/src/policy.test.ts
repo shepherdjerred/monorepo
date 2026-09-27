@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PilotConfig } from "./config.ts";
-import { humanPlayers, inPilotWindow } from "./policy.ts";
+import { humanPlayers, inPilotWindow, privateAuthCacheMode } from "./policy.ts";
 
 const CONFIG: PilotConfig = {
   enabled: false,
@@ -28,6 +28,13 @@ describe("pilot policy", () => {
   it("handles Pacific standard time separately", () => {
     expect(inPilotWindow(CONFIG, new Date("2026-12-02T02:00:00Z"))).toBe(true);
     expect(inPilotWindow(CONFIG, new Date("2026-12-02T04:00:00Z"))).toBe(false);
+  });
+
+  it("requires owner access and excludes other users from the token cache", () => {
+    expect(privateAuthCacheMode(0o700)).toBe(true);
+    for (const mode of [0o600, 0o400, 0o000, 0o701]) {
+      expect(privateAuthCacheMode(mode)).toBe(false);
+    }
   });
 
   it("requires a real player and rejects unknown list formats", () => {

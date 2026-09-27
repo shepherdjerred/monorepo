@@ -11,6 +11,11 @@ export function inPilotWindow(config: PilotConfig, instant: Date): boolean {
   return localHour >= config.startHour && localHour < config.endHour;
 }
 
+/** The Microsoft token cache must be usable by its owner and inaccessible to others. */
+export function privateAuthCacheMode(mode: number): boolean {
+  return (mode & 0o777) === 0o700;
+}
+
 const LIST =
   /^There are (?<online>\d+) of a max of (?<max>\d+) players online: ?(?<names>.*)$/u;
 

@@ -6,10 +6,15 @@ It validates the 18:00–20:00 `America/Los_Angeles` window, checks Paper's RCON
 `list` output for a human player, joins with Mineflayer, verifies presence
 again, and disconnects. It performs no autonomous gameplay or chat.
 
-The repo-owned `pilot.json` defaults to `enabled: false`. `bun run pilot
---check` reads only non-sensitive configuration and never opens a game or RCON
-connection. `--run` additionally requires explicit enablement and these
-bootstrap values from the existing authenticated credential wrapper:
+The repo-owned `pilot.json` defaults to `enabled: false`. The managed
+`the-storm-companion-pilot-enabled` flag is also off in production and targets
+Alt 1 in beta. The flag can disable a file-enabled pilot at the next run; a
+resolved flag value takes precedence over the file. Set `FEATURE_FLAGS_MODE`
+explicitly to `flipt` with its `FLIPT_URL`, `FLIPT_NAMESPACE=the-storm-companion`,
+and `FLIPT_ENVIRONMENT`, or to `disabled` for local checks without Flipt.
+`bun run pilot --check` reads only non-sensitive configuration and never opens
+a game or RCON connection. `--run` additionally requires explicit enablement
+and these bootstrap values from the existing authenticated credential wrapper:
 
 | Name                        | Use                                                               |
 | --------------------------- | ----------------------------------------------------------------- |

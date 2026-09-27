@@ -35,6 +35,11 @@
       "key": "alert-dashboard",
       "name": "Alert Dashboard",
       "description": "Ops dashboard (alert-dashboard) feature flags."
+    },
+    {
+      "key": "the-storm-companion",
+      "name": "The Storm Companion",
+      "description": "Opt-in Minecraft companion pilot feature flags."
     }
   ],
   "flags": [
@@ -1155,6 +1160,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "the-storm-companion-pilot-enabled",
+      "owner": "the-storm-companion",
+      "namespace": "the-storm-companion",
+      "source": "the-storm-brain",
+      "purpose": "Allow the one-account, one-shot Mineflayer pilot when its time and human-presence gates also pass.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-assistant-v2-enabled",
       "owner": "streambot",
       "namespace": "streambot",
@@ -1564,6 +1581,29 @@
           "type": "boolean",
           "default": true,
           "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-companion-pilot-enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [
+            {
+              "segmentKey": "the-storm-companion-alt-1",
+              "segmentOperator": "OR_SEGMENT_OPERATOR",
+              "matchType": "ALL_SEGMENT_MATCH_TYPE",
+              "constraints": [
+                {
+                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+                  "property": "pilot",
+                  "operator": "eq",
+                  "value": "alt-1"
+                }
+              ],
+              "result": true
+            }
+          ],
           "rules": [],
           "thresholdRollouts": []
         }
