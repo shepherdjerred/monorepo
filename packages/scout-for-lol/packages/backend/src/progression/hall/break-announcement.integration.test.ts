@@ -82,7 +82,9 @@ function announce(
     guildId: GUILD,
     matchId,
     channelId: overrides.channelId ?? CHANNEL,
-    records: overrides.records ?? hallBreakRecords(),
+    records:
+      overrides.records ??
+      hallBreakRecords(2, RiotMatchIdSchema.parse(matchId)),
     v2Enabled: overrides.v2Enabled ?? true,
     now: NOW,
   });
@@ -163,7 +165,7 @@ describe("with the V2 path on for the guild", () => {
     expect(rows).toHaveLength(1);
     expect(rows[0]?.channelId).toBe(OTHER_CHANNEL);
     expect(JSON.parse(rows[0]?.payloadJson ?? "null")).toEqual(
-      structuredClone(hallBreakRecords()),
+      structuredClone(hallBreakRecords(2, RiotMatchIdSchema.parse(matchId))),
     );
   });
 
@@ -187,7 +189,9 @@ describe("with the V2 path on for the guild", () => {
     await announce(matchId);
 
     await expect(
-      announce(matchId, { records: hallBreakRecords(1) }),
+      announce(matchId, {
+        records: hallBreakRecords(1, RiotMatchIdSchema.parse(matchId)),
+      }),
     ).rejects.toThrow(/different announcement/u);
     expect(await intentRows(matchId)).toHaveLength(1);
   });
