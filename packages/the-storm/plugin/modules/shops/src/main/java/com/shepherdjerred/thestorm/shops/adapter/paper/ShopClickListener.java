@@ -53,6 +53,9 @@ final class ShopClickListener implements Listener {
 
   @EventHandler(priority = EventPriority.HIGH)
   public void onClick(PlayerInteractEvent event) {
+    if (!blocks.registry().isReady()) {
+      return;
+    }
     var click = click(event.getAction());
     var block = event.getClickedBlock();
     if (click.isEmpty() || block == null || event.getHand() != EquipmentSlot.HAND) {

@@ -74,3 +74,13 @@ tests in `architecture/` enforce all of this.
 - Dependencies are locked (`gradle.lockfile`) and checksum-verified
   (`gradle/verification-metadata.xml`).
 - Code copied from GPL/LGPL plugins keeps its license header.
+
+## Shop startup
+
+The shops module registers a temporary guard before it reads stored sign shops
+from SQLite. While the read or reconciliation is pending, possible shop signs
+and configured shop containers cannot be opened, changed, or used for inventory
+transfer. Catalog names remain available to NPC validation, but catalog menus
+and `/shop` report that shops are loading. A failed read leaves the guard active
+and logs the startup failure; a successful read publishes the registry only
+after stale admin shops have been closed.

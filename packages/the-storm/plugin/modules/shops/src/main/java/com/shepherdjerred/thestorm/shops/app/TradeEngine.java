@@ -241,7 +241,12 @@ public final class TradeEngine {
               if (error != null) {
                 trail.record(what + " failed: " + error);
               } else if (result instanceof Result.Ok<Receipt, EconomyError>(var receipt)) {
-                trail.record(what + " committed as ledger entry " + receipt.transactionId());
+                var committed = what + " committed as ledger entry " + receipt.transactionId();
+                if ("payment".equals(what)) {
+                  trail.paymentCommitted(committed);
+                } else {
+                  trail.record(committed);
+                }
               } else {
                 trail.record(what + " refused: " + result);
               }

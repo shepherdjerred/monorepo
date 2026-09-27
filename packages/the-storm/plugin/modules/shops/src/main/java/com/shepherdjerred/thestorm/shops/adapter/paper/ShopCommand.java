@@ -52,6 +52,10 @@ final class ShopCommand {
   }
 
   private int status(CommandSender sender) {
+    if (!registry.isReady()) {
+      sender.sendMessage(Replies.error("Shops are still loading; try again shortly."));
+      return 0;
+    }
     if (!(sender instanceof Player player)) {
       sender.sendMessage(Replies.error("Only players own chest shops."));
       return 0;
@@ -95,6 +99,10 @@ final class ShopCommand {
   }
 
   private int open(CommandSender sender, String catalog) {
+    if (!registry.isReady()) {
+      sender.sendMessage(Replies.error("Shops are still loading; try again shortly."));
+      return 0;
+    }
     if (!(sender instanceof Player player)) {
       sender.sendMessage(Replies.error("Only players can open a shop."));
       return 0;

@@ -15,6 +15,7 @@ import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.shops.ShopsModule;
 import com.shepherdjerred.thestorm.shops.app.FakeWallets;
+import com.shepherdjerred.thestorm.shops.app.ServerShops;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -75,6 +76,10 @@ public class ShopsTestPlugin extends JavaPlugin {
 
   StormDatabase database() {
     return Objects.requireNonNull(database, "database");
+  }
+
+  boolean shopsReady() {
+    return ((ReadyServerShops) services.require(ServerShops.class)).isReady();
   }
 
   @Override

@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.shops.adapter.paper;
 
 import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import com.shepherdjerred.thestorm.economy.app.AccountId;
@@ -48,7 +49,7 @@ abstract class ShopsFixture {
   WorldMock world;
 
   @BeforeEach
-  void start() {
+  void start() throws InterruptedException {
     server = MockBukkit.mock();
     ShopsTestPlugin.directory = directory;
     plugin =
@@ -56,6 +57,11 @@ abstract class ShopsFixture {
             ShopsTestPlugin.class,
             new PluginDescriptionFile("TheStorm", "test", ShopsTestPlugin.class.getName()));
     world = server.addSimpleWorld("world");
+    for (var attempt = 0; attempt < 400 && !plugin.shopsReady(); attempt++) {
+      server.getScheduler().performOneTick();
+      Thread.sleep(5);
+    }
+    assertThat(plugin.shopsReady()).isTrue();
   }
 
   @AfterEach
