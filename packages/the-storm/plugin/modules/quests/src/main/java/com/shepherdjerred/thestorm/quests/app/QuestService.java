@@ -71,6 +71,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
   private final Notices notices;
   private final Describe.Lookup lookup;
   private final Map<UUID, PlayerQuests> sessions = new HashMap<>();
+  private final Map<UUID, CompletableFuture<Void>> loading = new HashMap<>();
   private final Map<String, CustomAction> customActions = new HashMap<>();
 
   public QuestService(Wiring wiring) {
@@ -86,23 +87,36 @@ public final class QuestService implements QuestHooks, QuestProgress {
 
   /** Loads {@code player}'s state; until it arrives they have no quests. */
   public CompletableFuture<Void> join(UUID player) {
-    return wiring
-        .store()
-        .load(player)
-        .thenAcceptAsync(
-            state -> {
-              if (wiring.world().facts(player).isEmpty()) {
-                return;
-              }
-              sessions.put(player, state);
-              refresh(player);
-            },
-            wiring.mainThread())
-        .exceptionally(
-            failure -> {
-              wiring.logger().error("Could not load quests for {}", player, failure);
-              return null;
-            });
+    var pending = loading.get(player);
+    if (pending != null) {
+      return pending;
+    }
+    var started =
+        wiring
+            .store()
+            .load(player)
+            .thenAcceptAsync(
+                state -> {
+                  loading.remove(player);
+                  if (wiring.world().facts(player).isEmpty()) {
+                    return;
+                  }
+                  sessions.put(player, state);
+                  refresh(player);
+                },
+                wiring.mainThread())
+            .exceptionallyAsync(
+                failure -> {
+                  loading.remove(player);
+                  wiring.logger().error("Could not load quests for {}", player, failure);
+                  return null;
+                },
+                wiring.mainThread());
+    loading.put(player, started);
+    if (started.isDone()) {
+      loading.remove(player, started);
+    }
+    return started;
   }
 
   /** Forgets {@code player} (their state is already saved). */
