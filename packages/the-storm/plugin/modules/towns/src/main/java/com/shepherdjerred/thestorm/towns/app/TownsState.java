@@ -143,6 +143,15 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, L
     return List.copyOf(held);
   }
 
+  /** Removes a departing member's explicit claim trust after their departure commits. */
+  public void removeClaimTrust(UUID townId, UUID player) {
+    for (var claim : claimsOf(townId)) {
+      if (claim.trusted().contains(player)) {
+        replaceClaim(claim.withTrust(player, false));
+      }
+    }
+  }
+
   @Override
   public TrustLevel trustOf(UUID player, Claim claim, Act act) {
     var town = towns.get(claim.townId());

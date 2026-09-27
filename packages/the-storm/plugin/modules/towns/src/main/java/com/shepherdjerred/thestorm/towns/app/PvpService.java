@@ -17,7 +17,8 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Players' own PvP switches, in memory for the protection engine and saved behind it. A change
- * applies at once; if its save fails, every switch is reloaded from storage. Main thread only.
+ * applies only after storage commits when enabling; disabling applies immediately. If a save fails,
+ * every switch is reloaded from storage. Main thread only.
  */
 public final class PvpService implements PvpPreferences {
 
@@ -90,7 +91,9 @@ public final class PvpService implements PvpPreferences {
     return PvpRules.change(setting(player), on, now(), timing)
         .map(
             setting -> {
-              settings.put(player, setting);
+              if (!on) {
+                settings.put(player, setting);
+              }
               busy.add(player);
               var saved = new CompletableFuture<Void>();
               var _ =
@@ -100,6 +103,7 @@ public final class PvpService implements PvpPreferences {
                           (ok, failure) -> {
                             busy.remove(player);
                             if (failure == null) {
+                              settings.put(player, setting);
                               saved.complete(null);
                             } else {
                               reload(saved, failure);

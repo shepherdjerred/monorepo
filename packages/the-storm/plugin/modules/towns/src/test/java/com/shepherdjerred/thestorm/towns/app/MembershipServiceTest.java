@@ -201,7 +201,7 @@ final class MembershipServiceTest {
   @Test
   void aFailedKickIsUndone() {
     ok(members.kick(OWNER, MEMBER_REF));
-    assertThat(state.townOf(MEMBER)).isEmpty();
+    assertThat(state.townOf(MEMBER)).contains(Fixtures.townA());
     assertThat(departed).isEmpty();
 
     store.fail();

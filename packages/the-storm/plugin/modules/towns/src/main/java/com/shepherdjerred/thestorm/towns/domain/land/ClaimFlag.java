@@ -2,8 +2,8 @@ package com.shepherdjerred.thestorm.towns.domain.land;
 
 /**
  * A switch on one claimed chunk. Off is always the protective setting. There is no container flag:
- * an unlocked container someone placed is anyone's to open, locks guard the rest, and other
- * containers (carts, composters, chests nobody placed) open to outsiders with public-build.
+ * unlocked containers still follow claim permissions, and public-build permits outsiders to open
+ * them. Locks can restrict access further.
  */
 public enum ClaimFlag {
   /** Players may fight each other here. */

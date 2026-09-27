@@ -232,7 +232,7 @@ final class TownCommands {
                 "Founded " + town.name() + ". Stand in a chunk and type /claim to claim it."));
   }
 
-  /** Deletes the player's town, paying its treasury to them first. */
+  /** Deletes the player's town, then pays its durably queued treasury to them. */
   void delete(Player player, String confirmation) {
     var claims = state.townOf(player.getUniqueId()).map(town -> state.claimCount(town.id()));
     var _ =
@@ -246,17 +246,48 @@ final class TownCommands {
                     player.sendMessage(Notices.error("The town could not be deleted; try again."));
                     return;
                   }
-                  onTown(
-                      player,
-                      result,
-                      town ->
-                          Notices.success(
-                              "Deleted "
-                                  + town.name()
-                                  + " and released its "
-                                  + claims.orElse(0)
-                                  + " chunk(s). Its treasury is yours."));
+                  switch (result) {
+                    case Result.Err<Change<Town>, List<TownProblem>>(var problems) ->
+                        parts.runtime().refuse(player, problems);
+                    case Result.Ok<Change<Town>, List<TownProblem>>(var change) -> {
+                      var _ =
+                          change
+                              .saved()
+                              .whenCompleteAsync(
+                                  (ignored, saveFailure) -> {
+                                    if (saveFailure != null) {
+                                      parts
+                                          .runtime()
+                                          .logger()
+                                          .error("Deleting a town failed", saveFailure);
+                                      player.sendMessage(
+                                          Notices.error(
+                                              payoutPending(saveFailure)
+                                                  ? "The town was deleted, but its treasury payout is pending recovery."
+                                                  : "The town could not be saved, so it was kept. Try again."));
+                                      return;
+                                    }
+                                    player.sendMessage(
+                                        Notices.success(
+                                            "Deleted "
+                                                + change.value().name()
+                                                + " and released its "
+                                                + claims.orElse(0)
+                                                + " chunk(s). Its treasury is yours."));
+                                  },
+                                  parts.runtime().scheduler().mainThread());
+                    }
+                  }
                 });
+  }
+
+  private static boolean payoutPending(Throwable failure) {
+    for (var cause = failure; cause != null; cause = cause.getCause()) {
+      if (cause instanceof Treasury.PayoutPending) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private void claimHere(Player player) {

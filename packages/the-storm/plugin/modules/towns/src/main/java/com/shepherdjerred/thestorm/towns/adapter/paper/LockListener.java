@@ -1,7 +1,5 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
-import static java.util.UUID.randomUUID;
-
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.towns.app.Change;
 import com.shepherdjerred.thestorm.towns.app.LockService;
@@ -9,12 +7,14 @@ import com.shepherdjerred.thestorm.towns.domain.land.BlockPos;
 import com.shepherdjerred.thestorm.towns.domain.lock.Lock;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockAttempt;
 import com.shepherdjerred.thestorm.towns.domain.lock.LockProblem;
+import com.shepherdjerred.thestorm.towns.domain.town.TownRules;
 import io.papermc.paper.event.entity.ItemTransportingEntityValidateTargetEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.random.RandomGenerator;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -52,13 +52,17 @@ final class LockListener implements Listener {
   private final LockService service;
   private final BlockKinds kinds;
   private final Placers placers;
+  private final RandomGenerator random;
   private final Map<BlockPos, UUID> pendingAutoLocks = new HashMap<>();
 
-  LockListener(LockGuard locks, LockService service, BlockKinds kinds, Placers placers) {
+  record PlacementTools(Placers placers, RandomGenerator random) {}
+
+  LockListener(LockGuard locks, LockService service, BlockKinds kinds, PlacementTools tools) {
     this.locks = locks;
     this.service = service;
     this.kinds = kinds;
-    this.placers = placers;
+    this.placers = tools.placers();
+    this.random = tools.random();
   }
 
   @EventHandler(priority = EventPriority.LOW)
@@ -150,25 +154,58 @@ final class LockListener implements Listener {
     if (!kinds.isLockable(block.getType())) {
       return;
     }
-    placers.record(block, event.getPlayer().getUniqueId());
-    var partner = Chests.partner(block);
-    if (partner.isPresent()) {
-      var lock = locks.lockOf(partner.get());
-      if (lock != null && locks.mayBreak(event.getPlayer(), lock, partner.get())) {
-        service.extend(lock, position);
-        return;
-      }
+    if (!placers.record(block, event.getPlayer().getUniqueId())) {
+      block.breakNaturally();
+      event
+          .getPlayer()
+          .sendMessage(
+              Notices.error(
+                  "The container could not remember its owner and was returned; try again."));
+      return;
+    }
+    if (extendJoinedChest(event.getPlayer(), block, position)) {
+      return;
     }
     if (!service.policy().autoLockOnPlace()) {
       return;
     }
+    autoLockPlaced(event.getPlayer(), block, position);
+  }
+
+  private boolean extendJoinedChest(Player player, Block block, BlockPos position) {
+    var partner = Chests.partner(block);
+    if (partner.isEmpty()) {
+      return false;
+    }
+    var lock = locks.lockOf(partner.get());
+    if (lock == null || !locks.mayBreak(player, lock, partner.get())) {
+      return false;
+    }
+    var extended = service.extendOnPlacement(lock, position);
+    if (extended.isEmpty()) {
+      revokeUnstoredPlacement(player, block, position);
+      return true;
+    }
+    var _ =
+        extended
+            .get()
+            .saved()
+            .whenComplete(
+                (saved, failure) -> {
+                  if (failure != null) {
+                    revokeUnstoredPlacement(player, block, position);
+                  }
+                });
+    return true;
+  }
+
+  private void autoLockPlaced(Player player, Block block, BlockPos position) {
     var blocks = LockGuard.container(block).stream().map(LockGuard::position).toList();
     var standing =
-        new LockAttempt.Standing(
-            event.getPlayer().getUniqueId(), true, locks.ground(event.getPlayer(), block), false);
-    var token = randomUUID();
+        new LockAttempt.Standing(player.getUniqueId(), true, locks.ground(player, block), false);
+    var token = TownRules.newId(random);
     pendingAutoLocks.put(position, token);
-    var result = service.lock(event.getPlayer().getUniqueId(), blocks, standing);
+    var result = service.lock(player.getUniqueId(), blocks, standing);
     switch (result) {
       case Result.Ok<Change<Lock>, List<LockProblem>>(var change) -> {
         var _ =
@@ -177,13 +214,13 @@ final class LockListener implements Listener {
                 .whenComplete(
                     (saved, failure) -> {
                       if (pendingAutoLocks.remove(position, token) && failure != null) {
-                        revokeUnstoredPlacement(event.getPlayer(), block, position);
+                        revokeUnstoredPlacement(player, block, position);
                       }
                     });
       }
       case Result.Err<Change<Lock>, List<LockProblem>>(var _) -> {
         pendingAutoLocks.remove(position, token);
-        revokeUnstoredPlacement(event.getPlayer(), block, position);
+        revokeUnstoredPlacement(player, block, position);
       }
     }
   }

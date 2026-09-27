@@ -193,15 +193,22 @@ public final class Settling {
             .loadAll()
             .whenCompleteAsync(
                 (snapshot, loadFailure) -> {
-                  if (loadFailure != null) {
-                    clocks.reloadFailed().accept(loadFailure);
-                  } else {
-                    state.reload(snapshot);
-                    reloading = false;
-                    events.reloaded();
-                    settledListeners.forEach(Runnable::run);
+                  try {
+                    if (loadFailure != null) {
+                      clocks.reloadFailed().accept(loadFailure);
+                    } else {
+                      try {
+                        state.reload(snapshot);
+                        reloading = false;
+                        events.reloaded();
+                        settledListeners.forEach(Runnable::run);
+                      } catch (RuntimeException invalidSnapshot) {
+                        clocks.reloadFailed().accept(invalidSnapshot);
+                      }
+                    }
+                  } finally {
+                    saved.completeExceptionally(failure);
                   }
-                  saved.completeExceptionally(failure);
                 },
                 clocks.mainThread());
   }

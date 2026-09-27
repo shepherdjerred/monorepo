@@ -70,11 +70,11 @@ final class ProtectionListenersTest extends AegisServer {
   }
 
   /**
-   * Server rule: anyone may take from an unlocked container, even in someone else's town; locks
-   * guard the rest. Admin regions still keep their containers shut.
+   * Unlocked containers on claimed land still follow claim permissions. Admin regions keep their
+   * containers shut, while public spawn doors remain usable.
    */
   @Test
-  void outsidersMayOpenATownsUnlockedChestsButNotSpawnsAndMayUseSpawnDoors() {
+  void outsidersNeedClaimPermissionForUnlockedChestsAndMayUseSpawnDoors() {
     var chest = block(CLAIM_X, Y, Z);
     chest.setType(Material.CHEST);
     var spawnDoor = block(0, Y, 0);
@@ -82,7 +82,7 @@ final class ProtectionListenersTest extends AegisServer {
     var spawnChest = block(1, Y, 0);
     spawnChest.setType(Material.CHEST);
 
-    assertThat(rightClick(bob, chest)).isNotEqualTo(Event.Result.DENY);
+    assertThat(rightClick(bob, chest)).isEqualTo(Event.Result.DENY);
     assertThat(rightClick(alice, chest)).isNotEqualTo(Event.Result.DENY);
     assertThat(rightClick(bob, spawnDoor)).isNotEqualTo(Event.Result.DENY);
     assertThat(rightClick(bob, spawnChest)).isEqualTo(Event.Result.DENY);

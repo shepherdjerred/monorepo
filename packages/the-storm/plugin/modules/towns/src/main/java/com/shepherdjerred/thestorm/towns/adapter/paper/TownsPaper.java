@@ -67,6 +67,18 @@ public final class TownsPaper {
                 },
                 loaded.locks()::isSettling));
     var treasury = new Treasury(towns, members, services.require(Wallets.class));
+    var _ =
+        treasury
+            .recoverPayouts()
+            .whenCompleteAsync(
+                (ignored, failure) -> {
+                  if (failure != null) {
+                    context
+                        .logger()
+                        .error("A deleted town still has a pending treasury payout", failure);
+                  }
+                },
+                context.scheduler().mainThread());
     var engine = new ProtectionEngine(state, loaded.pvp());
     var notices =
         new Notices(
@@ -94,7 +106,7 @@ public final class TownsPaper {
     List<Listener> listeners =
         List.of(
             new BlockListener(guard, kinds),
-            new InteractListener(guard, kinds),
+            new InteractListener(guard, kinds, locks),
             new EntityListener(guard),
             new CombatListener(guard, loaded.pvp()),
             new MovementListener(guard, kinds),
@@ -106,7 +118,11 @@ public final class TownsPaper {
             new ContactListener(guard, server),
             new ArrivalListener(guard),
             new SpawnListener(guard),
-            new LockListener(locks, loaded.locks(), kinds, placers),
+            new LockListener(
+                locks,
+                loaded.locks(),
+                kinds,
+                new LockListener.PlacementTools(placers, context.random())),
             new JoinListener(towns, levels, memberCommands));
     for (var listener : listeners) {
       server.getPluginManager().registerEvents(listener, plugin);

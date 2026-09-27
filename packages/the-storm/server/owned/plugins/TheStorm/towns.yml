@@ -21,8 +21,8 @@ claims:
   # PvP is on in new claims (towns may turn it off with /claim flag pvp false);
   # spawn stays PvP-off and the wilderness PvP-on. Flags: PVP, EXPLOSIONS,
   # FIRE_SPREAD, MOB_GRIEFING, PUBLIC_BUILD, PUBLIC_SWITCHES, PUBLIC_ENTITIES.
-  # There is no container flag: anyone may open an unlocked container anywhere,
-  # and /lock protects the rest.
+  # There is no container flag: unlocked containers in claims follow claim trust;
+  # locks grant explicit access to their owners and trusted players.
   defaultFlags: [PVP]
 
 membership:

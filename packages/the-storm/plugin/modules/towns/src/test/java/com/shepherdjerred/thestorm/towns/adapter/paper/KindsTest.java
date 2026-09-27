@@ -69,6 +69,8 @@ final class KindsTest {
         .contains(new Act(Action.USE_REDSTONE, Subject.REDSTONE_COMPONENT));
     assertThat(kinds.use(Material.CAKE)).contains(new Act(Action.BREAK, Subject.CAKE));
     assertThat(kinds.use(Material.CRAFTING_TABLE)).isEmpty();
+    assertThat(kinds.use(Material.ENDER_CHEST))
+        .contains(new Act(Action.OPEN_CONTAINER, Subject.CONTAINER));
     assertThat(kinds.use(Material.STONE)).isEmpty();
   }
 

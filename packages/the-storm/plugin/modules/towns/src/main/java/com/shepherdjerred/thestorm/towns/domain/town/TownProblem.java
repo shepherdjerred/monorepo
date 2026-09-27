@@ -62,7 +62,4 @@ public sealed interface TownProblem {
 
   /** At the named player's Governor level the town may hold only {@code limit} chunks. */
   record TooMuchLand(String player, int claims, int limit) implements TownProblem {}
-
-  /** The treasury could not be paid out to the owner, so the town was kept. */
-  record PayoutFailed() implements TownProblem {}
 }

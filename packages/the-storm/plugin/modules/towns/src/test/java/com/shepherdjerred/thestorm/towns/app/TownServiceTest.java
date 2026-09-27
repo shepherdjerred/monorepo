@@ -148,7 +148,7 @@ final class TownServiceTest {
   @Test
   void aTownBeingDeletedKeepsItsMembersUntilSaved() {
     ok(service.disband(OWNER, "Aegis"));
-    assertThat(state.townOf(MEMBER)).isEmpty();
+    assertThat(state.townOf(MEMBER)).contains(Fixtures.townA());
 
     assertThat(service.found(MEMBER, "Carthage", 1))
         .isEqualTo(Result.err(List.of(new TownProblem.Busy())));
@@ -163,8 +163,7 @@ final class TownServiceTest {
   @Test
   void aFailedFlagChangeIsUndone() {
     ok(service.setFlag(OWNER, chunk(0, 0), ClaimFlag.PVP, true));
-    assertThat(state.landAt("world", 1, 64, 1))
-        .isEqualTo(new Land.TownLand(claim(TOWN_A, 0, 0, ClaimFlag.PVP)));
+    assertThat(state.landAt("world", 1, 64, 1)).isEqualTo(new Land.TownLand(claim(TOWN_A, 0, 0)));
 
     store.fail();
 
@@ -287,8 +286,9 @@ final class TownServiceTest {
 
     var trusted = ok(service.trust(OWNER, chunk(0, 0), nomad, true));
     assertThat(trusted.trusted()).containsExactly(NOMAD);
-    assertThat(state.claimAt(chunk(0, 0))).contains(trusted);
+    assertThat(state.claimAt(chunk(0, 0))).contains(claim(TOWN_A, 0, 0));
     store.succeed();
+    assertThat(state.claimAt(chunk(0, 0))).contains(trusted);
     assertThat(store.snapshot().claims()).contains(trusted);
 
     ok(service.trust(ASSISTANT, chunk(0, 0), nomad, false));
