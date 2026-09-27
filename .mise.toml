@@ -35,6 +35,10 @@ dotnet = "10.0.303"
 "github:EmbarkStudios/cargo-deny" = "0.20.2"
 # renovate: datasource=github-releases depName=corretto/corretto-25 versioning=loose
 java = "corretto-25.0.4.8.1"
+# The Storm plugin build (packages/the-storm/plugin). No Gradle wrapper: this pin
+# is the single Gradle version for laptops and the CI image.
+# renovate: datasource=gradle-version depName=gradle
+gradle = "9.7.1"
 # Repo-wide checks + git hooks (verify/pre-commit call these directly)
 gitleaks = "8"
 shellcheck = "0.11"
