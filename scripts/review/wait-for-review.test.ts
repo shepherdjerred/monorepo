@@ -477,8 +477,29 @@ describe("verifyPassBeforeAccepting", () => {
         ...config,
         observed: observed(),
         fetchShared: async () => new Map(),
+        resolveCompletion: async () => reviewed,
       }),
     ).resolves.toBe(false);
+  });
+
+  test("resolves completion before fetching findings", async () => {
+    // A P0 posted between the findings fetch and the completion lookup
+    // must not slip past terminal verification: completion is resolved
+    // first, then the shared findings snapshot is fetched.
+    const order: string[] = [];
+    await verifyPassBeforeAccepting({
+      ...config,
+      observed: observed(),
+      fetchShared: async () => {
+        order.push("fetch");
+        return new Map([[codexProvider.id, []]]);
+      },
+      resolveCompletion: async () => {
+        order.push("resolve");
+        return reviewed;
+      },
+    });
+    expect(order).toEqual(["resolve", "fetch"]);
   });
 
   test("a freshly unresolved provider keeps polling instead of accepting", async () => {

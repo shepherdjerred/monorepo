@@ -344,7 +344,6 @@ export async function verifyPassBeforeAccepting(input: {
       });
       return byProvider;
     });
-  const byProvider = await fetch(targets.map((target) => target.provider));
   let pushedAt: string | null | undefined;
   const resolve =
     input.resolveCompletion ??
@@ -364,14 +363,22 @@ export async function verifyPassBeforeAccepting(input: {
         headPushedAt: pushedAt,
       });
     });
+  // Resolve fresh completion BEFORE fetching findings: a P0 posted between
+  // the findings fetch and the completion lookup would otherwise be missed.
+  // Fresh completion, not the confirming tick's: a dismissal after that
+  // tick resolves here and can no longer be accepted as reviewed.
+  const freshByProvider = new Map<string, ReviewStateResult>();
+  for (const target of targets) {
+    freshByProvider.set(target.provider.id, await resolve(target.provider));
+  }
+  const byProvider = await fetch(targets.map((target) => target.provider));
   const snapshots: ProviderGateSnapshot[] = [];
   for (const target of targets) {
     const threads = byProvider.get(target.provider.id);
     // Fail closed: an incomplete re-check keeps polling, accepts nothing.
     if (threads === undefined) return false;
-    // Fresh completion, not the confirming tick's: a dismissal after that
-    // tick resolves here and can no longer be accepted as reviewed.
-    const fresh = await resolve(target.provider);
+    const fresh = freshByProvider.get(target.provider.id);
+    if (fresh === undefined) return false;
     snapshots.push({
       provider: target.provider,
       reviewState: fresh.state,
