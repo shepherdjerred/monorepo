@@ -34,6 +34,6 @@ export function onlinePlayers(listOutput: string): string[] {
   return players;
 }
 
-export function humanPlayers(listOutput: string, botName: string): string[] {
+export function humanPlayers(listOutput: string, botName?: string): string[] {
   return onlinePlayers(listOutput).filter((player) => player !== botName);
 }

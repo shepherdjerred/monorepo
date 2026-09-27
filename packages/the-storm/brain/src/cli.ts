@@ -58,6 +58,11 @@ async function verifySpawn(
   config: PilotConfig,
 ): Promise<void> {
   await waitForSpawn(bot);
+  if (bot.username !== config.botPlayerName) {
+    throw new Error(
+      "connected Minecraft profile does not match configured pilot name",
+    );
+  }
   if (!inPilotWindow(config, new Date())) {
     process.stdout.write("pilot ended: window closed before spawn\n");
     return;
@@ -115,10 +120,6 @@ async function runWithFlags(command: "--check" | "--run"): Promise<void> {
     throw new Error("pilot is disabled or outside the configured window");
   }
   const credentials = loadBootstrap(Bun.env);
-  const botPlayerName = Bun.env["MINECRAFT_BOT_PLAYER_NAME"];
-  if (botPlayerName === undefined || !/^\w{3,16}$/u.test(botPlayerName)) {
-    throw new Error("MINECRAFT_BOT_PLAYER_NAME must be a valid player name");
-  }
   if (!path.isAbsolute(credentials.MINECRAFT_AUTH_CACHE_DIR)) {
     throw new Error("Microsoft auth cache path must be absolute");
   }
@@ -151,7 +152,11 @@ async function runWithFlags(command: "--check" | "--run"): Promise<void> {
     password: credentials.MINECRAFT_RCON_PASSWORD,
   });
   try {
-    const before = humanPlayers(await rcon.command("list"), botPlayerName);
+    // A previous pilot connection can still be online after this process exits.
+    const before = humanPlayers(
+      await rcon.command("list"),
+      config.botPlayerName,
+    );
     if (before.length === 0) {
       process.stdout.write("pilot skipped: no human online\n");
       return;

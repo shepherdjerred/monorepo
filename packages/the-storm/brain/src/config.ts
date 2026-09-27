@@ -66,6 +66,12 @@ const definition = {
     default: 1,
     names: { file: "maxCompanions" },
   },
+  botPlayerName: {
+    schema: z.string(),
+    sources: ["file", "default"],
+    default: "",
+    names: { file: "botPlayerName" },
+  },
   llmEnabled: {
     schema: z.boolean(),
     sources: ["file", "default"],
@@ -98,6 +104,7 @@ const ConfigSchema = z
     rconPort: Port,
     clientVersion: z.literal("26.1"),
     maxCompanions: z.literal(1),
+    botPlayerName: z.string(),
     llmEnabled: z.boolean(),
     llmModel: z.literal("gpt-6-luna"),
     monthlyBudgetUsd: z.literal(20),
@@ -105,6 +112,10 @@ const ConfigSchema = z
   .refine(
     (value) => value.startHour < value.endHour,
     "window must end after it starts",
+  )
+  .refine(
+    (value) => !value.enabled || /^\w{3,16}$/u.test(value.botPlayerName),
+    "enabled pilot requires the exact Minecraft profile name",
   );
 
 export type PilotConfig = z.infer<typeof ConfigSchema>;

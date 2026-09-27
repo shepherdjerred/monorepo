@@ -9,6 +9,7 @@
   "rconPort": 25575,
   "clientVersion": "26.1",
   "maxCompanions": 1,
+  "botPlayerName": "",
   "llmEnabled": false,
   "llmModel": "gpt-6-luna",
   "monthlyBudgetUsd": 20
