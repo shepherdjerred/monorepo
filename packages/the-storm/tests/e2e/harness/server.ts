@@ -53,6 +53,8 @@ export type StartServerOptions = {
   warmCache: boolean;
   /** The built TheStorm.jar under test. */
   stormJar: string;
+  mechanicsE2eJar: string;
+  mechanicsConfig: string;
   /** Contents of plugins/TheStorm/config.yml. */
   stormConfig: string;
 };
@@ -191,7 +193,14 @@ async function waitForLog(
 export async function stagePlugins(
   cacheDir: string,
   stagingDir: string,
-  options: Pick<StartServerOptions, "stormJar" | "stormConfig" | "warmCache">,
+  options: Pick<
+    StartServerOptions,
+    | "stormJar"
+    | "stormConfig"
+    | "mechanicsE2eJar"
+    | "mechanicsConfig"
+    | "warmCache"
+  >,
 ): Promise<string> {
   const downloads = path.join(cacheDir, "plugins");
   const pluginsDir = path.join(stagingDir, "plugins");
@@ -212,6 +221,14 @@ export async function stagePlugins(
   await Bun.write(
     path.join(pluginsDir, "TheStorm", "config.yml"),
     options.stormConfig,
+  );
+  await Bun.write(
+    path.join(pluginsDir, "TheStormMechanicsE2E.jar"),
+    Bun.file(options.mechanicsE2eJar),
+  );
+  await Bun.write(
+    path.join(pluginsDir, "TheStormMechanicsE2E", "mechanics.yml"),
+    options.mechanicsConfig,
   );
   if (options.warmCache) {
     const cachedLibs = path.join(cacheDir, luckPermsLibs);

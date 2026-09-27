@@ -13,6 +13,15 @@ const stormJar = path.join(
   "libs",
   "TheStorm.jar",
 );
+const mechanicsE2eJar = path.join(
+  packageRoot,
+  "plugin",
+  "modules",
+  "mechanics",
+  "build",
+  "libs",
+  "TheStormMechanicsE2E.jar",
+);
 const ownedConfig = path.join(
   packageRoot,
   "server",
@@ -20,6 +29,14 @@ const ownedConfig = path.join(
   "plugins",
   "TheStorm",
   "config.yml",
+);
+const mechanicsConfig = path.join(
+  packageRoot,
+  "server",
+  "owned",
+  "plugins",
+  "TheStorm",
+  "mechanics.yml",
 );
 const pluginVolume = Bun.env["STORM_E2E_PLUGIN_DIR"];
 const dataVolume = Bun.env["STORM_E2E_DATA_DIR"];
@@ -43,6 +60,8 @@ const stagingDir = path.join(
 const stagedPlugins = await stagePlugins(cacheDir, stagingDir, {
   stormJar,
   stormConfig: stormSmokeConfig(await Bun.file(ownedConfig).text()),
+  mechanicsE2eJar,
+  mechanicsConfig: await Bun.file(mechanicsConfig).text(),
   warmCache: false,
 });
 await mkdir(pluginVolume, { recursive: true });

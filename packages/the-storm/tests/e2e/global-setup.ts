@@ -24,6 +24,15 @@ const stormJar = path.join(
   "libs",
   "TheStorm.jar",
 );
+const mechanicsE2eJar = path.join(
+  packageRoot,
+  "plugin",
+  "modules",
+  "mechanics",
+  "build",
+  "libs",
+  "TheStormMechanicsE2E.jar",
+);
 const ownedConfig = path.join(
   packageRoot,
   "server",
@@ -31,6 +40,14 @@ const ownedConfig = path.join(
   "plugins",
   "TheStorm",
   "config.yml",
+);
+const mechanicsConfig = path.join(
+  packageRoot,
+  "server",
+  "owned",
+  "plugins",
+  "TheStorm",
+  "mechanics.yml",
 );
 
 // CI (Buildkite on Kubernetes) has no Docker daemon: the pinned server image
@@ -68,6 +85,8 @@ export default async function setup(project: TestProject) {
     warmCache: Bun.env["STORM_E2E_COLD"] !== "1",
     stormJar,
     stormConfig: stormSmokeConfig(await Bun.file(ownedConfig).text()),
+    mechanicsE2eJar,
+    mechanicsConfig: await Bun.file(mechanicsConfig).text(),
   });
   if (server.info.kind === "container") {
     console.warn(
