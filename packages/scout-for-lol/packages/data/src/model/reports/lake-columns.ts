@@ -1,4 +1,40 @@
 import { z } from "zod";
+import { MATCH_REBUILD_GATED_COLUMNS } from "#src/model/reports/match-rebuild-gated-columns.ts";
+
+const PositiveGameAssetIdSchema = z.number().int().positive();
+
+export const MatchRunePageSchema = z.object({
+  primaryStyleId: PositiveGameAssetIdSchema,
+  primaryRuneIds: z.tuple([
+    PositiveGameAssetIdSchema,
+    PositiveGameAssetIdSchema,
+    PositiveGameAssetIdSchema,
+    PositiveGameAssetIdSchema,
+  ]),
+  secondaryStyleId: PositiveGameAssetIdSchema,
+  secondaryRuneIds: z.tuple([
+    PositiveGameAssetIdSchema,
+    PositiveGameAssetIdSchema,
+  ]),
+  statShardIds: z.object({
+    offense: PositiveGameAssetIdSchema,
+    flex: PositiveGameAssetIdSchema,
+    defense: PositiveGameAssetIdSchema,
+  }),
+});
+
+export type MatchRunePage = z.infer<typeof MatchRunePageSchema>;
+
+export const MatchLoadoutSchema = z.object({
+  itemIds: z.array(z.number().int().nonnegative()).length(7),
+  summonerSpellIds: z.tuple([
+    PositiveGameAssetIdSchema,
+    PositiveGameAssetIdSchema,
+  ]),
+  runes: MatchRunePageSchema.nullable(),
+});
+
+export type MatchLoadout = z.infer<typeof MatchLoadoutSchema>;
 
 /**
  * Report-lake table schemas — the single source of truth for lake column
@@ -61,6 +97,21 @@ export const MatchLakeRowSchema = z.object({
   individual_position: z.string(),
   lane: z.string().nullable(),
   role: z.string().nullable(),
+  // End-of-game loadout. Rune fields are collectively NULL for modes whose
+  // payload contains Riot's all-zero sentinel instead of a rune page.
+  summoner_spell_1_id: z.number(),
+  summoner_spell_2_id: z.number(),
+  primary_rune_style_id: z.number().nullable(),
+  primary_rune_0_id: z.number().nullable(),
+  primary_rune_1_id: z.number().nullable(),
+  primary_rune_2_id: z.number().nullable(),
+  primary_rune_3_id: z.number().nullable(),
+  secondary_rune_style_id: z.number().nullable(),
+  secondary_rune_0_id: z.number().nullable(),
+  secondary_rune_1_id: z.number().nullable(),
+  stat_perk_offense_id: z.number().nullable(),
+  stat_perk_flex_id: z.number().nullable(),
+  stat_perk_defense_id: z.number().nullable(),
   // Outcome
   win: z.boolean(),
   surrendered: z.boolean(),
@@ -149,6 +200,12 @@ export const MatchLakeRowSchema = z.object({
   item4: ItemSlotSchema,
   item5: ItemSlotSchema,
   item6: ItemSlotSchema,
+  augment_1_id: z.number().nullable(),
+  augment_2_id: z.number().nullable(),
+  augment_3_id: z.number().nullable(),
+  augment_4_id: z.number().nullable(),
+  augment_5_id: z.number().nullable(),
+  augment_6_id: z.number().nullable(),
 });
 
 export type MatchLakeRow = z.infer<typeof MatchLakeRowSchema>;
@@ -274,6 +331,19 @@ export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
     individual_position: "VARCHAR",
     lane: "VARCHAR",
     role: "VARCHAR",
+    summoner_spell_1_id: "INTEGER",
+    summoner_spell_2_id: "INTEGER",
+    primary_rune_style_id: "INTEGER",
+    primary_rune_0_id: "INTEGER",
+    primary_rune_1_id: "INTEGER",
+    primary_rune_2_id: "INTEGER",
+    primary_rune_3_id: "INTEGER",
+    secondary_rune_style_id: "INTEGER",
+    secondary_rune_0_id: "INTEGER",
+    secondary_rune_1_id: "INTEGER",
+    stat_perk_offense_id: "INTEGER",
+    stat_perk_flex_id: "INTEGER",
+    stat_perk_defense_id: "INTEGER",
     win: "BOOLEAN",
     surrendered: "BOOLEAN",
     early_surrendered: "BOOLEAN",
@@ -345,6 +415,12 @@ export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
     item4: "INTEGER",
     item5: "INTEGER",
     item6: "INTEGER",
+    augment_1_id: "INTEGER",
+    augment_2_id: "INTEGER",
+    augment_3_id: "INTEGER",
+    augment_4_id: "INTEGER",
+    augment_5_id: "INTEGER",
+    augment_6_id: "INTEGER",
   };
 
 /** The final-inventory slot columns, which only match_items reads. */
@@ -358,21 +434,24 @@ export const ITEM_SLOT_COLUMNS = [
   "item6",
 ] as const;
 
-const ITEM_SLOTS = new Set<string>(ITEM_SLOT_COLUMNS);
+const REBUILD_GATED_COLUMNS = new Set<string>([
+  ...ITEM_SLOT_COLUMNS,
+  ...MATCH_REBUILD_GATED_COLUMNS,
+]);
 
 /**
- * The match columns every read selects: all but the inventory slots.
+ * The match columns every ordinary read selects: all but fields gated on a
+ * rebuild of older Parquet.
  *
  * A read names its columns, and a build published before a column existed
  * fails every read that names it until the lake is rebuilt (the backend's
- * lakeSchemaFingerprint). Only match_items needs the slots, so only its reads
- * name them: a deploy that adds them leaves every other match read working
- * while the rebuild runs.
+ * lakeSchemaFingerprint). Specialized UI readers select the new fields only
+ * after the full rebuild has published, while ordinary reports keep working.
  */
 export const MATCH_READ_COLUMNS: Record<string, DuckDbColumnType> =
   Object.fromEntries(
     Object.entries(MATCH_LAKE_COLUMNS).filter(
-      ([name]) => !ITEM_SLOTS.has(name),
+      ([name]) => !REBUILD_GATED_COLUMNS.has(name),
     ),
   );
 

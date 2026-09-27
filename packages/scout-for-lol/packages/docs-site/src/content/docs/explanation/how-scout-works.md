@@ -102,6 +102,12 @@ can always be reconstructed from the raw JSON, which is the real source of
 truth. Initial history waits for a fold before it is marked ready so the new
 guild identity mapping and its matches become visible together.
 
+The lake schema is fingerprinted. Adding match fields such as loadouts or
+Arena augments changes that fingerprint and requires a full rebuild from the
+canonical raw store. Readers that select new columns must not be released
+against old Parquet; the published fingerprint and rebuilt lake are a release
+boundary, separate from a green application build.
+
 The visible consequence: a newly tracked account's imported history may fill in
 over several minutes. Normal live matches can be queried from staging as soon
 as ingest succeeds.
