@@ -16,6 +16,7 @@ from `plugin/`.
 | `plugin/architecture/`             | ArchUnit rules that enforce the layering below                                                                         |
 | `plugin/build-logic/`              | Convention plugins: compiler strictness, formatting, PMD, tests, jOOQ codegen                                          |
 | `plugin/gradle/libs.versions.toml` | Every dependency and plugin version                                                                                    |
+| `brain/`                           | Disabled, one-shot Mineflayer companion pilot; no production sidecar or autonomous gameplay yet                        |
 
 ## Commands
 
