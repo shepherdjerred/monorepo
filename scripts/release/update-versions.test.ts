@@ -188,10 +188,26 @@ describe("key-wise monotonic arbitration", () => {
   test("merges pending keys independently", () => {
     const left = mergePinCandidates(empty, batch(10, "v10", A, "left"));
     const right = mergePinCandidates(empty, batch(11, "v11", B, "right"));
-    expect(Object.keys(mergePinStates(left, right).pins).sort()).toEqual([
-      "left",
-      "right",
-    ]);
+    expect(Object.keys(mergePinStates(left, right, empty).pins).sort()).toEqual(
+      ["left", "right"],
+    );
+  });
+
+  test("does not restore a stale pending pin deleted from main", () => {
+    const oldPin = mergePinCandidates(empty, batch(17_396, "v17396", A));
+    expect(mergePinStates(empty, oldPin, oldPin)).toEqual(empty);
+  });
+
+  test("preserves a pending pin added after the merge base", () => {
+    const pending = mergePinCandidates(empty, batch(18_031, "v18031", B));
+    expect(mergePinStates(empty, pending, empty)).toEqual(pending);
+  });
+
+  test("keeps the newer pin when main and pending both advance a key", () => {
+    const base = mergePinCandidates(empty, batch(10, "v10", A));
+    const main = mergePinCandidates(base, batch(11, "v11", B));
+    const pending = mergePinCandidates(base, batch(12, "v12", A));
+    expect(mergePinStates(main, pending, base)).toEqual(pending);
   });
 
   test("drops retired pins from an older pending branch", () => {

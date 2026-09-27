@@ -121,14 +121,33 @@ async function prepareAttempt(
       VERSION_CATALOG_FILE_REL,
     );
     const pendingVersions = parseVersionCatalogSource(pendingSource);
-    // Every generated bump commits its pin state beside the catalog, so the
-    // pending branch's state file is the authority for its pins.
+    // Every generated bump commits its full pin state beside the catalog.
     const pendingState = parsePinCandidatesState(
       await readBranchFile(git, pendingRef, PIN_STATE_FILE_REL),
     );
     validateStateAgainstVersions(pendingState, pendingVersions);
-    const { state: activePendingState, retiredKeys } = retainCurrentImagePins(
+    const mergeBaseResult = await git(
+      ["merge-base", "origin/main", pendingRef],
+      { capture: true },
+    );
+    const mergeBase = mergeBaseResult.stdout.trim();
+    const baseVersions = parseVersionCatalogSource(
+      await readBranchFile(git, mergeBase, VERSION_CATALOG_FILE_REL),
+    );
+    const baseState = parsePinCandidatesState(
+      await readBranchFile(git, mergeBase, PIN_STATE_FILE_REL),
+    );
+    validateStateAgainstVersions(baseState, baseVersions);
+    // Preserve pins changed only on the generated branch. For keys unchanged
+    // there, keep main's changes and deletions so a reset can't be undone by a
+    // stale full-state snapshot.
+    const mergedPendingState = mergePinStates(
+      aggregate,
       pendingState,
+      baseState,
+    );
+    const { state: activePendingState, retiredKeys } = retainCurrentImagePins(
+      mergedPendingState,
       mainVersions,
     );
     if (retiredKeys.length > 0) {
@@ -136,7 +155,8 @@ async function prepareAttempt(
         `Dropping retired image pins from pending version bump: ${retiredKeys.join(", ")}`,
       );
     }
-    aggregate = mergePinStates(aggregate, activePendingState);
+    aggregate = activePendingState;
+    validateStateAgainstVersions(aggregate, mainVersions);
   }
   aggregate = mergePinCandidates(aggregate, batch);
 

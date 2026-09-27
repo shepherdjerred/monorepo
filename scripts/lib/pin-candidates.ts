@@ -49,6 +49,7 @@ export const PinCandidatesStateSchema = z
 
 export type PinCandidates = z.infer<typeof PinCandidatesSchema>;
 export type PinCandidatesState = z.infer<typeof PinCandidatesStateSchema>;
+type PinStatePin = PinCandidatesState["pins"][string];
 
 function parseJson(text: string, description: string): unknown {
   try {
@@ -153,21 +154,68 @@ function pinsEqual(
   return left.version === right.version && left.digest === right.digest;
 }
 
-export function mergePinStates(
-  base: PinCandidatesState,
-  pending: PinCandidatesState,
-): PinCandidatesState {
-  let merged = base;
-  for (const [key, pin] of Object.entries(pending.pins)) {
-    merged = mergePinCandidates(merged, {
-      schema: "pin-candidates/v1",
-      buildNumber: pin.buildNumber,
-      candidates: {
-        [key]: { version: pin.version, digest: pin.digest },
-      },
-    });
+function samePinState(
+  left: PinStatePin | undefined,
+  right: PinStatePin | undefined,
+): boolean {
+  return left === undefined || right === undefined
+    ? left === right
+    : left.buildNumber === right.buildNumber &&
+        left.version === right.version &&
+        left.digest === right.digest &&
+        left.gitSha === right.gitSha;
+}
+
+function mergePinStateEntry(
+  key: string,
+  main: PinStatePin | undefined,
+  pending: PinStatePin | undefined,
+  base: PinStatePin | undefined,
+): PinStatePin | undefined {
+  if (samePinState(pending, base)) return main;
+  if (samePinState(main, base)) return pending;
+  if (main === undefined) {
+    return pending !== undefined &&
+      (base === undefined || pending.buildNumber > base.buildNumber)
+      ? pending
+      : undefined;
   }
-  return merged;
+  if (pending === undefined || pending.buildNumber < main.buildNumber) {
+    return main;
+  }
+  if (pending.buildNumber > main.buildNumber) return pending;
+  if (!pinsEqual(main, pending)) {
+    throw new Error(
+      `conflicting candidates for ${key} at build ${main.buildNumber.toString()}`,
+    );
+  }
+  return main;
+}
+
+export function mergePinStates(
+  main: PinCandidatesState,
+  pending: PinCandidatesState,
+  base: PinCandidatesState,
+): PinCandidatesState {
+  const pins = new Map(Object.entries(main.pins));
+  const keys = new Set([
+    ...Object.keys(base.pins),
+    ...Object.keys(main.pins),
+    ...Object.keys(pending.pins),
+  ]);
+
+  for (const key of keys) {
+    const result = mergePinStateEntry(
+      key,
+      main.pins[key],
+      pending.pins[key],
+      base.pins[key],
+    );
+    if (result === undefined) pins.delete(key);
+    else pins.set(key, result);
+  }
+
+  return { schema: main.schema, pins: Object.fromEntries(pins) };
 }
 
 export function mergePinCandidates(
