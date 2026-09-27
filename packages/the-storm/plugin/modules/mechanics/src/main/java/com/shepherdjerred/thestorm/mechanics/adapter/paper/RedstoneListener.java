@@ -1,11 +1,13 @@
 package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
+import com.shepherdjerred.thestorm.mechanics.domain.grid.Pos;
 import com.shepherdjerred.thestorm.mechanics.domain.structure.Target;
 import java.time.Duration;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
@@ -108,15 +110,16 @@ final class RedstoneListener implements Listener {
                 .isAllowed();
     if (mayUseSource) {
       // Nobody to tell if it fails: the structure simply stays as it is.
-      var target = powered(block) ? Target.OPEN : Target.CLOSE;
+      var target = powered(block, owner.orElseThrow(), grid) ? Target.OPEN : Target.CLOSE;
       structures.toggle(
           owner.orElseThrow(), new Structures.Use(grid, PaperGrid.pos(block), view), target);
     }
   }
 
-  /** Checks all redstone sources after the changed source has settled. */
-  private static boolean powered(Block sign) {
-    if (sign.isBlockPowered() || sign.isBlockIndirectlyPowered()) {
+  /** Checks only authorized contributing faces after the changed source has settled. */
+  private boolean powered(Block sign, UUID owner, PaperGrid grid) {
+    var signPos = PaperGrid.pos(sign);
+    if (poweredByAuthorizedFace(sign, signPos, owner, grid)) {
       return true;
     }
     var data = sign.getBlockData();
@@ -128,6 +131,23 @@ final class RedstoneListener implements Listener {
                     ? BlockFace.UP
                     : BlockFace.DOWN);
     return PaperGrid.loaded(attachment)
-        && (attachment.isBlockPowered() || attachment.isBlockIndirectlyPowered());
+        && poweredByAuthorizedFace(attachment, signPos, owner, grid);
+  }
+
+  private boolean poweredByAuthorizedFace(Block block, Pos signPos, UUID owner, PaperGrid grid) {
+    for (var face : FACES) {
+      if (block.getBlockPower(face) == 0 && !block.isBlockFaceIndirectlyPowered(face)) {
+        continue;
+      }
+      var source = block.getRelative(face);
+      if (PaperGrid.loaded(source)
+          && kit.guard().sameLand(grid, PaperGrid.pos(source), signPos)
+          && kit.guard()
+              .check(owner, ProtectedAction.INTERACT, grid, PaperGrid.pos(source))
+              .isAllowed()) {
+        return true;
+      }
+    }
+    return false;
   }
 }
