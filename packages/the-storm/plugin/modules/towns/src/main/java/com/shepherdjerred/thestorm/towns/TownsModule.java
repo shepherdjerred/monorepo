@@ -15,6 +15,8 @@ import com.shepherdjerred.thestorm.towns.app.MapSync;
 import com.shepherdjerred.thestorm.towns.app.PvpService;
 import com.shepherdjerred.thestorm.towns.app.Settling;
 import com.shepherdjerred.thestorm.towns.app.TownEvents;
+import com.shepherdjerred.thestorm.towns.app.TownListings;
+import com.shepherdjerred.thestorm.towns.app.TownRead;
 import com.shepherdjerred.thestorm.towns.app.TownsState;
 import com.shepherdjerred.thestorm.towns.domain.TownsConfig;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
@@ -87,6 +89,7 @@ public final class TownsModule implements StormModule {
     var protection =
         TownsPaper.install(context, new TownsPaper.Loaded(settling, locks, pvp), config);
     context.services().provide(Protection.class, protection);
+    context.services().provide(TownRead.class, new TownListings(state));
     context
         .logger()
         .info(

@@ -66,6 +66,10 @@ containers lock for their placer; owners can unlock them for public use or
 grant use, management, town sharing, and redstone access separately. Admin
 regions retain their own opening rules. Other modules use the towns
 `Protection` port so their container interactions follow the same rules.
+The towns `TownRead` port exposes an alphabetical, bounded directory of town
+names with member and claim counts plus the total town count. Consumers call
+it on Paper's main thread because it snapshots the loaded towns state; it
+does not expose town membership identities or treasury data.
 
 ## Conventions
 
