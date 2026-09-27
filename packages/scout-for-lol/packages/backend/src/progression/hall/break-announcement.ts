@@ -13,6 +13,7 @@ import {
   upsertIntent,
 } from "#src/database/durable/intent-repository.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import { getObservation } from "#src/database/durable/observation-repository.ts";
 import { hallRecordBreakIntentKey } from "#src/durable/match/delivery-intents.ts";
 import { toIsoInstant } from "#src/durable/match/match-identity.ts";
 import type { HallBreakPayload } from "#src/progression/hall/break-payload.ts";
@@ -41,6 +42,10 @@ export type HallBreakAnnouncementPath =
   /** A V2 intent already stands for this (match, guild): it keeps ownership. */
   | "intent-standing";
 
+export type HallAnnouncementDelivery =
+  | { readonly kind: "legacy-v1"; readonly silent: boolean }
+  | { readonly kind: "temporal-v2" };
+
 /**
  * Announce one guild's record break for one match — on exactly one path.
  *
@@ -64,11 +69,11 @@ export type HallBreakAnnouncementPath =
  *
  * ## Silence
  *
- * A match the committed observation marks `silent-backfill` announces nothing
- * on either path. v1 used to queue outbox rows for those too, so backfilling a
- * player's history could post weeks-old record breaks; the gate is the same
- * `matchMayAnnounce` every V2 minter asks, and it applies to the outbox path
- * because that is the path that leaked.
+ * V2 uses the committed observation to decide silence. v1 uses its original
+ * discovery-time decision, which remains available if its fail-open observation
+ * dual-write failed. A v1 evaluation without an observation stays on the
+ * legacy outbox even when the V2 flag is on: an intent without an observed
+ * match could never enter V2's post-commit fan-out.
  *
  * ## The key is the decision, the row is the truth
  *
@@ -87,11 +92,16 @@ export async function announceHallRecordBreak(
     records: readonly HallBreakPayload[];
     /** `scout_v2_progression_notifications_enabled` for this guild. */
     v2Enabled: boolean;
+    delivery: HallAnnouncementDelivery;
     now: Date;
   },
 ): Promise<HallBreakAnnouncementPath> {
   const riotMatchId = RiotMatchIdSchema.parse(args.matchId);
-  if (!(await matchMayAnnounce(tx, riotMatchId))) return "silent";
+  if (args.delivery.kind === "legacy-v1") {
+    if (args.delivery.silent) return "silent";
+  } else if (!(await matchMayAnnounce(tx, riotMatchId))) {
+    return "silent";
+  }
 
   const outbox = await tx.hallRecordBreakOutbox.findUnique({
     where: {
@@ -117,7 +127,15 @@ export async function announceHallRecordBreak(
     requireSameAnnouncement(standing, riotMatchId, envelope);
     return "intent-standing";
   }
-  if (!args.v2Enabled) {
+  const legacyObservation =
+    args.delivery.kind === "legacy-v1" && args.v2Enabled
+      ? await getObservation(tx, { matchId: riotMatchId })
+      : null;
+  if (
+    !args.v2Enabled ||
+    (args.delivery.kind === "legacy-v1" &&
+      legacyObservation?.deliveryMode !== "live")
+  ) {
     await upsertOutbox(tx, args);
     return "outbox";
   }

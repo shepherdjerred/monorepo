@@ -9,6 +9,7 @@ import type * as DatabaseModule from "#src/database/index.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testChannelId, testGuildId } from "#src/testing/test-ids.ts";
 import { hallBreakRecords } from "#src/temporal/v2/notification/hall-record-break.test-fixtures.ts";
+import type { HallAnnouncementDelivery } from "#src/progression/hall/break-announcement.ts";
 
 /**
  * Where a Hall record break is announced, against real rows.
@@ -76,6 +77,7 @@ function announce(
     v2Enabled: boolean;
     channelId: string;
     records: ReturnType<typeof hallBreakRecords>;
+    delivery: HallAnnouncementDelivery;
   }> = {},
 ) {
   return announceHallRecordBreak(prisma, {
@@ -86,6 +88,7 @@ function announce(
       overrides.records ??
       hallBreakRecords(2, RiotMatchIdSchema.parse(matchId)),
     v2Enabled: overrides.v2Enabled ?? true,
+    delivery: overrides.delivery ?? { kind: "temporal-v2" },
     now: NOW,
   });
 }
@@ -118,6 +121,19 @@ afterAll(async () => {
 });
 
 describe("with the V2 path on for the guild", () => {
+  test("legacy live delivery can mint after its observation dual-write succeeds", async () => {
+    const matchId = await observedMatch();
+
+    expect(
+      await announce(matchId, {
+        delivery: { kind: "legacy-v1", silent: false },
+      }),
+    ).toBe("intent-minted");
+
+    expect(await intentRows(matchId)).toHaveLength(1);
+    expect(await outboxRows(matchId)).toEqual([]);
+  });
+
   test("mints one pending hall intent and writes no outbox row", async () => {
     const matchId = await observedMatch();
 
@@ -237,5 +253,31 @@ describe("a silent or backfilled match", () => {
 
   test("a match with no observation is a broken contract, not a default", async () => {
     await expect(announce("NA1_4799999")).rejects.toThrow(/no observation/u);
+  });
+
+  test("legacy live delivery keeps its outbox when the observation dual-write is absent", async () => {
+    const matchId = "NA1_4799998";
+
+    expect(
+      await announce(matchId, {
+        delivery: { kind: "legacy-v1", silent: false },
+      }),
+    ).toBe("outbox");
+
+    expect(await outboxRows(matchId)).toHaveLength(1);
+    expect(await intentRows(matchId)).toEqual([]);
+  });
+
+  test("legacy silent delivery stays silent without an observation", async () => {
+    const matchId = "NA1_4799997";
+
+    expect(
+      await announce(matchId, {
+        delivery: { kind: "legacy-v1", silent: true },
+      }),
+    ).toBe("silent");
+
+    expect(await outboxRows(matchId)).toEqual([]);
+    expect(await intentRows(matchId)).toEqual([]);
   });
 });

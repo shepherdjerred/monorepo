@@ -15,7 +15,10 @@ import { prisma, type Db } from "#src/database/index.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { parseProgressionJson } from "#src/progression/json.ts";
 import { lockHallRecords } from "#src/progression/hall/baseline.ts";
-import { announceHallRecordBreak } from "#src/progression/hall/break-announcement.ts";
+import {
+  announceHallRecordBreak,
+  type HallAnnouncementDelivery,
+} from "#src/progression/hall/break-announcement.ts";
 import {
   HallBreakPayloadSchema,
   HallBreakRecordsSchema,
@@ -118,7 +121,10 @@ async function evaluateGuild(
   guildId: DiscordGuildId,
   matchId: string,
   matchesByPuuid: ReadonlyMap<string, ProgressionMatchRow>,
-  options: { readonly v2Enabled: boolean },
+  options: {
+    readonly v2Enabled: boolean;
+    readonly delivery: HallAnnouncementDelivery;
+  },
 ): Promise<void> {
   await prisma.$transaction(async (tx) => {
     await lockHallRecords(tx, guildId);
@@ -179,13 +185,17 @@ async function evaluateGuild(
       channelId: settings.channelId,
       records: payload,
       v2Enabled: options.v2Enabled,
+      delivery: options.delivery,
       now: new Date(),
     });
   });
 }
 
 /** Evaluate one durably ingested match before account cursors advance. */
-export async function evaluateHallMatch(matchData: RawMatch): Promise<void> {
+export async function evaluateHallMatch(
+  matchData: RawMatch,
+  delivery: HallAnnouncementDelivery,
+): Promise<void> {
   const matchId = matchData.metadata.matchId;
   const participantPuuids = matchData.metadata.participants;
   const accounts = await prisma.account.findMany({
@@ -239,6 +249,6 @@ export async function evaluateHallMatch(matchData: RawMatch): Promise<void> {
       "scout_v2_progression_notifications_enabled",
       { server: guildId },
     );
-    await evaluateGuild(guildId, matchId, byPuuid, { v2Enabled });
+    await evaluateGuild(guildId, matchId, byPuuid, { v2Enabled, delivery });
   }
 }

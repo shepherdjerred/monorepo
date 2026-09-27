@@ -163,6 +163,15 @@ async function observedMatch(
   return matchId;
 }
 
+function unobservedMatch(): string {
+  seq += 1;
+  const matchId = RiotMatchIdSchema.parse(
+    `NA1_48${String(seq).padStart(3, "0")}`,
+  );
+  stubs.rows = [row(matchId)];
+  return matchId;
+}
+
 beforeEach(async () => {
   stubs.flagCalls = [];
   await prisma.hallRecordBreakOutbox.deleteMany();
@@ -220,7 +229,7 @@ describe("evaluateHallMatch's announcement", () => {
     stubs.v2Enabled = true;
     const matchId = await observedMatch("live");
 
-    await evaluateHallMatch(rawMatch(matchId));
+    await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
 
     const intents = await prisma.matchNotificationIntent.findMany();
     expect(intents.map((intent) => intent.intentKey)).toEqual([
@@ -242,7 +251,24 @@ describe("evaluateHallMatch's announcement", () => {
     stubs.v2Enabled = false;
     const matchId = await observedMatch("live");
 
-    await evaluateHallMatch(rawMatch(matchId));
+    await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
+
+    expect(await prisma.matchNotificationIntent.count()).toBe(0);
+    expect(
+      await prisma.hallRecordBreakOutbox.findMany({
+        select: { guildId: true, matchId: true, channelId: true },
+      }),
+    ).toEqual([{ guildId: GUILD, matchId, channelId: CHANNEL }]);
+  });
+
+  test("keeps legacy ingestion on the outbox when its observation dual-write failed", async () => {
+    stubs.v2Enabled = true;
+    const matchId = unobservedMatch();
+
+    await evaluateHallMatch(rawMatch(matchId), {
+      kind: "legacy-v1",
+      silent: false,
+    });
 
     expect(await prisma.matchNotificationIntent.count()).toBe(0);
     expect(
@@ -258,7 +284,7 @@ describe("evaluateHallMatch's announcement", () => {
       stubs.v2Enabled = v2Enabled;
       const matchId = await observedMatch("silent-backfill");
 
-      await evaluateHallMatch(rawMatch(matchId));
+      await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
 
       // The record itself is still broken: silence is about the message.
       const cells = await prisma.hallRecordCell.findMany();
@@ -271,11 +297,11 @@ describe("evaluateHallMatch's announcement", () => {
   test("re-evaluating the same match announces nothing new", async () => {
     stubs.v2Enabled = true;
     const matchId = await observedMatch("live");
-    await evaluateHallMatch(rawMatch(matchId));
+    await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
 
     // A retried progression Activity: the cells already hold this match, so
     // nothing breaks again and no second intent or outbox row appears.
-    await evaluateHallMatch(rawMatch(matchId));
+    await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
 
     expect(await prisma.matchNotificationIntent.count()).toBe(1);
     expect(await prisma.hallRecordBreakOutbox.count()).toBe(0);

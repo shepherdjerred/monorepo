@@ -933,10 +933,13 @@ transaction through `announceHallRecordBreak`
   `pending` intent with a freshness deadline of creation plus 24 hours, off
   writes the outbox row.
 
-A match whose committed observation is `silent-backfill` announces nothing on
-either path (`matchMayAnnounce`), and a match with no observation throws. The
-records are still updated; only the message is silent. This also stops v1's
-outbox from queueing record breaks for backfilled history.
+V2 uses the committed observation to suppress a `silent-backfill` match and
+throws if that observation is absent. Legacy v1 uses its discovery-time silent
+decision, so its fail-open observation dual-write cannot stall progression. If
+that write is absent while the V2 flag is on, the announcement stays on v1's
+outbox; an intent without an observation could not enter V2 fan-out. The
+records are still updated for silent matches. This also stops v1's outbox from
+queueing record breaks for backfilled history.
 
 Progression runs before the V2 match core's post-commit fan-out, and
 `planMatchFanOutV2` starts a notification child for every drivable non-prematch
