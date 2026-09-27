@@ -16,30 +16,31 @@ import java.util.concurrent.CompletableFuture;
 public interface SpellStore {
 
   /**
-   * Every temporary block not yet known to be reverted on disk: pending ones and reverted ones
-   * whose world has not been saved since. Reverting any of them again is harmless.
+   * Temporary-block records whose chunk marker and world state have not both been reverted in
+   * memory and whose recovery row has not been deleted. Reverting any of them again is harmless.
    */
   CompletableFuture<List<TemporaryBlock>> temporaryBlocks();
 
   /**
    * Records {@code blocks} before they are placed. Returns the keys actually stored: a position
-   * with any existing record is skipped until that record is safely forgotten after a world save.
+   * with any existing record is skipped until the prior block and chunk marker are reverted and its
+   * row is deleted.
    */
   CompletableFuture<List<BlockKey>> saveTemporaryBlocks(List<TemporaryBlock> blocks);
 
-  /** Forgets records of blocks that never reached the world; returns how many were removed. */
+  /** Forgets records never placed or safely covered by the chunk marker recovery contract. */
   CompletableFuture<Integer> deleteTemporaryBlocks(List<BlockKey> keys);
 
   /** Marks blocks reverted in the world; returns how many records were marked. */
   CompletableFuture<Integer> markReverted(List<BlockKey> keys);
 
   /**
-   * Forgets the reverted records among {@code keys} (their chunk was saved); pending records are
-   * kept. Returns how many were removed.
+   * Forgets reverted records among {@code keys}; callers must first establish that their chunk's
+   * disk image no longer contains the temporary block. Pending records are kept.
    */
   CompletableFuture<Integer> forgetReverted(List<BlockKey> keys);
 
-  /** Forgets every reverted record in {@code world} (it was saved); returns how many. */
+  /** Forgets every reverted record in {@code world} after external durability proof. */
   CompletableFuture<Integer> forgetReverted(String world);
 
   /** Every player's Mark. */
@@ -53,4 +54,7 @@ public interface SpellStore {
 
   /** Records a bind; returns 1. */
   CompletableFuture<Integer> saveFocus(FocusKey key, long generation);
+
+  /** Restores the prior generation only if a failed handoff still owns {@code generation}. */
+  CompletableFuture<Integer> rollbackFocus(FocusKey key, long generation);
 }

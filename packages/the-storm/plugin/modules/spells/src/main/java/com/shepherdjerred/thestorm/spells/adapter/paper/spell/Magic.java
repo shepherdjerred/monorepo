@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
+import com.shepherdjerred.thestorm.spells.adapter.paper.Teleports;
+import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.geometry.Vec3;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
@@ -44,5 +46,26 @@ final class Magic {
   /** The middle of {@code target}'s body, for particle lines. */
   static Location chest(LivingEntity target) {
     return target.getLocation().add(0, target.getHeight() / 2, 0);
+  }
+
+  /** Teleport before payment, so a cancelled PlayerTeleportEvent cannot consume a cast. */
+  static Effect teleportEffect(SpellKind kind, Toolbox tools, Player caster, Location destination) {
+    var from = at(caster);
+    return new Effect() {
+      @Override
+      public void beforeCommit(Runnable commit, Runnable failed) {
+        if (Teleports.teleport(caster, destination)) {
+          commit.run();
+        } else {
+          failed.run();
+        }
+      }
+
+      @Override
+      public void apply() {
+        tools.fx().cast(kind, from);
+        tools.fx().cast(kind, destination);
+      }
+    };
   }
 }

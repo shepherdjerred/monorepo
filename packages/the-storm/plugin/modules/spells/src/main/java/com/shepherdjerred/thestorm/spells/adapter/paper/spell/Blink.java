@@ -31,18 +31,11 @@ final class Blink implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
-    var from = Magic.at(caster);
     var eyes = caster.getEyeLocation();
     return tools
         .teleports()
         .arrival(caster, aim(caster), SEARCH_RADIUS, spot -> Teleports.clearPath(eyes, spot))
-        .map(
-            destination ->
-                () -> {
-                  tools.fx().cast(kind(), from);
-                  Teleports.teleport(caster, destination);
-                  tools.fx().cast(kind(), destination);
-                });
+        .map(destination -> Magic.teleportEffect(kind(), tools, caster, destination));
   }
 
   /** The open block in front of the first block in sight, or the end of the range in open air. */

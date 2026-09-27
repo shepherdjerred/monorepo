@@ -5,4 +5,9 @@ package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 public interface Effect {
 
   void apply();
+
+  /** Lets fallible persistent effects finish before the cast pays or starts its cooldown. */
+  default void beforeCommit(Runnable commit, Runnable failed) {
+    commit.run();
+  }
 }

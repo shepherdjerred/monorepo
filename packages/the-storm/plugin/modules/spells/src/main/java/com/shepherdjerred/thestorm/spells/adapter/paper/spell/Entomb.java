@@ -1,7 +1,6 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
-import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.adapter.paper.PaperNames;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
@@ -46,18 +45,31 @@ final class Entomb implements Spell {
               return Aim.buildable(tools, caster, shell, Replaceability.Mode.OPEN_SPACE)
                   .map(
                       blocks -> {
-                        var seal =
-                            Harm.Blow.none()
-                                .then(
-                                    entombed ->
-                                        tools
-                                            .blocks()
-                                            .place(
-                                                blocks,
-                                                material.createBlockData(),
-                                                Duration.ofSeconds(settings.durationSeconds())));
-                        return () -> {
-                          if (tools.harm().strike(caster, target, seal)) {
+                        return new Effect() {
+                          @Override
+                          public void beforeCommit(Runnable commit, Runnable failed) {
+                            if (tools.harm().denial(caster, target).isPresent()) {
+                              failed.run();
+                              return;
+                            }
+                            tools
+                                .blocks()
+                                .place(
+                                    blocks,
+                                    material.createBlockData(),
+                                    Duration.ofSeconds(settings.durationSeconds()),
+                                    saved -> {
+                                      if (saved) {
+                                        tools.harm().breakStealth(caster);
+                                        commit.run();
+                                      } else {
+                                        failed.run();
+                                      }
+                                    });
+                          }
+
+                          @Override
+                          public void apply() {
                             tools.fx().cast(kind(), Magic.chest(target));
                           }
                         };

@@ -206,6 +206,38 @@ public final class JooqSpellStore implements SpellStore {
                 .execute());
   }
 
+  @Override
+  public CompletableFuture<Integer> rollbackFocus(FocusKey key, long generation) {
+    return database.write(
+        dsl -> {
+          var row =
+              dsl.selectFrom(SPELLS_FOCUS)
+                  .where(
+                      SPELLS_FOCUS.PLAYER_ID.eq(key.player().toString()),
+                      SPELLS_FOCUS.SPELL.eq(key.spell().id()),
+                      SPELLS_FOCUS.GENERATION.eq(generation))
+                  .fetchOne();
+          if (row == null) {
+            return 0;
+          }
+          if (generation == 1) {
+            return dsl.deleteFrom(SPELLS_FOCUS)
+                .where(
+                    SPELLS_FOCUS.PLAYER_ID.eq(key.player().toString()),
+                    SPELLS_FOCUS.SPELL.eq(key.spell().id()),
+                    SPELLS_FOCUS.GENERATION.eq(generation))
+                .execute();
+          }
+          return dsl.update(SPELLS_FOCUS)
+              .set(SPELLS_FOCUS.GENERATION, generation - 1)
+              .where(
+                  SPELLS_FOCUS.PLAYER_ID.eq(key.player().toString()),
+                  SPELLS_FOCUS.SPELL.eq(key.spell().id()),
+                  SPELLS_FOCUS.GENERATION.eq(generation))
+              .execute();
+        });
+  }
+
   private static TemporaryBlock toTemporaryBlock(SpellsTemporaryBlockRecord row) {
     return new TemporaryBlock(
         new BlockKey(row.getWorld(), row.getX(), row.getY(), row.getZ()),

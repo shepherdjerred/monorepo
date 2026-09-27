@@ -30,20 +30,38 @@ final class Mark implements Spell {
       return Result.err(new CastProblem.Protected(denial.get()));
     }
     return Result.ok(
-        () -> {
-          tools.waypoints().mark(caster.getUniqueId(), here);
-          tools.fx().cast(kind(), here);
-          tools
-              .say()
-              .success(
-                  caster,
-                  "Marked "
-                      + here.getBlockX()
-                      + ", "
-                      + here.getBlockY()
-                      + ", "
-                      + here.getBlockZ()
-                      + ". Recall returns you here.");
+        new Effect() {
+          @Override
+          public void beforeCommit(Runnable commit, Runnable failed) {
+            tools
+                .waypoints()
+                .mark(
+                    caster.getUniqueId(),
+                    here,
+                    saved -> {
+                      if (saved) {
+                        commit.run();
+                      } else {
+                        failed.run();
+                      }
+                    });
+          }
+
+          @Override
+          public void apply() {
+            tools.fx().cast(kind(), here);
+            tools
+                .say()
+                .success(
+                    caster,
+                    "Marked "
+                        + here.getBlockX()
+                        + ", "
+                        + here.getBlockY()
+                        + ", "
+                        + here.getBlockZ()
+                        + ". Recall returns you here.");
+          }
         });
   }
 }

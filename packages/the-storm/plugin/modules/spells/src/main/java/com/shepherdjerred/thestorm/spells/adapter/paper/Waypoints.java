@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
@@ -31,7 +32,7 @@ public final class Waypoints {
   }
 
   /** Sets {@code player}'s Mark to {@code location}. */
-  public void mark(UUID player, Location location) {
+  public void mark(UUID player, Location location, Consumer<Boolean> completed) {
     var world = location.getWorld();
     var waypoint =
         new Waypoint(
@@ -41,8 +42,18 @@ public final class Waypoints {
             location.getZ(),
             location.getYaw(),
             location.getPitch());
-    marks.put(player, waypoint);
-    async.logFailure(store.saveMark(player, waypoint), "storing the Mark of " + player);
+    async.onMain(
+        store.saveMark(player, waypoint),
+        "storing the Mark of " + player,
+        saved -> {
+          if (saved == 1) {
+            marks.put(player, waypoint);
+            completed.accept(true);
+          } else {
+            completed.accept(false);
+          }
+        },
+        failure -> completed.accept(false));
   }
 
   /** Where {@code waypoint} is now, or empty if its world is not loaded. */

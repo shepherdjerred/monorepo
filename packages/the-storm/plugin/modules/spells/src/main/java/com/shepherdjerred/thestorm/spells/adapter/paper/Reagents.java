@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.spells.domain.cast.ReagentCost;
 import com.shepherdjerred.thestorm.spells.domain.cast.ReagentPlan;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -40,13 +41,26 @@ final class Reagents {
 
   /** Removes {@code cost} from {@code inventory}; the caller has checked it can pay. */
   static void take(PlayerInventory inventory, ReagentCost cost) {
+    reserve(inventory, cost);
+  }
+
+  /** Reserves a focus's payment before an asynchronous effect can change the inventory. */
+  static List<ItemStack> reserve(PlayerInventory inventory, ReagentCost cost) {
+    var reserved = new ArrayList<ItemStack>();
     for (var take : ReagentPlan.takes(cost, stacks(inventory, cost))) {
       var item = inventory.getItem(take.slot());
-      if (item == null) {
-        throw new IllegalStateException("reagent slot " + take.slot() + " emptied mid-cast");
+      if (item == null || !isPlain(item) || item.getAmount() < take.amount()) {
+        throw new IllegalStateException("reagent slot " + take.slot() + " changed mid-cast");
       }
+      reserved.add(item.asQuantity(take.amount()));
       var left = item.getAmount() - take.amount();
       inventory.setItem(take.slot(), left == 0 ? null : item.asQuantity(left));
     }
+    return reserved;
+  }
+
+  /** Returns a failed cast's reservation; the caller handles any full-inventory leftovers. */
+  static Map<Integer, ItemStack> refund(PlayerInventory inventory, List<ItemStack> reserved) {
+    return reserved.isEmpty() ? Map.of() : inventory.addItem(reserved.toArray(ItemStack[]::new));
   }
 }

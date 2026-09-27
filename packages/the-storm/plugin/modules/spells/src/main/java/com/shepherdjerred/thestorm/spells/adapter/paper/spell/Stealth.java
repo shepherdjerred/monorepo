@@ -4,6 +4,9 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
 import java.time.Duration;
+import java.util.Objects;
+import org.bukkit.entity.Enemy;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -13,6 +16,8 @@ import org.bukkit.potion.PotionEffectType;
  * Attacking anything ends it at once.
  */
 final class Stealth implements Spell {
+
+  private static final double TARGET_CLEAR_RADIUS = 64;
 
   private final SpellSettings.Timed settings;
   private final Toolbox tools;
@@ -47,6 +52,17 @@ final class Stealth implements Spell {
                   caster.getUniqueId(),
                   Duration.ofSeconds(settings.durationSeconds()),
                   tools.time().instant());
+          for (var mob :
+              caster
+                  .getWorld()
+                  .getNearbyEntitiesByType(Mob.class, Magic.at(caster), TARGET_CLEAR_RADIUS)) {
+            if (mob instanceof Enemy
+                && Objects.equals(mob.getTarget(), caster)
+                && !tools.targets().isImmune(mob)
+                && tools.guard().harmDenial(caster, mob).isEmpty()) {
+              mob.setTarget(null);
+            }
+          }
         });
   }
 }

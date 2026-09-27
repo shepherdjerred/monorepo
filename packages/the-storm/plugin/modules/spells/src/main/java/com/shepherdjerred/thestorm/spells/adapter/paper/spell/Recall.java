@@ -1,7 +1,6 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
-import com.shepherdjerred.thestorm.spells.adapter.paper.Teleports;
 import com.shepherdjerred.thestorm.spells.adapter.paper.Waypoints;
 import com.shepherdjerred.thestorm.spells.domain.Refusal;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
@@ -37,16 +36,12 @@ final class Recall implements Spell {
     if (mark.isEmpty()) {
       return Result.err(CastProblem.refused(new Refusal.NoMark()));
     }
-    var from = Magic.at(caster);
+    if (!tools.teleports().loadArea(mark.get(), settings.searchRadius())) {
+      return Result.err(CastProblem.refused(new Refusal.DestinationLoading()));
+    }
     return tools
         .teleports()
         .arrival(caster, mark.get(), settings.searchRadius())
-        .map(
-            destination ->
-                () -> {
-                  tools.fx().cast(kind(), from);
-                  Teleports.teleport(caster, destination);
-                  tools.fx().cast(kind(), destination);
-                });
+        .map(destination -> Magic.teleportEffect(kind(), tools, caster, destination));
   }
 }
