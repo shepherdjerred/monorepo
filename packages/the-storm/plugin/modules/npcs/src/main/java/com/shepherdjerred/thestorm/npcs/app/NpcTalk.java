@@ -9,9 +9,14 @@ import com.shepherdjerred.thestorm.npcs.domain.npc.NpcDefinition;
 import com.shepherdjerred.thestorm.npcs.domain.trainer.Offer;
 import java.time.Duration;
 import java.time.InstantSource;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.BiPredicate;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
@@ -39,11 +44,15 @@ public final class NpcTalk {
       String continueLabel,
       InstantSource time,
       Duration hold,
+      BiPredicate<Player, String> near,
+      Executor mainThread,
       ComponentLogger logger) {}
 
   private final Wiring wiring;
   private final Trainer trainer;
   private final Conversations conversations = new Conversations();
+  private final Map<UUID, Long> generations = new HashMap<>();
+  private long nextGeneration;
 
   public NpcTalk(Wiring wiring, Trainer trainer) {
     this.wiring = wiring;
@@ -55,6 +64,7 @@ public final class NpcTalk {
    * own, else its trainer screen. An NPC with none of these says nothing.
    */
   public void talk(Player player, NpcDefinition npc) {
+    advance(player);
     var dialogue =
         wiring
             .dialogues()
@@ -70,10 +80,19 @@ public final class NpcTalk {
 
   /** A button press from the dialog with {@code token}. */
   public void click(Player player, long token, int button) {
+    var current = conversations.current(player.getUniqueId());
+    if (current.isPresent()
+        && current.get().token() == token
+        && !wiring.near().test(player, current.get().npc())) {
+      forget(player);
+      wiring.presenter().close(player);
+      return;
+    }
     var clicked = conversations.click(player.getUniqueId(), token, button);
     if (clicked.isEmpty()) {
       return;
     }
+    advance(player);
     var npc = wiring.catalog().content().npc(clicked.get().npc());
     if (npc.isEmpty()) {
       // The NPC was removed by a reload while the dialog was open.
@@ -93,7 +112,12 @@ public final class NpcTalk {
 
   /** Forgets {@code player}'s conversation (they quit). */
   public void forget(Player player) {
+    advance(player);
     conversations.forget(player.getUniqueId());
+  }
+
+  private void advance(Player player) {
+    generations.put(player.getUniqueId(), ++nextGeneration);
   }
 
   private void choose(Player player, NpcDefinition npc, Choice choice) {
@@ -129,19 +153,24 @@ public final class NpcTalk {
   }
 
   private void whenOnline(Player player, NpcDefinition npc, CompletableFuture<Screen> screen) {
+    var generation = Objects.requireNonNull(generations.get(player.getUniqueId()));
     var _ =
-        screen.whenComplete(
+        screen.whenCompleteAsync(
             (shown, failure) -> {
+              if (!player.isOnline() || !generation.equals(generations.get(player.getUniqueId()))) {
+                return;
+              }
               if (failure != null) {
                 wiring
                     .logger()
                     .error("Trainer {} failed for {}", npc.id(), player.getName(), failure);
                 player.sendMessage(
                     HouseStyle.error(LABEL, Component.text("Training is unavailable right now.")));
-              } else if (player.isOnline()) {
+              } else if (wiring.near().test(player, npc.id())) {
                 show(player, npc, shown);
               }
-            });
+            },
+            wiring.mainThread());
   }
 
   private void run(Player player, NpcDefinition npc, String id) {

@@ -116,6 +116,16 @@ final class NpcWorld {
         : Optional.empty();
   }
 
+  /** Whether a player is still close enough to use an open dialogue. */
+  boolean near(Player player, String npc) {
+    var place = location(npc);
+    if (place.isEmpty() || !player.getWorld().equals(place.get().getWorld())) {
+      return false;
+    }
+    return feetOf(player).distanceSquared(place.get())
+        <= config.dialog().holdRadius() * config.dialog().holdRadius();
+  }
+
   /** Where {@code npc} lives. */
   Location homeLocation(NpcDefinition npc) {
     return parts.mannequins().location(npc.home());
@@ -237,6 +247,17 @@ final class NpcWorld {
 
   private void track(NpcDefinition npc, Mannequin entity) {
     var entry = live.get(npc.id());
+    var previousHome =
+        entry == null
+            ? parts.mannequins().savedHome(entity)
+            : Optional.of(entry.npc.home().toString());
+    if (previousHome.isPresent() && !previousHome.get().equals(npc.home().toString())) {
+      parts.navigators().release(npc.id());
+      if (!entity.teleport(homeLocation(npc))) {
+        throw new IllegalStateException("could not move NPC " + npc.id() + " to its new home");
+      }
+    }
+    parts.mannequins().saveHome(entity, npc.home());
     if (entry == null) {
       live.put(npc.id(), new Live(npc, entity));
     } else {

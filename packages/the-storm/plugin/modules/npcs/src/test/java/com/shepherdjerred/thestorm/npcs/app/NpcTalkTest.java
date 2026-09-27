@@ -120,6 +120,8 @@ final class NpcTalkTest {
                 "Continue",
                 clock,
                 Duration.ofSeconds(30),
+                (talking, npc) -> true,
+                Runnable::run,
                 ComponentLogger.logger("test")),
             new Trainer(purchases, levels, wording, Runnable::run));
   }
@@ -248,6 +250,25 @@ final class NpcTalkTest {
   }
 
   @Test
+  void aReloadedTrainerCannotBuyAFormerTrack() {
+    purchases.nextQuote =
+        CompletableFuture.completedFuture(Result.ok(new Quote(Track.MECHANIC, 1, 1000)));
+    talk.talk(player, DARREN);
+    presenter.last().press("Buy level 1");
+    catalog.replace(
+        new Content(
+            Map.of("darren", define("darren", Optional.empty(), Optional.of("shopkeeper"))),
+            Map.of(),
+            Map.of(),
+            Map.of()));
+    presenter.last().press("Confirm");
+
+    assertThat(purchases.bought).isEmpty();
+    assertThat(presenter.last().screen().body())
+        .startsWith("This trainer's offer changed. Please review the current offer.");
+  }
+
+  @Test
   void confirmingCanGoBack() {
     talk.talk(player, DARREN);
     presenter.last().press("Buy level 1");
@@ -279,6 +300,8 @@ final class NpcTalkTest {
 
   @Test
   void aFailedPurchaseIsExplainedOnTheNextOffer() {
+    purchases.nextQuote =
+        CompletableFuture.completedFuture(Result.ok(new Quote(Track.MECHANIC, 1, 1000)));
     talk.talk(player, DARREN);
     presenter.last().press("Buy level 1");
     purchases.nextBuy =

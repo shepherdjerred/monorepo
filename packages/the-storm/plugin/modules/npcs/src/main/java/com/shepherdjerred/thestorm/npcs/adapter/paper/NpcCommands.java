@@ -59,6 +59,7 @@ final class NpcCommands {
       ComponentLogger logger) {}
 
   private final Wiring wiring;
+  private long reloadGeneration;
 
   NpcCommands(Wiring wiring) {
     this.wiring = wiring;
@@ -152,11 +153,15 @@ final class NpcCommands {
 
   private int reload(CommandSender sender) {
     sender.sendMessage(info("Reloading NPC content..."));
+    var generation = ++reloadGeneration;
     var source = wiring.source().get();
     var _ =
         CompletableFuture.supplyAsync(source::load, wiring.reader())
             .whenCompleteAsync(
                 (result, failure) -> {
+                  if (generation != reloadGeneration) {
+                    return;
+                  }
                   if (failure != null) {
                     wiring.logger().error("NPC reload failed", failure);
                     sender.sendMessage(error("Reload failed; see the server log."));

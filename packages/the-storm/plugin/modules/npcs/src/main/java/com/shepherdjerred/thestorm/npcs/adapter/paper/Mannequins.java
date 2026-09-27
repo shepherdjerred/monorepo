@@ -151,6 +151,17 @@ final class Mannequins {
     return Optional.of(new Spawned(entity.getUniqueId(), id, fingerprint));
   }
 
+  Optional<String> savedHome(Mannequin entity) {
+    return Optional.ofNullable(
+        entity.getPersistentDataContainer().get(keys.home(), PersistentDataType.STRING));
+  }
+
+  void saveHome(Mannequin entity, Spot home) {
+    entity
+        .getPersistentDataContainer()
+        .set(keys.home(), PersistentDataType.STRING, home.toString());
+  }
+
   static NamespacedKey requireKey(String key) {
     var parsed = NamespacedKey.fromString(key);
     if (parsed == null) {

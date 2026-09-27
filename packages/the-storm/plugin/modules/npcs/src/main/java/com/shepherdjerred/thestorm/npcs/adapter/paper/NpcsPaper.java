@@ -99,6 +99,8 @@ public final class NpcsPaper {
                 config.dialog().continueLabel(),
                 context.time(),
                 Duration.ofSeconds(config.dialog().holdSeconds()),
+                world::near,
+                context.scheduler().mainThread(),
                 context.logger()),
             parts.trainer());
     world.attachListeners(talk::listeners);

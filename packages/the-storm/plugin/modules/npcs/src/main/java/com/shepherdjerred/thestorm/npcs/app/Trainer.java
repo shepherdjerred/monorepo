@@ -72,7 +72,10 @@ public final class Trainer {
   /** The confirmation screen for {@code offer}. */
   public Screen confirm(NpcDefinition npc, Offer offer) {
     return TrainerScreens.confirm(
-        npc.name(), TrainerWording.trackName(track(npc)), offer, wording.crystals(offer.cost()));
+        npc.name(),
+        TrainerWording.trackName(Track.valueOf(offer.track().toUpperCase(Locale.ROOT))),
+        offer,
+        wording.crystals(offer.cost()));
   }
 
   /**
@@ -81,6 +84,10 @@ public final class Trainer {
    */
   public CompletableFuture<String> buy(Player player, NpcDefinition npc, Offer offer) {
     var track = track(npc);
+    if (!offer.track().equals(track.id())) {
+      return CompletableFuture.completedFuture(
+          "This trainer's offer changed. Please review the current offer.");
+    }
     return purchases
         .buy(player.getUniqueId(), new Quote(track, offer.level(), offer.cost()))
         .thenApplyAsync(this::outcome, mainThread);

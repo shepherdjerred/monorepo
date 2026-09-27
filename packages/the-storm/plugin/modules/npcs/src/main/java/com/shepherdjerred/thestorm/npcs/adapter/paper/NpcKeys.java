@@ -9,6 +9,7 @@ import org.bukkit.plugin.Plugin;
  * @param npc {@code thestorm:npc}, the NPC id on a Mannequin
  * @param fingerprint the definition fingerprint the Mannequin was last set up from
  * @param skin the skin the Mannequin wears, so the profile is only touched when it changes
+ * @param home the last applied home, so a reload can relocate a saved Mannequin
  * @param navigator marks a hidden navigator mob
  * @param marker marks a quest-marker text display
  */
@@ -16,6 +17,7 @@ public record NpcKeys(
     NamespacedKey npc,
     NamespacedKey fingerprint,
     NamespacedKey skin,
+    NamespacedKey home,
     NamespacedKey navigator,
     NamespacedKey marker) {
 
@@ -24,6 +26,7 @@ public record NpcKeys(
         new NamespacedKey(plugin, "npc"),
         new NamespacedKey(plugin, "npc_fingerprint"),
         new NamespacedKey(plugin, "npc_skin"),
+        new NamespacedKey(plugin, "npc_home"),
         new NamespacedKey(plugin, "npc_navigator"),
         new NamespacedKey(plugin, "npc_marker"));
   }
