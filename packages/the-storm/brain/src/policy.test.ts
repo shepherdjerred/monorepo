@@ -13,6 +13,7 @@ const CONFIG: PilotConfig = {
   rconPort: 25_575,
   clientVersion: "26.1",
   maxCompanions: 1,
+  botPlayerName: "",
   llmEnabled: false,
   llmModel: "gpt-6-luna",
   monthlyBudgetUsd: 20,
@@ -38,6 +39,9 @@ describe("pilot policy", () => {
   });
 
   it("requires a real player and rejects unknown list formats", () => {
+    expect(
+      humanPlayers("There are 1 of a max of 20 players online: Alex"),
+    ).toEqual(["Alex"]);
     expect(
       humanPlayers(
         "There are 2 of a max of 20 players online: BotOne, Alex",

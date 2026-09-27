@@ -18,6 +18,7 @@ it("ships disabled with one pilot account and a two-hour Pacific window", async 
   const config = await loadPilotConfig(PILOT_FILE);
   expect(config.enabled).toBe(false);
   expect(config.maxCompanions).toBe(1);
+  expect(config.botPlayerName).toBe("");
   expect([config.startHour, config.endHour]).toEqual([18, 20]);
   expect(config.llmEnabled).toBe(false);
   expect(config.llmModel).toBe("gpt-6-luna");
@@ -25,8 +26,19 @@ it("ships disabled with one pilot account and a two-hour Pacific window", async 
 });
 
 it("accepts a targeted flag while preserving the disabled file default", async () => {
-  const config = await loadPilotConfig(PILOT_FILE, flagSource(true));
-  expect(config.enabled).toBe(true);
+  const original = await Bun.file(PILOT_FILE).text();
+  const path = `${Bun.env["TMPDIR"] ?? "/tmp"}/storm-pilot-targeted-${crypto.randomUUID()}.json`;
+  try {
+    await Bun.write(
+      path,
+      original.replace('"botPlayerName": ""', '"botPlayerName": "BotOne"'),
+    );
+    const config = await loadPilotConfig(path, flagSource(true));
+    expect(config.enabled).toBe(true);
+    expect(config.botPlayerName).toBe("BotOne");
+  } finally {
+    await Bun.file(path).delete();
+  }
 });
 
 it("lets an explicit false flag disable a file-enabled pilot", async () => {
@@ -35,7 +47,9 @@ it("lets an explicit false flag disable a file-enabled pilot", async () => {
   try {
     await Bun.write(
       path,
-      original.replace('"enabled": false', '"enabled": true'),
+      original
+        .replace('"enabled": false', '"enabled": true')
+        .replace('"botPlayerName": ""', '"botPlayerName": "BotOne"'),
     );
     const config = await loadPilotConfig(path, flagSource(false));
     expect(config.enabled).toBe(false);
@@ -58,6 +72,31 @@ it("rejects an invalid flag value and falls back when its source fails", async (
   };
   const fallback = await loadPilotConfig(PILOT_FILE, failing);
   expect(fallback.enabled).toBe(false);
+});
+
+it("requires an exact profile name before the pilot can be enabled", async () => {
+  const file = Bun.file(new URL("../pilot.json", import.meta.url).pathname);
+  const original = await file.text();
+  const path = `${Bun.env["TMPDIR"] ?? "/tmp"}/storm-pilot-profile-${crypto.randomUUID()}.json`;
+  try {
+    await Bun.write(
+      path,
+      original.replace('"enabled": false', '"enabled": true'),
+    );
+    await expect(loadPilotConfig(path)).rejects.toThrow(
+      "enabled pilot requires the exact Minecraft profile name",
+    );
+    await Bun.write(
+      path,
+      original
+        .replace('"enabled": false', '"enabled": true')
+        .replace('"botPlayerName": ""', '"botPlayerName": "BotOne"'),
+    );
+    const config = await loadPilotConfig(path);
+    expect(config.botPlayerName).toBe("BotOne");
+  } finally {
+    await Bun.file(path).delete();
+  }
 });
 
 it("reads only required bootstrap values from a real process environment", () => {

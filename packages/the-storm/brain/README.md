@@ -13,20 +13,42 @@ resolved flag value takes precedence over the file. Set `FEATURE_FLAGS_MODE`
 explicitly to `flipt` with its `FLIPT_URL`, `FLIPT_NAMESPACE=the-storm-companion`,
 and `FLIPT_ENVIRONMENT`, or to `disabled` for local checks without Flipt.
 `bun run pilot --check` reads only non-sensitive configuration and never opens
-a game or RCON connection. `--run` additionally requires explicit enablement
-and these bootstrap values from the existing authenticated credential wrapper:
+a game or RCON connection. The selected pilot account is `Microsoft Minecraft
+Alt 1` in 1Password. Its sign-in identifier is injected through the tracked
+`account.env` reference; the file contains no credential value.
 
-| Name                        | Use                                                               |
-| --------------------------- | ----------------------------------------------------------------- |
-| `MINECRAFT_BOT_EMAIL`       | Microsoft account identifier for the pilot only                   |
-| `MINECRAFT_BOT_PLAYER_NAME` | In-game name to exclude from human presence                       |
-| `MINECRAFT_AUTH_CACHE_DIR`  | Absolute private directory for Mineflayer's Microsoft token cache |
-| `MINECRAFT_RCON_PASSWORD`   | RCON authentication for the local server                          |
+Before setting `enabled: true`, set `botPlayerName` in `pilot.json` to the
+account's exact public Minecraft profile name. The preflight RCON check
+excludes that player, including a pilot left connected by an earlier run.
+The post-spawn check rejects a mismatch between the configured and actual
+profile names.
 
-Never put these values or the token cache in the repository. The cache directory
+Once the other prerequisites are available, the authenticated invocation is:
+
+```bash
+cd packages/the-storm/brain
+op run --env-file=account.env -- bun run pilot --run
+```
+
+`--run` additionally requires explicit enablement and these bootstrap values:
+
+| Name                       | Use                                                               |
+| -------------------------- | ----------------------------------------------------------------- |
+| `MINECRAFT_BOT_EMAIL`      | Injected from Alt 1's 1Password `username` field                  |
+| `MINECRAFT_AUTH_CACHE_DIR` | Absolute private directory for Mineflayer's Microsoft token cache |
+| `MINECRAFT_RCON_PASSWORD`  | RCON authentication for the local server                          |
+
+Never put the resolved values or token cache in the repository. The cache directory
 must already exist with mode `0700`; the runtime does not create it. Authorize
 the pilot account and confirm the credential storage and refresh procedure
-before running `--run`. The other two accounts stay unconfigured.
+before running `--run`. The 1Password password field is never read; Mineflayer
+uses Microsoft OAuth and writes its tokens only to the private cache. The
+other two accounts stay unconfigured.
+
+The repository's current production `server.properties` has RCON disabled.
+Enabling an authenticated RCON path and supplying `MINECRAFT_RCON_PASSWORD`
+are separate prerequisites for a live pilot; this credential reference does
+not change the server.
 
 Mineflayer 4.39.0 speaks Minecraft 26.1. The production server is Paper 26.2,
 so its protocol bridge must be installed and proven before a live pilot. The
