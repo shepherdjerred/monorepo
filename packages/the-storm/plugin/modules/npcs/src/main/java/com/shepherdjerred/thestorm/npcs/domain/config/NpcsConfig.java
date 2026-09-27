@@ -12,13 +12,42 @@ import java.util.regex.Pattern;
  * @param navigator the hidden mob whose pathfinder plans NPC walks
  * @param markers the quest markers above NPCs
  * @param dialog conversation settings
+ * @param guard how guards detect and repel hostiles near their posts
  */
 public record NpcsConfig(
     MovementSettings movement,
     Animation animation,
     Navigator navigator,
     Markers markers,
-    Dialog dialog) {
+    Dialog dialog,
+    Guard guard) {
+
+  /** Limits pursuit and attacks to a small area around a guard's post. */
+  public record Guard(
+      double detectionRadius,
+      double homeRadius,
+      double attackReach,
+      double damage,
+      int cooldownTicks) {
+
+    public Guard {
+      if (!(detectionRadius >= 2 && detectionRadius <= 32)) {
+        throw new IllegalArgumentException("guard detectionRadius must be 2..32");
+      }
+      if (!(homeRadius >= detectionRadius && homeRadius <= 48)) {
+        throw new IllegalArgumentException("guard homeRadius must be detectionRadius..48");
+      }
+      if (!(attackReach >= 1 && attackReach <= 4)) {
+        throw new IllegalArgumentException("guard attackReach must be 1..4");
+      }
+      if (!(damage > 0 && damage <= 10)) {
+        throw new IllegalArgumentException("guard damage must be >0..10");
+      }
+      if (cooldownTicks < 5 || cooldownTicks > 100) {
+        throw new IllegalArgumentException("guard cooldownTicks must be 5..100");
+      }
+    }
+  }
 
   /**
    * Which NPCs move. Only NPCs with a player within {@code playerRadius} blocks walk or turn; the

@@ -191,7 +191,7 @@ public final class PathFollower {
    * another point later.
    */
   private Tick giveUp(Walker walker, Vec3 target, Observation seen) {
-    if (walker.intent() instanceof Intent.Wander) {
+    if (walker.intent() instanceof Intent.Wander || walker.intent() instanceof Intent.Pursue) {
       return arrive(walker.intent(), walker.stop(), seen.facing(), seen.tick());
     }
     var facing = Rotation.heading(seen.position(), target, seen.facing());
@@ -213,7 +213,7 @@ public final class PathFollower {
     var until =
         switch (intent) {
           case Intent.Stand _, Intent.Sleep _ -> Long.MAX_VALUE;
-          case Intent.Wander _, Intent.Patrol _ -> now + dwell();
+          case Intent.Wander _, Intent.Patrol _, Intent.Pursue _ -> now + dwell();
         };
     return new Tick(
         new Walker(intent, stop, new Phase.Resting(until)),
@@ -228,6 +228,7 @@ public final class PathFollower {
   private Vec3 destination(Intent intent, int stop) {
     return switch (intent) {
       case Intent.Stand(var spot, var _) -> spot.position();
+      case Intent.Pursue(var target) -> target.position();
       case Intent.Sleep(var bed) -> bed.position();
       case Intent.Patrol(var route) -> route.get(stop).position();
       case Intent.Wander(var center, var radius) -> {
@@ -246,6 +247,7 @@ public final class PathFollower {
       case Intent.Stand(var spot, var _) -> spot.rotation();
       case Intent.Sleep(var bed) -> bed.rotation();
       case Intent.Wander _, Intent.Patrol _ -> current;
+      case Intent.Pursue(var target) -> target.rotation();
     };
   }
 }

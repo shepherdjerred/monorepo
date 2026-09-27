@@ -17,12 +17,14 @@ import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mannequin;
 import org.bukkit.entity.Pose;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.profile.PlayerTextures;
 
@@ -84,6 +86,10 @@ final class Mannequins {
     mannequin.setInvulnerable(true);
     mannequin.setSilent(true);
     mannequin.setPersistent(true);
+    mannequin
+        .getEquipment()
+        .setItemInMainHand(
+            new ItemStack(npc.roles().contains("guard") ? Material.IRON_SWORD : Material.AIR));
     pose(mannequin, npc.pose());
     skin(mannequin, npc.skin());
     var data = mannequin.getPersistentDataContainer();

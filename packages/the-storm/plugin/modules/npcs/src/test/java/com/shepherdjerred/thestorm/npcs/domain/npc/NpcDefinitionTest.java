@@ -62,6 +62,24 @@ final class NpcDefinitionTest {
   }
 
   @Test
+  void aGuardRoleChangesVisibleEquipmentAndFingerprint() {
+    var base = npc("watch");
+    var guard =
+        new NpcDefinition(
+            base.id(),
+            base.name(),
+            base.description(),
+            base.skin(),
+            base.home(),
+            base.pose(),
+            Set.of("guard"),
+            base.schedule(),
+            base.dialogue(),
+            base.trainer());
+    assertThat(guard.fingerprint()).isNotEqualTo(base.fingerprint());
+  }
+
+  @Test
   void skinsDescribeThemselves() {
     assertThat(new Skin.Default().describe()).isEqualTo("none");
     var slim = new Skin.Vanilla(Skin.Model.SLIM, "alex");

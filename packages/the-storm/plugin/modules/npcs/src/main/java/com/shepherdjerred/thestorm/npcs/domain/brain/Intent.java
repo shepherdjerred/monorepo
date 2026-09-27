@@ -13,6 +13,9 @@ public sealed interface Intent {
   /** Stroll to random points within {@code radius} blocks of {@code center}. */
   record Wander(Spot center, int radius) implements Intent {}
 
+  /** Approach a moving hostile mob without teleporting through an obstructed route. */
+  record Pursue(Spot target) implements Intent {}
+
   /** Walk {@code route} in order and repeat. */
   record Patrol(List<Spot> route) implements Intent {
 

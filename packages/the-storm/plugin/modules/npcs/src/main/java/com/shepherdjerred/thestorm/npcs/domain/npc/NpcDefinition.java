@@ -35,11 +35,18 @@ public record NpcDefinition(
   }
 
   /**
-   * A fingerprint of everything applied to the entity itself (name, description, skin, pose), so a
-   * changed definition can be told from an unchanged one after a restart.
+   * A fingerprint of everything applied to the entity itself (name, description, skin, pose and
+   * guard equipment), so a changed definition can be told from an unchanged one after a restart.
    */
   public String fingerprint() {
-    var canonical = String.join("\u0000", name, description, skin.describe(), pose.id());
+    var canonical =
+        String.join(
+            "\u0000",
+            name,
+            description,
+            skin.describe(),
+            pose.id(),
+            Boolean.toString(roles.contains("guard")));
     return Integer.toHexString(canonical.hashCode());
   }
 }

@@ -46,6 +46,20 @@ places:
     z: 8.5
     yaw: 180.0
     pitch: 0.0
+  east-watch:
+    world: minecraft:overworld
+    x: 16.5
+    y: 64.0
+    z: 0.5
+    yaw: -90.0
+    pitch: 0.0
+  west-watch:
+    world: minecraft:overworld
+    x: -16.5
+    y: 64.0
+    z: 0.5
+    yaw: 90.0
+    pitch: 0.0
 
 # Signed skin textures, referred to by id from `skin:`. Copy `value` and
 # `signature` from
@@ -84,6 +98,18 @@ schedules:
       - from: "22:00"
         to: "06:00"
         activity: sleep smith-bed
+  east-guard:
+    shelter: none
+    slots:
+      - from: "00:00"
+        to: "00:00"
+        activity: patrol east-watch smithy-door market
+  west-guard:
+    shelter: none
+    slots:
+      - from: "00:00"
+        to: "00:00"
+        activity: patrol west-watch tavern-door market
 
 # Conversations. A node has either `next: <node>` (a Continue button) and no
 # options, or `next: none` and up to six options. An option's `then` is
@@ -191,6 +217,26 @@ dialogues:
         next: none
         options:
           - label: Goodbye
+            then: close
+  east-guard:
+    title: Town Guard
+    start: greet
+    nodes:
+      greet:
+        text: Keep the east road clear. We watch for trouble near town.
+        next: none
+        options:
+          - label: Stay safe
+            then: close
+  west-guard:
+    title: Town Guard
+    start: greet
+    nodes:
+      greet:
+        text: The west watch is quiet for now. Tell us if you see monsters.
+        next: none
+        options:
+          - label: Stay safe
             then: close
 
 # The NPCs. `name` is all Bedrock players see, so it carries the role;
@@ -323,4 +369,36 @@ npcs:
     roles: [blacksmith]
     schedule: blacksmith
     dialogue: thomas
+    trainer: none
+  east-guard:
+    name: Town Guard · East Watch
+    description: Patrols and defends Spawn Town
+    skin: vanilla:wide/steve
+    home:
+      world: minecraft:overworld
+      x: 16.5
+      y: 64.0
+      z: 0.5
+      yaw: -90.0
+      pitch: 0.0
+    pose: standing
+    roles: [guard]
+    schedule: east-guard
+    dialogue: east-guard
+    trainer: none
+  west-guard:
+    name: Town Guard · West Watch
+    description: Patrols and defends Spawn Town
+    skin: vanilla:wide/kai
+    home:
+      world: minecraft:overworld
+      x: -16.5
+      y: 64.0
+      z: 0.5
+      yaw: 90.0
+      pitch: 0.0
+    pose: standing
+    roles: [guard]
+    schedule: west-guard
+    dialogue: west-guard
     trainer: none

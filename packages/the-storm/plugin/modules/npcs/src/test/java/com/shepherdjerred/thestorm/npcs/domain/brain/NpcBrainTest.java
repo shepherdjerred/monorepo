@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.npcs.domain.brain.NpcBrain.Situation;
 import com.shepherdjerred.thestorm.npcs.domain.geo.Spot;
+import com.shepherdjerred.thestorm.npcs.domain.npc.NpcDefinition;
 import com.shepherdjerred.thestorm.npcs.domain.npc.NpcPose;
 import com.shepherdjerred.thestorm.npcs.domain.schedule.Activity;
 import com.shepherdjerred.thestorm.npcs.domain.schedule.Schedule;
@@ -15,6 +16,7 @@ import com.shepherdjerred.thestorm.npcs.domain.schedule.TimeRange;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 final class NpcBrainTest {
@@ -80,6 +82,30 @@ final class NpcBrainTest {
     var noShelter = new Schedule("dry", DAY.slots(), Optional.empty());
     assertThat(NpcBrain.decide(npc, Optional.of(noShelter), PLACES, at(13, true)))
         .isEqualTo(new Intent.Wander(MARKET, 4));
+  }
+
+  @Test
+  void aGuardPursuesAThreatBeforeItsPatrolAndResumesWhenItLeaves() {
+    var ordinary = npc("watch", Optional.of("day"));
+    var guard =
+        new NpcDefinition(
+            ordinary.id(),
+            ordinary.name(),
+            ordinary.description(),
+            ordinary.skin(),
+            ordinary.home(),
+            ordinary.pose(),
+            Set.of("guard"),
+            ordinary.schedule(),
+            ordinary.dialogue(),
+            ordinary.trainer());
+    var danger = new Situation(TimeOfDay.of(17, 0), true, Optional.of(GATE));
+    assertThat(NpcBrain.decide(guard, Optional.of(DAY), PLACES, danger))
+        .isEqualTo(new Intent.Pursue(GATE));
+    assertThat(NpcBrain.decide(ordinary, Optional.of(DAY), PLACES, danger))
+        .isEqualTo(new Intent.Stand(INN, NpcPose.STANDING));
+    assertThat(NpcBrain.decide(guard, Optional.of(DAY), PLACES, at(17, false)))
+        .isEqualTo(new Intent.Patrol(List.of(GATE, MARKET)));
   }
 
   @Test
