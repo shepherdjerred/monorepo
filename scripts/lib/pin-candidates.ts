@@ -107,6 +107,33 @@ export function validateStateAgainstVersions(
   }
 }
 
+/**
+ * Keep only pins for images that still exist in the current catalog.
+ *
+ * A pending generated bump branch can be based on a catalog from before main
+ * retired an image. Its state is valid against that branch's catalog, but the
+ * retired key must not be merged back into a bump reconstructed from current
+ * main.
+ */
+export function retainCurrentImagePins(
+  state: PinCandidatesState,
+  versions: Map<string, string>,
+): { state: PinCandidatesState; retiredKeys: string[] } {
+  const allowed = imageKeys(versions);
+  const entries = Object.entries(state.pins);
+  const retained = entries.filter(([key]) => allowed.has(key));
+  const retiredKeys = entries
+    .filter(([key]) => !allowed.has(key))
+    .map(([key]) => key);
+  return {
+    state: {
+      schema: state.schema,
+      pins: Object.fromEntries(retained),
+    },
+    retiredKeys,
+  };
+}
+
 export function validateCandidateKeys(
   candidates: PinCandidates,
   versions: Map<string, string>,
