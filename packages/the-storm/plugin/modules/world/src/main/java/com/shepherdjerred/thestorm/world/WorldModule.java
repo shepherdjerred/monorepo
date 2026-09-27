@@ -30,11 +30,12 @@ public final class WorldModule implements StormModule {
     var worlds = WorldPaper.install(context.plugin().getServer(), config);
     context.services().provide(WildWorlds.class, worlds);
     var base = System.getenv("FLIPT_URL");
+    var environment = System.getenv("FLIPT_ENVIRONMENT");
     CrierGate rollout;
-    if (base == null || base.isBlank()) {
+    if (base == null || base.isBlank() || environment == null || environment.isBlank()) {
       rollout = player -> java.util.concurrent.CompletableFuture.completedFuture(false);
     } else {
-      var remote = new FliptCrierGate(URI.create(base));
+      var remote = new FliptCrierGate(URI.create(base), environment);
       gate = remote;
       rollout = remote;
     }

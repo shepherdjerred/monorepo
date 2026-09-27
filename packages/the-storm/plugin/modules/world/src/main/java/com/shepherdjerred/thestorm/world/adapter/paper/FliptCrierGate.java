@@ -13,25 +13,41 @@ import tools.jackson.databind.json.JsonMapper;
 public final class FliptCrierGate implements CrierGate, AutoCloseable {
 
   private static final JsonMapper JSON = JsonMapper.builder().build();
+  private static final String NAMESPACE_KEY = "the-storm";
+  private static final String FLAG_KEY = "the-storm-crier-enabled";
   private final HttpClient client;
   private final URI endpoint;
+  private final String environment;
 
   public FliptCrierGate(URI base) {
+    this(base, "prod");
+  }
+
+  public FliptCrierGate(URI base, String environment) {
     if (!"http".equals(base.getScheme()) && !"https".equals(base.getScheme())) {
       throw new IllegalArgumentException("Flipt URL must use HTTP or HTTPS");
     }
     if (base.getHost() == null || base.getUserInfo() != null || base.getQuery() != null) {
       throw new IllegalArgumentException("Flipt URL must be an uncredentialed server address");
     }
+    if (!"prod".equals(environment) && !"beta".equals(environment)) {
+      throw new IllegalArgumentException("unknown Flipt environment: " + environment);
+    }
     this.endpoint = base.resolve("/evaluate/v1/boolean");
     this.client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
+    this.environment = environment;
   }
 
   @Override
   public CompletableFuture<Boolean> enabled(UUID player) {
     var body =
-        "{\"environment_key\":\"prod\",\"namespace_key\":\"the-storm\","
-            + "\"flag_key\":\"the-storm-crier-enabled\",\"entity_id\":\""
+        "{\"environment_key\":\""
+            + environment
+            + "\",\"namespace_key\":\""
+            + NAMESPACE_KEY
+            + "\",\"flag_key\":\""
+            + FLAG_KEY
+            + "\",\"entity_id\":\""
             + player
             + "\",\"context\":{\"world\":\"world\"}}";
     var request =
