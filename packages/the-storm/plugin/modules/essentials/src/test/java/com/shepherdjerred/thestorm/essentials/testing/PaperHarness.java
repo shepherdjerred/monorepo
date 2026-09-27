@@ -56,6 +56,7 @@ public final class PaperHarness implements AutoCloseable {
   public static PaperHarness start(Path directory, Wallets wallets) {
     var server = MockBukkit.mock();
     server.addSimpleWorld("world");
+    server.getWorld("world").loadChunk(0, 0);
     writeConfig(directory);
     var database = StormDatabase.open(directory.resolve("t.db"));
     var harness = new PaperHarness(server, database);
