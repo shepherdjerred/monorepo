@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-/** Player profiles and RTP attempts. Futures complete off the main thread. */
+/** Random-teleport state. Futures complete off the main thread. */
 public interface QolStore {
 
   /** The player's row, inserting {@code now} as first seen when they have none. */

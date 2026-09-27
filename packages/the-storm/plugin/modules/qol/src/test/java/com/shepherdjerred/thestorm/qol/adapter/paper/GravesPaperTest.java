@@ -238,8 +238,12 @@ final class GravesPaperTest {
     }
     harness.clock.advance(Duration.ofHours(2));
 
-    rightClick(bob, graveBlock());
-    harness.awaitMessage(bob, "2 are left");
+    harness.until(
+        () -> {
+          rightClick(bob, graveBlock());
+          return QolHarness.messages(bob).stream()
+              .anyMatch(message -> message.contains("2 are left"));
+        });
 
     assertThat(bob.getInventory().getItem(0)).isNotNull();
     assertThat(harness.graves.all())
@@ -396,7 +400,8 @@ final class GravesPaperTest {
     harness.close();
 
     harness = QolHarness.start(directory);
-    assertThat(GraveBlocks.idAt(harness.world.getBlockAt(4, 5, 4))).isEmpty();
+    // Startup reconciles loaded chunks; a later chunk-load event is idempotent.
+    assertThat(GraveBlocks.idAt(harness.world.getBlockAt(4, 5, 4))).contains(id);
     harness.world.loadChunk(0, 0);
     harness
         .server
@@ -417,6 +422,7 @@ final class GravesPaperTest {
         .getPluginManager()
         .callEvent(new ChunkLoadEvent(harness.world.getChunkAt(0, 0), false));
     harness.until(() -> harness.store.pendingDrops().join().size() == 3);
+    harness.until(() -> graveBlock().getType() == Material.AIR);
 
     assertThat(graveBlock().getType()).isEqualTo(Material.AIR);
     assertThat(harness.world.getEntitiesByClass(ItemDisplay.class)).hasSize(3);

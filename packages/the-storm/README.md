@@ -120,6 +120,13 @@ until the ledger or database can be reconciled.
 
 ## Grave recovery
 
+The grave storage migration keeps the original V1 checksum. It refuses to run
+while the old chest-based `qol_grave` table has rows, because those items live
+only in world chests. Before enabling the new QoL module on an installation
+that ran the old implementation, collect or expire those chests with the old
+module and confirm the table is empty. The migration then creates the SQLite
+item store without discarding any chest contents.
+
 The QoL module stores grave stacks in SQLite. A death first saves a handoff in
 the player's data with their emptied inventory, then creates the grave. Taking
 items first reserves them in SQLite, saves the recipient's inventory and a

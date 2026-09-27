@@ -14,8 +14,10 @@ import com.shepherdjerred.thestorm.qol.domain.grave.GravePolicy.Status;
 import com.shepherdjerred.thestorm.qol.domain.text.DurationText;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.random.RandomGenerator;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -45,6 +47,7 @@ final class GraveOpening {
   private final GraveUpkeep upkeep;
   private final RandomGenerator random;
   private final Set<UUID> receiving = new HashSet<>();
+  private final Set<UUID> recovering = new HashSet<>();
 
   GraveOpening(QolRuntime runtime, GraveParts parts, GraveUpkeep upkeep, RandomGenerator random) {
     this.runtime = runtime;
@@ -147,7 +150,9 @@ final class GraveOpening {
       Say.error(player, Say.GRAVES, "Your inventory is full.");
       return;
     }
-    if (GraveHandoff.receipt(player).isPresent() || !receiving.add(player.getUniqueId())) {
+    if (recovering.contains(player.getUniqueId())
+        || GraveHandoff.receipt(player).isPresent()
+        || !receiving.add(player.getUniqueId())) {
       Say.error(player, Say.GRAVES, "Your previous grave transfer is still settling.");
       return;
     }
@@ -175,7 +180,9 @@ final class GraveOpening {
 
   /** A tagged display remains a projection until this durable claim is saved. */
   void nearby(Player player) {
-    if (!registry.isLoaded() || receiving.contains(player.getUniqueId())) {
+    if (!registry.isLoaded()
+        || recovering.contains(player.getUniqueId())
+        || receiving.contains(player.getUniqueId())) {
       return;
     }
     for (var entity : player.getNearbyEntities(1.25, 1.25, 1.25)) {
@@ -192,7 +199,9 @@ final class GraveOpening {
   /** Claims a projected grave stack through the same saved-receipt path as opening. */
   void pickup(Player player, ItemDisplay entity, GraveDropEntity.Key key) {
     var taker = player.getUniqueId();
-    if (GraveHandoff.receipt(player).isPresent() || !receiving.add(taker)) {
+    if (recovering.contains(taker)
+        || GraveHandoff.receipt(player).isPresent()
+        || !receiving.add(taker)) {
       return;
     }
     if (!registry.tryLock(key.grave())) {
@@ -285,40 +294,76 @@ final class GraveOpening {
       return;
     }
     var taker = player.getUniqueId();
+    if (!recovering.add(taker)) {
+      return;
+    }
     runtime.onMain(
         store.pendingClaims(),
         "recovering grave claims",
-        claims -> {
-          var receipt = GraveHandoff.receipt(player);
-          var mine = claims.stream().filter(claim -> claim.taker().equals(taker)).toList();
-          for (var claim : mine) {
-            if (receipt.filter(claim.token()::equals).isPresent()) {
-              var grave =
-                  registry
-                      .get(claim.grave())
-                      .orElseThrow(() -> new IllegalStateException("claim grave missing"))
-                      .grave();
-              finish(new Transfer(claim, grave, Set.of(), null, false), player);
-            } else {
-              release(claim);
-            }
-          }
-          if (receipt.isPresent()
-              && mine.stream()
-                  .noneMatch(claim -> receipt.filter(claim.token()::equals).isPresent())) {
-            GraveHandoff.clearReceipt(player);
-            hooks.saveData().accept(player);
-          }
-        },
+        claims -> recovered(player, claims),
         failure -> {});
   }
 
+  private void recovered(Player player, List<GraveStore.Claim> claims) {
+    var taker = player.getUniqueId();
+    var receipt = GraveHandoff.receipt(player);
+    var mine = claims.stream().filter(claim -> claim.taker().equals(taker)).toList();
+    var remaining = new AtomicInteger(Math.max(1, mine.size()));
+    Runnable settled =
+        () -> {
+          if (remaining.decrementAndGet() == 0) {
+            recoverySettled(player, receipt, mine);
+          }
+        };
+    if (mine.isEmpty()) {
+      settled.run();
+      return;
+    }
+    mine.forEach(claim -> resumeClaim(player, receipt, claim, settled));
+  }
+
+  private void resumeClaim(
+      Player player, Optional<UUID> receipt, GraveStore.Claim claim, Runnable settled) {
+    if (receipt.filter(claim.token()::equals).isEmpty()) {
+      release(claim, settled);
+      return;
+    }
+    var grave =
+        registry
+            .get(claim.grave())
+            .orElseThrow(() -> new IllegalStateException("claim grave missing"))
+            .grave();
+    finish(new Transfer(claim, grave, Set.of(), null, false), player, settled);
+  }
+
+  private void recoverySettled(
+      Player player, Optional<UUID> receipt, List<GraveStore.Claim> claims) {
+    if (receipt.isPresent()
+        && claims.stream().noneMatch(claim -> receipt.filter(claim.token()::equals).isPresent())) {
+      GraveHandoff.clearReceipt(player);
+      try {
+        hooks.saveData().accept(player);
+      } catch (RuntimeException failure) {
+        runtime.report("clearing stale grave receipt", failure);
+        return;
+      }
+    }
+    recovering.remove(player.getUniqueId());
+  }
+
   private void finish(Transfer transfer, Player player) {
+    finish(transfer, player, () -> {});
+  }
+
+  private void finish(Transfer transfer, Player player, Runnable settled) {
     var claim = transfer.claim();
     runtime.onMain(
         store.finishTake(claim.token(), claim.taker()),
         "finishing grave claim",
-        taken -> completed(transfer, player, taken),
+        taken -> {
+          completed(transfer, player, taken);
+          settled.run();
+        },
         failure -> Say.error(player, Say.GRAVES, "Your grave transfer will retry on join."));
   }
 
@@ -362,12 +407,17 @@ final class GraveOpening {
   }
 
   private void release(GraveStore.Claim claim) {
+    release(claim, () -> {});
+  }
+
+  private void release(GraveStore.Claim claim, Runnable settled) {
     runtime.onMain(
         store.releaseTake(claim.token(), claim.taker()),
         "releasing an undelivered grave claim",
         done -> {
           registry.unlock(claim.grave());
           receiving.remove(claim.taker());
+          settled.run();
         },
         failure -> {});
   }

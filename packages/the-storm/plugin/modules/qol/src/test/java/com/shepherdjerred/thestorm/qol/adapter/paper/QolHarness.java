@@ -236,11 +236,15 @@ final class QolHarness implements AutoCloseable {
   /** Runs ticks until {@code player} has been sent a message containing {@code text}. */
   List<String> awaitMessage(PlayerMock player, String text) {
     var seen = new ArrayList<String>();
-    until(
-        () -> {
-          seen.addAll(messages(player));
-          return seen.stream().anyMatch(message -> message.contains(text));
-        });
+    try {
+      until(
+          () -> {
+            seen.addAll(messages(player));
+            return seen.stream().anyMatch(message -> message.contains(text));
+          });
+    } catch (AssertionError timeout) {
+      throw new AssertionError("Expected message containing " + text + "; saw " + seen, timeout);
+    }
     return seen;
   }
 

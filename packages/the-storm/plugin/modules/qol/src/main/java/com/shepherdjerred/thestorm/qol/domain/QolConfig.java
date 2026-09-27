@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * {@code plugins/TheStorm/qol.yml}. Durations are ISO-8601 text because the config parser has no
+ * {@code plugins/TheStorm/rtp.yml}. Durations are ISO-8601 text because the config parser has no
  * time module.
  */
 public record QolConfig(
