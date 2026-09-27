@@ -24,6 +24,9 @@ public interface Wallets {
   /** The richest player accounts, highest first. */
   CompletableFuture<List<Standing>> top(int limit);
 
+  /** The richest players with their last recorded names, highest first. */
+  CompletableFuture<List<RankedPlayer>> leaderboard(int limit);
+
   /**
    * One row of {@link #top}.
    *

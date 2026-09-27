@@ -25,7 +25,7 @@ import java.util.List;
 /**
  * Every module, in enable order. A module comes after every module whose ports it requires: tracks
  * needs economy; towns (the Protection provider) needs tracks and chat; essentials, shops,
- * mechanics and spells need Protection.
+ * mechanics and spells need Protection; Discord reads economy and towns.
  */
 final class Modules {
 
@@ -36,9 +36,9 @@ final class Modules {
         new EconomyModule(),
         new MessagesModule(),
         new ChatModule(),
-        new DiscordModule(),
         new TracksModule(),
         new TownsModule(),
+        new DiscordModule(),
         new EssentialsModule(),
         new ShopsModule(),
         new ShardsModule(),

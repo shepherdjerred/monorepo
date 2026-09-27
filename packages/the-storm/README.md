@@ -71,6 +71,11 @@ Modules reach each other only through the other module's `app` package, and
 schedule main-thread work only through `core.schedule.Scheduler`. ArchUnit
 tests in `architecture/` enforce all of this.
 
+The Discord bridge starts after economy and towns. Its read-only `/baltop` and
+`/towns` commands require the `Wallets`, `CrystalFormatter`, and `TownRead`
+services; a missing provider stops the bridge at enable time. The economy
+wallet implementation and towns read provider must land before enabling Discord.
+
 ## Conventions
 
 - `@NullMarked` on every package; NullAway (JSpecify mode) runs as an error.
