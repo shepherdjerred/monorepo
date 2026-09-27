@@ -12,6 +12,7 @@ import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts";
 import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
+import { isMissingChannelError } from "#src/discord/utils/permissions.ts";
 import { createLogger } from "#src/logger.ts";
 import { enqueuePerKey } from "#src/utils/enqueue-per-key.ts";
 import { guildAliasesForRoster } from "#src/mvp-votes/eligibility.ts";
@@ -202,6 +203,69 @@ async function deliveredPostmatchRefs(
   return refs;
 }
 
+async function editReportTally(
+  ref: { channelId: DiscordChannelId; messageId: string },
+  context: {
+    input: MvpTallyRefreshInput;
+    votes: Awaited<ReturnType<typeof listMatchMvpVotes>>;
+    roster: NonNullable<Awaited<ReturnType<typeof loadMatchMvpRoster>>>;
+    aliases: Awaited<ReturnType<typeof guildAliasesForRoster>>;
+    prismaClient: ExtendedPrismaClient;
+    editMessage: MvpTallyMessageEdit;
+  },
+): Promise<boolean> {
+  try {
+    const channel = await fetchChannelForDelivery(ref.channelId);
+    if (channel === null) {
+      logger.warn(
+        `MVP tally target ${ref.channelId}/${ref.messageId} no longer has a channel`,
+      );
+      return false;
+    }
+    if (!channel.isTextBased()) {
+      throw new Error(
+        `MVP tally channel ${ref.channelId} is unavailable or not text based`,
+      );
+    }
+    if (!belongsToGuild(channel, ref.channelId, context.input.serverId)) {
+      return false;
+    }
+    const message = await channel.messages.fetch(ref.messageId);
+    const current = message.embeds.map((embed) => embed.toJSON());
+    const existingTally = current.find(
+      (embed) => embed.title === MVP_TALLY_TITLE,
+    );
+    const tally = mvpTallyEmbed({
+      votes: context.votes,
+      roster: context.roster,
+      aliases: context.aliases,
+      footerText:
+        existingTally === undefined ? undefined : tallyFooter(existingTally),
+    });
+    await context.editMessage({
+      channelId: ref.channelId,
+      messageId: ref.messageId,
+      options: {
+        embeds: withReplacedTally(current, tally),
+        allowedMentions: { parse: [] },
+      },
+    });
+    await checkpointTarget(ref, context.input, context.prismaClient);
+    return true;
+  } catch (error) {
+    if (isMissingChannelError(error)) {
+      // The persisted refs are match-global. A deleted channel in another
+      // guild must not prevent this guild's still-live report from updating.
+      logger.warn(
+        `MVP tally target ${ref.channelId}/${ref.messageId} no longer has a channel`,
+        error,
+      );
+      return false;
+    }
+    throw error;
+  }
+}
+
 async function refreshOnce(
   input: MvpTallyRefreshInput,
   prismaClient: ExtendedPrismaClient,
@@ -243,37 +307,18 @@ async function refreshOnce(
       continue;
     }
     try {
-      const channel = await fetchChannelForDelivery(ref.channelId);
-      if (channel?.isTextBased() !== true) {
-        throw new Error(
-          `MVP tally channel ${ref.channelId} is unavailable or not text based`,
-        );
+      if (
+        await editReportTally(ref, {
+          input,
+          votes,
+          roster,
+          aliases,
+          prismaClient,
+          editMessage,
+        })
+      ) {
+        handled += 1;
       }
-      if (!belongsToGuild(channel, ref.channelId, input.serverId)) {
-        continue;
-      }
-      const message = await channel.messages.fetch(ref.messageId);
-      const current = message.embeds.map((embed) => embed.toJSON());
-      const existingTally = current.find(
-        (embed) => embed.title === MVP_TALLY_TITLE,
-      );
-      const tally = mvpTallyEmbed({
-        votes,
-        roster,
-        aliases,
-        footerText:
-          existingTally === undefined ? undefined : tallyFooter(existingTally),
-      });
-      await editMessage({
-        channelId: ref.channelId,
-        messageId: ref.messageId,
-        options: {
-          embeds: withReplacedTally(current, tally),
-          allowedMentions: { parse: [] },
-        },
-      });
-      await checkpointTarget(ref, input, prismaClient);
-      handled += 1;
     } catch (error) {
       // Checkpointed targets stay done; an edit with an unknown outcome is
       // retried safely because it replaces the tally embed in place.

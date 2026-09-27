@@ -67,6 +67,41 @@ beforeEach(async () => {
 });
 
 describe("MVP message refresh", () => {
+  test.each(["missing response", "unknown channel error"] as const)(
+    "updates this guild when another report channel is deleted (%s)",
+    async (missingMode) => {
+      stubs.fetchChannelForDelivery.mockImplementation(
+        async (channelId: string) => {
+          if (channelId === firstChannel) {
+            if (missingMode === "missing response") return null;
+            throw Object.assign(new Error("Unknown Channel"), { code: 10_003 });
+          }
+          return {
+            guildId: serverId,
+            isTextBased: () => true,
+            messages: { fetch: async () => ({ embeds: [] }) },
+          };
+        },
+      );
+      const edits: string[] = [];
+
+      await reconcileMvpTallyRefresh(key, db, async (input, client) =>
+        refreshMvpTallyMessages(input, client, async (target) => {
+          edits.push(target.messageId);
+        }),
+      );
+
+      expect(edits).toEqual(["400000000000000002"]);
+      await expect(
+        db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+      ).resolves.toMatchObject({
+        pending: false,
+        appliedRevision: 1,
+        lastErrorCode: null,
+      });
+    },
+  );
+
   test("retries every target after a partial Discord edit", async () => {
     const edits: string[] = [];
     let failSecond = true;
