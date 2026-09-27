@@ -28,10 +28,10 @@ final class PlayerCommands {
    * The kits players can claim.
    *
    * @param settings the configured kits
-   * @param items the kits as item stacks
    * @param claims when each player last claimed each kit
+   * @param deliveries claims whose items are still owed
    */
-  record Kits(KitSettings settings, KitItems items, KitClaimStore claims) {}
+  record Kits(KitSettings settings, KitClaimStore claims, KitDeliveries deliveries) {}
 
   PlayerCommands(PaperRuntime runtime, Kits kits, Book rules, AfkTracker afk) {
     this.runtime = runtime;
@@ -101,10 +101,7 @@ final class PlayerCommands {
         result -> {
           switch (result) {
             case Result.Ok<Instant, KitError> _ -> {
-              if (player.isOnline()) {
-                kits.items().give(player, name);
-                Say.success(player, Say.KITS, "You received the " + name + " kit.");
-              }
+              kits.deliveries().deliver(player.getUniqueId());
             }
             case Result.Err<Instant, KitError>(var error) ->
                 Say.error(player, Say.KITS, describe(error));

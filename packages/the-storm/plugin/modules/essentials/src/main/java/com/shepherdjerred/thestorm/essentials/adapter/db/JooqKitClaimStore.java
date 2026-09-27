@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.essentials.adapter.db;
 
 import static com.shepherdjerred.thestorm.essentials.adapter.db.generated.Tables.ESSENTIALS_KIT_CLAIMS;
+import static com.shepherdjerred.thestorm.essentials.adapter.db.generated.Tables.ESSENTIALS_KIT_DELIVERIES;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.result.Result;
@@ -8,6 +9,7 @@ import com.shepherdjerred.thestorm.essentials.app.store.KitClaimStore;
 import com.shepherdjerred.thestorm.essentials.domain.kit.KitError;
 import com.shepherdjerred.thestorm.essentials.domain.kit.KitRules;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -40,8 +42,38 @@ public final class JooqKitClaimStore implements KitClaimStore {
                 .doUpdate()
                 .set(ESSENTIALS_KIT_CLAIMS.CLAIMED_AT, at.toEpochMilli())
                 .execute();
+            dsl.insertInto(ESSENTIALS_KIT_DELIVERIES)
+                .set(ESSENTIALS_KIT_DELIVERIES.PLAYER, player.toString())
+                .set(ESSENTIALS_KIT_DELIVERIES.KIT, claim.name())
+                .set(ESSENTIALS_KIT_DELIVERIES.CLAIMED_AT, at.toEpochMilli())
+                .execute();
           }
           return decision;
         });
+  }
+
+  @Override
+  public CompletableFuture<List<PendingKit>> pending(UUID player) {
+    return database.read(
+        dsl ->
+            dsl.selectFrom(ESSENTIALS_KIT_DELIVERIES)
+                .where(ESSENTIALS_KIT_DELIVERIES.PLAYER.eq(player.toString()))
+                .orderBy(ESSENTIALS_KIT_DELIVERIES.CLAIMED_AT, ESSENTIALS_KIT_DELIVERIES.KIT)
+                .fetch(
+                    row -> new PendingKit(row.getKit(), Instant.ofEpochMilli(row.getClaimedAt()))));
+  }
+
+  @Override
+  public CompletableFuture<Void> acknowledge(UUID player, PendingKit pending) {
+    return database
+        .write(
+            dsl ->
+                dsl.deleteFrom(ESSENTIALS_KIT_DELIVERIES)
+                    .where(ESSENTIALS_KIT_DELIVERIES.PLAYER.eq(player.toString()))
+                    .and(ESSENTIALS_KIT_DELIVERIES.KIT.eq(pending.name()))
+                    .and(
+                        ESSENTIALS_KIT_DELIVERIES.CLAIMED_AT.eq(pending.claimedAt().toEpochMilli()))
+                    .execute())
+        .thenAccept(rows -> {});
   }
 }

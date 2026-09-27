@@ -80,9 +80,12 @@ public final class EssentialsPaper {
     var server = context.plugin().getServer();
     var runtime = new PaperRuntime(server, context.scheduler(), context.time(), context.logger());
     requireSafeSpawn(runtime, config);
+    var kitItems = KitItems.build(config.kits());
     var kits =
         new PlayerCommands.Kits(
-            config.kits(), KitItems.build(config.kits()), app.stores().kitClaims());
+            config.kits(),
+            app.stores().kitClaims(),
+            new KitDeliveries(runtime, app.stores().kitClaims(), kitItems));
     var permissions = new EssentialsPermissions(server.getPluginManager());
     permissions.register(config.kits().kits().keySet(), config.kits().starter());
 
