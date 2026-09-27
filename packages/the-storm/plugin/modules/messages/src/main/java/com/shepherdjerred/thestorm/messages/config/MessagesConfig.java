@@ -1,5 +1,8 @@
 package com.shepherdjerred.thestorm.messages.config;
 
+import static com.fasterxml.jackson.annotation.JsonCreator.Mode.DELEGATING;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.shepherdjerred.thestorm.messages.domain.CommandBlocklist;
 import com.shepherdjerred.thestorm.messages.domain.DeathCatalog;
 import com.shepherdjerred.thestorm.messages.domain.DeathCause;
@@ -33,33 +36,61 @@ public record MessagesConfig(
     }
   }
 
-  /**
-   * Death messages.
-   *
-   * @param spam when to stop broadcasting a player's deaths
-   * @param unarmed the {@code {weapon}} text for a player killed by an empty hand
-   * @param causes a list per death cause, keyed by cause (such as {@code fall}); {@code {player}}
-   *     only
-   * @param mobs deaths to mobs
-   * @param players deaths to other players
-   */
-  public record Deaths(
-      Spam spam,
-      String unarmed,
-      Map<String, List<String>> causes,
-      MobDeaths mobs,
-      PlayerDeaths players) {
+  /** Death messages and their validated catalog. */
+  public static final class Deaths {
 
-    public Deaths {
-      requireText(unarmed, "deaths.unarmed");
-      causes = Map.copyOf(causes);
-      // Build once so every template and key is checked at load.
-      catalog(causes, mobs, players);
+    /** Raw YAML shape, converted to one validated catalog by {@link Deaths}. */
+    public record Raw(
+        Spam spam,
+        String unarmed,
+        Map<String, List<String>> causes,
+        MobDeaths mobs,
+        PlayerDeaths players) {}
+
+    private final Spam spam;
+    private final String unarmed;
+    private final Map<String, List<String>> causes;
+    private final MobDeaths mobs;
+    private final PlayerDeaths players;
+    private final DeathCatalog catalog;
+
+    /**
+     * @param raw the death-message fields from YAML
+     */
+    @JsonCreator(mode = DELEGATING)
+    public Deaths(Raw raw) {
+      requireText(raw.unarmed(), "deaths.unarmed");
+      this.spam = raw.spam();
+      this.unarmed = raw.unarmed();
+      this.causes = Map.copyOf(raw.causes());
+      this.mobs = raw.mobs();
+      this.players = raw.players();
+      this.catalog = catalog(this.causes, mobs, players);
     }
 
-    /** The validated catalog. */
+    public Spam spam() {
+      return spam;
+    }
+
+    public String unarmed() {
+      return unarmed;
+    }
+
+    public Map<String, List<String>> causes() {
+      return causes;
+    }
+
+    public MobDeaths mobs() {
+      return mobs;
+    }
+
+    public PlayerDeaths players() {
+      return players;
+    }
+
+    /** The validated catalog built when YAML was loaded. */
     public DeathCatalog catalog() {
-      return catalog(causes, mobs, players);
+      return catalog;
     }
 
     private static DeathCatalog catalog(
@@ -101,7 +132,6 @@ public record MessagesConfig(
     public MobDeaths {
       any = List.copyOf(any);
       groups = List.copyOf(groups);
-      toDomain(any, groups);
     }
 
     DeathCatalog.Mobs toDomain() {
@@ -153,7 +183,6 @@ public record MessagesConfig(
     public PlayerDeaths {
       any = List.copyOf(any);
       byCause = Map.copyOf(byCause);
-      toDomain(any, byCause);
     }
 
     DeathCatalog.Players toDomain() {
