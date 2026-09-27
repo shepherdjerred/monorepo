@@ -48,8 +48,8 @@ domain tests and these scenarios belong in the real-server suite
 - A shelf in the wilderness beside a row of town shelves: an outsider cannot
   swap items through it, nor place a shelf that joins the town's row.
 - A double chest straddling a claim border: a hopper under the wild half
-  cannot drain it. (Anyone may open an unlocked chest, in a town or not; a
-  locked one opens only for its owner's people.)
+  cannot drain it. An unlocked chest on claimed land still needs claim access;
+  a locked one also needs the lock owner's permission.
 
 ## Raids, withers, boats (`MobListener.onRaid`, `WitherListener`, `EntityListener`)
 
@@ -126,8 +126,9 @@ the events itself. These need a real server:
   "Someone else placed that". An outsider cannot lock an unrecorded chest in a
   town (not their land); in the wilderness anyone may lock one nobody is
   recorded as placing.
-- A new container is locked for its placer. `/unlock` makes it public. Once a
-  player reaches 64 locks, placing another container is refused until they
+- A new container is locked for its placer. `/unlock` removes the lock, but
+  claimed land still requires claim access. Once a player reaches 64 locks,
+  placing another container is refused until they
   unlock one. A player cannot join their chest to someone else's unlocked
   chest and take ownership through automatic locking. While locks are saving,
   placement waits; if the new lock cannot be saved, the placed container is

@@ -169,16 +169,16 @@ final class LockListenersTest extends AegisServer {
   }
 
   @Test
-  void anUnlockedContainerOnAClaimIsPublic() {
+  void anUnlockedContainerOnAClaimStillNeedsClaimPermission() {
     var chest = block(CLAIM_X + 11, Y, Z);
     chest.setType(Material.CHEST);
     var protection = plugin.services.require(Protection.class);
 
-    assertThat(rightClick(bob, chest)).isNotEqualTo(Event.Result.DENY);
+    assertThat(rightClick(bob, chest)).isEqualTo(Event.Result.DENY);
     assertThat(
             protection.check(
                 bob.getUniqueId(), ProtectedAction.OPEN_CONTAINER, chest.getLocation()))
-        .isInstanceOf(Decision.Allowed.class);
+        .isInstanceOf(Decision.Denied.class);
   }
 
   @Test

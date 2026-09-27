@@ -7,10 +7,12 @@ import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWN
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_LOCK_BLOCK;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_LOCK_TRUST;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_MEMBER;
+import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_PENDING_PAYOUT;
 import static com.shepherdjerred.thestorm.towns.adapter.db.generated.Tables.TOWNS_TOWN;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
+import com.shepherdjerred.thestorm.towns.app.TownPayout;
 import com.shepherdjerred.thestorm.towns.app.TownsSnapshot;
 import com.shepherdjerred.thestorm.towns.app.TownsStore;
 import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
@@ -23,6 +25,7 @@ import java.time.Instant;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -144,6 +147,18 @@ public final class JooqTownsStore implements TownsStore {
             throw new IllegalStateException("departed player is not a stored member of this town");
           }
           saveTown(dsl, town);
+          dsl.deleteFrom(TOWNS_CLAIM_TRUST)
+              .where(TOWNS_CLAIM_TRUST.PLAYER_ID.eq(departed.toString()))
+              .and(
+                  DSL.row(
+                          TOWNS_CLAIM_TRUST.WORLD,
+                          TOWNS_CLAIM_TRUST.CHUNK_X,
+                          TOWNS_CLAIM_TRUST.CHUNK_Z)
+                      .in(
+                          DSL.select(TOWNS_CLAIM.WORLD, TOWNS_CLAIM.CHUNK_X, TOWNS_CLAIM.CHUNK_Z)
+                              .from(TOWNS_CLAIM)
+                              .where(TOWNS_CLAIM.TOWN_ID.eq(town.id().toString()))))
+              .execute();
           var blocks = TOWNS_LOCK_BLOCK.as("blocks");
           var claims = TOWNS_CLAIM.as("claims");
           var onTownLand =
@@ -208,10 +223,10 @@ public final class JooqTownsStore implements TownsStore {
   }
 
   @Override
-  public CompletableFuture<Void> deleteTown(UUID townId) {
+  public CompletableFuture<Void> deleteTown(TownPayout payout) {
     return write(
         dsl -> {
-          var id = townId.toString();
+          var id = payout.townId().toString();
           dsl.deleteFrom(TOWNS_CLAIM_TRUST)
               .where(
                   DSL.row(
@@ -238,25 +253,76 @@ public final class JooqTownsStore implements TownsStore {
           dsl.deleteFrom(TOWNS_MEMBER).where(TOWNS_MEMBER.TOWN_ID.eq(id)).execute();
           var deleted = dsl.deleteFrom(TOWNS_TOWN).where(TOWNS_TOWN.ID.eq(id)).execute();
           if (deleted != 1) {
-            throw new IllegalStateException("town " + townId + " is not stored");
+            throw new IllegalStateException("town " + payout.townId() + " is not stored");
+          }
+          dsl.insertInto(TOWNS_PENDING_PAYOUT)
+              .set(TOWNS_PENDING_PAYOUT.TOWN_ID, id)
+              .set(TOWNS_PENDING_PAYOUT.OWNER_ID, payout.ownerId().toString())
+              .set(TOWNS_PENDING_PAYOUT.TRANSFER_KEY, payout.transferKey().toString())
+              .execute();
+        });
+  }
+
+  @Override
+  public CompletableFuture<List<TownPayout>> pendingPayouts() {
+    return database.write(
+        dsl ->
+            dsl.selectFrom(TOWNS_PENDING_PAYOUT)
+                .orderBy(TOWNS_PENDING_PAYOUT.TOWN_ID)
+                .fetch(
+                    row ->
+                        new TownPayout(
+                            UUID.fromString(row.getTownId()),
+                            UUID.fromString(row.getOwnerId()),
+                            UUID.fromString(row.getTransferKey()))));
+  }
+
+  @Override
+  public CompletableFuture<Void> clearPayout(TownPayout payout) {
+    return write(
+        dsl -> {
+          var deleted =
+              dsl.deleteFrom(TOWNS_PENDING_PAYOUT)
+                  .where(TOWNS_PENDING_PAYOUT.TOWN_ID.eq(payout.townId().toString()))
+                  .and(TOWNS_PENDING_PAYOUT.OWNER_ID.eq(payout.ownerId().toString()))
+                  .and(TOWNS_PENDING_PAYOUT.TRANSFER_KEY.eq(payout.transferKey().toString()))
+                  .execute();
+          if (deleted == 0
+              && dsl.fetchExists(
+                  TOWNS_PENDING_PAYOUT,
+                  TOWNS_PENDING_PAYOUT.TOWN_ID.eq(payout.townId().toString()))) {
+            throw new IllegalStateException("town payout intent changed: " + payout);
           }
         });
   }
 
   @Override
   public CompletableFuture<Void> addClaim(Claim claim, Instant at) {
+    return write(dsl -> insertClaim(dsl, claim, at));
+  }
+
+  @Override
+  public CompletableFuture<Void> addClaimAndSaveTown(Claim claim, Instant at, Town town) {
+    if (!claim.townId().equals(town.id())) {
+      throw new IllegalArgumentException("claim and town ids differ");
+    }
     return write(
         dsl -> {
-          var chunk = claim.chunk();
-          dsl.insertInto(TOWNS_CLAIM)
-              .set(TOWNS_CLAIM.WORLD, chunk.world())
-              .set(TOWNS_CLAIM.CHUNK_X, chunk.x())
-              .set(TOWNS_CLAIM.CHUNK_Z, chunk.z())
-              .set(TOWNS_CLAIM.TOWN_ID, claim.townId().toString())
-              .set(TOWNS_CLAIM.CLAIMED_AT, at.toEpochMilli())
-              .execute();
-          insertSettings(dsl, claim);
+          insertClaim(dsl, claim, at);
+          saveTown(dsl, town);
         });
+  }
+
+  private static void insertClaim(DSLContext dsl, Claim claim, Instant at) {
+    var chunk = claim.chunk();
+    dsl.insertInto(TOWNS_CLAIM)
+        .set(TOWNS_CLAIM.WORLD, chunk.world())
+        .set(TOWNS_CLAIM.CHUNK_X, chunk.x())
+        .set(TOWNS_CLAIM.CHUNK_Z, chunk.z())
+        .set(TOWNS_CLAIM.TOWN_ID, claim.townId().toString())
+        .set(TOWNS_CLAIM.CLAIMED_AT, at.toEpochMilli())
+        .execute();
+    insertSettings(dsl, claim);
   }
 
   @Override

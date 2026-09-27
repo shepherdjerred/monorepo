@@ -156,7 +156,11 @@ final class MemberCommands {
     var result = members.accept(player.getUniqueId(), townName);
     runtime.report(player, result, town -> Notices.success("You joined " + town.name() + "."));
     if (result instanceof Result.Ok<Change<Town>, List<TownProblem>>(var change)) {
-      tellTown(change.value(), player, Notices.info(player.getName() + " joined the town."));
+      afterSaved(
+          change,
+          () ->
+              tellTown(
+                  change.value(), player, Notices.info(player.getName() + " joined the town.")));
     }
   }
 
@@ -174,7 +178,10 @@ final class MemberCommands {
     var result = members.leave(player.getUniqueId());
     runtime.report(player, result, town -> Notices.success("You left " + town.name() + "."));
     if (result instanceof Result.Ok<Change<Town>, List<TownProblem>>(var change)) {
-      tellTown(change.value(), player, Notices.info(player.getName() + " left the town."));
+      afterSaved(
+          change,
+          () ->
+              tellTown(change.value(), player, Notices.info(player.getName() + " left the town.")));
     }
   }
 
@@ -182,10 +189,13 @@ final class MemberCommands {
     var result = members.kick(player.getUniqueId(), target);
     runtime.report(
         player, result, town -> Notices.success(target.name() + " is no longer a member."));
-    if (result.isOk()) {
-      tell(
-          target.id(),
-          Notices.info("You were removed from your town by " + player.getName() + "."));
+    if (result instanceof Result.Ok<Change<Town>, List<TownProblem>>(var change)) {
+      afterSaved(
+          change,
+          () ->
+              tell(
+                  target.id(),
+                  Notices.info("You were removed from your town by " + player.getName() + ".")));
     }
   }
 
@@ -193,8 +203,9 @@ final class MemberCommands {
     var result = members.promote(player.getUniqueId(), target);
     runtime.report(
         player, result, town -> Notices.success(target.name() + " is now an assistant."));
-    if (result.isOk()) {
-      tell(target.id(), Notices.info("You are now an assistant of your town."));
+    if (result instanceof Result.Ok<Change<Town>, List<TownProblem>>(var change)) {
+      afterSaved(
+          change, () -> tell(target.id(), Notices.info("You are now an assistant of your town.")));
     }
   }
 
@@ -227,8 +238,26 @@ final class MemberCommands {
         town -> Notices.success("You handed " + town.name() + " over. You are now an assistant."));
     if (result instanceof Result.Ok<Change<Town>, List<TownProblem>>(var change)) {
       var town = change.value();
-      tell(town.owner(), Notices.info(player.getName() + " handed " + town.name() + " to you."));
+      afterSaved(
+          change,
+          () ->
+              tell(
+                  town.owner(),
+                  Notices.info(player.getName() + " handed " + town.name() + " to you.")));
     }
+  }
+
+  private void afterSaved(Change<Town> change, Runnable notification) {
+    var _ =
+        change
+            .saved()
+            .whenCompleteAsync(
+                (saved, failure) -> {
+                  if (failure == null) {
+                    notification.run();
+                  }
+                },
+                runtime.scheduler().mainThread());
   }
 
   private void rename(Player player, String name) {

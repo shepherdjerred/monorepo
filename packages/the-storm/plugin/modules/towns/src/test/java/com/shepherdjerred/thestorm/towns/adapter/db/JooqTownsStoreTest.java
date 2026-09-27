@@ -13,6 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
+import com.shepherdjerred.thestorm.towns.app.TownPayout;
 import com.shepherdjerred.thestorm.towns.app.TownsSnapshot;
 import com.shepherdjerred.thestorm.towns.domain.Fixtures;
 import com.shepherdjerred.thestorm.towns.domain.land.BlockPos;
@@ -130,14 +131,17 @@ final class JooqTownsStoreTest {
     await(store.addClaim(claim(TOWN_A, 0, 0, ClaimFlag.PVP), CLAIMED));
     await(store.addClaim(claim(TOWN_B, 10, 0, ClaimFlag.PVP), CLAIMED));
 
-    await(store.deleteTown(TOWN_A));
+    await(store.deleteTown(TownPayout.of(Fixtures.townA())));
 
     var snapshot = load();
     assertThat(snapshot.towns()).containsExactly(Fixtures.townB());
     assertThat(snapshot.claims()).containsExactly(claim(TOWN_B, 10, 0, ClaimFlag.PVP));
     assertThat(flagRows()).isEqualTo(1);
     await(store.createTown(Fixtures.townA()));
-    assertThatThrownBy(() -> await(store.deleteTown(UUID.randomUUID())))
+    assertThatThrownBy(
+            () ->
+                await(
+                    store.deleteTown(new TownPayout(UUID.randomUUID(), OWNER, UUID.randomUUID()))))
         .isInstanceOf(ExecutionException.class);
   }
 
@@ -233,7 +237,7 @@ final class JooqTownsStoreTest {
     await(store.removeClaim(Fixtures.chunk(0, 0)));
     assertThat(trustRows()).isEqualTo(1);
 
-    await(store.deleteTown(TOWN_A));
+    await(store.deleteTown(TownPayout.of(Fixtures.townA())));
     assertThat(trustRows()).isZero();
   }
 

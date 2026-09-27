@@ -20,7 +20,7 @@ import java.util.function.Supplier;
 
 /**
  * Joining, leaving and running a town: invitations, kicks, ranks, handovers and renames. Changes
- * apply in memory at once and are saved through {@link Settling}; invitations and pending handovers
+ * become visible in memory once saved through {@link Settling}; invitations and pending handovers
  * live in memory only. Main thread only.
  */
 public final class MembershipService {
@@ -66,6 +66,9 @@ public final class MembershipService {
 
   /** Invites {@code invitee} to {@code inviter}'s town; returns that town. */
   public Result<Town, List<TownProblem>> invite(UUID inviter, PlayerRef invitee) {
+    if (settling.isPlayerBusy(inviter) || settling.isPlayerBusy(invitee.id())) {
+      return Result.err(List.of(new TownProblem.Busy()));
+    }
     return Membership.invite(inviter, invitee, state())
         .map(
             town -> {
@@ -91,6 +94,7 @@ public final class MembershipService {
   /** {@code player} turns down the town named {@code townName}; returns that town. */
   public Result<Town, List<TownProblem>> deny(UUID player, String townName) {
     return named(townName)
+        .flatMap(town -> notBusy(town, player))
         .flatMap(
             town ->
                 invitations.withdraw(town.id(), player, now())
@@ -140,6 +144,9 @@ public final class MembershipService {
    * #confirmTransfer} within the configured window.
    */
   public Result<Town, List<TownProblem>> requestTransfer(UUID actor, PlayerRef target) {
+    if (settling.isPlayerBusy(actor) || settling.isPlayerBusy(target.id())) {
+      return Result.err(List.of(new TownProblem.Busy()));
+    }
     return Membership.transferable(actor, target, state())
         .map(
             town -> {
@@ -167,16 +174,11 @@ public final class MembershipService {
             level,
             hooks.limits().maxClaims(town.get().withGovernorLevel(level)),
             state().claimCount(town.get().id()));
-    var result =
-        unlessBusy(
-            actor,
-            target.get().id(),
-            () -> Membership.transfer(actor, target.get(), successor, state()),
-            done -> {});
-    if (result.isOk()) {
-      transfers.done(town.get().id());
-    }
-    return result;
+    return unlessBusy(
+        actor,
+        target.get().id(),
+        () -> Membership.transfer(actor, target.get(), successor, state()),
+        done -> transfers.done(done.id()));
   }
 
   /** How long an owner has to confirm a handover. */
@@ -233,22 +235,28 @@ public final class MembershipService {
     var players = new HashSet<>(state().town(updated.id()).orElseThrow().members().keySet());
     players.addAll(updated.members().keySet());
     players.add(touched);
-    state().replaceTown(updated);
     return settling.persist(
         updated,
         settling.store().saveTown(updated),
         new Settling.Busy(updated.id(), players, Set.of()),
-        afterSave);
+        () -> {
+          state().replaceTown(updated);
+          afterSave.run();
+        });
   }
 
   private Change<Town> saveDeparture(Town updated, UUID departed) {
     var players = new HashSet<>(state().town(updated.id()).orElseThrow().members().keySet());
     players.addAll(updated.members().keySet());
     players.add(departed);
+    var write = settling.store().saveDeparture(updated, departed);
+    // A departing player loses protection access immediately, including explicit claim trust.
+    // Settling reloads the stored state if the write fails.
     state().replaceTown(updated);
+    state().removeClaimTrust(updated.id(), departed);
     return settling.persistResult(
         updated,
-        settling.store().saveDeparture(updated, departed),
+        write,
         new Settling.Busy(updated.id(), players, Set.of()),
         ids -> hooks.departures().left(updated.id(), departed, ids));
   }

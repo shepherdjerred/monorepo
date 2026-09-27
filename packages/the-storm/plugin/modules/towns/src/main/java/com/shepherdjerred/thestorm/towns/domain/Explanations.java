@@ -106,8 +106,6 @@ public final class Explanations {
               + "'s Governor level it may hold only "
               + limit
               + ". Unclaim some first.";
-      case TownProblem.PayoutFailed() ->
-          "The treasury could not be paid out to you, so the town was kept. Try again.";
     };
   }
 

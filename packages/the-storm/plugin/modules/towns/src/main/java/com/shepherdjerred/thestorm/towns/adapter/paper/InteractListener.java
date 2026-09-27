@@ -21,10 +21,12 @@ final class InteractListener implements Listener {
 
   private final Guard guard;
   private final BlockKinds kinds;
+  private final LockGuard locks;
 
-  InteractListener(Guard guard, BlockKinds kinds) {
+  InteractListener(Guard guard, BlockKinds kinds, LockGuard locks) {
     this.guard = guard;
     this.kinds = kinds;
+    this.locks = locks;
   }
 
   @EventHandler(priority = EventPriority.LOW)
@@ -103,11 +105,12 @@ final class InteractListener implements Listener {
 
   private boolean mayUseBlock(org.bukkit.entity.Player player, Block block, Act use) {
     var land = guard.land(block);
-    // On claims a lock alone governs opening lockable containers. Admin regions
-    // retain their own rules, and other item holders still follow claim flags.
+    // On claims an existing lock governs opening. Unlocked containers still
+    // follow the claim's access rules.
     return (use.action() == Action.OPEN_CONTAINER
             && kinds.isLockable(block.getType())
-            && land instanceof Land.TownLand)
+            && land instanceof Land.TownLand
+            && LockGuard.container(block).stream().anyMatch(part -> locks.lockOf(part) != null))
         || guard.permits(player, use, land);
   }
 

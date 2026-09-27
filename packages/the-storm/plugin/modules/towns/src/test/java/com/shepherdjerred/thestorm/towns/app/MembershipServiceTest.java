@@ -173,6 +173,8 @@ final class MembershipServiceTest {
   @Test
   void membersLeaveButOwnersCannot() {
     var left = ok(members.leave(MEMBER)).value();
+    assertThat(state.townOf(MEMBER)).isEmpty();
+    assertThat(departed).isEmpty();
     store.succeed();
 
     assertThat(left.roleOf(MEMBER)).isEmpty();
@@ -200,13 +202,19 @@ final class MembershipServiceTest {
 
   @Test
   void aFailedKickIsUndone() {
+    var trusted = claim(TOWN_A, 0, 0).withTrust(MEMBER, true);
+    store.seed(Fixtures.townA(), trusted);
+    state.replaceClaim(trusted);
+
     ok(members.kick(OWNER, MEMBER_REF));
     assertThat(state.townOf(MEMBER)).isEmpty();
+    assertThat(state.claimAt(trusted.chunk()).orElseThrow().trusted()).isEmpty();
     assertThat(departed).isEmpty();
 
     store.fail();
 
     assertThat(state.townOf(MEMBER)).contains(Fixtures.townA());
+    assertThat(state.claimAt(trusted.chunk()).orElseThrow().trusted()).containsExactly(MEMBER);
     assertThat(departed).isEmpty();
   }
 

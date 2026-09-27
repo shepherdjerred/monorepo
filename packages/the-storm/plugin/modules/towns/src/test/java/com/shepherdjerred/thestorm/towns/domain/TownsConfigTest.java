@@ -5,10 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.core.config.StrictYaml;
 import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
-import com.shepherdjerred.thestorm.towns.domain.protection.Act;
-import com.shepherdjerred.thestorm.towns.domain.protection.Action;
-import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
-import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
 import java.nio.file.Path;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -65,22 +61,12 @@ final class TownsConfigTest {
   }
 
   @Test
-  void theShippedFileParsesWithSpawnAndArena() {
+  void theShippedFileHasNoUnverifiedRegions() {
     var config = ConfigFiles.load(SHIPPED, TownsConfig.class);
-    var regions = new RegionIndex(config.regions());
 
-    assertThat(config.regions())
-        .extracting(region -> region.id())
-        .containsExactly("spawn", "arena");
+    assertThat(config.regions()).isEmpty();
     assertThat(config.claims().worlds()).containsExactly("world");
     assertThat(config.claims().defaultFlags()).containsExactly(ClaimFlag.PVP);
-    var spawn = regions.byId("spawn").orElseThrow();
-    assertThat(spawn.permits(new Act(Action.INTERACT, Subject.DOOR))).isTrue();
-    assertThat(spawn.permits(new Act(Action.OPEN_CONTAINER, Subject.CONTAINER))).isFalse();
-    assertThat(spawn.permits(new Act(Action.TELEPORT_INTO, Subject.LOCATION))).isTrue();
-    assertThat(spawn.permits(new Act(Action.SET_HOME, Subject.LOCATION))).isFalse();
-    assertThat(spawn.permits(new Act(Action.ATTACK_PLAYER, Subject.PLAYER))).isFalse();
-    assertThat(spawn.permits(new Act(Action.BUILD, Subject.BLOCK))).isFalse();
   }
 
   @Test

@@ -3,9 +3,7 @@ package com.shepherdjerred.thestorm.towns.domain.region;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.shepherdjerred.thestorm.core.config.ConfigFiles;
 import com.shepherdjerred.thestorm.towns.domain.Fixtures;
-import com.shepherdjerred.thestorm.towns.domain.TownsConfig;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.Action;
@@ -13,23 +11,50 @@ import com.shepherdjerred.thestorm.towns.domain.protection.Actor;
 import com.shepherdjerred.thestorm.towns.domain.protection.ProtectionEngine;
 import com.shepherdjerred.thestorm.towns.domain.protection.PvpPreferences;
 import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
-import java.nio.file.Path;
+import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
- * The arena as shipped: only the arena module's waves (and what they bring) and staff summons spawn
- * inside, and players may break the creaking heart that ends the creaking fight but nothing else.
- * Spawn limits no spawns.
+ * Region policy for a built arena: only its waves and staff summons spawn inside, and players may
+ * break the creaking heart but nothing else. The shipped config contains no unverified region.
  */
 final class ArenaRegionTest {
 
-  private static final Path SHIPPED = Path.of("../../../server/owned/plugins/TheStorm/towns.yml");
-
   private final RegionIndex regions =
-      new RegionIndex(ConfigFiles.load(SHIPPED, TownsConfig.class).regions());
+      new RegionIndex(
+          List.of(
+              new AdminRegion(
+                  "spawn",
+                  "Spawn",
+                  new RegionAreas(
+                      List.of(),
+                      List.of(
+                          new Cuboid(
+                              "world", new BlockCorner(0, 0, 0), new BlockCorner(15, 128, 15)))),
+                  List.of(),
+                  RegionSpawns.unlimited()),
+              new AdminRegion(
+                  "arena",
+                  "Arena",
+                  new RegionAreas(
+                      List.of(),
+                      List.of(
+                          new Cuboid(
+                              "world", new BlockCorner(32, 0, 32), new BlockCorner(63, 128, 63)))),
+                  List.of(new RegionAllowance(Action.BREAK, Set.of(Subject.CREAKING_HEART))),
+                  new RegionSpawns(
+                      true,
+                      Set.of(
+                          "CUSTOM",
+                          "COMMAND",
+                          "SPELL",
+                          "REINFORCEMENTS",
+                          "SLIME_SPLIT",
+                          "JOCKEY",
+                          "MOUNT")))));
   private final AdminRegion arena = regions.byId("arena").orElseThrow();
   private final AdminRegion spawn = regions.byId("spawn").orElseThrow();
 

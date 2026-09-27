@@ -57,6 +57,8 @@ final class PvpServiceTest {
 
     clock.advance(Duration.ofDays(1));
     assertThat(pvp.set(OWNER, true).isOk()).isTrue();
+    assertThat(pvp.pvpOn(OWNER)).isFalse();
+    store.pending.complete(null);
     assertThat(pvp.pvpOn(OWNER)).isTrue();
   }
 

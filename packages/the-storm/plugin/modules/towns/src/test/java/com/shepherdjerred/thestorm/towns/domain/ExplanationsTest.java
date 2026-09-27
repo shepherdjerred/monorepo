@@ -94,8 +94,7 @@ final class ExplanationsTest {
             new TownProblem.NotYourself(),
             new TownProblem.AlreadyRanked("Bob", TownRole.ASSISTANT),
             new TownProblem.TargetInTown("Bob"),
-            new TownProblem.NoPendingTransfer(),
-            new TownProblem.PayoutFailed());
+            new TownProblem.NoPendingTransfer());
     for (var problem : problems) {
       assertThat(Explanations.explain(problem)).as("%s", problem).isNotBlank().endsWith(".");
     }

@@ -21,8 +21,9 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Founding and deleting towns, and their land: claims, flags and claim trust. Each use case
- * validates against the in-memory state, applies the change there at once (so protection follows
- * immediately), and saves it through {@link Settling}. Main thread only.
+ * validates against the in-memory state and saves it through {@link Settling}. Permission-reducing
+ * changes apply at once; permission-expanding changes become visible only after storage commits.
+ * Main thread only.
  *
  * <p>A claim is checked against the owner's live Governor level when they are online, and that
  * level is stored with the claim, so the town's limit holds while they are away.
@@ -76,22 +77,22 @@ public final class TownService {
                     : Result.ok(town));
   }
 
-  /**
-   * Deletes {@code player}'s town. Callers pay out its treasury first (see {@link Treasury}), so
-   * this is only the land and membership.
-   */
+  /** Deletes {@code player}'s town and durably records its treasury payout for {@link Treasury}. */
   public Result<Change<Town>, List<TownProblem>> disband(UUID player, String confirmation) {
     return checkDisband(player, confirmation)
         .map(
             town -> {
-              var claims = state().removeTown(town.id());
+              var claims = state().claimsOf(town.id());
               var chunks = new HashSet<ChunkPos>();
               claims.forEach(claim -> chunks.add(claim.chunk()));
               return settling.persist(
                   town,
-                  settling.store().deleteTown(town.id()),
+                  settling.store().deleteTown(TownPayout.of(town)),
                   Settling.Busy.of(town, chunks),
-                  () -> settling.events().removed(town.id()));
+                  () -> {
+                    state().removeTown(town.id());
+                    settling.events().removed(town.id());
+                  });
             });
   }
 
@@ -107,10 +108,13 @@ public final class TownService {
 
   private Change<Claim> save(Claim claim, Town town, Town stored) {
     state().addClaim(claim);
-    CompletableFuture<Void> write = settling.store().addClaim(claim, now());
-    if (town.governorLevel() != stored.governorLevel()) {
+    var levelChanged = town.governorLevel() != stored.governorLevel();
+    CompletableFuture<Void> write =
+        levelChanged
+            ? settling.store().addClaimAndSaveTown(claim, now(), town)
+            : settling.store().addClaim(claim, now());
+    if (levelChanged) {
       state().replaceTown(town);
-      write = CompletableFuture.allOf(write, settling.store().saveTown(town));
     }
     return settling.persist(
         claim, write, Settling.Busy.of(claim), () -> settling.events().landChanged(claim.townId()));
@@ -121,12 +125,14 @@ public final class TownService {
         .flatMap(claiming::unclaim)
         .map(
             claim -> {
-              state().removeClaim(claim.chunk());
               return settling.persist(
                   claim,
                   settling.store().removeClaim(claim.chunk()),
                   Settling.Busy.of(claim),
-                  () -> settling.events().landChanged(claim.townId()));
+                  () -> {
+                    state().removeClaim(claim.chunk());
+                    settling.events().landChanged(claim.townId());
+                  });
             });
   }
 
@@ -134,7 +140,7 @@ public final class TownService {
       UUID player, ChunkPos chunk, ClaimFlag flag, boolean on) {
     return attempt(player, chunk)
         .flatMap(attempt -> claiming.setFlag(attempt, flag, on))
-        .map(this::replace);
+        .map(claim -> replace(claim, !on));
   }
 
   /** Trusts {@code target} (when {@code on}) on the claim at {@code chunk}, or stops trusting. */
@@ -142,12 +148,25 @@ public final class TownService {
       UUID player, ChunkPos chunk, PlayerRef target, boolean on) {
     return attempt(player, chunk)
         .flatMap(attempt -> claiming.trust(attempt, target, on))
-        .map(this::replace);
+        .map(claim -> replace(claim, !on));
   }
 
-  private Change<Claim> replace(Claim claim) {
-    state().replaceClaim(claim);
-    return settling.persist(claim, settling.store().saveClaim(claim), Settling.Busy.of(claim));
+  private Change<Claim> replace(Claim claim, boolean restrictive) {
+    var write = settling.store().saveClaim(claim);
+    // Protection reads this state on the main thread. Revocations must take effect while the
+    // write is pending; a failed write reloads the stored state through Settling.
+    if (restrictive) {
+      state().replaceClaim(claim);
+    }
+    return settling.persist(
+        claim,
+        write,
+        Settling.Busy.of(claim),
+        () -> {
+          if (!restrictive) {
+            state().replaceClaim(claim);
+          }
+        });
   }
 
   /**

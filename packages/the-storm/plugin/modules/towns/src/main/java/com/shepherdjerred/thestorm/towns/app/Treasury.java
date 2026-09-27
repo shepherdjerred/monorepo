@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
+import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
 
@@ -75,12 +77,19 @@ public final class Treasury {
       Function<Town, CompletableFuture<Result<Receipt, EconomyError>>> transfer) {
     return switch (allowed) {
       case Result.Ok<Town, TreasuryProblem>(var town) -> {
-        if (towns.settling().isBusy(Settling.Busy.of(town, Set.of()))) {
+        var busy = Settling.Busy.of(town, Set.of());
+        if (!towns.settling().hold(busy)) {
           yield CompletableFuture.completedFuture(Result.err(new TreasuryProblem.Busy()));
         }
-        yield transfer
-            .apply(town)
-            .thenApplyAsync(result -> result.mapError(Treasury::problem), mainThread());
+        try {
+          yield transfer
+              .apply(town)
+              .whenCompleteAsync((ignored, failure) -> towns.settling().release(busy), mainThread())
+              .thenApply(result -> result.mapError(Treasury::problem));
+        } catch (RuntimeException failure) {
+          towns.settling().release(busy);
+          throw failure;
+        }
       }
       case Result.Err<Town, TreasuryProblem>(var problem) ->
           CompletableFuture.completedFuture(Result.err(problem));
@@ -98,74 +107,102 @@ public final class Treasury {
   }
 
   /**
-   * Deletes {@code player}'s town, confirmed by its name. Its treasury is paid to the owner first,
-   * in one transfer; if that fails the town is kept. If deleting then fails to save, the payout is
-   * moved back and the returned change fails.
+   * Deletes {@code player}'s town, confirmed by its name. Deletion commits with a payout intent;
+   * the keyed transfer follows and can resume after a crash. The town cannot survive with a drained
+   * treasury, and a failed transfer leaves a durable payout to retry.
    */
   public CompletableFuture<Result<Change<Town>, List<TownProblem>>> delete(
       UUID player, String confirmation) {
     return switch (towns.checkDisband(player, confirmation)) {
-      case Result.Ok<Town, List<TownProblem>>(var town) -> payOutAndDelete(town, confirmation);
+      case Result.Ok<Town, List<TownProblem>>(var town) ->
+          CompletableFuture.completedFuture(
+              towns
+                  .disband(player, confirmation)
+                  .map(
+                      change -> {
+                        var payout = TownPayout.of(town);
+                        var saved =
+                            change
+                                .saved()
+                                .thenCompose(
+                                    ignored -> {
+                                      members.forgetTown(town.id());
+                                      return payPayout(payout);
+                                    })
+                                .exceptionallyCompose(
+                                    failure ->
+                                        towns.settling().state().town(town.id()).isEmpty()
+                                            ? CompletableFuture.failedFuture(
+                                                new PayoutPending(payout.townId(), failure))
+                                            : CompletableFuture.failedFuture(failure));
+                        return new Change<>(town, saved);
+                      }));
       case Result.Err<Town, List<TownProblem>>(var problems) ->
           CompletableFuture.completedFuture(Result.err(problems));
     };
   }
 
-  private CompletableFuture<Result<Change<Town>, List<TownProblem>>> payOutAndDelete(
-      Town town, String confirmation) {
-    var busy = Settling.Busy.of(town, Set.of());
-    if (!towns.settling().hold(busy)) {
-      return CompletableFuture.completedFuture(Result.err(List.of(new TownProblem.Busy())));
-    }
-    var treasury = new AccountId.Town(town.id());
-    var owner = new AccountId.Player(town.owner());
-    return wallets
-        .balance(treasury)
+  /** Replays payout intents left by interrupted deletions after the town module starts. */
+  public CompletableFuture<Void> recoverPayouts() {
+    return towns
+        .settling()
+        .store()
+        .pendingPayouts()
         .thenCompose(
-            balance ->
-                balance.amount() == 0
-                    ? CompletableFuture.completedFuture(Result.<Crystals, EconomyError>ok(balance))
-                    : wallets
-                        .transfer(treasury, owner, balance, "town:delete:" + town.id())
-                        .thenApply(result -> result.map(Receipt::amount)))
-        .handleAsync(
-            (paid, failure) -> {
-              towns.settling().release(busy);
-              if (failure != null || !(paid instanceof Result.Ok<Crystals, EconomyError> ok)) {
-                return Result.<Change<Town>, List<TownProblem>>err(
-                    List.of(new TownProblem.PayoutFailed()));
-              }
-              return towns
-                  .disband(town.owner(), confirmation)
-                  .map(change -> refundIfUnsaved(change, owner, treasury, ok.value()));
-            },
-            mainThread());
+            payouts ->
+                CompletableFuture.allOf(
+                    payouts.stream().map(this::payPayout).toArray(CompletableFuture[]::new)));
   }
 
-  private Change<Town> refundIfUnsaved(
-      Change<Town> change, AccountId.Player owner, AccountId.Town treasury, Crystals amount) {
-    members.forgetTown(change.value().id());
-    var saved =
-        change
-            .saved()
-            .exceptionallyCompose(
-                failure -> {
-                  if (amount.amount() == 0) {
-                    return CompletableFuture.failedFuture(failure);
-                  }
-                  return wallets
-                      .transfer(owner, treasury, amount, "town:delete-undone:" + treasury.townId())
-                      .thenCompose(
-                          refund -> {
-                            if (!refund.isOk()) {
-                              failure.addSuppressed(
-                                  new IllegalStateException(
-                                      "the treasury payout could not be moved back: " + refund));
-                            }
-                            return CompletableFuture.<Void>failedFuture(failure);
-                          });
-                });
-    return new Change<>(change.value(), saved);
+  private CompletableFuture<Void> payPayout(TownPayout payout) {
+    var treasury = new AccountId.Town(payout.townId());
+    var owner = new AccountId.Player(payout.ownerId());
+    var reason = "town:delete:" + payout.townId();
+    return wallets
+        .receiptFor(payout.transferKey())
+        .thenCompose(
+            existing -> {
+              if (existing.isPresent()) {
+                var receipt = existing.orElseThrow();
+                if (!receipt.from().equals(treasury)
+                    || !receipt.to().equals(owner)
+                    || !receipt.reason().equals(reason)) {
+                  return CompletableFuture.failedFuture(
+                      new IllegalStateException("town payout key belongs to another transfer"));
+                }
+                return towns.settling().store().clearPayout(payout);
+              }
+              return wallets
+                  .balance(treasury)
+                  .thenCompose(
+                      balance -> {
+                        if (balance.amount() == 0) {
+                          return towns.settling().store().clearPayout(payout);
+                        }
+                        return wallets
+                            .transferOnce(
+                                new KeyedTransfer(
+                                    payout.transferKey(), treasury, owner, balance, reason))
+                            .thenCompose(
+                                result -> {
+                                  if (result instanceof Result.Err<Receipt, EconomyError> error) {
+                                    return CompletableFuture.failedFuture(
+                                        new IllegalStateException(
+                                            "town payout transfer failed: " + error.error()));
+                                  }
+                                  return towns.settling().store().clearPayout(payout);
+                                });
+                      });
+            });
+  }
+
+  /** Deletion committed, but its durable payout still needs recovery. */
+  public static final class PayoutPending extends CompletionException {
+    private static final long serialVersionUID = 1L;
+
+    public PayoutPending(UUID town, Throwable cause) {
+      super("town " + town + " was deleted but its treasury payout is pending", cause);
+    }
   }
 
   private Executor mainThread() {

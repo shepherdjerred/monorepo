@@ -150,6 +150,7 @@ final class TreasuryTest {
 
     var change = done(treasury.delete(OWNER, "Aegis"));
     store.succeed();
+    store.succeed();
 
     assertThat(change.saved()).isCompleted();
     assertThat(state.town(TOWN_A)).isEmpty();
@@ -166,26 +167,38 @@ final class TreasuryTest {
 
   @Test
   void anEmptyTreasuryNeedsNoTransfer() {
-    done(treasury.delete(OWNER, "Aegis"));
+    var change = done(treasury.delete(OWNER, "Aegis"));
+    store.succeed();
+    store.succeed();
 
+    assertThat(change.saved()).isCompleted();
     assertThat(state.town(TOWN_A)).isEmpty();
     assertThat(wallets.receipts()).isEmpty();
   }
 
   @Test
-  void aFailedPayoutKeepsTheTown() {
+  void aFailedPayoutRemainsDurableAfterDeletion() {
     wallets.give(TREASURY, 750);
     wallets.failNext(1);
 
-    assertThat(refused(treasury.delete(OWNER, "Aegis")))
-        .containsExactly(new TownProblem.PayoutFailed());
-    assertThat(state.town(TOWN_A)).isPresent();
+    var change = done(treasury.delete(OWNER, "Aegis"));
+    store.succeed();
+
+    assertThat(change.saved()).isCompletedExceptionally();
+    assertThat(state.town(TOWN_A)).isEmpty();
+    assertThat(store.pendingPayouts().join()).containsExactly(TownPayout.of(Fixtures.townA()));
     assertThat(wallets.balanceOf(TREASURY)).isEqualTo(750);
     assertThat(settling.isSettling()).isFalse();
+
+    var recovered = treasury.recoverPayouts();
+    store.succeed();
+    assertThat(recovered).isCompleted();
+    assertThat(store.pendingPayouts().join()).isEmpty();
+    assertThat(wallets.balanceOf(new AccountId.Player(OWNER))).isEqualTo(850);
   }
 
   @Test
-  void aDeleteThatCannotBeSavedMovesThePayoutBack() {
+  void aDeleteThatCannotBeSavedNeverPaysOut() {
     wallets.give(TREASURY, 750);
 
     var change = done(treasury.delete(OWNER, "Aegis"));

@@ -26,9 +26,9 @@ import org.mockbukkit.mockbukkit.simulate.entity.LivingEntitySimulation;
 import org.mockbukkit.mockbukkit.world.WorldMock;
 
 /**
- * A MockBukkit server for listener tests with the shipped {@code towns.yml} and a real SQLite
- * store. Alice founds Aegis and claims chunks (10, 10) and (11, 10), blocks x 160..191, z 160..175;
- * chunk (9, 10), blocks x 144..159, is wilderness; spawn covers chunks -4..3.
+ * A MockBukkit server for listener tests with synthetic admin regions and a real SQLite store.
+ * Alice founds Aegis and claims chunks (10, 10) and (11, 10), blocks x 160..191, z 160..175; chunk
+ * (9, 10), blocks x 144..159, is wilderness; spawn covers chunks -4..3.
  */
 abstract class AegisServer {
 

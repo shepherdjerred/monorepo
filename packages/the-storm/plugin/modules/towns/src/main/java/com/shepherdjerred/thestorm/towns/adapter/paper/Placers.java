@@ -20,10 +20,12 @@ final class Placers {
     this.key = key;
   }
 
-  void record(Block block, UUID player) {
+  boolean record(Block block, UUID player) {
     if (block.getState(false) instanceof TileState tile) {
       tile.getPersistentDataContainer().set(key, PersistentDataType.STRING, player.toString());
+      return tile.update();
     }
+    return false;
   }
 
   @Nullable UUID placedBy(Block block) {

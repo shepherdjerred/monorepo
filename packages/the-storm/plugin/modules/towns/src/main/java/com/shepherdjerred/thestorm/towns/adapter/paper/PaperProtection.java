@@ -62,6 +62,8 @@ final class PaperProtection implements Protection {
         action == ProtectedAction.OPEN_CONTAINER
                 && rendering.kinds().isLockable(location.getBlock().getType())
                 && land instanceof Land.TownLand
+                && LockGuard.container(location.getBlock()).stream()
+                    .anyMatch(block -> locks.lockOf(block) != null)
             ? Verdict.allow()
             : engine().decide(actor, act, land);
     if (verdict.isAllowed()

@@ -66,7 +66,7 @@ final class Names {
 
   /**
    * The names of {@code players}, on the main thread. Everyone in a town has joined, so every id is
-   * in the directory; one that is not (a hand-edited database) shows as the start of its id.
+   * in the directory. Missing entries are a broken internal contract.
    */
   CompletableFuture<Map<UUID, String>> namesOf(Collection<UUID> players) {
     var names = new HashMap<UUID, String>();
@@ -86,14 +86,12 @@ final class Names {
                 lookup.resultNow().ifPresent(known -> names.put(known.uuid(), known.lastName()));
               }
               for (var player : players) {
-                names.computeIfAbsent(player, Names::shortId);
+                if (!names.containsKey(player)) {
+                  throw new IllegalStateException("Missing player-directory entry for " + player);
+                }
               }
               return Map.copyOf(names);
             },
             scheduler.mainThread());
-  }
-
-  private static String shortId(UUID player) {
-    return player.toString().substring(0, 8);
   }
 }

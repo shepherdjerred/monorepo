@@ -143,10 +143,18 @@ world available before TheStorm enables again.
 
 Towns separates land rights from container rights. Claims control building,
 while a lock controls opening a lockable container on claimed land. New
-containers lock for their placer; owners can unlock them for public use or
-grant use, management, town sharing, and redstone access separately. Admin
+containers lock for their placer. Unlocking removes the lock while claimed land
+still applies its access rules. Owners can grant use, management, town sharing,
+and redstone access separately. Admin
 regions retain their own opening rules. Other modules use the towns
 `Protection` port so their container interactions follow the same rules.
+
+Town deletion commits a pending treasury payout in the same transaction as
+removing the town and its claims. The treasury then pays the former owner with a
+stable economy transfer key. If the server stops between these steps, towns
+replays pending payouts on the next module start; a failed payout remains
+recorded and is logged for recovery. Treasury deposits and withdrawals hold the
+town busy until their transfers finish, so deletion cannot race a balance change.
 
 ## Conventions
 

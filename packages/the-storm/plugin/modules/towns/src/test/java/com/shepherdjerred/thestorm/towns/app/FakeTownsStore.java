@@ -21,6 +21,7 @@ final class FakeTownsStore implements TownsStore {
 
   private final Map<UUID, Town> towns = new LinkedHashMap<>();
   private final Map<ChunkPos, Claim> claims = new LinkedHashMap<>();
+  private final Map<UUID, TownPayout> payouts = new LinkedHashMap<>();
   private final List<Write> pending = new ArrayList<>();
   private boolean holdReload;
   private CompletableFuture<TownsSnapshot> heldReload = new CompletableFuture<>();
@@ -99,24 +100,51 @@ final class FakeTownsStore implements TownsStore {
 
   @Override
   public CompletableFuture<Set<UUID>> saveDeparture(Town town, UUID departed) {
-    return record(() -> towns.put(town.id(), town)).thenApply(done -> Set.of());
+    return record(
+            () -> {
+              towns.put(town.id(), town);
+              claims.replaceAll(
+                  (chunk, claim) ->
+                      claim.townId().equals(town.id()) ? claim.withTrust(departed, false) : claim);
+            })
+        .thenApply(done -> Set.of());
   }
 
   @Override
-  public CompletableFuture<Void> deleteTown(UUID townId) {
+  public CompletableFuture<Void> deleteTown(TownPayout payout) {
     return record(
         () -> {
-          towns.remove(townId);
+          towns.remove(payout.townId());
+          payouts.put(payout.townId(), payout);
           var remaining = new HashMap<>(claims);
-          remaining.values().removeIf(claim -> claim.townId().equals(townId));
+          remaining.values().removeIf(claim -> claim.townId().equals(payout.townId()));
           claims.clear();
           claims.putAll(remaining);
         });
   }
 
   @Override
+  public CompletableFuture<List<TownPayout>> pendingPayouts() {
+    return CompletableFuture.completedFuture(List.copyOf(payouts.values()));
+  }
+
+  @Override
+  public CompletableFuture<Void> clearPayout(TownPayout payout) {
+    return record(() -> payouts.remove(payout.townId()));
+  }
+
+  @Override
   public CompletableFuture<Void> addClaim(Claim claim, Instant at) {
     return record(() -> claims.put(claim.chunk(), claim));
+  }
+
+  @Override
+  public CompletableFuture<Void> addClaimAndSaveTown(Claim claim, Instant at, Town town) {
+    return record(
+        () -> {
+          claims.put(claim.chunk(), claim);
+          towns.put(town.id(), town);
+        });
   }
 
   @Override

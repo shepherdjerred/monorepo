@@ -43,7 +43,7 @@ public final class LockService {
   /** World changes held while locks reload or their owner leaves a town. */
   private final List<Deferred> deferred = new ArrayList<>();
 
-  private record Deferred(Optional<UUID> owner, Runnable change) {}
+  private record Deferred(Optional<Lock> lock, Runnable change) {}
 
   /** Policy, clocks and membership settlement needed by lock writes. */
   public record Dependencies(LockPolicy policy, Clocks clocks, Predicate<UUID> ownerBusy) {}
@@ -149,8 +149,7 @@ public final class LockService {
     return rule.apply(lock)
         .map(
             updated -> {
-              book.put(updated);
-              return persist(updated, store.save(updated));
+              return persist(updated, store.save(updated), () -> book.put(updated));
             });
   }
 
@@ -190,7 +189,7 @@ public final class LockService {
       deferred.add(new Deferred(Optional.empty(), () -> release(block)));
       return;
     }
-    book.lockAt(block).ifPresent(lock -> whenSettled(lock.owner(), () -> releaseNow(block)));
+    book.lockAt(block).ifPresent(lock -> whenSettled(lock, () -> releaseNow(block)));
   }
 
   private void releaseNow(BlockPos block) {
@@ -212,13 +211,29 @@ public final class LockService {
   /** {@code lock} also covers {@code block}, a chest joined to it as its other half. */
   public void extend(Lock lock, BlockPos block) {
     whenSettled(
-        lock.owner(),
+        lock,
         () -> {
           var current = book.byId(lock.id());
           if (current.isPresent()) {
             extendNow(current.get(), block);
           }
         });
+  }
+
+  /** Extends a newly placed chest only when its lock can be saved now. */
+  public Optional<Change<Lock>> extendOnPlacement(Lock lock, BlockPos block) {
+    if (reloading || ownerBusy.test(lock.owner()) || busy.containsKey(lock.id())) {
+      return Optional.empty();
+    }
+    var current = book.byId(lock.id());
+    if (current.isEmpty()
+        || current.get().blocks().size() >= Lock.MAX_BLOCKS
+        || book.lockAt(block).isPresent()) {
+      return Optional.empty();
+    }
+    var grown = current.get().withBlock(block);
+    book.put(grown);
+    return Optional.of(persist(grown, store.save(grown)));
   }
 
   private void extendNow(Lock lock, BlockPos block) {
@@ -231,6 +246,10 @@ public final class LockService {
   }
 
   private Change<Lock> persist(Lock lock, CompletableFuture<Void> write) {
+    return persist(lock, write, () -> {});
+  }
+
+  private Change<Lock> persist(Lock lock, CompletableFuture<Void> write, Runnable afterSave) {
     busy.merge(lock.id(), 1, Integer::sum);
     var saved = new CompletableFuture<Void>();
     var _ =
@@ -238,7 +257,13 @@ public final class LockService {
             (ok, failure) -> {
               settle(lock.id());
               if (failure == null) {
-                saved.complete(null);
+                try {
+                  afterSave.run();
+                  flushDeferred();
+                  saved.complete(null);
+                } catch (RuntimeException callbackFailure) {
+                  reload(saved, callbackFailure);
+                }
               } else {
                 reload(saved, failure);
               }
@@ -270,9 +295,9 @@ public final class LockService {
    * Runs {@code change} now, or once a reload finishes: a block broken or joined while locks are
    * being reloaded from storage is applied to the reloaded locks, not lost.
    */
-  private void whenSettled(UUID owner, Runnable change) {
-    if (reloading || ownerBusy.test(owner)) {
-      deferred.add(new Deferred(Optional.of(owner), change));
+  private void whenSettled(Lock lock, Runnable change) {
+    if (reloading || ownerBusy.test(lock.owner()) || busy.containsKey(lock.id())) {
+      deferred.add(new Deferred(Optional.of(lock), change));
     } else {
       change.run();
     }
@@ -286,7 +311,7 @@ public final class LockService {
     var waiting = List.copyOf(deferred);
     deferred.clear();
     for (var item : waiting) {
-      item.owner().ifPresentOrElse(owner -> whenSettled(owner, item.change()), item.change());
+      item.lock().ifPresentOrElse(lock -> whenSettled(lock, item.change()), item.change());
     }
   }
 
