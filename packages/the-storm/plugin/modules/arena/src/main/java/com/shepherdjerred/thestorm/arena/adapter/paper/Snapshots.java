@@ -39,7 +39,9 @@ final class Snapshots {
   private final RewardStore rewards;
   private final Texts texts;
   private final RestoreMarker marker;
+  private final VaultReceipt vaultReceipt;
   private final Set<UUID> delivering = new HashSet<>();
+  private final Set<UUID> settlingRewards = new HashSet<>();
   private final Set<UUID> restoreOnRespawn = new HashSet<>();
   private final Set<UUID> restoring = new HashSet<>();
   private final Set<UUID> joinedFromDisk = new HashSet<>();
@@ -63,6 +65,7 @@ final class Snapshots {
     this.rewards = parts.rewards();
     this.texts = parts.texts();
     this.marker = new RestoreMarker(runtime.plugin());
+    this.vaultReceipt = new VaultReceipt(runtime.plugin());
   }
 
   /**
@@ -280,6 +283,7 @@ final class Snapshots {
     var id = player.getUniqueId();
     if (loadedFromDisk) {
       joinedFromDisk.add(id);
+      settleRewards(player);
     }
     var pending = awaitingProof.get(id);
     if (pending != null) {
@@ -306,6 +310,30 @@ final class Snapshots {
     }
   }
 
+  /** A fresh login proves both the inventory and receipt survived the player-data save. */
+  private void settleRewards(Player player) {
+    var ids = vaultReceipt.ids(player);
+    if (ids.isEmpty() || !settlingRewards.add(player.getUniqueId())) {
+      return;
+    }
+    var _ =
+        rewards
+            .acknowledge(player.getUniqueId(), ids)
+            .whenCompleteAsync(
+                (ignored, failure) -> {
+                  settlingRewards.remove(player.getUniqueId());
+                  if (failure != null) {
+                    runtime.logger().error("Could not acknowledge saved vault loot", failure);
+                    return;
+                  }
+                  if (player.isOnline()) {
+                    vaultReceipt.clear(player, ids);
+                    deliver(player);
+                  }
+                },
+                runtime.mainThread());
+  }
+
   /** The player respawned: restore them if their restore waited for it. */
   void respawned(Player player) {
     if (restoreOnRespawn.remove(player.getUniqueId())) {
@@ -330,51 +358,69 @@ final class Snapshots {
   }
 
   /**
-   * Hands {@code player} the vault loot waiting for them. The loot is claimed (read and removed in
-   * one transaction) before anything is given, and put back if they cannot take it now.
+   * Hands {@code player} whole reward rows that fit. The rows stay durable until the player logs in
+   * again with matching receipts saved alongside their inventory.
    */
   void deliver(Player player) {
     var id = player.getUniqueId();
-    if (!delivering.add(id)) {
+    if (settlingRewards.contains(id) || !delivering.add(id)) {
       return;
     }
     var _ =
         rewards
-            .claimAll(id)
+            .pending(id)
             .whenCompleteAsync(
-                (claimed, failure) -> {
+                (pending, failure) -> {
                   delivering.remove(id);
                   if (failure != null) {
-                    runtime.logger().error("Could not claim waiting vault loot", failure);
+                    runtime.logger().error("Could not read waiting vault loot", failure);
                   } else {
                     runtime.guarded(
                         "handing out vault loot to " + player.getName(),
-                        () -> handOut(player, claimed));
+                        () -> handOut(player, pending));
                   }
                 },
                 runtime.mainThread());
   }
 
-  private void handOut(Player player, List<RewardStore.PendingReward> claimed) {
-    if (claimed.isEmpty()) {
+  private void handOut(Player player, List<RewardStore.PendingReward> pending) {
+    if (pending.isEmpty()) {
       return;
     }
     var id = player.getUniqueId();
     if (!player.isOnline() || player.isDead() || runtime.inArena(id)) {
-      runtime.logFailure(
-          rewards.requeue(id, claimed, runtime.time().instant()),
-          "put back vault loot for " + player.getName());
       return;
     }
-    for (var reward : claimed) {
+    var recorded = vaultReceipt.ids(player);
+    var delivered = false;
+    for (var reward : pending) {
+      if (recorded.contains(reward.id())) {
+        continue;
+      }
       var items =
           Arrays.stream(ItemStack.deserializeItemsFromBytes(reward.items().bytes()))
               .filter(item -> !item.isEmpty())
               .toArray(ItemStack[]::new);
+      var before =
+          Arrays.stream(player.getInventory().getStorageContents())
+              .map(item -> item == null ? null : item.clone())
+              .toArray(ItemStack[]::new);
       var leftovers = player.getInventory().addItem(items);
-      leftovers.values().forEach(item -> player.getWorld().dropItem(Places.at(player), item));
+      if (!leftovers.isEmpty()) {
+        player.getInventory().setStorageContents(before);
+        continue;
+      }
+      try {
+        vaultReceipt.record(player, reward.id());
+      } catch (RuntimeException failure) {
+        player.getInventory().setStorageContents(before);
+        throw failure;
+      }
+      delivered = true;
     }
-    texts.notice(player, Notice.of(NoticeKind.VAULT_DELIVERED));
+    if (delivered) {
+      texts.notice(player, Notice.of(NoticeKind.VAULT_DELIVERED));
+    }
   }
 
   /** Whether {@code player} has a snapshot waiting to be restored. */

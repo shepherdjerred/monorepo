@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
@@ -32,10 +33,17 @@ public final class ArenaPaper {
   private final List<Listener> listeners;
   private final Cancellable clock;
   private final ArenaPermissions permissions;
+  private final List<GameRunner> runners;
+  private boolean stopped;
 
   private ArenaPaper(
-      Arenas arenas, List<Listener> listeners, Cancellable clock, ArenaPermissions permissions) {
+      Arenas arenas,
+      List<GameRunner> runners,
+      List<Listener> listeners,
+      Cancellable clock,
+      ArenaPermissions permissions) {
     this.arenas = arenas;
+    this.runners = List.copyOf(runners);
     this.listeners = List.copyOf(listeners);
     this.clock = clock;
     this.permissions = permissions;
@@ -58,8 +66,8 @@ public final class ArenaPaper {
       CrystalFormatter formatter) {}
 
   /**
-   * Starts every arena. Throws, naming every problem, if an arena's world is not loaded, a loot
-   * chest is not a container, or content names an item, mob or effect the server does not know.
+   * Starts every arena. Missing worlds and unknown content fail immediately; chest blocks are
+   * checked after their chunks load asynchronously, with admissions closed until cleanup finishes.
    */
   public static ArenaPaper start(
       ModuleContext module, ArenaBundle content, App app, ServerHooks hooks) {
@@ -106,8 +114,6 @@ public final class ArenaPaper {
         continue;
       }
       var chests = new LootChests(world, definition.lootChests(), settings.lootChests(), items);
-      problems.addAll(
-          chests.problems().stream().map(p -> "arena " + definition.id() + ": " + p).toList());
       var parts =
           new ArenaWorld.Parts(
               context,
@@ -127,8 +133,6 @@ public final class ArenaPaper {
     if (!problems.isEmpty()) {
       throw new IllegalStateException("Invalid arenas: " + String.join("; ", problems));
     }
-    runners.forEach(runner -> runner.world().cleanUp());
-
     var arenas = new Arenas(runners, snapshots);
     context.presence(arenas);
     var commands = new ArenaCommands(context, arenas, content.classes(), app.leaderboard());
@@ -148,7 +152,50 @@ public final class ArenaPaper {
         listener -> context.server().getPluginManager().registerEvents(listener, module.plugin()));
     var clock = module.scheduler().repeatOnMainThread(TICK, TICK, arenas::tick);
     snapshots.load(player -> arenas.arenaOf(player).isPresent());
-    return new ArenaPaper(arenas, listeners, clock, permissions);
+    var started = new ArenaPaper(arenas, runners, listeners, clock, permissions);
+    started.prepare(context);
+    return started;
+  }
+
+  private void prepare(PaperContext context) {
+    var loads =
+        runners.stream()
+            .map(runner -> runner.world().startupPreload())
+            .toArray(CompletableFuture[]::new);
+    var _ =
+        CompletableFuture.allOf(loads)
+            .whenCompleteAsync(
+                (ignored, failure) -> {
+                  if (stopped) {
+                    return;
+                  }
+                  try {
+                    if (failure != null) {
+                      throw new IllegalStateException("Could not load arena chunks", failure);
+                    }
+                    var problems = new ArrayList<String>();
+                    for (var runner : runners) {
+                      problems.addAll(
+                          runner.world().chestProblems().stream()
+                              .map(problem -> "arena " + runner.id() + ": " + problem)
+                              .toList());
+                    }
+                    if (!problems.isEmpty()) {
+                      throw new IllegalStateException(
+                          "Invalid arenas: " + String.join("; ", problems));
+                    }
+                    runners.forEach(runner -> runner.world().cleanUp());
+                    arenas.ready();
+                  } catch (RuntimeException error) {
+                    arenas.startupFailed();
+                    context
+                        .logger()
+                        .error("Could not prepare arenas; admission is disabled", error);
+                  } finally {
+                    runners.forEach(runner -> runner.world().cancelPreload());
+                  }
+                },
+                context.mainThread());
   }
 
   private static Setup setup(ArenaBundle content, ArenaDefinition definition) {
@@ -191,6 +238,8 @@ public final class ArenaPaper {
 
   /** Stops every game (restoring everyone inside), the clock, listeners and permissions. */
   public void stop() {
+    stopped = true;
+    runners.forEach(runner -> runner.world().cancelPreload());
     arenas.stopAll();
     clock.cancel();
     listeners.forEach(HandlerList::unregisterAll);

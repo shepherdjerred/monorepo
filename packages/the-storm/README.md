@@ -237,6 +237,13 @@ that Paper saved the restored inventory and its matching persistent-data marker
 together. Players must reconnect before entering another arena after a restore;
 this avoids a synchronous player-data write on the server tick.
 
+Arena startup loads its configured region chunks asynchronously before checking
+loot chest blocks or clearing remnants of an interrupted game. Admission stays
+closed if any chunk or chest is unavailable. Vault rewards stay in the database
+while delivered items and their receipt await a player-data save; a later login
+retires those rows. A reward whose whole item bundle does not fit remains queued
+until the player frees inventory space.
+
 ## Conventions
 
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating

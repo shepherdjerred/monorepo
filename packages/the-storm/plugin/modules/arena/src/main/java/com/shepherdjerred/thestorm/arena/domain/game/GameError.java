@@ -20,4 +20,8 @@ public enum GameError {
   NO_CLASS,
   /** Nobody in the lobby has a class, or a game is already running. */
   NOTHING_TO_START,
+  /** Arena chunks are loading before the game can start. */
+  PREPARING,
+  /** Arena chunks could not be loaded. */
+  UNAVAILABLE,
 }

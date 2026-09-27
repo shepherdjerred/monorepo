@@ -27,6 +27,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Container;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Cow;
 import org.bukkit.entity.Drowned;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -41,6 +42,8 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.EntityTargetEvent.TargetReason;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -53,6 +56,7 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockbukkit.mockbukkit.entity.LivingEntityMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
 /**
@@ -127,7 +131,14 @@ final class ArenaSafetyTest {
   private void fight(PlayerMock player) {
     lobby(player);
     player.performCommand("arena class knight");
-    harness().server.dispatchCommand(harness().server.getConsoleSender(), "arena start colosseum");
+    harness()
+        .until(
+            () -> {
+              harness()
+                  .server
+                  .dispatchCommand(harness().server.getConsoleSender(), "arena start colosseum");
+              return player.getLocation().getX() == 1030.5;
+            });
   }
 
   private static ItemStack tagged(Material material) {
@@ -350,6 +361,45 @@ final class ArenaSafetyTest {
   // P1: arena mobs stay arena mobs.
 
   @Test
+  void fightersCannotHitOutsidersOrUntrackedEntities() {
+    var harness = start();
+    var alice = player("Alice");
+    fight(alice);
+    var bob = player("Bob");
+    var wild = harness.world.spawn(outside(), Zombie.class);
+    var untracked = harness.world.spawn(inside(), Zombie.class);
+    untracked.getPersistentDataContainer().set(ENTITY_TAG, PersistentDataType.STRING, "colosseum");
+
+    assertThat(bob.simulateDamage(3, alice).isCancelled()).isTrue();
+    assertThat(((LivingEntityMock) wild).simulateDamage(3, alice).isCancelled()).isTrue();
+    assertThat(((LivingEntityMock) untracked).simulateDamage(3, alice).isCancelled()).isTrue();
+  }
+
+  @Test
+  void arenaMobsCannotTargetOutsidersOrOrdinaryAnimals() {
+    var harness = start();
+    var alice = player("Alice");
+    fight(alice);
+    var bob = player("Bob");
+    var mob = harness.world.spawn(inside(), Zombie.class);
+    mob.getPersistentDataContainer().set(ENTITY_TAG, PersistentDataType.STRING, "colosseum");
+    var cow = harness.world.spawn(inside(), Cow.class);
+
+    assertThat(
+            call(new EntityTargetLivingEntityEvent(mob, alice, TargetReason.CLOSEST_PLAYER))
+                .isCancelled())
+        .isFalse();
+    assertThat(
+            call(new EntityTargetLivingEntityEvent(mob, bob, TargetReason.CLOSEST_PLAYER))
+                .isCancelled())
+        .isTrue();
+    assertThat(
+            call(new EntityTargetLivingEntityEvent(mob, cow, TargetReason.CLOSEST_ENTITY))
+                .isCancelled())
+        .isTrue();
+  }
+
+  @Test
   void arenaMobsNeverTransformButStillSplit() {
     var harness = start();
     var zombie = harness.world.spawn(inside(), Zombie.class);
@@ -491,8 +541,8 @@ final class ArenaSafetyTest {
                 .mapToInt(ItemStack::getAmount)
                 .sum())
         .isEqualTo(2);
-    assertThat(new JooqRewardStore(harness.database).claimAll(alice.getUniqueId()).join())
-        .isEmpty();
+    assertThat(new JooqRewardStore(harness.database).pending(alice.getUniqueId()).join())
+        .hasSize(1);
   }
 
   // Polish: graves, rollbacks, staff, views, stuck restores, strays, dying while joining.

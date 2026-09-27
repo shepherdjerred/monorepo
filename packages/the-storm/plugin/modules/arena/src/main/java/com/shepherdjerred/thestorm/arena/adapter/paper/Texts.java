@@ -56,6 +56,8 @@ final class Texts {
       case CLASS_LOCKED -> "You have not unlocked that class yet.";
       case NO_CLASS -> "Pick a class first.";
       case NOTHING_TO_START -> "There is nobody with a class to start a game with.";
+      case PREPARING -> "Arena chunks are loading. Try starting again in a moment.";
+      case UNAVAILABLE -> "Arena chunks could not be loaded. See the server log.";
     };
   }
 }
