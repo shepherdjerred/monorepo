@@ -10,7 +10,6 @@ import com.shepherdjerred.thestorm.quests.domain.model.Condition;
 import com.shepherdjerred.thestorm.quests.domain.model.Objective;
 import com.shepherdjerred.thestorm.quests.domain.model.Quest;
 import com.shepherdjerred.thestorm.quests.domain.sim.Simulator;
-import com.shepherdjerred.thestorm.quests.domain.state.Board;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -116,7 +115,9 @@ final class ShippedContentTest {
       for (var seed = 0L; seed < 40; seed++) {
         var quest =
             BoardQuests.quest(
-                template, new Board.Entry("daily-1", template.id(), seed), config.board().npc());
+                template,
+                BoardQuests.entry("daily-1", template, BoardQuests.draw(template, seed)),
+                config.board().npc());
         var runs = Simulator.simulate(Catalog.of(List.of(quest)), quest, config.calendar(), NOW);
         assertThat(runs)
             .as("%s seed %s", template.id(), seed)

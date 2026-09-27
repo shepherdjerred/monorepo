@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.quests.domain.state;
 
+import com.shepherdjerred.thestorm.quests.domain.board.Template;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,11 +26,34 @@ public record Board(String day, String week, List<Entry> entries) {
   }
 
   /**
-   * One drawn quest. Its quest is generated again from the template and seed whenever needed.
+   * One drawn quest, snapshotted when drawn: later template edits change its text but not what it
+   * asks for or pays.
    *
    * @param slot the quest id on the board, such as {@code daily-1}
    * @param template the template it was drawn from
-   * @param seed the random seed that picked its target and amount
+   * @param period whether this is a daily or weekly quest
+   * @param kind whether the objective is a kill or delivery
+   * @param target the entity type or material it asks for
+   * @param amount how many
+   * @param stars its difficulty, 1 to 5
+   * @param reward the crystals it pays
+   * @param minutes its estimated minutes
    */
-  public record Entry(String slot, String template, long seed) {}
+  public record Entry(
+      String slot,
+      String template,
+      Template.Period period,
+      Template.Kind kind,
+      String target,
+      int amount,
+      int stars,
+      long reward,
+      int minutes) {
+
+    public Entry {
+      if (amount < 1 || stars < 1 || stars > 5 || reward < 0 || minutes < 1) {
+        throw new IllegalArgumentException("a board entry needs a positive amount and minutes");
+      }
+    }
+  }
 }

@@ -133,12 +133,15 @@ public final class QuestService implements QuestHooks, QuestProgress {
   private Catalog catalog(PlayerQuests state) {
     var board = new ArrayList<Quest>();
     for (var entry : state.board().entries()) {
-      wiring
-          .content()
-          .template(entry.template())
-          .ifPresent(
-              template ->
-                  board.add(BoardQuests.quest(template, entry, wiring.config().board().npc())));
+      var template =
+          wiring
+              .content()
+              .template(entry.template())
+              .orElseThrow(
+                  () ->
+                      new IllegalStateException(
+                          "Stored board template no longer exists: " + entry.template()));
+      board.add(BoardQuests.quest(template, entry, wiring.config().board().npc()));
     }
     return wiring.content().catalog().with(board);
   }

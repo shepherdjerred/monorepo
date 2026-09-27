@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.quests.app.QuestStore;
+import com.shepherdjerred.thestorm.quests.domain.board.Template;
 import com.shepherdjerred.thestorm.quests.domain.model.Action.NpcMark;
 import com.shepherdjerred.thestorm.quests.domain.state.ActiveQuest;
 import com.shepherdjerred.thestorm.quests.domain.state.Board;
@@ -66,8 +67,26 @@ final class JooqQuestStoreTest {
             "2026-09-23",
             "2026-09-21",
             List.of(
-                new Board.Entry("daily-1", "bounty", -99L),
-                new Board.Entry("weekly-1", "supply", 5L))),
+                new Board.Entry(
+                    "daily-1",
+                    "bounty",
+                    Template.Period.DAILY,
+                    Template.Kind.KILL,
+                    "ZOMBIE",
+                    12,
+                    2,
+                    150L,
+                    10),
+                new Board.Entry(
+                    "weekly-1",
+                    "supply",
+                    Template.Period.WEEKLY,
+                    Template.Kind.DELIVER,
+                    "IRON_INGOT",
+                    32,
+                    4,
+                    350L,
+                    30))),
         Map.of("nat", NpcMark.TURN_IN, "cade", NpcMark.AVAILABLE));
   }
 

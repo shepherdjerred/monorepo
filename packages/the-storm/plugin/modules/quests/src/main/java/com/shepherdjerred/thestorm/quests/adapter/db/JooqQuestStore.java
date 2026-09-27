@@ -11,6 +11,7 @@ import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUE
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.quests.app.QuestStore;
+import com.shepherdjerred.thestorm.quests.domain.board.Template;
 import com.shepherdjerred.thestorm.quests.domain.model.Action.NpcMark;
 import com.shepherdjerred.thestorm.quests.domain.state.ActiveQuest;
 import com.shepherdjerred.thestorm.quests.domain.state.ActiveQuest.Phase;
@@ -101,7 +102,16 @@ public final class JooqQuestStore implements QuestStore {
                 .orderBy(QUESTS_BOARD.SLOT.asc())
                 .fetch(
                     entry ->
-                        new Board.Entry(entry.getSlot(), entry.getTemplate(), entry.getSeed()))),
+                        new Board.Entry(
+                            entry.getSlot(),
+                            entry.getTemplate(),
+                            Template.Period.valueOf(entry.getPeriod().toUpperCase(Locale.ROOT)),
+                            Template.Kind.valueOf(entry.getKind().toUpperCase(Locale.ROOT)),
+                            entry.getTarget(),
+                            entry.getAmount(),
+                            entry.getStars(),
+                            entry.getReward(),
+                            entry.getMinutes()))),
         marks(dsl, id));
   }
 
@@ -224,7 +234,13 @@ public final class JooqQuestStore implements QuestStore {
           .set(QUESTS_BOARD.PLAYER_ID, id)
           .set(QUESTS_BOARD.SLOT, entry.slot())
           .set(QUESTS_BOARD.TEMPLATE, entry.template())
-          .set(QUESTS_BOARD.SEED, entry.seed())
+          .set(QUESTS_BOARD.PERIOD, entry.period().name().toLowerCase(Locale.ROOT))
+          .set(QUESTS_BOARD.KIND, entry.kind().name().toLowerCase(Locale.ROOT))
+          .set(QUESTS_BOARD.TARGET, entry.target())
+          .set(QUESTS_BOARD.AMOUNT, entry.amount())
+          .set(QUESTS_BOARD.STARS, entry.stars())
+          .set(QUESTS_BOARD.REWARD, entry.reward())
+          .set(QUESTS_BOARD.MINUTES, entry.minutes())
           .execute();
     }
     state

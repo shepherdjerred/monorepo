@@ -56,12 +56,19 @@ CREATE TABLE quests_reputation (
     PRIMARY KEY (player_id, faction)
 );
 
--- The player's radiant board: each slot's template and generation seed.
+-- The player's radiant board: each slot's template and what was drawn for it,
+-- snapshotted so template edits do not change a drawn quest.
 CREATE TABLE quests_board (
-    player_id TEXT   NOT NULL REFERENCES quests_player (player_id) ON DELETE CASCADE,
-    slot      TEXT   NOT NULL,
-    template  TEXT   NOT NULL,
-    seed      BIGINT NOT NULL,
+    player_id TEXT    NOT NULL REFERENCES quests_player (player_id) ON DELETE CASCADE,
+    slot      TEXT    NOT NULL,
+    template  TEXT    NOT NULL,
+    period    TEXT    NOT NULL CHECK (period IN ('daily', 'weekly')),
+    kind      TEXT    NOT NULL CHECK (kind IN ('kill', 'deliver')),
+    target    TEXT    NOT NULL,
+    amount    INTEGER NOT NULL CHECK (amount >= 1),
+    stars     INTEGER NOT NULL CHECK (stars BETWEEN 1 AND 5),
+    reward    BIGINT  NOT NULL CHECK (reward >= 0),
+    minutes   INTEGER NOT NULL CHECK (minutes >= 1),
     PRIMARY KEY (player_id, slot)
 );
 
