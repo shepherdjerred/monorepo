@@ -33,6 +33,24 @@ mise exec -- gradle --write-verification-metadata sha256 build
 
 The jar is `plugin/dist/build/libs/TheStorm.jar`.
 
+## Discord bridge rollout
+
+The `discord` module bridges global chat and player activity to one channel
+using JDA. Its `THE_STORM_DISCORD_BOT_TOKEN` and
+`THE_STORM_DISCORD_CHANNEL_ID` bootstrap values come from the existing
+`minecraft-tsmc-discord` 1Password-backed Secret. The token is never stored in
+the repository, and the channel ID is validated before JDA starts. The bot
+needs the Discord `MESSAGE_CONTENT` intent enabled in its application settings.
+
+The module is disabled in repository-owned `config.yml` while DiscordSRV owns
+the same bot token. In the replacement release, remove DiscordSRV's plugin URL,
+config mount and old environment references when enabling `discord: true`.
+Verify both chat directions and the `/list` response with the three authorized
+players before treating that release as accepted. The foundation's `economy`
+and `towns` modules are still stubs, so `/baltop` and `/towns` have no owned
+read model to query yet. The bridge does not register those commands until
+their modules provide one.
+
 ## Modules
 
 Every module implements `StormModule` and is listed in `dist`'s `Modules`
