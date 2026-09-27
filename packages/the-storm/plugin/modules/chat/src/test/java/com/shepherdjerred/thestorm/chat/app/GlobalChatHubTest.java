@@ -71,6 +71,7 @@ final class GlobalChatHubTest {
 
   @Test
   void relaysExternalMessagesEscapedAndTellsListeners() {
+    service.load().join();
     var lines = new ArrayList<ChatLine>();
     hub.subscribe(lines::add);
 
@@ -84,9 +85,21 @@ final class GlobalChatHubTest {
 
   @Test
   void blankExternalMessagesAreABug() {
+    service.load().join();
     assertThatThrownBy(() -> hub.broadcastExternal("D", "bob", " §a "))
         .isInstanceOf(IllegalArgumentException.class);
     assertThat(delivered).isEmpty();
+  }
+
+  @Test
+  void externalMessagesWaitForStoredState() {
+    var lines = new ArrayList<ChatLine>();
+    hub.subscribe(lines::add);
+
+    hub.broadcastExternal("D", "bob", "hello");
+
+    assertThat(delivered).isEmpty();
+    assertThat(lines).isEmpty();
   }
 
   @Test
