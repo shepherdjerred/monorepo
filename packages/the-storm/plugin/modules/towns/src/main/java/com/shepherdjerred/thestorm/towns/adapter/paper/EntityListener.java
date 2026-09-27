@@ -9,10 +9,14 @@ import io.papermc.paper.event.player.PlayerItemFrameChangeEvent;
 import java.util.List;
 import org.bukkit.Location;
 import org.bukkit.damage.DamageSource;
+import org.bukkit.entity.AbstractHorse;
+import org.bukkit.entity.ChestBoat;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Vehicle;
+import org.bukkit.entity.minecart.HopperMinecart;
+import org.bukkit.entity.minecart.StorageMinecart;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -58,6 +62,10 @@ final class EntityListener implements Listener {
   void onOpenEntityInventory(InventoryOpenEvent event) {
     if (event.getPlayer() instanceof Player player
         && event.getInventory().getHolder(false) instanceof Entity entity
+        && (entity instanceof AbstractHorse
+            || entity instanceof ChestBoat
+            || entity instanceof HopperMinecart
+            || entity instanceof StorageMinecart)
         && !guard.permits(
             player, new Act(Action.OPEN_CONTAINER, Subject.CONTAINER), guard.land(entity))) {
       event.setCancelled(true);

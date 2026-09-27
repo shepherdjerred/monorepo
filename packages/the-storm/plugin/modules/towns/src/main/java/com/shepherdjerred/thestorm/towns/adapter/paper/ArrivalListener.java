@@ -7,7 +7,10 @@ import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -76,6 +79,7 @@ final class ArrivalListener implements Listener {
     }
     var spawn = world.getSpawnLocation();
     return world.isChunkLoaded(spawn.getBlockX() >> 4, spawn.getBlockZ() >> 4)
+            && safe(spawn)
             && guard.permitsQuietly(player, ARRIVE, guard.land(spawn))
         ? Optional.of(spawn)
         : Optional.empty();
@@ -104,13 +108,47 @@ final class ArrivalListener implements Listener {
       return Optional.empty();
     }
     var spot = surface(world, (x << 4) + 8, (z << 4) + 8);
-    var land = guard.land(spot);
+    if (spot.isEmpty()) {
+      return Optional.empty();
+    }
+    var land = guard.land(spot.get());
     return land instanceof Land.Wilderness && guard.permitsQuietly(player, ARRIVE, land)
-        ? Optional.of(spot)
+        ? spot
         : Optional.empty();
   }
 
-  private static Location surface(World world, int x, int z) {
-    return world.getHighestBlockAt(x, z).getLocation().add(0.5, 1, 0.5);
+  private static Optional<Location> surface(World world, int x, int z) {
+    var ground = world.getHighestBlockAt(x, z);
+    if (ground.getY() + 2 >= world.getMaxHeight()) {
+      return Optional.empty();
+    }
+    var spot = ground.getLocation().add(0.5, 1, 0.5);
+    return safe(spot) ? Optional.of(spot) : Optional.empty();
+  }
+
+  private static boolean safe(Location spot) {
+    var feet = spot.getBlock();
+    var head = feet.getRelative(BlockFace.UP);
+    var ground = feet.getRelative(BlockFace.DOWN);
+    return safeGround(ground) && safeAir(feet) && safeAir(head);
+  }
+
+  private static boolean safeGround(Block ground) {
+    var type = ground.getType();
+    return type.isSolid()
+        && type != Material.CACTUS
+        && type != Material.MAGMA_BLOCK
+        && type != Material.CAMPFIRE
+        && type != Material.SOUL_CAMPFIRE;
+  }
+
+  private static boolean safeAir(Block block) {
+    var type = block.getType();
+    return block.isPassable()
+        && !block.isLiquid()
+        && type != Material.FIRE
+        && type != Material.SOUL_FIRE
+        && type != Material.POWDER_SNOW
+        && type != Material.SWEET_BERRY_BUSH;
   }
 }
