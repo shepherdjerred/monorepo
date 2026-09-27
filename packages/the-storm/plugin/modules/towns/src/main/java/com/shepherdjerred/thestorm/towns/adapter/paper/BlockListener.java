@@ -81,7 +81,7 @@ final class BlockListener implements Listener {
     var center = block.getLocation().add(0.5, 0.5, 0.5);
     for (var hanging : block.getWorld().getNearbyEntitiesByType(Hanging.class, center, 1.5)) {
       var support = hanging.getLocation().getBlock().getRelative(hanging.getAttachedFace());
-      var act = new Act(Action.BREAK, EntityKinds.subject(hanging).orElse(Subject.ENTITY));
+      var act = new Act(Action.DAMAGE_ENTITY, EntityKinds.subject(hanging).orElse(Subject.ENTITY));
       if (support.equals(block) && !guard.permits(player, act, guard.land(hanging))) {
         return false;
       }
@@ -180,7 +180,11 @@ final class BlockListener implements Listener {
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
   void onBucketEmpty(PlayerBucketEmptyEvent event) {
-    check(event, event.getPlayer(), new Act(Action.BUILD, Subject.BLOCK), event.getBlock());
+    check(
+        event,
+        event.getPlayer(),
+        new Act(Action.BUILD, Subject.BLOCK),
+        event.getBlock().getRelative(event.getBlockFace()));
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)

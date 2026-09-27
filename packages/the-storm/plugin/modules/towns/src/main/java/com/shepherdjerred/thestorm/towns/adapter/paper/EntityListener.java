@@ -24,6 +24,7 @@ import org.bukkit.event.entity.PlayerLeashEntityEvent;
 import org.bukkit.event.hanging.HangingBreakByEntityEvent;
 import org.bukkit.event.hanging.HangingBreakEvent;
 import org.bukkit.event.hanging.HangingPlaceEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerArmorStandManipulateEvent;
 import org.bukkit.event.player.PlayerBucketEntityEvent;
 import org.bukkit.event.player.PlayerFishEvent;
@@ -50,6 +51,17 @@ final class EntityListener implements Listener {
   void onInteractEntity(PlayerInteractEntityEvent event) {
     var entity = event.getRightClicked();
     EntityKinds.use(entity).ifPresent(act -> use(event, event.getPlayer(), entity, act));
+  }
+
+  /** Animal inventories also require container rights when a player opens them. */
+  @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
+  void onOpenEntityInventory(InventoryOpenEvent event) {
+    if (event.getPlayer() instanceof Player player
+        && event.getInventory().getHolder(false) instanceof Entity entity
+        && !guard.permits(
+            player, new Act(Action.OPEN_CONTAINER, Subject.CONTAINER), guard.land(entity))) {
+      event.setCancelled(true);
+    }
   }
 
   @EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
@@ -198,7 +210,8 @@ final class EntityListener implements Listener {
       var remover = byEntity.getRemover();
       var culprit = guard.culprit(remover);
       if (culprit.isPresent()) {
-        var act = new Act(Action.BREAK, EntityKinds.subject(hanging).orElse(Subject.ENTITY));
+        var act =
+            new Act(Action.DAMAGE_ENTITY, EntityKinds.subject(hanging).orElse(Subject.ENTITY));
         event.setCancelled(!guard.permits(culprit.get(), act, land));
         return;
       }
