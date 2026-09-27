@@ -119,6 +119,8 @@ function matchingHumans(client: SessionClient, list: string): string[] {
     .filter((name) => name !== client.username() && listed.has(name));
 }
 
+const MAX_PRESENCE_LISTS = 8;
+
 async function confirmPresence(options: {
   client: SessionClient;
   rcon: SessionRcon;
@@ -132,17 +134,27 @@ async function confirmPresence(options: {
   | { kind: "window-end" }
 > {
   const { client, rcon, firstList, stopped, config, now } = options;
-  const first = matchingHumans(client, firstList);
-  if (first.length > 0) return { kind: "humans", names: first };
-  // The roster can change while the first RCON reply is in flight.
-  const refreshed = await Promise.race([
-    rcon.command("list").then((list) => ({ kind: "list" as const, list })),
-    stopped.then((value) => ({ kind: "stop" as const, value })),
-  ]);
-  if (refreshed.kind === "stop") return refreshed;
-  return inPilotWindow(config, now())
-    ? { kind: "humans", names: matchingHumans(client, refreshed.list) }
-    : { kind: "window-end" };
+  let list = firstList;
+  // A new player can appear after an RCON snapshot was produced but before the
+  // reply is processed. Reconcile against the current bot roster each time.
+  for (let attempt = 0; attempt < MAX_PRESENCE_LISTS; attempt++) {
+    if (!inPilotWindow(config, now())) return { kind: "window-end" };
+    const names = matchingHumans(client, list);
+    if (names.length > 0) return { kind: "humans", names };
+    if (client.playerNames().every((name) => name === client.username())) {
+      return { kind: "humans", names: [] };
+    }
+    if (attempt === MAX_PRESENCE_LISTS - 1) {
+      throw new Error("RCON and Mineflayer could not reconcile human presence");
+    }
+    const refreshed = await Promise.race([
+      rcon.command("list").then((reply) => ({ kind: "list" as const, reply })),
+      stopped.then((value) => ({ kind: "stop" as const, value })),
+    ]);
+    if (refreshed.kind === "stop") return refreshed;
+    list = refreshed.reply;
+  }
+  throw new Error("presence confirmation exhausted");
 }
 
 /** Holds one authorized bot only while the window and human presence remain verified. */

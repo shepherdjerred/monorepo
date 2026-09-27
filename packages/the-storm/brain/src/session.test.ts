@@ -91,7 +91,7 @@ function start(client: FakeClient, rcon: FakeRcon) {
 }
 
 async function settle(): Promise<void> {
-  for (let step = 0; step < 6; step++) await Promise.resolve();
+  for (let step = 0; step < 20; step++) await Promise.resolve();
 }
 
 afterEach(() => vi.useRealTimers());
@@ -184,6 +184,51 @@ describe("companion session", () => {
     );
     client.left("Sam");
     expect(await session).toBe("human-left");
+  });
+
+  it("reconciles a join that arrives after the refreshed RCON snapshot", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-27T01:30:00Z"));
+    const client = new FakeClient();
+    const rcon = new FakeRcon();
+    let firstAnswer!: (value: string) => void;
+    rcon.command
+      .mockImplementationOnce(
+        () =>
+          new Promise<string>((resolve) => {
+            firstAnswer = resolve;
+          }),
+      )
+      .mockResolvedValueOnce("There are 1 of a max of 20 players online: Pilot")
+      .mockResolvedValueOnce(
+        "There are 2 of a max of 20 players online: Pilot, Sam",
+      );
+    const session = start(client, rcon);
+    await settle();
+    client.left("Alex");
+    client.joined("Sam");
+    firstAnswer("There are 2 of a max of 20 players online: Pilot, Alex");
+    await settle();
+
+    expect(rcon.command).toHaveBeenCalledTimes(3);
+    expect(await Promise.race([session, Promise.resolve("pending")])).toBe(
+      "pending",
+    );
+    client.left("Sam");
+    expect(await session).toBe("human-left");
+  });
+
+  it("fails closed if the two rosters never agree", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-27T01:30:00Z"));
+    const rcon = new FakeRcon();
+    rcon.command.mockResolvedValue(
+      "There are 1 of a max of 20 players online: Pilot",
+    );
+    await expect(start(new FakeClient(), rcon)).rejects.toThrow(
+      "RCON and Mineflayer could not reconcile human presence",
+    );
+    expect(rcon.command).toHaveBeenCalledTimes(8);
   });
 
   it("ends at 20:00 Pacific without a recurring timer", async () => {
