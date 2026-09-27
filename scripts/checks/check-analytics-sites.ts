@@ -69,6 +69,13 @@ const staticTrackers = [
     masksAllText: false,
     wiring: /<script[^>]+\bsrc=["']\.\/posthog\.js["']/,
   },
+  {
+    path: "packages/ts-mc/public/posthog.js",
+    entrypoint: "packages/ts-mc/src/layouts/BaseLayout.astro",
+    hostname: "ts-mc.net",
+    masksAllText: false,
+    wiring: /<script[^>]+\bsrc=["']\/posthog\.js["']/,
+  },
 ] as const;
 
 // These three keys are load-bearing by their ABSENCE, and each one silently

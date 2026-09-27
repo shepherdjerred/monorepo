@@ -11,11 +11,8 @@ Scout's `/docs/` pages share the Scout host identity and tracker. PostHog is a
 managed external service: the cluster has no PostHog namespace, database,
 volume, DNS record, secret, or readiness dependency.
 
-The Cooklang preview, Stocks, Glitter Boys, and human wiki trackers are
-repo-owned static assets. `ts-mc.net` has no current site source in this
-checkout, so its tracker is currently installed in the S3-hosted HTML itself;
-an external redeploy of that bucket must preserve `/posthog.js` and its HTML
-script tags.
+The Cooklang preview, Stocks, Glitter Boys, human wiki, and Storm portal
+trackers are repo-owned static assets.
 
 ## Project setup
 

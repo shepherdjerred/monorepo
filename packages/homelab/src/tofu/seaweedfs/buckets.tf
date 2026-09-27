@@ -144,8 +144,9 @@ resource "aws_s3_bucket" "relay_docs" {
 # that a still-open browser tab references. Any future manual deploy should
 # follow the same convention: re-upload the current build's hashed files (fresh
 # mtime resets their age) so only prior builds' hashes age out. Only buckets
-# the retired pipeline deployed to are listed; non-hashed sites (resume,
-# webring, glitter) and buckets never deployed to are intentionally omitted.
+# whose hashed prefixes deploy without `--delete` are listed; non-hashed
+# sites (resume, webring, glitter) and buckets never deployed to are
+# intentionally omitted.
 locals {
   static_site_immutable_prefixes = {
     "scout-frontend"      = ["app/assets/", "_astro/"]
@@ -156,6 +157,7 @@ locals {
     "stocks-sjer-red"     = ["_astro/"]
     "wiki-sjer-red"       = ["_astro/"]
     "better-skill-capped" = ["assets/"]
+    "ts-mc"               = ["_astro/"]
   }
   # OpenTofu's S3 backend intentionally inherits the state-only AWS identity
   # from the process. The AWS CLI provisioners mutate deployment buckets, so
@@ -179,6 +181,7 @@ resource "terraform_data" "static_site_asset_lifecycle" {
     aws_s3_bucket.stocks_sjer_red,
     aws_s3_bucket.wiki_sjer_red,
     aws_s3_bucket.better_skill_capped,
+    aws_s3_bucket.ts_mc,
   ]
 
   input = {

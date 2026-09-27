@@ -67,6 +67,13 @@ export const sitePaths = {
     "packages/glitter-context",
     ...deployScripts,
   ],
+  "site-ts-mc": [
+    ...workspacePaths,
+    "packages/ts-mc",
+    // Registry corrections must rebuild every static tracker consumer.
+    "config/analytics-sites.json",
+    ...deployScripts,
+  ],
   // The Storybook catalogs. Scoped to the two packages that build them rather
   // than all of `packages/scout-for-lol`, so a backend or bot change does not
   // redeploy a component catalog neither of them appears in.

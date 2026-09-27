@@ -64,6 +64,7 @@ export const summaryLanes = [
   "site-wiki",
   "site-better-skill-capped",
   "site-glitter",
+  "site-ts-mc",
   "site-scout-design-system",
   "site-scout",
   "helm",
