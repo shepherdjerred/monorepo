@@ -8,15 +8,19 @@ export const STREAMEAST_HOME = "https://v2.streameast.ga/";
 export const TVSPORTSLIVE_HOME = "https://tvsportslive.fr/";
 
 function localDateKey(date: Date): string {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: SPORTS_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(date);
-  const year = parts.find((part) => part.type === "year")?.value;
-  const month = parts.find((part) => part.type === "month")?.value;
-  const day = parts.find((part) => part.type === "day")?.value;
+  const fields = new Map(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: SPORTS_TIME_ZONE,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+      .formatToParts(date)
+      .map((part) => [part.type, part.value] as const),
+  );
+  const year = fields.get("year");
+  const month = fields.get("month");
+  const day = fields.get("day");
   if (year === undefined || month === undefined || day === undefined) {
     throw new Error("Could not format the sports listing date");
   }

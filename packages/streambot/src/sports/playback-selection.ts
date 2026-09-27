@@ -18,6 +18,12 @@ export type SportsPlaybackSelection = {
 
 type PlaySource = "auto" | "history" | "local" | "youtube";
 
+function hasSportsCue(query: string, utterance: string | undefined): boolean {
+  return /\b(?:vs|versus|game|match|sports|nfl|nba|wnba|nhl|mlb)\b/i.test(
+    `${query} ${utterance ?? ""}`,
+  );
+}
+
 export async function selectDirectRequestUrl(input: {
   readonly query: string;
   readonly spoken: boolean | undefined;
@@ -149,8 +155,9 @@ export async function selectSportsPlayback(input: {
 
 export async function selectSportsForRequest(input: {
   readonly query: string;
+  readonly utterance?: string;
   readonly source: PlaySource;
-  readonly provider: SportsProviderPreference;
+  readonly provider: SportsProviderPreference | undefined;
   readonly scope: DiscoveryScope | null;
   readonly enabled: MediaFeatureGate["sportsStreaming"];
   readonly signal: AbortSignal;
@@ -162,6 +169,8 @@ export async function selectSportsForRequest(input: {
   readonly onAmbiguous: () => void;
 }): Promise<SportsPlaybackSelection | null> {
   if (
+    (input.provider === undefined &&
+      !hasSportsCue(input.query, input.utterance)) ||
     input.scope === null ||
     input.source !== "auto" ||
     input.catalog === undefined ||
@@ -172,7 +181,7 @@ export async function selectSportsForRequest(input: {
   }
   return await selectSportsPlayback({
     query: input.query,
-    provider: input.provider,
+    provider: input.provider ?? "auto",
     signal: input.signal,
     catalog: input.catalog,
     resolve: input.resolve,

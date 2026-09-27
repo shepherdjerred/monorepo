@@ -9,6 +9,11 @@ const IdentifierSchema = z.looseObject({
   id: z.string().optional(),
   instanceId: z.string().optional(),
 });
+const ProfileSchema = z.looseObject({
+  id: z.string().min(1),
+  name: z.string(),
+});
+const ProfilesSchema = z.array(ProfileSchema);
 const InstanceSchema = z.looseObject({
   id: z.string().optional(),
   instanceId: z.string().optional(),
@@ -52,6 +57,12 @@ const ClickSchema = z.looseObject({
   success: z.boolean(),
   result: z.looseObject({ clicked: z.boolean() }),
 });
+
+class PinchtabHttpError extends Error {
+  constructor(readonly status: number) {
+    super(`Sports browser request failed (${String(status)})`);
+  }
+}
 
 function approvedPlayerFrameUrl(value: string): boolean {
   try {
@@ -314,6 +325,31 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
       throw new Error("Sports browser credentials are not configured");
     }
     const instanceId = await this.ensureInstance(signal);
+    try {
+      return await this.openTabOnInstance(instanceId, url, signal);
+    } catch (error) {
+      if (
+        !(error instanceof PinchtabHttpError) ||
+        (error.status !== 404 && error.status !== 410)
+      ) {
+        throw error;
+      }
+      // PinchTab may restart independently of Streambot. A missing instance
+      // invalidates only this cached browser identity, then gets one retry.
+      if (this.instanceId === instanceId) this.instanceId = null;
+      return await this.openTabOnInstance(
+        await this.ensureInstance(signal),
+        url,
+        signal,
+      );
+    }
+  }
+
+  private async openTabOnInstance(
+    instanceId: string,
+    url: string,
+    signal: AbortSignal,
+  ): Promise<{ tabId: string }> {
     const tabResult = await this.json(
       `/instances/${encodeURIComponent(instanceId)}/tabs/open`,
       signal,
@@ -350,9 +386,20 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
       return existingId;
     }
 
+    const profiles = ProfilesSchema.parse(await this.json("/profiles", signal));
+    const profile = profiles.find((item) => item.name === PROFILE_NAME);
+    const profileId =
+      profile?.id ??
+      ProfileSchema.parse(
+        await this.json("/profiles", signal, {
+          method: "POST",
+          body: JSON.stringify({ name: PROFILE_NAME }),
+        }),
+      ).id;
+
     const started = IdentifierSchema.parse(
       await this.json(
-        `/profiles/${encodeURIComponent(PROFILE_NAME)}/start`,
+        `/profiles/${encodeURIComponent(profileId)}/start`,
         signal,
         {
           method: "POST",
@@ -367,8 +414,28 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
     if (startedId === undefined || startedId.length === 0) {
       throw new Error("PinchTab did not return a browser instance id");
     }
-    this.instanceId = startedId;
-    return startedId;
+    // Starting Chrome can outlive the API response. Do not open a tab until
+    // PinchTab reports this exact new instance as running.
+    const deadline = Date.now() + 10_000;
+    while (Date.now() < deadline) {
+      signal.throwIfAborted();
+      const rawState = InstancesSchema.parse(
+        await this.json("/instances", signal),
+      );
+      const current = Array.isArray(rawState) ? rawState : rawState.instances;
+      const state = current.find(
+        (instance) => (instance.instanceId ?? instance.id) === startedId,
+      )?.status;
+      if (state === "running") {
+        this.instanceId = startedId;
+        return startedId;
+      }
+      if (state !== undefined && state !== "starting") {
+        throw new Error("Sports browser instance stopped during startup");
+      }
+      await new Promise((resolve) => setTimeout(resolve, 250));
+    }
+    throw new Error("Sports browser instance did not become ready");
   }
 
   private async json(
@@ -426,9 +493,7 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
         method: options.method ?? "GET",
         status: response.status,
       });
-      throw new Error(
-        `Sports browser request failed (${String(response.status)})`,
-      );
+      throw new PinchtabHttpError(response.status);
     }
     return response;
   }

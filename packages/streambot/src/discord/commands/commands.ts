@@ -47,7 +47,9 @@ function withRequestOptions(
     .addStringOption((o) =>
       o
         .setName("provider")
-        .setDescription("Preferred live sports provider (optional)")
+        .setDescription(
+          "Choose for sports requests; auto tries StreamEast first",
+        )
         .addChoices(
           { name: "auto (StreamEast first)", value: "auto" },
           { name: "StreamEast", value: "streameast" },

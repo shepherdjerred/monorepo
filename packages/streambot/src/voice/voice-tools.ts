@@ -87,9 +87,10 @@ export function bindPlaybackVoiceCommandPort(
   return {
     play: async (input, signal) => {
       const spokenCommand = observed.spokenCommand();
+      const { provider, ...playInput } = input;
       const result = await service.play({
-        ...input,
-        provider: input.provider ?? "auto",
+        ...playInput,
+        ...(provider === undefined ? {} : { provider }),
         userId,
         signal,
         spoken: true,
@@ -246,7 +247,7 @@ export function createStreambotVoiceTools(
     tool({
       name: "play",
       description:
-        "Play or queue a media title from the local library or YouTube search.",
+        "Play or queue a media title. For a sports game, set provider to auto unless the speaker names StreamEast or TVSportsLive; omit provider for ordinary music or video.",
       parameters: voiceToolSchemas.play,
       execute: (input) =>
         invoke("play", true, input, () =>

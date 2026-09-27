@@ -44,6 +44,10 @@ const DeploymentSchema = z.object({
   }),
 });
 
+const SelectorSchema = z.object({
+  matchLabels: z.record(z.string(), z.string()),
+});
+
 const NetworkPolicySchema = z.object({
   kind: z.literal("NetworkPolicy"),
   metadata: z.object({ name: z.string() }),
@@ -53,25 +57,23 @@ const NetworkPolicySchema = z.object({
         z.object({
           from: z.array(
             z.object({
-              namespaceSelector: z
-                .object({ matchLabels: z.record(z.string(), z.string()) })
-                .optional(),
-              podSelector: z
-                .object({ matchLabels: z.record(z.string(), z.string()) })
-                .optional(),
+              namespaceSelector: SelectorSchema.optional(),
+              podSelector: SelectorSchema.optional(),
             }),
           ),
           ports: z.array(z.object({ port: z.number(), protocol: z.string() })),
         }),
       )
       .optional(),
-    egress: z.array(
-      z.object({
-        ports: z
-          .array(z.object({ port: z.number(), protocol: z.string() }))
-          .optional(),
-      }),
-    ),
+    egress: z
+      .array(
+        z.object({
+          ports: z
+            .array(z.object({ port: z.number(), protocol: z.string() }))
+            .optional(),
+        }),
+      )
+      .optional(),
   }),
 });
 
@@ -139,7 +141,9 @@ describe("PinchTab network boundary", () => {
     if (policy == null) {
       throw new Error("PinchTab egress NetworkPolicy must be synthesized");
     }
-    const ports = policy.spec.egress.flatMap((entry) => entry.ports ?? []);
+    const ports = (policy.spec.egress ?? []).flatMap(
+      (entry) => entry.ports ?? [],
+    );
     expect(ports).toContainEqual({ port: 443, protocol: "TCP" });
     expect(ports).not.toContainEqual({ port: 80, protocol: "TCP" });
   });

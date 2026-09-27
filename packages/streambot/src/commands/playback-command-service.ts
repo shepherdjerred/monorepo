@@ -291,8 +291,9 @@ export class PlaybackCommandService extends PlaybackControls {
     if (direct !== null) return direct;
     const sports = await selectSportsForRequest({
       query,
+      ...(input.utterance === undefined ? {} : { utterance: input.utterance }),
       source: input.source,
-      provider: input.provider ?? "auto",
+      provider: input.provider,
       scope,
       enabled: this.deps.featureGate?.sportsStreaming,
       signal,

@@ -79,6 +79,62 @@ describe("sports playback selection", () => {
     expect(ambiguous).toBe(false);
   });
 
+  it("does not fetch sports listings for an ordinary playback request", async () => {
+    const selected = await selectSportsForRequest({
+      query: "Never Gonna Give You Up",
+      source: "auto",
+      provider: undefined,
+      scope,
+      enabled: async () => {
+        throw new Error("ordinary playback must not evaluate sports gate");
+      },
+      signal,
+      catalog: {
+        listToday: async () => {
+          throw new Error("ordinary playback must not browse sports sites");
+        },
+        search: async () => {
+          throw new Error("ordinary playback must not browse sports sites");
+        },
+      },
+      resolve: async () => {
+        throw new Error("ordinary playback must not resolve sports");
+      },
+      onAmbiguous: () => {
+        throw new Error("ordinary playback must not ask about sports");
+      },
+    });
+    expect(selected).toBeNull();
+  });
+
+  it("recognizes a game title without a provider option", async () => {
+    const selected = await selectSportsForRequest({
+      query: "Bears vs Packers",
+      source: "auto",
+      provider: undefined,
+      scope,
+      enabled: async () => true,
+      signal,
+      catalog: {
+        listToday: async () => events,
+        search: async () => ({ kind: "found", events }),
+      },
+      resolve: async () => ({
+        title: "Bears vs Packers",
+        ffmpegInput: "https://edgestream12.pro/live.m3u8",
+        mediaKind: "video",
+        chapters: [],
+      }),
+      onAmbiguous: () => {
+        throw new Error("expected a single game");
+      },
+    });
+    expect(selected?.source).toMatchObject({
+      kind: "url",
+      url: "https://v2.streameast.ga/nfl/bears-vs-packers/",
+    });
+  });
+
   it("does not allow a sports page URL when the feature is disabled", async () => {
     await expect(
       selectDirectRequestUrl({

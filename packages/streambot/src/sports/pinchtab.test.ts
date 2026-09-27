@@ -1,9 +1,38 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { PinchtabSportsBrowser } from "@shepherdjerred/streambot/sports/pinchtab.ts";
 
-describe("PinchtabSportsBrowser", () => {
-  afterEach(() => vi.unstubAllGlobals());
+function sessionResponse(url: string, tabId: string): Response | null {
+  if (url.endsWith("/instances")) {
+    return Response.json({
+      instances: [
+        {
+          id: "inst-streambot",
+          profileName: "streambot",
+          status: "running",
+        },
+      ],
+    });
+  }
+  return url.endsWith("/tabs/open") ? Response.json({ id: tabId }) : null;
+}
 
+function testBrowser(): PinchtabSportsBrowser {
+  return new PinchtabSportsBrowser({
+    baseUrl: "http://pinchtab.test",
+    token: "test-token",
+  });
+}
+
+async function testRuntimeStreams() {
+  return await testBrowser().runtimeStreams(
+    "https://streame.center/stream-east/ch49.php",
+    new AbortController().signal,
+  );
+}
+
+afterEach(() => vi.unstubAllGlobals());
+
+describe("PinchtabSportsBrowser streams", () => {
   it("discovers browser network requests without evaluation and closes the tab", async () => {
     const requests: { url: string; init: RequestInit | undefined }[] = [];
     let captures = 0;
@@ -17,20 +46,8 @@ describe("PinchtabSportsBrowser", () => {
               ? input.toString()
               : input;
         requests.push({ url, init });
-        if (url.endsWith("/instances")) {
-          return Response.json({
-            instances: [
-              {
-                id: "inst-streambot",
-                profileName: "streambot",
-                status: "running",
-              },
-            ],
-          });
-        }
-        if (url.endsWith("/tabs/open")) {
-          return Response.json({ id: "tab-stream" });
-        }
+        const session = sessionResponse(url, "tab-stream");
+        if (session !== null) return session;
         if (url.includes("/snapshot?interactive=true")) {
           return Response.json({
             nodes: [
@@ -80,13 +97,7 @@ describe("PinchtabSportsBrowser", () => {
       },
     );
 
-    const result = await new PinchtabSportsBrowser({
-      baseUrl: "http://pinchtab.test",
-      token: "test-token",
-    }).runtimeStreams(
-      "https://streame.center/stream-east/ch49.php",
-      new AbortController().signal,
-    );
+    const result = await testRuntimeStreams();
 
     expect(result).toEqual({
       resources: ["https://edgestream12.pro/live.m3u8?token=secret"],
@@ -113,19 +124,8 @@ describe("PinchtabSportsBrowser", () => {
       async (input: string | URL | Request, init?: RequestInit) => {
         const url = input instanceof Request ? input.url : String(input);
         requests.push(url);
-        if (url.endsWith("/instances")) {
-          return Response.json({
-            instances: [
-              {
-                id: "inst-streambot",
-                profileName: "streambot",
-                status: "running",
-              },
-            ],
-          });
-        }
-        if (url.endsWith("/tabs/open"))
-          return Response.json({ id: "tab-frame" });
+        const session = sessionResponse(url, "tab-frame");
+        if (session !== null) return session;
         if (url.includes("/network?filter=m3u8")) {
           return Response.json({ entries: [] });
         }
@@ -175,13 +175,7 @@ describe("PinchtabSportsBrowser", () => {
       },
     );
 
-    const result = await new PinchtabSportsBrowser({
-      baseUrl: "http://pinchtab.test",
-      token: "test-token",
-    }).runtimeStreams(
-      "https://streame.center/stream-east/ch49.php",
-      new AbortController().signal,
-    );
+    const result = await testRuntimeStreams();
 
     expect(result).toEqual({
       resources: ["https://edgestream12.pro/live.m3u8?token=secret"],
@@ -194,5 +188,130 @@ describe("PinchtabSportsBrowser", () => {
     expect(requests.some((url) => url.endsWith("/tabs/tab-frame/close"))).toBe(
       true,
     );
+  });
+});
+
+describe("PinchtabSportsBrowser lifecycle", () => {
+  it("creates its dedicated profile before starting a fresh browser", async () => {
+    const requests: {
+      url: string;
+      method: string;
+      body: RequestInit["body"] | null;
+    }[] = [];
+    let instanceLookups = 0;
+    vi.stubGlobal("fetch", (input: string, init?: RequestInit) => {
+      requests.push({
+        url: input,
+        method: init?.method ?? "GET",
+        body: init?.body ?? null,
+      });
+      if (input.endsWith("/instances")) {
+        instanceLookups += 1;
+        return Response.json(
+          instanceLookups === 1
+            ? []
+            : [
+                {
+                  id: "inst-new",
+                  profileName: "streambot",
+                  status: instanceLookups === 2 ? "starting" : "running",
+                },
+              ],
+        );
+      }
+      if (input.endsWith("/profiles") && init?.method === undefined)
+        return Response.json([]);
+      if (input.endsWith("/profiles") && init?.method === "POST") {
+        return Response.json({ id: "prof-streambot", name: "streambot" });
+      }
+      if (input.endsWith("/profiles/prof-streambot/start")) {
+        return Response.json({ instanceId: "inst-new" });
+      }
+      if (input.endsWith("/instances/inst-new/tabs/open")) {
+        return Response.json({ tabId: "tab-new" });
+      }
+      return input.endsWith("/tabs/tab-new/html")
+        ? Response.json({ html: "<title>Ready</title>" })
+        : Response.json({ closed: true });
+    });
+
+    const browser = testBrowser();
+    expect(
+      await browser.html(
+        "https://v2.streameast.ga/",
+        new AbortController().signal,
+      ),
+    ).toBe("<title>Ready</title>");
+    expect(requests.map((request) => request.url)).toEqual([
+      "http://pinchtab.test/instances",
+      "http://pinchtab.test/profiles",
+      "http://pinchtab.test/profiles",
+      "http://pinchtab.test/profiles/prof-streambot/start",
+      "http://pinchtab.test/instances",
+      "http://pinchtab.test/instances",
+      "http://pinchtab.test/instances/inst-new/tabs/open",
+      "http://pinchtab.test/tabs/tab-new/html",
+      "http://pinchtab.test/tabs/tab-new/close",
+    ]);
+    expect(requests[2]).toMatchObject({
+      method: "POST",
+      body: JSON.stringify({ name: "streambot" }),
+    });
+  });
+
+  it("replaces a stale instance after PinchTab restarts", async () => {
+    const requests: string[] = [];
+    let instanceLookups = 0;
+    let oldInstanceOpens = 0;
+    vi.stubGlobal("fetch", (input: string) => {
+      requests.push(input);
+      if (input.endsWith("/instances")) {
+        instanceLookups += 1;
+        return Response.json(
+          instanceLookups === 1
+            ? [{ id: "inst-old", profileName: "streambot", status: "running" }]
+            : instanceLookups === 2
+              ? []
+              : [
+                  {
+                    id: "inst-new",
+                    profileName: "streambot",
+                    status: "running",
+                  },
+                ],
+        );
+      }
+      if (input.endsWith("/instances/inst-old/tabs/open")) {
+        oldInstanceOpens += 1;
+        return oldInstanceOpens === 1
+          ? Response.json({ tabId: "tab-old" })
+          : new Response(null, { status: 404 });
+      }
+      if (input.endsWith("/profiles")) {
+        return Response.json([{ id: "prof-streambot", name: "streambot" }]);
+      }
+      if (input.endsWith("/profiles/prof-streambot/start")) {
+        return Response.json({ instanceId: "inst-new" });
+      }
+      if (input.endsWith("/instances/inst-new/tabs/open")) {
+        return Response.json({ tabId: "tab-new" });
+      }
+      return input.endsWith("/html")
+        ? Response.json({ html: "<title>Ready</title>" })
+        : Response.json({ closed: true });
+    });
+
+    const browser = testBrowser();
+    const signal = new AbortController().signal;
+    await browser.html("https://v2.streameast.ga/", signal);
+    expect(await browser.html("https://v2.streameast.ga/", signal)).toBe(
+      "<title>Ready</title>",
+    );
+    expect(instanceLookups).toBe(3);
+    expect(oldInstanceOpens).toBe(2);
+    expect(requests).toContain(
+      "http://pinchtab.test/instances/inst-new/tabs/open",
+    );
+    expect(requests.filter((url) => url.endsWith("/profiles"))).toHaveLength(1);
   });
 });
