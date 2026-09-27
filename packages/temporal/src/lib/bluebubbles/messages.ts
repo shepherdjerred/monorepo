@@ -6,6 +6,9 @@ import {
 
 // BlueBubbles/macOS chat.db uses 43 for groups and 45 for direct messages.
 const BLUEBUBBLES_DIRECT_CHAT_STYLE = 45;
+// SQLite ROWIDs are monotonic only within the local Messages database; they
+// must never share the timestamp-scale HTTP ingress sequence domain.
+export const BLUEBUBBLES_SOURCE_EPOCH = 1;
 // ImessageCommandSchema uses RFC 3339 timestamps with four-digit years.
 const MAX_BLUEBUBBLES_DATE_MS = 253_402_300_799_999;
 
@@ -65,6 +68,7 @@ export function blueBubblesCommand(
     conversationId: chat.guid,
     submittedAt: new Date(message.dateCreated).toISOString(),
     sourceSequence: message.originalROWID,
+    sourceEpoch: BLUEBUBBLES_SOURCE_EPOCH,
     action: parseImessageAction(message.text),
   };
 }

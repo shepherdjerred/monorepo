@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  BLUEBUBBLES_SOURCE_EPOCH,
   BlueBubblesMessageSchema,
   blueBubblesCommand,
   parseImessageAction,
@@ -48,6 +49,7 @@ describe("BlueBubbles message normalization", () => {
       conversationId: "iMessage;-;owner",
       submittedAt: new Date(MESSAGE.dateCreated).toISOString(),
       sourceSequence: MESSAGE.originalROWID,
+      sourceEpoch: BLUEBUBBLES_SOURCE_EPOCH,
       action: { kind: "continue", prompt: "hello" },
     });
   });

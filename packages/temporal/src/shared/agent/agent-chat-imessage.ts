@@ -1,5 +1,9 @@
 import { z } from "zod/v4";
-import { AgentChatIdSchema, AgentChatProviderSchema } from "./agent-chat.ts";
+import {
+  AgentChatIdSchema,
+  AgentChatProviderSchema,
+  AgentChatSourceEpochSchema,
+} from "./agent-chat.ts";
 import { HttpAgentChatCommandSchema } from "./agent-chat-http.ts";
 
 const PromptSchema = z.string().trim().min(1).max(4000);
@@ -23,6 +27,7 @@ export const ImessageCommandSchema = z.strictObject({
   conversationId: z.string().min(1).max(200),
   submittedAt: z.iso.datetime(),
   sourceSequence: z.number().int().positive(),
+  sourceEpoch: AgentChatSourceEpochSchema,
   action: ImessageActionSchema,
 });
 export type ImessageCommand = z.infer<typeof ImessageCommandSchema>;
