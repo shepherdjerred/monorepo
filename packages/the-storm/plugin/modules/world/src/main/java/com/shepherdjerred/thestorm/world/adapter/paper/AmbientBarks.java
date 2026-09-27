@@ -90,10 +90,9 @@ public final class AmbientBarks implements Listener {
     if (world == null || !world.getName().equals(config.world())) {
       return false;
     }
-    var spawn = world.getSpawnLocation();
-    long east = (long) location.getBlockX() - spawn.getBlockX();
-    long up = (long) location.getBlockY() - spawn.getBlockY();
-    long south = (long) location.getBlockZ() - spawn.getBlockZ();
+    long east = (long) location.getBlockX() - config.spawnX();
+    long up = (long) location.getBlockY() - config.spawnY();
+    long south = (long) location.getBlockZ() - config.spawnZ();
     if (Math.abs(east) > config.spawnRadius()
         || Math.abs(south) > config.spawnRadius()
         || Math.abs(up) > config.verticalRadius()) {

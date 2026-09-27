@@ -15,6 +15,10 @@ crier:
 ambient:
   enabled: false
   world: world
+  # Block position of the repo-owned Essentials spawn.yml gameplay arrival.
+  spawnX: -440
+  spawnY: 71
+  spawnZ: -66
   spawnRadius: 24
   verticalRadius: 8
   timeZone: America/Los_Angeles
