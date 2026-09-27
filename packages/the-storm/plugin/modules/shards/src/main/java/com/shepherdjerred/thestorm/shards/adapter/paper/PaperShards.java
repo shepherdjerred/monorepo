@@ -12,17 +12,17 @@ import java.util.List;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.Listener;
 
-/** Registers the shards listeners and command on the server. */
+/** Registers shards after the configured altar chunks have been checked without blocking a tick. */
 public final class PaperShards {
 
   private PaperShards() {}
 
   /**
-   * Validates the config's Paper names, then registers everything.
+   * Validates names immediately and registers listeners after asynchronous altar validation.
    *
    * @return the shard item port for other modules
-   * @throws IllegalStateException when a material, entity type, spawn reason or altar world in
-   *     {@code shards.yml} does not exist on this server
+   * @throws IllegalStateException when a material, entity type, spawn reason or world in {@code
+   *     shards.yml} does not exist on this server
    */
   public static StormShards install(ModuleContext context, ShardsConfig config) {
     var plugin = context.plugin();
@@ -52,8 +52,35 @@ public final class PaperShards {
                 new AltarSetup(altars, upgrades, context.scheduler(), AltarSetup::paperSky), kit),
             new CombatListener(bonuses, gear),
             new CraftingGuard(shards));
-    var pluginManager = plugin.getServer().getPluginManager();
-    listeners.forEach(listener -> pluginManager.registerEvents(listener, plugin));
+    var _ =
+        PaperNames.altarProblemsAsync(config, plugin.getServer(), context.scheduler().mainThread())
+            .whenCompleteAsync(
+                (altarProblems, failure) -> {
+                  if (!plugin.isEnabled()) {
+                    return;
+                  }
+                  if (failure != null) {
+                    context.logger().error("Could not validate shard altars", failure);
+                    plugin.getServer().shutdown();
+                    return;
+                  }
+                  if (!altarProblems.isEmpty()) {
+                    altarProblems.forEach(
+                        problem -> context.logger().error("shards.yml: {}", problem));
+                    plugin.getServer().shutdown();
+                    return;
+                  }
+                  var pluginManager = plugin.getServer().getPluginManager();
+                  listeners.forEach(listener -> pluginManager.registerEvents(listener, plugin));
+                },
+                context.scheduler().mainThread())
+            .exceptionallyAsync(
+                failure -> {
+                  context.logger().error("Shard altar validation callback failed", failure);
+                  plugin.getServer().shutdown();
+                  return null;
+                },
+                context.scheduler().mainThread());
 
     var command = new ShardsCommand(kit, bonuses, upgrades);
     context
