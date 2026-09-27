@@ -85,6 +85,45 @@ describe("executeReportQuery cancellation", () => {
   });
 });
 
+describe("executeReportQuery row budget", () => {
+  test("keeps saved-report row limits and lets Explore raise its result ceiling", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: Array.from({ length: 60 }, (_, index) => ({
+        playerId: index + 1,
+        playerAlias: `Player ${index.toString().padStart(2, "0")}`,
+        matchId: `NA1_LIMIT_${index.toString()}`,
+        puuid: testPuuid(`query-limit-${index.toString()}`),
+        queue: "solo",
+        win: true,
+        surrendered: false,
+        kills: 1,
+        deaths: 1,
+        assists: 1,
+        gameCreationAt: now,
+      })),
+    });
+    const queryText = `SELECT COUNT(*) AS games FROM match_participants WHERE ${BOUND} GROUP BY player ORDER BY games DESC LIMIT 60`;
+
+    const savedReport = await executeReportQuery({
+      prisma,
+      scope: guildScope(serverId),
+      queryText,
+      now,
+    });
+    const explore = await executeReportQuery({
+      prisma,
+      scope: guildScope(serverId),
+      queryText,
+      rowLimitCeiling: 50,
+      now,
+    });
+
+    expect(savedReport.rows).toHaveLength(25);
+    expect(explore.rows).toHaveLength(50);
+  });
+});
+
 describe("executeReportQuery", () => {
   test("runs a leaderboard query from the report lake", async () => {
     await writeTestLake(lakeDir, {

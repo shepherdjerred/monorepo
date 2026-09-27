@@ -4,6 +4,7 @@ import {
   type DiscordAccountId,
   EXPLORE_MAX_PREVIEW_CALLS,
   EXPLORE_MAX_TOOL_CALLS,
+  EXPLORE_MODEL_PREVIEW_MAX_ROWS,
   ReportQueryTextSchema,
   type DiscordChannelId,
   type ExploreMessage,
@@ -261,6 +262,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
           scope: turn.scope,
           askerGuildIds: turn.guildIds,
           queryText: validation.formattedQueryText,
+          rowLimitCeiling: EXPLORE_MODEL_PREVIEW_MAX_ROWS,
           abortSignal: params.abortSignal,
           onPlan: (plan) => {
             source = plan.source;
