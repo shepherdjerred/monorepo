@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
 import com.shepherdjerred.thestorm.shops.domain.trade.TradeProblem;
 import java.time.Instant;
 import java.time.InstantSource;
+import java.util.ArrayDeque;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.Test;
@@ -253,6 +254,37 @@ final class TradeEngineTest {
 
     assertThat(heldAtRefund[0]).isZero();
     assertThat(customer.count).isEqualTo(16);
+  }
+
+  @Test
+  void committedRefundAwaitingMainThreadRecordsItemsButNoMoneyOwed() {
+    wallets.set(OWNER, 100);
+    customer.count = 16;
+    wallets.afterNextTransfer(() -> shop.count = 60);
+    var queued = new ArrayDeque<Runnable>();
+    var journal =
+        new RefundJournal(store, InstantSource.fixed(Instant.EPOCH), NOPLogger.NOP_LOGGER);
+    var delayedEngine = new TradeEngine(wallets, queued::add, journal);
+    var deal = deal(Direction.SELL, OWNER, shop);
+    var trail = new LedgerTrail();
+
+    var trade = delayedEngine.execute(deal, trail);
+    queued.removeFirst().run(); // Payment continuation starts the refund.
+
+    assertThat(trade).isNotDone();
+    assertThat(trail.hasCommittedPayment()).isTrue();
+    assertThat(trail.hasCommittedRefund()).isTrue();
+    assertThat(trail.escrowHeld()).isTrue();
+    assertThat(customer.count).isZero();
+    assertThat(wallets.balanceOf(OWNER)).isEqualTo(100);
+    journal.unsettled(deal, trail);
+    assertThat(store.refundFailures)
+        .singleElement()
+        .satisfies(
+            failure -> {
+              assertThat(failure.amount()).isEqualTo(Crystals.ZERO);
+              assertThat(failure.held()).contains(new HeldItems("coal", 16));
+            });
   }
 
   @Test

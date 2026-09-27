@@ -161,6 +161,37 @@ final class ShutdownDrainTest {
         .satisfies(failure -> assertThat(failure.held()).contains(new HeldItems("emerald", 4)));
   }
 
+  @Test
+  void aCommittedRefundLeavesOnlyEscrowedItemsForStaff() {
+    var items = new FakeHoldings(4, 64);
+    var deal = catalogSell(items);
+    var lease = locks.acquire(List.of(), BOB.id(), deal).orElseThrow();
+    lease.trail().escrowTaken();
+    lease.trail().paymentCommitted("payment committed");
+    lease.trail().refundCommitted("refund committed");
+
+    assertThat(drain.drain(Duration.ofMillis(1))).isEqualTo(1);
+    assertThat(store.refundFailures)
+        .singleElement()
+        .satisfies(
+            failure -> {
+              assertThat(failure.amount()).isEqualTo(Crystals.ZERO);
+              assertThat(failure.held()).contains(new HeldItems("emerald", 4));
+              assertThat(failure.reason()).contains("do not transfer money");
+            });
+  }
+
+  @Test
+  void aCommittedRefundWithNoEscrowCreatesNoStaffDebt() {
+    var deal = catalogSell(new FakeHoldings(4, 64));
+    var lease = locks.acquire(List.of(), BOB.id(), deal).orElseThrow();
+    lease.trail().paymentCommitted("payment committed");
+    lease.trail().refundCommitted("refund committed");
+
+    assertThat(drain.drain(Duration.ofMillis(1))).isEqualTo(1);
+    assertThat(store.refundFailures).isEmpty();
+  }
+
   private static Deal catalogSell(Holdings items) {
     return new Deal(
         Direction.SELL,

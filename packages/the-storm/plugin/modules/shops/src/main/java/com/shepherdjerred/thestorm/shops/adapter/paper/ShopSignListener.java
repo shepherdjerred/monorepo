@@ -19,6 +19,7 @@ import com.shepherdjerred.thestorm.shops.domain.sign.ShopSignParser;
 import com.shepherdjerred.thestorm.shops.domain.sign.SignLines;
 import com.shepherdjerred.thestorm.shops.domain.sign.SignProblem;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Optional;
 import net.kyori.adventure.text.Component;
@@ -48,6 +49,7 @@ final class ShopSignListener implements Listener {
   private final Protection protection;
   private final Scheduler scheduler;
   private final String clicks;
+  private final IdentityHashMap<SignChangeEvent, SignShop> pending = new IdentityHashMap<>();
 
   record Deps(
       ShopSignParser parser,
@@ -116,6 +118,17 @@ final class ShopSignListener implements Listener {
     for (var index = 0; index < shown.lines().size(); index++) {
       event.line(index, Component.text(shown.lines().get(index)));
     }
+    pending.put(event, shop);
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR)
+  public void commitSignChange(SignChangeEvent event) {
+    var shop = pending.remove(event);
+    if (shop == null || event.isCancelled()) {
+      return;
+    }
+    shops.activate(shop);
+    var block = event.getBlock();
     // The server writes the event's lines after this handler; stamp the id once they are in place.
     // A sign broken within that tick takes its shop with it.
     scheduler.runOnMainThread(
@@ -124,7 +137,7 @@ final class ShopSignListener implements Listener {
             shops.remove(shop);
           }
         });
-    player.sendMessage(Replies.success(created(shop)));
+    event.getPlayer().sendMessage(Replies.success(created(shop)));
   }
 
   private Optional<SignShop> create(Player player, Block block, SignLines lines) {
@@ -157,7 +170,7 @@ final class ShopSignListener implements Listener {
                 container.map(ShopBlocks::pos),
                 container.map(ShopBlocks::containerBlocks).orElseGet(List::of)),
             item);
-    return switch (shops.create(request)) {
+    return switch (shops.prepare(request)) {
       case Result.Ok<SignShop, List<CreationProblem>>(var shop) -> Optional.of(shop);
       case Result.Err<SignShop, List<CreationProblem>>(var problems) -> {
         problems.forEach(problem -> player.sendMessage(Replies.error(problem.describe())));
