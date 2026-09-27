@@ -86,6 +86,44 @@ final class AppServicesTest {
   }
 
   @Test
+  void loginCheckSeesBansOnceLoaded() {
+    var log = new MemoryLog();
+    log.entries.add(ban(ALICE, Optional.empty()));
+    var moderation = ModerationService.load(log, clock);
+    moderation.loaded().join();
+
+    assertThat(moderation.bansReady()).isTrue();
+    assertThat(moderation.activeBanNow(ALICE)).isPresent();
+    assertThat(moderation.activeBanNow(BOB)).isEmpty();
+  }
+
+  @Test
+  void loginCheckRefusesWhileTheLogIsLoading() {
+    var hanging =
+        new ModerationLogStore() {
+          final MemoryLog delegate = new MemoryLog();
+
+          @Override
+          public CompletableFuture<Void> append(AuditEntry entry) {
+            return delegate.append(entry);
+          }
+
+          @Override
+          public CompletableFuture<List<AuditEntry>> all() {
+            return new CompletableFuture<>();
+          }
+
+          @Override
+          public CompletableFuture<List<AuditEntry>> history(UUID target, int limit) {
+            return delegate.history(target, limit);
+          }
+        };
+    var moderation = ModerationService.load(hanging, clock);
+
+    assertThat(moderation.bansReady()).isFalse();
+  }
+
+  @Test
   void recordingABanAppliesAtOnceAndIsLogged() {
     var log = new MemoryLog();
     var moderation = ModerationService.load(log, clock);

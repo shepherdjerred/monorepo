@@ -367,21 +367,23 @@ public final class TicketCommands {
   }
 
   private CompletableFuture<Function<UUID, String>> names(Set<UUID> ids) {
-    Map<UUID, CompletableFuture<String>> lookups = new HashMap<>();
+    CompletableFuture<Map<UUID, String>> resolved =
+        CompletableFuture.completedFuture(new HashMap<>());
     for (var id : ids) {
-      lookups.put(
-          id,
+      CompletableFuture<String> lookup =
           players
               .byId(id)
-              .thenApply(found -> found.map(KnownPlayer::lastName).orElseGet(() -> shortId(id))));
+              .thenApply(found -> found.map(KnownPlayer::lastName).orElseGet(() -> shortId(id)));
+      resolved =
+          resolved.thenCombine(
+              lookup,
+              (map, name) -> {
+                map.put(id, name);
+                return map;
+              });
     }
-    return CompletableFuture.allOf(lookups.values().toArray(CompletableFuture[]::new))
-        .thenApply(
-            done -> {
-              Map<UUID, String> resolved = new HashMap<>();
-              lookups.forEach((id, lookup) -> resolved.put(id, lookup.join()));
-              return (Function<UUID, String>) id -> resolved.getOrDefault(id, shortId(id));
-            });
+    return resolved.thenApply(
+        map -> (Function<UUID, String>) name -> map.getOrDefault(name, shortId(name)));
   }
 
   private void tellReporter(Ticket ticket, String message) {

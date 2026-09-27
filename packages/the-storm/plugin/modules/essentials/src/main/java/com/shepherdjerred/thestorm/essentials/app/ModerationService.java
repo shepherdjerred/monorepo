@@ -64,6 +64,23 @@ public final class ModerationService {
         ready -> standings.getOrDefault(player, Standing.CLEAN).activeBan(time.instant()));
   }
 
+  /**
+   * Whether the audit log has replayed successfully, so in-memory answers are valid. Terminal: once
+   * true it stays true, so a caller that sees true can read without racing the replay.
+   */
+  public boolean bansReady() {
+    return loaded.isDone() && !loaded.isCompletedExceptionally();
+  }
+
+  /**
+   * The ban in force on {@code player} right now, without waiting. Call only when {@link
+   * #bansReady()} is true; before the replay the standings are empty and a missing ban would be a
+   * lie. For the login check, which must decide without blocking.
+   */
+  public Optional<Ban> activeBanNow(UUID player) {
+    return standings.getOrDefault(player, Standing.CLEAN).activeBan(time.instant());
+  }
+
   /** Every ban in force once the log has loaded, newest first. For {@code /banlist}. */
   public CompletableFuture<List<ActiveBan>> activeBans() {
     return loaded.thenApply(
