@@ -13,6 +13,10 @@ import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.TimeUnit;
 
 /**
  * The layering rules every module follows. Each module has {@code domain} (pure rules and data),
@@ -67,6 +71,20 @@ final class ArchitectureTest {
           .resideInAnyPackage("java.sql..", "java.net..", "java.nio.file..", "org.jooq..")
           .orShould()
           .callMethod(Thread.class, "sleep", long.class)
+          .orShould()
+          .callMethod(Future.class, "get")
+          .orShould()
+          .callMethod(Future.class, "get", long.class, TimeUnit.class)
+          .orShould()
+          .callMethod(FutureTask.class, "get")
+          .orShould()
+          .callMethod(FutureTask.class, "get", long.class, TimeUnit.class)
+          .orShould()
+          .callMethod(CompletableFuture.class, "get")
+          .orShould()
+          .callMethod(CompletableFuture.class, "get", long.class, TimeUnit.class)
+          .orShould()
+          .callMethod(CompletableFuture.class, "join")
           .allowEmptyShould(true)
           .because("listeners and commands run on the main thread");
 

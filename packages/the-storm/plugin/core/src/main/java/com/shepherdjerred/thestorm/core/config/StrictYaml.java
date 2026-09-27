@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.joining;
 import com.shepherdjerred.thestorm.core.result.Result;
 import java.util.List;
 import tools.jackson.core.JacksonException;
+import tools.jackson.core.StreamReadFeature;
 import tools.jackson.databind.DatabindException;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.json.JsonMapper;
@@ -22,6 +23,7 @@ public final class StrictYaml {
 
   private static final YAMLMapper YAML =
       YAMLMapper.builder()
+          .enable(StreamReadFeature.STRICT_DUPLICATE_DETECTION)
           .enable(
               DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
               DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES,
