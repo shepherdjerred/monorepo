@@ -50,7 +50,7 @@ final class ShippedContent {
 
   static ContentCheck.Rules rules() {
     var config = config();
-    return new ContentCheck.Rules(registry(), config.budget(), config.board().npc());
+    return new ContentCheck.Rules(registry(), config.budget(), config.board().npc(), OVERWORLD);
   }
 
   static QuestContent load() {

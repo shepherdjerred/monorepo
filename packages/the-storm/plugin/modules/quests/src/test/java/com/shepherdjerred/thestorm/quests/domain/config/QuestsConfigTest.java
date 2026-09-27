@@ -21,6 +21,7 @@ final class QuestsConfigTest {
     assertThat(config.calendar().zone()).isEqualTo(ZoneId.of("America/Los_Angeles"));
     assertThat(config.calendar().weekStart()).isEqualTo(DayOfWeek.MONDAY);
     assertThat(config.board().npc()).isEqualTo("quest-board");
+    assertThat(config.mainWorld()).isEqualTo("world");
     assertThat(config.budget().limit(10)).isEqualTo(100 + 25 * 10);
   }
 
@@ -31,20 +32,42 @@ final class QuestsConfigTest {
     var board = new QuestsConfig.BoardSettings("board", 3, 1);
     assertThatThrownBy(
             () ->
+                new QuestsConfig("UTC", "MONDAY", "", budget, party, board, 40, 300, 8, 10, LABELS))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(
+            () ->
                 new QuestsConfig(
-                    "Mars/Olympus", "MONDAY", budget, party, board, 40, 300, 8, 10, LABELS))
+                    "Mars/Olympus",
+                    "MONDAY",
+                    "world",
+                    budget,
+                    party,
+                    board,
+                    40,
+                    300,
+                    8,
+                    10,
+                    LABELS))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(
-            () -> new QuestsConfig("UTC", "FUNDAY", budget, party, board, 40, 300, 8, 10, LABELS))
+            () ->
+                new QuestsConfig(
+                    "UTC", "FUNDAY", "world", budget, party, board, 40, 300, 8, 10, LABELS))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(
-            () -> new QuestsConfig("UTC", "MONDAY", budget, party, board, 0, 300, 8, 10, LABELS))
+            () ->
+                new QuestsConfig(
+                    "UTC", "MONDAY", "world", budget, party, board, 0, 300, 8, 10, LABELS))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(
-            () -> new QuestsConfig("UTC", "MONDAY", budget, party, board, 40, 300, 15, 10, LABELS))
+            () ->
+                new QuestsConfig(
+                    "UTC", "MONDAY", "world", budget, party, board, 40, 300, 15, 10, LABELS))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(
-            () -> new QuestsConfig("UTC", "MONDAY", budget, party, board, 40, 300, 8, 0, LABELS))
+            () ->
+                new QuestsConfig(
+                    "UTC", "MONDAY", "world", budget, party, board, 40, 300, 8, 0, LABELS))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new QuestsConfig.Budget(-1, 0))
         .isInstanceOf(IllegalArgumentException.class);
@@ -59,7 +82,7 @@ final class QuestsConfigTest {
     assertThatThrownBy(() -> new QuestsConfig.Labels("a", "b", "c", "d", "e", " "))
         .isInstanceOf(IllegalArgumentException.class);
     assertThat(
-            new QuestsConfig("UTC", "sunday", budget, party, board, 40, 300, 8, 10, LABELS)
+            new QuestsConfig("UTC", "sunday", "world", budget, party, board, 40, 300, 8, 10, LABELS)
                 .calendar()
                 .weekStart())
         .isEqualTo(DayOfWeek.SUNDAY);

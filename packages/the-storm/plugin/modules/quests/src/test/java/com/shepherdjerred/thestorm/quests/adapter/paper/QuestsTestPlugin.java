@@ -108,6 +108,7 @@ public class QuestsTestPlugin extends JavaPlugin {
       new QuestsConfig(
           "America/Los_Angeles",
           "MONDAY",
+          "world",
           new QuestsConfig.Budget(25, 100),
           new QuestsConfig.Party(16),
           new QuestsConfig.BoardSettings("board", 0, 0),

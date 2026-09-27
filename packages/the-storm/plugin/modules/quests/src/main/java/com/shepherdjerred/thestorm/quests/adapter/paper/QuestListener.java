@@ -1,12 +1,14 @@
 package com.shepherdjerred.thestorm.quests.adapter.paper;
 
 import com.shepherdjerred.thestorm.quests.app.QuestService;
+import com.shepherdjerred.thestorm.quests.domain.config.QuestsConfig;
 import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
 import com.shepherdjerred.thestorm.quests.domain.engine.CraftCount;
 import com.shepherdjerred.thestorm.quests.domain.engine.PlacedBlocks;
 import com.shepherdjerred.thestorm.quests.domain.engine.QuestEvent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.bukkit.Location;
@@ -21,6 +23,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -40,15 +43,15 @@ final class QuestListener implements Listener {
   private final QuestService service;
   private final QuestContent content;
   private final SidebarDisplay sidebars;
-  private final double partyRadius;
+  private final QuestsConfig config;
   private final PlacedBlocks placed = new PlacedBlocks(PLACED_MEMORY);
 
   QuestListener(
-      QuestService service, QuestContent content, SidebarDisplay sidebars, double partyRadius) {
+      QuestService service, QuestContent content, SidebarDisplay sidebars, QuestsConfig config) {
     this.service = service;
     this.content = content;
     this.sidebars = sidebars;
-    this.partyRadius = partyRadius;
+    this.config = config;
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
@@ -62,10 +65,17 @@ final class QuestListener implements Listener {
     sidebars.forget(event.getPlayer().getUniqueId());
   }
 
+  @EventHandler(priority = EventPriority.MONITOR)
+  void onWorldChanged(PlayerChangedWorldEvent event) {
+    if (!inMainWorld(event.getPlayer())) {
+      sidebars.show(event.getPlayer(), Optional.empty());
+    }
+  }
+
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onDeath(EntityDeathEvent event) {
     var killer = event.getEntity().getKiller();
-    if (killer == null || event.getEntity() instanceof Player) {
+    if (killer == null || event.getEntity() instanceof Player || !inMainWorld(killer)) {
       return;
     }
     service.event(
@@ -76,7 +86,7 @@ final class QuestListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onPickup(EntityPickupItemEvent event) {
-    if (!(event.getEntity() instanceof Player player)) {
+    if (!(event.getEntity() instanceof Player player) || !inMainWorld(player)) {
       return;
     }
     var stack = event.getItem().getItemStack();
@@ -88,7 +98,7 @@ final class QuestListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onCraft(CraftItemEvent event) {
-    if (!(event.getWhoClicked() instanceof Player player)) {
+    if (!(event.getWhoClicked() instanceof Player player) || !inMainWorld(player)) {
       return;
     }
     var result = event.getRecipe().getResult();
@@ -108,7 +118,8 @@ final class QuestListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onFish(PlayerFishEvent event) {
-    if (event.getState() == PlayerFishEvent.State.CAUGHT_FISH
+    if (inMainWorld(event.getPlayer())
+        && event.getState() == PlayerFishEvent.State.CAUGHT_FISH
         && event.getCaught() instanceof Item caught) {
       service.event(
           event.getPlayer().getUniqueId(),
@@ -119,6 +130,9 @@ final class QuestListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onBreak(BlockBreakEvent event) {
+    if (!inMainWorld(event.getPlayer())) {
+      return;
+    }
     if (placed.broken(position(event.getBlock()))) {
       service.event(
           event.getPlayer().getUniqueId(),
@@ -129,6 +143,9 @@ final class QuestListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onPlace(BlockPlaceEvent event) {
+    if (!inMainWorld(event.getPlayer())) {
+      return;
+    }
     placed.placed(position(event.getBlockPlaced()));
     service.event(
         event.getPlayer().getUniqueId(),
@@ -138,7 +155,7 @@ final class QuestListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onMove(PlayerMoveEvent event) {
-    if (!event.hasChangedBlock()) {
+    if (!event.hasChangedBlock() || !inMainWorld(event.getPlayer())) {
       return;
     }
     var to = event.getTo();
@@ -155,13 +172,17 @@ final class QuestListener implements Listener {
 
   /** Online players within the party radius of {@code player}, in the same world. */
   private List<UUID> nearby(Player player) {
-    if (partyRadius <= 0) {
+    if (config.party().radius() <= 0) {
       return List.of();
     }
-    return Locations.of(player).getNearbyPlayers(partyRadius).stream()
+    return Locations.of(player).getNearbyPlayers(config.party().radius()).stream()
         .filter(other -> !other.equals(player))
         .map(Player::getUniqueId)
         .toList();
+  }
+
+  private boolean inMainWorld(Player player) {
+    return player.getWorld().getName().equals(config.mainWorld());
   }
 
   private static int room(Player player, ItemStack result) {

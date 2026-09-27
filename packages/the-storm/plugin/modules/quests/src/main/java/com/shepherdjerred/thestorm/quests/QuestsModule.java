@@ -52,11 +52,16 @@ public final class QuestsModule implements StormModule {
     context.database().migrate(id(), QuestsModule.class.getClassLoader());
     var services = context.services();
     var npcs = services.require(NpcDirectory.class);
+    var mainWorld = context.plugin().getServer().getWorld(config.mainWorld());
+    if (mainWorld == null) {
+      throw new IllegalStateException("Quest main world is not loaded: " + config.mainWorld());
+    }
     var rules =
         new ContentCheck.Rules(
             Registries.of(context.plugin().getServer(), npcs),
             config.budget(),
-            config.board().npc());
+            config.board().npc(),
+            mainWorld.getKey().asString());
     var content = requireValid(ContentLoader.load(context.dataDirectory(), rules));
     var paper =
         new QuestsPaper(

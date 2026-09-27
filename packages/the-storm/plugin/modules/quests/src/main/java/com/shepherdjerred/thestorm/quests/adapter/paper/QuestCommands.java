@@ -57,7 +57,8 @@ final class QuestCommands {
       BiConsumer<Player, Journal.View> journal,
       PlayerDirectory players,
       Executor mainThread,
-      ComponentLogger logger) {}
+      ComponentLogger logger,
+      String mainWorld) {}
 
   private final Wiring wiring;
 
@@ -183,6 +184,9 @@ final class QuestCommands {
       sender.sendMessage(error("Only players have a quest journal."));
       return Command.SINGLE_SUCCESS;
     }
+    if (!available(player)) {
+      return Command.SINGLE_SUCCESS;
+    }
     var view = wiring.service().journal(player.getUniqueId());
     if (view.isEmpty()) {
       sender.sendMessage(error("Your quests are still loading."));
@@ -194,7 +198,9 @@ final class QuestCommands {
 
   private int track(CommandSender sender, String quest) {
     if (sender instanceof Player player) {
-      wiring.service().track(player.getUniqueId(), quest);
+      if (available(player)) {
+        wiring.service().track(player.getUniqueId(), quest);
+      }
     } else {
       sender.sendMessage(error("Only players track quests."));
     }
@@ -203,7 +209,9 @@ final class QuestCommands {
 
   private int abandon(CommandSender sender, String quest) {
     if (sender instanceof Player player) {
-      wiring.service().abandon(player.getUniqueId(), quest);
+      if (available(player)) {
+        wiring.service().abandon(player.getUniqueId(), quest);
+      }
     } else {
       sender.sendMessage(error("Only players have quests."));
     }
@@ -232,6 +240,14 @@ final class QuestCommands {
                 },
                 wiring.mainThread());
     return Command.SINGLE_SUCCESS;
+  }
+
+  private boolean available(Player player) {
+    if (player.getWorld().getName().equals(wiring.mainWorld())) {
+      return true;
+    }
+    player.sendMessage(error("Quests are only available in " + wiring.mainWorld() + "."));
+    return false;
   }
 
   /** "1. Name: 12" lines, looking names up in order. */

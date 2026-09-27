@@ -54,8 +54,10 @@ public final class ContentCheck {
    * @param registry what exists on the server
    * @param budget the crystal budget
    * @param boardNpc the NPC board quests belong to
+   * @param allowedWorld the dimension key of the main world
    */
-  public record Rules(ContentRegistry registry, Budget budget, String boardNpc) {}
+  public record Rules(
+      ContentRegistry registry, Budget budget, String boardNpc, String allowedWorld) {}
 
   private final QuestContent content;
   private final Rules rules;
@@ -84,6 +86,9 @@ public final class ContentCheck {
               at("quests", "regions." + id);
               if (!rules.registry().worlds().contains(region.world())) {
                 problem("world " + region.world() + " is not loaded");
+              }
+              if (!rules.allowedWorld().equals(region.world())) {
+                problem("world " + region.world() + " is outside the main world");
               }
               text("name", region.name(), MAX_NAME);
             });

@@ -63,6 +63,7 @@ public final class QuestsPaper {
             ports.npcs(),
             ports.markers(),
             sidebars,
+            config.mainWorld(),
             Duration.ofSeconds(config.spawnedMobSeconds())));
   }
 
@@ -80,8 +81,7 @@ public final class QuestsPaper {
     server
         .getPluginManager()
         .registerEvents(
-            new QuestListener(service, service.content(), sidebars, config.party().radius()),
-            context.plugin());
+            new QuestListener(service, service.content(), sidebars, config), context.plugin());
     var commands =
         new QuestCommands(
             new QuestCommands.Wiring(
@@ -89,7 +89,8 @@ public final class QuestsPaper {
                 journal,
                 ports.players(),
                 context.scheduler().mainThread(),
-                context.logger()));
+                context.logger(),
+                config.mainWorld()));
     context
         .lifecycle()
         .registerEventHandler(
