@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.mechanics.domain.structure.Target;
+import java.time.Duration;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +22,8 @@ import org.bukkit.event.block.BlockRedstoneEvent;
  * drive someone else's structure from outside it.
  */
 final class RedstoneListener implements Listener {
+
+  private static final Duration SETTLE = Duration.ofMillis(50);
 
   private static final List<BlockFace> FACES =
       List.of(
@@ -51,9 +54,8 @@ final class RedstoneListener implements Listener {
     if (signs.isEmpty()) {
       return;
     }
-    var target = isOn ? Target.OPEN : Target.CLOSE;
     for (var block : signs) {
-      trigger(source, block, target);
+      kit.scheduler().runOnMainThreadLater(SETTLE, () -> trigger(source, block));
     }
   }
 
@@ -85,7 +87,7 @@ final class RedstoneListener implements Listener {
     return signs;
   }
 
-  private void trigger(Block source, Block block, Target target) {
+  private void trigger(Block source, Block block) {
     if (!(block.getState(false) instanceof Sign sign)) {
       return;
     }
@@ -106,8 +108,26 @@ final class RedstoneListener implements Listener {
                 .isAllowed();
     if (mayUseSource) {
       // Nobody to tell if it fails: the structure simply stays as it is.
+      var target = powered(block) ? Target.OPEN : Target.CLOSE;
       structures.toggle(
           owner.orElseThrow(), new Structures.Use(grid, PaperGrid.pos(block), view), target);
     }
+  }
+
+  /** Checks all redstone sources after the changed source has settled. */
+  private static boolean powered(Block sign) {
+    if (sign.isBlockPowered() || sign.isBlockIndirectlyPowered()) {
+      return true;
+    }
+    var data = sign.getBlockData();
+    var attachment =
+        data instanceof WallSign wall
+            ? sign.getRelative(wall.getFacing().getOppositeFace())
+            : sign.getRelative(
+                org.bukkit.Tag.CEILING_HANGING_SIGNS.isTagged(sign.getType())
+                    ? BlockFace.UP
+                    : BlockFace.DOWN);
+    return PaperGrid.loaded(attachment)
+        && (attachment.isBlockPowered() || attachment.isBlockIndirectlyPowered());
   }
 }

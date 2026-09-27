@@ -73,10 +73,21 @@ final class Signs {
 
   Stock stock(Sign sign) {
     var data = sign.getPersistentDataContainer();
-    var count = data.getOrDefault(stockCount, PersistentDataType.LONG, 0L);
-    var held = data.get(stockMaterial, PersistentDataType.STRING);
-    if (count == 0 || held == null) {
+    var hasCount = data.has(stockCount);
+    var hasMaterial = data.has(stockMaterial);
+    if (!hasCount && !hasMaterial) {
       return Stock.empty();
+    }
+    if (hasCount != hasMaterial) {
+      throw new IllegalStateException("a stock sign has a partial record");
+    }
+    var count = data.get(stockCount, PersistentDataType.LONG);
+    var held = data.get(stockMaterial, PersistentDataType.STRING);
+    if (count == null || held == null) {
+      throw new IllegalStateException("a stock sign has invalid record types");
+    }
+    if (count <= 0) {
+      throw new IllegalStateException("a stock sign has a nonpositive count: " + count);
     }
     return Stock.of(held, count);
   }

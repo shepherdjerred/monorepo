@@ -109,7 +109,10 @@ final class Supports {
 
   /** Torches, rails, flowers, carpets, pressure plates, doors and the like on top. */
   private static boolean restsOn(Block above, BlockData data) {
-    return above.isPassable() || data instanceof Door || Tag.WOOL_CARPETS.isTagged(above.getType());
+    return above.isPassable()
+        || above.getType().hasGravity()
+        || data instanceof Door
+        || Tag.WOOL_CARPETS.isTagged(above.getType());
   }
 
   /** Lanterns, bells, vines, roots and the like underneath. */
