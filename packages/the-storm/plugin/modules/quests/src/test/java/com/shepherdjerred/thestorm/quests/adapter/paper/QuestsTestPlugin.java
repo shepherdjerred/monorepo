@@ -83,6 +83,12 @@ public class QuestsTestPlugin extends JavaPlugin {
                                   .objective(new Objective.Kill("ZOMBIE", 2, Optional.empty())))
                           .reward(new Action.Points(2))
                           .build(),
+                      quest("collect")
+                          .giver("captain")
+                          .stage(
+                              stage("s")
+                                  .objective(new Objective.Collect(IRON, 5, Optional.empty())))
+                          .build(),
                       quest("dig")
                           .giver("captain")
                           .stage(

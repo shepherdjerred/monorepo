@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.npcs.app.NpcRef;
 import com.shepherdjerred.thestorm.npcs.app.QuestMarker;
 import com.shepherdjerred.thestorm.npcs.app.dialogue.DialogueGraph.OptionEffect;
 import com.shepherdjerred.thestorm.quests.domain.engine.KillCredit;
+import com.shepherdjerred.thestorm.quests.domain.engine.PickupCredit;
 import com.shepherdjerred.thestorm.quests.domain.state.PlayerQuests;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -20,8 +21,12 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.ItemMergeEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jspecify.annotations.Nullable;
@@ -209,6 +214,31 @@ final class QuestsPaperTest {
     mainZombie.setKiller(alice);
     mainZombie.setHealth(0);
     assertThat(state(alice).active("hunt").orElseThrow().progress()).containsExactly(1);
+  }
+
+  @Test
+  void pickupsCountOnlyNewItemsAndNeverCountPlayerDrops() throws InterruptedException {
+    var alice = join("alice");
+    plugin().service().accept(alice.getUniqueId(), "collect", "captain");
+    var at = new Location(world, 1, 64, 0);
+    Item dropped = world.dropItem(at, new ItemStack(Material.IRON_INGOT, 6));
+    server.getPluginManager().callEvent(new PlayerDropItemEvent(alice, dropped));
+    server.getPluginManager().callEvent(new EntityPickupItemEvent(alice, dropped, 0));
+    assertThat(state(alice).active("collect").orElseThrow().progress()).containsExactly(0);
+
+    Item natural = world.dropItem(at, new ItemStack(Material.IRON_INGOT, 6));
+    server.getPluginManager().callEvent(new EntityPickupItemEvent(alice, natural, 4));
+    assertThat(state(alice).active("collect").orElseThrow().progress()).containsExactly(2);
+
+    Item merged = world.dropItem(at, new ItemStack(Material.IRON_INGOT, 6));
+    server.getPluginManager().callEvent(new ItemMergeEvent(dropped, merged));
+    assertThat(merged.getScoreboardTags()).contains(PickupCredit.PLAYER_DROPPED);
+    server.getPluginManager().callEvent(new EntityPickupItemEvent(alice, merged, 0));
+    assertThat(state(alice).active("collect").orElseThrow().progress()).containsExactly(2);
+
+    Item more = world.dropItem(at, new ItemStack(Material.IRON_INGOT, 5));
+    server.getPluginManager().callEvent(new EntityPickupItemEvent(alice, more, 1));
+    assertThat(state(alice).completion("collect")).isPresent();
   }
 
   @Test
