@@ -84,6 +84,8 @@ committed. Module startup and player joins reconcile unfinished attempts against
 the economy ledger. If a process stops after teleport delivery but before the
 attempt is cleared, recovery may refund a delivered teleport; it never drops a
 known charge without either delivery or compensation.
+The cooldown is recorded before loading destination chunks, so a cancelled
+warmup, failed search, or refused charge cannot repeat costly scans immediately.
 The selected landing chunk has a reference-counted plugin ticket through the
 warmup, charge, and teleport so the final move does not reload it on the main
 thread.

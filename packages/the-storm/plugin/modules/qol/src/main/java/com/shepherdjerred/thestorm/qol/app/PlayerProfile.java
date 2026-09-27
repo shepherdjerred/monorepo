@@ -9,6 +9,6 @@ import java.util.UUID;
  *
  * @param player the player
  * @param firstSeen the first time this module saw them
- * @param lastRtp their last random teleport, if they have used one
+ * @param lastRtp their last RTP search or completed teleport, if they have used one
  */
 public record PlayerProfile(UUID player, Instant firstSeen, Optional<Instant> lastRtp) {}

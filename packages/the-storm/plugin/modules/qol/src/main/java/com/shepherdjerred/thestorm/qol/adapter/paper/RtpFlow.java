@@ -181,9 +181,32 @@ final class RtpFlow {
   }
 
   private void search(Player player, World world, Optional<String> biome, long cost) {
-    player.sendMessage(Messages.info("Looking for a place..."));
-    search.find(
-        request(world, biome), context.random(), outcome -> found(player, world, outcome, cost));
+    var playerId = player.getUniqueId();
+    var startedAt = context.time().instant();
+    var _ =
+        store
+            .setLastRtp(playerId, startedAt)
+            .whenCompleteAsync(
+                (ignored, failure) -> {
+                  if (failure != null) {
+                    release(playerId);
+                    context.logger().error("Could not record an RTP search", failure);
+                    if (player.isOnline()) {
+                      player.sendMessage(Messages.error("Could not start the teleport search."));
+                    }
+                    return;
+                  }
+                  if (!player.isOnline()) {
+                    release(playerId);
+                    return;
+                  }
+                  player.sendMessage(Messages.info("Looking for a place..."));
+                  search.find(
+                      request(world, biome),
+                      context.random(),
+                      outcome -> found(player, world, outcome, cost));
+                },
+                context.scheduler().mainThread());
   }
 
   private void stand(Player player, Location destination, long cost) {

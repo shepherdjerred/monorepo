@@ -25,9 +25,7 @@ public final class RtpPricing {
     this.cost = cost;
   }
 
-  /**
-   * What {@code now} allows, given when the player was first seen and when they last teleported.
-   */
+  /** What {@code now} allows, given when the player was first seen and when they last searched. */
   public RtpDecision decide(Instant firstSeen, Optional<Instant> lastRtp, Instant now) {
     if (lastRtp.isPresent() && now.isBefore(lastRtp.get().plus(cooldown))) {
       return new RtpDecision.CoolingDown(Duration.between(now, lastRtp.get().plus(cooldown)));

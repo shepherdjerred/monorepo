@@ -12,7 +12,7 @@ public interface QolStore {
   /** The player's row, inserting {@code now} as first seen when they have none. */
   CompletableFuture<Ensured> ensure(UUID player, Instant now);
 
-  /** Records a successful random teleport. */
+  /** Records an RTP search or completed teleport for the cooldown. */
   CompletableFuture<Void> setLastRtp(UUID player, Instant when);
 
   /** Saves an RTP entitlement before its keyed charge is attempted. */
