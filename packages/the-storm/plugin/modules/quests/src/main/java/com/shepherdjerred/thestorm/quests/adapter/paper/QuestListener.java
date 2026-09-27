@@ -71,9 +71,10 @@ final class QuestListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
-    if (inMainWorld(event.getPlayer())) {
-      activity.acted(event.getPlayer().getUniqueId(), time.instant());
+    if (!inMainWorld(event.getPlayer())) {
+      return;
     }
+    activity.acted(event.getPlayer().getUniqueId(), time.instant());
     var _ = service.join(event.getPlayer().getUniqueId());
   }
 
