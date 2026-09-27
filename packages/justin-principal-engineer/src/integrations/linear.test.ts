@@ -86,21 +86,46 @@ describe("Linear queue selection", () => {
   });
 });
 
-function recordingRunner(recorded: string[][]): CommandRunner {
+function defaultTeams(): Record<string, { id: string; name: string }[]> {
+  return {
+    SJ: [
+      { id: "sj-codex-id", name: "agent:codex" },
+      { id: "sj-needs-human-id", name: "agent:needs-human" },
+      { id: "sj-ready-id", name: "agent:ready" },
+    ],
+    AI: [
+      { id: "ai-codex-id", name: "agent:codex" },
+      { id: "ai-ready-id", name: "agent:ready" },
+    ],
+  };
+}
+
+function recordingRunner(
+  recorded: string[][],
+  teams: Record<string, { id: string; name: string }[]> = defaultTeams(),
+): CommandRunner {
   return async (args) => {
     recorded.push([...args]);
-    if (args[2] === "label") {
+    if (args[2] === "label" && args[3] === "create") {
       const team = args[args.indexOf("--team") + 1] ?? "SJ";
-      const prefix = team === "SJ" ? "sj" : team.toLowerCase();
+      const name = args[args.indexOf("--name") + 1] ?? "";
+      const created = {
+        id: `${team.toLowerCase()}-${name.replace(/^agent:/, "")}-id`,
+        name,
+      };
+      teams[team] = [...(teams[team] ?? []), created];
       return {
         exitCode: 0,
-        stdout: JSON.stringify({
-          nodes: [
-            { id: `${prefix}-codex-id`, name: "agent:codex" },
-            { id: `${prefix}-needs-human-id`, name: "agent:needs-human" },
-            { id: `${prefix}-ready-id`, name: "agent:ready" },
-          ],
-        }),
+        stdout: JSON.stringify(created),
+        stderr: "",
+        timedOut: false,
+      };
+    }
+    if (args[2] === "label") {
+      const team = args[args.indexOf("--team") + 1] ?? "SJ";
+      return {
+        exitCode: 0,
+        stdout: JSON.stringify({ nodes: teams[team] ?? [] }),
         stderr: "",
         timedOut: false,
       };
@@ -154,7 +179,7 @@ describe("Linear label mutations", () => {
     });
   });
 
-  test("needsHuman resolves IDs from the issue's own team", async () => {
+  test("needsHuman provisions the team label on first park", async () => {
     const recorded: string[][] = [];
     const client = new LinearClient("SJ", recordingRunner(recorded));
     await client.needsHuman(
@@ -164,6 +189,12 @@ describe("Linear label mutations", () => {
         labels: ["agent:codex"],
       }),
       "reason",
+    );
+    const create = recorded.find(
+      (args) => args[2] === "label" && args[3] === "create",
+    );
+    expect(create).toEqual(
+      expect.arrayContaining(["--team", "AI", "--name", "agent:needs-human"]),
     );
     expect(apiVariables(recorded)).toEqual({
       id: "AI-3",

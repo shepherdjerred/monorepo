@@ -24,6 +24,19 @@ const TeamLabelsSchema = z.object({
   nodes: z.array(z.object({ id: z.string().min(1), name: z.string().min(1) })),
 });
 
+const MANAGED_LABELS = [
+  {
+    name: "agent:codex",
+    color: "#059669",
+    description: "Use Codex SDK through OpenRouter",
+  },
+  {
+    name: LABEL_NEEDS_HUMAN,
+    color: "#DC2626",
+    description: "Parked until Jerred requeues it",
+  },
+] as const;
+
 function labels(issue: LinearIssue): Set<string> {
   return new Set(issue.labels.nodes.map(({ name }) => name));
 }
@@ -216,11 +229,43 @@ export class LinearClient {
     );
   }
 
+  private async ensureLabels(
+    team: string,
+    names: readonly string[],
+  ): Promise<void> {
+    // Parking is the only path that adds labels, so a team that has never
+    // parked is missing agent:needs-human by construction. Create managed
+    // labels on demand instead of failing the park.
+    const ids = await this.labelIds(team);
+    const missing = names.filter((name) => !ids.has(name));
+    for (const name of missing) {
+      const managed = MANAGED_LABELS.find((label) => label.name === name);
+      if (managed === undefined) {
+        throw new Error(`Linear label ${name} does not exist on team ${team}`);
+      }
+      await this.command([
+        "label",
+        "create",
+        "--team",
+        team,
+        "--name",
+        managed.name,
+        "--color",
+        managed.color,
+        "--description",
+        managed.description,
+      ]);
+    }
+    if (missing.length > 0) this.labelIdsCache.delete(team);
+  }
+
   public async needsHuman(issue: LinearIssue, reason: string): Promise<void> {
     if (!labels(issue).has(LABEL_NEEDS_HUMAN)) {
+      const team = this.issueTeam(issue);
+      await this.ensureLabels(team, [LABEL_NEEDS_HUMAN]);
       await this.mutateLabels({
         nodeId: issue.id,
-        team: this.issueTeam(issue),
+        team,
         add: [LABEL_NEEDS_HUMAN],
         remove: [],
       });
