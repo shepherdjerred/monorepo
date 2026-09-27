@@ -137,6 +137,7 @@ final class QuestListener implements Listener {
         player.getUniqueId(),
         new QuestEvent.Collected(ItemStacks.facts(stack), amount),
         nearby(player));
+    service.discover(player.getUniqueId(), stack.getType().name());
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

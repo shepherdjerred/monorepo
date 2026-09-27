@@ -183,6 +183,7 @@ public class QuestsTestPlugin extends JavaPlugin {
         new QuestService(
             new QuestService.Wiring(
                 CONTENT,
+                new com.shepherdjerred.thestorm.quests.domain.content.Collections(Map.of()),
                 CONFIG,
                 new JooqQuestStore(db),
                 paper.world(CONTENT),

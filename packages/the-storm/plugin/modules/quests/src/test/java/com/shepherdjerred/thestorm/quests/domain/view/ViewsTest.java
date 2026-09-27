@@ -278,7 +278,14 @@ final class ViewsTest {
                 "town",
                 "Spawn Town",
                 List.of(new Faction.Rank("Neighbour", 5), new Faction.Rank("Friend", 15))));
-    var view = Journal.journal(state, context.catalog(), LOOKUP, factions);
+    var view =
+        Journal.journal(
+            state,
+            context.catalog(),
+            LOOKUP,
+            new Journal.Content(
+                factions,
+                new com.shepherdjerred.thestorm.quests.domain.content.Collections(Map.of())));
     assertThat(view.active()).containsExactly("smith");
     assertThat(view.body())
         .contains("» Quest smith")
@@ -298,7 +305,14 @@ final class ViewsTest {
 
   @Test
   void anEmptyJournalPointsAtQuestGivers() {
-    var view = Journal.journal(empty(), context(facts).catalog(), LOOKUP, Map.of());
+    var view =
+        Journal.journal(
+            empty(),
+            context(facts).catalog(),
+            LOOKUP,
+            new Journal.Content(
+                Map.of(),
+                new com.shepherdjerred.thestorm.quests.domain.content.Collections(Map.of())));
     assertThat(view.body()).contains("You have no quests");
     assertThat(view.active()).isEmpty();
   }

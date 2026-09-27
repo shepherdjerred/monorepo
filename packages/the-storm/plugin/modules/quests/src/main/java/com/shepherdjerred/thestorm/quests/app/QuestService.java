@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.quests.app.QuestStore.PendingWorld;
 import com.shepherdjerred.thestorm.quests.domain.board.BoardQuests;
 import com.shepherdjerred.thestorm.quests.domain.config.QuestsConfig;
+import com.shepherdjerred.thestorm.quests.domain.content.Collections;
 import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
 import com.shepherdjerred.thestorm.quests.domain.engine.Catalog;
 import com.shepherdjerred.thestorm.quests.domain.engine.Effect;
@@ -50,6 +51,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
    * What the service needs.
    *
    * @param content the quest content
+   * @param collections authored first-pickup discoveries
    * @param config quests.yml
    * @param store where state is kept
    * @param world the server
@@ -62,6 +64,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
    */
   public record Wiring(
       QuestContent content,
+      Collections collections,
       QuestsConfig config,
       QuestStore store,
       QuestWorld world,
@@ -329,7 +332,49 @@ public final class QuestService implements QuestHooks, QuestProgress {
   /** The journal for {@code player}. */
   public Optional<Journal.View> journal(UUID player) {
     return state(player)
-        .map(state -> Journal.journal(state, catalog(state), lookup, wiring.content().factions()));
+        .map(
+            state ->
+                Journal.journal(
+                    state,
+                    catalog(state),
+                    lookup,
+                    new Journal.Content(wiring.content().factions(), wiring.collections())));
+  }
+
+  /** Reveals authored collection entries after an eligible main-world pickup. */
+  public void discover(UUID player, String material) {
+    var matching = wiring.collections().matching(material);
+    if (matching.isEmpty()) {
+      return;
+    }
+    var load = loading.get(player);
+    if (load != null) {
+      long generation = generations.getOrDefault(player, 0L);
+      var _ =
+          load.whenCompleteAsync(
+              (ignored, failure) -> {
+                if (failure == null && generations.getOrDefault(player, 0L) == generation) {
+                  discover(player, material);
+                }
+              },
+              wiring.mainThread());
+      return;
+    }
+    withContext(
+        player,
+        (state, context) -> {
+          var next = state;
+          var effects = new ArrayList<Effect>();
+          for (var entry : matching) {
+            if (!next.discoveries().containsKey(entry.id())) {
+              next = next.discover(entry.id(), wiring.time().instant());
+              effects.add(new Effect.Discovered(entry.name()));
+            }
+          }
+          if (!effects.isEmpty()) {
+            commit(player, state, new Outcome(next, effects), context.catalog());
+          }
+        });
   }
 
   /** The players with the most quest points. */

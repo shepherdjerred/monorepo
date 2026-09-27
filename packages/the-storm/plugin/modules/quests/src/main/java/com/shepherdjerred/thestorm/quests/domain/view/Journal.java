@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.quests.domain.view;
 
+import com.shepherdjerred.thestorm.quests.domain.content.Collections;
 import com.shepherdjerred.thestorm.quests.domain.engine.Catalog;
 import com.shepherdjerred.thestorm.quests.domain.engine.QuestEngine;
 import com.shepherdjerred.thestorm.quests.domain.model.Faction;
@@ -7,7 +8,10 @@ import com.shepherdjerred.thestorm.quests.domain.model.Quest;
 import com.shepherdjerred.thestorm.quests.domain.state.ActiveQuest;
 import com.shepherdjerred.thestorm.quests.domain.state.ActiveQuest.Phase;
 import com.shepherdjerred.thestorm.quests.domain.state.PlayerQuests;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,9 +40,12 @@ public final class Journal {
    */
   public record Sidebar(String title, List<String> lines) {}
 
+  /** Additional authored content shown with persistent quest state. */
+  public record Content(Map<String, Faction> factions, Collections collections) {}
+
   /** The journal for {@code state}. */
   public static View journal(
-      PlayerQuests state, Catalog catalog, Describe.Lookup lookup, Map<String, Faction> factions) {
+      PlayerQuests state, Catalog catalog, Describe.Lookup lookup, Content content) {
     var text = new StringBuilder();
     var active = new ArrayList<String>();
     if (state.active().isEmpty()) {
@@ -67,11 +74,61 @@ public final class Journal {
         .append("   Quest points: ")
         .append(state.points())
         .append('\n');
+    var completedQuests =
+        state.completions().entrySet().stream()
+            .filter(entry -> catalog.quests().containsKey(entry.getKey()))
+            .sorted(
+                Map.Entry
+                    .<String, com.shepherdjerred.thestorm.quests.domain.state.Completion>
+                        comparingByValue(
+                            Comparator.comparing(
+                                com.shepherdjerred.thestorm.quests.domain.state.Completion::last))
+                    .reversed())
+            .limit(10)
+            .toList();
+    if (!completedQuests.isEmpty()) {
+      text.append("Diary (latest finished quests, UTC):\n");
+      for (var entry : completedQuests) {
+        var quest = catalog.require(entry.getKey());
+        text.append("  ")
+            .append(LocalDate.ofInstant(entry.getValue().last(), ZoneOffset.UTC))
+            .append("  ")
+            .append(quest.name())
+            .append(" — ")
+            .append(quest.text().summary())
+            .append('\n');
+      }
+    }
+    var collections = content.collections();
+    if (!collections.entries().isEmpty()) {
+      text.append("Collections: ")
+          .append(
+              state.discoveries().keySet().stream()
+                  .filter(collections.entries()::containsKey)
+                  .count())
+          .append('/')
+          .append(collections.entries().size())
+          .append('\n');
+      collections.entries().values().stream()
+          .sorted(
+              Comparator.comparing(Collections.Entry::region)
+                  .thenComparing(Collections.Entry::name))
+          .filter(entry -> state.discoveries().containsKey(entry.id()))
+          .forEach(
+              entry ->
+                  text.append("  ")
+                      .append(entry.region())
+                      .append(" · ")
+                      .append(entry.name())
+                      .append(": ")
+                      .append(entry.note())
+                      .append('\n'));
+    }
     state
         .reputation()
         .forEach(
             (id, value) -> {
-              var faction = Optional.ofNullable(factions.get(id));
+              var faction = Optional.ofNullable(content.factions().get(id));
               text.append(faction.map(Faction::name).orElse(id))
                   .append(": ")
                   .append(value)

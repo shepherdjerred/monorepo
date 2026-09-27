@@ -1,0 +1,101 @@
+collections:
+  town-harvest:
+    name: Town Harvest
+    material: WHEAT
+    region: Spawn Town
+    note: Grain still reaches the mill, even when the road does not.
+  smiths-stock:
+    name: Smith's Stock
+    material: IRON_INGOT
+    region: Spawn Town
+    note: The town smith measures a safe season in iron, not days.
+  copper-roof:
+    name: Copper Roof
+    material: COPPER_INGOT
+    region: Spawn Town
+    note: Weathered copper marks the roofs that have faced the storm longest.
+  builders-plank:
+    name: Builder's Plank
+    material: OAK_PLANKS
+    region: Spawn Town
+    note: A spare plank means one more wall can be repaired before night.
+  daily-loaf:
+    name: Daily Loaf
+    material: BREAD
+    region: Spawn Town
+    note: Someone kept the ovens warm after the caravans stopped.
+  tunnel-remnant:
+    name: Tunnel Remnant
+    material: ROTTEN_FLESH
+    region: Sewers
+    note: The lower passages have been occupied for far too long.
+  webbed-eye:
+    name: Webbed Eye
+    material: SPIDER_EYE
+    region: Sewers
+    note: Webs gather where the lantern crews no longer go.
+  buried-signal:
+    name: Buried Signal
+    material: REDSTONE
+    region: Sewers
+    note: An old mechanism still hums beneath the street.
+  dark-ink:
+    name: Dark Ink
+    material: GLOW_INK_SAC
+    region: Sewers
+    note: Its light makes messages readable underground.
+  drainage-slime:
+    name: Drainage Slime
+    material: SLIME_BALL
+    region: Sewers
+    note: The deepest drains have their own strange life.
+  blank-leaf:
+    name: Blank Leaf
+    material: PAPER
+    region: Library
+    note: The Library saves every page it can recover.
+  salvaged-volume:
+    name: Salvaged Volume
+    material: BOOK
+    region: Library
+    note: The binding survived; the story may still be inside.
+  blue-pigment:
+    name: Blue Pigment
+    material: LAPIS_LAZULI
+    region: Library
+    note: Archivists once marked their most important maps in blue.
+  crystal-fragment:
+    name: Crystal Fragment
+    material: AMETHYST_SHARD
+    region: Library
+    note: The crystal catches light even under a shuttered sky.
+  sealed-text:
+    name: Sealed Text
+    material: ENCHANTED_BOOK
+    region: Library
+    note: A spell survives if its book survives.
+  new-root:
+    name: New Root
+    material: OAK_SAPLING
+    region: Wilds
+    note: New growth is the clearest sign that the fringe endures.
+  wild-honey:
+    name: Wild Honey
+    material: HONEYCOMB
+    region: Wilds
+    note: The bees have their own routes through the storm.
+  sea-shard:
+    name: Sea Shard
+    material: PRISMARINE_SHARD
+    region: Wilds
+    note: Salt and stone meet at the old edge of the mapped world.
+  first-snow:
+    name: First Snow
+    material: SNOWBALL
+    region: Wilds
+    note: Snow keeps a record of every traveler for a little while.
+  deep-echo:
+    name: Deep Echo
+    material: ECHO_SHARD
+    region: Wilds
+    note: A sound from below can travel farther than any bell.

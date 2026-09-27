@@ -82,6 +82,7 @@ final class Notices {
                           + " ("
                           + total
                           + ")")));
+      case Effect.Discovered(var name) -> Optional.of(success("Collection discovered: ", name));
       case Effect.World(_, Action.Take(var item, var amount)) ->
           Optional.of(
               HouseStyle.info(

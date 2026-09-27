@@ -120,6 +120,15 @@ final class QuestServiceTest {
         new QuestService(
             new QuestService.Wiring(
                 content,
+                new com.shepherdjerred.thestorm.quests.domain.content.Collections(
+                    Map.of(
+                        "old-iron",
+                        new com.shepherdjerred.thestorm.quests.domain.content.Collections.Entry(
+                            "old-iron",
+                            "Old Iron",
+                            "IRON_INGOT",
+                            "Spawn Town",
+                            "The smith keeps count."))),
                 config(),
                 store,
                 world,
@@ -138,6 +147,35 @@ final class QuestServiceTest {
 
   private PlayerQuests state(UUID player) {
     return service.state(player).orElseThrow();
+  }
+
+  @Test
+  void aCollectionRevealsOnFirstPickupAndKeepsItsOriginalTime() {
+    join(ALICE);
+    service.discover(ALICE, "IRON_INGOT");
+    assertThat(state(ALICE).discoveries()).containsEntry("old-iron", WEDNESDAY);
+    assertThat(store.saved.get(ALICE)).isEqualTo(state(ALICE));
+    assertThat(world.said(ALICE)).contains("[Quests]: Collection discovered: Old Iron");
+    clock.now = WEDNESDAY.plusSeconds(60);
+    service.discover(ALICE, "IRON_INGOT");
+    assertThat(state(ALICE).discoveries()).containsEntry("old-iron", WEDNESDAY);
+    assertThat(world.said(ALICE))
+        .filteredOn(line -> line.contains("Collection discovered"))
+        .hasSize(1);
+    assertThat(service.journal(ALICE).orElseThrow().body())
+        .contains("Collections: 1/1", "Spawn Town · Old Iron: The smith keeps count.");
+  }
+
+  @Test
+  void aPickupDuringThePlayerLoadIsDiscoveredAfterTheLoad() {
+    world.join(ALICE);
+    var pending = new CompletableFuture<PlayerQuests>();
+    store.deferredLoad = Optional.of(pending);
+    var joining = service.join(ALICE);
+    service.discover(ALICE, "IRON_INGOT");
+    pending.complete(PlayerQuests.empty(ALICE));
+    joining.join();
+    assertThat(state(ALICE).discoveries()).containsEntry("old-iron", WEDNESDAY);
   }
 
   @Test
