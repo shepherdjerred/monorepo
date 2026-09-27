@@ -44,7 +44,7 @@ public final class MuteCommands {
 
   private LiteralCommandNode<CommandSourceStack> muteCommand() {
     return Commands.literal("mute")
-        .requires(source -> source.getSender().hasPermission(Speakers.MUTE))
+        .requires(source -> service.ready() && source.getSender().hasPermission(Speakers.MUTE))
         .then(
             Commands.argument(PLAYER, StringArgumentType.word())
                 .suggests(this::suggestOnline)
@@ -58,7 +58,7 @@ public final class MuteCommands {
 
   private LiteralCommandNode<CommandSourceStack> unmuteCommand() {
     return Commands.literal("unmute")
-        .requires(source -> source.getSender().hasPermission(Speakers.MUTE))
+        .requires(source -> service.ready() && source.getSender().hasPermission(Speakers.MUTE))
         .then(
             Commands.argument(PLAYER, StringArgumentType.word())
                 .suggests(this::suggestOnline)

@@ -106,11 +106,7 @@ public final class JdaBridge implements DiscordGateway {
         .queue(sent -> {}, error -> logger.warn("Posting to Discord failed", error));
   }
 
-  /**
-   * Posts {@code goodbye} and disconnects. Called once, from module disable, on the main thread: it
-   * waits at most {@link #GOODBYE_WAIT} plus {@link #CLOSE_WAIT} (5 seconds in all), then cuts the
-   * connection.
-   */
+  /** Queues {@code goodbye} and disconnects off the Paper thread. */
   public void stop(String goodbye) {
     @Nullable TextChannel target;
     synchronized (lifecycle) {
@@ -118,6 +114,16 @@ public final class JdaBridge implements DiscordGateway {
       target = channel;
       channel = null;
     }
+    var client = jda.getAndSet(null);
+    if (target == null && client == null) {
+      return;
+    }
+    Thread.ofVirtual()
+        .name("storm-discord-shutdown")
+        .start(() -> disconnect(target, client, goodbye));
+  }
+
+  private void disconnect(@Nullable TextChannel target, @Nullable JDA client, String goodbye) {
     if (target != null) {
       try {
         withoutMentions(target.sendMessage(goodbye))
@@ -129,7 +135,6 @@ public final class JdaBridge implements DiscordGateway {
         Thread.currentThread().interrupt();
       }
     }
-    var client = jda.getAndSet(null);
     if (client == null) {
       return;
     }

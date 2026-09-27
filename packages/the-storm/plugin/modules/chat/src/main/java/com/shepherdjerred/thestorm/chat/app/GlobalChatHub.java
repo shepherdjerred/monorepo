@@ -39,6 +39,9 @@ public final class GlobalChatHub implements GlobalChat {
 
   @Override
   public void broadcastExternal(String source, String author, String text) {
+    if (!service.ready()) {
+      return;
+    }
     var cleaned = ChatText.clean(text);
     if (cleaned.isEmpty()) {
       throw new IllegalArgumentException("relayed messages must not be blank");

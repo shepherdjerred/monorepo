@@ -50,6 +50,7 @@ public final class ChatService {
   private final Map<UUID, Mute> mutes = new ConcurrentHashMap<>();
   private final Map<UUID, RecentMessage> recent = new ConcurrentHashMap<>();
   private final Map<UUID, Correspondent> lastCorrespondent = new ConcurrentHashMap<>();
+  private volatile boolean ready;
 
   public ChatService(
       ChatConfig config, ChatStore store, InstantSource time, ChatExtensions extensions) {
@@ -66,10 +67,7 @@ public final class ChatService {
     this.externalTemplate = config.externalTemplate();
   }
 
-  /**
-   * Loads stored state. The module waits for this before it starts; anything changed before the
-   * load finished would still win over the stored value.
-   */
+  /** Loads stored state before chat accepts messages or commands. */
   public CompletableFuture<Void> load() {
     return store
         .loadAll(time.instant(), config.defaultChannelKey())
@@ -77,7 +75,13 @@ public final class ChatService {
             snapshot -> {
               snapshot.profiles().forEach(profiles::putIfAbsent);
               snapshot.mutes().forEach(mutes::putIfAbsent);
+              ready = true;
             });
+  }
+
+  /** Whether stored mutes, ignores and channel preferences are ready for use. */
+  public boolean ready() {
+    return ready;
   }
 
   /** {@code player}'s preferences. */
