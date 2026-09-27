@@ -2,14 +2,23 @@ package com.shepherdjerred.thestorm.world.adapter.paper;
 
 import static java.util.Objects.requireNonNull;
 
+import com.shepherdjerred.thestorm.world.app.MerchantGate;
 import com.shepherdjerred.thestorm.world.domain.MerchantAnchor;
 import com.shepherdjerred.thestorm.world.domain.MerchantConfig;
 import com.shepherdjerred.thestorm.world.domain.MerchantStock;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.InstantSource;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.Executor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -17,6 +26,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.WanderingTrader;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -24,6 +34,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.MerchantRecipe;
 import org.bukkit.persistence.PersistentDataContainer;
@@ -34,15 +46,24 @@ import org.jspecify.annotations.Nullable;
 /** Starts one finite, item-barter trader visit per local date when a player reaches its anchor. */
 public final class WindmillMerchant implements Listener {
 
+  private static final Duration FLAG_RETRY_AFTER = Duration.ofSeconds(30);
+
   private final MerchantConfig config;
   private final MerchantAnchor anchor;
   private final InstantSource time;
   private final NamespacedKey visitDay;
   private final ComponentLogger logger;
+  private final MerchantGate gate;
+  private final Executor mainThread;
+  private final Set<UUID> evaluating = new HashSet<>();
+  private final Map<UUID, Instant> nextEvaluation = new HashMap<>();
   private long lastUnsafeWarning = Long.MIN_VALUE;
 
-  public WindmillMerchant(
-      Plugin plugin, MerchantConfig config, InstantSource time, ComponentLogger logger) {
+  /** External rollout evaluation and the main-thread completion executor. */
+  public record Services(
+      InstantSource time, ComponentLogger logger, MerchantGate gate, Executor mainThread) {}
+
+  public WindmillMerchant(Plugin plugin, MerchantConfig config, Services services) {
     if (!config.enabled()) {
       throw new IllegalArgumentException("windmill merchant listener requires enabled config");
     }
@@ -51,19 +72,25 @@ public final class WindmillMerchant implements Listener {
     }
     this.config = config;
     this.anchor = config.anchor();
-    this.time = time;
+    this.time = services.time();
     this.visitDay = new NamespacedKey(plugin, "windmill_merchant_visit_day");
-    this.logger = logger;
+    this.logger = services.logger();
+    this.gate = services.gate();
+    this.mainThread = services.mainThread();
   }
 
   @EventHandler
   public void onJoin(PlayerJoinEvent event) {
-    arrive(requireNonNull(event.getPlayer().getLocation(), "joining player location"));
+    arrive(
+        event.getPlayer(),
+        requireNonNull(event.getPlayer().getLocation(), "joining player location"));
   }
 
   @EventHandler
   public void onWorldChange(PlayerChangedWorldEvent event) {
-    arrive(requireNonNull(event.getPlayer().getLocation(), "travelling player location"));
+    arrive(
+        event.getPlayer(),
+        requireNonNull(event.getPlayer().getLocation(), "travelling player location"));
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -72,13 +99,58 @@ public final class WindmillMerchant implements Listener {
     if (destination == null || sameBlock(event.getFrom(), destination)) {
       return;
     }
-    arrive(destination);
+    arrive(event.getPlayer(), destination);
   }
 
-  private void arrive(Location destination) {
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  public void onTeleport(PlayerTeleportEvent event) {
+    var destination = event.getTo();
+    if (destination != null) {
+      arrive(event.getPlayer(), destination);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR)
+  public void onRespawn(PlayerRespawnEvent event) {
+    arrive(event.getPlayer(), event.getRespawnLocation());
+  }
+
+  private void arrive(Player player, Location destination) {
     if (!nearAnchor(destination)) {
       return;
     }
+    var world = requireNonNull(destination.getWorld(), "merchant arrival world");
+    var now = time.instant();
+    var epochDay = LocalDate.ofInstant(now, config.zone()).toEpochDay();
+    var previous = readDay(world.getPersistentDataContainer(), "world");
+    var playerId = player.getUniqueId();
+    var retryAt = nextEvaluation.get(playerId);
+    if ((previous != null && previous >= epochDay)
+        || (retryAt != null && now.isBefore(retryAt))
+        || !evaluating.add(playerId)) {
+      return;
+    }
+    nextEvaluation.put(playerId, now.plus(FLAG_RETRY_AFTER));
+    var _ =
+        gate.enabled(playerId)
+            .whenCompleteAsync(
+                (enabled, failure) -> {
+                  evaluating.remove(playerId);
+                  if (failure != null) {
+                    logger.error("Could not evaluate windmill merchant flag", failure);
+                    return;
+                  }
+                  if (Boolean.TRUE.equals(enabled) && player.isOnline()) {
+                    var current = requireNonNull(player.getLocation(), "merchant player location");
+                    if (nearAnchor(current)) {
+                      visit(current);
+                    }
+                  }
+                },
+                mainThread);
+  }
+
+  private void visit(Location destination) {
     var world = requireNonNull(destination.getWorld(), "merchant arrival world");
     var today = LocalDate.ofInstant(time.instant(), config.zone());
     var epochDay = today.toEpochDay();
@@ -109,7 +181,6 @@ public final class WindmillMerchant implements Listener {
         trader -> {
           trader.customName(Component.text("Windmill Trader", NamedTextColor.GOLD));
           trader.setCustomNameVisible(true);
-          trader.setAI(false);
           trader.setInvulnerable(true);
           trader.setDespawnDelay(config.visitMinutes() * 60 * 20);
           trader.setRecipes(recipes);

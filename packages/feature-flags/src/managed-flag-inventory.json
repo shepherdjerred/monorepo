@@ -1441,6 +1441,18 @@
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-merchant-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-merchant",
+      "purpose": "Enable targeted main-world trader visits after measured placement and live acceptance.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     }
   ],
   "exemptions": [
@@ -1586,6 +1598,14 @@
         },
         {
           "key": "the-storm-crier-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "the-storm-merchant-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],

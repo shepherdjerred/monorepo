@@ -10,7 +10,9 @@ import com.shepherdjerred.thestorm.world.adapter.paper.DailyDigestCommands;
 import com.shepherdjerred.thestorm.world.adapter.paper.WindmillMerchant;
 import com.shepherdjerred.thestorm.world.adapter.paper.WorldPaper;
 import com.shepherdjerred.thestorm.world.adapter.remote.FliptCrierGate;
+import com.shepherdjerred.thestorm.world.adapter.remote.FliptMerchantGate;
 import com.shepherdjerred.thestorm.world.app.CrierGate;
+import com.shepherdjerred.thestorm.world.app.MerchantGate;
 import com.shepherdjerred.thestorm.world.app.WildWorlds;
 import com.shepherdjerred.thestorm.world.domain.WorldConfig;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -25,6 +27,7 @@ import org.jspecify.annotations.Nullable;
 public final class WorldModule implements StormModule {
 
   private @Nullable FliptCrierGate gate;
+  private @Nullable FliptMerchantGate merchantGate;
 
   @Override
   public String id() {
@@ -83,13 +86,27 @@ public final class WorldModule implements StormModule {
               context.plugin());
     }
     if (config.merchant().enabled()) {
+      MerchantGate merchantRollout;
+      if (base == null || base.isBlank() || environment == null || environment.isBlank()) {
+        merchantRollout = player -> java.util.concurrent.CompletableFuture.completedFuture(false);
+      } else {
+        var remote = new FliptMerchantGate(URI.create(base), environment);
+        merchantGate = remote;
+        merchantRollout = remote;
+      }
       context
           .plugin()
           .getServer()
           .getPluginManager()
           .registerEvents(
               new WindmillMerchant(
-                  context.plugin(), config.merchant(), context.time(), context.logger()),
+                  context.plugin(),
+                  config.merchant(),
+                  new WindmillMerchant.Services(
+                      context.time(),
+                      context.logger(),
+                      merchantRollout,
+                      context.scheduler().mainThread())),
               context.plugin());
     }
     context.logger().info("{} module created {}", id(), worlds.defaultWorld().name());
@@ -100,6 +117,10 @@ public final class WorldModule implements StormModule {
     if (gate != null) {
       gate.close();
       gate = null;
+    }
+    if (merchantGate != null) {
+      merchantGate.close();
+      merchantGate = null;
     }
   }
 }
