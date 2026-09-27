@@ -604,6 +604,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/storm-brain",
+      "directory": "packages/storm-brain",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test/"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/streambot",
       "directory": "packages/streambot",
       "steps": [
