@@ -161,16 +161,17 @@ final class JooqSpellStoreTest {
   }
 
   @Test
-  void aRevertedRecordMayBeReplacedByANewPlacement() throws Exception {
+  void aRevertedRecordBlocksReplacementUntilItIsForgotten() throws Exception {
     var old = block(1, "minecraft:packed_ice");
     await(store.saveTemporaryBlocks(List.of(old)));
     await(store.markReverted(List.of(old.key())));
     var fresh = block(1, "minecraft:white_wool");
 
+    assertThat(await(store.saveTemporaryBlocks(List.of(fresh)))).isEmpty();
+    assertThat(await(store.temporaryBlocks())).containsExactly(old);
+    assertThat(await(store.forgetReverted(WORLD))).isEqualTo(1);
     assertThat(await(store.saveTemporaryBlocks(List.of(fresh)))).containsExactly(fresh.key());
     assertThat(await(store.temporaryBlocks())).containsExactly(fresh);
-    // The replacement is pending again: a world save does not forget it.
-    assertThat(await(store.forgetReverted(WORLD))).isZero();
   }
 
   @Test

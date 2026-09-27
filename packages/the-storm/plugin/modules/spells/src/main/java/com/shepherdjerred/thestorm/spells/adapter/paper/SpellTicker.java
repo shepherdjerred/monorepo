@@ -5,8 +5,6 @@ import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.Wards;
 import com.shepherdjerred.thestorm.spells.domain.geometry.Knockback;
 import com.shepherdjerred.thestorm.spells.domain.geometry.Vec3;
-import java.time.Duration;
-import java.time.Instant;
 import org.bukkit.Location;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Enemy;
@@ -20,24 +18,16 @@ import org.bukkit.util.Vector;
 final class SpellTicker {
 
   private static final double WARD_LIFT = 0.2;
-  private static final Duration SAVE_INTERVAL = Duration.ofSeconds(30);
-
   private final Toolbox tools;
-  private Instant nextSave;
 
   SpellTicker(Toolbox tools) {
     this.tools = tools;
-    this.nextSave = tools.time().instant().plus(SAVE_INTERVAL);
   }
 
   void tick() {
     var state = tools.state();
     var now = tools.time().instant();
     tools.blocks().sweep();
-    if (!now.isBefore(nextSave)) {
-      tools.blocks().flushReverts();
-      nextSave = now.plus(SAVE_INTERVAL);
-    }
     for (var ward : state.wards().active(now)) {
       hold(ward);
     }

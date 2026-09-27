@@ -22,6 +22,7 @@ public final class RefusalText {
       case Refusal.MissingReagents(var missing) -> "You need " + reagents(missing) + " more.";
       case Refusal.NoTarget(var what) -> "No " + what + " to target.";
       case Refusal.NoSafeSpot() -> "There is nowhere safe to land there.";
+      case Refusal.DestinationLoading() -> "Your destination is loading. Cast again in a moment.";
       case Refusal.NoMark() -> "You have no Mark to return to.";
       case Refusal.NoWall() -> "There is no wall in front of you to pass through.";
       case Refusal.Loading() -> "Your spellbook is still loading. Try again in a moment.";

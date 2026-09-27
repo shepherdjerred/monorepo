@@ -17,8 +17,11 @@ import com.shepherdjerred.thestorm.spells.domain.cast.SpellTerms;
 import com.shepherdjerred.thestorm.spells.domain.config.Spellbook;
 import java.time.Duration;
 import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -40,6 +43,7 @@ final class CastFlow {
   private final Map<SpellKind, Spell> spells;
   private final Spellbook book;
   private final Toolbox tools;
+  private final Set<CooldownKey> pending = new HashSet<>();
 
   CastFlow(Map<SpellKind, Spell> spells, Spellbook book, Toolbox tools) {
     this.spells = new EnumMap<>(spells);
@@ -77,6 +81,10 @@ final class CastFlow {
       return Optional.empty();
     }
     var terms = book.entry(kind).terms();
+    if (pending.contains(new CooldownKey(caster.getUniqueId(), terms.cooldownGroup()))) {
+      tools.say().refusal(caster, new Refusal.Loading());
+      return Optional.empty();
+    }
     var refusal =
         CastRules.casting().first(new CastAttempt(mode, terms, state(caster, kind, terms)));
     if (refusal.isPresent()) {
@@ -100,15 +108,64 @@ final class CastFlow {
   }
 
   /**
-   * Pays for {@code cast} (reagents for a focus; a scroll is consumed by the game), starts its
-   * cooldown group (drawn by the client on every item of the group) and applies the effect.
+   * Reserves focus reagents before any asynchronous work can begin. On success the reservation
+   * becomes payment; on failure it is returned. The game consumes a scroll after the read event.
    */
   void commit(Prepared cast, ItemStack item) {
+    var key = new CooldownKey(cast.caster().getUniqueId(), cast.terms().cooldownGroup());
+    if (!pending.add(key)) {
+      return;
+    }
+    var inventory = cast.caster().getInventory();
+    var held = ReagentPlan.held(Reagents.stacks(inventory, cast.terms().cost()));
+    if (cast.mode() == CastMode.FOCUS && !cast.terms().cost().affordableWith(held)) {
+      pending.remove(key);
+      tools
+          .say()
+          .refusal(cast.caster(), new Refusal.MissingReagents(cast.terms().cost().shortfall(held)));
+      return;
+    }
+    var reserved =
+        cast.mode() == CastMode.FOCUS
+            ? Reagents.reserve(inventory, cast.terms().cost())
+            : List.<ItemStack>of();
+    cast.effect()
+        .beforeCommit(
+            () -> {
+              pending.remove(key);
+              applyCommitted(cast, item);
+            },
+            () -> {
+              pending.remove(key);
+              Reagents.refund(inventory, reserved)
+                  .values()
+                  .forEach(
+                      leftover ->
+                          cast.caster()
+                              .getWorld()
+                              .dropItem(cast.caster().getEyeLocation(), leftover)
+                              .setOwner(cast.caster().getUniqueId()));
+              if (cast.mode() == CastMode.SCROLL) {
+                cast.caster()
+                    .getInventory()
+                    .addItem(item.asQuantity(1))
+                    .values()
+                    .forEach(
+                        leftover ->
+                            cast.caster()
+                                .getWorld()
+                                .dropItem(cast.caster().getEyeLocation(), leftover)
+                                .setOwner(cast.caster().getUniqueId()));
+              }
+              tools
+                  .say()
+                  .error(cast.caster(), "The spell could not complete. Your payment was returned.");
+            });
+  }
+
+  private void applyCommitted(Prepared cast, ItemStack item) {
     var caster = cast.caster();
     var terms = cast.terms();
-    if (cast.mode() == CastMode.FOCUS) {
-      Reagents.take(caster.getInventory(), terms.cost());
-    }
     var cooldownKey = new CooldownKey(caster.getUniqueId(), terms.cooldownGroup());
     tools.state().cooldowns().start(cooldownKey, terms.cooldown(), tools.time().instant());
     caster.setCooldown(item, (int) (terms.cooldown().toMillis() / MILLIS_PER_TICK));

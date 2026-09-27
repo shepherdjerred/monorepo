@@ -37,6 +37,9 @@ public sealed interface Refusal {
   /** No safe place to arrive at. */
   record NoSafeSpot() implements Refusal {}
 
+  /** Recall's destination chunks are loading without blocking the server tick. */
+  record DestinationLoading() implements Refusal {}
+
   /** Recall without a Mark, or a Mark in a world that is gone. */
   record NoMark() implements Refusal {}
 

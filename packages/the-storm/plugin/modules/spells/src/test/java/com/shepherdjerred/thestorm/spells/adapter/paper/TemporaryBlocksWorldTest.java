@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.bukkit.Location;
@@ -27,8 +28,14 @@ final class TemporaryBlocksWorldTest {
 
   private final Harness harness = new Harness();
   private final MemoryStore store = new MemoryStore();
-  private final TemporaryBlocks blocks =
-      new TemporaryBlocks(store, harness.server, harness.clock, harness.async);
+  private final TemporaryBlocks blocks = newBlocks();
+
+  private TemporaryBlocks newBlocks() {
+    return new TemporaryBlocks(store, harness.server, harness.clock, harness.async)
+        .withLoader(
+            (world, key) ->
+                CompletableFuture.completedFuture(world.getBlockAt(key.x(), key.y(), key.z())));
+  }
 
   @AfterEach
   void tearDown() {
@@ -131,6 +138,11 @@ final class TemporaryBlocksWorldTest {
     public CompletableFuture<Integer> saveFocus(FocusKey key, long generation) {
       return CompletableFuture.completedFuture(1);
     }
+
+    @Override
+    public CompletableFuture<Integer> rollbackFocus(FocusKey key, long generation) {
+      return CompletableFuture.completedFuture(1);
+    }
   }
 
   private Block air(int x) {
@@ -141,6 +153,27 @@ final class TemporaryBlocksWorldTest {
 
   private void place(List<Block> targets, int seconds) {
     blocks.place(targets, Material.DEEPSLATE_BRICKS.createBlockData(), Duration.ofSeconds(seconds));
+  }
+
+  @Test
+  void aTargetThatMovesBeforePersistenceFinishesGetsNoTemporaryBlocks() {
+    var gate = new CompletableFuture<Boolean>();
+    store.gate = gate;
+    var targetStillHere = new boolean[] {true};
+    var placed = new ArrayList<Boolean>();
+    var block = air(0);
+
+    blocks.place(
+        List.of(block),
+        Material.DEEPSLATE_BRICKS.createBlockData(),
+        Duration.ofSeconds(10),
+        new TemporaryBlocks.GuardedPlacement(() -> targetStillHere[0], placed::add));
+    targetStillHere[0] = false;
+    gate.complete(true);
+
+    assertThat(placed).containsExactly(false);
+    assertThat(block.getType()).isEqualTo(Material.AIR);
+    assertThat(store.rows).isEmpty();
   }
 
   @Test
@@ -160,11 +193,7 @@ final class TemporaryBlocksWorldTest {
     blocks.sweep();
     assertThat(wall).allMatch(block -> block.getType() == Material.AIR);
     assertThat(blocks.holds(wall.getFirst())).isFalse();
-    // Reverted, but remembered until the world is saved.
-    assertThat(store.reverted()).hasSize(2);
     assertThat(store.pending()).isEmpty();
-
-    blocks.worldSaved(harness.world);
     assertThat(store.rows).isEmpty();
   }
 
@@ -172,17 +201,24 @@ final class TemporaryBlocksWorldTest {
   void aCrashAfterARevertButBeforeTheSaveRevertsAgainAtStartup() {
     var block = air(0);
     place(List.of(block), 10);
+    var recorded = Objects.requireNonNull(store.rows.get(TemporaryBlocks.key(block))).block();
     harness.clock.advance(Duration.ofSeconds(10));
     blocks.sweep();
     assertThat(block.getType()).isEqualTo(Material.AIR);
 
-    // kill -9: the world on disk still shows the wall, and the record is still there.
+    // kill -9: the old disk image still has the wall and its chunk marker.
     block.setType(Material.DEEPSLATE_BRICKS);
-    var restarted = new TemporaryBlocks(store, harness.server, harness.clock, harness.async);
-    restarted.recover(() -> {});
+    ChunkMarkers.put(block.getChunk(), recorded);
+    var restarted = newBlocks();
+    restarted.recover(
+        () -> {},
+        failure -> {
+          throw new AssertionError(failure);
+        });
+    restarted.chunkLoaded(block.getChunk());
 
     assertThat(block.getType()).isEqualTo(Material.AIR);
-    assertThat(store.reverted()).containsExactly(TemporaryBlocks.key(block));
+    assertThat(store.rows).isEmpty();
   }
 
   @Test
@@ -194,13 +230,18 @@ final class TemporaryBlocksWorldTest {
     // Someone builds where the wall stood, then the server dies before the save.
     block.setType(Material.OAK_PLANKS);
 
-    new TemporaryBlocks(store, harness.server, harness.clock, harness.async).recover(() -> {});
+    newBlocks()
+        .recover(
+            () -> {},
+            failure -> {
+              throw new AssertionError(failure);
+            });
 
     assertThat(block.getType()).isEqualTo(Material.OAK_PLANKS);
   }
 
   @Test
-  void revertedBlocksRemainRecordedUntilTheWorldSave() {
+  void revertedBlocksRemoveRowsAfterTheirChunkMarkersAreCleared() {
     var near = air(0);
     var far = harness.world.getBlockAt(100, 100, 0);
     far.setType(Material.AIR);
@@ -208,24 +249,19 @@ final class TemporaryBlocksWorldTest {
     harness.clock.advance(Duration.ofSeconds(1));
     blocks.sweep();
 
-    assertThat(store.reverted())
-        .containsExactlyInAnyOrder(TemporaryBlocks.key(near), TemporaryBlocks.key(far));
-    blocks.worldSaved(harness.world);
-    assertThat(store.reverted()).isEmpty();
+    assertThat(store.rows).isEmpty();
+    assertThat(blocks.holds(near)).isFalse();
+    assertThat(blocks.holds(far)).isFalse();
   }
 
   @Test
-  void aNewSpellMustWaitForTheWorldSaveBeforeReusingAPosition() {
+  void aNewSpellCanReuseAPositionAfterItsRecoveryMarkerIsCleared() {
     var block = air(0);
     place(List.of(block), 1);
     harness.clock.advance(Duration.ofSeconds(1));
     blocks.sweep();
 
-    place(List.of(block), 10);
-
-    assertThat(block.getType()).isEqualTo(Material.AIR);
     assertThat(store.pending()).isEmpty();
-    blocks.worldSaved(harness.world);
     place(List.of(block), 10);
     assertThat(block.getType()).isEqualTo(Material.DEEPSLATE_BRICKS);
     assertThat(store.pending()).hasSize(1);
@@ -292,7 +328,7 @@ final class TemporaryBlocksWorldTest {
     place(List.of(block), 10);
 
     assertThat(block.getType()).isEqualTo(Material.AIR);
-    assertThat(blocks.holds(block)).isFalse();
+    assertThat(blocks.holds(block)).isTrue();
   }
 
   @Test
@@ -311,10 +347,14 @@ final class TemporaryBlocksWorldTest {
             false));
     var ready = new boolean[1];
 
-    blocks.recover(() -> ready[0] = true);
+    blocks.recover(
+        () -> ready[0] = true,
+        failure -> {
+          throw new AssertionError(failure);
+        });
 
     assertThat(ice.getType()).isEqualTo(Material.AIR);
-    assertThat(store.reverted()).containsExactly(key);
+    assertThat(store.rows).isEmpty();
     assertThat(ready[0]).isTrue();
   }
 
@@ -331,7 +371,11 @@ final class TemporaryBlocksWorldTest {
             false));
     harness.server.removeWorld(harness.world);
 
-    blocks.recover(() -> {});
+    blocks.recover(
+        () -> {},
+        failure -> {
+          throw new AssertionError(failure);
+        });
     assertThat(ice.getType()).isEqualTo(Material.PACKED_ICE);
     assertThat(store.pending()).hasSize(1);
 
@@ -339,7 +383,7 @@ final class TemporaryBlocksWorldTest {
     blocks.worldLoaded(harness.world);
 
     assertThat(ice.getType()).isEqualTo(Material.AIR);
-    assertThat(store.reverted()).containsExactly(key);
+    assertThat(store.rows).isEmpty();
   }
 
   @Test

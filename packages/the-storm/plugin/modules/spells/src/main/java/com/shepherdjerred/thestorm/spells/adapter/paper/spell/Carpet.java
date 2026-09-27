@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.spells.adapter.paper.PaperNames;
+import com.shepherdjerred.thestorm.spells.adapter.paper.TemporaryBlocks;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
 import com.shepherdjerred.thestorm.spells.domain.geometry.Shapes;
@@ -43,7 +44,45 @@ final class Carpet implements Spell {
 
   @Override
   public Result<Effect, CastProblem> prepare(Player caster) {
-    return cloud(caster).map(blocks -> () -> weave(caster));
+    return cloud(caster)
+        .map(
+            ignored ->
+                new Effect() {
+                  @Override
+                  public void beforeCommit(Runnable commit, Runnable failed) {
+                    if (cloud(caster) instanceof Result.Ok<List<Block>, CastProblem>(var blocks)) {
+                      var world = caster.getWorld();
+                      var under = Aim.pos(Magic.at(caster).getBlock()).below();
+                      tools
+                          .blocks()
+                          .place(
+                              blocks,
+                              material.createBlockData(),
+                              Duration.ofSeconds(settings.durationSeconds()),
+                              new TemporaryBlocks.GuardedPlacement(
+                                  () ->
+                                      caster.isOnline()
+                                          && caster.getWorld().equals(world)
+                                          && Aim.pos(Magic.at(caster).getBlock())
+                                              .below()
+                                              .equals(under),
+                                  saved -> {
+                                    if (saved) {
+                                      commit.run();
+                                    } else {
+                                      failed.run();
+                                    }
+                                  }));
+                    } else {
+                      failed.run();
+                    }
+                  }
+
+                  @Override
+                  public void apply() {
+                    weave(caster);
+                  }
+                });
   }
 
   /** The open air under the caster's feet they may build in, or why there is none. */
@@ -54,8 +93,8 @@ final class Carpet implements Spell {
   }
 
   /**
-   * Stops the caster's fall and forms the cloud under where they are now; slow falling carries them
-   * down gently if the cloud cannot form in time or when it melts.
+   * Stops the caster's fall after the cloud was persisted and placed. Slow falling carries them
+   * down gently when it melts.
    */
   private void weave(Player caster) {
     caster.setVelocity(new Vector(0, 0, 0));
@@ -65,12 +104,6 @@ final class Carpet implements Spell {
         PotionEffectType.SLOW_FALLING,
         settings.durationSeconds() + SOFT_LANDING_SECONDS,
         0);
-    if (cloud(caster) instanceof Result.Ok<List<Block>, CastProblem>(var blocks)) {
-      tools
-          .blocks()
-          .place(
-              blocks, material.createBlockData(), Duration.ofSeconds(settings.durationSeconds()));
-    }
     tools.fx().cast(kind(), Magic.at(caster));
     tools.fx().ring(kind(), Magic.at(caster), settings.size() / 2.0 + 0.5);
   }

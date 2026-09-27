@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.bukkit.ExplosionResult;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -29,7 +30,13 @@ final class TemporaryBlockGuardTest {
   private final Harness harness = new Harness();
   private final TemporaryBlocks blocks =
       new TemporaryBlocks(
-          new TemporaryBlocksWorldTest.MemoryStore(), harness.server, harness.clock, harness.async);
+              new TemporaryBlocksWorldTest.MemoryStore(),
+              harness.server,
+              harness.clock,
+              harness.async)
+          .withLoader(
+              (world, key) ->
+                  CompletableFuture.completedFuture(world.getBlockAt(key.x(), key.y(), key.z())));
   private final TemporaryBlockGuard guard = new TemporaryBlockGuard(blocks);
 
   private Block wall;

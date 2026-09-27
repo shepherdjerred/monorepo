@@ -80,7 +80,10 @@ final class SpellEffectsListener implements Listener {
     }
     var hidden =
         target instanceof Player player
-            && state.stealth().running(player.getUniqueId(), time.instant());
+            && event.getEntity() instanceof Enemy
+            && event.getEntity() instanceof LivingEntity mob
+            && state.stealth().running(player.getUniqueId(), time.instant())
+            && guard.harmDenial(player, mob).isEmpty();
     if (hidden
         || (event.getEntity() instanceof Enemy
             && event.getEntity() instanceof LivingEntity mob
@@ -101,6 +104,10 @@ final class SpellEffectsListener implements Listener {
   @EventHandler
   void onQuit(PlayerQuitEvent event) {
     var player = event.getPlayer();
+    if (state.stealth().keys().contains(player.getUniqueId())) {
+      state.stealth().stop(player.getUniqueId(), time.instant());
+      player.removePotionEffect(PotionEffectType.INVISIBILITY);
+    }
     if (state.timeShifts().stop(player.getUniqueId(), time.instant())) {
       player.resetPlayerTime();
     }

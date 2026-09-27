@@ -1,8 +1,8 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
-import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.adapter.paper.PaperNames;
+import com.shepherdjerred.thestorm.spells.adapter.paper.TemporaryBlocks;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
 import com.shepherdjerred.thestorm.spells.domain.geometry.Shapes;
@@ -40,24 +40,50 @@ final class Entomb implements Spell {
     return Aim.creature(tools, caster, settings.range())
         .flatMap(
             target -> {
+              var world = target.getWorld();
               var feet = Aim.pos(target.getLocation().getBlock());
               var height = Math.max(1, (int) Math.ceil(target.getHeight()));
-              var shell = Aim.blocks(target.getWorld(), Shapes.tomb(feet, height));
+              var shell = Aim.blocks(world, Shapes.tomb(feet, height));
               return Aim.buildable(tools, caster, shell, Replaceability.Mode.OPEN_SPACE)
                   .map(
                       blocks -> {
-                        var seal =
-                            Harm.Blow.none()
-                                .then(
-                                    entombed ->
-                                        tools
-                                            .blocks()
-                                            .place(
-                                                blocks,
-                                                material.createBlockData(),
-                                                Duration.ofSeconds(settings.durationSeconds())));
-                        return () -> {
-                          if (tools.harm().strike(caster, target, seal)) {
+                        return new Effect() {
+                          @Override
+                          public void beforeCommit(Runnable commit, Runnable failed) {
+                            if (!target.isValid()
+                                || target.isDead()
+                                || !target.getWorld().equals(world)
+                                || !Aim.pos(target.getLocation().getBlock()).equals(feet)
+                                || tools.harm().denial(caster, target).isPresent()) {
+                              failed.run();
+                              return;
+                            }
+                            tools
+                                .blocks()
+                                .place(
+                                    blocks,
+                                    material.createBlockData(),
+                                    Duration.ofSeconds(settings.durationSeconds()),
+                                    new TemporaryBlocks.GuardedPlacement(
+                                        () ->
+                                            target.isValid()
+                                                && !target.isDead()
+                                                && target.getWorld().equals(world)
+                                                && Aim.pos(target.getLocation().getBlock())
+                                                    .equals(feet)
+                                                && tools.harm().denial(caster, target).isEmpty(),
+                                        saved -> {
+                                          if (saved) {
+                                            tools.harm().breakStealth(caster);
+                                            commit.run();
+                                          } else {
+                                            failed.run();
+                                          }
+                                        }));
+                          }
+
+                          @Override
+                          public void apply() {
                             tools.fx().cast(kind(), Magic.chest(target));
                           }
                         };

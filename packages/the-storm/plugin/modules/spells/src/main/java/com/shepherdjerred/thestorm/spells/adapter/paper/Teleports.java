@@ -11,6 +11,7 @@ import com.shepherdjerred.thestorm.spells.domain.geometry.SafeSpots;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.function.Predicate;
+import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -57,6 +58,9 @@ public final class Teleports {
     if (pos.y() < world.getMinHeight() || pos.y() >= world.getMaxHeight()) {
       return Footing.HAZARD;
     }
+    if (!world.isChunkLoaded(pos.x() >> 4, pos.z() >> 4)) {
+      return Footing.HAZARD;
+    }
     var block = world.getBlockAt(pos.x(), pos.y(), pos.z());
     var type = block.getType();
     if (HAZARDS.contains(type)
@@ -69,6 +73,40 @@ public final class Teleports {
       return Footing.OPEN;
     }
     return block.isSolid() ? Footing.SOLID : Footing.HAZARD;
+  }
+
+  /** Starts asynchronous loads for the chunks a safe-spot search can inspect. */
+  public boolean loadArea(Location wanted, int radius) {
+    var world = wanted.getWorld();
+    var ready = true;
+    for (var x = (wanted.getBlockX() - radius) >> 4; x <= (wanted.getBlockX() + radius) >> 4; x++) {
+      for (var z = (wanted.getBlockZ() - radius) >> 4;
+          z <= (wanted.getBlockZ() + radius) >> 4;
+          z++) {
+        if (!world.isChunkLoaded(x, z)) {
+          ready = false;
+          var chunkX = x;
+          var chunkZ = z;
+          var _ =
+              world
+                  .getChunkAtAsync(x, z, true)
+                  .whenComplete(
+                      (chunk, failure) -> {
+                        if (failure != null) {
+                          Bukkit.getLogger()
+                              .warning(
+                                  "Could not load Recall destination chunk "
+                                      + chunkX
+                                      + ", "
+                                      + chunkZ
+                                      + ": "
+                                      + failure.getMessage());
+                        }
+                      });
+        }
+      }
+    }
+    return ready;
   }
 
   /**
@@ -121,9 +159,12 @@ public final class Teleports {
         == null;
   }
 
-  /** Moves {@code caster} to {@code destination}, clearing any fall they had built up. */
-  public static void teleport(Player caster, Location destination) {
+  /** Moves {@code caster} to {@code destination}; false if another plugin cancels the move. */
+  public static boolean teleport(Player caster, Location destination) {
+    if (!caster.teleport(destination, PlayerTeleportEvent.TeleportCause.PLUGIN)) {
+      return false;
+    }
     caster.setFallDistance(0);
-    caster.teleport(destination, PlayerTeleportEvent.TeleportCause.PLUGIN);
+    return true;
   }
 }

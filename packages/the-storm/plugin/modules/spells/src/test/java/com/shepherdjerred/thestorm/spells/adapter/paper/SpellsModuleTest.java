@@ -68,6 +68,16 @@ final class SpellsModuleTest {
     }
   }
 
+  private void bind(PlayerMock player, String spell) {
+    player.performCommand("spells bind " + spell);
+    try {
+      settle();
+    } catch (InterruptedException failure) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException("interrupted while waiting for a focus bind", failure);
+    }
+  }
+
   private static String plain(Component component) {
     return PlainTextComponentSerializer.plainText().serialize(component);
   }
@@ -111,7 +121,7 @@ final class SpellsModuleTest {
   void aSpellcasterBindsAFocusForASpellTheyKnow() {
     var player = spellcaster(1);
 
-    player.performCommand("spells bind haste");
+    bind(player, "haste");
 
     assertThat(said(player)).anyMatch(line -> line.contains("haste focus is ready"));
     var focus = focusIn(player);
@@ -122,7 +132,7 @@ final class SpellsModuleTest {
   void aSpellAboveTheCastersTierCannotBeBound() {
     var player = spellcaster(1);
 
-    player.performCommand("spells bind wall");
+    bind(player, "wall");
 
     assertThat(said(player)).anyMatch(line -> line.contains("You need Spellcaster II"));
     assertThat(player.getInventory().contains(Material.PAPER)).isFalse();
@@ -132,20 +142,20 @@ final class SpellsModuleTest {
   void aQuestSpellNeedsLearning() {
     var player = spellcaster(3);
 
-    player.performCommand("spells bind blink");
+    bind(player, "blink");
     assertThat(said(player)).anyMatch(line -> line.contains("not learned"));
 
     player.addAttachment(plugin, SpellScrolls.learnedPermission("blink"), true);
-    player.performCommand("spells bind blink");
+    bind(player, "blink");
     assertThat(said(player)).anyMatch(line -> line.contains("blink focus is ready"));
   }
 
   @Test
   void rebindingLeavesOneFocusAndKillsTheOldOne() {
     var player = spellcaster(1);
-    player.performCommand("spells bind haste");
+    bind(player, "haste");
     var first = focusIn(player).clone();
-    player.performCommand("spells bind haste");
+    bind(player, "haste");
     said(player);
 
     var foci =
@@ -166,7 +176,7 @@ final class SpellsModuleTest {
   @Test
   void castingPaysReagentsAndStartsTheCooldown() {
     var player = spellcaster(1);
-    player.performCommand("spells bind haste");
+    bind(player, "haste");
     var focus = focusIn(player);
     player.getInventory().setItem(20, ItemStack.of(Material.REDSTONE, 20));
     said(player);
@@ -183,9 +193,29 @@ final class SpellsModuleTest {
   }
 
   @Test
+  void aPersistedMarkKeepsItsReservedPaymentWhenInventoryChanges() throws InterruptedException {
+    var player = spellcaster(1);
+    bind(player, "mark");
+    var focus = focusIn(player);
+    player.getInventory().setItem(20, ItemStack.of(Material.REDSTONE, 20));
+    player.getInventory().setItem(21, ItemStack.of(Material.LAPIS_LAZULI, 20));
+    said(player);
+
+    rightClick(player, focus);
+    assertThat(player.getInventory().getItem(20)).isEqualTo(ItemStack.of(Material.REDSTONE, 5));
+    assertThat(player.getInventory().getItem(21)).isEqualTo(ItemStack.of(Material.LAPIS_LAZULI, 5));
+    player.getInventory().setItem(20, null);
+    player.getInventory().setItem(21, null);
+    settle();
+
+    assertThat(said(player)).anyMatch(line -> line.contains("Marked"));
+    assertThat(player.getCooldown(focus)).isPositive();
+  }
+
+  @Test
   void withoutReagentsNothingHappens() {
     var player = spellcaster(1);
-    player.performCommand("spells bind haste");
+    bind(player, "haste");
     said(player);
 
     rightClick(player, focusIn(player));
@@ -197,7 +227,7 @@ final class SpellsModuleTest {
   @Test
   void someoneElsesFocusDoesNotCast() {
     var owner = spellcaster(1);
-    owner.performCommand("spells bind haste");
+    bind(owner, "haste");
     var focus = focusIn(owner);
     var thief = spellcaster(5);
     thief.getInventory().addItem(ItemStack.of(Material.REDSTONE, 64));
@@ -264,7 +294,7 @@ final class SpellsModuleTest {
   @Test
   void aFocusIsNotAScroll() {
     var player = spellcaster(1);
-    player.performCommand("spells bind haste");
+    bind(player, "haste");
 
     assertThat(read(player, focusIn(player)).isCancelled()).isTrue();
   }
@@ -272,7 +302,7 @@ final class SpellsModuleTest {
   @Test
   void bindingIntoAFullInventoryIsRefusedBeforeAnythingIsRemoved() {
     var player = spellcaster(1);
-    player.performCommand("spells bind haste");
+    bind(player, "haste");
     var focus = focusIn(player);
     // Move the focus to the ender chest and fill the backpack.
     player.getInventory().remove(focus);
@@ -282,7 +312,7 @@ final class SpellsModuleTest {
     }
     said(player);
 
-    player.performCommand("spells bind haste");
+    bind(player, "haste");
 
     assertThat(said(player)).anyMatch(line -> line.contains("Make room"));
     assertThat(player.getEnderChest().contains(focus)).isTrue();
@@ -291,7 +321,7 @@ final class SpellsModuleTest {
   @Test
   void rebindingIntoAFullInventoryReusesTheOldFocusSlot() {
     var player = spellcaster(1);
-    player.performCommand("spells bind haste");
+    bind(player, "haste");
     var old = focusIn(player);
     for (var slot = 0; slot < 36; slot++) {
       var item = player.getInventory().getItem(slot);
@@ -301,7 +331,7 @@ final class SpellsModuleTest {
     }
     said(player);
 
-    player.performCommand("spells bind haste");
+    bind(player, "haste");
 
     assertThat(said(player)).anyMatch(line -> line.contains("haste focus is ready"));
     assertThat(focusIn(player)).isNotEqualTo(old);

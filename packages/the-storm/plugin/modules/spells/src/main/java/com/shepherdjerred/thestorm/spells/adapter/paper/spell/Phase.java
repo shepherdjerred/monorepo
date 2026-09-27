@@ -53,14 +53,7 @@ final class Phase implements Spell {
             .denial(caster, ProtectedAction.TELEPORT_INTO, destination)
             .<Result<Effect, CastProblem>>map(
                 reason -> Result.err(new CastProblem.Protected(reason)))
-            .orElseGet(
-                () ->
-                    Result.ok(
-                        () -> {
-                          tools.fx().cast(kind(), from);
-                          Teleports.teleport(caster, destination);
-                          tools.fx().cast(kind(), destination);
-                        }));
+            .orElseGet(() -> Result.ok(Magic.teleportEffect(kind(), tools, caster, destination)));
       }
     };
   }

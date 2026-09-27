@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 import org.bukkit.Server;
 import org.bukkit.entity.EntityType;
 
@@ -91,8 +92,15 @@ public final class SpellsPaper {
     return new SpellsPaper(tools, items, repeating);
   }
 
-  /** Reverts leftovers, then loads Marks and binds; casting opens once all three are done. */
+  /** Reserves leftover blocks, then loads Marks and binds before casting opens. */
   private static void load(SpellStore store, Toolbox tools, Async async) {
+    Consumer<Throwable> failed =
+        failure -> {
+          async
+              .logger()
+              .error("Required spells state could not be loaded; shutting down server", failure);
+          tools.server().shutdown();
+        };
     tools
         .blocks()
         .recover(
@@ -108,8 +116,11 @@ public final class SpellsPaper {
                           foci -> {
                             tools.state().foci().restore(foci);
                             tools.state().markReady();
-                          });
-                    }));
+                          },
+                          failed);
+                    },
+                    failed),
+            failed);
   }
 
   private static Set<EntityType> immune(SpellsConfig config) {
@@ -146,7 +157,6 @@ public final class SpellsPaper {
   public void stop() {
     ticker.cancel();
     blocks.revertAll();
-    blocks.flushReverts();
     for (var player : state.timeShifts().keys()) {
       var online = server.getPlayer(player);
       if (online != null) {

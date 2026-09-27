@@ -97,14 +97,13 @@ final class Binder {
             storage.store().saveFocus(key, generation),
             "recording a " + spell.id() + " bind",
             saved -> {
-              pending.remove(key);
               if (saved != 1) {
+                pending.remove(key);
                 completed.accept(false);
                 return;
               }
-              state.foci().restore(Map.of(key, generation));
               if (!player.isOnline()) {
-                completed.accept(false);
+                rollback(key, generation, player, completed);
                 return;
               }
               var destination =
@@ -115,13 +114,15 @@ final class Binder {
                                   .filter(held -> held < STORAGE_SLOTS)
                                   .findFirst());
               if (destination.isEmpty()) {
-                completed.accept(false);
+                rollback(key, generation, player, completed);
                 return;
               }
               removeFoci(inventory, player, spell);
               removeFoci(player.getEnderChest(), player, spell);
               inventory.setItem(
                   destination.get(), items.focus(spell, player.getUniqueId(), generation));
+              state.foci().restore(Map.of(key, generation));
+              pending.remove(key);
               completed.accept(true);
             },
             failure -> {
@@ -129,6 +130,27 @@ final class Binder {
               completed.accept(false);
             });
     return Optional.empty();
+  }
+
+  private void rollback(FocusKey key, long generation, Player player, Consumer<Boolean> completed) {
+    storage
+        .async()
+        .onMain(
+            storage.store().rollbackFocus(key, generation),
+            "rolling back an undelivered focus bind",
+            rolledBack -> {
+              pending.remove(key);
+              if (rolledBack != 1) {
+                storage.async().logger().error("Focus bind rollback changed no row for {}", key);
+                player.getServer().shutdown();
+              }
+              completed.accept(false);
+            },
+            failure -> {
+              pending.remove(key);
+              player.getServer().shutdown();
+              completed.accept(false);
+            });
   }
 
   private static Optional<Integer> freeSlot(Inventory inventory) {

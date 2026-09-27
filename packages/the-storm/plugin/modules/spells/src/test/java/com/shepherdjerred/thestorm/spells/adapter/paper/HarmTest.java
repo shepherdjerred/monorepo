@@ -6,10 +6,13 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.entity.Cow;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
@@ -176,6 +179,21 @@ final class HarmTest {
     harm.strike(caster, victim, Harm.Blow.none().withDamage(1));
 
     assertThat(state.stealth().running(caster.getUniqueId(), harness.clock.instant())).isFalse();
+    assertThat(caster.hasPotionEffect(PotionEffectType.INVISIBILITY)).isFalse();
+  }
+
+  @Test
+  void quittingClearsSpellStealthBeforeThePlayerCanReturn() {
+    state.stealth().start(caster.getUniqueId(), Duration.ofSeconds(20), harness.clock.instant());
+    caster.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 400, 0));
+    var listener =
+        new SpellEffectsListener(
+            state, harness.clock, new Targets(Set.of()), new Guard(protection));
+
+    listener.onQuit(
+        new PlayerQuitEvent(caster, Component.empty(), PlayerQuitEvent.QuitReason.DISCONNECTED));
+
+    assertThat(state.stealth().keys()).doesNotContain(caster.getUniqueId());
     assertThat(caster.hasPotionEffect(PotionEffectType.INVISIBILITY)).isFalse();
   }
 }

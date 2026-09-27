@@ -1,7 +1,6 @@
 package com.shepherdjerred.thestorm.spells.adapter.paper.spell;
 
 import com.shepherdjerred.thestorm.core.result.Result;
-import com.shepherdjerred.thestorm.spells.adapter.paper.Harm;
 import com.shepherdjerred.thestorm.spells.adapter.paper.Teleports;
 import com.shepherdjerred.thestorm.spells.domain.SpellKind;
 import com.shepherdjerred.thestorm.spells.domain.config.SpellSettings;
@@ -46,10 +45,20 @@ final class Shadowstep implements Spell {
         .arrival(caster, behind(target), SEARCH_RADIUS, spot -> Teleports.clearPath(eyes, spot))
         .map(
             destination ->
-                () -> {
-                  var sneak =
-                      Harm.Blow.none().then(victim -> Teleports.teleport(caster, destination));
-                  if (tools.harm().strike(caster, target, sneak)) {
+                new Effect() {
+                  @Override
+                  public void beforeCommit(Runnable commit, Runnable failed) {
+                    if (tools.harm().denial(caster, target).isPresent()
+                        || !Teleports.teleport(caster, destination)) {
+                      failed.run();
+                      return;
+                    }
+                    tools.harm().breakStealth(caster);
+                    commit.run();
+                  }
+
+                  @Override
+                  public void apply() {
                     tools.fx().cast(kind(), from);
                     tools.fx().cast(kind(), destination);
                   }
