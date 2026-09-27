@@ -26,6 +26,7 @@ import {
 } from "#src/mvp-votes/vote.ts";
 
 const logger = createLogger("mvp-vote-refresh");
+const MissingMessageErrorSchema = z.object({ code: z.literal(10_008) });
 const tallyRefreshTails = new Map<string, Promise<unknown>>();
 const TargetProgressSchema = z.record(
   z.string(),
@@ -253,11 +254,14 @@ async function editReportTally(
     await checkpointTarget(ref, context.input, context.prismaClient);
     return true;
   } catch (error) {
-    if (isMissingChannelError(error)) {
+    if (
+      isMissingChannelError(error) ||
+      MissingMessageErrorSchema.safeParse(error).success
+    ) {
       // The persisted refs are match-global. A deleted channel in another
-      // guild must not prevent this guild's still-live report from updating.
+      // guild or message must not prevent still-live reports from updating.
       logger.warn(
-        `MVP tally target ${ref.channelId}/${ref.messageId} no longer has a channel`,
+        `MVP tally target ${ref.channelId}/${ref.messageId} no longer exists`,
         error,
       );
       return false;

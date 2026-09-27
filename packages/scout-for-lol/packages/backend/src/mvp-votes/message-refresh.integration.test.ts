@@ -67,19 +67,40 @@ beforeEach(async () => {
 });
 
 describe("MVP message refresh", () => {
-  test.each(["missing response", "unknown channel error"] as const)(
-    "updates this guild when another report channel is deleted (%s)",
+  test.each([
+    "missing response",
+    "unknown channel error",
+    "unknown message error",
+    "deleted during edit",
+  ] as const)(
+    "updates live reports when another target is deleted (%s)",
     async (missingMode) => {
       stubs.fetchChannelForDelivery.mockImplementation(
         async (channelId: string) => {
           if (channelId === firstChannel) {
             if (missingMode === "missing response") return null;
-            throw Object.assign(new Error("Unknown Channel"), { code: 10_003 });
+            if (missingMode === "unknown channel error") {
+              throw Object.assign(new Error("Unknown Channel"), {
+                code: 10_003,
+              });
+            }
           }
           return {
             guildId: serverId,
             isTextBased: () => true,
-            messages: { fetch: async () => ({ embeds: [] }) },
+            messages: {
+              fetch: async () => {
+                if (
+                  missingMode === "unknown message error" &&
+                  channelId === firstChannel
+                ) {
+                  throw Object.assign(new Error("Unknown Message"), {
+                    code: 10_008,
+                  });
+                }
+                return { embeds: [] };
+              },
+            },
           };
         },
       );
@@ -87,6 +108,14 @@ describe("MVP message refresh", () => {
 
       await reconcileMvpTallyRefresh(key, db, async (input, client) =>
         refreshMvpTallyMessages(input, client, async (target) => {
+          if (
+            missingMode === "deleted during edit" &&
+            target.channelId === firstChannel
+          ) {
+            throw Object.assign(new Error("Unknown Message"), {
+              code: 10_008,
+            });
+          }
           edits.push(target.messageId);
         }),
       );
