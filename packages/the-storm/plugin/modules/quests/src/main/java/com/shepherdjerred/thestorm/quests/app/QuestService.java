@@ -83,6 +83,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
   private final Wiring wiring;
   private final Notices notices;
   private final Describe.Lookup lookup;
+  private final QuestTextRenderer textRenderer;
   private final Map<UUID, PlayerQuests> sessions = new HashMap<>();
   private final Map<UUID, CompletableFuture<Void>> loading = new HashMap<>();
   private final Map<UUID, CompletableFuture<Void>> saving = new HashMap<>();
@@ -98,7 +99,13 @@ public final class QuestService implements QuestHooks, QuestProgress {
   private final Map<String, CustomAction> customActions = new HashMap<>();
 
   public QuestService(Wiring wiring) {
+    this(wiring, (source, state, context) -> source);
+  }
+
+  /** Wires optional authored dialogue rendering into the existing quest graph. */
+  public QuestService(Wiring wiring, QuestTextRenderer textRenderer) {
     this.wiring = wiring;
+    this.textRenderer = textRenderer;
     this.lookup =
         new Describe.Lookup(
             wiring.npcNames(),
@@ -270,10 +277,24 @@ public final class QuestService implements QuestHooks, QuestProgress {
       return Optional.empty();
     }
     return Dialogues.forNpc(
-        state,
-        new Dialogues.Npc(npc, wiring.npcNames().apply(npc)),
-        current.get(),
-        wiring.config().labels());
+            state,
+            new Dialogues.Npc(npc, wiring.npcNames().apply(npc)),
+            current.get(),
+            wiring.config().labels())
+        .map(dialogue -> render(dialogue, state, current.get()));
+  }
+
+  private QuestDialogue render(QuestDialogue dialogue, PlayerQuests state, Context context) {
+    var nodes = new HashMap<String, QuestDialogue.Node>();
+    dialogue
+        .nodes()
+        .forEach(
+            (id, node) ->
+                nodes.put(
+                    id,
+                    new QuestDialogue.Node(
+                        textRenderer.render(node.text(), state, context), node.options())));
+    return new QuestDialogue(dialogue.title(), dialogue.start(), nodes);
   }
 
   /** {@code player} accepts {@code quest} from {@code npc}. */
@@ -900,9 +921,18 @@ public final class QuestService implements QuestHooks, QuestProgress {
 
   private void effects(UUID player, Outcome outcome, Catalog catalog) {
     var executor = new EffectRunner(player, wiring, notices, this);
+    var context = context(player, outcome.state());
     for (var effect : outcome.effects()) {
       if (!(effect instanceof Effect.World)) {
-        executor.run(effect, catalog);
+        if (effect instanceof Effect.Say(var npc, var text)) {
+          context.ifPresent(
+              current ->
+                  executor.run(
+                      new Effect.Say(npc, textRenderer.render(text, outcome.state(), current)),
+                      catalog));
+        } else {
+          executor.run(effect, catalog);
+        }
       }
     }
   }

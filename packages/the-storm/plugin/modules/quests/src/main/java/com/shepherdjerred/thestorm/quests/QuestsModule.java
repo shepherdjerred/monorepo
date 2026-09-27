@@ -15,6 +15,7 @@ import com.shepherdjerred.thestorm.npcs.app.NpcMarkers;
 import com.shepherdjerred.thestorm.npcs.app.NpcRef;
 import com.shepherdjerred.thestorm.quests.adapter.content.CollectionsLoader;
 import com.shepherdjerred.thestorm.quests.adapter.content.ContentLoader;
+import com.shepherdjerred.thestorm.quests.adapter.content.InkDialogue;
 import com.shepherdjerred.thestorm.quests.adapter.db.JooqQuestStore;
 import com.shepherdjerred.thestorm.quests.adapter.luckperms.LuckPermsGrants;
 import com.shepherdjerred.thestorm.quests.adapter.paper.QuestsPaper;
@@ -76,6 +77,7 @@ public final class QuestsModule implements StormModule {
     var collections =
         requireCollections(
             CollectionsLoader.load(context.dataDirectory(), rules.registry().items()));
+    var ink = InkDialogue.load(context.dataDirectory(), content);
     var paper =
         new QuestsPaper(
             context,
@@ -106,7 +108,8 @@ public final class QuestsModule implements StormModule {
                 context.scheduler().mainThread(),
                 context.time(),
                 context.random(),
-                context.logger()));
+                context.logger()),
+            ink);
     services.provide(QuestHooks.class, service);
     services.provide(QuestProgress.class, service);
     tick = paper.install(service, paper.dialogJournal(service));

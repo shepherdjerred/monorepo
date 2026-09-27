@@ -87,6 +87,23 @@ dialogue gives story and track quests priority, then rotates offers of equal
 priority in a stable order for each player and local day. Hand-ins and active
 choices remain ahead of new offers.
 
+Quest dialogue text may reference an Ink knot as `ink:<script>#<knot>`. Scripts
+live under `quests/dialogue/` and compile at module enable; invalid scripts or
+references stop startup. Ink currently renders text inside the existing NPC
+dialogue graph. `quest_active(id)`, `quest_completed(id)`,
+`quest_can_accept(id)`, `quest_variable(name)`, `quest_reputation(faction)`, and
+`quest_points()` are read-only external functions over the current player's
+main-world quest state. Quest buttons still invoke the quest engine's guarded
+accept, hand-in, and choice actions. Ink snippets must end without Ink choices;
+the authored quest statechart owns those buttons and their side effects.
+Variable, reputation, and point values are exposed as decimal strings so
+their full 64-bit values can be displayed; Ink scripts should not use them in
+numeric expressions.
+Scripts cannot use `INCLUDE`, so all source is auditable in one file.
+Board template accept, decline and finish text can use Ink references. Board
+offers retain the board's `{amount}` and `{target}` interpolation and reject
+Ink references at startup.
+
 Quest state and pending world actions commit in one SQLite transaction. Item
 hand-ins run from that outbox after the state write succeeds, so a failed write
 cannot remove items. Actions run in order while the player is in the main

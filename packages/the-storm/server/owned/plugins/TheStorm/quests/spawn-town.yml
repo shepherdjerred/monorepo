@@ -22,7 +22,7 @@ quests:
     estimatedMinutes: 45
     requirements: []
     text:
-      offer: With the recent outbreak of attacks on the town, I've been tasked with creating new gear for the guards. Bring me materials that I can refine into the finest weapons this town has seen!
+      offer: "ink:blacksmith#offer"
       accept: I would be happy to take the materials needed to make the basic weaponry. Bring them as you find them.
       decline: No problem. Please come back later!
       finish: Thanks again for your help. That should be all for now!

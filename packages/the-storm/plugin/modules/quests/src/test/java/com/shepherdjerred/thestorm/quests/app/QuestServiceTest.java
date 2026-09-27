@@ -86,6 +86,7 @@ final class QuestServiceTest {
   private Fakes.World world;
   private Fakes.Rewards rewards;
   private Fakes.Clock clock;
+  private QuestService.Wiring wiring;
   private QuestService service;
 
   static QuestsConfig config() {
@@ -119,28 +120,28 @@ final class QuestServiceTest {
             Map.of("fanfare", "plays a fanfare"),
             Map.of("bounty", BOUNTY),
             Map.of());
-    service =
-        new QuestService(
-            new QuestService.Wiring(
-                content,
-                new com.shepherdjerred.thestorm.quests.domain.content.Collections(
-                    Map.of(
+    wiring =
+        new QuestService.Wiring(
+            content,
+            new com.shepherdjerred.thestorm.quests.domain.content.Collections(
+                Map.of(
+                    "old-iron",
+                    new com.shepherdjerred.thestorm.quests.domain.content.Collections.Entry(
                         "old-iron",
-                        new com.shepherdjerred.thestorm.quests.domain.content.Collections.Entry(
-                            "old-iron",
-                            "Old Iron",
-                            "IRON_INGOT",
-                            "Spawn Town",
-                            "The smith keeps count."))),
-                config(),
-                store,
-                world,
-                rewards,
-                npc -> npc.substring(0, 1).toUpperCase(java.util.Locale.ROOT) + npc.substring(1),
-                Runnable::run,
-                clock,
-                new SplittableRandom(4),
-                ComponentLogger.logger("test")));
+                        "Old Iron",
+                        "IRON_INGOT",
+                        "Spawn Town",
+                        "The smith keeps count."))),
+            config(),
+            store,
+            world,
+            rewards,
+            npc -> npc.substring(0, 1).toUpperCase(java.util.Locale.ROOT) + npc.substring(1),
+            Runnable::run,
+            clock,
+            new SplittableRandom(4),
+            ComponentLogger.logger("test"));
+    service = new QuestService(wiring);
   }
 
   private void join(UUID player) {
@@ -293,6 +294,19 @@ final class QuestServiceTest {
             "[Quests]: Well done.");
     assertThat(store.saved.get(ALICE)).isEqualTo(state(ALICE));
     assertThat(state(ALICE).completion("smith")).isPresent();
+  }
+
+  @Test
+  void authoredSayEffectsRenderBeforeSending() {
+    service =
+        new QuestService(
+            wiring, (source, state, context) -> source.equals("Ahah!") ? "Rendered!" : source);
+    join(ALICE);
+    service.accept(ALICE, "smith", "thomas");
+    world.carry(ALICE).give(IRON, 4);
+    service.handIn(ALICE, "thomas", Optional.of("smith"));
+
+    assertThat(world.said(ALICE)).contains("[Thomas]: Rendered!");
   }
 
   @Test

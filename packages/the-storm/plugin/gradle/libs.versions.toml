@@ -22,6 +22,7 @@ mockito = "5.24.0"
 jda = "6.7.0"
 luckperms = "5.5"
 bluemap = "2.8.1"
+ink = "1.3.2"
 
 [libraries]
 paper-api = { module = "io.papermc.paper:paper-api", version.ref = "paper" }
@@ -47,6 +48,8 @@ mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 jda = { module = "net.dv8tion:JDA", version.ref = "jda" }
 luckperms-api = { module = "net.luckperms:api", version.ref = "luckperms" }
 bluemap-api = { module = "de.bluecolored:bluemap-api", version.ref = "bluemap" }
+ink-runtime = { module = "com.bladecoder.ink:blade-ink", version.ref = "ink" }
+ink-compiler = { module = "com.bladecoder.ink:blade-ink-compiler", version.ref = "ink" }
 
 [plugins]
 errorprone = { id = "net.ltgt.errorprone", version = "5.1.1" }
