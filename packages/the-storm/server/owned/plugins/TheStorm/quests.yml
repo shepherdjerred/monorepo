@@ -19,6 +19,7 @@ budget:
 # get the credit too. Everything is soloable; this only helps groups.
 party:
   radius: 24
+  activeSeconds: 60
 
 # The radiant board: each player gets this many daily and weekly quests,
 # drawn from the templates, offered and handed in at this NPC.

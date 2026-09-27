@@ -21,6 +21,7 @@ final class QuestsConfigTest {
     assertThat(config.calendar().zone()).isEqualTo(ZoneId.of("America/Los_Angeles"));
     assertThat(config.calendar().weekStart()).isEqualTo(DayOfWeek.MONDAY);
     assertThat(config.board().npc()).isEqualTo("quest-board");
+    assertThat(config.party().activeSeconds()).isEqualTo(60);
     assertThat(config.mainWorld()).isEqualTo("world");
     assertThat(config.budget().limit(10)).isEqualTo(100 + 25 * 10);
   }
@@ -28,7 +29,7 @@ final class QuestsConfigTest {
   @Test
   void nonsenseIsRejected() {
     var budget = new QuestsConfig.Budget(25, 100);
-    var party = new QuestsConfig.Party(24);
+    var party = new QuestsConfig.Party(24, 60);
     var board = new QuestsConfig.BoardSettings("board", 3, 1);
     assertThatThrownBy(
             () ->
@@ -71,7 +72,9 @@ final class QuestsConfigTest {
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new QuestsConfig.Budget(-1, 0))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new QuestsConfig.Party(500))
+    assertThatThrownBy(() -> new QuestsConfig.Party(500, 60))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new QuestsConfig.Party(24, 0))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new QuestsConfig.BoardSettings("", 1, 1))
         .isInstanceOf(IllegalArgumentException.class);

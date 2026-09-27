@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.quests.domain.config;
 import com.shepherdjerred.thestorm.quests.domain.engine.Calendar;
 import java.time.DateTimeException;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.ZoneId;
 import java.util.Locale;
 
@@ -82,12 +83,21 @@ public record QuestsConfig(
    * Shared credit.
    *
    * @param radius players this close to a kill or pickup who share the objective also get credit
+   * @param activeSeconds a partner must have moved or acted this recently to share credit
    */
-  public record Party(double radius) {
+  public record Party(double radius, int activeSeconds) {
     public Party {
       if (radius < 0 || radius > 128) {
         throw new IllegalArgumentException("party radius must be 0..128 blocks");
       }
+      if (activeSeconds < 1) {
+        throw new IllegalArgumentException("activeSeconds must be positive");
+      }
+    }
+
+    /** How recently a partner must have acted. */
+    public Duration active() {
+      return Duration.ofSeconds(activeSeconds);
     }
   }
 

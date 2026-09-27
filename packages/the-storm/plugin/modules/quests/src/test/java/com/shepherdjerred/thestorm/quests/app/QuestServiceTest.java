@@ -90,7 +90,7 @@ final class QuestServiceTest {
         "MONDAY",
         "world",
         new QuestsConfig.Budget(25, 100),
-        new QuestsConfig.Party(24),
+        new QuestsConfig.Party(24, 60),
         new QuestsConfig.BoardSettings("board", 1, 0),
         40,
         300,

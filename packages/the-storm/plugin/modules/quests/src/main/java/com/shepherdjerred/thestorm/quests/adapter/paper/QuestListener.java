@@ -5,9 +5,11 @@ import com.shepherdjerred.thestorm.quests.domain.config.QuestsConfig;
 import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
 import com.shepherdjerred.thestorm.quests.domain.engine.CraftCount;
 import com.shepherdjerred.thestorm.quests.domain.engine.KillCredit;
+import com.shepherdjerred.thestorm.quests.domain.engine.PartyActivity;
 import com.shepherdjerred.thestorm.quests.domain.engine.PickupCredit;
 import com.shepherdjerred.thestorm.quests.domain.engine.PlacedBlocks;
 import com.shepherdjerred.thestorm.quests.domain.engine.QuestEvent;
+import java.time.InstantSource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -37,29 +39,39 @@ import org.bukkit.inventory.ItemStack;
 /**
  * Turns what players do into quest events. Everything listens at MONITOR and ignores cancelled
  * events, so only what really happened counts. Kills and pickups are shared with players within the
- * party radius.
+ * party radius when they have recently played.
  */
 final class QuestListener implements Listener {
 
   /** How many player-placed blocks are remembered so breaking them does not count. */
   static final int PLACED_MEMORY = 4096;
 
+  record Wiring(
+      QuestService service,
+      QuestContent content,
+      SidebarDisplay sidebars,
+      QuestsConfig config,
+      InstantSource time) {}
+
   private final QuestService service;
   private final QuestContent content;
   private final SidebarDisplay sidebars;
   private final QuestsConfig config;
+  private final InstantSource time;
   private final PlacedBlocks placed = new PlacedBlocks(PLACED_MEMORY);
+  private final PartyActivity activity = new PartyActivity();
 
-  QuestListener(
-      QuestService service, QuestContent content, SidebarDisplay sidebars, QuestsConfig config) {
-    this.service = service;
-    this.content = content;
-    this.sidebars = sidebars;
-    this.config = config;
+  QuestListener(Wiring wiring) {
+    this.service = wiring.service();
+    this.content = wiring.content();
+    this.sidebars = wiring.sidebars();
+    this.config = wiring.config();
+    this.time = wiring.time();
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
+    activity.acted(event.getPlayer().getUniqueId(), time.instant());
     var _ = service.join(event.getPlayer().getUniqueId());
   }
 
@@ -67,11 +79,14 @@ final class QuestListener implements Listener {
   void onQuit(PlayerQuitEvent event) {
     service.quit(event.getPlayer().getUniqueId());
     sidebars.forget(event.getPlayer().getUniqueId());
+    activity.forget(event.getPlayer().getUniqueId());
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onWorldChanged(PlayerChangedWorldEvent event) {
-    if (!inMainWorld(event.getPlayer())) {
+    if (inMainWorld(event.getPlayer())) {
+      activity.acted(event.getPlayer().getUniqueId(), time.instant());
+    } else {
       sidebars.show(event.getPlayer(), Optional.empty());
     }
   }
@@ -87,6 +102,7 @@ final class QuestListener implements Listener {
         || !KillCredit.eligible(spawnReason.name(), event.getEntity().getScoreboardTags())) {
       return;
     }
+    activity.acted(killer.getUniqueId(), time.instant());
     service.event(
         killer.getUniqueId(),
         new QuestEvent.Killed(event.getEntity().getType().name()),
@@ -98,6 +114,7 @@ final class QuestListener implements Listener {
     if (!(event.getEntity() instanceof Player player) || !inMainWorld(player)) {
       return;
     }
+    activity.acted(player.getUniqueId(), time.instant());
     var item = event.getItem();
     var stack = item.getItemStack();
     var amount =
@@ -117,6 +134,9 @@ final class QuestListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onDrop(PlayerDropItemEvent event) {
     event.getItemDrop().addScoreboardTag(PickupCredit.PLAYER_DROPPED);
+    if (inMainWorld(event.getPlayer())) {
+      activity.acted(event.getPlayer().getUniqueId(), time.instant());
+    }
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -131,6 +151,7 @@ final class QuestListener implements Listener {
     if (!(event.getWhoClicked() instanceof Player player) || !inMainWorld(player)) {
       return;
     }
+    activity.acted(player.getUniqueId(), time.instant());
     var result = event.getRecipe().getResult();
     var ingredients = new ArrayList<Integer>();
     for (var stack : Locations.slots(event.getInventory().getMatrix())) {
@@ -151,6 +172,7 @@ final class QuestListener implements Listener {
     if (inMainWorld(event.getPlayer())
         && event.getState() == PlayerFishEvent.State.CAUGHT_FISH
         && event.getCaught() instanceof Item caught) {
+      activity.acted(event.getPlayer().getUniqueId(), time.instant());
       service.event(
           event.getPlayer().getUniqueId(),
           new QuestEvent.Fished(ItemStacks.facts(caught.getItemStack())),
@@ -163,6 +185,7 @@ final class QuestListener implements Listener {
     if (!inMainWorld(event.getPlayer())) {
       return;
     }
+    activity.acted(event.getPlayer().getUniqueId(), time.instant());
     if (placed.broken(position(event.getBlock()))) {
       service.event(
           event.getPlayer().getUniqueId(),
@@ -176,6 +199,7 @@ final class QuestListener implements Listener {
     if (!inMainWorld(event.getPlayer())) {
       return;
     }
+    activity.acted(event.getPlayer().getUniqueId(), time.instant());
     placed.placed(position(event.getBlockPlaced()));
     service.event(
         event.getPlayer().getUniqueId(),
@@ -188,6 +212,7 @@ final class QuestListener implements Listener {
     if (!event.hasChangedBlock() || !inMainWorld(event.getPlayer())) {
       return;
     }
+    activity.acted(event.getPlayer().getUniqueId(), time.instant());
     var to = event.getTo();
     var world = to.getWorld().getKey().asString();
     var inside =
@@ -205,8 +230,10 @@ final class QuestListener implements Listener {
     if (config.party().radius() <= 0) {
       return List.of();
     }
+    var now = time.instant();
     return Locations.of(player).getNearbyPlayers(config.party().radius()).stream()
         .filter(other -> !other.equals(player))
+        .filter(other -> activity.active(other.getUniqueId(), now, config.party().active()))
         .map(Player::getUniqueId)
         .toList();
   }
