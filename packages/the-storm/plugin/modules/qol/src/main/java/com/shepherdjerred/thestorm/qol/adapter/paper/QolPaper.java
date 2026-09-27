@@ -35,10 +35,11 @@ public final class QolPaper {
     var graves = new GraveListener(plugin, store, config, context);
     context.services().provide(GraveRecovery.class, graves::mayOpen);
     List<Listener> listeners =
-        List.of(graves, new JoinListener(store, dialog, context), new TravelListener(flow));
+        List.of(graves, new JoinListener(store, dialog, context, flow), new TravelListener(flow));
     for (var listener : listeners) {
       plugin.getServer().getPluginManager().registerEvents(listener, plugin);
     }
+    flow.recoverPending();
     new GraveExpiry(store, context).start();
     context
         .lifecycle()

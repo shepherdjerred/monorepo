@@ -68,6 +68,13 @@ receipt for an identical retry, and rejects reuse of the key with different
 transfer details. `receiptFor` lets a caller reconcile an uncertain result.
 Ordinary unkeyed transfers keep their existing behavior.
 
+Paid random teleports save an attempt in the QoL database before their keyed
+charge. The attempt remains until the teleport succeeds or a keyed refund is
+committed. Module startup and player joins reconcile unfinished attempts against
+the economy ledger. If a process stops after teleport delivery but before the
+attempt is cleared, recovery may refund a delivered teleport; it never drops a
+known charge without either delivery or compensation.
+
 - `@NullMarked` on every package; NullAway (JSpecify mode) runs as an error.
 - Error Prone with Picnic's checks; `-Xlint:all -Werror`. Warnings fail the build.
 - google-java-format via Spotless; PMD enforces the repository's complexity

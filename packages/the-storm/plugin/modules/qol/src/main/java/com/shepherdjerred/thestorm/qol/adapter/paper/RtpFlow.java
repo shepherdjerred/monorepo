@@ -2,12 +2,17 @@ package com.shepherdjerred.thestorm.qol.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.SettledLand;
+import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
+import com.shepherdjerred.thestorm.economy.app.EconomyError;
+import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
+import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.qol.app.Ensured;
 import com.shepherdjerred.thestorm.qol.app.LandingMemory;
 import com.shepherdjerred.thestorm.qol.app.QolStore;
+import com.shepherdjerred.thestorm.qol.app.RtpAttempt;
 import com.shepherdjerred.thestorm.qol.domain.QolConfig;
 import com.shepherdjerred.thestorm.qol.domain.rtp.BlockPoint;
 import com.shepherdjerred.thestorm.qol.domain.rtp.RtpDecision;
@@ -21,6 +26,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -29,6 +35,7 @@ import org.bukkit.entity.Player;
 final class RtpFlow {
 
   private final Set<UUID> busy = new HashSet<>();
+  private final Set<UUID> recovering = new HashSet<>();
   private final Map<UUID, Instant> unsavedCooldowns = new HashMap<>();
   private final WildWorlds worlds;
   private final SettledLand land;
@@ -57,6 +64,26 @@ final class RtpFlow {
 
   Warmups warmups() {
     return warmups;
+  }
+
+  /** Reconciles persisted charges after startup or a player joins. */
+  void recoverPending() {
+    var _ =
+        store
+            .pendingRtpAttempts()
+            .whenCompleteAsync(
+                (attempts, failure) -> {
+                  if (failure != null) {
+                    context.logger().error("Could not load pending RTP charges", failure);
+                    return;
+                  }
+                  for (var attempt : attempts) {
+                    if (!busy.contains(attempt.player()) && recovering.add(attempt.id())) {
+                      recover(attempt);
+                    }
+                  }
+                },
+                context.scheduler().mainThread());
   }
 
   /** Starts a teleport into {@code worldName}, optionally in {@code biome}. */
@@ -175,25 +202,51 @@ final class RtpFlow {
       finish(player, destination);
       return;
     }
+    var attempt = new RtpAttempt(UUID.randomUUID(), player.getUniqueId(), cost);
+    var _ =
+        store
+            .insertRtpAttempt(attempt)
+            .whenCompleteAsync(
+                (ignored, failure) -> {
+                  if (failure != null) {
+                    release(player.getUniqueId());
+                    context.logger().error("Could not save an RTP charge intent", failure);
+                    if (player.isOnline()) {
+                      player.sendMessage(Messages.error("Could not prepare the teleport charge."));
+                    }
+                    return;
+                  }
+                  charge(player, destination, attempt);
+                },
+                context.scheduler().mainThread());
+  }
+
+  private void charge(Player player, Location destination, RtpAttempt attempt) {
     var _ =
         wallets
-            .transfer(
-                new AccountId.Player(player.getUniqueId()),
-                new AccountId.Server(),
-                Crystals.of(cost),
-                "rtp")
+            .transferOnce(
+                new KeyedTransfer(
+                    attempt.id(),
+                    new AccountId.Player(attempt.player()),
+                    new AccountId.Server(),
+                    Crystals.of(attempt.cost()),
+                    "rtp"))
             .whenCompleteAsync(
-                (result, failure) -> paid(player, destination, new Charge(cost, result, failure)),
+                (result, failure) ->
+                    paid(player, destination, new Charge(attempt, result, failure)),
                 context.scheduler().mainThread());
   }
 
   private void paid(Player player, Location destination, Charge charge) {
     var failure = charge.failure();
     var result = charge.result();
-    var cost = charge.cost();
+    var attempt = charge.attempt();
     if (failure != null || result == null) {
       release(player.getUniqueId());
       context.logger().error("Could not charge for a random teleport", failure);
+      if (recovering.add(attempt.id())) {
+        recover(attempt);
+      }
       if (player.isOnline()) {
         player.sendMessage(
             Messages.error("Could not process the teleport charge. Try again later."));
@@ -201,14 +254,19 @@ final class RtpFlow {
       return;
     }
     switch (result) {
-      case com.shepherdjerred.thestorm.core.result.Result.Ok<?, ?> ignored -> {
+      case Result.Ok<Receipt, EconomyError> ignored -> {
         if (!finish(player, destination)) {
-          refund(player.getUniqueId(), cost);
+          settle(refund(attempt), attempt, "refund failed random teleport");
+        } else {
+          settle(store.deleteRtpAttempt(attempt.id()), attempt, "settle completed teleport");
         }
       }
-      case com.shepherdjerred.thestorm.core.result.Result.Err<?, ?> ignored -> {
+      case Result.Err<Receipt, EconomyError> ignored -> {
         release(player.getUniqueId());
-        player.sendMessage(Messages.error("That costs " + cost + " crystals."));
+        settle(store.deleteRtpAttempt(attempt.id()), attempt, "clear refused charge");
+        if (player.isOnline()) {
+          player.sendMessage(Messages.error("That costs " + attempt.cost() + " crystals."));
+        }
       }
     }
   }
@@ -245,26 +303,54 @@ final class RtpFlow {
     return true;
   }
 
-  private void refund(UUID player, long cost) {
+  private CompletableFuture<Void> refund(RtpAttempt attempt) {
+    return wallets
+        .transferOnce(
+            new KeyedTransfer(
+                attempt.refundKey(),
+                new AccountId.Server(),
+                new AccountId.Player(attempt.player()),
+                Crystals.of(attempt.cost()),
+                "rtp refund"))
+        .thenCompose(
+            result ->
+                switch (result) {
+                  case Result.Ok<Receipt, EconomyError> ignored ->
+                      store.deleteRtpAttempt(attempt.id());
+                  case Result.Err<Receipt, EconomyError> refused ->
+                      CompletableFuture.failedFuture(
+                          new IllegalStateException("RTP refund refused: " + refused.error()));
+                });
+  }
+
+  private void recover(RtpAttempt attempt) {
     var _ =
         wallets
-            .transfer(
-                new AccountId.Server(),
-                new AccountId.Player(player),
-                Crystals.of(cost),
-                "rtp refund")
+            .receiptFor(attempt.id())
+            .thenCompose(
+                receipt ->
+                    receipt.isPresent() ? refund(attempt) : store.deleteRtpAttempt(attempt.id()))
             .whenCompleteAsync(
-                (result, failure) -> {
-                  if (failure != null
-                      || result == null
-                      || result
-                          instanceof com.shepherdjerred.thestorm.core.result.Result.Err<?, ?>) {
+                (ignored, failure) -> {
+                  recovering.remove(attempt.id());
+                  if (failure != null) {
                     context
                         .logger()
-                        .error("Could not refund failed random teleport for {}", player, failure);
+                        .error("Could not reconcile RTP charge {}", attempt.id(), failure);
                   }
                 },
                 context.scheduler().mainThread());
+  }
+
+  private void settle(CompletableFuture<Void> completion, RtpAttempt attempt, String action) {
+    var _ =
+        completion.whenCompleteAsync(
+            (ignored, failure) -> {
+              if (failure != null) {
+                context.logger().error("Could not {} for {}", action, attempt.player(), failure);
+              }
+            },
+            context.scheduler().mainThread());
   }
 
   private void release(UUID player) {
@@ -319,12 +405,7 @@ final class RtpFlow {
   record Ports(WildWorlds worlds, SettledLand land, QolStore store, Wallets wallets) {}
 
   private record Charge(
-      long cost,
-      com.shepherdjerred.thestorm.core.result.Result<
-              com.shepherdjerred.thestorm.economy.app.Receipt,
-              com.shepherdjerred.thestorm.economy.app.EconomyError>
-          result,
-      Throwable failure) {}
+      RtpAttempt attempt, Result<Receipt, EconomyError> result, Throwable failure) {}
 
   private record PricingCheck(Ensured ensured, Throwable failure) {}
 }

@@ -2,11 +2,13 @@ package com.shepherdjerred.thestorm.qol.adapter.db;
 
 import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_GRAVE;
 import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_PLAYER;
+import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_RTP_ATTEMPT;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.qol.app.Ensured;
 import com.shepherdjerred.thestorm.qol.app.PlayerProfile;
 import com.shepherdjerred.thestorm.qol.app.QolStore;
+import com.shepherdjerred.thestorm.qol.app.RtpAttempt;
 import com.shepherdjerred.thestorm.qol.app.StoredGrave;
 import java.time.Instant;
 import java.util.List;
@@ -39,6 +41,37 @@ public final class JooqQolStore implements QolStore {
                 .set(QOL_PLAYER.LAST_RTP, when.toEpochMilli())
                 .where(QOL_PLAYER.PLAYER.eq(player.toString()))
                 .execute());
+  }
+
+  @Override
+  public CompletableFuture<Void> insertRtpAttempt(RtpAttempt attempt) {
+    return write(
+        dsl ->
+            dsl.insertInto(QOL_RTP_ATTEMPT)
+                .set(QOL_RTP_ATTEMPT.ID, attempt.id().toString())
+                .set(QOL_RTP_ATTEMPT.PLAYER, attempt.player().toString())
+                .set(QOL_RTP_ATTEMPT.COST, attempt.cost())
+                .execute());
+  }
+
+  @Override
+  public CompletableFuture<List<RtpAttempt>> pendingRtpAttempts() {
+    return database.read(
+        dsl ->
+            dsl.selectFrom(QOL_RTP_ATTEMPT)
+                .fetch(
+                    row ->
+                        new RtpAttempt(
+                            UUID.fromString(row.getId()),
+                            UUID.fromString(row.getPlayer()),
+                            row.getCost())));
+  }
+
+  @Override
+  public CompletableFuture<Void> deleteRtpAttempt(UUID id) {
+    return write(
+        dsl ->
+            dsl.deleteFrom(QOL_RTP_ATTEMPT).where(QOL_RTP_ATTEMPT.ID.eq(id.toString())).execute());
   }
 
   @Override
