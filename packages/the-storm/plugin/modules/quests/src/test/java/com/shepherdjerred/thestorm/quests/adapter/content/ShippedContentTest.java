@@ -14,6 +14,7 @@ import com.shepherdjerred.thestorm.quests.domain.sim.Simulator;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
@@ -157,6 +158,26 @@ final class ShippedContentTest {
           "the-blanket-drive",
           "the-hearth-turn");
 
+  /** The sixth two-quest chapter in each historical region. */
+  static final List<String> CHAPTER_SIX =
+      List.of(
+          "the-watch-rota",
+          "a-lighted-shift",
+          "the-sample-labels",
+          "the-safe-grate-map",
+          "the-question-shelf",
+          "the-repeatable-trial",
+          "markers-for-the-cart",
+          "the-sealed-load",
+          "the-field-kit",
+          "a-returning-signal",
+          "the-rail-audit",
+          "the-third-cart",
+          "a-fishers-basket",
+          "the-river-supper",
+          "the-hearth-store",
+          "a-warm-window");
+
   private static QuestContent content = QuestContent.empty();
 
   @BeforeAll
@@ -181,7 +202,8 @@ final class ShippedContentTest {
                     CONTINUATIONS.stream(),
                     CHAPTER_THREE.stream(),
                     CHAPTER_FOUR.stream(),
-                    CHAPTER_FIVE.stream())
+                    CHAPTER_FIVE.stream(),
+                    CHAPTER_SIX.stream())
                 .flatMap(stream -> stream)
                 .toList());
     assertThat(content.factions()).containsOnlyKeys("townsfolk", "storm-watch");
@@ -217,6 +239,17 @@ final class ShippedContentTest {
       var second = content.catalog().require(CHAPTER_FIVE.get(index + 1));
       assertThat(first.requirements())
           .containsExactly(new Condition.Completed(CHAPTER_FOUR.get(index + 1)));
+      assertThat(second.requirements()).containsExactly(new Condition.Completed(first.id()));
+    }
+  }
+
+  @Test
+  void sixthChaptersContinueEachRegionalStoryInOrder() {
+    for (var index = 0; index < CHAPTER_SIX.size(); index += 2) {
+      var first = content.catalog().require(CHAPTER_SIX.get(index));
+      var second = content.catalog().require(CHAPTER_SIX.get(index + 1));
+      assertThat(first.requirements())
+          .containsExactly(new Condition.Completed(CHAPTER_FIVE.get(index + 1)));
       assertThat(second.requirements()).containsExactly(new Condition.Completed(first.id()));
     }
   }
@@ -291,6 +324,27 @@ final class ShippedContentTest {
     var errand = content.catalog().require("an-enchanting-errand");
     assertThat(errand.requirements())
         .containsExactly(new Condition.Completed("a-blacksmiths-task"));
+  }
+
+  @Test
+  void craftedSuppliesMustBeHandedInBeforeCompletion() {
+    var craftingStages =
+        Map.of(
+            "markers-for-the-cart", "signs",
+            "the-hearth-store", "store",
+            "the-question-shelf", "books",
+            "a-fishers-basket", "barrels",
+            "the-field-kit", "kit",
+            "a-lighted-shift", "lights");
+    for (var entry : craftingStages.entrySet()) {
+      var quest = content.catalog().require(entry.getKey());
+      assertThat(quest.stage(entry.getValue()).orElseThrow().next().targets())
+          .as(entry.getKey())
+          .containsExactly("handoff");
+      assertThat(quest.stage("handoff").orElseThrow().objectives())
+          .as(entry.getKey())
+          .anyMatch(Objective.Deliver.class::isInstance);
+    }
   }
 
   @Test
