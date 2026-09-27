@@ -19,10 +19,12 @@ import {
   type ReviewProvider,
   type ReviewThread,
 } from "@shepherdjerred/code-review";
+import { fetchSharedProviderThreads } from "@shepherdjerred/code-review/github-review-snapshot";
 import {
-  fetchReviewThreads,
+  resolveReviewState,
   type ReviewStateResult,
 } from "@shepherdjerred/code-review/github";
+import { fetchHeadPushedAt } from "@shepherdjerred/code-review/head-pushed-at";
 import { buildSignalEvent } from "./review-gate-signal.ts";
 import { warnIfFirstReviewIsOversized } from "./review-gate-policy.ts";
 import {
@@ -299,13 +301,16 @@ export function confirmPass(passed: boolean, streak: number): PassConfirmation {
 }
 
 /**
- * Final veto re-check before terminal acceptance. Re-fetch every observed
- * provider's threads and re-evaluate the combined decision on the freshest
- * snapshots: a P0 posted after its provider's fetch in the confirming tick
- * must still veto. Completion states are NOT re-resolved — a review cannot
- * unhappen, so only newly posted threads can change a pass. Throws on a
- * blocking failure (fail fast, like any tick); returns true only when the
- * fresh evaluation still passes. `fetchThreads` is injectable for tests.
+ * Final veto re-check before terminal acceptance. Every provider's threads
+ * come from ONE shared {@link ReviewListing} fetched up front, then each
+ * provider partitions that same snapshot in memory: a P0 posted after one
+ * provider's sequential fetch — while a later provider's multi-page fetch is
+ * still running — can no longer slip through a mixed-time acceptance.
+ * Completion state is re-resolved fresh per provider — a review dismissed
+ * after the confirming tick reads as unresolved, never as reviewed. Throws
+ * on a blocking failure (fail fast, like any tick); returns true only when
+ * the fresh evaluation still passes. `fetchShared` and `resolveCompletion`
+ * are injectable for tests.
  */
 export async function verifyPassBeforeAccepting(input: {
   repo: string;
@@ -314,35 +319,67 @@ export async function verifyPassBeforeAccepting(input: {
   token: string;
   policy: BlockingPolicy;
   observed: readonly ProviderObservation[];
-  fetchThreads?: (provider: ReviewProvider) => Promise<readonly ReviewThread[]>;
+  fetchShared?: (
+    providers: readonly ReviewProvider[],
+  ) => Promise<ReadonlyMap<string, readonly ReviewThread[]>>;
+  resolveCompletion?: (provider: ReviewProvider) => Promise<ReviewStateResult>;
 }): Promise<boolean> {
   const { repo, number, head, token, policy, observed } = input;
+  const targets = observed.flatMap((observation) => {
+    const { state } = observation;
+    return state === null ? [] : [{ provider: observation.provider }];
+  });
+  // Defensive: the tick-null path never reaches verification, so there is
+  // always something to re-check. Fail closed — keep polling, accept nothing.
+  if (targets.length === 0) return false;
   const fetch =
-    input.fetchThreads ??
-    (async (provider: ReviewProvider) => {
-      const result = await fetchReviewThreads({
+    input.fetchShared ??
+    (async (providers: readonly ReviewProvider[]) => {
+      const { byProvider } = await fetchSharedProviderThreads({
         repo,
         number,
         token,
-        provider,
+        providers,
+        evaluateHead: head,
       });
-      return result.threads;
+      return byProvider;
+    });
+  const byProvider = await fetch(targets.map((target) => target.provider));
+  let pushedAt: string | null | undefined;
+  const resolve =
+    input.resolveCompletion ??
+    (async (provider: ReviewProvider) => {
+      pushedAt ??= await fetchHeadPushedAt({
+        repo,
+        sha: head,
+        prNumber: number,
+        token,
+      });
+      return resolveReviewState({
+        provider,
+        repo,
+        head,
+        prNumber: number,
+        token,
+        headPushedAt: pushedAt,
+      });
     });
   const snapshots: ProviderGateSnapshot[] = [];
-  for (const observation of observed) {
-    if (observation.state === null) continue;
-    const threads = await fetch(observation.provider);
+  for (const target of targets) {
+    const threads = byProvider.get(target.provider.id);
+    // Fail closed: an incomplete re-check keeps polling, accepts nothing.
+    if (threads === undefined) return false;
+    // Fresh completion, not the confirming tick's: a dismissal after that
+    // tick resolves here and can no longer be accepted as reviewed.
+    const fresh = await resolve(target.provider);
     snapshots.push({
-      provider: observation.provider,
-      reviewState: observation.state.state,
+      provider: target.provider,
+      reviewState: fresh.state,
       threads: [...threads],
-      skipReason: observation.state.skipReason,
-      blockedReason: observation.state.blockedReason,
+      skipReason: fresh.skipReason,
+      blockedReason: fresh.blockedReason,
     });
   }
-  // Defensive: the tick-null path never reaches verification, so there is
-  // always something to re-check. Fail closed — keep polling, accept nothing.
-  if (snapshots.length === 0) return false;
   const decision = evaluateMultiGate({
     head,
     providers: snapshots,

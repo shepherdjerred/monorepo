@@ -14,7 +14,6 @@ import {
   eachIssueComment,
   GITHUB_API_URL,
   getJsonWithLink,
-  graphqlRequest,
   recordField,
   splitRepo,
   stringField,
@@ -25,19 +24,11 @@ import {
   fetchLatestProviderIssueComment,
   resolveIssueCommentReview,
 } from "./github-issue-comments.ts";
-import { ALWAYS_BLOCKING_PRIORITY } from "./gate.ts";
-import {
-  attributeRaisedInReview,
-  type ParsedReviewThread,
-  appendReviewBodyFindings,
-  parseThreadPage,
-  parseReviewPage,
-  type ProviderReview,
-  REVIEW_REVIEWS_QUERY,
-  REVIEW_THREADS_QUERY,
-} from "./github-review-threads.ts";
 import { isProviderAuthor } from "./identity.ts";
-import { mergeDuplicateFindings } from "./merge-findings.ts";
+import {
+  assembleProviderThreads,
+  fetchReviewListing,
+} from "./github-review-snapshot.ts";
 import type { CompletionSignal } from "./signal.ts";
 import type {
   PullRequestAuthor,
@@ -103,69 +94,31 @@ export async function fetchReviewThreads(input: {
    * so this function fetches it; `null` means "fetched, none found".
    */
   issueComment?: ReviewIssueComment | null | undefined;
+  /**
+   * Exact head under evaluation, for body-finding outdated marking (see
+   * {@link assembleProviderThreads}). Defaults to the live head.
+   */
+  evaluateHead?: string | null | undefined;
 }): Promise<{ threads: ReviewThread[]; headRefOid: string | null }> {
-  const { owner, name } = splitRepo(input.repo);
-  const parsed: ParsedReviewThread[] = [];
-  const providerReviews: ProviderReview[] = [];
-  let headRefOid: string | null = null;
-  let cursor: string | null = null;
-  for (;;) {
-    const payload = await graphqlRequest(
-      REVIEW_THREADS_QUERY,
-      { owner, name, number: input.number, cursor },
-      input.token,
-    );
-    const page = parseThreadPage(payload, input.provider);
-    if (page.headRefOid !== null) headRefOid = page.headRefOid;
-    parsed.push(...page.threads);
-    if (!page.hasNextPage || page.endCursor === null) break;
-    cursor = page.endCursor;
-  }
-  let reviewCursor: string | null = null;
-  for (;;) {
-    const payload = await graphqlRequest(
-      REVIEW_REVIEWS_QUERY,
-      { owner, name, number: input.number, cursor: reviewCursor },
-      input.token,
-    );
-    const page = parseReviewPage(payload);
-    providerReviews.push(...page.reviews);
-    if (!page.hasNextPage || page.endCursor === null) break;
-    reviewCursor = page.endCursor;
-  }
-  // Providers whose findings live partly in the review itself (CodeRabbit's
-  // outside-diff sections) contribute body findings before attribution, so a
-  // body finding shares its review's ordinal — and merges with its thread
-  // copy — instead of drifting into a review position of its own.
-  appendReviewBodyFindings(parsed, providerReviews, input.provider, headRefOid);
-  // Attribution needs every page: a thread's ordinal is its review's position
-  // among all of this provider's reviews, including clean reviews that opened
-  // no thread and therefore do not appear in `parsed`.
-  const threads: ReviewThread[] = attributeRaisedInReview(
-    parsed,
-    input.provider,
-    ALWAYS_BLOCKING_PRIORITY,
-    providerReviews,
-  );
+  const listing = await fetchReviewListing(input);
   const { completion } = input.provider;
-  if (completion.kind === "issue-comment") {
-    const comment =
-      input.issueComment === undefined
-        ? await fetchLatestProviderIssueComment({
-            repo: input.repo,
-            number: input.number,
-            token: input.token,
-            provider: input.provider,
-          })
-        : input.issueComment;
-    if (comment !== null) {
-      threads.push(...completion.parseFindings(comment));
-    }
-  }
-  return {
-    threads: mergeDuplicateFindings(threads, input.provider),
-    headRefOid,
-  };
+  const comment =
+    completion.kind === "issue-comment" && input.issueComment === undefined
+      ? await fetchLatestProviderIssueComment({
+          repo: input.repo,
+          number: input.number,
+          token: input.token,
+          provider: input.provider,
+        })
+      : (input.issueComment ?? null);
+  return assembleProviderThreads({
+    provider: input.provider,
+    threadPayloads: listing.threadPayloads,
+    reviewPayloads: listing.reviewPayloads,
+    headRefOid: listing.headRefOid,
+    evaluateHead: input.evaluateHead,
+    issueComment: comment,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -301,6 +254,10 @@ export async function fetchLatestProviderReview(input: {
       const user = recordField(item, "user");
       const login = user === null ? null : stringField(user, "login");
       if (!isProviderAuthor(input.provider, login)) continue;
+      // A dismissed review is withdrawn: it must not satisfy completion, or
+      // a dismissal after the last observation would still read as reviewed.
+      // Fall through to an older non-dismissed review, or none.
+      if (stringField(item, "state") === "DISMISSED") continue;
       const submittedAt = stringField(item, "submitted_at");
       const score = Date.parse(submittedAt ?? "");
       const normalized = Number.isFinite(score)

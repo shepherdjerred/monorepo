@@ -134,6 +134,10 @@ export async function observeProviderOnce(input: {
     // Reuse the comment resolveReviewState just fetched: both decisions
     // describe the identical snapshot without paginating twice per poll.
     issueComment: state.issueComment,
+    // Body findings are outdated against the exact head under evaluation,
+    // not the live head: when the PR advances mid-build, the older head's
+    // review is still current for that build's gate result.
+    evaluateHead: head,
   });
 
   // Ask for the review this loop is waiting on, once the provider has not

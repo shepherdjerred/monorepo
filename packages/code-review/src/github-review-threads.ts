@@ -181,6 +181,68 @@ export function parseReviewPage(payload: unknown): {
   };
 }
 
+/**
+ * Provider-agnostic listing info for one review-threads page: the live head
+ * plus pagination, without parsing any thread. Lets {@link fetchReviewListing}
+ * paginate once for every provider instead of once per provider, so terminal
+ * acceptance partitions a single snapshot.
+ */
+export function threadListingPageInfo(payload: unknown): {
+  headRefOid: string | null;
+  hasNextPage: boolean;
+  endCursor: string | null;
+} {
+  const pullRequest = listingPullRequest(payload, "reviewThreads");
+  const reviewThreads = recordField(pullRequest, "reviewThreads");
+  if (reviewThreads === null) {
+    throw new Error("GitHub GraphQL response did not include reviewThreads");
+  }
+  const pageInfo = recordField(reviewThreads, "pageInfo");
+  return {
+    headRefOid: stringField(pullRequest, "headRefOid"),
+    hasNextPage: pageInfo !== null && boolField(pageInfo, "hasNextPage"),
+    endCursor: pageInfo === null ? null : stringField(pageInfo, "endCursor"),
+  };
+}
+
+/**
+ * Provider-agnostic listing info for one reviews page, mirroring
+ * {@link threadListingPageInfo}.
+ */
+export function reviewListingPageInfo(payload: unknown): {
+  hasNextPage: boolean;
+  endCursor: string | null;
+} {
+  const pullRequest = listingPullRequest(payload, "reviews");
+  const reviews = recordField(pullRequest, "reviews");
+  if (reviews === null) {
+    throw new Error("GitHub GraphQL response did not include reviews");
+  }
+  const pageInfo = recordField(reviews, "pageInfo");
+  return {
+    hasNextPage: pageInfo !== null && boolField(pageInfo, "hasNextPage"),
+    endCursor: pageInfo === null ? null : stringField(pageInfo, "endCursor"),
+  };
+}
+
+function listingPullRequest(
+  payload: unknown,
+  connection: string,
+): Record<string, unknown> {
+  const payloadRecord = asRecord(payload);
+  const data =
+    payloadRecord === null ? null : recordField(payloadRecord, "data");
+  const repository = data === null ? null : recordField(data, "repository");
+  const pullRequest =
+    repository === null ? null : recordField(repository, "pullRequest");
+  if (pullRequest === null) {
+    throw new Error(
+      `GitHub GraphQL response did not include repository.pullRequest for ${connection}`,
+    );
+  }
+  return pullRequest;
+}
+
 export function parseThreadPage(
   payload: unknown,
   provider: ReviewProvider,

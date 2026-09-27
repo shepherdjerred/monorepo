@@ -431,7 +431,8 @@ describe("verifyPassBeforeAccepting", () => {
       verifyPassBeforeAccepting({
         ...config,
         observed: observed(),
-        fetchThreads: async () => [],
+        fetchShared: async () => new Map([[codexProvider.id, []]]),
+        resolveCompletion: async () => reviewed,
       }),
     ).resolves.toBe(true);
   });
@@ -454,7 +455,8 @@ describe("verifyPassBeforeAccepting", () => {
       verifyPassBeforeAccepting({
         ...config,
         observed: observed(),
-        fetchThreads: async () => [veto],
+        fetchShared: async () => new Map([[codexProvider.id, [veto]]]),
+        resolveCompletion: async () => reviewed,
       }),
     ).rejects.toThrow(/veto the gate/);
   });
@@ -464,7 +466,31 @@ describe("verifyPassBeforeAccepting", () => {
       verifyPassBeforeAccepting({
         ...config,
         observed: [],
-        fetchThreads: async () => [],
+        fetchShared: async () => new Map(),
+      }),
+    ).resolves.toBe(false);
+  });
+
+  test("fails closed when the shared snapshot omits a provider", async () => {
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: observed(),
+        fetchShared: async () => new Map(),
+      }),
+    ).resolves.toBe(false);
+  });
+
+  test("a freshly unresolved provider keeps polling instead of accepting", async () => {
+    // The confirming tick saw reviewed; a dismissal afterwards must not be
+    // accepted — the fresh state says reviewing, so verification declines
+    // and the loop keeps polling instead of returning success.
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: observed(),
+        fetchShared: async () => new Map([[codexProvider.id, []]]),
+        resolveCompletion: async () => ({ ...reviewed, state: "reviewing" }),
       }),
     ).resolves.toBe(false);
   });
