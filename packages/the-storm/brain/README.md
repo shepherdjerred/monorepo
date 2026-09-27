@@ -1,10 +1,12 @@
 # The Storm companion pilot
 
-This is a **disabled, one-shot connectivity pilot** for one Microsoft Minecraft
+This is a **disabled, manual companion pilot** for one Microsoft Minecraft
 account. Two further accounts are reserved and cannot be started by this build.
 It validates the 18:00–20:00 `America/Los_Angeles` window, checks Paper's RCON
-`list` output for a human player, joins with Mineflayer, verifies presence
-again, and disconnects. It performs no autonomous gameplay or chat.
+`list` output for a human player, joins with Mineflayer, and verifies presence
+again. `--run` keeps the account connected until the final human leaves, RCON
+or Mineflayer disconnects, or the 20:00 deadline arrives. A run can last up
+to two hours. It performs no autonomous gameplay or chat.
 
 The repo-owned `pilot.json` defaults to `enabled: false`. The managed
 `the-storm-companion-pilot-enabled` flag is also off in production and targets
@@ -57,15 +59,16 @@ so its protocol bridge must be installed and proven before a live pilot. The
 repository pins ViaVersion and ViaBackwards for the server, but their pairing
 with this Mineflayer build still needs a controlled live acceptance check.
 
-The pilot is a manual, one-shot command. A continuously present companion,
-Temporal-owned 18:00–20:00 scheduling, an authenticated control path, the
-homelab sidecar image, bot tab labels, movement, and GPT-6 Luna conversations
-are separate deployment steps. No scheduled work is performed in this process.
+The pilot is a manual session with no recurring start. Temporal-owned
+18:00–20:00 scheduling, an authenticated control path, the homelab sidecar
+image, bot tab labels, movement, and GPT-6 Luna conversations are separate
+deployment steps. No scheduled work is performed in this process.
 
 The shared model catalog now pins GPT-6 Luna to `openai/gpt-6-luna` at the
 provider's published text rates. `MonthlyBudget` keeps a SQLite ledger with a
-$20 monthly cap and reserves the maximum 2,000-input/150-output-token turn
-before a call. An unsettled reservation remains charged after a crash. This
+$20 monthly cap and reserves the maximum 2,000 ordinary input, 2,000 cache
+read, 2,000 cache write, and 150 output-token turn before a call. An unsettled
+reservation remains charged after a crash. This
 guard is ready for the later conversation path; the pilot makes no model calls.
 Before enabling inference, provision a provider-enforced $20 key limit and
 model lock, connect the ledger to every call, and verify cost observability.

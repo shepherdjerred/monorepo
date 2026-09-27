@@ -16,6 +16,30 @@ export function privateAuthCacheMode(mode: number): boolean {
   return (mode & 0o777) === 0o700;
 }
 
+/** One session deadline; this is a safety timeout, not a recurring start schedule. */
+export function windowEndDelayMs(config: PilotConfig, instant: Date): number {
+  if (!inPilotWindow(config, instant)) {
+    throw new Error("pilot session is outside its configured window");
+  }
+  const start = instant.getTime();
+  const hour = 60 * 60 * 1000;
+  let upper = start + hour;
+  for (let checked = 0; checked < 25; checked++) {
+    if (!inPilotWindow(config, new Date(upper))) break;
+    upper += hour;
+  }
+  if (inPilotWindow(config, new Date(upper))) {
+    throw new Error("cannot find pilot window end");
+  }
+  let lower = upper - hour;
+  while (lower + 1 < upper) {
+    const middle = Math.floor((lower + upper) / 2);
+    if (inPilotWindow(config, new Date(middle))) lower = middle;
+    else upper = middle;
+  }
+  return upper - start;
+}
+
 const LIST =
   /^There are (?<online>\d+) of a max of (?<max>\d+) players online: ?(?<names>.*)$/u;
 

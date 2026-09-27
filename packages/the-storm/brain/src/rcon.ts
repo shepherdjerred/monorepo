@@ -25,8 +25,9 @@ export class RconClient {
   private buffer = Buffer.alloc(0);
   private nextId = 1;
   private pending: Pending | undefined;
-  private terminalError: Error | undefined;
   private queue: Promise<void> = Promise.resolve();
+  private readonly failureListeners = new Set<(error: Error) => void>();
+  private failure: Error | undefined;
 
   private constructor(
     private readonly socket: net.Socket,
@@ -53,7 +54,6 @@ export class RconClient {
         { host: options.host, port: options.port },
         () => {
           connection.off("error", reject);
-          connection.setTimeout(0);
           resolve(connection);
         },
       );
@@ -62,6 +62,7 @@ export class RconClient {
         connection.destroy(new Error("RCON connect timed out"));
       });
     });
+    socket.setTimeout(0);
     const client = new RconClient(socket, timeoutMs);
     try {
       await client.authenticate(options.password);
@@ -70,6 +71,18 @@ export class RconClient {
       throw error;
     }
     return client;
+  }
+
+  /** Reports a lost or invalid control connection after authentication. */
+  onFailure(listener: (error: Error) => void): () => void {
+    if (this.failure !== undefined) {
+      listener(this.failure);
+      return () => {
+        this.failureListeners.delete(listener);
+      };
+    }
+    this.failureListeners.add(listener);
+    return () => this.failureListeners.delete(listener);
   }
 
   /** Runs one console command. Commands are serialized over the socket. */
@@ -99,9 +112,7 @@ export class RconClient {
   }
 
   private async send(type: number, body: string): Promise<string> {
-    if (this.terminalError !== undefined) {
-      throw this.terminalError;
-    }
+    if (this.failure !== undefined) throw this.failure;
     if (this.socket.destroyed || this.socket.writableEnded) {
       throw new Error("RCON socket closed");
     }
@@ -181,9 +192,11 @@ export class RconClient {
   }
 
   private fail(error: Error): void {
-    this.terminalError ??= error;
+    if (this.failure !== undefined) return;
+    this.failure = error;
     const pending = this.pending;
     this.pending = undefined;
     pending?.reject(error);
+    for (const listener of this.failureListeners) listener(error);
   }
 }

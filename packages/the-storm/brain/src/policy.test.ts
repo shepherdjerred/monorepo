@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { PilotConfig } from "./config.ts";
-import { humanPlayers, inPilotWindow, privateAuthCacheMode } from "./policy.ts";
+import {
+  humanPlayers,
+  inPilotWindow,
+  privateAuthCacheMode,
+  windowEndDelayMs,
+} from "./policy.ts";
 
 const CONFIG: PilotConfig = {
   enabled: false,
@@ -36,6 +41,18 @@ describe("pilot policy", () => {
     for (const mode of [0o600, 0o400, 0o000, 0o701]) {
       expect(privateAuthCacheMode(mode)).toBe(false);
     }
+  });
+
+  it("ends at 20:00 Pacific during daylight and standard time", () => {
+    expect(windowEndDelayMs(CONFIG, new Date("2026-09-27T01:30:00Z"))).toBe(
+      90 * 60 * 1000,
+    );
+    expect(windowEndDelayMs(CONFIG, new Date("2026-12-02T03:30:00Z"))).toBe(
+      30 * 60 * 1000,
+    );
+    expect(() =>
+      windowEndDelayMs(CONFIG, new Date("2026-09-27T03:00:00Z")),
+    ).toThrow();
   });
 
   it("requires a real player and rejects unknown list formats", () => {
