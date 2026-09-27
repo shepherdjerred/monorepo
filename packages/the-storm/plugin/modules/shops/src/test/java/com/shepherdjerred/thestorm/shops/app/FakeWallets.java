@@ -95,7 +95,8 @@ public final class FakeWallets implements Wallets {
       if (!previous.equals(request)) {
         throw new IllegalArgumentException("transfer key reused with different details");
       }
-      return CompletableFuture.completedFuture(Result.ok(requireNonNull(keyedReceipts.get(request.key()))));
+      return CompletableFuture.completedFuture(
+          Result.ok(requireNonNull(keyedReceipts.get(request.key()))));
     }
     return transfer(request.from(), request.to(), request.amount(), request.reason())
         .thenApply(

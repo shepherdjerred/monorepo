@@ -11,8 +11,8 @@ import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.towns.TownsModule;
 import com.shepherdjerred.thestorm.towns.app.FakeWallets;
-import com.shepherdjerred.thestorm.tracks.app.TrackLevels;
 import com.shepherdjerred.thestorm.tracks.app.Track;
+import com.shepherdjerred.thestorm.tracks.app.TrackLevels;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -27,8 +27,8 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.random.RandomGenerator;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jspecify.annotations.Nullable;
 
 /**
