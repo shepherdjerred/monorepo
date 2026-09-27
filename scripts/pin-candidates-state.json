@@ -68,9 +68,9 @@
       "buildNumber": 17828
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 17948,
-      "version": "2.0.0-17948",
-      "digest": "sha256:f49504a916976cf922a1c6bbd002c448c7b72a67e268511f0f4df5f9f054b1c5"
+      "buildNumber": 18006,
+      "version": "2.0.0-18006",
+      "digest": "sha256:29e7d5d5ecfae38037feab4f0868ac0097e05094290ff2376518df4f6f769486"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-17396",
