@@ -191,22 +191,31 @@ public final class ChatService {
       return Result.err(List.of(new ChatDenial.ToSelf()));
     }
     var now = time.instant();
-    var checked =
-        validator.validate(
-            new ChatAttempt(sender, rawText, now),
-            new ChatFacts(mutes.get(sender.id()), recent.get(sender.id())));
-    return switch (checked) {
-      case Result.Err<AcceptedMessage, List<ChatDenial>>(var denials) -> Result.err(denials);
-      case Result.Ok<AcceptedMessage, List<ChatDenial>>(var message) -> {
-        if (!sender.staff() && profile(recipient.id()).ignores(sender.id())) {
-          yield Result.err(List.of(new ChatDenial.Undeliverable()));
-        }
-        recent.put(sender.id(), RecentMessage.of(message.text(), now));
-        lastCorrespondent.put(sender.id(), recipient);
-        lastCorrespondent.put(recipient.id(), new Correspondent(sender.id(), sender.name()));
-        yield Result.ok(new PrivateLine(sender, recipient, message));
-      }
-    };
+    var outcome = new AtomicReference<Result<PrivateLine, List<ChatDenial>>>();
+    recent.compute(
+        sender.id(),
+        (id, previous) -> {
+          var checked =
+              validator.validate(
+                  new ChatAttempt(sender, rawText, now), new ChatFacts(mutes.get(id), previous));
+          return switch (checked) {
+            case Result.Err<AcceptedMessage, List<ChatDenial>>(var denials) -> {
+              outcome.set(Result.err(denials));
+              yield previous;
+            }
+            case Result.Ok<AcceptedMessage, List<ChatDenial>>(var message) -> {
+              if (!sender.staff() && profile(recipient.id()).ignores(id)) {
+                outcome.set(Result.err(List.of(new ChatDenial.Undeliverable())));
+                yield previous;
+              }
+              lastCorrespondent.put(id, recipient);
+              lastCorrespondent.put(recipient.id(), new Correspondent(id, sender.name()));
+              outcome.set(Result.ok(new PrivateLine(sender, recipient, message)));
+              yield RecentMessage.of(message.text(), now);
+            }
+          };
+        });
+    return outcome.get();
   }
 
   /** Who {@code player} last messaged or was messaged by this session, for {@code /r}. */
@@ -226,15 +235,27 @@ public final class ChatService {
       return Result.err(List.of(new ChatDenial.NoAccess(channel, resolution.access())));
     }
     var now = time.instant();
-    return validator
-        .validate(
-            new ChatAttempt(speaker, rawText, now),
-            new ChatFacts(mutes.get(speaker.id()), recent.get(speaker.id())))
-        .map(
-            message -> {
-              recent.put(speaker.id(), RecentMessage.of(message.text(), now));
-              return new OutgoingLine(channel, speaker, message, resolution.members(), emote);
-            });
+    var outcome = new AtomicReference<Result<OutgoingLine, List<ChatDenial>>>();
+    recent.compute(
+        speaker.id(),
+        (id, previous) -> {
+          var checked =
+              validator.validate(
+                  new ChatAttempt(speaker, rawText, now), new ChatFacts(mutes.get(id), previous));
+          return switch (checked) {
+            case Result.Err<AcceptedMessage, List<ChatDenial>>(var denials) -> {
+              outcome.set(Result.err(denials));
+              yield previous;
+            }
+            case Result.Ok<AcceptedMessage, List<ChatDenial>>(var message) -> {
+              outcome.set(
+                  Result.ok(
+                      new OutgoingLine(channel, speaker, message, resolution.members(), emote)));
+              yield RecentMessage.of(message.text(), now);
+            }
+          };
+        });
+    return outcome.get();
   }
 
   /** Whether {@code viewer} receives {@code line}. */

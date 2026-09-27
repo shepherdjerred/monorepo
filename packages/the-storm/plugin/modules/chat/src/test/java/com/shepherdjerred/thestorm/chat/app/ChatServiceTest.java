@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 
 final class ChatServiceTest {
@@ -151,6 +154,39 @@ final class ChatServiceTest {
 
     clock.advance(Duration.ofSeconds(20));
     assertThat(service.prepare(ALICE_SPEAKS, ChannelKey.GLOBAL, "selling dirt").isOk()).isTrue();
+  }
+
+  @Test
+  void concurrentChannelAndPrivateMessagesShareTheRepeatLimit() throws Exception {
+    var start = new CountDownLatch(1);
+    try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+      var attempts =
+          IntStream.range(0, 32)
+              .mapToObj(
+                  index ->
+                      executor.submit(
+                          () -> {
+                            start.await();
+                            return index % 2 == 0
+                                ? service
+                                    .prepare(ALICE_SPEAKS, ChannelKey.GLOBAL, "same text")
+                                    .isOk()
+                                : service
+                                    .preparePrivate(
+                                        ALICE_SPEAKS, new Correspondent(BOB, "Bob"), "same text")
+                                    .isOk();
+                          }))
+              .toList();
+      start.countDown();
+
+      var accepted = 0;
+      for (var attempt : attempts) {
+        if (attempt.get()) {
+          accepted++;
+        }
+      }
+      assertThat(accepted).isEqualTo(1);
+    }
   }
 
   @Test
