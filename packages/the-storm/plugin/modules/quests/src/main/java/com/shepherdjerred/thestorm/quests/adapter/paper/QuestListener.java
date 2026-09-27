@@ -71,7 +71,9 @@ final class QuestListener implements Listener {
 
   @EventHandler(priority = EventPriority.MONITOR)
   void onJoin(PlayerJoinEvent event) {
-    activity.acted(event.getPlayer().getUniqueId(), time.instant());
+    if (inMainWorld(event.getPlayer())) {
+      activity.acted(event.getPlayer().getUniqueId(), time.instant());
+    }
     var _ = service.join(event.getPlayer().getUniqueId());
   }
 
@@ -86,6 +88,9 @@ final class QuestListener implements Listener {
   void onWorldChanged(PlayerChangedWorldEvent event) {
     if (inMainWorld(event.getPlayer())) {
       activity.acted(event.getPlayer().getUniqueId(), time.instant());
+      if (service.state(event.getPlayer().getUniqueId()).isEmpty()) {
+        var _ = service.join(event.getPlayer().getUniqueId());
+      }
     } else {
       sidebars.show(event.getPlayer(), Optional.empty());
     }

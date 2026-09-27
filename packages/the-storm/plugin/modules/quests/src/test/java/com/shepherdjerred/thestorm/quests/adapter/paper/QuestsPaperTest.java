@@ -45,7 +45,7 @@ import org.mockbukkit.mockbukkit.world.WorldMock;
  * The Paper side on MockBukkit: players load their quests on join, NPC dialogue and actions accept
  * and hand in, listeners turn kills, mining and movement into progress with party credit, markers
  * follow, and {@code /quests} works. Dialogs and the scoreboard sidebar use Paper APIs MockBukkit
- * lacks; they are covered by the real-server cases in E2E-CASES.md.
+ * lacks; those require real-server acceptance.
  */
 final class QuestsPaperTest {
 
@@ -214,6 +214,20 @@ final class QuestsPaperTest {
     mainZombie.setKiller(alice);
     mainZombie.setHealth(0);
     assertThat(state(alice).active("hunt").orElseThrow().progress()).containsExactly(1);
+  }
+
+  @Test
+  void enteringMainWorldLoadsAnUnloadedQuestSession() throws InterruptedException {
+    var wilds = server.addSimpleWorld("wilds");
+    var alice = join("alice");
+    alice.teleport(new Location(wilds, 0, 64, 0));
+    plugin().service().quit(alice.getUniqueId());
+    assertThat(plugin().service().state(alice.getUniqueId())).isEmpty();
+
+    alice.teleport(new Location(world, 0, 64, 0));
+    await(
+        "main-world session loaded",
+        () -> plugin().service().state(alice.getUniqueId()).isPresent());
   }
 
   @Test
