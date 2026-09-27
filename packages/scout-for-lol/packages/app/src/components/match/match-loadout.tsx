@@ -138,7 +138,11 @@ function RunePagePopover(props: { runes: MatchRunePage }) {
 
 export function MatchLoadoutDisplay(props: { loadout: MatchLoadout }) {
   return (
-    <div className="flex items-center gap-1.5" aria-label="Match loadout">
+    <div
+      className="flex items-center gap-1.5"
+      role="group"
+      aria-label="Match loadout"
+    >
       <div className="grid grid-cols-1 gap-0.5">
         {props.loadout.summonerSpellIds.map((spellId) => (
           <SummonerSpell key={spellId} spellId={spellId} />
@@ -146,6 +150,7 @@ export function MatchLoadoutDisplay(props: { loadout: MatchLoadout }) {
       </div>
       {props.loadout.runes === null ? (
         <span
+          role="img"
           className="flex size-7 items-center justify-center rounded-full border text-xs text-scout-subtle"
           title="Rune page unavailable"
           aria-label="Rune page unavailable"
@@ -160,6 +165,7 @@ export function MatchLoadoutDisplay(props: { loadout: MatchLoadout }) {
           itemId === 0 ? (
             <span
               key={`empty-${index.toString()}`}
+              role="img"
               className="size-6 rounded border bg-muted/40"
               aria-label={`Empty item slot ${(index + 1).toString()}`}
             />

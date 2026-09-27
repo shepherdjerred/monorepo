@@ -76,6 +76,10 @@ function fact(options: {
   championId?: number;
   championName?: string;
   teamId?: number;
+  queue?: string;
+  queueId?: number;
+  gameMode?: string;
+  playerSubteamId?: number;
   index?: number;
 }) {
   return {
@@ -83,7 +87,12 @@ function fact(options: {
     playerAlias: options.alias,
     puuid: options.puuid,
     matchId: options.matchId,
-    queue: "solo",
+    queue: options.queue ?? "solo",
+    ...(options.queueId === undefined ? {} : { queueId: options.queueId }),
+    ...(options.gameMode === undefined ? {} : { gameMode: options.gameMode }),
+    ...(options.playerSubteamId === undefined
+      ? {}
+      : { playerSubteamId: options.playerSubteamId }),
     win: options.win,
     surrendered: false,
     kills: options.win ? 8 : 2,
@@ -347,6 +356,32 @@ describe("consumerMatch", () => {
       }),
     ).rejects.toThrow("Match was not found");
   });
+
+  test("rejects an Arena match with missing participant subteams", async () => {
+    const puuid = testPuuid("arena-no-subteam");
+    const launch = await player({ guildId: guildOne, alias: "Arena", puuid });
+    await writeTestLake(lakeDir, {
+      serverId: guildOne,
+      matchFacts: [
+        fact({
+          playerId: launch.id,
+          alias: launch.alias,
+          puuid,
+          matchId: "NA1_arena_no_subteam",
+          win: false,
+          queue: "arena",
+          queueId: 1700,
+          gameMode: "CHERRY",
+        }),
+      ],
+    });
+    await expect(
+      trpc.authedCaller().consumerMatch.detail({
+        playerId: launch.id,
+        matchId: "NA1_arena_no_subteam",
+      }),
+    ).rejects.toThrow("missing a participant subteam ID");
+  });
 });
 
 const testLoadoutColumns = {
@@ -508,6 +543,24 @@ describe("role-paired match scoreboards", () => {
           frames,
         }),
       ).toBeNull();
+    }
+  });
+
+  test("pairs custom CLASSIC games on Summoner's Rift", () => {
+    for (const context of [
+      { queue: "custom", queue_id: 0, game_type: "MATCHED_GAME" },
+      { queue: null, queue_id: 3110, game_type: "CUSTOM_GAME" },
+    ]) {
+      const matchups = buildRoleMatchups({
+        rows: rows.map((row) => ({
+          ...row,
+          ...context,
+        })),
+        coverage: null,
+        frames: [],
+      });
+      expect(matchups).toHaveLength(5);
+      expect(matchups?.every((matchup) => matchup.at15 === null)).toBe(true);
     }
   });
 

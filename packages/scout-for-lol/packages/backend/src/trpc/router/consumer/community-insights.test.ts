@@ -140,6 +140,27 @@ describe("guild community insights", () => {
     expect(squadChemistry({ players, rows, playerIds: [1, 3] }).games).toBe(0);
   });
 
+  test("keeps custom Rift games in standard guild aggregates", () => {
+    const customRows = roster("NA1_custom", 3000, "main").map((row) => ({
+      ...row,
+      queue: "custom",
+      queue_id: 0,
+    }));
+    const insights = buildCommunityInsights({
+      players,
+      rows: customRows,
+      allTimeAccounts: [],
+      standardOnly: true,
+    });
+    expect(insights.matchCount).toBe(1);
+    expect(
+      squadChemistry({ players, rows: customRows, playerIds: [1, 2] }),
+    ).toMatchObject({
+      games: 1,
+      wins: 1,
+    });
+  });
+
   test("uses Arena subteams for teammates, rivals, and pair chemistry", () => {
     const arenaRows = roster("NA1_arena", 3000, "main").map((row, index) => ({
       ...row,

@@ -168,6 +168,16 @@ function matchView(match: AuthorizedMatch) {
       scoutAliases: match.aliasesByPuuid.get(row.puuid) ?? [],
     };
   });
+  const arenaSubteamIds = isArenaQueueOrMode(first.queue_id, first.game_mode)
+    ? match.rows.map((row) => {
+        if (row.player_subteam_id === null) {
+          throw new Error(
+            `Arena match ${first.match_id} is missing a participant subteam ID`,
+          );
+        }
+        return row.player_subteam_id;
+      })
+    : null;
   const teams = [...new Set(match.rows.map((row) => row.team_id))].map(
     (teamId) => {
       const teamRows = participants.filter(
@@ -203,21 +213,21 @@ function matchView(match: AuthorizedMatch) {
     gameType: first.game_type,
     gameVersion: first.game_version,
     mapId: first.map_id,
-    arenaSubteams: isArenaQueueOrMode(first.queue_id, first.game_mode)
-      ? [...new Set(participants.map((participant) => participant.subteamId))]
-          .filter((id) => id !== null)
-          .map((subteamId) => ({
-            subteamId,
-            participants: participants.filter(
-              (participant) => participant.subteamId === subteamId,
+    arenaSubteams:
+      arenaSubteamIds === null
+        ? null
+        : [...new Set(arenaSubteamIds)]
+            .map((subteamId) => ({
+              subteamId,
+              participants: participants.filter(
+                (participant) => participant.subteamId === subteamId,
+              ),
+            }))
+            .toSorted(
+              (left, right) =>
+                (left.participants[0]?.placement ?? Number.MAX_SAFE_INTEGER) -
+                (right.participants[0]?.placement ?? Number.MAX_SAFE_INTEGER),
             ),
-          }))
-          .toSorted(
-            (left, right) =>
-              (left.participants[0]?.placement ?? Number.MAX_SAFE_INTEGER) -
-              (right.participants[0]?.placement ?? Number.MAX_SAFE_INTEGER),
-          )
-      : null,
     teams,
   };
 }

@@ -341,6 +341,7 @@ function ReadyCommunity(props: {
             <PeopleTab overview={overview.data} />
           ) : (
             <ConsumerGuildTeamTools
+              key={selectedGuild}
               overview={overview.data}
               windowDays={windowDays}
             />
