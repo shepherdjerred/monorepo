@@ -1018,7 +1018,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "v1.36.4"
+      "value": "v1.37.0"
     },
     {
       "name": "paper",
@@ -1073,7 +1073,7 @@
         "datasource": "github-releases",
         "versioning": "semver"
       },
-      "value": "1.13.9"
+      "value": "1.14.1"
     },
     {
       "name": "postgres-operator",

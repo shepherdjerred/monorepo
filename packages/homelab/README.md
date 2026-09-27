@@ -73,8 +73,8 @@ ArgoCD, which reverts direct mutations.
 ```bash
 talosctl gen config \
   --with-secrets secrets.yaml \
-  --talos-version v1.13.9 \
-  --kubernetes-version 1.36.4 \
+  --talos-version v1.14.1 \
+  --kubernetes-version 1.37.0 \
   --config-patch-control-plane @torvalds/patches/scheduling.yaml \
   --config-patch-control-plane @torvalds/patches/certsans.yaml \
   --config-patch-control-plane @torvalds/patches/etcd-metrics.yaml \
@@ -219,7 +219,7 @@ kubectl exec pod/shell -n maintenance -- \
 ### Upgrade Talos
 
 ```bash
-VERSION=v1.13.9
+VERSION=v1.14.1
 # Upgrade the CI worker first. The short MagicDNS name is a direct worker
 # endpoint; a worker cannot proxy its own Talos request. Use the Torvalds
 # Tailscale FQDN for all control-plane operations.
@@ -240,7 +240,7 @@ talosctl --nodes torvalds.tailnet-1a49.ts.net version
 ### Upgrade Kubernetes
 
 ```bash
-VERSION=1.36.4
+VERSION=1.37.0
 
 # `upgrade-k8s` discovers liskov by raw Tailscale IP, which does not match
 # its hostname-only Talos API certificate. Upgrade control-plane components,
