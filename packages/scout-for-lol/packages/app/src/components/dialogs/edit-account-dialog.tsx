@@ -96,7 +96,7 @@ export function EditAccountDialog(props: {
             {(field) => (
               <field.TextField
                 id="edit-account-alias"
-                label="Player name"
+                label="Account alias"
                 autoComplete="off"
                 maxLength={100}
                 required

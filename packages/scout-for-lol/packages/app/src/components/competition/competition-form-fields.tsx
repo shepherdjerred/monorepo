@@ -7,6 +7,12 @@ import {
   visibilityToString,
 } from "@scout-for-lol/data";
 import {
+  ChannelAvailabilityMessage,
+  channelSelectDisabled,
+  channelSelectOptions,
+  type ChannelAvailability,
+} from "#src/components/channel-select-support.tsx";
+import {
   Field,
   FieldDescription,
   FieldError,
@@ -62,11 +68,14 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 type CompetitionFormFieldsProps = {
   locked: boolean;
   channels: { id: string; name: string }[] | undefined;
+  channelAvailability?: ChannelAvailability;
+  onRetryChannels?: () => void;
 };
 
 const DEFAULT_PROPS: CompetitionFormFieldsProps = {
   locked: false,
   channels: undefined,
+  channelAvailability: { status: "ready" },
 };
 
 export const CompetitionFormFields = withScoutForm({
@@ -115,16 +124,28 @@ export const CompetitionFormFields = withScoutForm({
           </form.AppField>
           <form.AppField name="channelId">
             {(field) => (
-              <field.NativeSelectField
-                id="competition-channel"
-                label="Announcement channel"
-                placeholder="Pick a channel"
-                options={(props.channels ?? []).map((channel) => ({
-                  value: channel.id,
-                  label: `#${channel.name}`,
-                }))}
-                required
-              />
+              <>
+                <field.NativeSelectField
+                  id="competition-channel"
+                  label="Announcement channel"
+                  placeholder="Pick a channel"
+                  disabled={channelSelectDisabled(
+                    props.channelAvailability ?? { status: "ready" },
+                    props.channels?.length ?? 0,
+                  )}
+                  options={channelSelectOptions(
+                    field.state.value,
+                    props.channels ?? [],
+                  )}
+                  required
+                />
+                {props.channelAvailability !== undefined && (
+                  <ChannelAvailabilityMessage
+                    availability={props.channelAvailability}
+                    onRetry={props.onRetryChannels}
+                  />
+                )}
+              </>
             )}
           </form.AppField>
           <div className="grid gap-3 sm:grid-cols-2">

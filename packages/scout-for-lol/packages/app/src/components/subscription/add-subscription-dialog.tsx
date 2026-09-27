@@ -32,6 +32,11 @@ type Channel = { id: string; name: string };
 type Props = {
   guildId: string;
   channels: Channel[];
+  channelAvailability: {
+    status: "loading" | "error" | "empty" | "ready";
+    message?: string;
+  };
+  onRetryChannels: () => void;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdded: () => void;
@@ -39,6 +44,7 @@ type Props = {
 
 export function AddSubscriptionDialog(props: Props) {
   const formElement = useRef<HTMLFormElement>(null);
+  const wasOpen = useRef(false);
   const { submit, isPending, error, clearError } = useAddSubscription({
     guildId: props.guildId,
     onAdded: () => {
@@ -61,15 +67,19 @@ export function AddSubscriptionDialog(props: Props) {
   });
 
   useEffect(() => {
-    if (props.open) {
-      clearError();
-      form.reset(emptySubscriptionFormValue(props.channels[0]?.id ?? ""));
+    if (!props.open) {
+      wasOpen.current = false;
+      return;
     }
+    if (wasOpen.current) return;
+    wasOpen.current = true;
+    clearError();
+    form.reset(emptySubscriptionFormValue(props.channels[0]?.id ?? ""));
   }, [clearError, form, props.channels, props.open]);
 
   return (
     <Dialog open={props.open} onOpenChange={props.onOpenChange}>
-      <DialogContent>
+      <DialogContent className="max-h-[calc(100dvh-2rem)] overscroll-contain">
         <form.AppForm>
           <form
             ref={formElement}
@@ -82,7 +92,8 @@ export function AddSubscriptionDialog(props: Props) {
             <DialogHeader>
               <DialogTitle>Add subscription</DialogTitle>
               <DialogDescription>
-                Subscribe a player&apos;s Riot ID to a Discord channel.
+                Track a League account and send its match reports to a Discord
+                channel.
               </DialogDescription>
             </DialogHeader>
 
@@ -92,22 +103,29 @@ export function AddSubscriptionDialog(props: Props) {
                 idPrefix="add-sub"
                 guildId={props.guildId}
                 channels={props.channels}
+                channelAvailability={props.channelAvailability}
+                onRetryChannels={props.onRetryChannels}
               />
             </fieldset>
 
-            <DialogFormError error={error} />
-
-            <DialogFormFooter
-              pending={isPending}
-              submitLabel="Add"
-              pendingLabel="Adding…"
-              onCancel={() => {
-                props.onOpenChange(false);
-              }}
-            />
-            <FormPendingStatus pending={isPending}>
-              Adding subscription…
-            </FormPendingStatus>
+            <div className="space-y-2">
+              <DialogFormError error={error} />
+              <DialogFormFooter
+                pending={isPending}
+                submitLabel="Add"
+                pendingLabel="Adding…"
+                submitDisabled={
+                  props.channelAvailability.status === "loading" ||
+                  props.channels.length === 0
+                }
+                onCancel={() => {
+                  props.onOpenChange(false);
+                }}
+              />
+              <FormPendingStatus pending={isPending}>
+                Adding subscription…
+              </FormPendingStatus>
+            </div>
           </form>
         </form.AppForm>
       </DialogContent>

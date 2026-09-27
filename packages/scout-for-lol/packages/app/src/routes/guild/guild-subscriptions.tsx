@@ -13,6 +13,7 @@ import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta, track } from "#src/lib/analytics.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
 import { AddSubscriptionDialog } from "#src/components/subscription/add-subscription-dialog.tsx";
+import { channelAvailabilityForQuery } from "#src/components/channel-select-support.tsx";
 import {
   SubscriptionChannelDialog,
   type SubscriptionChannelAction,
@@ -103,6 +104,7 @@ export function GuildSubscriptions() {
       { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
     ),
   );
+  const channelAvailability = channelAvailabilityForQuery(channelsQuery);
   const subsValue = Loaded.fromQuery(subsQuery, ["guild.subscriptions"]);
   const removeMutation = useMutation(
     trpc.subscription.remove.mutationOptions({
@@ -252,167 +254,172 @@ export function GuildSubscriptions() {
       )}
 
       {subsQuery.data && subscriptions.length > 0 && (
-        <div className="rounded-md border border-border">
-          <Table>
-            <caption className="sr-only">
-              Subscriptions: tracked players and the channels their match
-              reports post to
-            </caption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Alias</TableHead>
-                <TableHead>Accounts</TableHead>
-                <TableHead>Channel</TableHead>
-                <TableHead>Filters</TableHead>
-                <TableHead className="w-1">
-                  {/* Named for assistive tech rather than left empty: axe
+        <>
+          <p className="mb-2 text-xs text-scout-subtle md:hidden">
+            Swipe or scroll horizontally to see all columns.
+          </p>
+          <div className="rounded-md border border-border">
+            <Table className="min-w-[48rem]">
+              <caption className="sr-only">
+                Subscriptions: tracked players and the channels their match
+                reports post to
+              </caption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Alias</TableHead>
+                  <TableHead>Accounts</TableHead>
+                  <TableHead>Channel</TableHead>
+                  <TableHead>Filters</TableHead>
+                  <TableHead className="w-1">
+                    {/* Named for assistive tech rather than left empty: axe
                       flags a header cell with no accessible text
                       (empty-table-header), and a screen reader announcing
                       "blank" gives no clue what the column holds. */}
-                  <span className="scout-sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {subscriptions.map((sub) => {
-                const channel = channelsQuery.data?.find(
-                  (c) => c.id === sub.channelId,
-                );
-                return (
-                  <TableRow key={sub.subscriptionId}>
-                    <TableCell className="font-medium">
-                      <Link
-                        className="underline"
-                        to={`/g/${guildId}/players/${encodeURIComponent(sub.player.alias)}`}
-                      >
-                        {sub.player.alias}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-scout-subtle">
-                      {sub.player.accounts
-                        .map((account) => accountLabel(account))
-                        .join(", ")}
-                    </TableCell>
-                    <TableCell className="text-scout-subtle">
-                      {channel === undefined
-                        ? sub.channelId
-                        : `#${channel.name}`}
-                    </TableCell>
-                    <TableCell className="text-scout-subtle">
-                      <FilterSummary
-                        filters={sub.filters}
-                        isMuted={sub.isMuted}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center justify-end gap-1">
-                        {canUpdate && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            aria-haspopup="dialog"
-                            onClick={() => {
-                              setFilterAction({
-                                kind: "edit",
-                                alias: sub.player.alias,
-                                channelId: sub.channelId,
-                                initial: sub.filters,
-                              });
-                            }}
-                          >
-                            Edit filters
-                          </Button>
-                        )}
-                        {(canUpdate || canCreate || canDelete) && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon"
-                                aria-label={`Actions for ${sub.player.alias}`}
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              {canUpdate && (
-                                <>
+                    <span className="scout-sr-only">Actions</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {subscriptions.map((sub) => {
+                  const channel = channelsQuery.data?.find(
+                    (c) => c.id === sub.channelId,
+                  );
+                  return (
+                    <TableRow key={sub.subscriptionId}>
+                      <TableCell className="font-medium">
+                        <Link
+                          className="underline"
+                          to={`/g/${guildId}/players/${encodeURIComponent(sub.player.alias)}`}
+                        >
+                          {sub.player.alias}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-scout-subtle">
+                        {sub.player.accounts
+                          .map((account) => accountLabel(account))
+                          .join(", ")}
+                      </TableCell>
+                      <TableCell className="text-scout-subtle">
+                        {channel === undefined
+                          ? sub.channelId
+                          : `#${channel.name}`}
+                      </TableCell>
+                      <TableCell className="text-scout-subtle">
+                        <FilterSummary
+                          filters={sub.filters}
+                          isMuted={sub.isMuted}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center justify-end gap-1">
+                          {canUpdate && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              aria-haspopup="dialog"
+                              onClick={() => {
+                                setFilterAction({
+                                  kind: "edit",
+                                  alias: sub.player.alias,
+                                  channelId: sub.channelId,
+                                  initial: sub.filters,
+                                });
+                              }}
+                            >
+                              Edit filters
+                            </Button>
+                          )}
+                          {(canUpdate || canCreate || canDelete) && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  aria-label={`Actions for ${sub.player.alias}`}
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                {canUpdate && (
+                                  <>
+                                    <DropdownMenuItem
+                                      onSelect={() => {
+                                        setChannelAction({
+                                          kind: "move",
+                                          alias: sub.player.alias,
+                                          fromChannelId: sub.channelId,
+                                        });
+                                      }}
+                                    >
+                                      Move to another channel
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      disabled={muteMutation.isPending}
+                                      onSelect={() => {
+                                        muteMutation.mutate({
+                                          guildId,
+                                          channelId: sub.channelId,
+                                          alias: sub.player.alias,
+                                          isMuted: !sub.isMuted,
+                                        });
+                                      }}
+                                    >
+                                      {sub.isMuted ? "Unmute" : "Mute"}
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                                {canCreate && (
                                   <DropdownMenuItem
                                     onSelect={() => {
                                       setChannelAction({
-                                        kind: "move",
-                                        alias: sub.player.alias,
-                                        fromChannelId: sub.channelId,
-                                      });
-                                    }}
-                                  >
-                                    Move to another channel
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    disabled={muteMutation.isPending}
-                                    onSelect={() => {
-                                      muteMutation.mutate({
-                                        guildId,
-                                        channelId: sub.channelId,
-                                        alias: sub.player.alias,
-                                        isMuted: !sub.isMuted,
-                                      });
-                                    }}
-                                  >
-                                    {sub.isMuted ? "Unmute" : "Mute"}
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                              {canCreate && (
-                                <DropdownMenuItem
-                                  onSelect={() => {
-                                    setChannelAction({
-                                      kind: "add-channel",
-                                      alias: sub.player.alias,
-                                    });
-                                  }}
-                                >
-                                  Add channel
-                                </DropdownMenuItem>
-                              )}
-                              {canDelete && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    disabled={removeMutation.isPending}
-                                    className="text-scout-danger focus:text-scout-danger"
-                                    onSelect={() => {
-                                      if (
-                                        !globalThis.confirm(
-                                          `Remove "${sub.player.alias}" from this channel?`,
-                                        )
-                                      ) {
-                                        return;
-                                      }
-                                      removeMutation.mutate({
-                                        guildId,
-                                        channelId: sub.channelId,
+                                        kind: "add-channel",
                                         alias: sub.player.alias,
                                       });
                                     }}
                                   >
-                                    Remove
+                                    Add channel
                                   </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+                                )}
+                                {canDelete && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      disabled={removeMutation.isPending}
+                                      className="text-scout-danger focus:text-scout-danger"
+                                      onSelect={() => {
+                                        if (
+                                          !globalThis.confirm(
+                                            `Remove "${sub.player.alias}" from this channel?`,
+                                          )
+                                        ) {
+                                          return;
+                                        }
+                                        removeMutation.mutate({
+                                          guildId,
+                                          channelId: sub.channelId,
+                                          alias: sub.player.alias,
+                                        });
+                                      }}
+                                    >
+                                      Remove
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
 
       <LoadMore
@@ -426,6 +433,8 @@ export function GuildSubscriptions() {
       <AddSubscriptionDialog
         guildId={guildId}
         channels={channelsQuery.data ?? []}
+        channelAvailability={channelAvailability}
+        onRetryChannels={() => void channelsQuery.refetch()}
         open={isAddOpen}
         onOpenChange={setAddOpen}
         onAdded={() => {

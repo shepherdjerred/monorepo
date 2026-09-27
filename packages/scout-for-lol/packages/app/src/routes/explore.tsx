@@ -53,6 +53,8 @@ const EXPLORE_CONTAINER_CLASS =
 export function Explore() {
   const { conversationId: routeConversationId } = useExploreParams();
   const conversationId = routeConversationId ?? null;
+  const composerRef = useRef<HTMLDivElement | null>(null);
+  const [composerHeight, setComposerHeight] = useState(0);
   const location = useLocation();
   const locationKeyRef = useRef(location.key);
   locationKeyRef.current = location.key;
@@ -212,6 +214,19 @@ export function Explore() {
 
   const { scrollIfPinned, pinned, scrollToBottom } = usePinnedScroll();
   useEffect(() => {
+    const composer = composerRef.current;
+    if (composer === null) return;
+    const updateHeight = () => {
+      setComposerHeight(Math.ceil(composer.getBoundingClientRect().height));
+    };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(composer);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+  useEffect(() => {
     scrollIfPinned();
   }, [
     transcript.data,
@@ -316,7 +331,10 @@ export function Explore() {
         pendingTurn,
       }) && <ExploreSuggestionChips onSelect={ask} enabled={enabled} />}
 
-      <div className="min-h-0 flex-1 space-y-4 pb-4">
+      <div
+        className="min-h-0 flex-1 space-y-4 pb-4"
+        style={{ paddingBottom: `${String(composerHeight)}px` }}
+      >
         <ExploreTranscript
           messages={messages}
           pendingQuestion={pendingQuestion}
@@ -353,7 +371,10 @@ export function Explore() {
           effect. `explore-composer-fade` carries the gradient (see global.css
           for why it is not built from `from-*`/`to-*`); it is the canvas colour
           in every theme, which switches with `data-scout-mode`. */}
-      <div className="sticky bottom-0 w-full pointer-events-none pt-8 pb-4 explore-composer-fade">
+      <div
+        ref={composerRef}
+        className="sticky bottom-0 w-full pointer-events-none pt-8 pb-4 explore-composer-fade"
+      >
         <ExploreJumpToLatest pinned={pinned} onClick={scrollToBottom} />
         <div className="pointer-events-auto">
           <ExploreComposer
