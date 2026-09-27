@@ -1,5 +1,6 @@
-package com.shepherdjerred.thestorm.world.adapter.paper;
+package com.shepherdjerred.thestorm.world.adapter.remote;
 
+import com.shepherdjerred.thestorm.world.app.CrierGate;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -41,9 +42,7 @@ public final class FliptCrierGate implements CrierGate, AutoCloseable {
   @Override
   public CompletableFuture<Boolean> enabled(UUID player) {
     var body =
-        "{\"environment_key\":\""
-            + environment
-            + "\",\"namespace_key\":\""
+        "{\"namespace_key\":\""
             + NAMESPACE_KEY
             + "\",\"flag_key\":\""
             + FLAG_KEY
@@ -54,6 +53,7 @@ public final class FliptCrierGate implements CrierGate, AutoCloseable {
         HttpRequest.newBuilder(endpoint)
             .timeout(Duration.ofSeconds(3))
             .header("Content-Type", "application/json")
+            .header("x-flipt-environment", environment)
             .POST(HttpRequest.BodyPublishers.ofString(body))
             .build();
     return client
