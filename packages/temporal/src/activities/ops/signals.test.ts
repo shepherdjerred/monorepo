@@ -235,8 +235,8 @@ describe("logs", () => {
 
 function ai(overrides: Partial<AiSamples>): AiSamples {
   return {
-    billedMtd: [],
-    openAiToday: [],
+    clusterMtd: [],
+    billedToday: [],
     macCostMtd: [],
     macTokens24h: [],
     clusterTokens24h: [],
@@ -266,7 +266,7 @@ describe("ai", () => {
     const spent = OPS_POLICY.monthlyApiBudgetUsd * 0.8;
     const result = mapAi(
       ai({
-        billedMtd: [sample(spent)],
+        clusterMtd: [sample(spent)],
         macCostMtd: [sample(310.5, { source: "claude-code" })],
         macTokens24h: [sample(1000)],
         quotas: [

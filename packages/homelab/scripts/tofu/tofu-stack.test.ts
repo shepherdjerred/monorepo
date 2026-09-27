@@ -1,8 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
-  addValidationOnlySecrets,
-  assertPlatformSecretCoverage,
   buildTofuEnvironment,
+  desiredStateVariableValue,
   validationInitArguments,
 } from "./tofu-stack.ts";
 import { STACK_MANIFEST, type TofuStack } from "./tofu-stack-manifest.ts";
@@ -35,6 +34,7 @@ async function temporaryDirectory(): Promise<string> {
 
 const STACKS: readonly TofuStack[] = [
   "anthropic",
+  "anthropic-federation",
   "argocd",
   "arr",
   "asuswrt",
@@ -43,8 +43,8 @@ const STACKS: readonly TofuStack[] = [
   "cloudflare-tokens",
   "discord",
   "github",
+  "google",
   "openai",
-  "openrouter",
   "posthog",
   "seaweedfs",
   "tailscale",
@@ -114,100 +114,14 @@ describe("Buildkite OpenTofu credential contracts", () => {
       "state_passphrase",
     );
   });
-
-  // A BYOK credential declared without a provider key used to abort inside
-  // `tofu plan` with a bare `Invalid index` on `each.key`, naming neither the
-  // secret nor where it belongs. These cover the fail-fast replacement.
-  describe("OpenRouter BYOK provider-key coverage", () => {
-    const declared = {
-      openrouter_byok_credentials: { anthropic: {}, openai: {} },
-    };
-
-    test("names every credential whose provider key is absent", () => {
-      expect(() => {
-        assertPlatformSecretCoverage("openrouter", declared, {
-          TF_VAR_openrouter_byok_keys: "{}",
-        });
-      }).toThrow(/missing a provider key for anthropic, openai/);
-    });
-
-    test("treats a blank provider key as absent rather than supplied", () => {
-      expect(() => {
-        assertPlatformSecretCoverage("openrouter", declared, {
-          TF_VAR_openrouter_byok_keys: JSON.stringify({
-            anthropic: "sk-real",
-            openai: "",
-          }),
-        });
-      }).toThrow(/missing a provider key for openai/);
-    });
-
-    test("points the operator at the 1Password field and the opt-out", () => {
-      expect(() => {
-        assertPlatformSecretCoverage("openrouter", declared, {
-          TF_VAR_openrouter_byok_keys: "{}",
-        });
-      }).toThrow(
-        /OPENROUTER_BYOK_KEYS_JSON field of the\s+openrouter-tofu-credentials 1Password item/,
-      );
-    });
-
-    test("accepts a fully covered set", () => {
-      expect(() => {
-        assertPlatformSecretCoverage("openrouter", declared, {
-          TF_VAR_openrouter_byok_keys: JSON.stringify({
-            anthropic: "sk-real",
-            openai: "sk-real",
-          }),
-        });
-      }).not.toThrow();
-    });
-
-    test("requires nothing when no BYOK credential is declared", () => {
-      expect(() => {
-        assertPlatformSecretCoverage(
-          "openrouter",
-          { openrouter_byok_credentials: {} },
-          {},
-        );
-      }).not.toThrow();
-    });
-
-    test("rejects a non-object payload instead of silently covering nothing", () => {
-      expect(() => {
-        assertPlatformSecretCoverage("openrouter", declared, {
-          TF_VAR_openrouter_byok_keys: '["anthropic"]',
-        });
-      }).toThrow(/must hold a JSON object/);
-    });
-  });
-
-  test("synthesizes one dummy value per OpenRouter BYOK credential", () => {
-    const environment: Record<string, string> = {};
-    addValidationOnlySecrets(
-      "openrouter",
-      {
-        openrouter_byok_credentials: {
-          anthropic: {},
-          openai: {},
-        },
-      },
-      environment,
-    );
-    expect(
-      JSON.parse(environment["TF_VAR_openrouter_byok_keys"] ?? ""),
-    ).toEqual({
-      anthropic: "ci-validation-only-provider-key",
-      openai: "ci-validation-only-provider-key",
-    });
-  });
 });
 
 const PLATFORM_STACKS: readonly PlatformStack[] = [
   "openai",
   "anthropic",
+  "anthropic-federation",
+  "google",
   "discord",
-  "openrouter",
   "cloudflare-tokens",
 ];
 
@@ -246,10 +160,8 @@ describe("committed platform desired state", () => {
         cloudflare_api_tokens: {},
       }),
     );
-    await expect(
-      loadPlatformDesiredState(stackDir, "openrouter"),
-    ).rejects.toThrow(
-      "Desired state for openrouter declares platform cloudflare-tokens",
+    await expect(loadPlatformDesiredState(stackDir, "openai")).rejects.toThrow(
+      "Desired state for openai declares platform cloudflare-tokens",
     );
   });
 
@@ -274,31 +186,100 @@ describe("committed platform desired state", () => {
     );
   });
 
-  test("requires an exact 1Password handoff field for generated keys", async () => {
+  test("requires a valid 1Password item title for each minted Gemini key", async () => {
     const stackDir = await temporaryDirectory();
     await Bun.write(
       `${stackDir}/desired-state.json`,
       JSON.stringify({
         $schema: "../../platform-desired-state.schema.json",
-        platform: "openrouter",
-        openrouter_workspaces: {},
-        openrouter_guardrails: {},
-        openrouter_api_keys: {
+        platform: "google",
+        google_billing_account_id: null,
+        google_quota_project_id: null,
+        google_workloads: {
           birmel: {
-            name: "birmel",
-            onepassword_targets: [
-              {
-                vault_item_id: "birmel-item",
+            project_id: "sjerred-llm-birmel",
+            display_name: "LLM birmel",
+            monthly_budget_usd: 10,
+            ai_studio_spend_cap_usd: 10,
+            gemini_key_revision: 1,
+            gemini_quota_limits: {
+              "gemini-3-pro-image": {
+                requests_per_day: 50,
+                requests_per_minute: 5,
               },
-            ],
+            },
+            // CDK8s references the item by this title, so it must be a
+            // title the cluster's item path can carry.
+            onepassword_item_title: "Birmel Gemini Key",
           },
         },
-        openrouter_byok_credentials: {},
+      }),
+    );
+    await expect(loadPlatformDesiredState(stackDir, "google")).rejects.toThrow(
+      "onepassword_item_title",
+    );
+  });
+
+  test("refuses a Gemini spend cap above its budget", async () => {
+    // The budget is the early warning and the AI Studio cap is the stop. A cap
+    // above the budget means the warning arrives after the stop should have.
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../../platform-desired-state.schema.json",
+        platform: "google",
+        google_billing_account_id: null,
+        google_quota_project_id: null,
+        google_workloads: {
+          birmel: {
+            project_id: "sjerred-llm-birmel",
+            display_name: "LLM birmel",
+            monthly_budget_usd: 10,
+            ai_studio_spend_cap_usd: 50,
+            gemini_key_revision: 1,
+            gemini_quota_limits: {
+              "gemini-3-pro-image": {
+                requests_per_day: 50,
+                requests_per_minute: 5,
+              },
+            },
+            onepassword_item_title: "llm-gemini-birmel",
+          },
+        },
+      }),
+    );
+    await expect(loadPlatformDesiredState(stackDir, "google")).rejects.toThrow(
+      "must not exceed monthly_budget_usd",
+    );
+  });
+
+  test("keeps Anthropic token lifetimes inside the projected token's rotation", async () => {
+    const stackDir = await temporaryDirectory();
+    await Bun.write(
+      `${stackDir}/desired-state.json`,
+      JSON.stringify({
+        $schema: "../../platform-desired-state.schema.json",
+        platform: "anthropic-federation",
+        anthropic_federation_workspaces: { prod: { name: "prod" } },
+        anthropic_federation_issuer: {
+          name: "cluster",
+          issuer_url: "https://cluster.example",
+          jwks_keys_json: "[]",
+          max_jwt_lifetime_seconds: 3600,
+        },
+        anthropic_federation_workloads: {
+          birmel: {
+            workspace_key: "prod",
+            namespace: "birmel",
+            token_lifetime_seconds: 3600,
+          },
+        },
       }),
     );
     await expect(
-      loadPlatformDesiredState(stackDir, "openrouter"),
-    ).rejects.toThrow("vault_field");
+      loadPlatformDesiredState(stackDir, "anthropic-federation"),
+    ).rejects.toThrow();
   });
 
   test("collects handoffs nested in resource objects", () => {
@@ -340,5 +321,19 @@ describe("committed platform desired state", () => {
         },
       }),
     ).toEqual([{ vault_item_id: "birmel-item" }]);
+  });
+});
+
+describe("desired-state variables", () => {
+  test("passes strings literally and encodes every other type", () => {
+    // A string variable reads its environment value verbatim, so encoding it
+    // would deliver the quotes too and fail the variable's own validation.
+    expect(desiredStateVariableValue("012345-6789AB-CDEF01")).toBe(
+      "012345-6789AB-CDEF01",
+    );
+    expect(desiredStateVariableValue(null)).toBe("null");
+    expect(desiredStateVariableValue({ birmel: { budget: 10 } })).toBe(
+      '{"birmel":{"budget":10}}',
+    );
   });
 });

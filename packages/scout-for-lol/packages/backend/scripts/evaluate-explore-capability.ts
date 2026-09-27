@@ -5,7 +5,11 @@ import {
   type ExploreCapabilityCase,
   type ExploreCapabilityCorpus,
 } from "@scout-for-lol/data";
-import { createOpenRouterRuntime } from "@shepherdjerred/llm-runtime";
+import {
+  createLlmRuntime,
+  providerCredentialsFromEnv,
+  requireCredentialsFor,
+} from "@shepherdjerred/llm-runtime";
 import {
   capabilityAnswerIssues,
   EXPLORE_CAPABILITY_EVAL_MODEL,
@@ -92,7 +96,7 @@ function isMissingOutput(error: unknown): boolean {
 }
 
 async function answerOnce(
-  runtime: ReturnType<typeof createOpenRouterRuntime>,
+  runtime: ReturnType<typeof createLlmRuntime>,
   entry: ExploreCapabilityCase,
 ): Promise<string> {
   const result = await generateText({
@@ -104,13 +108,16 @@ async function answerOnce(
     // that loads two.
     stopWhen: stepCountIs(4),
     output: Output.object({ schema: ExploreAnswerWireSchema }),
-    ...runtime.callOptions({ workload: "scout.explore.capability-eval" }),
+    ...runtime.callOptions({
+      workload: "scout.explore.capability-eval",
+      model: EXPLORE_CAPABILITY_EVAL_MODEL,
+    }),
   });
   return result.output.answer;
 }
 
 async function evaluateCase(
-  runtime: ReturnType<typeof createOpenRouterRuntime>,
+  runtime: ReturnType<typeof createLlmRuntime>,
   entry: ExploreCapabilityCase,
 ): Promise<{
   id: string;
@@ -164,15 +171,10 @@ async function evaluateCase(
 }
 
 async function main(): Promise<void> {
-  const apiKey = Bun.env["OPENROUTER_API_KEY"];
-  if (apiKey === undefined || apiKey.trim() === "") {
-    throw new Error(
-      "OPENROUTER_API_KEY is required for Explore capability evals.",
-    );
-  }
+  requireCredentialsFor(EXPLORE_CAPABILITY_EVAL_MODEL);
   const { corpus, raw } = await loadCorpus();
-  const runtime = createOpenRouterRuntime({
-    apiKey,
+  const runtime = createLlmRuntime({
+    credentials: providerCredentialsFromEnv(),
     service: "scout-explore-capability-evals",
     appName: "Scout Explore Capability Evals",
   });

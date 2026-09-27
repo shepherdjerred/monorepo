@@ -14,9 +14,8 @@ import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/
 // Routing is an explicit allowlist: each branch's filter processor DROPS every
 // span matching one of its `drop` conditions, so a branch's conditions are the
 // negation of "this span belongs to the project". A service listed nowhere
-// (openrouter-broadcast-ingest's payloads especially) reaches no project by
-// construction — that exclusion bounds Phoenix's database growth, so there
-// must never be a catch-all branch.
+// reaches no project by construction — that exclusion bounds Phoenix's
+// database growth, so there must never be a catch-all branch.
 type PhoenixBranch = {
   // Exact Phoenix project name.
   project: string;

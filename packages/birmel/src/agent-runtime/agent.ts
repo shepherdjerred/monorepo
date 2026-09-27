@@ -22,7 +22,10 @@ import { getConfig } from "@shepherdjerred/birmel/config/index.ts";
 import { getLlmRuntime } from "@shepherdjerred/birmel/agent-runtime/llm.ts";
 import { withSpan } from "@shepherdjerred/birmel/observability/tracing.ts";
 import { loggers } from "@shepherdjerred/birmel/utils/logger.ts";
-import { getOpenRouterProviderOptions } from "./provider-options.ts";
+import {
+  getAgentProviderOptions,
+  mergeAgentProviderOptions,
+} from "./provider-options.ts";
 import { recoverTurnAnswer } from "./turn-answer-recovery.ts";
 import { AGENT_INSTRUCTIONS } from "./prompts.ts";
 import type { ProgressReporter } from "./progress.ts";
@@ -366,11 +369,11 @@ export async function executeTurn(
       const abortSignal = AbortSignal.timeout(
         options.timeoutMs ?? config.agent.responseTimeoutMs,
       );
+      const modelId = options.model ?? config.llm.model;
+      const providerOptions = getAgentProviderOptions(modelId, options);
       const agent = new ToolLoopAgent({
         id: "birmel-agent",
-        model: runtime.languageModel(options.model ?? config.openRouter.model, [
-          "tools",
-        ]),
+        model: runtime.languageModel(modelId, ["tools"]),
         instructions: `${AGENT_INSTRUCTIONS}\n\n${packet.persona}`,
         tools,
         stopWhen: stepCountIs(maxSteps),
@@ -381,8 +384,8 @@ export async function executeTurn(
           stepNumber >= maxSteps - 1
             ? { activeTools: [], toolChoice: "none" }
             : undefined,
-        maxOutputTokens: config.openRouter.maxTokens,
-        providerOptions: getOpenRouterProviderOptions(options),
+        maxOutputTokens: config.llm.maxTokens,
+        ...(providerOptions === undefined ? {} : { providerOptions }),
         output: Output.object({ schema: TurnAnswerSchema }),
       });
       const progress = options.progress;
@@ -393,6 +396,15 @@ export async function executeTurn(
       const completedSteps: CompletedStepForSession[] = [];
       let result: Awaited<ReturnType<typeof agent.generate>>;
       try {
+        const callOptions = runtime.callOptions({
+          workload: "birmel.agent.turn",
+          model: modelId,
+          sessionId: packet.threadId ?? packet.channelId,
+        });
+        const mergedProviderOptions = mergeAgentProviderOptions(
+          providerOptions,
+          callOptions.providerOptions,
+        );
         result = await agent.generate({
           messages: taskMessages(packet),
           abortSignal,
@@ -445,10 +457,10 @@ export async function executeTurn(
                   progress.stepStarted(stepNumber);
                 },
               }),
-          ...runtime.callOptions({
-            workload: "birmel.agent.turn",
-            sessionId: packet.threadId ?? packet.channelId,
-          }),
+          ...callOptions,
+          ...(mergedProviderOptions === undefined
+            ? {}
+            : { providerOptions: mergedProviderOptions }),
         });
       } catch (error) {
         const recovered = recoverTurnAnswer(error);

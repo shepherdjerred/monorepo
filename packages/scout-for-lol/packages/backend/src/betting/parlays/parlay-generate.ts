@@ -46,7 +46,7 @@ import {
 import { buildRosterForButtons } from "#src/betting/markets/prematch-subject.ts";
 import { publishParlayDefinition } from "#src/betting/parlays/runtime/parlay-publish.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
+import { getLlmRuntime } from "#src/league/review/ai-clients.ts";
 import {
   assertWithinBudget,
   recordTokenUsage,
@@ -188,9 +188,9 @@ async function generateAndPersistDefinition(
   deadline: AbortSignal,
   prismaClient: ExtendedPrismaClient,
 ): Promise<number> {
-  const runtime = getOpenRouterRuntime();
+  const runtime = getLlmRuntime();
   if (runtime === undefined) {
-    throw new Error("OPENROUTER_API_KEY is required for parlay generation");
+    throw new Error("OpenAI credentials are required for parlay generation");
   }
   const model = bettingParlayAiModel();
 
@@ -271,7 +271,6 @@ async function generateAndPersistDefinition(
   );
   resolveProviderIssue({
     app: "scout-for-lol",
-    provider: "openrouter",
     kind: "quota",
     source: "betting_parlay",
   });

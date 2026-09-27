@@ -50,7 +50,7 @@ test("a second runtime can register after the first shuts down", async () => {
   const secondRecorder = await createRecorder();
   const second = await createFleetTelemetryRuntime(secondRecorder);
   const span = trace.getTracer("pr-fleet-test").startSpan("gen_ai.chat");
-  span.setAttribute("gen_ai.system", "openrouter");
+  span.setAttribute("gen_ai.system", "openai");
   span.end();
   await second.shutdown();
 
@@ -79,7 +79,7 @@ test("writes and digest-verifies private spans.jsonl", async () => {
   recorder.record("run.started", { test: "storage" });
   const runtime = await createFleetTelemetryRuntime(recorder);
   const span = trace.getTracer("pr-fleet-test").startSpan("gen_ai.chat");
-  span.setAttribute("gen_ai.system", "openrouter");
+  span.setAttribute("gen_ai.system", "openai");
   span.end();
   const spanStats = await stat(recorder.paths.spans);
   expect(spanStats.mode & 0o777).toBe(0o600);

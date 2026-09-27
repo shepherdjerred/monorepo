@@ -3,7 +3,8 @@
   "type": "module",
   "private": true,
   "imports": {
-    "#scripts/*": "./scripts/*"
+    "#scripts/*": "./scripts/*",
+    "#tofu/*": "./src/tofu/*"
   },
   "dependencies": {
     "@shepherdjerred/root-scripts": "workspace:*",

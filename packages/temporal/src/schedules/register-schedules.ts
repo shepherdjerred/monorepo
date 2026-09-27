@@ -83,6 +83,10 @@ export const DELETED_SCHEDULE_IDS = [
   // no longer in the bundle, so this schedule must be deleted or it would
   // keep firing a missing workflow.
   "ci-io-post-merge-impact",
+  // Monitored the one OpenAI project OpenRouter billed through. Replaced by
+  // `llm-billed-cost-hourly`, which covers every OpenAI project and Anthropic
+  // workspace now that each app calls its provider directly.
+  "openai-complimentary-usage-hourly",
 ] as const;
 
 /**
@@ -105,6 +109,10 @@ const DELETED_BETA_SCHEDULE_IDS = [
 // the queue-owning workers receive a bundle without their handlers.
 const RETIRED_WORKFLOW_TYPES = [
   { workflowType: "observeReviewSignalsWorkflow", namespace: "prod" },
+  {
+    workflowType: "runOpenAiComplimentaryUsageReconciliation",
+    namespace: "prod",
+  },
   // A weekly parlay execution stays open for a week, so a deploy can easily
   // land mid-run. Deleting the Schedule only stops future starts; without
   // these the open execution would keep retrying tasks against workers whose

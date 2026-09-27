@@ -30,14 +30,14 @@ fi
 
 case "${TOFU_PLATFORM_APPLY:-}" in
   "") ;;
-  openai | anthropic | discord | openrouter | cloudflare-tokens)
+  openai | anthropic | discord | cloudflare-tokens)
     if [ "${BUILDKITE_BRANCH:-}" != "$default_branch" ]; then
       echo "TOFU_PLATFORM_APPLY is ${default_branch}-only; BUILDKITE_BRANCH was ${BUILDKITE_BRANCH:-unset}" >&2
       exit 1
     fi
     ;;
   *)
-    echo 'TOFU_PLATFORM_APPLY must be one of openai, anthropic, discord, openrouter, cloudflare-tokens' >&2
+    echo 'TOFU_PLATFORM_APPLY must be one of openai, anthropic, discord, cloudflare-tokens' >&2
     exit 1
     ;;
 esac

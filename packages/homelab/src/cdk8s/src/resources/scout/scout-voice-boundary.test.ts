@@ -51,8 +51,8 @@ const DeploymentSpecSchema = z.object({
 });
 
 const VOICE_ENV_NAMES = [
-  "OPENAI_API_KEY",
-  "OPENAI_API_KEY_FILE",
+  "VOICE_OPENAI_API_KEY",
+  "VOICE_OPENAI_API_KEY_FILE",
   "VOICE_ASSETS_DIR",
   "VOICE_KWS_RUNTIME",
 ] as const;
@@ -153,7 +153,7 @@ describe("Hey Scout voice deployment boundary", () => {
         }),
         expect.objectContaining({ name: "VOICE_KWS_RUNTIME", value: "auto" }),
         expect.objectContaining({
-          name: "OPENAI_API_KEY_FILE",
+          name: "VOICE_OPENAI_API_KEY_FILE",
           value: "/run/secrets/scout-openai/OPENAI_API_KEY",
         }),
       ]),
@@ -206,9 +206,11 @@ describe("Hey Scout voice deployment boundary", () => {
   test("the beta OpenAI key is an updateable optional Secret volume", () => {
     const deployment = voiceDeployment("beta");
     const container = containerOf(deployment, voiceWorkloadName("beta"));
-    expect(container.env.some((entry) => entry.name === "OPENAI_API_KEY")).toBe(
-      false,
-    );
+    // The inline OPENAI_API_KEY is the text-inference project key; voice must
+    // never read it as a literal.
+    expect(
+      container.env.some((entry) => entry.name === "VOICE_OPENAI_API_KEY"),
+    ).toBe(false);
 
     const mount = container.volumeMounts.find(
       (candidate) => candidate.mountPath === "/run/secrets/scout-openai",
@@ -233,7 +235,7 @@ describe("Hey Scout voice deployment boundary", () => {
    * The other half of moving voice onto the shard: the `application` role
    * declares voiceAssistant false, so on a split stage it must carry neither
    * the credential mount nor the bootstrap env. Leaving them behind would point
-   * OPENAI_API_KEY_FILE at a path that pod does not mount, which looks like a
+   * VOICE_OPENAI_API_KEY_FILE at a path that pod does not mount, which looks like a
    * wired credential and is not one.
    */
   test("a split stage leaves no voice surface on the application pod", () => {

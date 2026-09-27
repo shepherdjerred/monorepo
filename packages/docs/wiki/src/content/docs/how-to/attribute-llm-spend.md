@@ -15,28 +15,25 @@ Tempo retention limit.
 ## 1. Find spend for the feature you care about
 
 ```bash
-toolkit prom query 'topk(10, sum by (service, workload) (max by (service, workload, model) (sum by (service, workload, model, type) (increase(llm_cost_usd_total{type=~"actual|upstream"}[24h])))))'
+toolkit prom query 'topk(10, sum by (service, workload) (increase(llm_cost_usd_total{type="catalog"}[24h])))'
 ```
 
-Take the per-series maximum of `actual` and `upstream`, not `actual` alone: a BYOK
-route bills nothing through OpenRouter and reads as `$0` under an actual-only query
-while still costing real money upstream.
+This is the live series: the catalog price applied to provider-reported tokens.
+It counts OpenAI complimentary data-sharing tokens as if they were paid, so it is
+an upper bound on what OpenAI charged. For what the providers actually bill, see
+[Compare live and billed spend](#compare-live-and-billed-spend) below.
 
-For OpenAI complimentary-token traffic, this is intentionally conservative and
-does not answer what was paid. Use the official reconciliation below before
-treating `upstream` as an OpenAI charge.
-
-The inner `sum` must stay inside the `max`. These series carry `pod`, so a deploy
-inside the window leaves two counter series per workload, and taking the maximum
-first would keep only the longer-lived pod's spend.
+Sum before anything else. These series carry `pod`, so a deploy inside the window
+leaves two counter series per workload, and the sum collapses both lifetimes.
 
 ## 2. Pull the per-call cost records with their trace IDs
 
-Each successful call logs one JSON record carrying `workload`, `model`,
-`generationId`, `traceId`, and all three cost figures.
+Each successful call logs one JSON record carrying `workload`, `provider`,
+`model`, `responseId`, `serviceTier`, token counts, `catalogCostUsd`, and
+`traceId`.
 
 ```bash
-toolkit loki query '{namespace="scout-beta"} |= "llm.openrouter.response"' --since 24h --limit 200
+toolkit loki query '{namespace="scout-beta"} |= "llm.provider.response"' --since 24h --limit 200
 ```
 
 Namespaces are `scout-beta`, `birmel`, and `temporal`. A record whose `traceId` is
@@ -78,55 +75,51 @@ and match reviews are not made on behalf of a person who asked. Those are
 attributed, just not to a human. A span with _no_ subject attributes at all is an
 unwrapped call site.
 
-## Verify Scout's complimentary OpenAI inference
+## Compare live and billed spend
 
-First confirm that successful Scout reviews used the configured provider key:
-
-```bash
-toolkit prom query 'sum by (model, upstream_provider, byok) (increase(llm_openrouter_byok_requests_total{exported_service="scout-for-lol-backend",workload=~"scout[.]review([.]text)?"}[1h]))'
-```
-
-`byok="true"` is necessary but not sufficient. Trigger the
-`openai-complimentary-usage-hourly` Temporal schedule after waiting at least 15
-minutes from the request, then query the official provider reconciliation:
+The `llm-billed-cost-hourly` Temporal schedule reads OpenAI's organization
+Costs and Usage APIs and Anthropic's Cost Report, per project and workspace:
 
 ```bash
-toolkit prom query 'sum by (model, service_tier, type) (openai_project_usage_tokens)'
-toolkit prom query 'max(openai_project_cost_usd)'
-toolkit prom query 'time() - max(openai_usage_reconciliation_last_success_timestamp_seconds)'
+toolkit prom query 'sum by (provider, account, window) (llm_billed_cost_usd)'
+toolkit prom query 'sum by (account, model, service_tier, type) (llm_billed_tokens{provider="openai"})'
+toolkit prom query 'time() - max by (provider) (llm_billed_reconciliation_last_success_timestamp_seconds)'
 ```
 
-The request is confirmed complimentary only when its tokens appear under
-`incentivized-tier` and official current-day Costs remain zero. A request that
-crosses OpenAI's daily allowance can be billed in full, so any `default`-tier
-tokens are actionable even when BYOK is still healthy.
+`window="today"` is the current UTC day; `window="7d"` is the seven UTC days
+ending today. Compare the seven-day billed figure with
+`sum by (provider) (increase(llm_cost_usd_total{type="catalog"}[7d]))`:
 
-The alerts divide failures by evidence layer:
+- **Billed below live** is expected for OpenAI projects with data sharing
+  enabled. Complimentary tokens appear in `llm_billed_tokens` under a
+  non-`default` service tier with no matching cost.
+- **Billed above live** means traffic the runtime does not price — Codex,
+  voice, transcription — or a catalog price that has drifted. Check which
+  account moved before editing the catalog.
+- **Google** has no billed series. Its per-project spend is visible only in AI
+  Studio and through Cloud Billing budget alerts.
 
-For the full worker rollout, schedule, and alert acceptance procedure, use the
+The alerts divide by source: `LlmDailySpendHigh`/`Critical` fire on the live
+series, `LlmBilledSpendHigh`/`Critical` on billed spend for the current UTC day,
+and `LlmBilledReconciliationStale` when no reconciliation has succeeded for two
+hours after the billing worker started. Each project and workspace also has a
+provider-side hard cap that rejects requests once reached.
+
+To rotate the billing worker's admin keys, create a new OpenAI organization
+admin key and Anthropic admin key, replace `OPENAI_ADMIN_KEY` and
+`ANTHROPIC_ADMIN_API_KEY` in the dedicated `temporal-openai-usage-monitor`
+1Password item, restart `temporal-billing-worker`, and trigger the schedule
+once. Delete the prior keys only after
+`llm_billed_reconciliation_last_success_timestamp_seconds` advances for both
+providers. Never move these keys into the shared Temporal item: admin keys are
+organization-wide credentials.
+
+For the worker rollout procedure, use the
 [Temporal worker deployment rollout guide](/how-to/roll-out-a-temporal-worker-deployment/).
-
-- `ScoutOpenAiNotByok` means OpenRouter reported shared capacity for a
-  successful Scout review.
-- `LlmOpenRouterMetadataMissing` means the request-level credential evidence is
-  absent.
-- `OpenAiComplimentaryPaidTokens` means the official Usage API reported
-  `default`-tier tokens.
-- `OpenAiOpenRouterProjectCost` means official current-day Costs reached one
-  cent.
-- `OpenAiComplimentaryMonitorStale` means no complete reconciliation succeeded
-  for two hours after the billing worker started.
-
-To rotate the monitor credential, create a new organization admin key named
-`openai-usage-monitor`, replace only the `OPENAI_ADMIN_KEY` field in the
-dedicated 1Password item, restart `temporal-billing-worker`, and run the
-schedule once. Delete the prior OpenAI admin key only after Usage, Costs,
-metrics, and both Alertmanager resolutions succeed. Never move this key into
-the shared Temporal item: OpenAI admin keys are organization-wide credentials.
 
 ## Related
 
 - [LLM stack](/explanation/llm-stack/) — why subject IDs stay out of Prometheus,
   and why the 30-day horizon exists.
-- [Enable OpenRouter Broadcast](/how-to/enable-openrouter-broadcast/) — the
-  correlated per-generation record from OpenRouter itself.
+- [Rotate LLM provider credentials](/how-to/rotate-provider-credentials/) — the
+  per-workload keys, federation, and provider spend caps.

@@ -9,9 +9,12 @@ import { sharedLlmFailureKind } from "#src/betting/llm-failure.ts";
 const deadline = new AbortController().signal;
 
 function quotaError(): Error {
-  return Object.assign(new Error("Key limit exceeded (weekly limit)"), {
-    statusCode: 403,
-  });
+  return Object.assign(
+    new Error(
+      "You exceeded your current quota, please check your plan and billing details.",
+    ),
+    { statusCode: 429 },
+  );
 }
 
 describe("sharedLlmFailureKind", () => {
@@ -48,9 +51,7 @@ describe("sharedLlmFailureKind", () => {
         deadline,
         new StructuredOutputExhaustionError("nope", [], {
           tokens: emptyTokenBreakdown(),
-          actualCostUsd: 0,
           catalogCostUsd: 0,
-          upstreamCostUsd: 0,
         }),
       ),
     ).toBe("invalid_output");

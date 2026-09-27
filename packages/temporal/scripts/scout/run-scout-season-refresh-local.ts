@@ -18,7 +18,7 @@
  *
  * Notes:
  *   - This bypasses Temporal entirely. No worker bundle, no schedule. The
- *     activity body uses Codex SDK through OpenRouter plus git/gh commands.
+ *     activity body uses the Codex SDK against OpenAI plus git/gh commands.
  *   - When using --repo=PATH, the harness assumes PATH is a clean checkout
  *     of the monorepo. The activity mutates files there in-place; reset
  *     between runs with `git checkout -- packages/scout-for-lol/.../seasons*`.

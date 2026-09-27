@@ -228,15 +228,6 @@
       "grafanaDashboards": ["alert-dashboard"]
     },
     {
-      "id": "openrouter-broadcast-ingest",
-      "title": "OpenRouter broadcast ingest",
-      "kind": "workload",
-      "package": "openrouter-broadcast-ingest",
-      "namespaces": ["openrouter-broadcast-ingest"],
-      "argoApps": ["openrouter-broadcast-ingest"],
-      "grafanaDashboards": ["ai-provider-health"]
-    },
-    {
       "id": "home",
       "title": "Home Assistant",
       "kind": "workload",

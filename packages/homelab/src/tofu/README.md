@@ -1,6 +1,6 @@
 # OpenTofu Infrastructure
 
-Manages external resources with [OpenTofu](https://opentofu.org/), including infrastructure, platform organization settings, and replaceable application credentials for services such as Discord, OpenAI, Anthropic, and OpenRouter.
+Manages external resources with [OpenTofu](https://opentofu.org/), including infrastructure, platform organization settings, and replaceable application credentials for services such as Discord, OpenAI, Anthropic, and Google.
 
 ## Structure
 
@@ -16,7 +16,8 @@ tofu/
 ├── github/              # Repository settings and branch rulesets
 ├── openai/              # OpenAI projects, users, roles, alerts, and service accounts
 ├── anthropic/           # Anthropic workspaces, members, and imported API-key metadata
-├── openrouter/          # OpenRouter workspaces, guardrails, API keys, and BYOK
+├── anthropic-federation/ # Anthropic workload identity federation (operator-applied)
+├── google/              # Per-workload Gemini API projects and budgets (operator-applied)
 ├── posthog/             # PostHog organization and project controls
 ├── seaweedfs/           # SeaweedFS S3 bucket management (AWS provider, custom endpoint)
 └── tailscale/           # Tailnet ACL policy (deny-by-default access control)
@@ -39,14 +40,15 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
   - `discord` — one bot token per imported application plus `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `openai` — `OPENAI_ADMIN_KEY`, `OPENAI_CERTIFICATE_VALUES_JSON`, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `anthropic` — `ANTHROPIC_ADMIN_API_KEY` and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
-  - `openrouter` — `OPENROUTER_MANAGEMENT_KEY`, `OPENROUTER_BYOK_KEYS_JSON`, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
+  - `anthropic-federation` — `ANTHROPIC_ADMIN_API_KEY`, an `org:admin` OAuth token as `ANTHROPIC_AUTH_TOKEN`, `OP_ACCOUNT` for the 1Password provider's desktop-app auth, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
+  - `google` — the operator's Application Default Credentials, `OP_ACCOUNT` for the 1Password provider's desktop-app auth, and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
   - `cloudflare-tokens` — a bootstrap `CLOUDFLARE_API_TOKEN` and `TOFU_STATE_ENCRYPTION_PASSPHRASE`
 
 Non-secret platform desired state is committed in each platform stack's
 `desired-state.json` and checked against `platform-desired-state.schema.json`.
 `packages/homelab/scripts/tofu/tofu-stack.ts` injects that state as typed variables
 and builds every child environment from an allowlist. Vendor admin keys,
-generated credentials, BYOK values, certificate material, bot tokens, and each
+generated credentials, certificate material, bot tokens, and each
 stack's unique state passphrase remain in 1Password.
 
 To validate without state or platform access, run
@@ -77,7 +79,7 @@ The static Buildkite pipeline ([`.buildkite/pipeline.yml`](../../../../.buildkit
 
 - **Every PR** (when tofu inputs change): credentialed plans for the established infrastructure stacks and backend-disabled validation with dummy encryption values for the five platform stacks.
 - **On merge to main**: applies `seaweedfs`, `tailscale`, `buildkite`, and `arr` (`tofu-apply` step); `github` in its own no-retry step (GitHub API mutations are not idempotent on partial failure); and `cloudflare` after the ArgoCD sync step's TunnelBinding deletion gate.
-- **Platform control planes on main**: separate, serialized, no-retry jobs for `openai`, `anthropic`, `discord`, `openrouter`, and `cloudflare-tokens`. Ordinary main builds plan only. An operator sets `TOFU_PLATFORM_APPLY` to exactly one stack name on a targeted main build to run that stack's plan and apply; the selector omits the other four jobs. Each job receives only its own platform credentials and the shared state identity.
+- **Platform control planes on main**: separate, serialized, no-retry jobs for `openai`, `anthropic`, `discord`, and `cloudflare-tokens`. Ordinary main builds plan only. An operator sets `TOFU_PLATFORM_APPLY` to exactly one stack name on a targeted main build to run that stack's plan and apply; the selector omits the other three jobs. `anthropic-federation` and `google` validate on PRs but have no CI plan or apply job: their credentials are an operator's OAuth token and ADC, so an operator applies them locally through the wrapper. Each job receives only its own platform credentials and the shared state identity.
 - The `argocd` stack is operator-run only — it is not in the CI plan/apply loops.
 - `asuswrt` is not in the CI loops either, and cannot be: the CI pod has tailnet-only egress and cannot reach the LAN routers. It is run by hand from a machine on both the LAN and the tailnet — see [`asuswrt/README.md`](asuswrt/README.md).
 
@@ -131,8 +133,10 @@ pinned `jianyuan/openai` companion is used only for project service accounts
 because that resource returns the newly created key. The sensitive output pairs
 that key with one or more existing 1Password rotation units for the
 operator-controlled handoff. Existing projects carry their permanent import IDs;
-new service accounts are limited to the Streambot, OpenRouter BYOK, and Scout
-voice rotations. OpenAI subscription/Codex authentication is a separate
+every inference workload and environment has its own project and service
+account, with a hard spend limit, a spend alert, and a model allowlist. The
+`openrouter` project and its BYOK service account remain only until the
+OpenRouter keys are revoked after live acceptance. OpenAI subscription/Codex authentication is a separate
 boundary.
 
 Spend controls denominate their thresholds inconsistently upstream, and the
@@ -152,39 +156,37 @@ manual bootstrap steps. The committed key metadata records the existing
 1Password rotation unit, including a JSON path when needed, that receives a
 manually created replacement.
 
-### OpenRouter
+### Anthropic workload identity federation
 
-The official pinned `OpenRouterTeam/openrouter` provider manages workspaces,
-guardrails, and inference API keys. Every current workspace and supported
-inference key is committed with its import ID and exact live settings before
-replacement keys are created. Generated keys name their existing 1Password targets; imported external
-keys may intentionally have no repository handoff. OpenRouter management keys
-are bootstrap credentials and are never used as application inference keys.
+The `anthropic-federation` stack registers the Talos cluster's service-account
+token issuer with inline JWKS, because the issuer is not publicly reachable. It
+creates one Anthropic service account and federation rule per workload, each
+matching `system:serviceaccount:<namespace>:*` and bound to that environment's
+workspace. Federated pods hold no Anthropic secret. The apply writes each
+workload's organization, rule, service account, and workspace IDs into a
+dedicated 1Password item named by its `onepassword_item_title`, which CDK8s
+syncs into the workload's namespace, so an apply needs no follow-up commit.
 
-**BYOK credentials are deliberately NOT managed here.** `openrouter_byok_key`
-declares `key` — the raw upstream Anthropic/OpenAI API key — as a _required_
-attribute, and OpenRouter never returns it, so OpenTofu cannot read an existing
-credential and cannot avoid pushing a value. Nor can it mint one: across every
-resource and data source of both the `ippontech/anthropic` and `openai/openai`
-providers there is no computed+sensitive attribute at all. `anthropic_api_key`
-exposes only `partial_key_hint`, and `openai_project_service_account` exposes no
-key attribute, so the secret can only enter from outside OpenTofu.
+The federation admin endpoints accept only an `org:admin` OAuth token, so this
+stack is operator-applied. Workspace spend limits are not exposed by the
+provider and are set in the Claude Console.
 
-Managing BYOK here would therefore require both provider keys to sit in a
-CI-readable 1Password field, granting every Buildkite job holding that grant
-standing access to them — a permanent cost paid to version-control a few
-policy fields (`allowed_models`, `disabled`, `is_fallback`, workspace binding)
-that change rarely. BYOK is instead wired by hand in the OpenRouter UI, and
-`openrouter_byok_credentials` is an empty map.
+### Google
 
-To adopt them later: populate `OPENROUTER_BYOK_KEYS_JSON` on the
-`openrouter-tofu-credentials` item with `{"<name>": "<raw provider key>"}` and
-add the matching entries (with their `byok_key_id`) back to
-`desired-state.json`. The resource, variables, and import wiring all remain in
-place, and `assertPlatformSecretCoverage` in `tofu-stack.ts` fails fast naming
-any credential whose key is missing. Note that whatever value is supplied
-becomes what OpenRouter stores — if it differs from the key wired today, the
-apply rotates the credential rather than adopting it.
+The `google` stack creates one project per workload with the Gemini API
+enabled, a role-less service account to bind the key to, and an alert-only
+Cloud Billing budget. It mints a Gemini API key bound to that account and
+restricted to the Gemini API, and writes it into a dedicated 1Password item
+named by the workload's `onepassword_item_title`. Bumping
+`gemini_key_revision` rotates the key: the replacement is created and handed
+off before the old one is deleted. The AI Studio spend cap has no API; the
+output `google_gemini_spend_caps` lists the value to set by hand. Without a
+GCP organization only a user can create projects, so this stack runs with the
+operator's Application Default Credentials. `google_billing_account_id` and
+`google_quota_project_id` are unset until the billing account exists.
+
+See [Rotate LLM provider credentials](https://github.com/shepherdjerred/monorepo/blob/main/packages/docs/wiki/src/content/docs/how-to/rotate-provider-credentials.md)
+for the operator steps, spend caps, and JWKS refresh.
 
 ### GitHub
 
@@ -238,7 +240,8 @@ To import existing Cloudflare records into state, use [`cf-terraforming`](https:
 
 State is stored in a self-hosted SeaweedFS S3 bucket
 (`homelab-tofu-state`), split by module. The new `openai`, `anthropic`,
-`discord`, `openrouter`, and `cloudflare-tokens` states enforce client-side
+`discord`, `anthropic-federation`, `google`, and `cloudflare-tokens` states
+enforce client-side
 AES-GCM encryption for state and saved plans from their first write. They have
 no plaintext fallback because no prior remote object exists.
 

@@ -92,7 +92,7 @@ async function prepareTestEnvironment(
 ): Promise<string | undefined> {
   Bun.env["DISCORD_TOKEN"] ??= "test-token";
   Bun.env["DISCORD_CLIENT_ID"] ??= "123456789012345678";
-  Bun.env["OPENROUTER_API_KEY"] ??= "test-key";
+  Bun.env["OPENAI_API_KEY"] ??= "test-key";
   Bun.env["SCHEDULER_ENABLED"] ??= "true";
   Bun.env["BROWSER_ENABLED"] = "true";
   Bun.env["BROWSER_HEADLESS"] ??= "true";

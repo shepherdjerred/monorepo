@@ -10,11 +10,11 @@
  *  - macOS with ffmpeg on PATH (AVFoundation capture);
  *  - trained hey-scout assets in --assets-dir (see
  *    `src/voice-assistant/constants.ts` for the manifest filenames);
- *  - OPENAI_API_KEY in the environment.
+ *  - VOICE_OPENAI_API_KEY in the environment.
  *
  * Usage:
  *   bun scripts/smoke/voice-probe.ts --list-devices
- *   OPENAI_API_KEY=... bun scripts/smoke/voice-probe.ts --device 1 --assets-dir ~/scout-voice-models
+ *   VOICE_OPENAI_API_KEY=... bun scripts/smoke/voice-probe.ts --device 1 --assets-dir ~/scout-voice-models
  *
  * Say "hey scout, how much true damage does Cho'Gath ult do at rank one" and
  * expect a printed transcript and verified command.
@@ -45,7 +45,7 @@ const help = `Hey Scout local voice probe
 
 Usage:
   bun scripts/smoke/voice-probe.ts --list-devices
-  OPENAI_API_KEY=... bun scripts/smoke/voice-probe.ts --device <index> [--assets-dir <path>]
+  VOICE_OPENAI_API_KEY=... bun scripts/smoke/voice-probe.ts --device <index> [--assets-dir <path>]
 
 Options:
   --device <index>       AVFoundation audio-device index
@@ -101,9 +101,9 @@ async function main(): Promise<void> {
   if (!Number.isInteger(deviceIndex) || deviceIndex < 0) {
     throw new Error("--device must be a non-negative AVFoundation index");
   }
-  const apiKey = Bun.env["OPENAI_API_KEY"];
+  const apiKey = Bun.env["VOICE_OPENAI_API_KEY"];
   if (apiKey === undefined || apiKey.length === 0) {
-    throw new Error("OPENAI_API_KEY is required for the Realtime turn");
+    throw new Error("VOICE_OPENAI_API_KEY is required for the Realtime turn");
   }
   const assetsDir =
     values["assets-dir"] ?? Bun.env["VOICE_ASSETS_DIR"] ?? "/opt/scout/voice";

@@ -33,13 +33,14 @@ actually uses.
 
 Neither native SDK contributes to `llm_cost_usd_total`. Both bill against a
 subscription rather than per call, so a cost figure from either would be an
-API-equivalent price mixed into the same series as real OpenRouter charges.
+API-equivalent price mixed into the same series as real per-token API charges.
 They record tokens instead. `llm.cost_usd` remains on the Claude Agent span as a
 provider-reported fact for reading a single trace.
 
 Direct provider-SDK wrappers (Anthropic, OpenAI, Gemini, and the `claude` CLI)
-are gone: every model call in the repository now goes through OpenRouter via
-the AI SDK, so those calls are instrumented by
+are gone: every model call in the repository now goes through
+`@shepherdjerred/llm-runtime`, which calls OpenAI, Anthropic, and Google directly
+through the AI SDK, so those calls are instrumented by
 `RepositoryOpenTelemetry` (`./ai-sdk-telemetry`) and the `withLlmSpan` /
 `setLlmResponseAttributes` primitives in `./span-helpers` rather than by a
 per-provider wrapper.
@@ -55,9 +56,9 @@ have a user.
 
 `withLlmSubjectSpan(name, subject, fn)` opens an **active** span carrying those
 attributes. Activeness is the point, not a detail: `@shepherdjerred/llm-runtime`
-reads `trace.getSpan(context.active())` when it builds a call's attribution
-headers, so a call made outside an active span reaches OpenRouter with no trace
-id and its cost log cannot be joined back to the span that names the subject.
+reads `trace.getSpan(context.active())` when it stamps a call's trace id, so a
+call made outside an active span reaches the provider with no trace id and its
+cost log cannot be joined back to the span that names the subject.
 
 The subject also travels through OpenTelemetry context, and `RepositoryOpenTelemetry`
 stamps it onto every `gen_ai.*` span it opens. This is not a convenience: OTel

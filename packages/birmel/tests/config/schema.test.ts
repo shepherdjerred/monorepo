@@ -1,7 +1,7 @@
 import { describe, test, expect } from "vitest";
 import {
   DiscordConfigSchema,
-  OpenRouterConfigSchema,
+  LlmConfigSchema,
   AgentConfigSchema,
   TelemetryConfigSchema,
   DailyPostsConfigSchema,
@@ -44,11 +44,9 @@ describe("DiscordConfigSchema", () => {
   });
 });
 
-describe("OpenRouterConfigSchema", () => {
+describe("LlmConfigSchema", () => {
   test("validates with defaults", () => {
-    const result = OpenRouterConfigSchema.safeParse({
-      apiKey: "test-key",
-    });
+    const result = LlmConfigSchema.safeParse({});
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.model).toBe("gpt-5.6-sol");
@@ -59,8 +57,7 @@ describe("OpenRouterConfigSchema", () => {
   });
 
   test("allows custom model and classifierModel", () => {
-    const result = OpenRouterConfigSchema.safeParse({
-      apiKey: "test-key",
+    const result = LlmConfigSchema.safeParse({
       model: "gpt-4o",
       classifierModel: "gpt-4o-mini",
     });
@@ -71,9 +68,15 @@ describe("OpenRouterConfigSchema", () => {
     }
   });
 
-  test("rejects missing apiKey", () => {
-    const result = OpenRouterConfigSchema.safeParse({});
-    expect(result.success).toBe(false);
+  test("holds no credential", () => {
+    // Model selection is configuration; provider keys are credentials and are
+    // read by the runtime, not validated here. A required key in this schema is
+    // what kept Birmel from booting without the old gateway variable.
+    const result = LlmConfigSchema.safeParse({ apiKey: "stray" });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).not.toHaveProperty("apiKey");
+    }
   });
 });
 
@@ -237,9 +240,7 @@ describe("ConfigSchema (full)", () => {
         token: "test-token",
         clientId: "123456789012345678",
       },
-      openRouter: {
-        apiKey: "test-openrouter-key",
-      },
+      llm: {},
       imageGeneration: {},
       agent: {},
       authority: {},
@@ -263,9 +264,7 @@ describe("ConfigSchema (full)", () => {
 
   test("rejects config with missing required section", () => {
     const result = ConfigSchema.safeParse({
-      openRouter: {
-        apiKey: "test-openrouter-key",
-      },
+      llm: {},
     });
     expect(result.success).toBe(false);
   });

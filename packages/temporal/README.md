@@ -3,7 +3,7 @@
 Temporal workflow worker for the monorepo. It consolidates what used to be K8s
 CronJobs, in-process cron, and custom job queues into one durable, observable
 scheduler: declarative schedules (home automation, reports, maintenance),
-generic report-only Codex SDK agent tasks through OpenRouter, including the daily
+generic report-only Codex SDK agent tasks on an OpenAI project key, including the daily
 homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 (GitHub merge-conflict check and build cancel, Xcode Cloud, iOS sleep).
 
@@ -51,7 +51,7 @@ Provider subprocesses lose these capabilities when their UID changes, and
 `allowPrivilegeEscalation: false` prevents regaining them.
 
 The shared agent runner keeps authentication separate from tool environments.
-OpenRouter automation uses the Codex SDK. Subscription chats use Claude Agent
+API-key automation uses the Codex SDK. Subscription chats use Claude Agent
 SDK or Codex App Server with in-memory `chatgptAuthTokens` authentication and
 ephemeral credential storage. Subscription Codex requires an isolated
 `CODEX_HOME` without `auth.json`; dropped-UID Claude requires an explicit isolated
@@ -97,17 +97,18 @@ The target defaults to `central`; `--target scout-beta` and `--target
 scout-prod` select the stage-local Scout deployment, queue, replay bundle,
 pinned canary, image repository, and catalog pins.
 
-The hourly `openai-complimentary-usage-hourly` schedule starts
-`runOpenAiComplimentaryUsageReconciliation` on `monorepo-workflows`. Pause it
-before repairing or replacing the Workflow bundle, then resume it only after a
-pinned canary and one bounded scheduled run complete. The Workflow delegates
-the OpenAI Usage and Costs calls to the isolated `billing` Activity queue. Live
-acceptance requires current `openai_project_usage_tokens`, zero official
-`openai_project_cost_usd`, a fresh reconciliation timestamp, and Scout review
-requests with `byok="true"`. The Prometheus rules use
-`exported_service="scout-for-lol-backend"` for Scout telemetry and
-`container="temporal-billing-worker"` for worker freshness; these labels are
-stable across pod recreations.
+The hourly `llm-billed-cost-hourly` schedule starts
+`runLlmBilledCostReconciliation` on `monorepo-workflows`. Pause it before
+repairing or replacing the Workflow bundle, then resume it only after a pinned
+canary and one bounded scheduled run complete. The Workflow delegates the OpenAI
+Costs/Usage and Anthropic Cost Report calls to the isolated `billing` Activity
+queue, whose worker alone holds `OPENAI_ADMIN_KEY` and
+`ANTHROPIC_ADMIN_API_KEY`. Live acceptance requires populated
+`llm_billed_cost_usd` for both providers and a fresh
+`llm_billed_reconciliation_last_success_timestamp_seconds`. The Prometheus rules
+use `container="temporal-billing-worker"` for worker freshness, which is stable
+across pod recreations. The retired `openai-complimentary-usage-hourly` schedule
+is deleted at registration.
 Scout extraction uses two capable image releases. The pre-entrypoint pin creates
 no pod. Copy the first capable candidate pin to stable; that creates only the
 credentialless stable poller. A later distinct candidate pin creates the ramp

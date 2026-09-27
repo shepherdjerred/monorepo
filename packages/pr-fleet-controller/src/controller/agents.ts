@@ -167,6 +167,7 @@ Additional user guidance: ${guidance.length === 0 ? "none" : guidance.join("\n")
       stopWhen: stepCountIs(20),
       ...this.#model.runtime.callOptions({
         workload: "pr-fleet.worker.tool-loop",
+        model: this.#model.id,
         sessionId: `${this.#telemetry.runId}:${prNumber}:${generation}`,
         traceContext: { traceId },
       }),
@@ -314,6 +315,7 @@ export class FleetMaster {
       stopWhen: stepCountIs(12),
       ...this.#model.runtime.callOptions({
         workload: "pr-fleet.master",
+        model: this.#model.id,
         sessionId: this.#telemetry.runId,
         ...(traceId === undefined ? {} : { traceContext: { traceId } }),
       }),

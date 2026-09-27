@@ -34,11 +34,17 @@ Commands for the PR fleet controller. Package:
 | `--no-open`                  | start the dashboard without opening a browser          |
 | `--help`                     | print usage, flags, and interactive commands           |
 
-Set `OPENROUTER_API_KEY` before starting the controller. The model must be a
-stable ID from `@shepherdjerred/llm-models` with OpenRouter tool and
-structured-output capabilities. One exact catalog model powers the master and
-every bounded worker. OpenRouter may choose another upstream provider for that
-model, but it may not silently substitute another model.
+The model must be a stable ID from `@shepherdjerred/llm-models` with tool and
+structured-output capabilities. Set the key for the provider it routes to
+before starting the controller:
+
+| Provider  | Variable            |
+| --------- | ------------------- |
+| OpenAI    | `OPENAI_API_KEY`    |
+| Anthropic | `ANTHROPIC_API_KEY` |
+| Google    | `GEMINI_API_KEY`    |
+
+One exact catalog model powers the master and every bounded worker.
 
 ## In-session controls
 

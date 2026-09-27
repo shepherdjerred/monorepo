@@ -1,50 +1,48 @@
 import { describe, expect, test } from "vitest";
-import {
-  createOpenRouterCodexConfig,
-  OPENROUTER_API_BASE_URL,
-} from "@shepherdjerred/llm-runtime";
+import { createCodexConfig } from "@shepherdjerred/llm-runtime";
 
-describe("OpenRouter Codex SDK configuration", () => {
-  test.each([
-    ["gpt-5.6-luna", "openai/gpt-5.6-luna"],
-    ["gpt-5.6-sol", "openai/gpt-5.6-sol"],
-  ])("routes %s through OpenRouter", (modelId, routeModelId) => {
-    const config = createOpenRouterCodexConfig({
-      apiKey: "test-key",
-      modelId,
-      env: { PATH: "/usr/bin" },
+describe("Codex SDK configuration", () => {
+  test("uses the catalog's native model id and OpenAI's own endpoint", () => {
+    // Under the gateway this rewrote the model to `openai/gpt-5.6-luna` and
+    // overrode the base URL. Against OpenAI the catalog id IS the API name, and
+    // no base URL is set at all.
+    const config = createCodexConfig({
+      apiKey: "sk-test",
+      modelId: "gpt-5.6-luna",
     });
-    expect(config).toEqual({
-      catalogModelId: modelId,
-      routeModelId,
-      codexOptions: {
-        apiKey: "test-key",
-        baseUrl: OPENROUTER_API_BASE_URL,
-        env: { PATH: "/usr/bin" },
-      },
-      providerConfig: {
-        model_provider: "openrouter",
-        model_providers: {
-          openrouter: {
-            name: "OpenRouter",
-            base_url: OPENROUTER_API_BASE_URL,
-            wire_api: "responses",
-            env_key: "CODEX_API_KEY",
-          },
-        },
-      },
-    });
+    expect(config.catalogModelId).toBe("gpt-5.6-luna");
+    expect(config.routeModelId).toBe("gpt-5.6-luna");
+    expect(config.codexOptions.apiKey).toBe("sk-test");
+    expect(config.codexOptions).not.toHaveProperty("baseUrl");
   });
 
-  test("rejects missing keys and non-language routes", () => {
+  test("passes caller env through untouched", () => {
+    const config = createCodexConfig({
+      apiKey: "sk-test",
+      modelId: "gpt-5.6-sol",
+      env: { CODEX_HOME: "/tmp/codex" },
+    });
+    expect(config.codexOptions.env).toEqual({ CODEX_HOME: "/tmp/codex" });
+  });
+
+  test("refuses a model Codex cannot serve", () => {
     expect(() =>
-      createOpenRouterCodexConfig({ apiKey: " ", modelId: "gpt-5.6-luna" }),
-    ).toThrow("OpenRouter API key must not be empty");
+      createCodexConfig({ apiKey: "sk-test", modelId: "claude-sonnet-5" }),
+    ).toThrow("routes to anthropic");
     expect(() =>
-      createOpenRouterCodexConfig({
-        apiKey: "test-key",
+      createCodexConfig({ apiKey: "sk-test", modelId: "gpt-9000" }),
+    ).toThrow("Unknown model id");
+    expect(() =>
+      createCodexConfig({
+        apiKey: "sk-test",
         modelId: "text-embedding-3-small",
       }),
-    ).toThrow("uses OpenRouter embedding, not language");
+    ).toThrow("not language");
+  });
+
+  test("refuses an empty key", () => {
+    expect(() =>
+      createCodexConfig({ apiKey: "   ", modelId: "gpt-5.6-luna" }),
+    ).toThrow("must not be empty");
   });
 });

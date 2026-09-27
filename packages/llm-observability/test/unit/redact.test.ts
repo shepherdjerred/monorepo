@@ -104,6 +104,7 @@ test("does not redact Discord-style snowflake IDs or usernames", () => {
 afterEach(() => {
   delete Bun.env["OPENAI_API_KEY"];
   delete Bun.env["XAI_API_KEY"];
+  delete Bun.env["GEMINI_API_KEY"];
   delete Bun.env["OPENROUTER_API_KEY"];
 });
 
@@ -122,14 +123,23 @@ test("redactText masks known secret env-var values in any format", () => {
 
 test("redactText masks every documented provider credential", () => {
   const xaiSecret = ["xai", "provider", "credential"].join("-");
-  const openRouterSecret = ["openrouter", "provider", "credential"].join("-");
+  const geminiSecret = ["gemini", "provider", "credential"].join("-");
   Bun.env["XAI_API_KEY"] = xaiSecret;
-  Bun.env["OPENROUTER_API_KEY"] = openRouterSecret;
+  Bun.env["GEMINI_API_KEY"] = geminiSecret;
 
-  const out = redactText(`xai=${xaiSecret} router=${openRouterSecret}`);
+  const out = redactText(`xai=${xaiSecret} gemini=${geminiSecret}`);
   expect(out).not.toContain(xaiSecret);
-  expect(out).not.toContain(openRouterSecret);
+  expect(out).not.toContain(geminiSecret);
   expect(out.match(/\[REDACTED\]/g)).toHaveLength(2);
+});
+
+test("redactText keeps retired OpenRouter values masked through credential revocation", () => {
+  const retiredSecret = ["router", "provider", "credential"].join("-");
+  Bun.env["OPENROUTER_API_KEY"] = retiredSecret;
+
+  const out = redactText(`archived span: ${retiredSecret}`);
+  expect(out).not.toContain(retiredSecret);
+  expect(out).toContain("[REDACTED]");
 });
 
 test("redactSecrets applies literal-value masking inside nested strings", () => {

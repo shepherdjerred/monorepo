@@ -31,7 +31,6 @@ export const summarySteps = [
   "tofu-platform-openai",
   "tofu-platform-anthropic",
   "tofu-platform-discord",
-  "tofu-platform-openrouter",
   "tofu-platform-cloudflare-tokens",
   "argocd-sync",
   "scout-beta-release",

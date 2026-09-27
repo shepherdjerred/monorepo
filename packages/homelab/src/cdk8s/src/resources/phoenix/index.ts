@@ -132,9 +132,9 @@ export function createPhoenixDeployment(chart: Chart) {
           EnvValue.fromValue("90"),
 
         // No analytics pixels, and no server-side agent that can run bash,
-        // browse, or call GitHub from inside the cluster. Ordinary inference
-        // goes through OpenRouter, so Phoenix holds no provider credentials
-        // for its assistant or playground.
+        // browse, or call GitHub from inside the cluster. Provider credentials
+        // belong to the workloads that call models, so Phoenix holds none for
+        // its assistant or playground.
         PHOENIX_TELEMETRY_ENABLED: EnvValue.fromValue("false"),
         PHOENIX_DISABLE_AGENT_ASSISTANT: EnvValue.fromValue("true"),
         PHOENIX_AGENTS_DISABLE_BASH: EnvValue.fromValue("true"),

@@ -1,6 +1,6 @@
 # PR Fleet Controller
 
-OpenRouter-backed AI SDK workflow for driving every open
+AI SDK workflow for driving every open
 `shepherdjerred/monorepo` pull request toward current-head readiness. It runs as
 one foreground Bun process on macOS, uses one selected catalog model for both the
 conversational master and all per-PR workers, and reconstructs live state on
@@ -35,7 +35,8 @@ outside every layer is one no rule can match, in either direction.
 
 ## Run
 
-Configure `OPENROUTER_API_KEY`, then:
+Configure the key for the model's provider (`OPENAI_API_KEY`,
+`ANTHROPIC_API_KEY`, or `GEMINI_API_KEY`), then:
 
 ```bash
 bun run pr:fleet \
@@ -47,10 +48,9 @@ bun run pr:fleet \
 scope; using the operator's login naturally excludes Renovate and other bots.
 The manifest and dashboard show the selected scope.
 
-The model must be a stable ID from `@shepherdjerred/llm-models` with OpenRouter
-tool and structured-output capabilities, such as `gpt-5.6-sol`. The invocation
-uses that exact model throughout. OpenRouter may fall back between upstream
-providers, but the controller never silently changes model identity.
+The model must be a stable ID from `@shepherdjerred/llm-models` with tool and
+structured-output capabilities, such as `gpt-5.6-sol`. The invocation uses that
+exact model throughout, calling its first-party provider directly.
 
 Every non-help invocation also requires a private local run-bundle directory.
 The default is
@@ -208,7 +208,7 @@ Collection is mandatory and local-only. Each run writes:
 - `summary.json` with final status, duration, event counts, last hash, and final
   fleet snapshot;
 - `spans.jsonl` with completed, secret-redacted OpenTelemetry spans, including
-  AI SDK/OpenRouter reasoning, tools, usage, cost, and trace correlation. It is
+  AI SDK reasoning, tools, usage, cost, and trace correlation. It is
   the authoritative telemetry artifact in run-bundle schema v2 and its byte
   length plus SHA-256 digest are bound into the terminal event and summary.
 
@@ -228,7 +228,7 @@ the bootstrap bundle is created and waits for in-progress storage initialization
 before shutting down and finalizing it.
 
 The event payload redactor masks secret-shaped fields, bearer values, known
-credential environment values, and the OpenRouter key before writing any event,
+credential environment values, and every provider key before writing any event,
 span, or summary. The same literal-value redactor runs synchronously before
 OpenTelemetry span persistence, so traces retain redacted model/tool bodies,
 timing, token metadata, and correlation IDs. Commands inherit

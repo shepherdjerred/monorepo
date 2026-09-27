@@ -65,7 +65,7 @@ const { jsonLog, captureWithContext, safeHeartbeat } =
 
 // Audit hits a wide tool surface (kubectl, talosctl, toolkit, tofu, gh). The
 // actual security bound is layered:
-//   1. The Agent SDK env (OpenRouter + audit creds).
+//   1. The Agent SDK env (OpenAI + audit creds).
 //   2. The cluster RBAC bound to the temporal-worker SA — strict read-only via
 //      `temporal-worker-audit-reader` (see homelab/.../audit-rbac.ts).
 //   3. The prompt itself, which forbids state-mutating commands.
@@ -89,9 +89,9 @@ function todayIsoDate(): string {
 async function runAuditAgent(
   input: HomelabAuditAgentInput,
 ): Promise<HomelabAuditAgentResult> {
-  const openRouterApiKey = Bun.env["OPENROUTER_API_KEY"];
-  if (openRouterApiKey === undefined || openRouterApiKey === "") {
-    throw new Error("OPENROUTER_API_KEY is required");
+  const openAiApiKey = Bun.env["OPENAI_API_KEY"];
+  if (openAiApiKey === undefined || openAiApiKey === "") {
+    throw new Error("OPENAI_API_KEY is required");
   }
 
   const date = input.date ?? todayIsoDate();
@@ -157,9 +157,9 @@ async function runAuditAgent(
       maxTurns,
       turnBudgetKind: "turns",
       cwd: process.cwd(),
-      auth: { kind: "openrouter", apiKey: openRouterApiKey },
+      auth: { kind: "openai-api-key", apiKey: openAiApiKey },
       env: envForTrustedAgent({
-        OPENROUTER_API_KEY: openRouterApiKey,
+        OPENAI_API_KEY: openAiApiKey,
         GH_TOKEN: githubTokenResult.token,
       }),
       signal,

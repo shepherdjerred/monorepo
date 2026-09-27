@@ -2,7 +2,11 @@ import path from "node:path";
 import { readdir } from "node:fs/promises";
 import { z } from "zod";
 import { Output, generateText } from "ai";
-import { createOpenRouterRuntime } from "@shepherdjerred/llm-runtime";
+import {
+  createLlmRuntime,
+  providerCredentialsFromEnv,
+  requireCredentialsFor,
+} from "@shepherdjerred/llm-runtime";
 import {
   ReplayCaseCandidateSchema,
   ReplayManifestSchema,
@@ -100,7 +104,7 @@ function isEmptyResponse(error: unknown): boolean {
 }
 
 async function observeOnce(
-  runtime: ReturnType<typeof createOpenRouterRuntime>,
+  runtime: ReturnType<typeof createLlmRuntime>,
   record: CaseFile,
 ): Promise<JudgeObservation> {
   const result = await generateText({
@@ -119,6 +123,7 @@ async function observeOnce(
     output: Output.object({ schema: JudgeObservationSchema }),
     ...runtime.callOptions({
       workload: "scout.explore.replay-judge",
+      model: EXPLORE_JUDGE_MODEL,
       // The rubric is the same for every case, so every call after the first
       // reads it from the prompt cache; see Explore's own key in agent.ts.
       promptCacheKey: "scout.explore.replay-judge",
@@ -134,7 +139,7 @@ async function observeOnce(
  * an answer still fails rather than being retried into a verdict.
  */
 async function observe(
-  runtime: ReturnType<typeof createOpenRouterRuntime>,
+  runtime: ReturnType<typeof createLlmRuntime>,
   record: CaseFile,
 ): Promise<JudgeObservation> {
   let lastError: unknown;
@@ -157,7 +162,7 @@ async function observe(
  * against another report of the same bundle.
  */
 async function observeAll(
-  runtime: ReturnType<typeof createOpenRouterRuntime>,
+  runtime: ReturnType<typeof createLlmRuntime>,
   records: readonly CaseFile[],
   concurrency: number,
 ): Promise<{
@@ -261,10 +266,7 @@ async function main(): Promise<void> {
     process.stdout.write(`${USAGE}\n`);
     return;
   }
-  const apiKey = Bun.env["OPENROUTER_API_KEY"];
-  if (apiKey === undefined || apiKey.trim() === "") {
-    throw new Error("OPENROUTER_API_KEY is required to judge a bundle.");
-  }
+  requireCredentialsFor(EXPLORE_JUDGE_MODEL);
   const { bundleDir, concurrency } = parseArgs(args);
 
   const manifest = ReplayManifestSchema.parse(
@@ -284,8 +286,8 @@ async function main(): Promise<void> {
   process.stderr.write(
     `judging ${records.length.toString()} cases from ${manifest.runId} with ${EXPLORE_JUDGE_MODEL}\n`,
   );
-  const runtime = createOpenRouterRuntime({
-    apiKey,
+  const runtime = createLlmRuntime({
+    credentials: providerCredentialsFromEnv(),
     service: "scout-explore-replay-judge",
     appName: "Scout Explore Replay Judge",
   });

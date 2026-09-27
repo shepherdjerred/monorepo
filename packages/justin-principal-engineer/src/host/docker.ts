@@ -223,9 +223,9 @@ export class DockerAgentRunner {
     );
 
     const credential = {
-      name: "OPENROUTER_API_KEY",
+      name: "OPENAI_API_KEY",
       value: await readOpReference(
-        this.config.agents.codex.openRouterApiKey,
+        this.config.agents.codex.openAiApiKey,
         this.run,
       ),
       model: this.config.agents.codex.model,

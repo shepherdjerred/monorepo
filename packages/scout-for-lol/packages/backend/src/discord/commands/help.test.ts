@@ -90,7 +90,7 @@ describe("/help", () => {
   test("advertises voice only when the deployment gate is also on", async () => {
     Bun.env["ENVIRONMENT"] = "beta";
     Bun.env["VOICE_ASSISTANT_ENABLED"] = "true";
-    Bun.env["OPENAI_API_KEY"] = "test-openai-key";
+    Bun.env["VOICE_OPENAI_API_KEY"] = "test-openai-key";
     resetConfigurationForTests();
     const gatedGuild = "100000000000000005";
     const server = DiscordGuildIdSchema.parse(gatedGuild);
@@ -101,7 +101,7 @@ describe("/help", () => {
       expect(gated).toContain("`/scout join`");
     } finally {
       delete Bun.env["VOICE_ASSISTANT_ENABLED"];
-      delete Bun.env["OPENAI_API_KEY"];
+      delete Bun.env["VOICE_OPENAI_API_KEY"];
       resetConfigurationForTests();
     }
   });
