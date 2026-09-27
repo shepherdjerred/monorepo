@@ -55,7 +55,8 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     args: [],
     timing: {
       kind: "cron",
-      expression: "0 4 1 1,4,7,10 *",
+      // Start after the 05:00 golink sync; leave the 03:30–05:00 audits free.
+      expression: "15 5 1 1,4,7,10 *",
       timezone: "America/Los_Angeles",
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,

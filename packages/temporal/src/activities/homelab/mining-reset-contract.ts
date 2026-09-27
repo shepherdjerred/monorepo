@@ -220,13 +220,24 @@ case "$period" in ????q[1-4]) ;; *) exit 20 ;; esac
 [ ! -L "$root/mining" ] || exit 23
 [ ! -L "$root/.mining-reset" ] || exit 24
 mkdir -p "$root/.mining-reset"
-if [ -f "$root/.mining-reset/$period.done" ]; then exit 0; fi
-[ -d "$root/mining" ] || exit 25
-[ -f "$root/mining/level.dat" ] || exit 26
-[ -d "$root/mining/region" ] || exit 27
-rm -rf -- "$root/mining"
+if [ -f "$root/.mining-reset/$period.done" ]; then
+  [ "$(cat "$root/.mining-reset/$period.done")" = "$period" ] || exit 28
+  exit 0
+fi
+tomb="$root/.mining-reset/$period.deleting"
+[ ! -L "$tomb" ] || exit 29
+if [ ! -d "$tomb" ]; then
+  [ ! -e "$tomb" ] || exit 30
+  [ -d "$root/mining" ] || exit 25
+  [ -f "$root/mining/level.dat" ] || exit 26
+  [ -d "$root/mining/region" ] || exit 27
+  mv -- "$root/mining" "$tomb"
+  sync
+fi
+rm -rf -- "$tomb"
 sync
-printf '%s\n' "$period" > "$root/.mining-reset/$period.done"
+printf '%s\n' "$period" > "$root/.mining-reset/$period.done.tmp"
+mv -- "$root/.mining-reset/$period.done.tmp" "$root/.mining-reset/$period.done"
 sync
 `;
 }

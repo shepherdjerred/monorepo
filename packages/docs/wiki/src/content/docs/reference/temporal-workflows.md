@@ -137,7 +137,7 @@ Only corpus capture and context-refresh are scheduled.
 | Workflow                         | Trigger                          | Brain         | Output                                        |
 | -------------------------------- | -------------------------------- | ------------- | --------------------------------------------- |
 | zfs-maintenance                  | Sun 03:00                        | deterministic | scrub + autotrim                              |
-| the-storm-mining-reset-quarterly | quarter day 1, 04:00 PT (paused) | deterministic | stopped-server Velero snapshot + mining reset |
+| the-storm-mining-reset-quarterly | quarter day 1, 05:15 PT (paused) | deterministic | stopped-server Velero snapshot + mining reset |
 | buildkite-uv-cache-prune-weekly  | Sun 03:15                        | deterministic | uv cache prune                                |
 | bugsink-housekeeping             | daily 03:00                      | deterministic | DB cleanup                                    |
 | velero-orphan-audit              | daily 03:30                      | deterministic | metrics only                                  |

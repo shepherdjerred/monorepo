@@ -13,7 +13,7 @@ The [quarterly schedule](https://github.com/shepherdjerred/monorepo/blob/main/pa
 
 3. Read the matching `mining-reset-YYYYqN` Backup in namespace `velero`. Require phase `Completed`, zero warnings and errors, and exactly one attempted and completed volume snapshot. The [PVC policy](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.json) includes `datadir-minecraft-tsmc-0`. A completed backup is still separate from a tested restore.
 
-4. Read the matching `mining-reset-YYYYqN` Job in namespace `minecraft-tsmc`. If it failed, inspect its Pod logs and the mounted claim before retrying. The Job only removes `/data/mining`; a `.mining-reset/YYYYqN.done` marker prevents deleting a regenerated world during a retry. Do not substitute a different Job or PVC.
+4. Read the matching `mining-reset-YYYYqN` Job in namespace `minecraft-tsmc`. If it failed, inspect its Pod logs and the mounted claim before retrying. The Job atomically renames `/data/mining` to `/data/.mining-reset/YYYYqN.deleting`, removes that checkpoint, then writes `.mining-reset/YYYYqN.done`. A retry resumes deletion of the checkpoint and leaves any newly regenerated `/data/mining` alone. Do not substitute a different Job or PVC.
 
 5. If the Workflow is still running, let its retry continue only when the Backup and Job match the intended quarter and claim. If the Workflow failed or either object has an unexpected spec, leave the lock in place for a controlled recovery. After a successful Workflow completion, confirm both maintenance annotations are gone before allowing a client to wake the server.
 

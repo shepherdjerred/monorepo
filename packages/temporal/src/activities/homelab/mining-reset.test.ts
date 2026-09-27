@@ -3,6 +3,7 @@ import {
   mkdtemp,
   mkdir,
   readFile,
+  rename,
   rm,
   symlink,
   writeFile,
@@ -72,6 +73,26 @@ describe("The Storm mining reset", () => {
     expect(await runScript(root)).toBe(23);
     expect(await readFile(path.join(root, "world", "level.dat"), "utf8")).toBe(
       "main world",
+    );
+  });
+
+  test("resumes an interrupted deletion without touching a regenerated world", async () => {
+    const root = await fixtureRoot();
+    const checkpoint = path.join(root, ".mining-reset");
+    await mkdir(checkpoint);
+    const tomb = path.join(checkpoint, "2026q4.deleting");
+    await rename(path.join(root, "mining"), tomb);
+    await writeFile(path.join(tomb, "partial"), "left by interrupted delete");
+    await mkdir(path.join(root, "mining"));
+    await writeFile(path.join(root, "mining", "new.txt"), "regenerated");
+
+    expect(await runScript(root)).toBe(0);
+    expect(await Bun.file(path.join(tomb, "partial")).exists()).toBe(false);
+    expect(await readFile(path.join(root, "mining", "new.txt"), "utf8")).toBe(
+      "regenerated",
+    );
+    expect(await readFile(path.join(checkpoint, "2026q4.done"), "utf8")).toBe(
+      "2026q4\n",
     );
   });
 
