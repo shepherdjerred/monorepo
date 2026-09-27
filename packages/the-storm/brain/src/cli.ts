@@ -1,87 +1,17 @@
 import path from "node:path";
 import { realpath, stat } from "node:fs/promises";
 import mineflayer from "mineflayer";
-import type { Bot } from "mineflayer";
 import {
   initFeatureFlags,
   shutdownFeatureFlags,
 } from "@shepherdjerred/feature-flags";
 import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { loadBootstrap, loadPilotConfig } from "./config.ts";
-import type { PilotConfig } from "./config.ts";
-import {
-  humanPlayers,
-  inPilotWindow,
-  onlinePlayers,
-  privateAuthCacheMode,
-} from "./policy.ts";
+import { humanPlayers, inPilotWindow, privateAuthCacheMode } from "./policy.ts";
 import { RconClient } from "./rcon.ts";
+import { mineflayerClient, runSession } from "./session.ts";
 
 const CONFIG = new URL("../pilot.json", import.meta.url).pathname;
-
-function waitForSpawn(bot: Bot): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => {
-      finish(new Error("bot spawn timed out"));
-    }, 30_000);
-    const onSpawn = () => {
-      finish();
-    };
-    const onError = () => {
-      finish(new Error("bot connection failed"));
-    };
-    const onEnd = () => {
-      finish(new Error("bot disconnected before spawn"));
-    };
-    const onKicked = () => {
-      finish(new Error("bot was kicked before spawn"));
-    };
-    function finish(error?: Error) {
-      clearTimeout(timer);
-      bot.off("spawn", onSpawn);
-      bot.off("error", onError);
-      bot.off("end", onEnd);
-      bot.off("kicked", onKicked);
-      if (error === undefined) resolve();
-      else reject(error);
-    }
-    bot.once("spawn", onSpawn);
-    bot.on("error", onError);
-    bot.on("end", onEnd);
-    bot.on("kicked", onKicked);
-  });
-}
-
-async function verifySpawn(
-  bot: Bot,
-  rcon: RconClient,
-  config: PilotConfig,
-): Promise<void> {
-  await waitForSpawn(bot);
-  if (bot.username !== config.botPlayerName) {
-    throw new Error(
-      "connected Minecraft profile does not match configured pilot name",
-    );
-  }
-  if (!inPilotWindow(config, new Date())) {
-    process.stdout.write("pilot ended: window closed before spawn\n");
-    return;
-  }
-  const online = onlinePlayers(await rcon.command("list"));
-  if (!online.includes(bot.username)) {
-    throw new Error("bot left before the post-spawn presence check completed");
-  }
-  const after = online.filter((player) => player !== bot.username);
-  if (!inPilotWindow(config, new Date())) {
-    process.stdout.write("pilot ended: window closed during spawn check\n");
-    return;
-  }
-  if (after.length === 0) {
-    process.stdout.write("pilot ended: human left before spawn\n");
-    return;
-  }
-  process.stdout.write("pilot connected and verified human presence\n");
-}
 
 async function run(): Promise<void> {
   const command = Bun.argv[2];
@@ -177,7 +107,8 @@ async function runWithFlags(command: "--check" | "--run"): Promise<void> {
       hideErrors: true,
     });
     try {
-      await verifySpawn(bot, rcon, config);
+      const outcome = await runSession(mineflayerClient(bot), rcon, config);
+      process.stdout.write(`pilot ended: ${outcome}\n`);
     } finally {
       bot.quit();
     }

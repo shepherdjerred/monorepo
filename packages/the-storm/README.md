@@ -16,7 +16,7 @@ from `plugin/`.
 | `plugin/architecture/`             | ArchUnit rules that enforce the layering below                                                                         |
 | `plugin/build-logic/`              | Convention plugins: compiler strictness, formatting, PMD, tests, jOOQ codegen                                          |
 | `plugin/gradle/libs.versions.toml` | Every dependency and plugin version                                                                                    |
-| `brain/`                           | Disabled, one-shot Mineflayer companion pilot; no production sidecar or autonomous gameplay yet                        |
+| `brain/`                           | Disabled, manual Mineflayer session for one account; no production sidecar or autonomous gameplay yet                  |
 
 ## Commands
 
@@ -33,6 +33,16 @@ mise exec -- gradle --write-verification-metadata sha256 build
 ```
 
 The jar is `plugin/dist/build/libs/TheStorm.jar`.
+
+The separate `brain/` pilot remains disabled and starts only with its explicit
+`--run` command. When enabled for a supervised trial, it checks for a human
+through RCON before Microsoft authentication and again after Mineflayer spawns.
+It stays connected only during the configured 18:00–20:00 Pacific window and
+while Mineflayer's player roster includes a human. The final human's departure,
+RCON connection loss, bot disconnect, or the window deadline ends the session.
+The end deadline is a single process-local safety timeout; a future recurring
+start belongs to Temporal. See [brain/README.md](brain/README.md) for the
+credential and manual invocation contract.
 
 ## Modules
 
