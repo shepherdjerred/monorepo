@@ -10,7 +10,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-/** The statechart checks: targets exist, every stage is reachable and can finish, no spins. */
+/**
+ * The statechart checks: targets exist, every stage is reachable and can finish, no unsafe cycles.
+ */
 final class Graph {
 
   private Graph() {}
@@ -50,6 +52,20 @@ final class Graph {
       }
     }
     spins(quest).forEach(problems::add);
+    problems.addAll(repeatablePayouts(quest));
+    return problems;
+  }
+
+  private static List<String> repeatablePayouts(Quest quest) {
+    var problems = new ArrayList<String>();
+    for (var stage : sorted(quest)) {
+      if (crystals(stage.onComplete()) > 0 && canCycle(quest, stage.id())) {
+        problems.add(
+            "stage "
+                + stage.id()
+                + " pays crystals in a repeatable cycle; rewards must fit a finite budget");
+      }
+    }
     return problems;
   }
 
@@ -116,6 +132,23 @@ final class Graph {
       var stage = quest.stage(id);
       if (stage.isPresent() && instant(stage.get()) && seen.add(id)) {
         queue.addAll(stage.get().next().targets());
+      }
+    }
+    return false;
+  }
+
+  /** Whether any route from a stage leads back to it, regardless of objectives or choices. */
+  private static boolean canCycle(Quest quest, String start) {
+    var seen = new HashSet<String>();
+    var queue = new ArrayDeque<>(targets(quest.stage(start).orElseThrow()));
+    while (!queue.isEmpty()) {
+      var id = queue.poll();
+      if (id.equals(start)) {
+        return true;
+      }
+      var stage = quest.stage(id);
+      if (stage.isPresent() && seen.add(id)) {
+        queue.addAll(targets(stage.get()));
       }
     }
     return false;

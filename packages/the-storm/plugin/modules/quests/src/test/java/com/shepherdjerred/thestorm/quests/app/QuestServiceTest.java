@@ -178,6 +178,28 @@ final class QuestServiceTest {
   }
 
   @Test
+  void aStaleLoadCannotReplaceANewerSession() {
+    world.join(ALICE);
+    var firstLoad = new CompletableFuture<PlayerQuests>();
+    store.deferredLoad = Optional.of(firstLoad);
+    var first = service.join(ALICE);
+    world.online.remove(ALICE);
+    service.quit(ALICE);
+
+    world.join(ALICE);
+    var secondLoad = new CompletableFuture<PlayerQuests>();
+    store.deferredLoad = Optional.of(secondLoad);
+    var second = service.join(ALICE);
+    secondLoad.complete(PlayerQuests.empty(ALICE).withPoints(7));
+    second.join();
+    firstLoad.complete(PlayerQuests.empty(ALICE));
+    first.join();
+
+    assertThat(state(ALICE).points()).isEqualTo(7);
+    assertThat(store.loads).isEqualTo(2);
+  }
+
+  @Test
   void acceptingThroughAnNpcAndHandingInPaysEverything() {
     join(ALICE);
     service.accept(ALICE, "smith", "nat");
@@ -222,6 +244,116 @@ final class QuestServiceTest {
     world.carry(ALICE).give(IRON, 4);
     service.handIn(ALICE, "thomas", Optional.empty());
     assertThat(world.said(ALICE)).contains("[Quests]: Your crystal reward could not be paid.");
+  }
+
+  @Test
+  void rewardsWaitForTheStateWriteAndFailedWritesDoNotPay() {
+    join(ALICE);
+    service.accept(ALICE, "smith", "thomas");
+    world.carry(ALICE).give(IRON, 4);
+
+    var failed = new CompletableFuture<Void>();
+    store.deferredSave = Optional.of(failed);
+    service.handIn(ALICE, "thomas", Optional.empty());
+    assertThat(rewards.paid).isEmpty();
+    assertThat(world.actions).contains("take 4 IRON_INGOT").doesNotContain("give 2 GOLD_INGOT");
+    assertThat(world.carry(ALICE).count(IRON)).isZero();
+    assertThat(state(ALICE).completion("smith")).isEmpty();
+    failed.completeExceptionally(new IllegalStateException("disk unavailable"));
+    assertThat(rewards.paid).isEmpty();
+    assertThat(state(ALICE).completion("smith")).isEmpty();
+    assertThat(world.carry(ALICE).count(IRON)).isEqualTo(4);
+    assertThat(world.said(ALICE)).last().asString().contains("could not be saved");
+
+    var successful = new CompletableFuture<Void>();
+    store.deferredSave = Optional.of(successful);
+    service.handIn(ALICE, "thomas", Optional.empty());
+    assertThat(rewards.paid).isEmpty();
+    successful.complete(null);
+    assertThat(state(ALICE).completion("smith")).isPresent();
+    assertThat(rewards.paid).containsExactly("100 quest:smith");
+    assertThat(world.actions).contains("take 4 IRON_INGOT", "give 2 GOLD_INGOT");
+  }
+
+  @Test
+  void operationsDuringASaveUseTheCommittedState() {
+    join(ALICE);
+    var deferred = new CompletableFuture<Void>();
+    store.deferredSave = Optional.of(deferred);
+    service.accept(ALICE, "hunt", "captain");
+    service.event(ALICE, new QuestEvent.Killed("ZOMBIE"), List.of());
+    assertThat(state(ALICE).active("hunt")).isEmpty();
+    deferred.complete(null);
+    assertThat(state(ALICE).active("hunt").orElseThrow().progress()).containsExactly(1);
+  }
+
+  @Test
+  void queuedProgressIsSavedAfterAPlayerLeaves() {
+    join(ALICE);
+    var deferred = new CompletableFuture<Void>();
+    store.deferredSave = Optional.of(deferred);
+    service.accept(ALICE, "hunt", "captain");
+    service.event(ALICE, new QuestEvent.Killed("ZOMBIE"), List.of());
+    world.online.remove(ALICE);
+    service.quit(ALICE);
+    assertThat(service.state(ALICE)).isEmpty();
+
+    deferred.complete(null);
+
+    assertThat(
+            Optional.ofNullable(store.saved.get(ALICE))
+                .orElseThrow()
+                .active("hunt")
+                .orElseThrow()
+                .progress())
+        .containsExactly(1);
+    assertThat(service.online()).isEmpty();
+  }
+
+  @Test
+  void reservedItemsAndWorldRewardsSurviveDepartureDuringTheStateWrite() {
+    join(ALICE);
+    service.accept(ALICE, "smith", "thomas");
+    world.carry(ALICE).give(IRON, 4);
+    var deferred = new CompletableFuture<Void>();
+    store.deferredSave = Optional.of(deferred);
+    service.handIn(ALICE, "thomas", Optional.empty());
+    world.online.remove(ALICE);
+    service.quit(ALICE);
+    deferred.complete(null);
+
+    assertThat(Optional.ofNullable(store.saved.get(ALICE)).orElseThrow().completion("smith"))
+        .isPresent();
+    assertThat(store.pending.get(ALICE)).isNotEmpty();
+    assertThat(rewards.paid).isEmpty();
+    assertThat(world.actions).contains("take 4 IRON_INGOT").doesNotContain("give 2 GOLD_INGOT");
+
+    world.join(ALICE);
+    service.join(ALICE).join();
+    assertThat(world.actions).contains("take 4 IRON_INGOT", "give 2 GOLD_INGOT");
+    assertThat(rewards.paid).containsExactly("100 quest:smith");
+    assertThat(world.actions.stream().filter("take 4 IRON_INGOT"::equals)).hasSize(1);
+  }
+
+  @Test
+  void failedStateWriteReturnsReservedItemsWhenThePlayerRejoins() {
+    join(ALICE);
+    service.accept(ALICE, "smith", "thomas");
+    world.carry(ALICE).give(IRON, 4);
+    var failed = new CompletableFuture<Void>();
+    store.deferredSave = Optional.of(failed);
+    service.handIn(ALICE, "thomas", Optional.empty());
+    assertThat(world.carry(ALICE).count(IRON)).isZero();
+    world.online.remove(ALICE);
+    service.quit(ALICE);
+    failed.completeExceptionally(new IllegalStateException("disk unavailable"));
+    assertThat(store.pending.getOrDefault(ALICE, List.of())).isEmpty();
+
+    world.join(ALICE);
+    store.deferredSave = Optional.empty();
+    service.join(ALICE).join();
+    assertThat(world.carry(ALICE).count(IRON)).isEqualTo(4);
+    assertThat(state(ALICE).completion("smith")).isEmpty();
   }
 
   @Test

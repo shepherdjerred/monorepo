@@ -4,8 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.quests.app.QuestStore;
+import com.shepherdjerred.thestorm.quests.app.QuestStore.PendingWorld;
 import com.shepherdjerred.thestorm.quests.domain.board.Template;
+import com.shepherdjerred.thestorm.quests.domain.model.Action;
 import com.shepherdjerred.thestorm.quests.domain.model.Action.NpcMark;
+import com.shepherdjerred.thestorm.quests.domain.model.ItemMatch;
 import com.shepherdjerred.thestorm.quests.domain.state.ActiveQuest;
 import com.shepherdjerred.thestorm.quests.domain.state.Board;
 import com.shepherdjerred.thestorm.quests.domain.state.Completion;
@@ -109,6 +112,19 @@ final class JooqQuestStoreTest {
     var smaller = PlayerQuests.empty(ALICE).withPoints(1).withVariable("x", 1);
     store.save(smaller).join();
     assertThat(store.load(ALICE).join()).isEqualTo(smaller);
+  }
+
+  @Test
+  void committedWorldActionsSurviveStateReplacementUntilAcknowledged() {
+    var give =
+        new PendingWorld(
+            new UUID(4, 1), ALICE, "smith", new Action.Give(ItemMatch.of("IRON_INGOT"), 2));
+    var grant = new PendingWorld(new UUID(4, 2), ALICE, "smith", new Action.Grant("storm.test"));
+    store.save(rich(ALICE), List.of(give, grant)).join();
+    store.save(PlayerQuests.empty(ALICE)).join();
+    assertThat(store.pending(ALICE).join()).containsExactly(give, grant);
+    store.acknowledge(give.id()).join();
+    assertThat(store.pending(ALICE).join()).containsExactly(grant);
   }
 
   @Test

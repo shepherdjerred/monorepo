@@ -49,7 +49,9 @@ final class Fakes {
   /** Keeps state in a map; futures complete immediately. */
   static final class Store implements QuestStore {
     final Map<UUID, PlayerQuests> saved = new HashMap<>();
+    final Map<UUID, List<PendingWorld>> pending = new HashMap<>();
     Optional<CompletableFuture<PlayerQuests>> deferredLoad = Optional.empty();
+    Optional<CompletableFuture<Void>> deferredSave = Optional.empty();
     int loads;
     int saves;
 
@@ -64,9 +66,28 @@ final class Fakes {
     }
 
     @Override
-    public CompletableFuture<Void> save(PlayerQuests state) {
+    public CompletableFuture<Void> save(PlayerQuests state, List<PendingWorld> effects) {
       saves++;
-      saved.put(state.player(), state);
+      return deferredSave
+          .orElseGet(() -> CompletableFuture.completedFuture(null))
+          .thenRun(
+              () -> {
+                saved.put(state.player(), state);
+                pending
+                    .computeIfAbsent(state.player(), ignored -> new ArrayList<>())
+                    .addAll(effects);
+              });
+    }
+
+    @Override
+    public CompletableFuture<List<PendingWorld>> pending(UUID player) {
+      return CompletableFuture.completedFuture(
+          List.copyOf(pending.getOrDefault(player, List.of())));
+    }
+
+    @Override
+    public CompletableFuture<Void> acknowledge(UUID effect) {
+      pending.values().forEach(effects -> effects.removeIf(found -> found.id().equals(effect)));
       return CompletableFuture.completedFuture(null);
     }
 
@@ -122,9 +143,13 @@ final class Fakes {
     }
 
     @Override
-    public void take(UUID player, ItemMatch item, int amount) {
+    public boolean take(UUID player, ItemMatch item, int amount) {
+      if (facts(player).isEmpty() || carry(player).count(item) < amount) {
+        return false;
+      }
       actions.add("take " + amount + " " + item.material());
       Objects.requireNonNull(online.get(player)).take(item, amount);
+      return true;
     }
 
     @Override

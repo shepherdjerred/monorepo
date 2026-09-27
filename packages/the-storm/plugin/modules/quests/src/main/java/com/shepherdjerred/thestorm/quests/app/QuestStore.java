@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.quests.app;
 
+import com.shepherdjerred.thestorm.quests.domain.model.Action;
 import com.shepherdjerred.thestorm.quests.domain.state.PlayerQuests;
 import java.util.List;
 import java.util.UUID;
@@ -15,7 +16,19 @@ public interface QuestStore {
   CompletableFuture<PlayerQuests> load(UUID player);
 
   /** Replaces the player's stored state with {@code state}. */
-  CompletableFuture<Void> save(PlayerQuests state);
+  CompletableFuture<Void> save(PlayerQuests state, List<PendingWorld> effects);
+
+  default CompletableFuture<Void> save(PlayerQuests state) {
+    return save(state, List.of());
+  }
+
+  /** World actions committed with quest state and awaiting delivery to the player. */
+  CompletableFuture<List<PendingWorld>> pending(UUID player);
+
+  /** Removes one action after it has been delivered. */
+  CompletableFuture<Void> acknowledge(UUID effect);
+
+  record PendingWorld(UUID id, UUID player, String quest, Action action) {}
 
   /** The players with the most quest points, highest first. */
   CompletableFuture<List<Standing>> top(int limit);

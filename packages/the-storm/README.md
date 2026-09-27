@@ -69,6 +69,13 @@ templates do not change quests already assigned to players. The content
 currently includes 23 imported historical quests; additional anthology content
 is tracked in the quest PR rather than this reference.
 
+Quest state and pending world rewards commit in one SQLite transaction. Item
+hand-ins are taken while the player is present; a failed state write returns
+them immediately or at the next main-world join. The world reward outbox then
+delivers actions in order when the player is online and records each delivery.
+If a process stops after an action runs but before its receipt is written,
+that action can be retried on the next join.
+
 ## Conventions
 
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating
