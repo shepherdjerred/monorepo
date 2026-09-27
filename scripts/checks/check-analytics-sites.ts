@@ -76,6 +76,13 @@ const staticTrackers = [
     masksAllText: false,
     wiring: /<script[^>]+\bsrc=["']\/posthog\.js["']/,
   },
+  {
+    path: "packages/ts-mc-docs/public/posthog.js",
+    entrypoint: "packages/ts-mc-docs/astro.config.ts",
+    hostname: "docs.ts-mc.net",
+    masksAllText: false,
+    wiring: /\bsrc\s*:\s*["']\/posthog\.js["']/,
+  },
 ] as const;
 
 // These three keys are load-bearing by their ABSENCE, and each one silently
@@ -131,6 +138,7 @@ const expectedHostnames = new Set([
   "scout-for-lol.com",
   "beta.scout-for-lol.com",
   "ts-mc.net",
+  "docs.ts-mc.net",
   "ppl.glitter-boys.com",
   "cook.sjer.red",
   "stocks.sjer.red",
@@ -142,7 +150,7 @@ if (
   [...expectedHostnames].some((hostname) => !actualHostnames.has(hostname))
 ) {
   throw new Error(
-    "Analytics registry must contain exactly the thirteen portfolio hosts",
+    "Analytics registry must contain exactly the fourteen portfolio hosts",
   );
 }
 

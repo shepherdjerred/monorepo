@@ -167,6 +167,7 @@
     "packages/toolkit",
     "packages/trmnl-dashboard",
     "packages/ts-mc",
+    "packages/ts-mc-docs",
     "packages/version-catalog",
     "packages/voice-assistant",
     "packages/webring",
