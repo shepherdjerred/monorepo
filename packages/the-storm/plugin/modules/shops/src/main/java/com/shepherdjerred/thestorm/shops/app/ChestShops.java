@@ -138,6 +138,17 @@ public final class ChestShops {
 
   /** Makes the shop the sign describes, or explains every reason it cannot. */
   public Result<SignShop, List<CreationProblem>> create(Request request) {
+    return switch (prepare(request)) {
+      case Result.Err<SignShop, List<CreationProblem>>(var problems) -> Result.err(problems);
+      case Result.Ok<SignShop, List<CreationProblem>>(var shop) -> {
+        activate(shop);
+        yield Result.ok(shop);
+      }
+    };
+  }
+
+  /** Checks a sign and builds its shop without making it tradable or persisting it. */
+  public Result<SignShop, List<CreationProblem>> prepare(Request request) {
     var owner =
         switch (request.draft().owner()) {
           case OwnerLine.Creator() ->
@@ -169,6 +180,11 @@ public final class ChestShops {
     if (loop.isPresent()) {
       return Result.err(List.of(loop.orElseThrow()));
     }
+    return Result.ok(shop);
+  }
+
+  /** Publishes an accepted sign after the final cancellation state is known. */
+  public void activate(SignShop shop) {
     registry.add(shop);
     var _ =
         store
@@ -181,7 +197,6 @@ public final class ChestShops {
                   }
                 },
                 mainThread);
-    return Result.ok(shop);
   }
 
   private CreationAttempt.Container containerState(ShopOwner owner, Placement where) {

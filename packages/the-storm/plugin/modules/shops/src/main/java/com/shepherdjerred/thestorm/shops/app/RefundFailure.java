@@ -13,7 +13,7 @@ import java.util.Optional;
  *
  * @param payer who should have paid the refund
  * @param payee who should have received it
- * @param amount how much
+ * @param amount how much is still owed; zero means return held items only
  * @param reason the trade's ledger reason, with what the ledger answered
  * @param held items the trade took but could not put anywhere, for staff to hand out
  * @param at when
@@ -24,4 +24,10 @@ public record RefundFailure(
     Crystals amount,
     String reason,
     Optional<HeldItems> held,
-    Instant at) {}
+    Instant at) {
+  public RefundFailure {
+    if (amount.amount() == 0 && held.isEmpty()) {
+      throw new IllegalArgumentException("an item-only recovery must name held items");
+    }
+  }
+}

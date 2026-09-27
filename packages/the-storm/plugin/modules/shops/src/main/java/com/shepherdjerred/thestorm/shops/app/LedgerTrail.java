@@ -13,6 +13,7 @@ public final class LedgerTrail {
   private final List<String> events = new ArrayList<>();
   private boolean escrowHeld;
   private boolean paymentCommitted;
+  private boolean refundCommitted;
 
   synchronized void record(String event) {
     events.add(event);
@@ -25,6 +26,15 @@ public final class LedgerTrail {
 
   public synchronized boolean hasCommittedPayment() {
     return paymentCommitted;
+  }
+
+  synchronized void refundCommitted(String event) {
+    refundCommitted = true;
+    events.add(event);
+  }
+
+  public synchronized boolean hasCommittedRefund() {
+    return refundCommitted;
   }
 
   /** The customer's items have actually left their inventory. */

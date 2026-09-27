@@ -244,6 +244,8 @@ public final class TradeEngine {
                 var committed = what + " committed as ledger entry " + receipt.transactionId();
                 if ("payment".equals(what)) {
                   trail.paymentCommitted(committed);
+                } else if ("refund".equals(what)) {
+                  trail.refundCommitted(committed);
                 } else {
                   trail.record(committed);
                 }

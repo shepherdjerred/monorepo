@@ -7,6 +7,9 @@ import com.shepherdjerred.thestorm.shops.domain.shop.ShopOwner;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Sign;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.junit.jupiter.api.Test;
 
@@ -39,6 +42,32 @@ final class ShopSignListenerTest extends ShopsFixture {
             .getPersistentDataContainer()
             .get(new NamespacedKey(plugin, "shop_id"), PersistentDataType.LONG);
     assertThat(stamped).isEqualTo(stored.getFirst().id());
+  }
+
+  @Test
+  void aLaterCancellationCannotCreateOrStampAShop() throws Exception {
+    var alice = player("Alice", 1);
+    var sign = signOn(chest(0));
+    server
+        .getPluginManager()
+        .registerEvent(
+            SignChangeEvent.class,
+            new Listener() {},
+            EventPriority.HIGHEST,
+            (listener, event) -> ((SignChangeEvent) event).setCancelled(true),
+            plugin);
+
+    var event = write(alice, sign, "", "16", "B 50", "coal");
+    tick(2);
+
+    assertThat(event.isCancelled()).isTrue();
+    assertThat(storedShops()).isEmpty();
+    assertThat(messages(alice)).isEmpty();
+    assertThat(
+            ((Sign) sign.getState())
+                .getPersistentDataContainer()
+                .get(new NamespacedKey(plugin, "shop_id"), PersistentDataType.LONG))
+        .isNull();
   }
 
   @Test

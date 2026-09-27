@@ -210,6 +210,37 @@ final class JooqShopStoreTest {
   }
 
   @Test
+  void itemOnlyRecoveryPersistsWithoutASecondMoneyTransfer() throws Exception {
+    var failure =
+        new RefundFailure(
+            new AccountId.Player(ALICE),
+            new AccountId.Player(BOB),
+            Crystals.ZERO,
+            "refund committed; return held items only",
+            Optional.of(new HeldItems("emerald", 4)),
+            NOW);
+
+    assertThat(store.recordRefundFailure(failure).get()).isEqualTo(1);
+    var row = database.read(dsl -> dsl.selectFrom(SHOPS_REFUND_FAILURE).fetchSingle()).get();
+    assertThat(row.getAmount()).isZero();
+    assertThat(row.getHeldItem()).isEqualTo("emerald");
+    assertThat(row.getHeldQuantity()).isEqualTo(4);
+
+    assertThatThrownBy(
+            () ->
+                database
+                    .write(
+                        dsl ->
+                            dsl.execute(
+                                "insert into shops_refund_failure (payer_kind, payer_id,"
+                                    + " payee_kind, payee_id, amount, reason, at)"
+                                    + " values ('player', 'a', 'player', 'b', 0, 'r', 0)"))
+                    .get())
+        .isInstanceOf(ExecutionException.class)
+        .hasMessageContaining("CHECK");
+  }
+
+  @Test
   void refundFailuresAreKeptForStaff() throws Exception {
     var failure =
         new RefundFailure(

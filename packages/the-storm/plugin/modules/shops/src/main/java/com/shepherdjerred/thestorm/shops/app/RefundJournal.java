@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.shops.app;
 
+import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.shops.domain.trade.Direction;
 import java.time.InstantSource;
@@ -31,6 +32,19 @@ public final class RefundJournal {
             ? Optional.of(new HeldItems(deal.goods(), deal.quantity()))
             : Optional.<HeldItems>empty();
     logger.error("Trade {} was still settling at shutdown: {}", deal.reason(), trail.describe());
+    if (trail.hasCommittedRefund()) {
+      if (held.isPresent()) {
+        record(
+            new RefundFailure(
+                deal.payer().account(),
+                deal.payee().account(),
+                Crystals.ZERO,
+                reason + "; refund committed: return held items only, do not transfer money",
+                held,
+                time.instant()));
+      }
+      return;
+    }
     var paymentCommitted = trail.hasCommittedPayment();
     var payer = paymentCommitted ? deal.payee().account() : deal.payer().account();
     var payee = paymentCommitted ? deal.payer().account() : deal.payee().account();
