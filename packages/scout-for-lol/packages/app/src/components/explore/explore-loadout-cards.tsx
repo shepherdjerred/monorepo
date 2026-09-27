@@ -1,4 +1,7 @@
-import type { ExploreLoadoutCard } from "@scout-for-lol/data";
+import {
+  EXPLORE_LOADOUT_BUILD_PATH_MAX_EVENTS,
+  type ExploreLoadoutCard,
+} from "@scout-for-lol/data";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
 import {
   Card,
@@ -40,44 +43,90 @@ function RuneImage(props: {
   );
 }
 
-function FinalBuild(props: { card: ExploreLoadoutCard }) {
+function FinalBuild(props: { card: ExploreLoadoutCard; compact?: boolean }) {
+  const compact = props.compact === true;
+  const iconSize = compact ? "size-7" : "size-9";
   return (
-    <section className="space-y-2" aria-label="Final build">
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
+    <section
+      className={compact ? "space-y-1" : "space-y-2"}
+      aria-label="Final build"
+    >
+      <h4
+        className={
+          compact
+            ? "sr-only"
+            : "text-xs font-semibold uppercase tracking-wide text-scout-subtle"
+        }
+      >
         Final build
       </h4>
-      <div className="flex flex-wrap items-center gap-1.5" role="list">
-        {props.card.finalItems.map((item) => (
-          <div
-            key={item.slot}
-            role="listitem"
-            aria-label={`${item.slot === 6 ? "Trinket" : `Item slot ${String(item.slot + 1)}`}: ${item.name ?? "empty"}`}
-            title={`${item.slot === 6 ? "Trinket" : `Slot ${String(item.slot + 1)}`}: ${item.name ?? "Empty"}`}
-            className="flex flex-col items-center gap-0.5"
-          >
-            {item.itemId === null || item.name === null ? (
-              <span className="size-9 rounded border border-dashed border-scout-border bg-scout-surface" />
-            ) : (
-              <ItemImage
-                itemId={item.itemId}
-                name={item.name}
-                className="size-9 rounded border border-scout-border"
-              />
-            )}
-            {item.slot === 6 && (
-              <span className="text-[10px] text-scout-subtle">Trinket</span>
-            )}
-          </div>
-        ))}
+      <div
+        className={
+          compact
+            ? "flex flex-wrap items-center gap-1"
+            : "flex flex-wrap items-center gap-1.5"
+        }
+        role="list"
+      >
+        {props.card.finalItems.map((item) => {
+          const slotName =
+            item.slot === 6 ? "Trinket" : `Item slot ${String(item.slot + 1)}`;
+          const itemName =
+            item.itemId === null
+              ? "empty"
+              : (item.name ?? `Unknown item ID ${item.itemId.toString()}`);
+          return (
+            <div
+              key={item.slot}
+              role="listitem"
+              aria-label={`${slotName}: ${itemName}`}
+              title={`${slotName}: ${itemName}`}
+              className="flex flex-col items-center gap-0.5"
+            >
+              {item.itemId === null ? (
+                <span
+                  className={`${iconSize} rounded border border-dashed border-scout-border bg-scout-surface`}
+                />
+              ) : item.name === null ? (
+                <span
+                  className={`${iconSize} flex items-center justify-center rounded border border-amber-500/60 bg-scout-surface px-0.5 text-center text-[8px] leading-tight text-scout-ink`}
+                  aria-label={`Unknown item ID ${item.itemId.toString()}`}
+                >
+                  ID {item.itemId.toString()}
+                </span>
+              ) : (
+                <ItemImage
+                  itemId={item.itemId}
+                  name={item.name}
+                  className={`${iconSize} rounded border border-scout-border`}
+                />
+              )}
+              {item.slot === 6 && (
+                <span className="text-[10px] text-scout-subtle">Trinket</span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </section>
   );
 }
 
-function Spells(props: { card: ExploreLoadoutCard }) {
+function Spells(props: { card: ExploreLoadoutCard; compact?: boolean }) {
+  const compact = props.compact === true;
+  const iconSize = compact ? "size-6" : "size-8";
   return (
-    <section className="space-y-2" aria-label="Summoner spells">
-      <h4 className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
+    <section
+      className={compact ? "space-y-1" : "space-y-2"}
+      aria-label="Summoner spells"
+    >
+      <h4
+        className={
+          compact
+            ? "sr-only"
+            : "text-xs font-semibold uppercase tracking-wide text-scout-subtle"
+        }
+      >
         Spells
       </h4>
       <div className="flex gap-1.5">
@@ -85,7 +134,7 @@ function Spells(props: { card: ExploreLoadoutCard }) {
           spell.spellId === null || spell.name === null ? (
             <span
               key={spell.slot}
-              className="size-8 rounded border border-dashed border-scout-border"
+              className={`${iconSize} rounded border border-dashed border-scout-border`}
               aria-label={`Spell slot ${String(spell.slot)} unavailable`}
             />
           ) : (
@@ -95,7 +144,7 @@ function Spells(props: { card: ExploreLoadoutCard }) {
               alt={spell.name}
               title={spell.name}
               optional
-              className="size-8 rounded border border-scout-border"
+              className={`${iconSize} rounded border border-scout-border`}
             />
           ),
         )}
@@ -197,6 +246,12 @@ function BuildPath(props: { card: ExploreLoadoutCard }) {
       <h4 className="text-xs font-semibold uppercase tracking-wide text-scout-subtle">
         Build path
       </h4>
+      {props.card.buildPathTruncated && (
+        <p className="text-xs text-scout-subtle">
+          Showing the most recent {EXPLORE_LOADOUT_BUILD_PATH_MAX_EVENTS}{" "}
+          events; earlier item events are omitted.
+        </p>
+      )}
       <ol className="flex flex-wrap items-start gap-x-4 gap-y-3">
         {[...eventsByMinute.entries()].map(([minute, events]) => (
           <li key={minute} className="flex flex-col gap-1">
@@ -284,36 +339,59 @@ function SkillOrder(props: { card: ExploreLoadoutCard }) {
 
 function ExploreLoadoutCardView(props: { card: ExploreLoadoutCard }) {
   const { card } = props;
+  const compact = card.size === "S";
   return (
     <Card className="border-scout-border bg-scout-surface">
-      <CardHeader className="space-y-2 pb-3">
+      <CardHeader
+        className={compact ? "space-y-1 px-3 py-2" : "space-y-2 pb-3"}
+      >
         <div className="flex items-center gap-3">
           <ChampionPortrait
             champion={card.championId}
             alt={card.championName}
             optional
-            className="size-10 rounded-full border border-scout-border"
+            className={`${compact ? "size-8" : "size-10"} rounded-full border border-scout-border`}
           />
           <div className="min-w-0 flex-1">
             <p className="truncate font-medium text-scout-ink">
               {card.championName} loadout
             </p>
-            <p className="truncate text-xs text-scout-subtle">{card.matchId}</p>
+            <p
+              className={`${compact ? "text-[10px]" : "text-xs"} truncate text-scout-subtle`}
+            >
+              {card.matchId}
+            </p>
           </div>
           <Badge variant="outline">{card.size}</Badge>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 pt-0">
-        <div className="grid gap-4 sm:grid-cols-[auto_1fr]">
-          <FinalBuild card={card} />
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Spells card={card} />
-            <RunePage card={card} />
+      {compact ? (
+        <CardContent className="flex flex-wrap items-center gap-x-4 gap-y-2 px-3 pb-3 pt-0">
+          <FinalBuild card={card} compact />
+          <Spells card={card} compact />
+          {card.runePage.keystone !== null && (
+            <section className="flex items-center" aria-label="Keystone">
+              <RuneImage
+                assetKey={card.runePage.keystone.assetKey}
+                name={card.runePage.keystone.name}
+                className="size-7 rounded-full border border-amber-400/70"
+              />
+            </section>
+          )}
+        </CardContent>
+      ) : (
+        <CardContent className="space-y-4 pt-0">
+          <div className="grid gap-4 sm:grid-cols-[auto_1fr]">
+            <FinalBuild card={card} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Spells card={card} />
+              <RunePage card={card} />
+            </div>
           </div>
-        </div>
-        <BuildPath card={card} />
-        <SkillOrder card={card} />
-      </CardContent>
+          <BuildPath card={card} />
+          <SkillOrder card={card} />
+        </CardContent>
+      )}
     </Card>
   );
 }
@@ -324,7 +402,7 @@ export function ExploreLoadoutCards(props: { cards: ExploreLoadoutCard[] }) {
     <div className="space-y-3" role="group" aria-label="Loadout cards">
       {props.cards.map((card) => (
         <ExploreLoadoutCardView
-          key={`${card.matchId}:${card.participantId.toString()}`}
+          key={`${card.matchId}:${card.participantId.toString()}:${card.size}`}
           card={card}
         />
       ))}

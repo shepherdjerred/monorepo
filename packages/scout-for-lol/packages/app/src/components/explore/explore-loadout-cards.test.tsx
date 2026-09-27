@@ -3,9 +3,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ExploreLoadoutCardSchema } from "@scout-for-lol/data";
 import { ExploreLoadoutCards } from "#src/components/explore/explore-loadout-cards.tsx";
 
-function card() {
+function card(size: "S" | "L" = "L") {
   return ExploreLoadoutCardSchema.parse({
-    size: "L",
+    size,
     matchId: "NA1_5635906026",
     participantId: 1,
     championId: 103,
@@ -37,6 +37,7 @@ function card() {
       ],
     },
     buildPathRecorded: true,
+    buildPathTruncated: false,
     buildPath: [
       { minute: 1, itemId: 1001, name: "Boots", kind: "purchase" },
       { minute: 3, itemId: 2003, name: "Health Potion", kind: "sold" },
@@ -75,6 +76,52 @@ describe("ExploreLoadoutCards", () => {
     );
     expect(markup).toContain("Timeline data is not recorded for this match");
     expect(markup).toContain("Skill order is not recorded");
+  });
+
+  test("renders compact cards without the detailed sections", () => {
+    const compact = card("S");
+    const markup = renderToStaticMarkup(
+      <ExploreLoadoutCards cards={[compact]} />,
+    );
+    expect(markup).toContain("Final build");
+    expect(markup).toContain("Summoner spells");
+    expect(markup).not.toContain("Rune page");
+    expect(markup).not.toContain("Build path");
+    expect(markup).not.toContain("Skill order");
+  });
+
+  test("labels unknown item IDs instead of rendering them as empty slots", () => {
+    const unknownItem = ExploreLoadoutCardSchema.parse({
+      ...card(),
+      finalItems: [
+        { slot: 0, itemId: 999_999, name: null },
+        ...card().finalItems.slice(1),
+      ],
+    });
+    const markup = renderToStaticMarkup(
+      <ExploreLoadoutCards cards={[unknownItem]} />,
+    );
+    expect(markup).toContain("Unknown item ID 999999");
+    expect(markup).toContain("ID 999999");
+  });
+
+  test("explains when an older card omits the build path truncation field", () => {
+    const olderCard: Record<string, unknown> = { ...card() };
+    delete olderCard["buildPathTruncated"];
+    const parsed = ExploreLoadoutCardSchema.parse(olderCard);
+    expect(parsed.buildPathTruncated).toBe(false);
+  });
+
+  test("explains when earlier build path events were omitted", () => {
+    const truncated = ExploreLoadoutCardSchema.parse({
+      ...card(),
+      buildPathTruncated: true,
+    });
+    const markup = renderToStaticMarkup(
+      <ExploreLoadoutCards cards={[truncated]} />,
+    );
+    expect(markup).toContain("Showing the most recent 100 events");
+    expect(markup).toContain("earlier item events are omitted");
   });
 
   test("omits the artifact region when no cards are selected", () => {

@@ -1,4 +1,5 @@
 import {
+  EXPLORE_LOADOUT_BUILD_PATH_MAX_EVENTS,
   ExploreLoadoutCardSchema,
   LeaguePuuidSchema,
   MatchIdSchema,
@@ -153,11 +154,53 @@ type LoadoutTimelineEvent = Pick<
   | "frame_index"
   | "event_index"
   | "event_type"
+  | "after_id"
   | "before_id"
   | "item_id"
   | "skill_slot"
   | "level"
 >;
+
+function undoTimelineItemEvent(
+  path: {
+    minute: number;
+    itemId: number;
+    name: string | null;
+    kind: "purchase" | "sold";
+  }[],
+  event: LoadoutTimelineEvent,
+): void {
+  const isSaleUndo = event.before_id === 0;
+  const itemId = isSaleUndo
+    ? event.after_id
+    : (event.before_id ?? event.item_id);
+  if (itemId === null || itemId <= 0) return;
+  const kind = isSaleUndo ? "sold" : "purchase";
+  const undoneIndex = path.findLastIndex(
+    (entry) => entry.kind === kind && entry.itemId === itemId,
+  );
+  if (undoneIndex !== -1) path.splice(undoneIndex, 1);
+}
+
+function itemPathEvent(event: LoadoutTimelineEvent) {
+  if (
+    (event.event_type !== "ITEM_PURCHASED" &&
+      event.event_type !== "ITEM_SOLD") ||
+    event.item_id === null ||
+    event.item_id <= 0
+  ) {
+    return null;
+  }
+  return {
+    minute: Math.floor(event.event_timestamp_ms / 60_000),
+    itemId: event.item_id,
+    name: itemName(event.item_id),
+    kind:
+      event.event_type === "ITEM_SOLD"
+        ? ("sold" as const)
+        : ("purchase" as const),
+  };
+}
 
 export function buildPathFromEvents(events: readonly LoadoutTimelineEvent[]) {
   const path: {
@@ -176,30 +219,16 @@ export function buildPathFromEvents(events: readonly LoadoutTimelineEvent[]) {
 
   for (const event of ordered) {
     if (event.event_type === "ITEM_UNDO") {
-      const itemId = event.before_id ?? event.item_id;
-      if (itemId === null) continue;
-      const undoneIndex = path.findLastIndex(
-        (entry) => entry.kind === "purchase" && entry.itemId === itemId,
-      );
-      if (undoneIndex !== -1) path.splice(undoneIndex, 1);
+      undoTimelineItemEvent(path, event);
       continue;
     }
-    if (
-      (event.event_type !== "ITEM_PURCHASED" &&
-        event.event_type !== "ITEM_SOLD") ||
-      event.item_id === null ||
-      event.item_id <= 0
-    ) {
-      continue;
-    }
-    path.push({
-      minute: Math.floor(event.event_timestamp_ms / 60_000),
-      itemId: event.item_id,
-      name: itemName(event.item_id),
-      kind: event.event_type === "ITEM_SOLD" ? "sold" : "purchase",
-    });
+    const pathEvent = itemPathEvent(event);
+    if (pathEvent !== null) path.push(pathEvent);
   }
-  return path;
+  return {
+    events: path.slice(-EXPLORE_LOADOUT_BUILD_PATH_MAX_EVENTS),
+    truncated: path.length > EXPLORE_LOADOUT_BUILD_PATH_MAX_EVENTS,
+  };
 }
 
 export function skillOrderFromEvents(events: readonly LoadoutTimelineEvent[]) {
@@ -289,6 +318,10 @@ export function buildExploreLoadoutCard(input: {
   if (row.match_id !== request.matchId || row.puuid !== request.puuid) {
     throw new Error("Loadout card participant does not match its request");
   }
+  const buildPath =
+    timelineEvents === null
+      ? { events: [], truncated: false }
+      : buildPathFromEvents(timelineEvents);
   const card = ExploreLoadoutCardSchema.parse({
     size: request.size,
     matchId: row.match_id,
@@ -303,8 +336,8 @@ export function buildExploreLoadoutCard(input: {
     ],
     runePage: runePage(row),
     buildPathRecorded: timelineEvents !== null,
-    buildPath:
-      timelineEvents === null ? [] : buildPathFromEvents(timelineEvents),
+    buildPathTruncated: buildPath.truncated,
+    buildPath: buildPath.events,
     skillOrder:
       timelineEvents === null ? [] : skillOrderFromEvents(timelineEvents),
   });

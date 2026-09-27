@@ -47,6 +47,7 @@ function event(input: {
   type: string;
   itemId?: number | null;
   beforeId?: number | null;
+  afterId?: number | null;
   skillSlot?: number | null;
   level?: number | null;
 }) {
@@ -58,6 +59,7 @@ function event(input: {
     event_type: input.type,
     item_id: input.itemId ?? null,
     before_id: input.beforeId ?? null,
+    after_id: input.afterId ?? null,
     skill_slot: input.skillSlot ?? null,
     level: input.level ?? null,
   };
@@ -139,11 +141,56 @@ describe("loadout timeline reconstruction", () => {
           type: "ITEM_SOLD",
           itemId: 1056,
         }),
-      ]),
+      ]).events,
     ).toEqual([
       { minute: 4, itemId: 1056, name: "Doran's Ring", kind: "purchase" },
       { minute: 16, itemId: 1056, name: "Doran's Ring", kind: "sold" },
     ]);
+  });
+
+  test("undoing a sale removes the restored item from the sold path", () => {
+    expect(
+      buildPathFromEvents([
+        event({
+          id: "buy-ring",
+          timestamp: 245_000,
+          type: "ITEM_PURCHASED",
+          itemId: 1056,
+        }),
+        event({
+          id: "sell-ring",
+          timestamp: 980_000,
+          type: "ITEM_SOLD",
+          itemId: 1056,
+        }),
+        event({
+          id: "undo-sale",
+          timestamp: 981_000,
+          type: "ITEM_UNDO",
+          beforeId: 0,
+          afterId: 1056,
+        }),
+      ]).events,
+    ).toEqual([
+      { minute: 4, itemId: 1056, name: "Doran's Ring", kind: "purchase" },
+    ]);
+  });
+
+  test("keeps the newest build path events and marks earlier history truncated", () => {
+    const result = buildPathFromEvents(
+      Array.from({ length: 105 }, (_, index) =>
+        event({
+          id: `purchase-${index.toString().padStart(3, "0")}`,
+          timestamp: index * 60_000,
+          type: "ITEM_PURCHASED",
+          itemId: 1001,
+        }),
+      ),
+    );
+    expect(result.events).toHaveLength(100);
+    expect(result.events[0]?.minute).toBe(5);
+    expect(result.events.at(-1)?.minute).toBe(104);
+    expect(result.truncated).toBe(true);
   });
 
   test("orders skills by champion level and translates Riot's slots", () => {
@@ -222,6 +269,7 @@ describe("Explore loadout card hydration", () => {
         ],
       },
       buildPathRecorded: false,
+      buildPathTruncated: false,
       buildPath: [],
       skillOrder: [],
     });

@@ -33,6 +33,7 @@ export function testExploreLoadoutCard(size: "S" | "L"): ExploreLoadoutCard {
       ],
     },
     buildPathRecorded: false,
+    buildPathTruncated: false,
     buildPath: [],
     skillOrder: [],
   });

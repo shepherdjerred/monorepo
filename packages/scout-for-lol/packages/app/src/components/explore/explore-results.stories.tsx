@@ -218,6 +218,7 @@ function loadoutCard(size: "S" | "L"): ExploreLoadoutCard {
       ],
     },
     buildPathRecorded: true,
+    buildPathTruncated: false,
     buildPath: [
       { minute: 1, itemId: 2003, name: "Health Potion", kind: "purchase" },
       { minute: 4, itemId: 1056, name: "Doran's Ring", kind: "sold" },
@@ -343,7 +344,11 @@ export const MatchCards: Story = {
 
 export const LoadoutCards: Story = {
   args: { preview: null, visualization: null },
-  render: () => <ExploreLoadoutCards cards={[loadoutCard("L")]} />,
+  render: () => (
+    <div className="mx-auto max-w-3xl space-y-3">
+      <ExploreLoadoutCards cards={[loadoutCard("S"), loadoutCard("L")]} />
+    </div>
+  ),
 };
 
 export const LoadoutAnswer: Story = {

@@ -81,12 +81,9 @@ async function postObserver(
   return response;
 }
 
-async function getShared(
-  token: string,
-  includeCards = false,
-): Promise<Response> {
+async function getShared(token: string, cards?: "1" | "2"): Promise<Response> {
   const url = new URL(`http://localhost/api/explore/shared/${token}`);
-  if (includeCards) url.searchParams.set("cards", "1");
+  if (cards !== undefined) url.searchParams.set("cards", cards);
   const response = await handleExploreRoute(
     new Request(url.toString(), { method: "GET" }),
     url,
@@ -554,18 +551,36 @@ describe("explore http route — remaining surface", () => {
     expect(JSON.stringify(rawBody)).not.toContain("owner-only");
   });
 
-  test("a shared transcript includes loadout cards only when cards=1", async () => {
+  test("cards=1 preserves the legacy match-card shape", async () => {
     const shareToken = await seedSharedConversation();
-    const response = await getShared(shareToken, true);
+    const response = await getShared(shareToken, "1");
     const body = z
       .object({
         messages: z.array(
           z.object({
+            matchCards: z.array(z.looseObject({})).optional(),
+            loadoutCards: z.never().optional(),
+          }),
+        ),
+      })
+      .parse(await response.json());
+    expect(body.messages[1]?.matchCards).toBeDefined();
+  });
+
+  test("cards=2 includes match and loadout cards", async () => {
+    const shareToken = await seedSharedConversation();
+    const response = await getShared(shareToken, "2");
+    const body = z
+      .object({
+        messages: z.array(
+          z.object({
+            matchCards: z.array(z.looseObject({})).optional(),
             loadoutCards: z.array(ExploreLoadoutCardSchema).optional(),
           }),
         ),
       })
       .parse(await response.json());
+    expect(body.messages[1]?.matchCards).toBeDefined();
     expect(body.messages[1]?.loadoutCards).toEqual([SHARED_LOADOUT_CARD]);
   });
 
