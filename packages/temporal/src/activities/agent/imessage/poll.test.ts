@@ -36,7 +36,11 @@ function isHighWaterQuery(input: z.infer<typeof QueryBodySchema>): boolean {
 }
 beforeEach(() => {
   vi.resetAllMocks();
-  mocks.config.mockResolvedValue({ enabled: true, owners: ["owner"] });
+  mocks.config.mockResolvedValue({
+    sourceAvailable: true,
+    enabled: true,
+    owners: ["owner"],
+  });
 });
 describe("durable BlueBubbles polling", () => {
   test("uses a stable ROWID cursor, sorts before paging and retains disallowed rows in progress", async () => {
@@ -224,11 +228,25 @@ describe("durable BlueBubbles polling", () => {
 });
 
 describe("disabled BlueBubbles polling", () => {
+  test("pauses without advancing when the flag source is unavailable", async () => {
+    mocks.config.mockResolvedValue({
+      sourceAvailable: false,
+      enabled: false,
+      owners: [],
+    });
+
+    await expect(pollBlueBubblesMessages(CURSOR)).resolves.toEqual({
+      ...CURSOR,
+      commands: [],
+    });
+    expect(mocks.request).not.toHaveBeenCalled();
+  });
+
   test.each([
     { enabled: false, owners: ["owner"] },
     { enabled: true, owners: [] },
   ])("advances the watermark when disabled or unowned", async (config) => {
-    mocks.config.mockResolvedValue(config);
+    mocks.config.mockResolvedValue({ sourceAvailable: true, ...config });
     mocks.request.mockImplementation(async (_route: string, body: unknown) =>
       isHighWaterQuery(QueryBodySchema.parse(body))
         ? [message(75)]
@@ -254,7 +272,11 @@ describe("disabled BlueBubbles polling", () => {
     );
   });
   test("never moves the disabled watermark backwards", async () => {
-    mocks.config.mockResolvedValue({ enabled: false, owners: ["owner"] });
+    mocks.config.mockResolvedValue({
+      sourceAvailable: true,
+      enabled: false,
+      owners: ["owner"],
+    });
     mocks.request.mockResolvedValue([]);
 
     const result = await pollBlueBubblesMessages(CURSOR);

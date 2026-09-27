@@ -45,6 +45,8 @@ import {
 
 const REGISTER_AND_BIND_PRECEDENCE_PATCH =
   "agent-chat-register-and-bind-precedence-v1";
+const SOURCE_EPOCH_TIMESTAMP_ORDERING_PATCH =
+  "agent-chat-source-epoch-timestamp-ordering-v1";
 
 function catalogStateBytes(state: AgentChatCatalogState): number {
   return new TextEncoder().encode(JSON.stringify(state)).byteLength;
@@ -283,11 +285,21 @@ export function settleAgentChatCatalogTurn(
   const entry = registerAgentChatCatalogEntry(state, rawEntry);
   return recordTurn(state, entry.config.chatId, turnCount, updatedAt);
 }
+type BindAgentChatCatalogEntryInput = {
+  binding: AgentChatBinding;
+  chatId: string;
+  update: AgentChatBindingUpdateInput;
+  sourceEpochTimestampOrdering?: boolean;
+};
+
 function bind(
   state: AgentChatCatalogState,
-  rawBinding: AgentChatBinding,
-  rawChatId: string,
-  rawUpdate: AgentChatBindingUpdateInput,
+  {
+    binding: rawBinding,
+    chatId: rawChatId,
+    update: rawUpdate,
+    sourceEpochTimestampOrdering = true,
+  }: BindAgentChatCatalogEntryInput,
 ): AgentChatCatalogEntry {
   const binding = AgentChatBindingSchema.parse(rawBinding);
   const update = parseBindingUpdate(rawUpdate);
@@ -344,6 +356,7 @@ type RegisterAndBindAgentChatCatalogEntryInput = {
   binding: AgentChatBinding;
   update: AgentChatBindingUpdateInput;
   precedenceBeforeRegistration?: boolean;
+  sourceEpochTimestampOrdering?: boolean;
 };
 
 export function registerAndBindAgentChatCatalogEntry({
@@ -352,6 +365,7 @@ export function registerAndBindAgentChatCatalogEntry({
   binding: rawBinding,
   update: rawUpdate,
   precedenceBeforeRegistration = true,
+  sourceEpochTimestampOrdering = true,
 }: RegisterAndBindAgentChatCatalogEntryInput): AgentChatCatalogEntry {
   const candidate = AgentChatCatalogEntrySchema.parse(rawEntry);
   const binding = AgentChatBindingSchema.parse(rawBinding);
@@ -372,9 +386,14 @@ export function registerAndBindAgentChatCatalogEntry({
       (current) =>
         agentChatBindingKey(current.binding) === agentChatBindingKey(binding),
     );
-    assertDistinctSourceOrdering(existing, next);
-    if (existing !== undefined && existingBindingWins(existing, next)) {
-      return entryForBinding(state, existing.chatId);
+    assertDistinctSourceOrdering(existing, next, sourceEpochTimestampOrdering);
+    if (
+      existing !== undefined &&
+      existingBindingWins(existing, next, sourceEpochTimestampOrdering)
+    ) {
+      const selected = entryForBinding(state, existing.chatId);
+      retainBindingOperation(state, next, selected.config.chatId);
+      return selected;
     }
   }
   const entry = registerAgentChatCatalogEntry(
@@ -382,7 +401,12 @@ export function registerAndBindAgentChatCatalogEntry({
     rawEntry,
     agentChatBindingKey(binding),
   );
-  return bind(state, binding, entry.config.chatId, update);
+  return bind(state, {
+    binding,
+    chatId: entry.config.chatId,
+    update,
+    sourceEpochTimestampOrdering,
+  });
 }
 
 function resolve(
@@ -418,10 +442,20 @@ export async function agentChatCatalogWorkflow(
       binding,
       update,
       precedenceBeforeRegistration: patched(REGISTER_AND_BIND_PRECEDENCE_PATCH),
+      sourceEpochTimestampOrdering: patched(
+        SOURCE_EPOCH_TIMESTAMP_ORDERING_PATCH,
+      ),
     }),
   );
   setHandler(bindAgentChatUpdate, (binding, chatId, update) =>
-    bind(state, binding, chatId, update),
+    bind(state, {
+      binding,
+      chatId,
+      update,
+      sourceEpochTimestampOrdering: patched(
+        SOURCE_EPOCH_TIMESTAMP_ORDERING_PATCH,
+      ),
+    }),
   );
   setHandler(resolveAgentChatBindingQuery, (binding) =>
     resolve(state, binding),

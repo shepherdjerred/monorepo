@@ -186,7 +186,7 @@ and [Discord delivery Activity](https://github.com/shepherdjerred/monorepo/blob/
 | Contract                | Value                                                                                                                                  |
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | Bootstrap               | Paired `BLUEBUBBLES_URL` and `BLUEBUBBLES_PASSWORD`; absent pair leaves the connector inactive; partial pair fails startup             |
-| Enable flag             | `temporal-agent-chat-imessage-enabled`; base default `false`, production gateway override `true`                                       |
+| Enable flag             | `temporal-agent-chat-imessage-enabled`; default `false` until an explicit rollout enables it                                           |
 | Owners flag             | `temporal-agent-chat-imessage-owners`; exact comma-separated incoming sender handles; default empty                                    |
 | Model defaults          | `temporal-agent-chat-imessage-claude-model` and `temporal-agent-chat-imessage-codex-model`; snapshotted when a chat is created         |
 | Accepted messages       | Incoming text direct messages from an exact owner handle                                                                               |
@@ -197,6 +197,7 @@ and [Discord delivery Activity](https://github.com/shepherdjerred/monorepo/blob/
 | Polling ownership       | Temporal Workflow; durable cursor and Continue-As-New; no webhook receiver or Mac-side polling daemon                                  |
 | Cursor                  | Explicit initialization marker, original start timestamp, and last processed BlueBubbles message ROWID                                 |
 | Disabled period         | Excluded from later activation backfill                                                                                                |
+| Flag-provider outage    | Polling pauses without advancing the cursor until configuration is available again                                                     |
 | Bounds                  | 50 rows per batch, 4,000 prompt characters, 2 MiB response; a full 1,000-row server page fails without advancing the cursor            |
 | Ordering                | Each command settles before the next message resolves its binding                                                                      |
 | Activity ownership      | Control-only `agent-chat-imessage` queue for polling, preparation, and delivery; existing ingress queue for waiting on agent execution |

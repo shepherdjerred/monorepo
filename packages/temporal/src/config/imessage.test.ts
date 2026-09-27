@@ -32,6 +32,7 @@ describe("iMessage configuration boundaries", () => {
       }),
     );
     expect(await imessageIngressConfig()).toEqual({
+      sourceAvailable: true,
       enabled: false,
       owners: ["owner"],
       claudeModel: "fixed-model",
@@ -49,6 +50,7 @@ describe("iMessage configuration boundaries", () => {
     try {
       flag.mockRejectedValue(new Error("source unavailable"));
       expect(await imessageIngressConfig()).toMatchObject({
+        sourceAvailable: false,
         enabled: false,
         owners: [],
       });

@@ -40,6 +40,10 @@ export const AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS =
 // including the initial queue delay before its first Activity can start.
 export const AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS =
   AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+// An iMessage command adds bounded preparation and delivery around the ingress
+// command Activity. This is also the maximum duplicate-child join lifetime.
+export const AGENT_CHAT_IMESSAGE_COMMAND_WORKFLOW_TIMEOUT_MS =
+  AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS + 10 * 60 * 1000;
 export const AGENT_CHAT_INGRESS_MAX_ATTEMPTS = Math.ceil(
   AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS / AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
 );
@@ -397,6 +401,9 @@ export const AgentChatCatalogBindingSchema =
 export const AgentChatCatalogBindingOperationSchema =
   AgentChatCatalogBindingSchema.extend({
     tieBreaker: z.string().min(1).max(512),
+    // The selected chat can differ from the requested chat when a stale
+    // operation loses precedence. Keep both so an identical retry returns its
+    // original result while a changed retry is still a conflict.
     requestedChatId: AgentChatIdSchema.optional(),
   });
 export type AgentChatCatalogBindingOperation = z.infer<

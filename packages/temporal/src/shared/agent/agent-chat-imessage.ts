@@ -48,7 +48,7 @@ export const BlueBubblesPollResultSchema = z.discriminatedUnion("initialized", [
   z.strictObject({
     ...BlueBubblesCursorFields,
     initialized: z.literal(false),
-    initializationHighWaterRowId: z.number().int().nonnegative(),
+    initializationHighWaterRowId: z.number().int().nonnegative().optional(),
     commands: z.array(ImessageCommandSchema).max(50),
   }),
 ]);
