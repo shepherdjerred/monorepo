@@ -25,7 +25,7 @@ For example, if `world` spawn is `(100, 64, 200)`, Winter Vigil's first door bel
 
 Place a supporting block below each marked position, then place the configured door material with its lower half on the mark. Leave both halves clear of other blocks. Make each door reachable and openable by a normal player without changing the [configured coordinates](https://github.com/shepherdjerred/monorepo/blob/6654062adccaa8c16d3d58f76afd174aa0bbc9c5/packages/the-storm/server/owned/plugins/TheStorm/seasonal.yml).
 
-Inspect the ring around spawn before building. If terrain, protected builds, or walkways conflict with a mark, revise the authored offsets in the configuration and review that change before placing doors. A nearby replacement door will not qualify.
+Inspect the ring around spawn before building. If terrain, protected builds, or walkways conflict with a mark, revise the authored offsets in the configuration and review that change before placing doors. The [exact-door check](https://github.com/shepherdjerred/monorepo/blob/6654062adccaa8c16d3d58f76afd174aa0bbc9c5/packages/the-storm/plugin/modules/seasonal/src/main/java/com/shepherdjerred/thestorm/seasonal/adapter/paper/SeasonalDoors.java#L85-L98) excludes nearby replacements.
 
 ## 4. Check the layout before activation
 
