@@ -24,7 +24,7 @@ final class WorldConfigTest {
     assertThat(config.sleepPercentage()).isEqualTo(50);
     assertThat(config.crier()).isEqualTo(new CrierConfig(false, "world"));
     assertThat(config.ambient())
-        .isEqualTo(new AmbientConfig(false, "world", 24, 8, "America/Los_Angeles"));
+        .isEqualTo(new AmbientConfig(false, "world", -440, 71, -66, 24, 8, "America/Los_Angeles"));
     assertThat(config.worlds())
         .extracting(WorldSpec::name)
         .containsExactly("wilds", "peaks", "mining");
@@ -43,14 +43,17 @@ final class WorldConfigTest {
 
   @Test
   void ambientBarksRequireMainWorldAndBoundedSpawnArea() {
-    assertThatThrownBy(() -> new AmbientConfig(true, "mining", 24, 8, "America/Los_Angeles"))
+    assertThatThrownBy(
+            () -> new AmbientConfig(true, "mining", 0, 64, 0, 24, 8, "America/Los_Angeles"))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("main world");
-    assertThatThrownBy(() -> new AmbientConfig(true, "world", 0, 8, "America/Los_Angeles"))
+    assertThatThrownBy(
+            () -> new AmbientConfig(true, "world", 0, 64, 0, 0, 8, "America/Los_Angeles"))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new AmbientConfig(true, "world", 24, 33, "America/Los_Angeles"))
+    assertThatThrownBy(
+            () -> new AmbientConfig(true, "world", 0, 64, 0, 24, 33, "America/Los_Angeles"))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> new AmbientConfig(true, "world", 24, 8, "not-a-zone"))
+    assertThatThrownBy(() -> new AmbientConfig(true, "world", 0, 64, 0, 24, 8, "not-a-zone"))
         .isInstanceOf(java.time.DateTimeException.class);
   }
 }

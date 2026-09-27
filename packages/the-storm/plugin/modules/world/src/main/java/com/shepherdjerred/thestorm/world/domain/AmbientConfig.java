@@ -4,7 +4,14 @@ import java.time.ZoneId;
 
 /** Main-world spawn arrival barks, independent of the on-demand crier command. */
 public record AmbientConfig(
-    boolean enabled, String world, int spawnRadius, int verticalRadius, String timeZone) {
+    boolean enabled,
+    String world,
+    int spawnX,
+    int spawnY,
+    int spawnZ,
+    int spawnRadius,
+    int verticalRadius,
+    String timeZone) {
 
   public AmbientConfig {
     if (!"world".equals(world)) {

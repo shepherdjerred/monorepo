@@ -40,8 +40,7 @@ final class AmbientBarksTest {
     wilds = server.addSimpleWorld("wilds");
     player = server.addPlayer();
     plugin = MockBukkit.createMockPlugin();
-    var config = new AmbientConfig(true, "world", 24, 8, "America/Los_Angeles");
-    barks = new AmbientBarks(plugin, config, fixed("2026-09-27T06:30:00Z"));
+    barks = new AmbientBarks(plugin, configAtBukkitSpawn(), fixed("2026-09-27T06:30:00Z"));
   }
 
   @AfterEach
@@ -57,19 +56,11 @@ final class AmbientBarksTest {
     barks.onJoin(new PlayerJoinEvent(player, Component.empty()));
     assertThat(nextLine()).isNull();
 
-    var sameDay =
-        new AmbientBarks(
-            plugin,
-            new AmbientConfig(true, "world", 24, 8, "America/Los_Angeles"),
-            fixed("2026-09-27T06:59:00Z"));
+    var sameDay = new AmbientBarks(plugin, configAtBukkitSpawn(), fixed("2026-09-27T06:59:00Z"));
     sameDay.onJoin(new PlayerJoinEvent(player, Component.empty()));
     assertThat(nextLine()).isNull();
 
-    var tomorrow =
-        new AmbientBarks(
-            plugin,
-            new AmbientConfig(true, "world", 24, 8, "America/Los_Angeles"),
-            fixed("2026-09-27T07:30:00Z"));
+    var tomorrow = new AmbientBarks(plugin, configAtBukkitSpawn(), fixed("2026-09-27T07:30:00Z"));
     tomorrow.onJoin(new PlayerJoinEvent(player, Component.empty()));
     assertThat(nextLine()).contains("Crier:");
   }
@@ -111,6 +102,35 @@ final class AmbientBarksTest {
     assertThatThrownBy(() -> barks.onJoin(new PlayerJoinEvent(player, Component.empty())))
         .isInstanceOf(IllegalStateException.class)
         .hasMessageContaining("invalid ambient bark day");
+  }
+
+  @Test
+  void centersTheBarkOnGameplaySpawnInsteadOfBukkitSpawn() {
+    var gameplay =
+        new AmbientBarks(
+            plugin,
+            new AmbientConfig(true, "world", -440, 71, -66, 24, 8, "America/Los_Angeles"),
+            fixed("2026-09-27T06:30:00Z"));
+    player.teleport(world.getSpawnLocation());
+    gameplay.onJoin(new PlayerJoinEvent(player, Component.empty()));
+    assertThat(nextLine()).isNull();
+
+    player.teleport(new Location(world, -439.48, 71, -65.59));
+    gameplay.onJoin(new PlayerJoinEvent(player, Component.empty()));
+    assertThat(nextLine()).contains("Crier:");
+  }
+
+  private AmbientConfig configAtBukkitSpawn() {
+    var spawn = world.getSpawnLocation();
+    return new AmbientConfig(
+        true,
+        "world",
+        spawn.getBlockX(),
+        spawn.getBlockY(),
+        spawn.getBlockZ(),
+        24,
+        8,
+        "America/Los_Angeles");
   }
 
   private @Nullable String nextLine() {

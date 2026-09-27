@@ -177,8 +177,11 @@ the recovered Storm history (old spawn landmarks, the Bridge Hobo quest, the
 2015 Easter hunt, and Braxton's bank). It makes no claim that those landmarks
 or quests exist in the current world. There is no timer or automatic broadcast.
 
-`world.yml` also keeps `ambient.enabled` off. When enabled, a player arriving
-within the configured radius and height of the `world` spawn hears one crier
+`world.yml` also keeps `ambient.enabled` off. Its configured center uses the
+block position of the repo-owned Essentials gameplay spawn in `world`
+(`-440, 71, -66`), independently of the Bukkit world spawn. Confirm that
+center against the live windmill before enabling it. When enabled, a player arriving
+within the configured radius and height of that center hears one crier
 bark, grounded in current weather and a rotating archival fact. Join, world
 entry, and movement into the spawn area can trigger it, at most once per
 Pacific date per player. The last-heard date persists on the player. This is
