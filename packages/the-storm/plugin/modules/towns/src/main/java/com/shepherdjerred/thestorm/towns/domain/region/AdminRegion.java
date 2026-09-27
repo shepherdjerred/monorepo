@@ -14,8 +14,14 @@ import java.util.regex.Pattern;
  * @param name shown to players, such as {@code Spawn}
  * @param areas where it is
  * @param allow what ordinary players may do inside
+ * @param mobSpawns which creature spawns it lets through
  */
-public record AdminRegion(String id, String name, RegionAreas areas, List<RegionAllowance> allow) {
+public record AdminRegion(
+    String id,
+    String name,
+    RegionAreas areas,
+    List<RegionAllowance> allow,
+    RegionSpawns mobSpawns) {
 
   private static final Pattern ID = Pattern.compile("[a-z0-9_-]{1,32}");
 

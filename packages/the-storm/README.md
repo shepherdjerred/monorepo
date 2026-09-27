@@ -141,6 +141,13 @@ not expose reliable preset metadata for an existing world, so preset acceptance
 remains an operator check. A mining reset must likewise make the replacement
 world available before TheStorm enables again.
 
+Towns separates land rights from container rights. Claims control building,
+while a lock controls opening a lockable container on claimed land. New
+containers lock for their placer; owners can unlock them for public use or
+grant use, management, town sharing, and redstone access separately. Admin
+regions retain their own opening rules. Other modules use the towns
+`Protection` port so their container interactions follow the same rules.
+
 ## Conventions
 
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating

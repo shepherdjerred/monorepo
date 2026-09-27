@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
+import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.Action;
 import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
@@ -85,19 +86,29 @@ final class InteractListener implements Listener {
    */
   private boolean mayUse(PlayerInteractEvent event, Block block, Act use) {
     var player = event.getPlayer();
-    if (!guard.permits(player, use, guard.land(block))) {
+    if (!mayUseBlock(player, block, use)) {
       return false;
     }
     var partner = Chests.partner(block);
-    if (partner.isPresent() && !guard.permits(player, use, guard.land(partner.get()))) {
+    if (partner.isPresent() && !mayUseBlock(player, partner.get(), use)) {
       return false;
     }
     for (var shelf : Chests.shelfChain(block)) {
-      if (!guard.permits(player, use, guard.land(shelf))) {
+      if (!mayUseBlock(player, shelf, use)) {
         return false;
       }
     }
     return true;
+  }
+
+  private boolean mayUseBlock(org.bukkit.entity.Player player, Block block, Act use) {
+    var land = guard.land(block);
+    // On claims a lock alone governs opening lockable containers. Admin regions
+    // retain their own rules, and other item holders still follow claim flags.
+    return (use.action() == Action.OPEN_CONTAINER
+            && kinds.isLockable(block.getType())
+            && land instanceof Land.TownLand)
+        || guard.permits(player, use, land);
   }
 
   private void step(PlayerInteractEvent event, Block block) {

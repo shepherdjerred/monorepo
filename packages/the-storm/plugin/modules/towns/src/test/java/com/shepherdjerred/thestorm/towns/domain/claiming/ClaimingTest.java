@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.towns.domain.claiming;
 
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.ASSISTANT;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.MEMBER;
+import static com.shepherdjerred.thestorm.towns.domain.Fixtures.NOMAD;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.OWNER;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.TOWN_A;
 import static com.shepherdjerred.thestorm.towns.domain.Fixtures.TOWN_B;
@@ -23,6 +24,8 @@ import com.shepherdjerred.thestorm.towns.domain.region.ChunkRange;
 import com.shepherdjerred.thestorm.towns.domain.region.Cuboid;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionAreas;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
+import com.shepherdjerred.thestorm.towns.domain.region.RegionSpawns;
+import com.shepherdjerred.thestorm.towns.domain.town.PlayerRef;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
 import java.util.ArrayList;
@@ -41,7 +44,11 @@ import org.junit.jupiter.params.provider.ValueSource;
 final class ClaimingTest {
 
   private static final ClaimPolicy POLICY =
-      new ClaimPolicy(Set.of(Fixtures.WORLD), 2, 5, Set.of(ClaimFlag.PUBLIC_SWITCHES));
+      new ClaimPolicy(
+          Set.of(Fixtures.WORLD),
+          2,
+          new ClaimAllowance(5, List.of(1, 2, 4, 6, 10)),
+          Set.of(ClaimFlag.PUBLIC_SWITCHES));
 
   private final Claiming claiming = new Claiming(POLICY);
 
@@ -63,7 +70,8 @@ final class ClaimingTest {
                               Fixtures.WORLD,
                               new BlockCorner(-801, 0, -801),
                               new BlockCorner(-800, 10, -800)))),
-                  List.of())));
+                  List.of(),
+                  RegionSpawns.unlimited())));
 
   private final Map<ChunkPos, Claim> claims = new HashMap<>();
 
@@ -172,7 +180,12 @@ final class ClaimingTest {
     hold(claim(TOWN_B, 0, 0));
 
     var touching =
-        new Claiming(new ClaimPolicy(Set.of(Fixtures.WORLD), 0, 5, Set.of()))
+        new Claiming(
+                new ClaimPolicy(
+                    Set.of(Fixtures.WORLD),
+                    0,
+                    new ClaimAllowance(5, List.of(0, 0, 0, 0, 0)),
+                    Set.of()))
             .claim(new ClaimAttempt(OWNER, Fixtures.townA(), chunk(1, 0), map));
 
     assertThat(touching.isOk()).isTrue();
@@ -310,5 +323,98 @@ final class ClaimingTest {
                     ClaimFlag.PVP,
                     true)))
         .hasSize(1);
+  }
+
+  @ParameterizedTest(name = "Governor {0} holds {1}")
+  @CsvSource({"0, 5", "1, 6", "2, 7", "3, 9", "4, 11", "5, 15"})
+  void theLimitGrowsWithTheOwnersGovernorLevel(int level, int limit) {
+    var town = Fixtures.townA().withGovernorLevel(level);
+    for (var x = 0; x < limit; x++) {
+      hold(claim(TOWN_A, x, 0));
+    }
+
+    assertThat(POLICY.limits().maxClaims(town)).isEqualTo(limit);
+    assertThat(problems(claimAs(OWNER, town, chunk(limit, 0))))
+        .containsExactly(new ClaimProblem.LimitReached(limit));
+    claims.remove(chunk(limit - 1, 0));
+    assertThat(claimAs(OWNER, town, chunk(limit - 1, 0)).isOk()).isTrue();
+  }
+
+  @Test
+  void theAllowanceNeedsABaseAndOneNeverFallingBonusPerLevel() {
+    assertThatThrownBy(() -> new ClaimAllowance(0, List.of(0, 0, 0, 0, 0)))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new ClaimAllowance(5, List.of(1, 2, 3, 4)))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new ClaimAllowance(5, List.of(1, 2, 3, 4, 5, 6)))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new ClaimAllowance(5, List.of(1, 2, 1, 4, 5)))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new ClaimAllowance(5, List.of(-1, 2, 3, 4, 5)))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> POLICY.limits().forLevel(6))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> POLICY.limits().forLevel(-1))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThat(new ClaimAllowance(5, List.of(0, 0, 0, 0, 0)).forLevel(5)).isEqualTo(5);
+  }
+
+  @Test
+  void ownersAndAssistantsTrustOutsidersOnTheirOwnClaims() {
+    hold(claim(TOWN_A, 0, 0));
+    hold(claim(TOWN_B, 9, 9));
+    var nomad = new PlayerRef(NOMAD, "Nomad");
+    var owner = new ClaimAttempt(OWNER, Fixtures.townA(), chunk(0, 0), map);
+
+    var trusted = claiming.trust(owner, nomad, true);
+    assertThat(trusted.map(Claim::trusted)).isEqualTo(Result.ok(Set.of(NOMAD)));
+
+    hold(trusted.fold(claim -> claim, problems -> claim(TOWN_A, 0, 0)));
+    var assistant = new ClaimAttempt(ASSISTANT, Fixtures.townA(), chunk(0, 0), map);
+    assertThat(problems(claiming.trust(assistant, nomad, true)))
+        .containsExactly(new ClaimProblem.AlreadyTrusted("Nomad"));
+    assertThat(claiming.trust(assistant, nomad, false).map(Claim::trusted))
+        .isEqualTo(Result.ok(Set.of()));
+  }
+
+  @Test
+  void trustIsForOutsidersOnTheTownsOwnLand() {
+    hold(claim(TOWN_A, 0, 0));
+    hold(claim(TOWN_B, 9, 9));
+    var nomad = new PlayerRef(NOMAD, "Nomad");
+
+    assertThat(
+            problems(
+                claiming.trust(
+                    new ClaimAttempt(OWNER, Fixtures.townA(), chunk(0, 0), map),
+                    new PlayerRef(MEMBER, "Member"),
+                    true)))
+        .containsExactly(new ClaimProblem.TrustsMember("Member"));
+    assertThat(
+            problems(
+                claiming.trust(
+                    new ClaimAttempt(MEMBER, Fixtures.townA(), chunk(0, 0), map), nomad, true)))
+        .containsExactly(new ClaimProblem.CannotManageClaims(TownRole.MEMBER));
+    assertThat(
+            problems(
+                claiming.trust(
+                    new ClaimAttempt(OWNER, Fixtures.townA(), chunk(9, 9), map), nomad, true)))
+        .containsExactly(new ClaimProblem.OwnedByOtherTown(TOWN_B));
+    assertThat(
+            problems(
+                claiming.trust(
+                    new ClaimAttempt(OWNER, Fixtures.townA(), chunk(0, 0), map), nomad, false)))
+        .containsExactly(new ClaimProblem.NotTrusted("Nomad"));
+  }
+
+  @Test
+  void aFlagChangeKeepsTheTrustList() {
+    hold(claim(TOWN_A, 0, 0).withTrust(NOMAD, true));
+
+    var changed =
+        claiming.setFlag(
+            new ClaimAttempt(OWNER, Fixtures.townA(), chunk(0, 0), map), ClaimFlag.PVP, true);
+
+    assertThat(changed.map(Claim::trusted)).isEqualTo(Result.ok(Set.of(NOMAD)));
   }
 }

@@ -14,6 +14,15 @@ public sealed interface Denial {
   /** PvP is off where the attacker or the victim stands. */
   record NoPvp() implements Denial {}
 
+  /** The attacker has switched their own PvP off. */
+  record YourPvpIsOff() implements Denial {}
+
+  /** The player they attack has switched their PvP off. */
+  record TheirPvpIsOff() implements Denial {}
+
   /** The creature is someone else's tamed pet. */
   record NotYourPet() implements Denial {}
+
+  /** The container is locked and the player may not open or break it. */
+  record Locked() implements Denial {}
 }

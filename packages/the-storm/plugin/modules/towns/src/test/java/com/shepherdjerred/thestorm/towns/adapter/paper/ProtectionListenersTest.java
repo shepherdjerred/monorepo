@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.shepherdjerred.thestorm.core.protection.Decision;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
+import com.shepherdjerred.thestorm.tracks.app.Track;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,8 +69,12 @@ final class ProtectionListenersTest extends AegisServer {
     assertThat(call(place).isCancelled()).isTrue();
   }
 
+  /**
+   * Server rule: anyone may take from an unlocked container, even in someone else's town; locks
+   * guard the rest. Admin regions still keep their containers shut.
+   */
   @Test
-  void outsidersCannotOpenATownsChestsButCanUseSpawnDoors() {
+  void outsidersMayOpenATownsUnlockedChestsButNotSpawnsAndMayUseSpawnDoors() {
     var chest = block(CLAIM_X, Y, Z);
     chest.setType(Material.CHEST);
     var spawnDoor = block(0, Y, 0);
@@ -77,7 +82,7 @@ final class ProtectionListenersTest extends AegisServer {
     var spawnChest = block(1, Y, 0);
     spawnChest.setType(Material.CHEST);
 
-    assertThat(rightClick(bob, chest)).isEqualTo(Event.Result.DENY);
+    assertThat(rightClick(bob, chest)).isNotEqualTo(Event.Result.DENY);
     assertThat(rightClick(alice, chest)).isNotEqualTo(Event.Result.DENY);
     assertThat(rightClick(bob, spawnDoor)).isNotEqualTo(Event.Result.DENY);
     assertThat(rightClick(bob, spawnChest)).isEqualTo(Event.Result.DENY);
@@ -198,6 +203,7 @@ final class ProtectionListenersTest extends AegisServer {
                 switch (method.getName()) {
                   case "getLeftSide" -> leftHalf;
                   case "getRightSide" -> rightHalf;
+                  case "getHolder" -> null;
                   case "getLocation" -> new Location(world, left, Y, Z);
                   default -> throw new UnsupportedOperationException(method.getName());
                 });
@@ -325,6 +331,9 @@ final class ProtectionListenersTest extends AegisServer {
     server.dispatchCommand(bob, "unclaim");
     awaitLine(bob, "You are not in a town.");
 
+    server.dispatchCommand(bob, "town create Bastion");
+    awaitLine(bob, "Founding a town takes Governor I.");
+    bob.addAttachment(plugin, Track.GOVERNOR.permission(1), true);
     server.dispatchCommand(bob, "town create Bastion");
     awaitLine(bob, "Founded Bastion");
     server.dispatchCommand(bob, "claim");

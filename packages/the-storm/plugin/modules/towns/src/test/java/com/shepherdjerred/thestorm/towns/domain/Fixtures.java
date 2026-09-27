@@ -7,13 +7,14 @@ import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlags;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
 import com.shepherdjerred.thestorm.towns.domain.protection.Action;
 import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
-import com.shepherdjerred.thestorm.towns.domain.protection.TrustLevel;
 import com.shepherdjerred.thestorm.towns.domain.protection.TrustLookup;
 import com.shepherdjerred.thestorm.towns.domain.region.AdminRegion;
 import com.shepherdjerred.thestorm.towns.domain.region.ChunkCorner;
 import com.shepherdjerred.thestorm.towns.domain.region.ChunkRange;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionAllowance;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionAreas;
+import com.shepherdjerred.thestorm.towns.domain.region.RegionSpawns;
+import com.shepherdjerred.thestorm.towns.domain.town.ClaimTrust;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
 import java.time.Instant;
@@ -42,6 +43,10 @@ public final class Fixtures {
   /** In no town at all. */
   public static final UUID NOMAD = UUID.fromString("00000000-0000-4000-8000-000000000005");
 
+  /** In no town, but trusted on town A's claims that {@link #trustedLand} makes. */
+  public static final UUID TRUSTED_OUTSIDER =
+      UUID.fromString("00000000-0000-4000-8000-000000000006");
+
   public static final Instant FOUNDED = Instant.parse("2026-09-01T00:00:00Z");
 
   private Fixtures() {}
@@ -51,24 +56,26 @@ public final class Fixtures {
         TOWN_A,
         "Aegis",
         FOUNDED,
-        Map.of(OWNER, TownRole.OWNER, ASSISTANT, TownRole.ASSISTANT, MEMBER, TownRole.MEMBER));
+        Map.of(OWNER, TownRole.OWNER, ASSISTANT, TownRole.ASSISTANT, MEMBER, TownRole.MEMBER),
+        0);
   }
 
   public static Town townB() {
     return Town.found(TOWN_B, "Bastion", FOUNDED, OTHER_TOWN_OWNER);
   }
 
-  /** Trust as town membership gives it, for towns A and B. */
+  /** Trust as town membership and claim trust give it, for towns A and B. */
   public static TrustLookup trust() {
     var towns = List.of(townA(), townB());
     return (player, claim, act) ->
-        towns.stream()
-            .filter(town -> town.id().equals(claim.townId()))
-            .findFirst()
-            .orElseThrow()
-            .roleOf(player)
-            .map(TownRole::trust)
-            .orElse(TrustLevel.OUTSIDER);
+        ClaimTrust.of(
+            towns.stream()
+                .filter(town -> town.id().equals(claim.townId()))
+                .findFirst()
+                .orElseThrow(),
+            claim,
+            player,
+            act);
   }
 
   public static ChunkPos chunk(int x, int z) {
@@ -87,6 +94,12 @@ public final class Fixtures {
     return new Land.TownLand(new Claim(chunk(0, 0), town, new ClaimFlags(flags)));
   }
 
+  /** A claim of {@code town} with {@code flags}, trusting {@link #TRUSTED_OUTSIDER}. */
+  public static Land.TownLand trustedLand(UUID town, Set<ClaimFlag> flags) {
+    return new Land.TownLand(
+        new Claim(chunk(0, 0), town, new ClaimFlags(flags), Set.of(TRUSTED_OUTSIDER)));
+  }
+
   /** Every flag except {@code except}. */
   public static Set<ClaimFlag> allFlagsBut(ClaimFlag except) {
     var flags = EnumSet.allOf(ClaimFlag.class);
@@ -101,7 +114,8 @@ public final class Fixtures {
         new RegionAreas(
             List.of(new ChunkRange(WORLD, new ChunkCorner(-2, -2), new ChunkCorner(1, 1))),
             List.of()),
-        List.of(allow));
+        List.of(allow),
+        RegionSpawns.unlimited());
   }
 
   public static RegionAllowance allow(Action action, Subject... subjects) {

@@ -4,22 +4,25 @@ import com.shepherdjerred.thestorm.towns.domain.claiming.ClaimMap;
 import com.shepherdjerred.thestorm.towns.domain.land.ChunkPos;
 import com.shepherdjerred.thestorm.towns.domain.land.Claim;
 import com.shepherdjerred.thestorm.towns.domain.land.Land;
+import com.shepherdjerred.thestorm.towns.domain.lock.LockAccess;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.TrustLevel;
 import com.shepherdjerred.thestorm.towns.domain.protection.TrustLookup;
 import com.shepherdjerred.thestorm.towns.domain.region.AdminRegion;
 import com.shepherdjerred.thestorm.towns.domain.region.RegionIndex;
+import com.shepherdjerred.thestorm.towns.domain.town.ClaimTrust;
 import com.shepherdjerred.thestorm.towns.domain.town.Town;
 import com.shepherdjerred.thestorm.towns.domain.town.TownDirectory;
-import com.shepherdjerred.thestorm.towns.domain.town.TownRole;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -29,7 +32,7 @@ import java.util.UUID;
  * <p>Main thread only. It enforces its own invariants and throws when handed data that breaks them:
  * one town per player, unique names, claims only for existing towns, one claim per chunk.
  */
-public final class TownsState implements ClaimMap, TownDirectory, TrustLookup {
+public final class TownsState implements ClaimMap, TownDirectory, TrustLookup, LockAccess.Towns {
 
   private static final Land WILDERNESS = new Land.Wilderness();
 
@@ -39,7 +42,7 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup {
   private final Map<UUID, UUID> townOfPlayer = new HashMap<>();
   private final Map<String, UUID> townByName = new HashMap<>();
   private final Map<String, Long2ObjectOpenHashMap<Land.TownLand>> claims = new HashMap<>();
-  private final Map<UUID, Integer> claimCounts = new HashMap<>();
+  private final Map<UUID, Set<ChunkPos>> chunksByTown = new HashMap<>();
 
   public TownsState(RegionIndex regions) {
     this.regions = regions;
@@ -63,7 +66,7 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup {
     townOfPlayer.clear();
     townByName.clear();
     claims.clear();
-    claimCounts.clear();
+    chunksByTown.clear();
     load(snapshot);
   }
 
@@ -104,7 +107,8 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup {
 
   @Override
   public int claimCount(UUID townId) {
-    return claimCounts.getOrDefault(townId, 0);
+    var chunks = chunksByTown.get(townId);
+    return chunks == null ? 0 : chunks.size();
   }
 
   @Override
@@ -161,28 +165,59 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup {
   /** Every claim {@code townId} holds. */
   public List<Claim> claimsOf(UUID townId) {
     var held = new ArrayList<Claim>();
-    for (var worldClaims : claims.values()) {
-      for (var land : worldClaims.values()) {
-        if (land.claim().townId().equals(townId)) {
-          held.add(land.claim());
-        }
-      }
+    for (var chunk : chunksByTown.getOrDefault(townId, Set.of())) {
+      held.add(claimAt(chunk).orElseThrow());
     }
     return List.copyOf(held);
   }
 
   @Override
   public TrustLevel trustOf(UUID player, Claim claim, Act act) {
-    return trustOf(player, claim.townId());
+    var town = towns.get(claim.townId());
+    if (town == null) {
+      throw new IllegalStateException("claim for unknown town " + claim.townId());
+    }
+    return ClaimTrust.of(town, claim, player, act);
   }
 
-  /** How far {@code townId} trusts {@code player}, from their role; outsiders when not a member. */
-  public TrustLevel trustOf(UUID player, UUID townId) {
+  /** True when {@code player} owns or assists {@code townId}. */
+  @Override
+  public boolean manages(UUID player, UUID townId) {
     var town = towns.get(townId);
-    if (town == null) {
-      throw new IllegalStateException("claim for unknown town " + townId);
+    return town != null && town.roleOf(player).map(role -> role.manages()).orElse(false);
+  }
+
+  /** The id of the town {@code player} belongs to. */
+  @Override
+  public Optional<UUID> townIdOf(UUID player) {
+    return Optional.ofNullable(townOfPlayer.get(player));
+  }
+
+  /**
+   * Replaces a town with {@code town}, its new version: its name, members and Governor level may
+   * have changed. New members must not belong to another town, and a new name must be free.
+   */
+  public void replaceTown(Town town) {
+    var old = towns.get(town.id());
+    if (old == null) {
+      throw new IllegalStateException("town " + town.id() + " does not exist");
     }
-    return town.roleOf(player).map(TownRole::trust).orElse(TrustLevel.OUTSIDER);
+    var key = town.name().toLowerCase(Locale.ROOT);
+    var holder = townByName.get(key);
+    if (holder != null && !holder.equals(town.id())) {
+      throw new IllegalStateException("a town is already named " + town.name());
+    }
+    for (var member : town.members().keySet()) {
+      var current = townOfPlayer.get(member);
+      if (current != null && !current.equals(town.id())) {
+        throw new IllegalStateException(member + " already belongs to a town");
+      }
+    }
+    townByName.remove(old.name().toLowerCase(Locale.ROOT));
+    townByName.put(key, town.id());
+    old.members().keySet().forEach(townOfPlayer::remove);
+    town.members().keySet().forEach(member -> townOfPlayer.put(member, town.id()));
+    towns.put(town.id(), town);
   }
 
   /** Adds a new town; its members must not belong to another town and its name must be free. */
@@ -229,10 +264,10 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup {
       throw new IllegalStateException("chunk " + claim.chunk() + " is already claimed");
     }
     worldClaims.put(key, new Land.TownLand(claim));
-    claimCounts.merge(claim.townId(), 1, Integer::sum);
+    chunksByTown.computeIfAbsent(claim.townId(), town -> new HashSet<>()).add(claim.chunk());
   }
 
-  /** Replaces an existing claim with the same chunk and town, for flag changes. */
+  /** Replaces an existing claim with the same chunk and town, for flag and trust changes. */
   public void replaceClaim(Claim claim) {
     var current = claimAt(claim.chunk());
     if (current.isEmpty() || !current.get().townId().equals(claim.townId())) {
@@ -254,11 +289,12 @@ public final class TownsState implements ClaimMap, TownDirectory, TrustLookup {
       return Optional.empty();
     }
     var town = removed.claim().townId();
-    var count = claimCounts.getOrDefault(town, 0);
-    if (count <= 1) {
-      claimCounts.remove(town);
-    } else {
-      claimCounts.put(town, count - 1);
+    var held = chunksByTown.get(town);
+    if (held != null) {
+      held.remove(chunk);
+      if (held.isEmpty()) {
+        chunksByTown.remove(town);
+      }
     }
     return Optional.of(removed.claim());
   }

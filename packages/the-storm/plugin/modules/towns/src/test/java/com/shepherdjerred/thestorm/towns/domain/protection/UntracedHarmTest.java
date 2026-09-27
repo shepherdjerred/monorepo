@@ -49,7 +49,7 @@ final class UntracedHarmTest {
   @ParameterizedTest(name = "{0}")
   @MethodSource("cases")
   void decides(Case row) {
-    var engine = new ProtectionEngine(Fixtures.trust());
+    var engine = new ProtectionEngine(Fixtures.trust(), PvpPreferences.EVERYONE);
 
     assertThat(engine.allowsUntracedHarm(row.origin(), row.victim())).isEqualTo(row.allowed());
   }

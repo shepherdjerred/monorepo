@@ -27,7 +27,8 @@ final class RegionTest {
           case ChunkRange chunks -> new RegionAreas(List.of(chunks), List.of());
           case Cuboid cuboid -> new RegionAreas(List.of(), List.of(cuboid));
         };
-    return new AdminRegion(id, id.toUpperCase(java.util.Locale.ROOT), areas, List.of(allow));
+    return new AdminRegion(
+        id, id.toUpperCase(java.util.Locale.ROOT), areas, List.of(allow), RegionSpawns.unlimited());
   }
 
   @Test
@@ -92,7 +93,11 @@ final class RegionTest {
     assertThatThrownBy(
             () ->
                 new AdminRegion(
-                    "spawn", " ", new RegionAreas(List.of(SPAWN_CHUNKS), List.of()), List.of()))
+                    "spawn",
+                    " ",
+                    new RegionAreas(List.of(SPAWN_CHUNKS), List.of()),
+                    List.of(),
+                    RegionSpawns.unlimited()))
         .isInstanceOf(IllegalArgumentException.class);
   }
 

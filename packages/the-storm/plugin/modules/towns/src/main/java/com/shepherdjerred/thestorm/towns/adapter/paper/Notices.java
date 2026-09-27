@@ -64,7 +64,10 @@ final class Notices {
           case Denial.ByRegion(var region, var action) ->
               region + " is protected; you can't " + verb(action) + " here.";
           case Denial.NoPvp() -> "PvP is off here.";
+          case Denial.YourPvpIsOff() -> "Your PvP is off. Turn it on with /pvp on.";
+          case Denial.TheirPvpIsOff() -> "They have turned their PvP off.";
           case Denial.NotYourPet() -> "That pet belongs to someone else.";
+          case Denial.Locked() -> "That is locked.";
         });
   }
 

@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.towns.domain.protection;
 
+import java.util.UUID;
+
 /** Who or what a player hurts, pushes or pulls, as seen from that player. */
 public sealed interface Victim {
 
@@ -7,7 +9,7 @@ public sealed interface Victim {
   record Self() implements Victim {}
 
   /** Another player. */
-  record OtherPlayer() implements Victim {}
+  record OtherPlayer(UUID id) implements Victim {}
 
   /** A pet the attacker tamed. */
   record OwnPet() implements Victim {}

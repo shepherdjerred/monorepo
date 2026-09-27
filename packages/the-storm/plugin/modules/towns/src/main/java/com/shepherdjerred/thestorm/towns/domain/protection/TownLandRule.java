@@ -5,7 +5,8 @@ import com.shepherdjerred.thestorm.towns.domain.land.ClaimFlag;
 
 /**
  * A town's claim: its owner and trusted members may do anything; outsiders only what the claim's
- * public flags open. PvP follows the claim's PVP flag for everyone, members included.
+ * public flags open (see {@link OutsiderAccess}). PvP follows the claim's PVP flag for everyone,
+ * members included.
  */
 final class TownLandRule {
 
@@ -28,8 +29,7 @@ final class TownLandRule {
   }
 
   private static Verdict outsider(Act act, Claim claim) {
-    var open = OutsiderAccess.flagFor(act.action()).map(claim.flags()::has).orElse(false);
-    return open
+    return OutsiderAccess.opens(act.action(), claim.flags())
         ? Verdict.allow()
         : new Verdict.Deny(new Denial.ByTown(claim.townId(), act.action()));
   }
