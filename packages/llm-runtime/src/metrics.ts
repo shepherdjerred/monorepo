@@ -17,7 +17,10 @@ import {
   type CommonLlmMetrics,
 } from "@shepherdjerred/llm-observability/metrics";
 import { Counter, type Registry } from "prom-client";
-import { parseNativeUsage } from "./usage.ts";
+import {
+  countProviderExecutedWebSearchRequests,
+  parseNativeUsage,
+} from "./usage.ts";
 import {
   logLlmCallFailure,
   logLlmResponse,
@@ -105,6 +108,10 @@ export class LlmMetricsTelemetry implements Telemetry {
       responseId: event.responseId,
       resolvedModel: event.modelId,
       usage: event.usage,
+      ...(provider === "openai" && {
+        providerExecutedWebSearchRequests:
+          countProviderExecutedWebSearchRequests(event.content),
+      }),
     });
 
     logLlmResponse({

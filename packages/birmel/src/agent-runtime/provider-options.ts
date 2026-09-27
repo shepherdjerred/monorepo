@@ -1,4 +1,5 @@
 import {
+  mergeProviderOptions,
   toolLoopProviderOptions,
   type ProviderOptions,
 } from "@shepherdjerred/llm-runtime";
@@ -32,4 +33,12 @@ export function getAgentProviderOptions(
     serialToolCalls: true,
     reasoningEffort: overrides.reasoningEffort ?? config.llm.reasoningEffort,
   });
+}
+
+/** Keep agent safety settings when runtime call options add provider settings. */
+export function mergeAgentProviderOptions(
+  agentOptions: ProviderOptions | undefined,
+  runtimeOptions: ProviderOptions | undefined,
+): ProviderOptions | undefined {
+  return mergeProviderOptions(agentOptions, runtimeOptions);
 }

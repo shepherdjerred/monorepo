@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, test } from "vitest";
-import { getAgentProviderOptions } from "@shepherdjerred/birmel/agent-runtime/provider-options.ts";
+import {
+  getAgentProviderOptions,
+  mergeAgentProviderOptions,
+} from "@shepherdjerred/birmel/agent-runtime/provider-options.ts";
 
 describe("getAgentProviderOptions", () => {
   beforeEach(() => {
@@ -20,6 +23,20 @@ describe("getAgentProviderOptions", () => {
     expect(
       getAgentProviderOptions("gpt-5.6-sol", { reasoningEffort: "low" }),
     ).toMatchObject({ openai: { reasoningEffort: "low" } });
+  });
+
+  test("preserves serial tools and reasoning when runtime options add strict schemas", () => {
+    expect(
+      mergeAgentProviderOptions(getAgentProviderOptions("gpt-5.6-sol"), {
+        openai: { strictJsonSchema: true },
+      }),
+    ).toEqual({
+      openai: {
+        parallelToolCalls: false,
+        reasoningEffort: "medium",
+        strictJsonSchema: true,
+      },
+    });
   });
 
   test("does not forward text verbosity", () => {

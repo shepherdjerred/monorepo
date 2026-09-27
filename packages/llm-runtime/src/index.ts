@@ -36,6 +36,7 @@ import {
 import { generateValidatedObject as innerGenerateValidatedObject } from "./validated-object.ts";
 import { webSearchTool as innerWebSearchTool } from "./web-search.ts";
 import {
+  mergeProviderOptions as innerMergeProviderOptions,
   reasoningProviderOptions as innerReasoningProviderOptions,
   toolLoopProviderOptions as innerToolLoopProviderOptions,
   type ProviderOptions as InnerProviderOptions,
@@ -121,6 +122,12 @@ export function reasoningProviderOptions(
   ...args: Parameters<typeof innerReasoningProviderOptions>
 ): ReturnType<typeof innerReasoningProviderOptions> {
   return innerReasoningProviderOptions(...args);
+}
+
+export function mergeProviderOptions(
+  ...args: Parameters<typeof innerMergeProviderOptions>
+): ReturnType<typeof innerMergeProviderOptions> {
+  return innerMergeProviderOptions(...args);
 }
 
 export function toolLoopProviderOptions(

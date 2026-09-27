@@ -5,6 +5,7 @@ import {
   parseNativeUsage,
   tokenBreakdown,
 } from "@shepherdjerred/llm-runtime";
+import { countProviderExecutedWebSearchRequests } from "#src/usage.ts";
 
 /** The AI SDK's normalized usage, as every provider reports it. */
 function sdkUsage(input: {
@@ -72,6 +73,30 @@ describe("token breakdown", () => {
 });
 
 describe("native usage metadata", () => {
+  test("counts only provider-executed OpenAI web-search calls", () => {
+    expect(
+      countProviderExecutedWebSearchRequests([
+        {
+          type: "tool-call",
+          toolName: "web_search",
+          providerExecuted: true,
+        },
+        {
+          type: "tool-result",
+          toolName: "web_search",
+          providerExecuted: true,
+        },
+        {
+          type: "tool-call",
+          toolName: "web_search",
+          providerExecuted: false,
+        },
+        { type: "tool-call", toolName: "file_search", providerExecuted: true },
+        null,
+      ]),
+    ).toBe(1);
+  });
+
   test("prices an OpenAI call from the catalog", () => {
     const metadata = parseNativeUsage({
       requestedModel: "gpt-5.4-nano",
@@ -135,6 +160,17 @@ describe("native usage metadata", () => {
       }),
     });
     expect(metadata.serverToolRequests).toEqual({ webSearch: 1 });
+    expect(metadata.catalogCostUsd).toBeUndefined();
+  });
+
+  test("OpenAI web searches make the call unpriced when the catalog has no search rate", () => {
+    const metadata = parseNativeUsage({
+      requestedModel: "gpt-5.4-nano",
+      provider: "openai",
+      providerExecutedWebSearchRequests: 2,
+      usage: sdkUsage({ noCache: 1000, output: 100 }),
+    });
+    expect(metadata.serverToolRequests).toEqual({ webSearch: 2 });
     expect(metadata.catalogCostUsd).toBeUndefined();
   });
 });

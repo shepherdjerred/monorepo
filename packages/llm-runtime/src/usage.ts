@@ -27,6 +27,14 @@ const ZERO_TOKENS: TokenBreakdown = {
   total: 0,
 };
 
+const ProviderExecutedWebSearchCallSchema = z
+  .object({
+    type: z.literal("tool-call"),
+    toolName: z.literal("web_search"),
+    providerExecuted: z.literal(true),
+  })
+  .loose();
+
 export function emptyTokenBreakdown(): TokenBreakdown {
   return { ...ZERO_TOKENS };
 }
@@ -99,6 +107,14 @@ function count(value: number | null | undefined): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
+export function countProviderExecutedWebSearchRequests(
+  content: readonly unknown[],
+): number {
+  return content.filter(
+    (part) => ProviderExecutedWebSearchCallSchema.safeParse(part).success,
+  ).length;
+}
+
 export function tokenBreakdown(usage: unknown): TokenBreakdown {
   const parsed = SdkUsageSchema.safeParse(usage);
   if (!parsed.success) return emptyTokenBreakdown();
@@ -133,9 +149,9 @@ type RawPricingDimensions = {
 };
 
 /**
- * Pull the pricing dimensions a provider reports outside the normalized usage
- * shape. Only Anthropic reports any of them today; OpenAI and Google carry no
- * equivalent fields, so they price as standard with no TTL split.
+ * Pull the pricing dimensions Anthropic reports outside the normalized usage
+ * shape. OpenAI web-search counts come from response content in
+ * LlmMetricsTelemetry; Google carries no equivalent pricing dimensions.
  */
 function rawPricingDimensions(
   provider: Provider | "unknown",
@@ -191,16 +207,28 @@ export function pricingUsage(
 export function parseNativeUsage(input: {
   requestedModel: string;
   provider: Provider | "unknown";
+  /** OpenAI server tools appear in response content rather than usage.raw. */
+  providerExecutedWebSearchRequests?: number | undefined;
   responseId?: string | undefined;
   resolvedModel?: string | undefined;
   usage: unknown;
 }): LlmCallMetadata {
   const tokens = tokenBreakdown(input.usage);
   const parsed = SdkUsageSchema.safeParse(input.usage);
-  const dimensions = rawPricingDimensions(
+  const rawDimensions = rawPricingDimensions(
     input.provider,
     parsed.success ? parsed.data.raw : undefined,
   );
+  const dimensions =
+    input.provider === "openai" &&
+    count(input.providerExecutedWebSearchRequests) > 0
+      ? {
+          ...rawDimensions,
+          serverToolRequests: {
+            webSearch: count(input.providerExecutedWebSearchRequests),
+          },
+        }
+      : rawDimensions;
 
   return {
     requestedModel: input.requestedModel,
