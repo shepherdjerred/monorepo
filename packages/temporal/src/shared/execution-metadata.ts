@@ -60,6 +60,22 @@ export function executionDomainForTaskQueue(
   }
 }
 
+/** A role can poll several queues while still representing one telemetry domain. */
+export function executionDomainForTaskQueues(
+  taskQueues: readonly TaskQueue[],
+): ExecutionDomain {
+  const first = taskQueues[0];
+  if (first === undefined) {
+    return "platform";
+  }
+  const domain = executionDomainForTaskQueue(first);
+  return taskQueues.every(
+    (taskQueue) => executionDomainForTaskQueue(taskQueue) === domain,
+  )
+    ? domain
+    : "platform";
+}
+
 // Every new central Workflow execution (declared Schedule, ad-hoc client
 // start, or dynamic agent-task schedule) now targets the single
 // TASK_QUEUES.WORKFLOWS dispatch queue, so executionDomainForTaskQueue alone

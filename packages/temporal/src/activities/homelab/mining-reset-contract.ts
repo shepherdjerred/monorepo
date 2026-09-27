@@ -4,6 +4,7 @@ export const MINING_NAMESPACE = "minecraft-tsmc";
 export const MINING_SERVER = "minecraft-tsmc";
 export const MINING_CLAIM = "datadir-minecraft-tsmc-0";
 export const MINING_LOCK_ANNOTATION = "sjer.red/mining-reset-lock";
+export const MINING_IMAGE_ANNOTATION = "sjer.red/mining-reset-image";
 export const ROUTER_WAKE_ANNOTATION = "mc-router.itzg.me/autoScaleUp";
 
 export const MiningPeriodSchema = z.string().regex(/^\d{4}q[1-4]$/);
@@ -70,8 +71,11 @@ export const BackupSchema = z.object({
 export const JobSchema = z.object({
   metadata: MetadataSchema,
   spec: z.object({
+    backoffLimit: z.number().int(),
+    activeDeadlineSeconds: z.number().int(),
     template: z.object({
       spec: z.object({
+        restartPolicy: z.string(),
         containers: z.array(
           z.object({
             name: z.string(),
@@ -98,6 +102,9 @@ export const JobSchema = z.object({
     .object({
       succeeded: z.number().int().optional(),
       failed: z.number().int().optional(),
+      conditions: z
+        .array(z.object({ type: z.string(), status: z.string() }))
+        .optional(),
     })
     .optional(),
 });
@@ -180,7 +187,8 @@ function hasExpectedJobContainer(
     container.env[0]?.name === "RESET_PERIOD" &&
     container.env[0].value === period &&
     container.volumeMounts.length === 1 &&
-    container.volumeMounts[0]?.mountPath === "/data"
+    container.volumeMounts[0]?.name === "data" &&
+    container.volumeMounts[0].mountPath === "/data"
   );
 }
 
@@ -192,19 +200,30 @@ export function assertMatchingResetJob(
   if (
     job.metadata.name !== miningBackupName(period) ||
     job.metadata.labels?.["sjer.red/mining-reset-period"] !== period ||
+    job.spec.backoffLimit !== 0 ||
+    job.spec.activeDeadlineSeconds !== 600 ||
+    job.spec.template.spec.restartPolicy !== "Never" ||
     !hasExpectedJobContainer(job, period, image) ||
     job.spec.template.spec.volumes.length !== 1 ||
-    job.spec.template.spec.volumes[0]?.persistentVolumeClaim?.claimName !==
+    job.spec.template.spec.volumes[0]?.name !== "data" ||
+    job.spec.template.spec.volumes[0].persistentVolumeClaim?.claimName !==
       MINING_CLAIM
   ) {
     throw new Error(
       "Mining reset Job does not match the expected PVC and image",
     );
   }
-  if ((job.status?.failed ?? 0) > 0) {
-    throw new Error("Mining reset Job failed; the server remains locked");
-  }
   return job.status?.succeeded === 1;
+}
+
+/** A terminal failure can be replaced only after the Job spec is validated. */
+export function resetJobFailed(job: z.infer<typeof JobSchema>): boolean {
+  return (
+    (job.status?.failed ?? 0) > 0 ||
+    job.status?.conditions?.some(
+      (condition) => condition.type === "Failed" && condition.status === "True",
+    ) === true
+  );
 }
 
 export function miningResetScript(root: string): string {
@@ -222,6 +241,11 @@ case "$period" in ????q[1-4]) ;; *) exit 20 ;; esac
 mkdir -p "$root/.mining-reset"
 if [ -f "$root/.mining-reset/$period.done" ]; then
   [ "$(cat "$root/.mining-reset/$period.done")" = "$period" ] || exit 28
+  tomb="$root/.mining-reset/$period.deleting"
+  [ ! -L "$tomb" ] || exit 29
+  if [ -d "$tomb" ]; then
+    rmdir -- "$tomb"
+  fi
   exit 0
 fi
 tomb="$root/.mining-reset/$period.deleting"
@@ -234,10 +258,14 @@ if [ ! -d "$tomb" ]; then
   mv -- "$root/mining" "$tomb"
   sync
 fi
-rm -rf -- "$tomb"
+# Keep the tombstone directory itself as a durable deletion checkpoint until
+# the done marker has been atomically installed. A killed Pod can resume even
+# after its last child is gone.
+find "$tomb" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
 sync
 printf '%s\n' "$period" > "$root/.mining-reset/$period.done.tmp"
 mv -- "$root/.mining-reset/$period.done.tmp" "$root/.mining-reset/$period.done"
 sync
+rmdir -- "$tomb"
 `;
 }

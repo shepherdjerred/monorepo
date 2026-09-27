@@ -12,19 +12,20 @@ import {
   assertMatchingResetJob,
   BackupSchema,
   JobSchema,
-  MINING_CLAIM,
+  MINING_IMAGE_ANNOTATION,
   MINING_LOCK_ANNOTATION,
   MINING_NAMESPACE,
   MINING_SERVER,
   MiningPeriodSchema,
   miningBackupName,
-  miningResetScript,
   PodListSchema,
   PvcListSchema,
   ROUTER_WAKE_ANNOTATION,
+  resetJobFailed,
   ServiceSchema,
   StatefulSetSchema,
 } from "./mining-reset-contract.ts";
+import { resetJobManifest } from "./mining-reset-job.ts";
 
 async function readServer(command: Command) {
   return StatefulSetSchema.parse(
@@ -136,16 +137,36 @@ async function disableRouterWake(
   ]);
 }
 
-async function acquireLock(command: Command, period: string): Promise<string> {
+async function acquireLock(
+  command: Command,
+  period: string,
+): Promise<string | undefined> {
   const server = await readServer(command);
   const heldBy = server.metadata.annotations?.[MINING_LOCK_ANNOTATION];
   if (heldBy !== undefined && heldBy !== period) {
     throw new Error(`Mining reset maintenance lock belongs to ${heldBy}`);
   }
-  if (server.spec.replicas !== 0 || (server.status?.replicas ?? 0) !== 0) {
-    throw new Error("The Storm server is running; defer the mining reset");
+  if (
+    heldBy === undefined &&
+    server.metadata.annotations?.[MINING_IMAGE_ANNOTATION] !== undefined
+  ) {
+    throw new Error("Mining reset image exists without its maintenance lock");
   }
-  const image = resetImage(server);
+  if (server.spec.replicas !== 0 || (server.status?.replicas ?? 0) !== 0) {
+    if (heldBy === undefined) {
+      return undefined;
+    }
+    throw new Error(
+      "The Storm server is running while a mining reset lock is held",
+    );
+  }
+  const image =
+    heldBy === period
+      ? server.metadata.annotations?.[MINING_IMAGE_ANNOTATION]
+      : resetImage(server);
+  if (image === undefined || image.length === 0) {
+    throw new Error("Mining reset lock has no pinned server image");
+  }
   if (server.metadata.resourceVersion === undefined) {
     throw new Error("The Storm StatefulSet has no resourceVersion");
   }
@@ -165,7 +186,10 @@ async function acquireLock(command: Command, period: string): Promise<string> {
             {
               op: "add",
               path: "/metadata/annotations",
-              value: { [MINING_LOCK_ANNOTATION]: period },
+              value: {
+                [MINING_LOCK_ANNOTATION]: period,
+                [MINING_IMAGE_ANNOTATION]: image,
+              },
             },
           ]
         : [
@@ -173,6 +197,11 @@ async function acquireLock(command: Command, period: string): Promise<string> {
               op: "add",
               path: annotationPath(MINING_LOCK_ANNOTATION),
               value: period,
+            },
+            {
+              op: "add",
+              path: annotationPath(MINING_IMAGE_ANNOTATION),
+              value: image,
             },
           ]),
     ]);
@@ -191,7 +220,10 @@ async function assertStoppedAndBackedUpClaim(
   allowResetJob: boolean,
 ): Promise<void> {
   const server = await readServer(command);
+  const pinnedImage = server.metadata.annotations?.[MINING_IMAGE_ANNOTATION];
   if (
+    pinnedImage === undefined ||
+    pinnedImage.length === 0 ||
     server.metadata.annotations?.[MINING_LOCK_ANNOTATION] !== period ||
     server.spec.replicas !== 0 ||
     (server.status?.replicas ?? 0) !== 0
@@ -277,53 +309,12 @@ async function ensureBackup(
   return assertCompletedBackup(BackupSchema.parse(JSON.parse(raw)), period);
 }
 
-function resetJobManifest(period: string, image: string): string {
-  return JSON.stringify({
-    apiVersion: "batch/v1",
-    kind: "Job",
-    metadata: {
-      name: miningBackupName(period),
-      namespace: MINING_NAMESPACE,
-      labels: { "sjer.red/mining-reset-period": period },
-    },
-    spec: {
-      backoffLimit: 0,
-      activeDeadlineSeconds: 600,
-      ttlSecondsAfterFinished: 604_800,
-      template: {
-        metadata: { labels: { "sjer.red/mining-reset-period": period } },
-        spec: {
-          restartPolicy: "Never",
-          containers: [
-            {
-              name: "mining-reset",
-              image,
-              command: ["/bin/sh", "-eu", "-c", miningResetScript("/data")],
-              env: [{ name: "RESET_PERIOD", value: period }],
-              volumeMounts: [{ name: "data", mountPath: "/data" }],
-              securityContext: {
-                allowPrivilegeEscalation: false,
-                runAsUser: 0,
-              },
-            },
-          ],
-          volumes: [
-            {
-              name: "data",
-              persistentVolumeClaim: { claimName: MINING_CLAIM },
-            },
-          ],
-        },
-      },
-    },
-  });
-}
-
 async function ensureResetJob(
   command: Command,
   period: string,
   image: string,
-): Promise<boolean> {
+  allowReplacement: boolean,
+): Promise<"complete" | "running" | "replaced"> {
   const args = [
     "-n",
     MINING_NAMESPACE,
@@ -344,18 +335,42 @@ async function ensureResetJob(
     }
     raw = await run(command, args);
   }
-  return assertMatchingResetJob(
-    JobSchema.parse(JSON.parse(raw)),
-    period,
-    image,
-  );
+  const job = JobSchema.parse(JSON.parse(raw));
+  if (assertMatchingResetJob(job, period, image)) {
+    return "complete";
+  }
+  if (resetJobFailed(job)) {
+    if (!allowReplacement) {
+      throw new Error("Mining reset Job failed after bounded replacements");
+    }
+    // The Job has backoffLimit 0, so Kubernetes will not create another Pod.
+    // The shell uses a durable tombstone/done marker; a replacement of this
+    // exact validated Job can safely resume the same quarter after deletion.
+    await run(command, [
+      "-n",
+      MINING_NAMESPACE,
+      "delete",
+      "job",
+      miningBackupName(period),
+      "--wait=true",
+      "--cascade=foreground",
+    ]);
+    return "replaced";
+  }
+  return "running";
 }
 
 async function releaseLock(command: Command, period: string): Promise<void> {
   const server = await readServer(command);
+  const pinnedImage = server.metadata.annotations?.[MINING_IMAGE_ANNOTATION];
   if (server.metadata.annotations?.[MINING_LOCK_ANNOTATION] !== period) {
     throw new Error(
       "Refusing to release a mining reset lock owned by another run",
+    );
+  }
+  if (pinnedImage === undefined || pinnedImage.length === 0) {
+    throw new Error(
+      "Refusing to release a mining reset lock without its image",
     );
   }
   if (server.spec.replicas !== 0) {
@@ -377,6 +392,12 @@ async function releaseLock(command: Command, period: string): Promise<void> {
   ]);
   await patchJson(command, "statefulset", [
     { op: "test", path: annotationPath(MINING_LOCK_ANNOTATION), value: period },
+    {
+      op: "test",
+      path: annotationPath(MINING_IMAGE_ANNOTATION),
+      value: pinnedImage,
+    },
+    { op: "remove", path: annotationPath(MINING_IMAGE_ANNOTATION) },
     { op: "remove", path: annotationPath(MINING_LOCK_ANNOTATION) },
   ]);
 }
@@ -390,9 +411,12 @@ type MiningResetDependencies = {
 export async function resetMiningWorldWithDependencies(
   periodInput: string,
   dependencies: MiningResetDependencies,
-): Promise<string> {
+): Promise<MiningResetResult> {
   const period = MiningPeriodSchema.parse(periodInput);
   const image = await acquireLock(dependencies.command, period);
+  if (image === undefined) {
+    return { kind: "deferred" };
+  }
   dependencies.heartbeat("locked");
 
   // The on-demand backup is named by quarter. A retry observes the same CR,
@@ -431,12 +455,25 @@ export async function resetMiningWorldWithDependencies(
     await dependencies.sleep(30_000);
   }
 
+  let replacements = 0;
   for (let attempt = 0; attempt < 60; attempt += 1) {
     dependencies.heartbeat("job");
     await assertStoppedAndBackedUpClaim(dependencies.command, period, true);
-    if (await ensureResetJob(dependencies.command, period, image)) {
+    const job = await ensureResetJob(
+      dependencies.command,
+      period,
+      image,
+      replacements < 2,
+    );
+    if (job === "replaced") {
+      replacements += 1;
+    }
+    if (job === "complete") {
       await releaseLock(dependencies.command, period);
-      return `Mining world reset ${period} after a completed Velero snapshot`;
+      return {
+        kind: "completed",
+        message: `Mining world reset ${period} after a completed Velero snapshot`,
+      };
     }
     if (attempt === 59) {
       throw new Error("Mining reset Job did not finish within 30 minutes");
@@ -447,8 +484,11 @@ export async function resetMiningWorldWithDependencies(
 }
 
 export type MiningResetActivities = typeof miningResetActivities;
+export type MiningResetResult =
+  | { readonly kind: "deferred" }
+  | { readonly kind: "completed"; readonly message: string };
 export const miningResetActivities = {
-  async resetMiningWorld(period: string): Promise<string> {
+  async resetMiningWorld(period: string): Promise<MiningResetResult> {
     return resetMiningWorldWithDependencies(period, {
       command: kubectl,
       heartbeat: (phase) => {

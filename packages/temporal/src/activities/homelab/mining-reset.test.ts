@@ -96,6 +96,23 @@ describe("The Storm mining reset", () => {
     );
   });
 
+  test("resumes after all tombstone children are deleted but before the done marker", async () => {
+    const root = await fixtureRoot();
+    const checkpoint = path.join(root, ".mining-reset");
+    await mkdir(checkpoint);
+    const tomb = path.join(checkpoint, "2026q4.deleting");
+    await rename(path.join(root, "mining"), tomb);
+    await rm(path.join(tomb, "region"), { recursive: true });
+    await rm(path.join(tomb, "level.dat"));
+
+    expect(await runScript(root)).toBe(0);
+    expect(await Bun.file(path.join(checkpoint, "2026q4.done")).exists()).toBe(
+      true,
+    );
+    expect(await Bun.file(tomb).exists()).toBe(false);
+    expect(await runScript(root)).toBe(0);
+  });
+
   test("requires one bound claim and one completed snapshot", () => {
     const claim = {
       metadata: { name: "datadir-minecraft-tsmc-0" },
@@ -171,8 +188,11 @@ describe("The Storm mining reset", () => {
         labels: { "sjer.red/mining-reset-period": "2026q4" },
       },
       spec: {
+        backoffLimit: 0,
+        activeDeadlineSeconds: 600,
         template: {
           spec: {
+            restartPolicy: "Never",
             containers: [container],
             volumes: [
               {
@@ -193,6 +213,7 @@ describe("The Storm mining reset", () => {
     const wrong = {
       ...job,
       spec: {
+        ...job.spec,
         template: {
           spec: {
             ...job.spec.template.spec,
@@ -203,6 +224,13 @@ describe("The Storm mining reset", () => {
     };
     expect(() =>
       assertMatchingResetJob(wrong, "2026q4", "server@sha256:example"),
+    ).toThrow();
+    expect(() =>
+      assertMatchingResetJob(
+        { ...job, spec: { ...job.spec, backoffLimit: 4 } },
+        "2026q4",
+        "server@sha256:example",
+      ),
     ).toThrow();
   });
 });

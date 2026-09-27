@@ -26,7 +26,7 @@ import {
 } from "./shared/infra/temporal-bootstrap.ts";
 import { getWorkerRoleContract } from "./worker-config.ts";
 import {
-  executionDomainForTaskQueue,
+  executionDomainForTaskQueues,
   parseTemporalBootstrapMetadata,
 } from "./shared/execution-metadata.ts";
 import { ExecutionMetadataClientInterceptor } from "./lib/execution-metadata-client-interceptor.ts";
@@ -144,19 +144,12 @@ async function initializeTemporalTracing(
   bootstrapMetadata: ReturnType<typeof parseTemporalBootstrapMetadata>,
 ) {
   const taskQueues = roleContract.workers.map((worker) => worker.taskQueue);
-  const soleWorker = roleContract.workers.at(0);
-  if (soleWorker === undefined && roleContract.workers.length === 1) {
-    throw new Error("Single-worker Temporal role has no Worker configuration");
-  }
   const callGraphTracing = await initializeCallGraphTracing({
     environment: bootstrapMetadata.environment,
     workerRole: role,
   });
   const tracingRuntime = initializeTracing({
-    domain:
-      soleWorker !== undefined && roleContract.workers.length === 1
-        ? executionDomainForTaskQueue(soleWorker.taskQueue)
-        : "platform",
+    domain: executionDomainForTaskQueues(taskQueues),
     environment: bootstrapMetadata.environment,
     namespace,
     taskQueue: taskQueues.join(","),

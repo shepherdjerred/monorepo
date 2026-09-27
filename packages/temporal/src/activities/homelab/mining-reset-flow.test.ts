@@ -10,6 +10,10 @@ class FakeCluster {
   readonly serviceAnnotations: Record<string, string> = {};
   backup: Record<string, unknown> | undefined;
   job: Record<string, unknown> | undefined;
+  serverImage = "server@sha256:example";
+  serverReplicas = 0;
+  failNextJob = false;
+  failReleaseOnce = false;
 
   private ok(value: unknown): FakeResult {
     return { stdout: JSON.stringify(value), stderr: "", exitCode: 0 };
@@ -26,12 +30,12 @@ class FakeCluster {
             annotations: this.serverAnnotations,
           },
           spec: {
-            replicas: 0,
+            replicas: this.serverReplicas,
             template: {
-              spec: { containers: [{ image: "server@sha256:example" }] },
+              spec: { containers: [{ image: this.serverImage }] },
             },
           },
-          status: { replicas: 0 },
+          status: { replicas: this.serverReplicas },
         },
       ],
       [
@@ -70,6 +74,14 @@ class FakeCluster {
   }
 
   private patch(joined: string, payload: string): FakeResult {
+    if (
+      this.failReleaseOnce &&
+      joined.includes("service") &&
+      payload.includes('"op":"remove"')
+    ) {
+      this.failReleaseOnce = false;
+      throw new Error("simulated release failure");
+    }
     const operations = z
       .array(
         z.object({
@@ -118,7 +130,11 @@ class FakeCluster {
       };
     } else if (manifest.kind === "Job") {
       this.events.push("job-created");
-      this.job = { ...manifest, status: { succeeded: 1 } };
+      this.job = {
+        ...manifest,
+        status: this.failNextJob ? { failed: 1 } : { succeeded: 1 },
+      };
+      this.failNextJob = false;
     } else {
       throw new Error(`Unexpected resource kind ${manifest.kind}`);
     }
@@ -137,6 +153,10 @@ class FakeCluster {
     if (joined === "create -f -" && input !== undefined) {
       return this.create(input);
     }
+    if (joined.includes(" delete job ")) {
+      this.job = undefined;
+      return { stdout: "", stderr: "", exitCode: 0 };
+    }
     throw new Error(`Unexpected command: ${joined}`);
   }
 }
@@ -146,14 +166,17 @@ describe("mining reset orchestration", () => {
     const cluster = new FakeCluster();
     const result = await resetMiningWorldWithDependencies("2026q4", {
       command: cluster.command.bind(cluster),
-      heartbeat: (phase) => {
+      heartbeat: (phase: string) => {
         cluster.events.push(`heartbeat-${phase}`);
       },
       sleep: async () => {
         cluster.events.push("sleep");
       },
     });
-    expect(result).toContain("2026q4");
+    expect(result).toEqual({
+      kind: "completed",
+      message: "Mining world reset 2026q4 after a completed Velero snapshot",
+    });
     expect(cluster.events.indexOf("backup-created")).toBeLessThan(
       cluster.events.indexOf("job-created"),
     );
@@ -163,5 +186,74 @@ describe("mining reset orchestration", () => {
     expect(
       cluster.serviceAnnotations["mc-router.itzg.me/autoScaleUp"],
     ).toBeUndefined();
+  });
+
+  test("defers without a lock or backup while players keep the server awake", async () => {
+    const cluster = new FakeCluster();
+    cluster.serverReplicas = 1;
+
+    const result = await resetMiningWorldWithDependencies("2026q4", {
+      command: cluster.command.bind(cluster),
+      heartbeat: (phase) => {
+        cluster.events.push(`heartbeat-${phase}`);
+      },
+      sleep: async () => {
+        cluster.events.push("sleep");
+      },
+    });
+
+    expect(result).toEqual({ kind: "deferred" });
+    expect(cluster.serverAnnotations).toEqual({});
+    expect(cluster.backup).toBeUndefined();
+    expect(cluster.job).toBeUndefined();
+  });
+
+  test("recreates a validated failed Job for the same period", async () => {
+    const cluster = new FakeCluster();
+    cluster.failNextJob = true;
+
+    await resetMiningWorldWithDependencies("2026q4", {
+      command: cluster.command.bind(cluster),
+      heartbeat: (phase) => {
+        cluster.events.push(`heartbeat-${phase}`);
+      },
+      sleep: async () => {
+        cluster.events.push("sleep");
+      },
+    });
+
+    expect(
+      cluster.events.filter((event) => event === "job-created"),
+    ).toHaveLength(2);
+    expect(cluster.events.some((event) => event.includes(" delete job "))).toBe(
+      true,
+    );
+  });
+
+  test("pins the Job image across Activity retries and a server rollout", async () => {
+    const cluster = new FakeCluster();
+    cluster.failReleaseOnce = true;
+    const dependencies = {
+      command: cluster.command.bind(cluster),
+      heartbeat: (phase: string) => {
+        cluster.events.push(`heartbeat-${phase}`);
+      },
+      sleep: async () => {
+        cluster.events.push("sleep");
+      },
+    };
+
+    await expect(
+      resetMiningWorldWithDependencies("2026q4", dependencies),
+    ).rejects.toThrow("simulated release failure");
+    cluster.serverImage = "server@sha256:rolled-out";
+    await resetMiningWorldWithDependencies("2026q4", dependencies);
+
+    expect(
+      cluster.events.filter((event) => event === "job-created"),
+    ).toHaveLength(1);
+    expect(cluster.serverAnnotations["sjer.red/mining-reset-image"]).toBe(
+      undefined,
+    );
   });
 });
