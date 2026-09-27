@@ -184,9 +184,12 @@ and still look green.
 ## The review gate waits for the exact head
 
 The required PR review gate is multi-provider: one enabled reviewer (Codex,
-Qodo, Greptile, CodeRabbit — selected by `REVIEW_PROVIDERS`, default Codex)
-must finish reviewing the exact head commit with no blocking findings, while
-an unresolved P0 from any enabled provider vetoes the pass. Codex names the
+CodeRabbit — selected by `REVIEW_PROVIDERS`, default Codex) must finish
+reviewing the exact head commit with no blocking findings, while
+an unresolved P0 from any enabled provider vetoes the pass. Qodo and Greptile
+stay registered but out of the enabled set until their apps are installed and
+observed reviewing: an enabled-but-silent provider holds every PR at the
+deadline instead of passing it. Codex names the
 head in its latest PR review, and a clean Codex review is represented by its
 👍 reaction; each provider's completion signal is documented in
 `packages/code-review`. The gate is

@@ -326,10 +326,12 @@ export function vetoThreads(
  * - Any `passed` provider passes the gate unless a P0 veto stands.
  * - A P0 veto fails fast, even while other providers are still reviewing.
  * - Otherwise any `waiting` provider keeps the gate waiting.
- * - When every provider failed, unanimous provider-side blocks stay on the
- *   soft-fail path (`blockedReason` set → exit 42); a single findings failure
- *   among them makes the gate fail hard (exit 1) with the blocked providers
- *   noted as ignored.
+ * - When every enabled snapshot failed blocked, the unanimous provider-side
+ *   block stays on the soft-fail path (`blockedReason` set → exit 42). Any
+ *   skip in the mix — or a single findings failure — makes the gate fail
+ *   hard (exit 1) with the blocked providers noted as ignored: exit 42
+ *   means "no review could run", which is false when a provider declined
+ *   the PR instead of blocking on it.
  */
 export function evaluateMultiGate(input: {
   head: string;
@@ -429,7 +431,15 @@ export function evaluateMultiGate(input: {
   const blockedReasons = failed.map(({ decision }) =>
     decision.state === "failed" ? decision.blockedReason : null,
   );
-  if (blockedReasons.every((reason) => reason !== null)) {
+  // The quota path needs EVERY enabled snapshot to be a blocked failure, not
+  // just every failure. A skip evaluates to `passed`, so without the length
+  // check a skip beside quota blocks would exit 42: Buildkite would soft-fail
+  // a step no provider reviewed. Skips stay visible in the hard-fail message
+  // via the ignored-blocked note instead.
+  if (
+    failed.length === evaluated.length &&
+    blockedReasons.every((reason) => reason !== null)
+  ) {
     const names = failed
       .map(({ snapshot }) => snapshot.provider.displayName)
       .join(", ");

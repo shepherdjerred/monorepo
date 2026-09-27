@@ -746,6 +746,31 @@ describe("evaluateMultiGate — skipped providers", () => {
     expect(gateExitCode(d)).toBe(REVIEW_GATE_FAILURE_EXIT_CODE);
   });
 
+  test("a skip beside quota blocks fails hard instead of soft-failing", () => {
+    const d = evaluateMultiGate({
+      head,
+      policy: policy(),
+      providers: [
+        snapshot({
+          provider: greptileProvider,
+          skipReason: "too-many-files",
+        }),
+        snapshot({
+          provider: codexProvider,
+          reviewState: "errored",
+          blockedReason: "usage-limited",
+        }),
+      ],
+    });
+    // Exit 42 means "no review could run", which is false here: Greptile
+    // declined the PR rather than blocking on it, so no provider reviewed.
+    expect(d.state).toBe("failed");
+    if (d.state !== "failed") throw new Error("unreachable");
+    expect(d.blockedReason).toBeNull();
+    expect(gateExitCode(d)).toBe(REVIEW_GATE_FAILURE_EXIT_CODE);
+    expect(d.message).toContain("Ignored blocked provider(s): Codex");
+  });
+
   test("a stale P0 from a skipped provider still vetoes", () => {
     const d = evaluateMultiGate({
       head,

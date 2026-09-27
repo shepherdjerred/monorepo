@@ -88,7 +88,10 @@ loudly instead of gating against the wrong bot. The CI gate selects its
 enabled set with `REVIEW_PROVIDERS` (comma-separated; the resolver default is
 `codex`). Every enabled provider must have its GitHub App installed and
 reviewing: silence is neither a pass nor a block, so a missing provider holds
-each PR at the deadline instead of passing it.
+each PR at the deadline instead of passing it. Only confirmed-active reviewers
+belong in the production set — today `codex,coderabbit`. Qodo and Greptile
+stay registered for optional/manual review and rejoin the gate once their apps
+are installed and observed reviewing.
 
 ## Entry points
 
