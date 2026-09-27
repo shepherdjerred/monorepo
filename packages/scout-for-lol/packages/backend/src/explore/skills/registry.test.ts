@@ -86,7 +86,8 @@ describe("skill bodies", () => {
     expect(body).toContain("`item0` through `item6`");
     expect(body).toContain("summoner1_id");
     expect(body).toContain("stat_perk_*");
-    expect(body).toContain("most common individual item");
+    expect(body).toContain("For purchase frequency, filter `timeline_events`");
+    expect(body).toContain("cannot unpivot the six final-inventory slots");
     expect(body).toContain("exact `(match_id, puuid)` pair");
     expect(body).toContain("acquire_match_timelines");
     expect(skill("loadouts").surfaces).toEqual(["web", "voice"]);
