@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.discord.adapter.discord;
 
 import com.shepherdjerred.thestorm.discord.app.DiscordGateway;
+import com.shepherdjerred.thestorm.discord.app.DiscordReadCommands;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import com.shepherdjerred.thestorm.discord.domain.DiscordCredentials;
 import java.time.Duration;
@@ -14,6 +15,7 @@ import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.entities.Activity;
 import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import net.dv8tion.jda.api.utils.messages.MessageRequest;
@@ -43,7 +45,8 @@ public final class JdaBridge implements DiscordGateway {
   }
 
   /** Logs in on a virtual thread so the server never waits on Discord. */
-  public void start(DiscordCredentials credentials, DiscordRelay relay) {
+  public void start(
+      DiscordCredentials credentials, DiscordRelay relay, DiscordReadCommands commands) {
     Thread.ofVirtual()
         .name("storm-discord-login")
         .start(
@@ -55,7 +58,8 @@ public final class JdaBridge implements DiscordGateway {
                             GatewayIntent.GUILD_MESSAGES,
                             GatewayIntent.MESSAGE_CONTENT)
                         .setActivity(Activity.customStatus(relay.status()))
-                        .addEventListeners(new JdaListener(this, relay, credentials.channelId()))
+                        .addEventListeners(
+                            new JdaListener(this, relay, commands, credentials.channelId()))
                         .build();
                 jda.set(client);
                 if (stopped) {
@@ -68,8 +72,8 @@ public final class JdaBridge implements DiscordGateway {
   }
 
   /**
-   * Called by JDA once connected: finds the channel, registers {@code /list}, says hello. Holds the
-   * lifecycle lock so the hello is queued before any goodbye, and never after one.
+   * Called by JDA once connected: finds the channel, registers the read commands, says hello. Holds
+   * the lifecycle lock so the hello is queued before any goodbye, and never after one.
    */
   void ready(JDA client, long channelId, DiscordRelay relay) {
     var found = client.getTextChannelById(channelId);
@@ -89,7 +93,10 @@ public final class JdaBridge implements DiscordGateway {
     found
         .getGuild()
         .updateCommands()
-        .addCommands(Commands.slash("list", "Who is online on The Storm"))
+        .addCommands(
+            Commands.slash("list", "Who is online on The Storm"),
+            Commands.slash("baltop", "Show the richest players in The Storm"),
+            Commands.slash("towns", "Show player towns in The Storm"))
         .queue(
             commands -> logger.info("Discord bridge connected to #{}", found.getName()),
             error -> logger.warn("Registering Discord slash commands failed", error));
@@ -151,5 +158,17 @@ public final class JdaBridge implements DiscordGateway {
 
   static <R extends MessageRequest<R>> R withoutMentions(R request) {
     return request.setAllowedMentions(EnumSet.noneOf(Message.MentionType.class));
+  }
+
+  /** Edits an ephemeral slash-command reply without resolving mentions. */
+  void editReply(InteractionHook hook, String text) {
+    hook.editOriginal(text)
+        .setAllowedMentions(java.util.List.of())
+        .queue(
+            ignored -> {}, error -> logger.warn("Answering a Discord slash command failed", error));
+  }
+
+  void logCommandFailure(String operation, Throwable failure) {
+    logger.warn("Could not {}", operation, failure);
   }
 }

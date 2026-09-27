@@ -10,8 +10,12 @@ import com.shepherdjerred.thestorm.discord.adapter.paper.PaperOnlinePlayers;
 import com.shepherdjerred.thestorm.discord.adapter.paper.ServerEventsListener;
 import com.shepherdjerred.thestorm.discord.adapter.paper.VanillaPlainText;
 import com.shepherdjerred.thestorm.discord.app.DiscordConfig;
+import com.shepherdjerred.thestorm.discord.app.DiscordReadCommands;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import com.shepherdjerred.thestorm.discord.domain.DiscordCredentials;
+import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
+import com.shepherdjerred.thestorm.economy.app.PlayerLeaderboard;
+import com.shepherdjerred.thestorm.towns.app.TownRead;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -19,7 +23,8 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * The Discord bridge (replaces DiscordSRV): Global chat both ways, join, leave, death and
- * advancement posts, wake and sleep posts, and {@code /list}. Needs the chat module.
+ * advancement posts, wake and sleep posts, and the {@code /list}, {@code /baltop}, and {@code
+ * /towns} commands. Needs the chat, economy, and towns modules.
  *
  * <p>The bot token and channel id come from environment variables named in {@code discord.yml};
  * without them the module refuses to start.
@@ -59,10 +64,19 @@ public final class DiscordModule implements StormModule {
             new DiscordRelay.Game(chat, context.scheduler(), new PaperOnlinePlayers(server)));
     var subscription = chat.subscribe(relay::onChatLine);
     var text = new VanillaPlainText(server.getClass().getClassLoader());
+    var commands =
+        new DiscordReadCommands(
+            new DiscordReadCommands.Ports(
+                context.services().require(PlayerLeaderboard.class),
+                context.services().require(CrystalFormatter.class),
+                context.services().require(TownRead.class),
+                context.scheduler()),
+            relay,
+            context.logger());
     server
         .getPluginManager()
         .registerEvents(new ServerEventsListener(relay, text), context.plugin());
-    bridge.start(credentials, relay);
+    bridge.start(credentials, relay, commands);
     running = new Running(bridge, relay, subscription);
   }
 

@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.economy.adapter.paper.EconomyPaper;
 import com.shepherdjerred.thestorm.economy.app.ConfiguredCrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.LedgerWallets;
+import com.shepherdjerred.thestorm.economy.app.PlayerLeaderboard;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.economy.domain.CrystalFormat;
 import com.shepherdjerred.thestorm.economy.domain.EconomyConfig;
@@ -30,6 +31,7 @@ public final class EconomyModule implements StormModule {
     var store = new JooqLedgerStore(context.database(), context.time(), TransferRules.standard());
     var wallets = new LedgerWallets(store, config.startingCrystals());
     context.services().provide(Wallets.class, wallets);
+    context.services().provide(PlayerLeaderboard.class, wallets::leaderboard);
     context
         .services()
         .provide(

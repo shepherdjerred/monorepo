@@ -59,6 +59,11 @@ public final class DiscordRelay {
     stopping = true;
   }
 
+  /** Whether the bridge is shutting down and should refuse new query work. */
+  public boolean isStopping() {
+    return stopping;
+  }
+
   /** Relays a Discord message into Global chat. Called on a JDA thread; dropped once stopping. */
   public void onDiscordMessage(InboundMessage message) {
     if (stopping) {
