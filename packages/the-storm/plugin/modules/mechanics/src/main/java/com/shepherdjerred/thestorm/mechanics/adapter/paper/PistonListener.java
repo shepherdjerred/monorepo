@@ -15,6 +15,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.Directional;
+import org.bukkit.block.data.type.Piston;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -69,15 +70,36 @@ final class PistonListener implements Listener {
     var crusher = signs.get(Mechanism.CRUSH);
     if (crusher != null && crush(crusher, head)) {
       event.setCancelled(true);
+    }
+  }
+
+  /** Effects that require the vanilla extension are queued only after cancellation is final. */
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onExtendConfirmed(BlockPistonExtendEvent event) {
+    var piston = event.getBlock();
+    var signs = signs(piston);
+    if (signs.isEmpty()) {
       return;
     }
+    var facing = facing(piston);
+    var head = piston.getRelative(facing);
     var bouncer = signs.get(Mechanism.BOUNCE);
     if (bouncer != null) {
-      bounce(bouncer, head, facing);
+      var type = piston.getType();
+      kit.scheduler()
+          .runOnMainThreadLater(
+              SETTLE,
+              () -> {
+                if (piston.getType() == type
+                    && piston.getBlockData() instanceof Piston state
+                    && state.isExtended()) {
+                  bounce(bouncer, head, facing);
+                }
+              });
     }
     var pusher = signs.get(Mechanism.SUPER_PUSH);
     if (pusher != null) {
-      settleThen(piston, pusher, grid -> push(grid, piston, facing));
+      settleThen(piston, pusher, true, grid -> push(grid, piston, facing));
     }
   }
 
@@ -90,7 +112,7 @@ final class PistonListener implements Listener {
     var puller = signs(piston).get(Mechanism.SUPER_STICKY);
     if (puller != null) {
       var facing = facing(piston);
-      settleThen(piston, puller, grid -> pull(grid, piston, facing));
+      settleThen(piston, puller, false, grid -> pull(grid, piston, facing));
     }
   }
 
@@ -149,13 +171,16 @@ final class PistonListener implements Listener {
   }
 
   /** After the piston settles, plans moves and applies them if the owner may make every one. */
-  private void settleThen(Block piston, UUID owner, Function<PaperGrid, List<BlockMove>> planner) {
+  private void settleThen(
+      Block piston, UUID owner, boolean extended, Function<PaperGrid, List<BlockMove>> planner) {
     var type = piston.getType();
     kit.scheduler()
         .runOnMainThreadLater(
             SETTLE,
             () -> {
-              if (piston.getType() != type) {
+              if (piston.getType() != type
+                  || !(piston.getBlockData() instanceof Piston state)
+                  || state.isExtended() != extended) {
                 return;
               }
               var grid = new PaperGrid(piston.getWorld());

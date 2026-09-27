@@ -181,6 +181,10 @@ public final class SpanFinder {
     var max = search.config().maxWidthEachSide();
     var right = widthToward(grid, nearBase, layout.across(), max);
     var left = widthToward(grid, nearBase, layout.across().opposite(), max);
+    if (right != widthToward(grid, farBase, layout.across(), max)
+        || left != widthToward(grid, farBase, layout.across().opposite(), max)) {
+      return Result.err(new StructureProblem.WidthsDiffer());
+    }
     for (var offset = -left; offset <= right; offset++) {
       if (!grid.cellAt(farBase.offset(layout.across(), offset)).is(material)) {
         return Result.err(new StructureProblem.WidthsDiffer());

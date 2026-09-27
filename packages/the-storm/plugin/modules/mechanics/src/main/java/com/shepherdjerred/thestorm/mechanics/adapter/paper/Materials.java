@@ -85,7 +85,10 @@ final class Materials {
         || data instanceof Segmentable
         || data instanceof Bisected
         || data instanceof Bed
-        || (data instanceof MultipleFacing && !(data instanceof Fence)));
+        || (data instanceof MultipleFacing
+            && !(data instanceof Fence)
+            && data.getMaterial() != Material.IRON_BARS
+            && data.getMaterial() != Material.GLASS_PANE));
   }
 
   private static void check(
