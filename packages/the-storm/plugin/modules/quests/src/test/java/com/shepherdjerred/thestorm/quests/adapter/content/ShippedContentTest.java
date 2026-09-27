@@ -116,6 +116,26 @@ final class ShippedContentTest {
           "the-shelter-register",
           "a-warm-welcome");
 
+  /** The fourth two-quest chapter in each historical region. */
+  static final List<String> CHAPTER_FOUR =
+      List.of(
+          "the-rain-signal",
+          "after-the-storm",
+          "the-bank-seal",
+          "a-clean-count",
+          "the-open-catalogue",
+          "questions-for-tomorrow",
+          "a-guarded-delivery",
+          "the-market-receipt",
+          "the-watch-beacon",
+          "the-next-patrol",
+          "a-bent-rail",
+          "the-second-manifest",
+          "the-fishers-lesson",
+          "a-light-on-the-river",
+          "a-place-to-rest",
+          "the-hearth-kept");
+
   private static QuestContent content = QuestContent.empty();
 
   @BeforeAll
@@ -138,7 +158,8 @@ final class ShippedContentTest {
                     Stream.of("the-gate-ledger"),
                     REGIONAL.stream(),
                     CONTINUATIONS.stream(),
-                    CHAPTER_THREE.stream())
+                    CHAPTER_THREE.stream(),
+                    CHAPTER_FOUR.stream())
                 .flatMap(stream -> stream)
                 .toList());
     assertThat(content.factions()).containsOnlyKeys("townsfolk", "storm-watch");
@@ -152,6 +173,17 @@ final class ShippedContentTest {
       var second = content.catalog().require(CHAPTER_THREE.get(index + 1));
       assertThat(first.requirements())
           .containsExactly(new Condition.Completed(CONTINUATIONS.get(index + 1)));
+      assertThat(second.requirements()).containsExactly(new Condition.Completed(first.id()));
+    }
+  }
+
+  @Test
+  void fourthChaptersContinueEachRegionalStoryInOrder() {
+    for (var index = 0; index < CHAPTER_FOUR.size(); index += 2) {
+      var first = content.catalog().require(CHAPTER_FOUR.get(index));
+      var second = content.catalog().require(CHAPTER_FOUR.get(index + 1));
+      assertThat(first.requirements())
+          .containsExactly(new Condition.Completed(CHAPTER_THREE.get(index + 1)));
       assertThat(second.requirements()).containsExactly(new Condition.Completed(first.id()));
     }
   }
