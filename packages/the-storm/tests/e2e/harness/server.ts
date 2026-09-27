@@ -188,7 +188,7 @@ async function waitForLog(
  * Builds this run's /plugins mount: the pinned third-party jars, the plugin
  * under test and its repository-owned config directory.
  */
-async function stagePlugins(
+export async function stagePlugins(
   cacheDir: string,
   stagingDir: string,
   options: Pick<StartServerOptions, "stormJar" | "stormConfig" | "warmCache">,

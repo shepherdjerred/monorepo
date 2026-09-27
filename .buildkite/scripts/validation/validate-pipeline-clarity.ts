@@ -44,6 +44,7 @@ export function validatePipelineClarity(
     ["playwright-e2e-main", "browser E2E — sites + Scout Storybook/evals"],
     ["docker-e2e-pr", "llm-observability E2E — Tempo + MinIO"],
     ["docker-e2e-main", "llm-observability E2E — Tempo + MinIO"],
+    ["paper-e2e-pr", "Paper E2E — Paper 26.2 + The Storm"],
     ["codex-review-gate", "Codex review gate (required)"],
   ] satisfies readonly (readonly [string, string])[]) {
     requireIncludes(

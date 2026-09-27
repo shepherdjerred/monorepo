@@ -58,6 +58,7 @@ const PATH_GATED_PR_KEYS = new Set([
   "resume-build-pr",
   "trmnl-validate-pr",
   "docker-e2e-pr",
+  "paper-e2e-pr",
   "trivy",
   "semgrep",
   "images-pr",
