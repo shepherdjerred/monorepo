@@ -7,14 +7,13 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * {@code plugins/TheStorm/qol.yml}. Durations are ISO-8601 text because the config parser has no
+ * {@code plugins/TheStorm/rtp.yml}. Durations are ISO-8601 text because the config parser has no
  * time module.
  */
 public record QolConfig(
     String freeFor,
     String cooldown,
     String warmup,
-    String graveLifetime,
     String landingMemory,
     int cost,
     int batchSize,
@@ -31,7 +30,6 @@ public record QolConfig(
     freeFor = positive(freeFor, "freeFor");
     cooldown = positive(cooldown, "cooldown");
     warmup = nonNegative(warmup, "warmup");
-    graveLifetime = positive(graveLifetime, "graveLifetime");
     landingMemory = positive(landingMemory, "landingMemory");
     if (cost < 0) {
       throw new IllegalArgumentException("cost must not be negative: " + cost);
@@ -66,10 +64,6 @@ public record QolConfig(
 
   public Duration warmupDuration() {
     return Duration.parse(warmup);
-  }
-
-  public Duration graveLifetimeDuration() {
-    return Duration.parse(graveLifetime);
   }
 
   public Duration landingMemoryDuration() {

@@ -38,3 +38,10 @@ CREATE TABLE qol_notices (
 );
 
 CREATE INDEX qol_notices_player ON qol_notices (player, id);
+
+-- First arrival and cooldown state for random teleport.
+CREATE TABLE qol_player (
+  player TEXT NOT NULL PRIMARY KEY,
+  first_seen BIGINT NOT NULL,
+  last_rtp BIGINT
+);

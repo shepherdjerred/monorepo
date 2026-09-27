@@ -12,7 +12,7 @@ final class QolConfigTest {
 
   @Test
   void theShippedFileParses() throws Exception {
-    var path = Path.of("../../../server/owned/plugins/TheStorm/qol.yml");
+    var path = Path.of("../../../server/owned/plugins/TheStorm/rtp.yml");
     var yaml = Files.readString(path);
     var config =
         StrictYaml.parse(path.toString(), yaml, QolConfig.class)

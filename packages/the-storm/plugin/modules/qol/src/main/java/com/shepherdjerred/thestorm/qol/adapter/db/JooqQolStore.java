@@ -1,6 +1,5 @@
 package com.shepherdjerred.thestorm.qol.adapter.db;
 
-import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_GRAVE;
 import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_PLAYER;
 import static com.shepherdjerred.thestorm.qol.adapter.db.generated.Tables.QOL_RTP_ATTEMPT;
 
@@ -9,7 +8,6 @@ import com.shepherdjerred.thestorm.qol.app.Ensured;
 import com.shepherdjerred.thestorm.qol.app.PlayerProfile;
 import com.shepherdjerred.thestorm.qol.app.QolStore;
 import com.shepherdjerred.thestorm.qol.app.RtpAttempt;
-import com.shepherdjerred.thestorm.qol.app.StoredGrave;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
@@ -74,49 +72,6 @@ public final class JooqQolStore implements QolStore {
             dsl.deleteFrom(QOL_RTP_ATTEMPT).where(QOL_RTP_ATTEMPT.ID.eq(id.toString())).execute());
   }
 
-  @Override
-  public CompletableFuture<Void> insertGrave(StoredGrave grave) {
-    return write(
-        dsl ->
-            dsl.insertInto(QOL_GRAVE)
-                .set(QOL_GRAVE.ID, grave.id().toString())
-                .set(QOL_GRAVE.OWNER, grave.owner().toString())
-                .set(QOL_GRAVE.WORLD, grave.world())
-                .set(QOL_GRAVE.X, grave.x())
-                .set(QOL_GRAVE.Y, grave.y())
-                .set(QOL_GRAVE.Z, grave.z())
-                .set(QOL_GRAVE.EXPIRES, grave.expires().toEpochMilli())
-                .execute());
-  }
-
-  @Override
-  public CompletableFuture<Optional<StoredGrave>> graveAt(String world, int x, int y, int z) {
-    return database.read(
-        dsl ->
-            Optional.ofNullable(
-                    dsl.selectFrom(QOL_GRAVE)
-                        .where(QOL_GRAVE.WORLD.eq(world))
-                        .and(QOL_GRAVE.X.eq(x))
-                        .and(QOL_GRAVE.Y.eq(y))
-                        .and(QOL_GRAVE.Z.eq(z))
-                        .fetchOne())
-                .map(JooqQolStore::grave));
-  }
-
-  @Override
-  public CompletableFuture<List<StoredGrave>> due(Instant now) {
-    return database.read(
-        dsl ->
-            dsl.selectFrom(QOL_GRAVE)
-                .where(QOL_GRAVE.EXPIRES.le(now.toEpochMilli()))
-                .fetch(JooqQolStore::grave));
-  }
-
-  @Override
-  public CompletableFuture<Void> deleteGrave(UUID id) {
-    return write(dsl -> dsl.deleteFrom(QOL_GRAVE).where(QOL_GRAVE.ID.eq(id.toString())).execute());
-  }
-
   private CompletableFuture<Void> write(Consumer<DSLContext> work) {
     return database
         .write(
@@ -145,18 +100,6 @@ public final class JooqQolStore implements QolStore {
         UUID.fromString(row.getPlayer()),
         Instant.ofEpochMilli(row.getFirstSeen()),
         instant(row.getLastRtp()));
-  }
-
-  private static StoredGrave grave(
-      com.shepherdjerred.thestorm.qol.adapter.db.generated.tables.records.QolGraveRecord row) {
-    return new StoredGrave(
-        UUID.fromString(row.getId()),
-        UUID.fromString(row.getOwner()),
-        row.getWorld(),
-        row.getX(),
-        row.getY(),
-        row.getZ(),
-        Instant.ofEpochMilli(row.getExpires()));
   }
 
   private static Optional<Instant> instant(@Nullable Long millis) {

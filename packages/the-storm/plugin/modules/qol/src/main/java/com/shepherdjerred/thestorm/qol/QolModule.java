@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.essentials.app.AfkStatus;
 import com.shepherdjerred.thestorm.essentials.app.TeleportGuards;
 import com.shepherdjerred.thestorm.qol.adapter.db.JooqGraveStore;
 import com.shepherdjerred.thestorm.qol.adapter.paper.QolPaper;
+import com.shepherdjerred.thestorm.qol.adapter.paper.RtpPaper;
 import com.shepherdjerred.thestorm.qol.app.CombatStatus;
 import com.shepherdjerred.thestorm.qol.app.CombatTracker;
 import com.shepherdjerred.thestorm.qol.app.GraveRegistry;
@@ -42,6 +43,10 @@ public final class QolModule implements StormModule {
             services.require(TeleportGuards.class),
             services.require(AfkStatus.class));
     paper = QolPaper.start(context, config, app);
+    RtpPaper.install(
+        context,
+        new com.shepherdjerred.thestorm.qol.adapter.db.JooqQolStore(context.database()),
+        context.loadConfig("rtp.yml", com.shepherdjerred.thestorm.qol.domain.QolConfig.class));
     services.provide(CombatStatus.class, combat);
   }
 
