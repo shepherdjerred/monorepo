@@ -12,18 +12,25 @@ import {
   validateReviewRequestSchedule,
 } from "../lib/review/review-gate-policy.ts";
 import {
-  confirmPass,
   DEFAULT_TIMEOUT_SECONDS,
   parseMaxBlockingPriority,
-  PASS_CONFIRMATION_TICKS,
   resolveReviewGateProvider,
   resolveReviewGateProviders,
 } from "./wait-for-review.ts";
 import {
+  confirmPass,
+  PASS_CONFIRMATION_TICKS,
+  verifyPassBeforeAccepting,
+} from "../lib/review/review-gate-poll.ts";
+import {
+  type BlockingPolicy,
   codexProvider,
   qodoProvider,
   REVIEW_GATE_BLOCKED_EXIT_CODE,
+  type ReviewThread,
 } from "@shepherdjerred/code-review";
+import type { ReviewStateResult } from "@shepherdjerred/code-review/github";
+import type { ProviderObservation } from "../lib/review/review-gate-observe.ts";
 
 describe("resolveReviewGateProvider", () => {
   test("defaults direct invocations to Codex", () => {
@@ -378,5 +385,87 @@ describe("confirmPass", () => {
     const reset = confirmPass(false, first.streak);
     expect(reset).toEqual({ streak: 0, accepted: false });
     expect(confirmPass(true, reset.streak).accepted).toBe(false);
+  });
+});
+
+describe("verifyPassBeforeAccepting", () => {
+  const policy: BlockingPolicy = {
+    alwaysBlockingPriority: 1,
+    maxBlockingPriority: 3,
+    lowSeverity: "first-review-or-accompanied",
+  };
+  const config = {
+    repo: "shepherdjerred/monorepo",
+    number: 3189,
+    head: "abc123",
+    token: "token",
+    policy,
+  };
+  const reviewed: ReviewStateResult = {
+    state: "reviewed",
+    completionSignal: "review-at-head",
+    reviewedCommit: "abc123",
+    reviewedAt: "2026-09-27T04:00:00Z",
+    staleReaction: false,
+    skipReason: null,
+    blockedReason: null,
+  };
+  function observed(): ProviderObservation[] {
+    return [
+      {
+        provider: codexProvider,
+        skipped: false,
+        skipReason: null,
+        state: reviewed,
+        threads: [],
+        headRefOid: "abc123",
+        headPushedAt: null,
+        nextAttempt: 1,
+        decision: null,
+      },
+    ];
+  }
+
+  test("accepts when the re-fetch is still clean", async () => {
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: observed(),
+        fetchThreads: async () => [],
+      }),
+    ).resolves.toBe(true);
+  });
+
+  test("a P0 posted after the tick's fetch fails fast", async () => {
+    const veto: ReviewThread = {
+      authorLogin: "chatgpt-codex-connector",
+      isResolved: false,
+      isOutdated: false,
+      path: "src/example.ts",
+      line: 1,
+      url: null,
+      priority: 0,
+      title: "Critical finding.",
+      threadId: "thread-1",
+      commentId: null,
+      raisedInReview: null,
+    };
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: observed(),
+        fetchThreads: async () => [veto],
+      }),
+    ).rejects.toThrow(/veto the gate/);
+  });
+
+  test("fails closed with nothing to re-check", async () => {
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: [],
+        fetchThreads: async () => [],
+      }),
+    ).resolves.toBe(false);
   });
 });
