@@ -157,9 +157,10 @@ export const AgentChatSourceSequenceSchema = z
     message: `Source sequence must not exceed ${MAX_AGENT_CHAT_SOURCE_SEQUENCE}`,
   });
 
-// An ingress must advance this epoch before it restarts a bounded sequence.
-// Keeping the epoch separate from the provider sequence makes a reset explicit:
-// a delayed event from the prior epoch can never overwrite the new selection.
+// An ingress must change this epoch before it restarts a bounded sequence. A
+// different epoch is ordered by its submitted timestamp, so an exhausted epoch
+// cannot permanently pin a binding and a delayed prior epoch cannot overwrite a
+// newer selection.
 export const AgentChatSourceEpochSchema = z
   .union([
     z.number().int().nonnegative(),
@@ -396,6 +397,7 @@ export const AgentChatCatalogBindingSchema =
 export const AgentChatCatalogBindingOperationSchema =
   AgentChatCatalogBindingSchema.extend({
     tieBreaker: z.string().min(1).max(512),
+    requestedChatId: AgentChatIdSchema.optional(),
   });
 export type AgentChatCatalogBindingOperation = z.infer<
   typeof AgentChatCatalogBindingOperationSchema

@@ -2,15 +2,16 @@ import {
   allHandlersFinished,
   condition,
   continueAsNew,
+  patched,
   setHandler,
   workflowInfo,
 } from "@temporalio/workflow";
+import { z } from "zod";
 import {
   AgentChatBindingSchema,
   AgentChatBindingConflictError,
   AgentChatBindingUpdateSchema,
   AgentChatCatalogBindingSchema,
-  AgentChatCatalogBindingOperationSchema,
   AgentChatCatalogEntrySchema,
   AgentChatCatalogStateSchema,
   AgentChatIdSchema,
@@ -35,6 +36,18 @@ import {
   resolveAgentChatBindingQuery,
   settleAgentChatTurnUpdate,
 } from "#shared/agent/agent-chat-workflow.ts";
+import {
+  retainBindingOperation,
+  retainedOperationEntry,
+  sameBindingOperation,
+} from "./agent-chat-catalog/binding-operations.ts";
+import {
+  assertDistinctSourceOrdering,
+  existingBindingWins,
+} from "./agent-chat-catalog/ordering.ts";
+
+const SOURCE_EPOCH_TIMESTAMP_ORDERING_PATCH =
+  "agent-chat-source-epoch-timestamp-ordering-v1";
 
 function catalogStateBytes(state: AgentChatCatalogState): number {
   return new TextEncoder().encode(JSON.stringify(state)).byteLength;
@@ -62,58 +75,6 @@ function parseBindingUpdate(
   return update;
 }
 
-function sourceSequenceAtLeast(
-  existing: string | number,
-  next: string | number,
-): boolean {
-  const existingDigits = String(existing);
-  const nextDigits = String(next);
-  return existingDigits.length === nextDigits.length
-    ? existingDigits >= nextDigits
-    : existingDigits.length > nextDigits.length;
-}
-function sourceEpochAtLeast(
-  existing: string | number | undefined,
-  next: string | number | undefined,
-): boolean {
-  return sourceSequenceAtLeast(existing ?? 0, next ?? 0);
-}
-function sourceEpochMatches(
-  existing: string | number | undefined,
-  next: string | number | undefined,
-): boolean {
-  return String(existing ?? 0) === String(next ?? 0);
-}
-function existingBindingWins(
-  existing: AgentChatCatalogState["bindings"][number],
-  next: AgentChatCatalogState["bindings"][number],
-): boolean {
-  if (
-    existing.orderingVersion === undefined &&
-    next.orderingVersion === 1 &&
-    next.sourceSequence !== undefined
-  ) {
-    return false;
-  }
-  if (
-    existing.sourceSequence !== undefined &&
-    next.sourceSequence !== undefined
-  ) {
-    return sourceEpochMatches(existing.sourceEpoch, next.sourceEpoch)
-      ? sourceSequenceAtLeast(existing.sourceSequence, next.sourceSequence)
-      : sourceEpochAtLeast(existing.sourceEpoch, next.sourceEpoch);
-  }
-  const existingInstant = Date.parse(existing.updatedAt);
-  const nextInstant = Date.parse(next.updatedAt);
-  if (existingInstant !== nextInstant) return existingInstant > nextInstant;
-  if (
-    existing.sourceSequence !== undefined &&
-    next.sourceSequence === undefined
-  ) {
-    return true;
-  }
-  return false;
-}
 function oldestBindingIndex(
   state: AgentChatCatalogState,
   protectedBindingKey?: string,
@@ -220,7 +181,6 @@ function entryFor(
 ): AgentChatCatalogEntry | undefined {
   return state.entries.find((entry) => entry.config.chatId === chatId);
 }
-type CatalogBinding = AgentChatCatalogState["bindings"][number];
 function entryForBinding(
   state: AgentChatCatalogState,
   chatId: string,
@@ -232,75 +192,6 @@ function entryForBinding(
   return selected;
 }
 
-function sameBindingOperation(
-  existing: CatalogBinding,
-  next: CatalogBinding,
-): boolean {
-  return (
-    existing.chatId === next.chatId &&
-    existing.updatedAt === next.updatedAt &&
-    existing.sourceSequence === next.sourceSequence &&
-    existing.sourceEpoch === next.sourceEpoch
-  );
-}
-
-function retainedOperationEntry(
-  state: AgentChatCatalogState,
-  bindingKey: string,
-  next: CatalogBinding,
-): AgentChatCatalogEntry | undefined {
-  if (next.tieBreaker === undefined) return undefined;
-  const operation = state.bindingOperations?.find(
-    (candidate) =>
-      candidate.tieBreaker === next.tieBreaker &&
-      agentChatBindingKey(candidate.binding) === bindingKey,
-  );
-  if (operation === undefined) return undefined;
-  if (!sameBindingOperation(operation, next)) {
-    throw new AgentChatBindingConflictError(
-      `Agent chat binding conflict: operation ${next.tieBreaker} was reused with different input`,
-    );
-  }
-  const selected = entryFor(state, operation.chatId);
-  if (selected === undefined) {
-    throw new AgentChatBindingConflictError(
-      `Agent chat binding conflict: operation ${next.tieBreaker} refers to a retired chat`,
-    );
-  }
-  return selected;
-}
-function assertDistinctSourceOrdering(
-  existing: CatalogBinding | undefined,
-  next: CatalogBinding,
-): void {
-  if (
-    existing?.sourceSequence !== undefined &&
-    next.sourceSequence !== undefined &&
-    sourceEpochMatches(existing.sourceEpoch, next.sourceEpoch) &&
-    String(existing.sourceSequence) === String(next.sourceSequence) &&
-    (existing.chatId !== next.chatId || existing.tieBreaker !== next.tieBreaker)
-  ) {
-    throw new AgentChatBindingConflictError(
-      "Agent chat binding conflict: equal source ordering selected different chats",
-    );
-  }
-}
-function retainBindingOperation(
-  state: AgentChatCatalogState,
-  next: CatalogBinding,
-): void {
-  if (next.tieBreaker === undefined) return;
-  const operations = state.bindingOperations?.slice() ?? [];
-  if (operations.length >= MAX_AGENT_CHAT_CATALOG_BINDINGS) {
-    throw new AgentChatBindingConflictError(
-      "Agent chat binding conflict: operation retention is full",
-    );
-  }
-  state.bindingOperations = [
-    ...operations,
-    AgentChatCatalogBindingOperationSchema.parse(next),
-  ];
-}
 export function registerAgentChatCatalogEntry(
   state: AgentChatCatalogState,
   rawEntry: AgentChatCatalogEntry,
@@ -384,11 +275,21 @@ export function settleAgentChatCatalogTurn(
   const entry = registerAgentChatCatalogEntry(state, rawEntry);
   return recordTurn(state, entry.config.chatId, turnCount, updatedAt);
 }
+type BindAgentChatCatalogEntryInput = {
+  binding: AgentChatBinding;
+  chatId: string;
+  update: AgentChatBindingUpdateInput;
+  sourceEpochTimestampOrdering?: boolean;
+};
+
 function bind(
   state: AgentChatCatalogState,
-  rawBinding: AgentChatBinding,
-  rawChatId: string,
-  rawUpdate: AgentChatBindingUpdateInput,
+  {
+    binding: rawBinding,
+    chatId: rawChatId,
+    update: rawUpdate,
+    sourceEpochTimestampOrdering = true,
+  }: BindAgentChatCatalogEntryInput,
 ): AgentChatCatalogEntry {
   const binding = AgentChatBindingSchema.parse(rawBinding);
   const update = parseBindingUpdate(rawUpdate);
@@ -419,9 +320,14 @@ function bind(
     }
     return entryForBinding(state, existing.chatId);
   }
-  assertDistinctSourceOrdering(existing, next);
-  if (existing !== undefined && existingBindingWins(existing, next)) {
-    return entryForBinding(state, existing.chatId);
+  assertDistinctSourceOrdering(existing, next, sourceEpochTimestampOrdering);
+  if (
+    existing !== undefined &&
+    existingBindingWins(existing, next, sourceEpochTimestampOrdering)
+  ) {
+    const selected = entryForBinding(state, existing.chatId);
+    retainBindingOperation(state, next, selected.config.chatId);
+    return selected;
   }
   retainBindingOperation(state, next);
   if (existing === undefined) {
@@ -433,19 +339,43 @@ function bind(
   return entry;
 }
 
+const RegisterAndBindAgentChatCatalogEntryUpdateSchema = z.strictObject({
+  update: z.union([z.string(), AgentChatBindingUpdateSchema]),
+  sourceEpochTimestampOrdering: z.boolean(),
+});
+type RegisterAndBindAgentChatCatalogEntryUpdate = z.infer<
+  typeof RegisterAndBindAgentChatCatalogEntryUpdateSchema
+>;
+
 export function registerAndBindAgentChatCatalogEntry(
   state: AgentChatCatalogState,
   rawEntry: AgentChatCatalogEntry,
   rawBinding: AgentChatBinding,
-  update: AgentChatBindingUpdateInput,
+  rawUpdate:
+    AgentChatBindingUpdateInput | RegisterAndBindAgentChatCatalogEntryUpdate,
 ): AgentChatCatalogEntry {
+  const versionedUpdate =
+    RegisterAndBindAgentChatCatalogEntryUpdateSchema.safeParse(rawUpdate);
+  const { update: updateInput, sourceEpochTimestampOrdering = true } =
+    versionedUpdate.success
+      ? versionedUpdate.data
+      : {
+          update: z
+            .union([z.string(), AgentChatBindingUpdateSchema])
+            .parse(rawUpdate),
+        };
   const binding = AgentChatBindingSchema.parse(rawBinding);
   const entry = registerAgentChatCatalogEntry(
     state,
     rawEntry,
     agentChatBindingKey(binding),
   );
-  return bind(state, binding, entry.config.chatId, update);
+  return bind(state, {
+    binding,
+    chatId: entry.config.chatId,
+    update: updateInput,
+    sourceEpochTimestampOrdering,
+  });
 }
 
 function resolve(
@@ -475,10 +405,22 @@ export async function agentChatCatalogWorkflow(
     settleAgentChatCatalogTurn(state, entry, turnCount, updatedAt),
   );
   setHandler(registerAndBindAgentChatUpdate, (entry, binding, updatedAt) =>
-    registerAndBindAgentChatCatalogEntry(state, entry, binding, updatedAt),
+    registerAndBindAgentChatCatalogEntry(state, entry, binding, {
+      update: updatedAt,
+      sourceEpochTimestampOrdering: patched(
+        SOURCE_EPOCH_TIMESTAMP_ORDERING_PATCH,
+      ),
+    }),
   );
   setHandler(bindAgentChatUpdate, (binding, chatId, updatedAt) =>
-    bind(state, binding, chatId, updatedAt),
+    bind(state, {
+      binding,
+      chatId,
+      update: updatedAt,
+      sourceEpochTimestampOrdering: patched(
+        SOURCE_EPOCH_TIMESTAMP_ORDERING_PATCH,
+      ),
+    }),
   );
   setHandler(resolveAgentChatBindingQuery, (binding) =>
     resolve(state, binding),
