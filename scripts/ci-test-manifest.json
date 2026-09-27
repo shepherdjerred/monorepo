@@ -893,7 +893,7 @@
     {
       "package": "@shepherdjerred/macos-cross-compiler",
       "directory": "packages/macos-cross-compiler",
-      "reason": "Verified by the image's smoke stage, which builds every sample for every Apple platform and checks each Mach-O, in the macos-cross-compiler Buildkite lane (PR smoke, main publish). The SwiftUI macro parity check against Xcode's own plugins (macros:check) needs macOS with each Xcode installed."
+      "reason": "Compiler image smoke tests are paused in CI, so the sample builds and Mach-O checks are currently unverified by Buildkite. The smoke stage remains available for explicit local image validation. The SwiftUI macro parity check against Xcode's own plugins (macros:check) needs macOS with each Xcode installed."
     },
     {
       "package": "@shepherdjerred/hkctl",
