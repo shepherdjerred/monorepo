@@ -7,6 +7,11 @@ authors: [ShepherdJerred]
 website: https://ts-mc.net
 dependencies:
   server:
+    # The world module requires Multiverse to load wilds and mining before TheStorm starts.
+    Multiverse-Core:
+      load: BEFORE
+      required: true
+      join-classpath: false
     # Tracks grants levels as LuckPerms groups; LuckPerms must be enabled first.
     LuckPerms:
       load: BEFORE

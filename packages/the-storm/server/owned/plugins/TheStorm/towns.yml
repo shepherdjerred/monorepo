@@ -1,0 +1,87 @@
+# Owned by the repository; the plugin never writes it. A missing or unknown key
+# stops the towns module.
+#
+# Worlds are named as the server names them (level-name in server.properties).
+
+claims:
+  # Worlds towns may claim land in.
+  worlds: [world]
+  # Chunks that must separate one town's claims from another's, on both axes.
+  buffer: 2
+  # The most chunks one town may hold, until town levels and the plot bank
+  # replace this flat cap.
+  maxClaimsPerTown: 64
+  # Flags a new claim starts with; every flag not listed is off. Server rule:
+  # PvP is on in new claims (towns may turn it off with /claim flag pvp false);
+  # spawn stays PvP-off and the wilderness PvP-on. Flags: PVP, EXPLOSIONS,
+  # FIRE_SPREAD, MOB_GRIEFING, PUBLIC_BUILD, PUBLIC_CONTAINERS, PUBLIC_SWITCHES,
+  # PUBLIC_ENTITIES.
+  defaultFlags: [PVP]
+
+# How long before a player is told about the same refusal again.
+denialCooldownMillis: 2000
+
+# How far some wide-reaching griefs are kept from land a player has no say over
+# (other towns' claims and admin regions).
+grief:
+  # Chunks, on both axes, within which a player may not build a wither.
+  witherBufferChunks: 8
+  # Blocks from a raid's centre within which such land stops the raid.
+  raidRadiusBlocks: 64
+  # Ticks a dropped item still counts as its thrower's (5 seconds); after that
+  # anyone may have moved it, so it counts as coming from where it was dropped.
+  thrownItemMemoryTicks: 100
+
+# Admin regions. Nobody can claim a chunk a region overlaps. Players may only
+# do what `allow` lists (staff with thestorm.towns.bypass may do anything but
+# fight); explosions, fire and mob griefing never change a region, and nothing
+# flows or is pushed into it from outside. Where regions overlap, the one
+# listed first wins, so list small exceptions before large regions.
+#
+# Actions: BUILD, BREAK, INTERACT, OPEN_CONTAINER, USE_REDSTONE, DAMAGE_ENTITY,
+# INTERACT_ENTITY, PLACE_ENTITY, ATTACK_PLAYER, TELEPORT_INTO, SET_HOME.
+# Subjects: DOOR, TRAPDOOR, FENCE_GATE, BUTTON, LEVER, PRESSURE_PLATE,
+# TRIPWIRE, BELL, BED, RESPAWN_ANCHOR, ANVIL, CONTAINER, LECTERN, SIGN, CAKE,
+# REDSTONE_COMPONENT, FARMLAND, BLOCK, PLAYER, VEHICLE, ANIMAL, VILLAGER,
+# ITEM_FRAME, ARMOR_STAND, ENTITY, ENDER_PEARL, CHORUS_FRUIT, LOCATION, or ANY
+# on its own for all of them.
+regions:
+  # Spawn around the windmill. PLACEHOLDER coordinates: replace with the real
+  # chunk range around the windmill before the module is switched on.
+  - id: spawn
+    name: Spawn
+    areas:
+      chunks:
+        - world: world
+          from: { x: -4, z: -4 }
+          to: { x: 3, z: 3 }
+      cuboids: []
+    allow:
+      - action: INTERACT
+        subjects:
+          - DOOR
+          - TRAPDOOR
+          - FENCE_GATE
+          - BUTTON
+          - LEVER
+          - PRESSURE_PLATE
+          - TRIPWIRE
+          - BELL
+      - action: INTERACT_ENTITY
+        subjects: [VILLAGER, VEHICLE]
+      - action: TELEPORT_INTO
+        subjects: [LOCATION]
+  # The Mob Arena. PLACEHOLDER coordinates: replace with the arena's real box.
+  - id: arena
+    name: Arena
+    areas:
+      chunks: []
+      cuboids:
+        - world: world
+          from: { x: 512, y: -64, z: 512 }
+          to: { x: 575, y: 320, z: 575 }
+    allow:
+      - action: INTERACT
+        subjects: [DOOR, TRAPDOOR, FENCE_GATE, BUTTON, LEVER, PRESSURE_PLATE]
+      - action: TELEPORT_INTO
+        subjects: [LOCATION]

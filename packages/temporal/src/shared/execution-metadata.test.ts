@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   buildExecutionMetadata,
   executionDomainForTaskQueue,
+  executionDomainForTaskQueues,
   executionDomainForWorkflow,
   parseTemporalBootstrapMetadata,
 } from "./execution-metadata.ts";
@@ -26,6 +27,18 @@ describe("central Temporal execution metadata", () => {
       "maintenance",
     );
     expect(executionDomainForTaskQueue(TASK_QUEUES.WORKFLOWS)).toBe("platform");
+  });
+
+  test("keeps a multi-queue infra worker in the infra telemetry domain", () => {
+    expect(
+      executionDomainForTaskQueues([
+        TASK_QUEUES.INFRA,
+        TASK_QUEUES.MINING_RESET,
+      ]),
+    ).toBe("infra");
+    expect(
+      executionDomainForTaskQueues([TASK_QUEUES.INFRA, TASK_QUEUES.HOME]),
+    ).toBe("platform");
   });
 
   describe("executionDomainForWorkflow", () => {

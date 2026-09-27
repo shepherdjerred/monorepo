@@ -1,0 +1,38 @@
+# Quality of life: graves, combat tags, the sleep vote and chest sorting
+# (replaces GravesX, CombatLog, Sleeper and ChestSort).
+# Owned by the repository; the plugin never writes it. Every key is required,
+# unknown keys are errors, and durations are ISO-8601 (PT15S, PT2H, P7D).
+
+# When a player dies their drops go into a grave: a player head in open air
+# near where they died, on land they may build on (or, after a death in the
+# void or lava, where they last stood safely). The items live in the
+# database, not in the block. The owner can always empty it; after lockedFor
+# anyone may take what fits in their inventory ("stealing from unlocked chests
+# is allowed"). After expireAfter the grave breaks open where it stands, drops
+# what is left, and the owner is told (at once, or when they next join).
+# /graves lists your graves. Experience still drops as vanilla orbs.
+graves:
+  lockedFor: PT2H
+  expireAfter: P7D
+  # How far from the death, on each axis, a grave may be placed (1-8).
+  searchRadius: 4
+
+# A hit that deals damage between two players (or from a player's pet, TNT,
+# lingering potion or projectile) tags both. Tagged players cannot teleport
+# (/home, /spawn, /tpa, /back, /warp) and, with killOnLogout, die if they
+# disconnect or time out; kicks and bans never kill.
+combat:
+  tagFor: PT15S
+  killOnLogout: true
+  logoutMessage: "{player} logged out in combat and was struck down."
+
+# Vanilla's players_sleeping_percentage rule, set on every overworld. Players
+# marked AFK are left out of the count (unless they are the ones in bed).
+sleep:
+  percent: 50
+
+# /sort sorts the container you are looking at. With sneakPunch, punching a
+# chest, barrel, shulker box or ender chest while sneaking with an empty hand
+# sorts it too.
+sort:
+  sneakPunch: true

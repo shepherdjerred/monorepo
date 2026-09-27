@@ -21,6 +21,7 @@ import {
   getMinecraftExtraEnv,
   getMinecraftPluginConfigInitContainer,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-config.ts";
+import { MINING_RESET_LOCK_ANNOTATION } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-mining-reset-guard.ts";
 
 const NAMESPACE = "minecraft-tsmc";
 const SECRET_NAME = "minecraft-tsmc-discord";
@@ -223,6 +224,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
           kind: "StatefulSet",
           jsonPointers: [
             "/spec/replicas",
+            `/metadata/annotations/${MINING_RESET_LOCK_ANNOTATION.replaceAll("/", "~1")}`,
             "/spec/podManagementPolicy",
             "/spec/revisionHistoryLimit",
             "/spec/persistentVolumeClaimRetentionPolicy",
@@ -236,6 +238,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
           // perpetually OutOfSync against a manifest that includes it.
           kind: "Service",
           jsonPointers: [
+            "/metadata/annotations/mc-router.itzg.me~1autoScaleUp",
             "/spec/clusterIP",
             "/spec/clusterIPs",
             "/spec/ipFamilies",

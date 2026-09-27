@@ -124,6 +124,22 @@ effect retry <player-uuid> <effect-uuid>` only when it did not. Both commands
 require `thestorm.quests.admin`. An item hand-in can remain pending if the
 player leaves the main world or no longer has the items. Do not retry an
 ambiguous action without checking its effect first.
+Towns protection loads persisted claims before registering listeners. If a town
+save fails, it reloads persisted state before accepting another change. If that
+reload also fails, the server shuts down because its in-memory protection state
+may no longer reflect stored claims. A denied join or respawn relocates only to
+an already loaded, permitted location; when none exists, the player is
+disconnected rather than triggering terrain generation in the arrival event.
+
+The world module requires every world in `server/owned/plugins/TheStorm/world.yml`
+to be provisioned and loaded before TheStorm enables. A missing world stops the
+server rather than generating terrain during plugin startup. Keep the world
+module disabled until an operator has provisioned `wilds` (large biomes),
+`peaks` (amplified), and `mining` (normal), and confirmed their loaded names and
+presets. The plugin checks the loaded name and NORMAL environment; Paper does
+not expose reliable preset metadata for an existing world, so preset acceptance
+remains an operator check. A mining reset must likewise make the replacement
+world available before TheStorm enables again.
 
 ## Conventions
 
@@ -132,6 +148,26 @@ payments. It stores the operation key with the ledger row, returns the same
 receipt for an identical retry, and rejects reuse of the key with different
 transfer details. `receiptFor` lets a caller reconcile an uncertain result.
 Ordinary unkeyed transfers keep their existing behavior.
+
+Paid random teleports save an attempt in the QoL database before their keyed
+charge. The attempt remains until the teleport succeeds or a keyed refund is
+committed. Module startup and player joins reconcile unfinished attempts against
+the economy ledger. If a process stops after teleport delivery but before the
+attempt is cleared, recovery may refund a delivered teleport; it never drops a
+known charge without either delivery or compensation.
+The cooldown is recorded before loading destination chunks, so a cancelled
+warmup, failed search, or refused charge cannot repeat costly scans immediately.
+The selected landing chunk has a reference-counted plugin ticket through the
+warmup, charge, and teleport so the final move does not reload it on the main
+thread.
+
+Paid Essentials teleports use the same keyed ledger contract. Essentials writes
+an attempt before charging and clears it after arrival and usage persistence or
+after a keyed refund. On module startup, it checks each unfinished attempt
+against the ledger and refunds any committed charge. If the process stops after
+the player arrives but before confirmation is saved, recovery may refund that
+delivered teleport. A failed recovery keeps Essentials teleports unavailable
+until the ledger or database can be reconciled.
 
 - `@NullMarked` on every package; NullAway (JSpecify mode) runs as an error.
 - Error Prone with Picnic's checks; `-Xlint:all -Werror`. Warnings fail the build.
@@ -152,3 +188,28 @@ Ordinary unkeyed transfers keep their existing behavior.
 - Dependencies are locked (`gradle.lockfile`) and checksum-verified
   (`gradle/verification-metadata.xml`).
 - Code copied from GPL/LGPL plugins keeps its license header.
+
+## Grave recovery
+
+The grave storage migration keeps the original V1 checksum. It refuses to run
+while the old chest-based `qol_grave` table has rows, because those items live
+only in world chests. Before enabling the new QoL module on an installation
+that ran the old implementation, collect or expire those chests with the old
+module and confirm the table is empty. The migration then creates the SQLite
+item store without discarding any chest contents.
+
+The QoL module stores grave stacks in SQLite. A death first saves a handoff in
+the player's data with their emptied inventory, then creates the grave. Taking
+items first reserves them in SQLite, saves the recipient's inventory and a
+claim receipt to player data, then deletes the stored stacks. A restart or
+rejoin reconciles unfinished handoffs.
+If another death occurs before the first handoff settles, its items use vanilla
+drops so the saved handoff cannot be overwritten.
+
+Expired grave items and owner inventory overflow remain in SQLite as pending
+ground drops. Tagged `ItemDisplay` entities are replaceable views; nearby
+players collect them through the same saved receipt path. Overflow is owner
+only until the grave expires, then anyone can collect it. Loaded chunks are
+reconciled at startup and on chunk load. Interaction and nearby player movement
+also trigger expiry in chunks that stay loaded. Collection pauses while QoL is
+disabled; the stored stacks remain available when it starts again.

@@ -37,6 +37,7 @@ export function executionDomainForTaskQueue(
     case TASK_QUEUES.REPORTS:
       return "reports";
     case TASK_QUEUES.INFRA:
+    case TASK_QUEUES.MINING_RESET:
       return "infra";
     case TASK_QUEUES.REPO_AUTOMATION:
       return "repo";
@@ -57,6 +58,22 @@ export function executionDomainForTaskQueue(
     case TASK_QUEUES.WORKFLOWS:
       return "platform";
   }
+}
+
+/** A role can poll several queues while still representing one telemetry domain. */
+export function executionDomainForTaskQueues(
+  taskQueues: readonly TaskQueue[],
+): ExecutionDomain {
+  const first = taskQueues[0];
+  if (first === undefined) {
+    return "platform";
+  }
+  const domain = executionDomainForTaskQueue(first);
+  return taskQueues.every(
+    (taskQueue) => executionDomainForTaskQueue(taskQueue) === domain,
+  )
+    ? domain
+    : "platform";
 }
 
 // Every new central Workflow execution (declared Schedule, ad-hoc client
@@ -94,6 +111,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runHomelabAuditWorkflow: "infra",
   runOpsSnapshot: "infra",
   runOpsDigest: "infra",
+  runMiningWorldResetWorkflow: "infra",
 
   // TASK_QUEUES.REPO_AUTOMATION
   runLlmCatalogRefresh: "repo",

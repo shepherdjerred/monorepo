@@ -1,4 +1,4 @@
-/** The qol module. */
+/** Arrival and random teleport away from claims. */
 @NullMarked
 package com.shepherdjerred.thestorm.qol;
 
