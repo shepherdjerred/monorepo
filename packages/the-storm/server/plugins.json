@@ -113,6 +113,20 @@
       "file": "EssentialsXSpawn-2.22.0.jar"
     },
     {
+      "name": "floodgate",
+      "version": "2.2.5 build 141",
+      "url": "https://download.geysermc.org/v2/projects/floodgate/versions/2.2.5/builds/141/downloads/spigot",
+      "sha256": "21570aff9ce17d6983928e8552777760e1ede5050026b04c686b0ae112e6fd7e",
+      "file": "Floodgate-2.2.5-b141.jar"
+    },
+    {
+      "name": "Geyser-Spigot",
+      "version": "2.11.3 build 1247",
+      "url": "https://download.geysermc.org/v2/projects/geyser/versions/2.11.3/builds/1247/downloads/spigot",
+      "sha256": "6fed2d9711e2db3c365508ec10db36d06a0199abd226159d23d57f82662fd7a6",
+      "file": "Geyser-Spigot-2.11.3-b1247.jar"
+    },
+    {
       "name": "GravesX",
       "version": "2026.4.9.1",
       "url": "https://cdn.modrinth.com/data/vCFaodCy/versions/JpbCUK5u/GravesX-2026.4.9.1.jar",

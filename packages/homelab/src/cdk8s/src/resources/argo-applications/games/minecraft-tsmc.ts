@@ -125,7 +125,23 @@ export function createMinecraftTsmcApp(chart: Chart) {
       // from the image, so /data/plugins/*.jar is exactly the baked set.
       removeOldMods: true,
 
-      extraPorts: [getMinecraftBlueMapPort()],
+      extraPorts: [
+        getMinecraftBlueMapPort(),
+        {
+          // mc-router handles Java TCP only. Bedrock UDP reaches Geyser while
+          // the server is awake; a Bedrock packet cannot wake this StatefulSet.
+          service: {
+            enabled: true,
+            type: "NodePort",
+            port: 19_132,
+            nodePort: 30_004,
+          },
+          protocol: "UDP",
+          containerPort: 19_132,
+          name: "bedrock",
+          ingress: { enabled: false },
+        },
+      ],
 
       rcon: {
         enabled: true,

@@ -113,9 +113,21 @@ expect_patched() { # label: the patch step's values are in place
     fail "$1: DiscordSRV config.yml was not patched with CFG_DISCORD_CHANNEL_ID"
 }
 
+expect_bedrock() { # label: first-boot config and generated Floodgate key exist
+  on_volume grep -qx '  auth-type: floodgate' /data/plugins/Geyser-Spigot/config.yml ||
+    fail "$1: Geyser did not use Floodgate authentication"
+  on_volume grep -qx '  port: 19132' /data/plugins/Geyser-Spigot/config.yml ||
+    fail "$1: Geyser did not bind its Bedrock UDP port"
+  on_volume grep -qx '    broadcast-port: 30004' /data/plugins/Geyser-Spigot/config.yml ||
+    fail "$1: Geyser did not advertise the routed Bedrock port"
+  on_volume test -s /data/plugins/floodgate/key.pem ||
+    fail "$1: Floodgate did not create its runtime key"
+}
+
 # ── fresh ────────────────────────────────────────────────────────────────────
 new_volume
 boot fresh-first
+expect_bedrock fresh-first
 
 on_volume python3 -c '
 import sqlite3
@@ -139,6 +151,7 @@ expected=$( (jq -r '.plugins[].file' <<<"$manifest"; echo TheStorm.jar) | sort)
 actual=$(on_volume find /data/plugins -maxdepth 1 -name '*.jar' -printf '%f\n' | sort)
 [[ $expected == "$actual" ]] || fail "/data/plugins jars differ from the image: $(diff <(echo "$expected") <(echo "$actual"))"
 expect_patched fresh
+expect_bedrock fresh
 
 # ── legacy ───────────────────────────────────────────────────────────────────
 old=packages/homelab/src/cdk8s/config/minecraft-tsmc
@@ -170,6 +183,7 @@ on_volume test -f /data/plugins/DynamicShop/Shop/SampleShop.yml ||
 on_volume grep -q '^_version: 31$' /data/config/paper-global.yml ||
   fail "legacy: paper-global.yml was not regenerated from the 26.2 defaults"
 expect_patched legacy
+expect_bedrock legacy
 
 # A later release appends to remove.list: only the new entry may run. The
 # spawn an admin set after the first release must survive.

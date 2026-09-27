@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import { Testing } from "cdk8s";
 import { z } from "zod";
+import { parse as parseYaml } from "yaml";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import {
   THE_STORM_PAPER_VERSION,
@@ -64,6 +65,97 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     expect(values["extraDeploy"]).toBeUndefined();
     expect(server["type"]).toBe("PAPER");
     expect(server["version"]).toBe(THE_STORM_PAPER_VERSION);
+  });
+
+  test("exposes Bedrock UDP on its own NodePort", () => {
+    const server = z
+      .record(z.string(), z.unknown())
+      .parse(tsmcValues()["minecraftServer"]);
+    const ports = z
+      .array(z.record(z.string(), z.unknown()))
+      .parse(server["extraPorts"]);
+    expect(ports).toContainEqual({
+      service: {
+        enabled: true,
+        type: "NodePort",
+        port: 19_132,
+        nodePort: 30_004,
+      },
+      protocol: "UDP",
+      containerPort: 19_132,
+      name: "bedrock",
+      ingress: { enabled: false },
+    });
+  });
+
+  test("bakes the verified Geyser and Floodgate builds", async () => {
+    const manifest = z
+      .object({
+        plugins: z.array(
+          z.object({
+            name: z.string(),
+            version: z.string(),
+            url: z.url(),
+            sha256: z.string(),
+            file: z.string(),
+          }),
+        ),
+      })
+      .parse(await Bun.file(`${serverDir}/plugins.json`).json());
+    expect(
+      manifest.plugins.filter(
+        ({ name }) => name === "Geyser-Spigot" || name === "floodgate",
+      ),
+    ).toEqual([
+      {
+        name: "floodgate",
+        version: "2.2.5 build 141",
+        url: "https://download.geysermc.org/v2/projects/floodgate/versions/2.2.5/builds/141/downloads/spigot",
+        sha256:
+          "21570aff9ce17d6983928e8552777760e1ede5050026b04c686b0ae112e6fd7e",
+        file: "Floodgate-2.2.5-b141.jar",
+      },
+      {
+        name: "Geyser-Spigot",
+        version: "2.11.3 build 1247",
+        url: "https://download.geysermc.org/v2/projects/geyser/versions/2.11.3/builds/1247/downloads/spigot",
+        sha256:
+          "6fed2d9711e2db3c365508ec10db36d06a0199abd226159d23d57f82662fd7a6",
+        file: "Geyser-Spigot-2.11.3-b1247.jar",
+      },
+    ]);
+  });
+
+  test("provides the Bedrock listener and Floodgate auth before the first boot", async () => {
+    const geyser = z
+      .object({
+        bedrock: z.object({
+          address: z.string(),
+          port: z.number(),
+          "clone-remote-port": z.boolean(),
+        }),
+        java: z.object({ "auth-type": z.string() }),
+        advanced: z.object({
+          bedrock: z.object({ "broadcast-port": z.number() }),
+        }),
+      })
+      .parse(
+        parseYaml(
+          await Bun.file(
+            `${serverDir}/owned/plugins/Geyser-Spigot/config.yml`,
+          ).text(),
+        ),
+      );
+    expect(geyser.bedrock).toMatchObject({
+      address: "0.0.0.0",
+      port: 19_132,
+      "clone-remote-port": false,
+    });
+    expect(geyser.java["auth-type"]).toBe("floodgate");
+    expect(geyser.advanced.bedrock["broadcast-port"]).toBe(30_004);
+    expect(await dockerfile()).toContain(
+      "COPY server/owned/plugins/ /plugins/",
+    );
   });
 
   test("turns vanilla spawn protection off", () => {
