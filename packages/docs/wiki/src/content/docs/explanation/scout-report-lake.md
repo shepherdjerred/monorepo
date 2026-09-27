@@ -334,7 +334,9 @@ team-relative statistic ordinary SQL: a target row joins its team row on
 A participant row also carries its loadout: the final inventory as seven
 slot columns (`item0` through `item6`), both summoner spells, and the rune
 page. A match read selects those columns only when a query names one, and the
-Dare catalog leaves them out. That is deliberate. Reads name their columns, so
+Dare catalog leaves them out
+([dare-sql-v3-catalog.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/betting/dares/sql/dare-sql-v3-catalog.ts)).
+That is deliberate. Reads name their columns, so
 a build published before a column existed fails any read that names it until
 the schema fingerprint's rebuild publishes. Leaving the loadout out of ordinary
 reads keeps reports working through that window
