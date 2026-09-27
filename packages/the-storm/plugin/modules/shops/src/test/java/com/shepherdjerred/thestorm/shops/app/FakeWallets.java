@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
+import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.time.Instant;
@@ -13,6 +14,8 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -24,6 +27,8 @@ public final class FakeWallets implements Wallets {
 
   private final Map<AccountId, Long> balances = new HashMap<>();
   private final List<Receipt> receipts = new ArrayList<>();
+  private final Map<UUID, KeyedTransfer> keyed = new HashMap<>();
+  private final Map<UUID, Receipt> keyedReceipts = new HashMap<>();
   private final Deque<Runnable> afterTransfer = new ArrayDeque<>();
   private final Deque<RuntimeException> failures = new ArrayDeque<>();
   private final Deque<Runnable> held = new ArrayDeque<>();
@@ -79,6 +84,31 @@ public final class FakeWallets implements Wallets {
       return answer;
     }
     return CompletableFuture.completedFuture(result);
+  }
+
+  @Override
+  public CompletableFuture<Result<Receipt, EconomyError>> transferOnce(KeyedTransfer request) {
+    var previous = keyed.get(request.key());
+    if (previous != null) {
+      if (!previous.equals(request)) {
+        throw new IllegalArgumentException("transfer key reused with different details");
+      }
+      return CompletableFuture.completedFuture(Result.ok(keyedReceipts.get(request.key())));
+    }
+    return transfer(request.from(), request.to(), request.amount(), request.reason())
+        .thenApply(
+            result -> {
+              if (result instanceof Result.Ok<Receipt, EconomyError>(var receipt)) {
+                keyed.put(request.key(), request);
+                keyedReceipts.put(request.key(), receipt);
+              }
+              return result;
+            });
+  }
+
+  @Override
+  public CompletableFuture<Optional<Receipt>> receiptFor(UUID key) {
+    return CompletableFuture.completedFuture(Optional.ofNullable(keyedReceipts.get(key)));
   }
 
   /**
