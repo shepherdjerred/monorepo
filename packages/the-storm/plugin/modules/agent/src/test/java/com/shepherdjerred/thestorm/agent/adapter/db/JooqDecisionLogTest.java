@@ -85,7 +85,7 @@ final class JooqDecisionLogTest {
     assertThat(other.recent(10).get(5, TimeUnit.SECONDS)).containsExactly(theirs);
     assertThat(log.find(theirs.id()).get(5, TimeUnit.SECONDS)).isEmpty();
     assertThat(
-            log.strikes(ALICE, Offense.SPAM, NOW.minus(Duration.ofDays(7)))
+            log.strikes(ALICE, Offense.SPAM, NOW.minus(Duration.ofDays(7)), false)
                 .get(5, TimeUnit.SECONDS))
         .isEqualTo(1);
     assertThat(log.overturn(theirs.id(), BOB, NOW).get(5, TimeUnit.SECONDS)).isFalse();
@@ -101,17 +101,33 @@ final class JooqDecisionLogTest {
     log.record(draft(BOB, DecisionAction.MUTE), NOW).get(5, TimeUnit.SECONDS);
 
     assertThat(
-            log.strikes(ALICE, Offense.SPAM, NOW.minus(Duration.ofDays(7)))
+            log.strikes(ALICE, Offense.SPAM, NOW.minus(Duration.ofDays(7)), false)
                 .get(5, TimeUnit.SECONDS))
         .isEqualTo(1);
     assertThat(
-            log.strikes(ALICE, Offense.SPAM, NOW.minus(Duration.ofDays(60)))
+            log.strikes(ALICE, Offense.SPAM, NOW.minus(Duration.ofDays(60)), false)
                 .get(5, TimeUnit.SECONDS))
         .isEqualTo(2);
     assertThat(
-            log.strikes(ALICE, Offense.GRIEF, NOW.minus(Duration.ofDays(60)))
+            log.strikes(ALICE, Offense.GRIEF, NOW.minus(Duration.ofDays(60)), false)
                 .get(5, TimeUnit.SECONDS))
         .isEqualTo(0);
+  }
+
+  @Test
+  void strikesIncludeShadowRowsOnlyWhenAsked() throws Exception {
+    log.record(draft(ALICE, DecisionAction.MUTE, true, false), NOW).get(5, TimeUnit.SECONDS);
+    log.record(draft(ALICE, DecisionAction.MUTE, false, false), NOW.plusSeconds(1))
+        .get(5, TimeUnit.SECONDS);
+
+    assertThat(
+            log.strikes(ALICE, Offense.SPAM, NOW.minus(Duration.ofDays(7)), false)
+                .get(5, TimeUnit.SECONDS))
+        .isEqualTo(1);
+    assertThat(
+            log.strikes(ALICE, Offense.SPAM, NOW.minus(Duration.ofDays(7)), true)
+                .get(5, TimeUnit.SECONDS))
+        .isEqualTo(2);
   }
 
   @Test
@@ -145,7 +161,7 @@ final class JooqDecisionLogTest {
         .extracting(decision -> decision.shadow())
         .containsExactly(true);
     assertThat(
-            log.strikes(ALICE, Offense.SPAM, NOW.minus(Duration.ofDays(7)))
+            log.strikes(ALICE, Offense.SPAM, NOW.minus(Duration.ofDays(7)), false)
                 .get(5, TimeUnit.SECONDS))
         .isEqualTo(0);
   }
@@ -248,7 +264,7 @@ final class JooqDecisionLogTest {
 
     assertThat(log.escalations(10).get(5, TimeUnit.SECONDS)).isEmpty();
     assertThat(
-            log.strikes(ALICE, Offense.SPAM, NOW.minus(Duration.ofDays(7)))
+            log.strikes(ALICE, Offense.SPAM, NOW.minus(Duration.ofDays(7)), false)
                 .get(5, TimeUnit.SECONDS))
         .isEqualTo(0);
   }

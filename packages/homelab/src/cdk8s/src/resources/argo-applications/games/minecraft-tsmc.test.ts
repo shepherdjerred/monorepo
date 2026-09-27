@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Testing } from "cdk8s";
+import { App, Chart, Testing } from "cdk8s";
 import { z } from "zod";
 import { parse as parseYaml } from "yaml";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
@@ -23,6 +23,13 @@ const ManifestSchema = z.object({
 
 const HelmValues = z.record(z.string(), z.unknown());
 const HelmSource = z.object({ helm: z.object({ valuesObject: HelmValues }) });
+const OpItemSchema = z
+  .object({
+    kind: z.literal("OnePasswordItem"),
+    metadata: z.object({ name: z.string() }).loose(),
+    spec: z.object({ itemPath: z.string() }).loose(),
+  })
+  .loose();
 
 async function dockerfile(): Promise<string> {
   return Bun.file(`${serverDir}/Dockerfile`).text();
@@ -42,7 +49,39 @@ function tsmcValues(): Record<string, unknown> {
     .spec.source.helm.valuesObject;
 }
 
+function synthTsmc(): unknown[] {
+  const app = new App();
+  const chart = new Chart(app, "test", { disableResourceNameHashes: true });
+  createMinecraftTsmcApp(chart);
+  return Testing.synth(chart);
+}
+
 describe("minecraft-tsmc runs The Storm's image", () => {
+  test("projects the brain bearer token into the game namespace", () => {
+    const manifests = synthTsmc();
+    const item = manifests
+      .map((manifest) => OpItemSchema.safeParse(manifest))
+      .find(
+        (result) =>
+          result.success &&
+          result.data.metadata.name === "minecraft-tsmc-storm-brain",
+      )?.data;
+    expect(item?.spec.itemPath).toMatch(/\/items\/storm-brain$/u);
+
+    const values = tsmcValues();
+    const extraEnv = z
+      .record(z.string(), z.unknown())
+      .parse(values["extraEnv"]);
+    expect(extraEnv["STORM_BRAIN_BEARER_TOKEN"]).toEqual({
+      valueFrom: {
+        secretKeyRef: {
+          name: "minecraft-tsmc-storm-brain",
+          key: "STORM_BRAIN_BEARER_TOKEN",
+        },
+      },
+    });
+  });
+
   test("pins the image by the catalog's the-storm-server digest", () => {
     const values = tsmcValues();
     expect(values["image"]).toEqual({

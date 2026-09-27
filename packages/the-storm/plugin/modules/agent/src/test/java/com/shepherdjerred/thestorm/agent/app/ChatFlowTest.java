@@ -282,6 +282,25 @@ final class ChatFlowTest {
   }
 
   @Test
+  void shadowSoakSimulatesEscalationOnWatchedHistory() {
+    var chatFlow = flow(brain(verdict(Optional.of("spam"), 1)), spamLadder("shadow"));
+
+    for (var i = 1; i <= 8; i++) {
+      chatFlow.onChatLine(chat("message " + i)).join();
+    }
+
+    var decisions = log.recent(10).join();
+    assertThat(decisions)
+        .extracting(decision -> decision.action())
+        .containsExactly(DecisionAction.ESCALATE, DecisionAction.MUTE, DecisionAction.MUTE);
+    assertThat(decisions)
+        .extracting(decision -> decision.ladderStep())
+        .containsExactly(Optional.of(2), Optional.of(1), Optional.of(0));
+    assertThat(decisions).extracting(decision -> decision.shadow()).containsOnly(true);
+    assertThat(chat.activeMute(ALICE)).isEmpty();
+  }
+
+  @Test
   void kickRungsKick() {
     var config =
         AgentFixtures.config(

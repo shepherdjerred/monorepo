@@ -21,8 +21,13 @@ public interface DecisionLog {
   /** The decision with {@code id}, when it exists. */
   CompletableFuture<Optional<AgentDecision>> find(long id);
 
-  /** Strikes against {@code player} for {@code offense} since {@code since}. */
-  CompletableFuture<Integer> strikes(UUID player, Offense offense, Instant since);
+  /**
+   * Strikes against {@code player} for {@code offense} since {@code since}. Shadow rows count only
+   * when {@code includeShadow} is set: shadow mode simulates rungs on watched history, while active
+   * mode never punishes for it.
+   */
+  CompletableFuture<Integer> strikes(
+      UUID player, Offense offense, Instant since, boolean includeShadow);
 
   /** Marks decision {@code id} overturned by {@code staff} at {@code at}. */
   CompletableFuture<Boolean> overturn(long id, UUID staff, Instant at);

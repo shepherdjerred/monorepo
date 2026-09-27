@@ -111,7 +111,11 @@ public final class ChatFlow {
     var since = services.time().instant().minus(window);
     return services
         .log()
-        .strikes(current.player(), verdict.offense().orElse(Offense.OTHER), since)
+        .strikes(
+            current.player(),
+            verdict.offense().orElse(Offense.OTHER),
+            since,
+            services.config().shadow())
         .thenCompose(
             strikes ->
                 settle(
