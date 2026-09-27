@@ -40,6 +40,7 @@ let home = "";
 
 beforeAll(async () => {
   server = Bun.serve({
+    hostname: "127.0.0.1",
     port: 0,
     fetch: (request) => {
       lastUrl = request.url;
