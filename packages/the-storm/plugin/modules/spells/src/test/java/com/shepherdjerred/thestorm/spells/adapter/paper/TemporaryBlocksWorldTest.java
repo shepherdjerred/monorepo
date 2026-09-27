@@ -68,7 +68,7 @@ final class TemporaryBlocksWorldTest {
             var saved = new ArrayList<BlockKey>();
             for (var block : blocks) {
               var existing = rows.get(block.key());
-              if (existing == null || existing.reverted()) {
+              if (existing == null) {
                 rows.put(block.key(), new Row(block, false));
                 saved.add(block.key());
               }
@@ -200,7 +200,7 @@ final class TemporaryBlocksWorldTest {
   }
 
   @Test
-  void aSavedChunkForgetsOnlyItsOwnReverts() {
+  void revertedBlocksRemainRecordedUntilTheWorldSave() {
     var near = air(0);
     var far = harness.world.getBlockAt(100, 100, 0);
     far.setType(Material.AIR);
@@ -208,13 +208,14 @@ final class TemporaryBlocksWorldTest {
     harness.clock.advance(Duration.ofSeconds(1));
     blocks.sweep();
 
-    blocks.chunkSaved(near.getChunk());
-
-    assertThat(store.reverted()).containsExactly(TemporaryBlocks.key(far));
+    assertThat(store.reverted())
+        .containsExactlyInAnyOrder(TemporaryBlocks.key(near), TemporaryBlocks.key(far));
+    blocks.worldSaved(harness.world);
+    assertThat(store.reverted()).isEmpty();
   }
 
   @Test
-  void aNewSpellMayReuseAPositionWhoseRevertAwaitsTheSave() {
+  void aNewSpellMustWaitForTheWorldSaveBeforeReusingAPosition() {
     var block = air(0);
     place(List.of(block), 1);
     harness.clock.advance(Duration.ofSeconds(1));
@@ -222,9 +223,11 @@ final class TemporaryBlocksWorldTest {
 
     place(List.of(block), 10);
 
-    assertThat(block.getType()).isEqualTo(Material.DEEPSLATE_BRICKS);
-    assertThat(store.pending()).hasSize(1);
+    assertThat(block.getType()).isEqualTo(Material.AIR);
+    assertThat(store.pending()).isEmpty();
     blocks.worldSaved(harness.world);
+    place(List.of(block), 10);
+    assertThat(block.getType()).isEqualTo(Material.DEEPSLATE_BRICKS);
     assertThat(store.pending()).hasSize(1);
   }
 

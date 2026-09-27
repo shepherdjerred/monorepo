@@ -139,12 +139,25 @@ final class SpellsCommand {
       say.error(sender, "There is no spell called " + id + ".");
       return 0;
     }
-    var refused = binder.bind(player, kind.get());
+    var refused =
+        binder.bind(
+            player,
+            kind.get(),
+            success -> {
+              if (success) {
+                say.success(
+                    player, "Your " + kind.get().id() + " focus is ready. Right-click to cast.");
+              } else if (player.isOnline()) {
+                say.error(
+                    player,
+                    "The focus could not be delivered. Free an inventory slot and try again.");
+              }
+            });
     if (refused.isPresent()) {
       say.refusal(player, refused.get());
       return 0;
     }
-    say.success(player, "Your " + kind.get().id() + " focus is ready. Right-click to cast.");
+    say.info(player, "Binding your focus...");
     return Command.SINGLE_SUCCESS;
   }
 

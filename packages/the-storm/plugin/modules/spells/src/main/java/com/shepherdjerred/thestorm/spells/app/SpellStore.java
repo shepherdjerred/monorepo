@@ -23,8 +23,7 @@ public interface SpellStore {
 
   /**
    * Records {@code blocks} before they are placed. Returns the keys actually stored: a position
-   * with a pending (not reverted) record, for example from a world that was not loaded at startup,
-   * is skipped and must not be placed. A reverted record at the position is replaced.
+   * with any existing record is skipped until that record is safely forgotten after a world save.
    */
   CompletableFuture<List<BlockKey>> saveTemporaryBlocks(List<TemporaryBlock> blocks);
 
