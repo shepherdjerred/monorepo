@@ -107,6 +107,23 @@ export function validateStateAgainstVersions(
   }
 }
 
+/**
+ * Keep only image pins that still exist in the authoritative version catalog.
+ * Generated bump branches can outlive an image retirement on main.
+ */
+export function retainPinsForLiveImages(
+  state: PinCandidatesState,
+  versions: Map<string, string>,
+): PinCandidatesState {
+  const liveImages = imageKeys(versions);
+  return {
+    schema: state.schema,
+    pins: Object.fromEntries(
+      Object.entries(state.pins).filter(([key]) => liveImages.has(key)),
+    ),
+  };
+}
+
 export function validateCandidateKeys(
   candidates: PinCandidates,
   versions: Map<string, string>,

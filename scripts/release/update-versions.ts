@@ -9,6 +9,7 @@ import {
   parsePinCandidates,
   parsePinCandidatesState,
   parseVersionCatalogSource,
+  retainPinsForLiveImages,
   rewriteVersionCatalogSource,
   serializePinCandidatesState,
   validateCandidateKeys,
@@ -125,9 +126,16 @@ async function prepareAttempt(
       await readBranchFile(git, pendingRef, PIN_STATE_FILE_REL),
     );
     validateStateAgainstVersions(pendingState, pendingVersions);
-    aggregate = mergePinStates(aggregate, pendingState);
+    // The generated branch can retain pins for images removed from main since
+    // it was created. Main's catalog is authoritative for the reconstructed
+    // branch, so discard those retired pins before merging pending changes.
+    aggregate = mergePinStates(
+      aggregate,
+      retainPinsForLiveImages(pendingState, mainVersions),
+    );
   }
   aggregate = mergePinCandidates(aggregate, batch);
+  validateStateAgainstVersions(aggregate, mainVersions);
 
   await resetVersionBumpBranch(git);
   await Bun.write(

@@ -14,6 +14,7 @@ import {
   parsePinCandidates,
   parsePinCandidatesState,
   parseVersionCatalogSource,
+  retainPinsForLiveImages,
   rewriteVersionCatalogSource,
   serializePinCandidatesState,
   validateStateAgainstVersions,
@@ -251,6 +252,27 @@ describe("version catalog integrity", () => {
     expect(() =>
       validateStateAgainstVersions(state, parseVersionCatalogSource(source)),
     ).toThrow("pin state drift");
+  });
+
+  test("drops pending pins for images retired from the live catalog", async () => {
+    const retiredKey = "shepherdjerred/retired-image";
+    const pending = parsePinCandidatesState(
+      JSON.stringify({
+        schema: "pin-candidates-state/v1",
+        pins: {
+          [KEY]: { buildNumber: 12, version: "v12", digest: B },
+          [retiredKey]: { buildNumber: 11, version: "v11", digest: A },
+        },
+      }),
+    );
+    const liveCatalog = catalogSource([{ name: KEY, value: `old@${A}` }]);
+    const liveVersions = parseVersionCatalogSource(liveCatalog);
+    const reconciled = retainPinsForLiveImages(pending, liveVersions);
+
+    expect(Object.keys(reconciled.pins)).toEqual([KEY]);
+    expect(
+      await rewriteVersionCatalogSource(liveCatalog, reconciled),
+    ).toContain(`"value": "v12@${B}"`);
   });
 
   test("keeps the committed candidate state aligned with the committed catalog", async () => {
