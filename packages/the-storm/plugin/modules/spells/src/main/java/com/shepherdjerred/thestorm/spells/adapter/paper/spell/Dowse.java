@@ -43,6 +43,9 @@ final class Dowse implements Spell {
     List<LivingEntity> burning =
         centre.getWorld().getNearbyLivingEntities(centre, settings.radius()).stream()
             .filter(creature -> creature.getFireTicks() > 0)
+            .filter(
+                creature ->
+                    creature.equals(caster) || tools.guard().harmDenial(caster, creature).isEmpty())
             .toList();
     if (screened.isEmpty() && burning.isEmpty()) {
       return Result.err(CastProblem.nothingAllowed(screened, "fire nearby"));

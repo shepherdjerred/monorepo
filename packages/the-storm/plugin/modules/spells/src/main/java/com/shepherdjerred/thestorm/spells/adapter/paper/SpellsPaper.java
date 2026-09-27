@@ -76,7 +76,7 @@ public final class SpellsPaper {
     plugins.registerEvents(new CastListener(items, state, flow, say), context.plugin());
     plugins.registerEvents(harm, context.plugin());
     plugins.registerEvents(
-        new SpellEffectsListener(state, context.time(), targets), context.plugin());
+        new SpellEffectsListener(state, context.time(), targets, guard), context.plugin());
     plugins.registerEvents(new TemporaryBlockGuard(tools.blocks()), context.plugin());
     plugins.registerEvents(new WorldSaveListener(tools.blocks()), context.plugin());
     plugins.registerEvents(new CraftingGuard(items), context.plugin());

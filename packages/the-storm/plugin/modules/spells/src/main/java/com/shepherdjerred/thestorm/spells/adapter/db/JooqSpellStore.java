@@ -57,7 +57,7 @@ public final class JooqSpellStore implements SpellStore {
         });
   }
 
-  /** Inserts {@code block}, or replaces a reverted record at its position; 0 if one is pending. */
+  /** Inserts {@code block} only when no earlier record still occupies its position. */
   private static int save(DSLContext dsl, TemporaryBlock block) {
     var key = block.key();
     var revertAt = block.revertAt().toEpochMilli();
@@ -75,12 +75,7 @@ public final class JooqSpellStore implements SpellStore {
             SPELLS_TEMPORARY_BLOCK.X,
             SPELLS_TEMPORARY_BLOCK.Y,
             SPELLS_TEMPORARY_BLOCK.Z)
-        .doUpdate()
-        .set(SPELLS_TEMPORARY_BLOCK.ORIGINAL, block.original())
-        .set(SPELLS_TEMPORARY_BLOCK.PLACED, block.placed())
-        .set(SPELLS_TEMPORARY_BLOCK.REVERT_AT, revertAt)
-        .set(SPELLS_TEMPORARY_BLOCK.REVERTED, false)
-        .where(SPELLS_TEMPORARY_BLOCK.REVERTED.isTrue())
+        .doNothing()
         .execute();
   }
 

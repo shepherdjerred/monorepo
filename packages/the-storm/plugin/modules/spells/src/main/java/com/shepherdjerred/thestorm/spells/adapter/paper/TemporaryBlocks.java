@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
@@ -37,10 +36,10 @@ import org.bukkit.util.BoundingBox;
  * Places and reverts temporary blocks.
  *
  * <p>Every placement is written to storage first and only reaches the world once the write
- * succeeds. A revert only marks its record reverted; the record is forgotten once the world or the
- * block's chunk has been saved. So after a crash, whether or not the world on disk still shows the
- * temporary block, a record remains, and the module reverts every remaining record when it starts
- * (and when a world that was not loaded then loads). Reverting is idempotent ({@link RevertRule}).
+ * succeeds. A revert only marks its record reverted; the record is forgotten once the world has
+ * been saved. So after a crash, whether or not the world on disk still shows the temporary block, a
+ * record remains, and the module reverts every remaining record when it starts (and when a world
+ * that was not loaded then loads). Reverting is idempotent ({@link RevertRule}).
  *
  * <p>Blocks are set without physics, never drop items, replace only empty space, soft plants or
  * (Freeze) still water, and never go where a creature or hanging entity is. Main thread only.
@@ -244,29 +243,25 @@ public final class TemporaryBlocks {
   /** {@code world} was saved: its reverted records are no longer needed. */
   void worldSaved(World world) {
     var worldKey = world.getKey().asString();
-    var keys = awaitingSave.remove(worldKey);
-    if (keys != null && !keys.isEmpty()) {
-      async.logFailure(store.forgetReverted(worldKey), "forgetting reverted temporary blocks");
+    var waiting = awaitingSave.get(worldKey);
+    var keys = waiting == null ? List.<BlockKey>of() : List.copyOf(waiting);
+    if (!keys.isEmpty()) {
+      async.onMain(
+          store.forgetReverted(keys),
+          "forgetting reverted temporary blocks",
+          ignored -> {
+            var current = awaitingSave.get(worldKey);
+            if (current != null) {
+              current.removeAll(keys);
+              if (current.isEmpty()) {
+                awaitingSave.remove(worldKey);
+              }
+            }
+          });
     }
   }
 
-  /** {@code chunk} was unloaded and saved: its reverted records are no longer needed. */
-  void chunkSaved(Chunk chunk) {
-    var keys = awaitingSave.get(chunk.getWorld().getKey().asString());
-    if (keys == null) {
-      return;
-    }
-    var inChunk =
-        keys.stream()
-            .filter(key -> key.x() >> 4 == chunk.getX() && key.z() >> 4 == chunk.getZ())
-            .toList();
-    if (!inChunk.isEmpty()) {
-      inChunk.forEach(keys::remove);
-      async.logFailure(store.forgetReverted(inChunk), "forgetting reverted temporary blocks");
-    }
-  }
-
-  /** Records reverts, to be forgotten when the world or chunk is saved. */
+  /** Records reverts, to be forgotten when the world is saved. */
   private void settle(List<TemporaryBlock> reverted) {
     if (reverted.isEmpty()) {
       return;

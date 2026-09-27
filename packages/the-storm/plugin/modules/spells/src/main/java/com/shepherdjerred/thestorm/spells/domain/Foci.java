@@ -21,6 +21,11 @@ public final class Foci {
     return generations.merge(key, 1L, Long::sum);
   }
 
+  /** The generation to persist before a bind changes the player's inventory. */
+  public long next(FocusKey key) {
+    return Math.addExact(generations.getOrDefault(key, 0L), 1L);
+  }
+
   /** Whether a focus of {@code generation} for {@code key} is the current one. */
   public boolean isCurrent(FocusKey key, long generation) {
     var current = generations.get(key);

@@ -11,9 +11,12 @@ import com.shepherdjerred.thestorm.spells.domain.cast.CasterState;
 import com.shepherdjerred.thestorm.spells.domain.config.Spellbook;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Consumer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
@@ -31,6 +34,7 @@ final class Binder {
   private final SpellState state;
   private final Spellbook book;
   private final Storage storage;
+  private final Set<FocusKey> pending = new HashSet<>();
 
   /**
    * Where binds are recorded.
@@ -61,7 +65,7 @@ final class Binder {
   }
 
   /** Gives {@code player} a fresh focus for {@code spell}, replacing any earlier one. */
-  Optional<Refusal> bind(Player player, SpellKind spell) {
+  Optional<Refusal> bind(Player player, SpellKind spell, Consumer<Boolean> completed) {
     if (!state.ready()) {
       return Optional.of(new Refusal.Loading());
     }
@@ -82,15 +86,48 @@ final class Binder {
     if (slot.isEmpty()) {
       return Optional.of(new Refusal.InventoryFull());
     }
-    removeFoci(inventory, player, spell);
-    removeFoci(player.getEnderChest(), player, spell);
     var key = new FocusKey(player.getUniqueId(), spell);
-    var generation = state.foci().bind(key);
+    if (!pending.add(key)) {
+      return Optional.of(new Refusal.Loading());
+    }
+    var generation = state.foci().next(key);
     storage
         .async()
-        .logFailure(
-            storage.store().saveFocus(key, generation), "recording a " + spell.id() + " bind");
-    inventory.setItem(slot.get(), items.focus(spell, player.getUniqueId(), generation));
+        .onMain(
+            storage.store().saveFocus(key, generation),
+            "recording a " + spell.id() + " bind",
+            saved -> {
+              pending.remove(key);
+              if (saved != 1) {
+                completed.accept(false);
+                return;
+              }
+              state.foci().restore(Map.of(key, generation));
+              if (!player.isOnline()) {
+                completed.accept(false);
+                return;
+              }
+              var destination =
+                  freeSlot(inventory)
+                      .or(
+                          () ->
+                              fociSlots(inventory, player, spell).stream()
+                                  .filter(held -> held < STORAGE_SLOTS)
+                                  .findFirst());
+              if (destination.isEmpty()) {
+                completed.accept(false);
+                return;
+              }
+              removeFoci(inventory, player, spell);
+              removeFoci(player.getEnderChest(), player, spell);
+              inventory.setItem(
+                  destination.get(), items.focus(spell, player.getUniqueId(), generation));
+              completed.accept(true);
+            },
+            failure -> {
+              pending.remove(key);
+              completed.accept(false);
+            });
     return Optional.empty();
   }
 

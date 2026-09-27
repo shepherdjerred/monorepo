@@ -8,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Enemy;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -31,11 +32,13 @@ final class SpellEffectsListener implements Listener {
   private final SpellState state;
   private final InstantSource time;
   private final Targets targets;
+  private final Guard guard;
 
-  SpellEffectsListener(SpellState state, InstantSource time, Targets targets) {
+  SpellEffectsListener(SpellState state, InstantSource time, Targets targets, Guard guard) {
     this.state = state;
     this.time = time;
     this.targets = targets;
+    this.guard = guard;
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -78,7 +81,10 @@ final class SpellEffectsListener implements Listener {
     var hidden =
         target instanceof Player player
             && state.stealth().running(player.getUniqueId(), time.instant());
-    if (hidden || (event.getEntity() instanceof Enemy && warded(target.getLocation()))) {
+    if (hidden
+        || (event.getEntity() instanceof Enemy
+            && event.getEntity() instanceof LivingEntity mob
+            && protects(target.getLocation(), mob))) {
       event.setCancelled(true);
     }
   }
@@ -87,7 +93,7 @@ final class SpellEffectsListener implements Listener {
   void onPrime(ExplosionPrimeEvent event) {
     if (event.getEntity() instanceof Creeper creeper
         && !targets.isImmune(creeper)
-        && warded(creeper.getLocation())) {
+        && protects(creeper.getLocation(), creeper)) {
       event.setCancelled(true);
     }
   }
@@ -100,11 +106,21 @@ final class SpellEffectsListener implements Listener {
     }
   }
 
-  private boolean warded(Location where) {
+  private boolean protects(Location where, LivingEntity affected) {
     var point = new Vec3(where.getX(), where.getY(), where.getZ());
-    return state
-        .wards()
-        .covering(where.getWorld().getKey().asString(), point, time.instant())
-        .isPresent();
+    return state.wards().active(time.instant()).stream()
+        .filter(ward -> ward.contains(where.getWorld().getKey().asString(), point))
+        .anyMatch(
+            ward ->
+                guard
+                    .harmDenial(
+                        ward.owner(),
+                        new Location(
+                            where.getWorld(),
+                            ward.centre().x(),
+                            ward.centre().y(),
+                            ward.centre().z()),
+                        affected)
+                    .isEmpty());
   }
 }
