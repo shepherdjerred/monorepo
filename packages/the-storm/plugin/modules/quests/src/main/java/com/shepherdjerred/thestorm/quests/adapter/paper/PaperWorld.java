@@ -18,6 +18,7 @@ import com.shepherdjerred.thestorm.quests.domain.model.Region;
 import com.shepherdjerred.thestorm.quests.domain.view.Journal;
 import com.shepherdjerred.thestorm.tracks.app.TrackLevels;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,9 +29,16 @@ import org.bukkit.Server;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
 
 /** {@link QuestWorld} on a live Paper server. Main thread. */
 final class PaperWorld implements QuestWorld {
+
+  private record Removed(List<ItemStack> stacks) implements TakenItems {
+    private Removed {
+      stacks = List.copyOf(stacks);
+    }
+  }
 
   /**
    * What the world needs.
@@ -83,15 +91,33 @@ final class PaperWorld implements QuestWorld {
   }
 
   @Override
-  public boolean take(UUID player, ItemMatch item, int amount) {
+  public Optional<TakenItems> take(UUID player, ItemMatch item, int amount) {
     var found = player(player);
     if (found.isEmpty() || ItemStacks.count(found.get(), item) < amount) {
-      return false;
+      return Optional.empty();
     }
-    if (ItemStacks.take(found.get(), item, amount) != amount) {
+    var removed = ItemStacks.take(found.get(), item, amount);
+    if (removed.stream().mapToInt(ItemStack::getAmount).sum() != amount) {
       throw new IllegalStateException("quest item handover changed after its count check");
     }
-    return true;
+    return Optional.of(new Removed(removed));
+  }
+
+  @Override
+  public void restore(UUID player, TakenItems taken) {
+    var found =
+        player(player)
+            .orElseThrow(
+                () ->
+                    new IllegalStateException("cannot restore quest items outside the main world"));
+    var removed = (Removed) taken;
+    for (var stack : removed.stacks()) {
+      found
+          .getInventory()
+          .addItem(stack.clone())
+          .values()
+          .forEach(left -> found.getWorld().dropItem(Locations.of(found), left));
+    }
   }
 
   @Override

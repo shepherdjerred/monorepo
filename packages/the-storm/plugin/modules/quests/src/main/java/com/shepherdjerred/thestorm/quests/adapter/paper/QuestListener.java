@@ -91,6 +91,8 @@ final class QuestListener implements Listener {
       activity.acted(event.getPlayer().getUniqueId(), time.instant());
       if (service.state(event.getPlayer().getUniqueId()).isEmpty()) {
         var _ = service.join(event.getPlayer().getUniqueId());
+      } else {
+        service.resume(event.getPlayer().getUniqueId());
       }
     } else {
       sidebars.show(event.getPlayer(), Optional.empty());

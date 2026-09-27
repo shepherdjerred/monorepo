@@ -83,7 +83,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
   private final Set<UUID> departing = new HashSet<>();
   private final Set<UUID> delivering = new HashSet<>();
   private final Set<UUID> deliveryRequested = new HashSet<>();
-  private final Map<UUID, List<Action.Take>> refunds = new HashMap<>();
+  private final Map<UUID, List<QuestWorld.TakenItems>> refunds = new HashMap<>();
   private final Map<String, CustomAction> customActions = new HashMap<>();
 
   public QuestService(Wiring wiring) {
@@ -147,6 +147,16 @@ public final class QuestService implements QuestHooks, QuestProgress {
       loading.remove(player, started);
     }
     return started;
+  }
+
+  /** Resumes durable rewards and the journal when a loaded player returns to the main world. */
+  public void resume(UUID player) {
+    if (!sessions.containsKey(player) || wiring.world().facts(player).isEmpty()) {
+      return;
+    }
+    returnReserved(player);
+    deliverPending(player);
+    refresh(player);
   }
 
   /** Forgets {@code player} (their state is already saved). */
@@ -580,21 +590,26 @@ public final class QuestService implements QuestHooks, QuestProgress {
             .filter(effect -> !(effect.action() instanceof Action.Take))
             .map(
                 effect ->
-                    new PendingWorld(UUID.randomUUID(), player, effect.quest(), effect.action()))
+                    new PendingWorld(
+                        new UUID(wiring.random().nextLong(), wiring.random().nextLong()),
+                        player,
+                        effect.quest(),
+                        effect.action()))
             .toList();
     if (after.equals(before) && pending.isEmpty() && reserved.isEmpty()) {
       effects(player, outcome, catalog);
       present(player, after);
       return;
     }
-    var taken = new ArrayList<Action.Take>();
+    var taken = new ArrayList<QuestWorld.TakenItems>();
     for (var item : reserved) {
-      if (!wiring.world().take(player, item.item(), item.amount())) {
+      var removed = wiring.world().take(player, item.item(), item.amount());
+      if (removed.isEmpty()) {
         refund(player, taken);
         wiring.world().send(player, Notices.error("You no longer have the items to hand over."));
         return;
       }
-      taken.add(item);
+      taken.add(removed.get());
     }
     var barrier = new CompletableFuture<Void>();
     saving.put(player, barrier);
@@ -645,7 +660,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
     }
   }
 
-  private void refund(UUID player, List<Action.Take> taken) {
+  private void refund(UUID player, List<QuestWorld.TakenItems> taken) {
     if (taken.isEmpty()) {
       return;
     }
@@ -660,7 +675,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
     var items = refunds.remove(player);
     if (items != null) {
       for (var item : items) {
-        wiring.world().give(player, item.item(), item.amount());
+        wiring.world().restore(player, item);
       }
     }
   }

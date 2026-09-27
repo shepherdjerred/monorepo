@@ -27,8 +27,14 @@ public interface QuestWorld {
   /** Gives items, dropping what does not fit at the player's feet. */
   void give(UUID player, ItemMatch item, int amount);
 
+  /** Opaque record of the exact stacks removed for a hand-in. */
+  interface TakenItems {}
+
   /** Takes exactly {@code amount} matching items, or none if the player cannot hand them over. */
-  boolean take(UUID player, ItemMatch item, int amount);
+  Optional<TakenItems> take(UUID player, ItemMatch item, int amount);
+
+  /** Returns the exact removed stacks if the hand-in fails to persist. */
+  void restore(UUID player, TakenItems taken);
 
   /** Teleports to the centre of {@code region} if protection lets the player arrive there. */
   void teleport(UUID player, Region region);

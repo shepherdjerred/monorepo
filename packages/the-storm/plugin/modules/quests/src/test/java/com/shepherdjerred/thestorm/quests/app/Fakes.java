@@ -105,6 +105,8 @@ final class Fakes {
 
   /** Online players are those with scripted facts; everything done to them is recorded. */
   static final class World implements QuestWorld {
+    private record Removed(ItemMatch item, int amount) implements TakenItems {}
+
     final Map<UUID, ScriptedFacts> online = new HashMap<>();
     final Map<UUID, List<String>> messages = new HashMap<>();
     final Map<UUID, List<String>> actionBars = new HashMap<>();
@@ -143,13 +145,19 @@ final class Fakes {
     }
 
     @Override
-    public boolean take(UUID player, ItemMatch item, int amount) {
+    public Optional<TakenItems> take(UUID player, ItemMatch item, int amount) {
       if (facts(player).isEmpty() || carry(player).count(item) < amount) {
-        return false;
+        return Optional.empty();
       }
       actions.add("take " + amount + " " + item.material());
       Objects.requireNonNull(online.get(player)).take(item, amount);
-      return true;
+      return Optional.of(new Removed(item, amount));
+    }
+
+    @Override
+    public void restore(UUID player, TakenItems taken) {
+      var removed = (Removed) taken;
+      give(player, removed.item(), removed.amount());
     }
 
     @Override
