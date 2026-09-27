@@ -1,0 +1,326 @@
+# Owned by the repository; the plugin never writes it.
+# The NPCs of Spawn Town. Every file in this folder has the same five
+# sections (write {} for an empty one); ids are shared across files.
+#
+# PLACEHOLDER COORDINATES: every position below is a stand-in near 0,64,0
+# until Spawn Town is rebuilt. Stand where an NPC belongs and run
+# `/npc here <id>` to get a block to paste, then `/npc reload`.
+#
+# Optional references are written as `none`, never left out.
+
+# Named spots schedules send NPCs to. `home` is reserved: it always means
+# the NPC's own home.
+places:
+  market:
+    world: minecraft:overworld
+    x: 0.5
+    y: 64.0
+    z: 12.5
+    yaw: 0.0
+    pitch: 0.0
+  tavern-door:
+    world: minecraft:overworld
+    x: -9.5
+    y: 64.0
+    z: 4.5
+    yaw: 90.0
+    pitch: 0.0
+  tavern-bed:
+    world: minecraft:overworld
+    x: -14.5
+    y: 64.6
+    z: 8.5
+    yaw: 180.0
+    pitch: 0.0
+  smithy-door:
+    world: minecraft:overworld
+    x: 9.5
+    y: 64.0
+    z: 4.5
+    yaw: -90.0
+    pitch: 0.0
+  smith-bed:
+    world: minecraft:overworld
+    x: 14.5
+    y: 64.6
+    z: 8.5
+    yaw: 180.0
+    pitch: 0.0
+
+# Signed skin textures, referred to by id from `skin:`. Copy `value` and
+# `signature` from
+# https://sessionserver.mojang.com/session/minecraft/profile/<uuid>?unsigned=false
+# Skins are baked here; nothing is fetched while the server runs. Until each
+# NPC has one, it wears a built-in skin (`vanilla:<wide|slim>/<name>`), which
+# Bedrock players see as a default skin.
+skins: {}
+
+# Daily routines. Slots use in-game time (HH:MM, 06:00 is sunrise), may wrap
+# past midnight, and together must cover the whole day exactly once.
+# Activities: stay <place> | wander <place> <radius> | patrol <place> <place>...
+# | sleep <place>. While it rains, an NPC with a shelter goes there instead.
+schedules:
+  tavern-keeper:
+    shelter: none
+    slots:
+      - from: "06:00"
+        to: "09:00"
+        activity: wander market 6
+      - from: "09:00"
+        to: "23:00"
+        activity: stay home
+      - from: "23:00"
+        to: "06:00"
+        activity: sleep tavern-bed
+  blacksmith:
+    shelter: smithy-door
+    slots:
+      - from: "06:00"
+        to: "19:00"
+        activity: stay home
+      - from: "19:00"
+        to: "22:00"
+        activity: patrol smithy-door market tavern-door
+      - from: "22:00"
+        to: "06:00"
+        activity: sleep smith-bed
+
+# Conversations. A node has either `next: <node>` (a Continue button) and no
+# options, or `next: none` and up to six options. An option's `then` is
+# close, goto:<node>, trainer (open the NPC's trainer) or action:<module.name>.
+dialogues:
+  stan:
+    title: Stan
+    start: greet
+    nodes:
+      greet:
+        text: Buy low, sell high, and never let a chest sit empty. Want to learn the trade?
+        next: none
+        options:
+          - label: Train as a Shopkeeper
+            then: trainer
+          - label: What does a Shopkeeper do?
+            then: goto:about
+          - label: Goodbye
+            then: close
+      about:
+        text: Shopkeepers run chest shops, rent stalls in the market and keep this town's crystals moving. Every level opens more of it up.
+        next: greet
+        options: []
+  darren:
+    title: Darren
+    start: greet
+    nodes:
+      greet:
+        text: Pistons, rails, redstone. If it moves, a Mechanic built it. Ready to get your hands dirty?
+        next: none
+        options:
+          - label: Train as a Mechanic
+            then: trainer
+          - label: Goodbye
+            then: close
+  zavier:
+    title: Zavier
+    start: greet
+    nodes:
+      greet:
+        text: Engineers build what others think can't stand. Bridges over the storm, platforms above it.
+        next: none
+        options:
+          - label: Train as an Engineer
+            then: trainer
+          - label: Goodbye
+            then: close
+  lynn:
+    title: Lynn
+    start: greet
+    nodes:
+      greet:
+        text: The storm has a voice, if you know how to listen. Spellcasters learn to answer it.
+        next: none
+        options:
+          - label: Train as a Spellcaster
+            then: trainer
+          - label: Goodbye
+            then: close
+  aldric:
+    title: Aldric
+    start: greet
+    nodes:
+      greet:
+        text: A town needs someone to keep the ledgers and settle the disputes. Governors found towns and lead them.
+        next: none
+        options:
+          - label: Train as a Governor
+            then: trainer
+          - label: Goodbye
+            then: close
+  # A placeholder until the bank opens.
+  braxton:
+    title: Braxton
+    start: greet
+    nodes:
+      greet:
+        text: The Storm Bank opens soon. Keep your crystals close.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+  nat:
+    title: Nat
+    start: greet
+    nodes:
+      greet:
+        text: Welcome in, out of the weather. What'll it be?
+        next: none
+        options:
+          - label: Heard any news?
+            then: goto:news
+          - label: Just passing through
+            then: close
+      news:
+        text: Folk say the storm's been worse out past the walls. Travellers come in soaked and don't stay long.
+        next: greet
+        options: []
+  thomas:
+    title: Thomas
+    start: greet
+    nodes:
+      greet:
+        text: Mind the sparks. If it's iron, I can shape it.
+        next: none
+        options:
+          - label: Goodbye
+            then: close
+
+# The NPCs. `name` is all Bedrock players see, so it carries the role;
+# `description` is a second line for Java players only.
+npcs:
+  stan:
+    name: Stan · Shopkeeper Trainer
+    description: Teaches the Shopkeeper track
+    skin: vanilla:wide/steve
+    home:
+      world: minecraft:overworld
+      x: 4.5
+      y: 64.0
+      z: -6.5
+      yaw: 0.0
+      pitch: 0.0
+    pose: standing
+    roles: [trainer]
+    schedule: none
+    dialogue: stan
+    trainer: shopkeeper
+  darren:
+    name: Darren · Mechanic Trainer
+    description: Teaches the Mechanic track
+    skin: vanilla:wide/kai
+    home:
+      world: minecraft:overworld
+      x: 2.5
+      y: 64.0
+      z: -6.5
+      yaw: 0.0
+      pitch: 0.0
+    pose: standing
+    roles: [trainer]
+    schedule: none
+    dialogue: darren
+    trainer: mechanic
+  zavier:
+    name: Zavier · Engineer Trainer
+    description: Teaches the Engineer track
+    skin: vanilla:wide/efe
+    home:
+      world: minecraft:overworld
+      x: 0.5
+      y: 64.0
+      z: -6.5
+      yaw: 0.0
+      pitch: 0.0
+    pose: standing
+    roles: [trainer]
+    schedule: none
+    dialogue: zavier
+    trainer: engineer
+  lynn:
+    name: Lynn · Spellcaster Trainer
+    description: Teaches the Spellcaster track
+    skin: vanilla:slim/alex
+    home:
+      world: minecraft:overworld
+      x: -1.5
+      y: 64.0
+      z: -6.5
+      yaw: 0.0
+      pitch: 0.0
+    pose: standing
+    roles: [trainer]
+    schedule: none
+    dialogue: lynn
+    trainer: spellcaster
+  aldric:
+    name: Aldric · Governor Trainer
+    description: Teaches the Governor track
+    skin: vanilla:wide/noor
+    home:
+      world: minecraft:overworld
+      x: -3.5
+      y: 64.0
+      z: -6.5
+      yaw: 0.0
+      pitch: 0.0
+    pose: standing
+    roles: [trainer]
+    schedule: none
+    dialogue: aldric
+    trainer: governor
+  braxton:
+    name: Braxton · Crystal Bank
+    description: Banker
+    skin: vanilla:wide/zuri
+    home:
+      world: minecraft:overworld
+      x: 0.5
+      y: 64.0
+      z: 6.5
+      yaw: 180.0
+      pitch: 0.0
+    pose: standing
+    roles: [banker]
+    schedule: none
+    dialogue: braxton
+    trainer: none
+  nat:
+    name: Nat · Tavern Keeper
+    description: Runs the tavern
+    skin: vanilla:slim/sunny
+    home:
+      world: minecraft:overworld
+      x: -12.5
+      y: 64.0
+      z: 4.5
+      yaw: 90.0
+      pitch: 0.0
+    pose: standing
+    roles: [tavern-keeper]
+    schedule: tavern-keeper
+    dialogue: nat
+    trainer: none
+  thomas:
+    name: Thomas · Blacksmith
+    description: Works the forge
+    skin: vanilla:wide/makena
+    home:
+      world: minecraft:overworld
+      x: 12.5
+      y: 64.0
+      z: 4.5
+      yaw: -90.0
+      pitch: 0.0
+    pose: standing
+    roles: [blacksmith]
+    schedule: blacksmith
+    dialogue: thomas
+    trainer: none

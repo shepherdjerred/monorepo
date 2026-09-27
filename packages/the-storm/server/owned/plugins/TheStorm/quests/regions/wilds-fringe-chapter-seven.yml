@@ -1,0 +1,73 @@
+# The returning signal supports a real dusk patrol and written handoff.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-dusk-patrol:
+    name: "The Dusk Patrol"
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed a-returning-signal
+    text:
+      offer: "Iovita's signal will tell us who returns. First the watch should clear hostile mobs on a cautious dusk circuit near town."
+      accept: "Defeat zombies in the main world for the dusk watch."
+      decline: "The patrol will leave after sunrise instead."
+      finish: "The dusk circuit is safer and the watch has seen its return signal used."
+      summary: "Clear a cautious Wilds fringe dusk patrol route."
+      questions: []
+    start: dusk
+    stages:
+      dusk:
+        journal: "Defeat 12 zombies in the main world for the Guard Captain."
+        waiting: "Keep the town's lights in sight on the dusk circuit."
+        complete: "The dusk patrol has cleared its route."
+        objectives:
+          - kill 12 ZOMBIE
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation storm-watch 1
+
+  the-marker-log:
+    name: "The Marker Log"
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-dusk-patrol
+    text:
+      offer: "The patrol returned. I need a written log of every marker it repaired so another guard knows what changed."
+      accept: "Bring a map, paper and ink for the marker log."
+      decline: "I will ask each guard to remember the repairs."
+      finish: "The watch can trace each marker repair to the current route."
+      summary: "Write a handoff log for the Wilds fringe route markers."
+      questions: []
+    start: log
+    stages:
+      log:
+        journal: "Bring Iovita a map, 16 paper and 2 ink sacs."
+        waiting: "A repaired sign belongs on the map with a date."
+        complete: "The Wilds patrol marker log is ready."
+        objectives:
+          - deliver iovita 1 MAP
+          - deliver iovita 16 PAPER
+          - deliver iovita 2 INK_SAC
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation storm-watch 1

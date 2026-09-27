@@ -1,0 +1,72 @@
+# The mapped surface route gives the watch a safe patrol and a repair record.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-surface-watch:
+    name: "The Surface Watch"
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-safe-grate-map
+    text:
+      offer: "The map keeps us above the unverified drains. A surface patrol should clear hostile mobs near the marked grates before taking water samples."
+      accept: "Defeat zombies in the main world for the sewer watch."
+      decline: "I will send a larger patrol tomorrow."
+      finish: "The surface route is safer for the next sample run."
+      summary: "Clear hostile mobs from the surface sewer patrol route."
+      questions: []
+    start: patrol
+    stages:
+      patrol:
+        journal: "Defeat 12 zombies in the main world for the Guard Captain."
+        waiting: "Stay on the mapped surface route and avoid unknown drains."
+        complete: "The watch can approach the marked grates safely."
+        objectives:
+          - kill 12 ZOMBIE
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation storm-watch 1
+
+  the-grate-spares:
+    name: "The Grate Spares"
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-surface-watch
+    text:
+      offer: "The patrol found worn fittings beside two grates. Let us prepare spares before a small fault becomes another blocked drain."
+      accept: "Bring iron bars and lanterns for the surface repair kit."
+      decline: "I will mark the fittings for the next inspection."
+      finish: "The watch has a repair kit and a record of where the spares belong."
+      summary: "Stock spare fittings for the mapped sewer grates."
+      questions: []
+    start: spares
+    stages:
+      spares:
+        journal: "Bring Iovita 16 iron bars and 4 lanterns."
+        waiting: "The patrol can repair a marked grate without entering the drain."
+        complete: "The sewer surface repair kit is stocked."
+        objectives:
+          - deliver iovita 16 IRON_BARS
+          - deliver iovita 4 LANTERN
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation storm-watch 1

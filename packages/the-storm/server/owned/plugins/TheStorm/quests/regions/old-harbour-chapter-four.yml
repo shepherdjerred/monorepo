@@ -1,0 +1,91 @@
+# The old harbour survives as a story, bell and shared-fishing custom beside
+# a present-day river. No lost dock or old-world coordinate is required.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-fishers-lesson:
+    name: The Fisher's Lesson
+    giver: stanley
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed a-net-for-newcomers
+    text:
+      offer: Oswin has rods to lend. Show a newcomer what a catch feels like before we ask them to care for the gear.
+      accept: Catch fish in the main world, then bring string to mend the loaner rods.
+      decline: The river will still have lessons tomorrow.
+      finish: The rods are mended and the next fisher has a simple first lesson.
+      summary: Teach the old harbour's shared-fishing custom by doing it.
+      questions: []
+    start: catch
+    stages:
+      catch:
+        journal: Catch 6 fish in the main world for Stanley's lesson.
+        waiting: Show patience before counting the catch.
+        complete: The lesson has a catch. The loaner gear needs fresh line.
+        objectives:
+          - fish 6 any
+        onComplete: []
+        next: [{ to: mend, when: [], label: none }]
+        timeLimit: none
+      mend:
+        journal: Bring Stanley 16 string to mend the shared fishing gear.
+        waiting: A loaner rod should be ready for the next fisher.
+        complete: The gear and lesson are ready to share.
+        objectives:
+          - deliver stanley 16 STRING
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  a-light-on-the-river:
+    name: A Light on the River
+    giver: oswin
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-fishers-lesson
+    text:
+      offer: The bell, lights and loaner rods now tell a complete story. Keep a spare light for the river welcome when one goes dark.
+      accept: Bring lanterns and copper, then ask Stanley to check the memorial account one last time.
+      decline: I will watch the lights tonight.
+      finish: The river welcome is supplied and Stanley's account can be passed on.
+      summary: Maintain the present-day river welcome and close the harbour record.
+      questions: []
+    start: spares
+    stages:
+      spares:
+        journal: Bring Oswin 8 lanterns and 12 copper ingots.
+        waiting: A river light should never go dark for lack of a spare.
+        complete: The spares are ready. Stanley should check the old account.
+        objectives:
+          - deliver oswin 8 LANTERN
+          - deliver oswin 12 COPPER_INGOT
+        onComplete: []
+        next: [{ to: account, when: [], label: none }]
+        timeLimit: none
+      account:
+        journal: Ask Stanley to check the old harbour account.
+        waiting: New arrivals should know the old docks are a memory.
+        complete: The old story and the new river welcome are both preserved.
+        objectives:
+          - talk stanley
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

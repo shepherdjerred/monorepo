@@ -1,0 +1,9 @@
+# Owned by the repository; the plugin never saves it. Every key is required.
+currency:
+  singular: crystal
+  plural: crystals
+  symbol: CR
+# Crystals paid once, from the server, the first time a player ever joins.
+startingBalance: 500
+# Players listed by /baltop (1-20).
+baltopSize: 10

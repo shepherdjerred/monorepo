@@ -1,0 +1,92 @@
+# The rebuilt spawn's sewer and bank share a patrol and inventory record.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-bank-seal:
+    name: The Bank Seal
+    giver: braxton
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-drain-rota
+    text:
+      offer: The watch knows when to inspect the drain. Now my bank inventory needs a seal that shows when a storage chest was last checked.
+      accept: Bring wax, paper and a chest so the guard can witness a clean count.
+      decline: I will keep the tally in my hands for now.
+      finish: The Guard Captain witnessed the seal. We can see if a chest is opened between audits.
+      summary: Seal Braxton's recovered inventory with a witnessed count.
+      questions: []
+    start: seal
+    stages:
+      seal:
+        journal: Bring Braxton 4 honeycomb, 8 paper and a chest.
+        waiting: The seal needs a date and a clear inventory line.
+        complete: The stock is counted. The guard can witness the seal.
+        objectives:
+          - deliver braxton 4 HONEYCOMB
+          - deliver braxton 8 PAPER
+          - deliver braxton 1 CHEST
+        onComplete: []
+        next: [{ to: witness, when: [], label: none }]
+        timeLimit: none
+      witness:
+        journal: Ask the Guard Captain to witness Braxton's inventory seal.
+        waiting: A witness makes the audit useful to both the bank and watch.
+        complete: The count and seal are recorded together.
+        objectives:
+          - talk guard-captain
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  a-clean-count:
+    name: A Clean Count
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-bank-seal
+    text:
+      offer: The bank chest is sealed. We should teach the next clerk how to tell a stamped tally from a coin before another fragment reaches the drain.
+      accept: Bring a small sample of gold and copper, then ask Braxton to file a comparison sheet.
+      decline: The sealed samples will wait on my desk.
+      finish: Braxton has a comparison sheet. The sewer fragment can no longer distort the bank count.
+      summary: Finish the sewer audit with a clear bank inventory guide.
+      questions: []
+    start: samples
+    stages:
+      samples:
+        journal: Bring Iovita 16 gold nuggets and 8 copper ingots.
+        waiting: Compare the edges and marks before entering a count.
+        complete: The samples are labelled. Braxton can file the guide.
+        objectives:
+          - deliver iovita 16 GOLD_NUGGET
+          - deliver iovita 8 COPPER_INGOT
+        onComplete: []
+        next: [{ to: guide, when: [], label: none }]
+        timeLimit: none
+      guide:
+        journal: Ask Braxton to file the inventory comparison guide.
+        waiting: The bank needs a clear rule for the next clerk.
+        complete: The sewer audit has a clean final count.
+        objectives:
+          - talk braxton
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

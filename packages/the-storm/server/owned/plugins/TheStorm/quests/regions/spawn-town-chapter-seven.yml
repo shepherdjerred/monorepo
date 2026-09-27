@@ -1,0 +1,73 @@
+# The measured harvest and lit watch become an accountable market routine.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-market-weights:
+    name: "The Market Weights"
+    giver: braxton
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed a-lighted-shift
+    text:
+      offer: "The watch can keep the grain safe at night. I want common metal weights beside our grain measure so a buyer can check the morning count."
+      accept: "Bring copper and iron for a set of market weights."
+      decline: "The measure can stand alone for one more market day."
+      finish: "A buyer and the mill now use the same weights and the same grain measure."
+      summary: "Supply standard weights for the Spawn Town grain market."
+      questions: []
+    start: weights
+    stages:
+      weights:
+        journal: "Bring Braxton 12 copper ingots and 4 iron ingots."
+        waiting: "A common weight protects both the mill and the buyer."
+        complete: "The grain measure has matching market weights."
+        objectives:
+          - deliver braxton 12 COPPER_INGOT
+          - deliver braxton 4 IRON_INGOT
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1
+
+  the-harvest-account:
+    name: "The Harvest Account"
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-market-weights
+    text:
+      offer: "Braxton's weights are ready. Let us keep one public account of grain entering and leaving the market so the watch knows what it protects."
+      accept: "Bring paper and ink for the harvest account."
+      decline: "I will keep the totals on a loose page."
+      finish: "The town can compare each market day with the measured harvest instead of relying on memory."
+      summary: "Open a public harvest account for the mill and market."
+      questions: []
+    start: account
+    stages:
+      account:
+        journal: "Bring Martha 20 paper and 3 ink sacs."
+        waiting: "Each market day should begin from the previous count."
+        complete: "The harvest account is ready for its first entry."
+        objectives:
+          - deliver martha 20 PAPER
+          - deliver martha 3 INK_SAC
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1

@@ -1,0 +1,82 @@
+# The caravan's departure and return ledgers end in a checked exchange.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-return-check:
+    name: "The Return Check"
+    giver: marcus
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-return-ledger
+    text:
+      offer: "Martha's return ledger is ready. We need seal material and a clean page so the driver can record any change before unloading."
+      accept: "Bring honeycomb and paper for the return check."
+      decline: "The driver can report changes verbally."
+      finish: "The cart can arrive with a checked seal and a written return count."
+      summary: "Prepare a verifiable return check for the current caravan."
+      questions: []
+    start: check
+    stages:
+      check:
+        journal: "Bring Marcus 8 honeycomb and 16 paper."
+        waiting: "A broken seal should be written down before anyone opens the crate."
+        complete: "Marcus has the return-check kit."
+        objectives:
+          - deliver marcus 8 HONEYCOMB
+          - deliver marcus 16 PAPER
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1
+
+  the-fair-exchange:
+    name: "The Fair Exchange"
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 50
+    requirements:
+      - completed the-return-check
+    text:
+      offer: "The load can be checked in both directions. Put real goods on the next cart, then tell Marcus the market count matches the manifest."
+      accept: "Bring wool and bread for a checked exchange, then report to Marcus."
+      decline: "We can wait for the next market day."
+      finish: "The town has a trade route measured by goods, receipts and safe returns."
+      summary: "Complete a checked caravan exchange for the main-world market."
+      questions: []
+    start: goods
+    stages:
+      goods:
+        journal: "Bring Martha 20 white wool and 20 bread."
+        waiting: "The goods should match the departure sample and return ledger."
+        complete: "Martha has counted the exchange goods."
+        objectives:
+          - deliver martha 20 WHITE_WOOL
+          - deliver martha 20 BREAD
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Tell Marcus the market load matches the manifest."
+        waiting: "The driver should know the market count before departure."
+        complete: "Marcus accepts the checked caravan load."
+        objectives:
+          - talk marcus
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 650
+      - points 1
+      - reputation townsfolk 1

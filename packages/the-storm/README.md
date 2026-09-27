@@ -53,7 +53,52 @@ Modules reach each other only through the other module's `app` package, and
 schedule main-thread work only through `core.schedule.Scheduler`. ArchUnit
 tests in `architecture/` enforce all of this.
 
+## Quest content
+
+The `quests` module reads authored quests, board templates, regions, factions,
+and hooks from `server/owned/plugins/TheStorm/quests/`. Its runtime settings are
+in `server/owned/plugins/TheStorm/quests.yml`. Content is validated against the
+loaded Minecraft registries and NPC directory when the module starts; invalid
+content stops startup with file and field errors. The objective, condition, and
+action syntax is defined by `quests/domain/content/Dsl.java`.
+
+Quest offers, commands, and progress are restricted to the configured main
+world (`world`). Regions must resolve to that world's registry key. Board
+draws keep a snapshot of their objective and reward data in SQLite so edits to
+templates do not change quests already assigned to players. Shipped content
+counts and references are checked when the quest module is built. Regional
+chapters in `quests/regions/` cover Spawn Town, Sewers, Library, Caravan Road,
+the main-world Wilds fringe, South Mines, the old Harbour, and Frost Falls.
+The old sewer, water study, and caravan drafts inform their chapters.
+
+Quest state and pending world actions commit in one SQLite transaction. Item
+hand-ins run from that outbox after the state write succeeds, so a failed write
+cannot remove items. Actions run in order while the player is in the main
+world. Before an action touches Paper, its row moves to `IN_DOUBT`; the row is
+removed only after the action reports success. A crash or ambiguous failure
+leaves that row for staff to inspect, and later actions pause behind it.
+Quest progression, completion reads, and the journal wait while an item hand-in
+is outstanding, so the saved completion cannot unlock follow-up work early.
+Crystal transfers use the outbox ID as the economy ledger's idempotency key;
+these can resume safely after a crash. Paper inventory, teleports, spawns, and
+custom hooks still need operator reconciliation after an ambiguous attempt.
+
+Use `/quests admin effects <player-uuid>` to inspect the queue. For an
+`IN_DOUBT` effect, inspect the player's inventory, crystal ledger, permissions,
+or world state as appropriate. Use `/quests admin effect complete
+<player-uuid> <effect-uuid>` only when the action took effect; use `/quests admin
+effect retry <player-uuid> <effect-uuid>` only when it did not. Both commands
+require `thestorm.quests.admin`. An item hand-in can remain pending if the
+player leaves the main world or no longer has the items. Do not retry an
+ambiguous action without checking its effect first.
+
 ## Conventions
+
+The economy `Wallets` port supports a stable `KeyedTransfer` for compensating
+payments. It stores the operation key with the ledger row, returns the same
+receipt for an identical retry, and rejects reuse of the key with different
+transfer details. `receiptFor` lets a caller reconcile an uncertain result.
+Ordinary unkeyed transfers keep their existing behavior.
 
 - `@NullMarked` on every package; NullAway (JSpecify mode) runs as an error.
 - Error Prone with Picnic's checks; `-Xlint:all -Werror`. Warnings fail the build.

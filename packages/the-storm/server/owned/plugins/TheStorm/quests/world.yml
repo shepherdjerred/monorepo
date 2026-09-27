@@ -1,0 +1,46 @@
+# Owned by the repository; the plugin never writes it.
+# Shared quest definitions: factions, variables, regions and hooks. Every file
+# under quests/ has the same six sections (write {} for an empty one) and ids
+# are global across files. The one-line languages objectives, conditions and
+# actions are written in are described in the quests module's Dsl.java.
+
+# Groups players earn reputation with. Two at launch; more as the town grows.
+factions:
+  townsfolk:
+    name: Spawn Town
+    ranks:
+      - { name: Neighbour, from: 5 }
+      - { name: Friend of the Town, from: 15 }
+      - { name: Pillar of the Community, from: 30 }
+  storm-watch:
+    name: Storm Watch
+    ranks:
+      - { name: Recruit, from: 3 }
+      - { name: Sergeant-at-Arms, from: 10 }
+
+# Every variable a quest reads or writes, and what it means.
+variables:
+  login-claims: How many daily login rewards Anna has paid the player
+
+# PLACEHOLDER COORDINATES until the world around spawn is built out.
+regions:
+  south-entrance:
+    name: South Entrance
+    world: minecraft:overworld
+    x: -170.0
+    y: 70.0
+    z: -28.0
+    radius: 15.0
+  south-mines:
+    name: South Mines
+    world: minecraft:overworld
+    x: -300.0
+    y: 60.0
+    z: -14.0
+    radius: 35.0
+
+# Custom objective and action ids other modules report through QuestHooks.
+hooks: {}
+
+quests: {}
+templates: {}

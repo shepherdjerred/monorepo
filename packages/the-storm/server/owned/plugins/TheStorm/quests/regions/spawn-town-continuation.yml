@@ -1,0 +1,93 @@
+# The windmill and its storm altar were part of the historical spawn. These
+# quests follow the repair register without requiring an old-world location.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-altar-ledger:
+    name: The Altar Ledger
+    giver: walter
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-mill-register
+    text:
+      offer: Marcus remembers a cart of stone, and Braxton found no signature. The old windmill altar may explain why somebody hid the repair.
+      accept: Bring me an emerald and redstone dust. I can compare them with the marks in Braxton's register.
+      decline: The register will be here when you return.
+      finish: The dust matches the drawing. Someone repaired the altar circuit and left the cart off the books.
+      summary: Compare the windmill altar materials with Braxton's missing repair entry.
+      questions: []
+    start: materials
+    stages:
+      materials:
+        journal: Bring Walter an emerald and 12 redstone dust for the altar study.
+        waiting: An altar needs a careful record before anyone changes it.
+        complete: The materials match the register's faint sketch. Tell Braxton.
+        objectives:
+          - deliver walter 1 EMERALD
+          - deliver walter 12 REDSTONE
+        onComplete: []
+        next: [{ to: register, when: [], label: none }]
+        timeLimit: none
+      register:
+        journal: Tell Braxton what Walter found in the mill register.
+        waiting: Braxton can enter the finding without guessing who made the repair.
+        complete: The repair is recorded, though its author remains unknown.
+        objectives:
+          - talk braxton
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  storm-signatures:
+    name: Storm Signatures
+    giver: braxton
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-altar-ledger
+    text:
+      offer: A ledger without a name invites another mistake. Let the people who tend the mill sign a fresh maintenance record.
+      accept: Ask Martha and Marcus what they can promise, then bring me paper for their signatures.
+      decline: I will keep the page open.
+      finish: The mill has a proper record now. The next storm will have witnesses.
+      summary: Establish a new maintenance record for Spawn Town's windmill.
+      questions: []
+    start: witnesses
+    stages:
+      witnesses:
+        journal: Ask Martha and Marcus about the windmill's upkeep.
+        waiting: The mill belongs to everyone who depends on the harvest.
+        complete: Martha will watch the grain; Marcus will record each supply cart.
+        objectives:
+          - talk martha
+          - talk marcus
+        onComplete: []
+        next: [{ to: signatures, when: [], label: none }]
+        timeLimit: none
+      signatures:
+        journal: Bring Braxton 8 paper and 2 ink sacs for the signed register.
+        waiting: Every repair deserves a line and a name.
+        complete: The new register is ready for the next storm.
+        objectives:
+          - deliver braxton 8 PAPER
+          - deliver braxton 2 INK_SAC
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
