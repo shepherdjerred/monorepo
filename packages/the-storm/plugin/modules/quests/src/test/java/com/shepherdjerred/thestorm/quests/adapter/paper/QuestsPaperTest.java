@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.fail;
 import com.shepherdjerred.thestorm.npcs.app.NpcRef;
 import com.shepherdjerred.thestorm.npcs.app.QuestMarker;
 import com.shepherdjerred.thestorm.npcs.app.dialogue.DialogueGraph.OptionEffect;
+import com.shepherdjerred.thestorm.quests.domain.engine.KillCredit;
 import com.shepherdjerred.thestorm.quests.domain.state.PlayerQuests;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.jspecify.annotations.Nullable;
@@ -29,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.ServerMock;
+import org.mockbukkit.mockbukkit.entity.EntityMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 import org.mockbukkit.mockbukkit.simulate.entity.PlayerSimulation;
 import org.mockbukkit.mockbukkit.world.WorldMock;
@@ -158,8 +161,23 @@ final class QuestsPaperTest {
     service.accept(alice.getUniqueId(), "hunt", "captain");
     service.accept(bob.getUniqueId(), "hunt", "captain");
     var zombie = (LivingEntity) world.spawnEntity(new Location(world, 1, 64, 0), EntityType.ZOMBIE);
+    ((EntityMock) zombie).setSpawnReason(CreatureSpawnEvent.SpawnReason.NATURAL);
     zombie.setKiller(alice);
     zombie.setHealth(0);
+    assertThat(state(alice).active("hunt").orElseThrow().progress()).containsExactly(1);
+    assertThat(state(bob).active("hunt").orElseThrow().progress()).containsExactly(1);
+
+    var spawner =
+        (LivingEntity) world.spawnEntity(new Location(world, 1, 64, 0), EntityType.ZOMBIE);
+    ((EntityMock) spawner).setSpawnReason(CreatureSpawnEvent.SpawnReason.SPAWNER);
+    spawner.setKiller(alice);
+    spawner.setHealth(0);
+    var questSpawned =
+        (LivingEntity) world.spawnEntity(new Location(world, 1, 64, 0), EntityType.ZOMBIE);
+    ((EntityMock) questSpawned).setSpawnReason(CreatureSpawnEvent.SpawnReason.NATURAL);
+    questSpawned.addScoreboardTag(KillCredit.QUEST_SPAWNED);
+    questSpawned.setKiller(alice);
+    questSpawned.setHealth(0);
     assertThat(state(alice).active("hunt").orElseThrow().progress()).containsExactly(1);
     assertThat(state(bob).active("hunt").orElseThrow().progress()).containsExactly(1);
   }
@@ -180,12 +198,14 @@ final class QuestsPaperTest {
     alice.teleport(new Location(wilds, 0, 64, 0));
     assertThat(plugin().sidebars.get(alice.getUniqueId())).isEmpty();
     var zombie = (LivingEntity) wilds.spawnEntity(new Location(wilds, 1, 64, 0), EntityType.ZOMBIE);
+    ((EntityMock) zombie).setSpawnReason(CreatureSpawnEvent.SpawnReason.NATURAL);
     zombie.setKiller(alice);
     zombie.setHealth(0);
     assertThat(state(alice).active("hunt").orElseThrow().progress()).containsExactly(0);
     alice.teleport(new Location(world, 0, 64, 0));
     var mainZombie =
         (LivingEntity) world.spawnEntity(new Location(world, 1, 64, 0), EntityType.ZOMBIE);
+    ((EntityMock) mainZombie).setSpawnReason(CreatureSpawnEvent.SpawnReason.NATURAL);
     mainZombie.setKiller(alice);
     mainZombie.setHealth(0);
     assertThat(state(alice).active("hunt").orElseThrow().progress()).containsExactly(1);

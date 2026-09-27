@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.npcs.app.QuestMarker;
 import com.shepherdjerred.thestorm.quests.app.QuestWorld;
 import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
 import com.shepherdjerred.thestorm.quests.domain.engine.Facts;
+import com.shepherdjerred.thestorm.quests.domain.engine.KillCredit;
 import com.shepherdjerred.thestorm.quests.domain.model.Action;
 import com.shepherdjerred.thestorm.quests.domain.model.Action.NpcMark;
 import com.shepherdjerred.thestorm.quests.domain.model.ItemMatch;
@@ -117,6 +118,7 @@ final class PaperWorld implements QuestWorld {
     var type = EntityType.valueOf(spawn.entity());
     for (var index = 0; index < spawn.count(); index++) {
       var entity = at.get().getWorld().spawnEntity(at.get(), type);
+      entity.addScoreboardTag(KillCredit.QUEST_SPAWNED);
       spawn
           .name()
           .ifPresent(

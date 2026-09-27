@@ -4,6 +4,7 @@ import com.shepherdjerred.thestorm.quests.app.QuestService;
 import com.shepherdjerred.thestorm.quests.domain.config.QuestsConfig;
 import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
 import com.shepherdjerred.thestorm.quests.domain.engine.CraftCount;
+import com.shepherdjerred.thestorm.quests.domain.engine.KillCredit;
 import com.shepherdjerred.thestorm.quests.domain.engine.PlacedBlocks;
 import com.shepherdjerred.thestorm.quests.domain.engine.QuestEvent;
 import java.util.ArrayList;
@@ -75,7 +76,12 @@ final class QuestListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onDeath(EntityDeathEvent event) {
     var killer = event.getEntity().getKiller();
-    if (killer == null || event.getEntity() instanceof Player || !inMainWorld(killer)) {
+    var spawnReason = event.getEntity().getEntitySpawnReason();
+    if (killer == null
+        || spawnReason == null
+        || event.getEntity() instanceof Player
+        || !inMainWorld(killer)
+        || !KillCredit.eligible(spawnReason.name(), event.getEntity().getScoreboardTags())) {
       return;
     }
     service.event(
