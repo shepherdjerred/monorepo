@@ -172,6 +172,15 @@ function unobservedMatch(): string {
   return matchId;
 }
 
+async function expectLegacyOutboxFor(matchId: string): Promise<void> {
+  expect(await prisma.matchNotificationIntent.count()).toBe(0);
+  expect(
+    await prisma.hallRecordBreakOutbox.findMany({
+      select: { guildId: true, matchId: true, channelId: true },
+    }),
+  ).toEqual([{ guildId: GUILD, matchId, channelId: CHANNEL }]);
+}
+
 beforeEach(async () => {
   stubs.flagCalls = [];
   await prisma.hallRecordBreakOutbox.deleteMany();
@@ -253,12 +262,7 @@ describe("evaluateHallMatch's announcement", () => {
 
     await evaluateHallMatch(rawMatch(matchId), { kind: "temporal-v2" });
 
-    expect(await prisma.matchNotificationIntent.count()).toBe(0);
-    expect(
-      await prisma.hallRecordBreakOutbox.findMany({
-        select: { guildId: true, matchId: true, channelId: true },
-      }),
-    ).toEqual([{ guildId: GUILD, matchId, channelId: CHANNEL }]);
+    await expectLegacyOutboxFor(matchId);
   });
 
   test("keeps legacy ingestion on the outbox when its observation dual-write failed", async () => {
@@ -270,12 +274,7 @@ describe("evaluateHallMatch's announcement", () => {
       silent: false,
     });
 
-    expect(await prisma.matchNotificationIntent.count()).toBe(0);
-    expect(
-      await prisma.hallRecordBreakOutbox.findMany({
-        select: { guildId: true, matchId: true, channelId: true },
-      }),
-    ).toEqual([{ guildId: GUILD, matchId, channelId: CHANNEL }]);
+    await expectLegacyOutboxFor(matchId);
   });
 
   test.each([true, false])(
