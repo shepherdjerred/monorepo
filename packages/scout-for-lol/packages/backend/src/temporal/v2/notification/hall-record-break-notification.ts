@@ -1,11 +1,11 @@
 import type { MessageCreateOptions } from "discord.js";
+import { v5 as uuidv5 } from "uuid";
 import type { DiscordGuildId } from "@scout-for-lol/data";
 import type { NotificationPolicySuppressionReason } from "@scout-for-lol/domain/notifications/intent.ts";
 import { captureHallRecordBroken } from "#src/analytics/hall.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { hallRecordBreakIntentKey } from "#src/durable/match/delivery-intents.ts";
-import { hallRecordBreakDeliveries } from "#src/metrics/progression.ts";
 import { hallBreakEmbed } from "#src/progression/hall/outbox.ts";
 import {
   hallRecordBreakAnnouncementCodec,
@@ -30,8 +30,9 @@ import {
  *   answered before any attempt ({@link hallRecordBreakSuppressionV2});
  * - an announcement whose every record id has since been retired is
  *   undeliverable CONTENT, parked terminally rather than sent empty;
- * - the analytics event and the delivery counter are FOLLOW-UP, run only after
- *   Discord accepted the send ({@link afterHallRecordBreakDeliveredV2}).
+ * - the delivery counter is recorded only when the durable delivered
+ *   transition applies; the analytics FOLLOW-UP uses a stable event ID so an
+ *   Activity retry cannot report a second Hall event.
  */
 
 function hallAnnouncementOf(
@@ -148,16 +149,17 @@ export function assertHallRecordBreakTargetGuildV2(
 }
 
 /**
- * v1's post-send bookkeeping: one `hall_record_broken` analytics event with the
- * number of records the delivered embed named, and the delivery counter.
+ * v1's post-send analytics event with the number of records the delivered
+ * embed named. The intent key is the identity of one Hall announcement, so its
+ * stable event ID survives a follow-up Activity retry.
  */
 export async function afterHallRecordBreakDeliveredV2(
   record: MatchNotificationIntentRecord,
 ): Promise<void> {
   const announcement = hallAnnouncementOf(record);
-  hallRecordBreakDeliveries.inc({ status: "sent" });
   await captureHallRecordBroken({
     guildId: announcement.guildId,
     records: announcement.records.length,
+    eventId: uuidv5(`hall-record-break:${record.intent.key}`, uuidv5.URL),
   });
 }

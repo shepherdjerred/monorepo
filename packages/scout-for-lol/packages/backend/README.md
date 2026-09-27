@@ -734,8 +734,10 @@ against that attempt's nonce. Channel lookup stays with audience retirement
 before the attempt; the delivery Activity also verifies that Discord resolved
 the target in the envelope's guild and parks a mismatch as terminal
 `content-unavailable` without sending.
-The delivery counter and the `hall_record_broken` analytics event run in the
-best-effort post-delivery follow-up.
+The delivery counter increments only when the durable `delivered` transition
+applies, so retrying its Activity does not count a second send. The best-effort
+post-delivery follow-up captures `hall_record_broken` with a stable event ID
+derived from the intent key, so retrying that Activity keeps one event identity.
 
 ### Delivery sends exactly what the render attested, and establishes nothing
 

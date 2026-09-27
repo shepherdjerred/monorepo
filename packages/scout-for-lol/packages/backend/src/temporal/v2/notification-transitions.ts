@@ -20,6 +20,7 @@ import type {
 import { prisma } from "#src/database/index.ts";
 import { transitionIntent } from "#src/database/durable/intent-repository.ts";
 import { toIsoInstant } from "#src/durable/match/match-identity.ts";
+import { hallRecordBreakDeliveries } from "#src/metrics/progression.ts";
 import {
   policyHeldCommit,
   resolveNotificationGateV2,
@@ -190,11 +191,17 @@ function outcomeTransition(
 export async function recordNotificationOutcomeV2(
   input: ScoutNotificationOutcomeV2Input,
 ): Promise<ScoutNotificationTransitionV2Result> {
-  return await notificationTransitionV2(
-    input.intentKey,
-    await transitionIntent(prisma, {
-      intentKey: input.intentKey,
-      transition: outcomeTransition(input, input.delivery),
-    }),
-  );
+  const transition = await transitionIntent(prisma, {
+    intentKey: input.intentKey,
+    transition: outcomeTransition(input, input.delivery),
+  });
+  const result = await notificationTransitionV2(input.intentKey, transition);
+  if (
+    input.delivery.outcome === "delivered" &&
+    transition.outcome === "applied" &&
+    transition.next.kind === "hall-record-break"
+  ) {
+    hallRecordBreakDeliveries.inc({ status: "sent" });
+  }
+  return result;
 }

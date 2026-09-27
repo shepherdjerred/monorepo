@@ -13,8 +13,8 @@ const logger = createLogger("scout-v2-notification-follow-up");
  * The best-effort work that follows a delivered notification, in its own
  * Activity and after the outcome is durably recorded.
  *
- * Three kinds have any. A delivered Hall record break counts itself and
- * captures its analytics event. A delivered prematch records its Bryan Bucks message
+ * Three kinds have any. A delivered Hall record break captures its analytics
+ * event. A delivered prematch records its Bryan Bucks message
  * ref, refreshes the pool's messages, enqueues the game's parlay and counts
  * the guild's core output — v1's `recordPrematchOutputs`, per channel (see
  * `prematch-follow-up.ts`). A Dare summary refreshes the Dare callout once the
@@ -35,8 +35,8 @@ const logger = createLogger("scout-v2-notification-follow-up");
  */
 /**
  * The kinds whose follow-up is genuinely best-effort, and what it is. A Hall
- * record break counts its delivery and captures v1's `hall_record_broken`
- * analytics event — bookkeeping that must describe a send Discord accepted,
+ * record break captures v1's `hall_record_broken` analytics event —
+ * bookkeeping that must describe a send Discord accepted,
  * which is why it runs here and not before the send, and which must never
  * turn a delivered announcement into a failed Activity.
  */

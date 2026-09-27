@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { v5 as uuidv5 } from "uuid";
 import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { NotificationIntentSchema } from "@scout-for-lol/domain/notifications/intent.ts";
@@ -195,13 +196,17 @@ describe("the hall record-break policy", () => {
 });
 
 describe("the hall record-break follow-up", () => {
-  test("counts the delivery and captures v1's analytics event after the send", async () => {
-    await afterHallRecordBreakDeliveredV2(hallRecord());
+  test("keeps one analytics event identity across Activity retries", async () => {
+    const record = hallRecord();
+    await afterHallRecordBreakDeliveredV2(record);
+    await afterHallRecordBreakDeliveredV2(record);
 
-    expect(stubs.inc).toHaveBeenCalledWith({ status: "sent" });
+    expect(stubs.inc).not.toHaveBeenCalled();
     expect(stubs.captureHallRecordBroken).toHaveBeenCalledWith({
       guildId: hallGuildId,
       records: hallBreakRecords().length,
+      eventId: uuidv5(`hall-record-break:${record.intent.key}`, uuidv5.URL),
     });
+    expect(stubs.captureHallRecordBroken).toHaveBeenCalledTimes(2);
   });
 });

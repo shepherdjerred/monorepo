@@ -20,8 +20,16 @@ import type {
   ScoutIntentRefV2,
 } from "@scout-for-lol/temporal/contracts-v2";
 import { createTestDatabase } from "#src/testing/test-database.ts";
-import { testChannelId, testPuuid } from "#src/testing/test-ids.ts";
+import {
+  testChannelId,
+  testGuildId,
+  testPuuid,
+} from "#src/testing/test-ids.ts";
 import { seedSubscription } from "#src/durable/match/intent-retirement.test-fixtures.ts";
+import { hallRecordBreakIntentKey } from "#src/durable/match/delivery-intents.ts";
+import { hallRecordBreakDeliveries } from "#src/metrics/progression.ts";
+import { hallRecordBreakAnnouncementEnvelope } from "#src/temporal/v2/notification/announcement-codecs.ts";
+import { hallBreakRecords } from "#src/temporal/v2/notification/hall-record-break.test-fixtures.ts";
 import {
   getIntent,
   upsertIntent,
@@ -264,6 +272,57 @@ describe("beginNotificationSendV2", () => {
 });
 
 describe("recordNotificationOutcomeV2", () => {
+  test("counts a Hall send only when the delivered transition first applies", async () => {
+    const guildId = testGuildId("8200");
+    const intentKey = NotificationIntentKeySchema.parse(
+      hallRecordBreakIntentKey(MATCH_ID, guildId),
+    );
+    expect(
+      await upsertIntent(prisma, {
+        matchId: MATCH_ID,
+        intent: NotificationIntentSchema.parse({
+          key: intentKey,
+          kind: "hall-record-break",
+          origin: LIVE,
+          target: { kind: "channel", channelId: testChannelId("8200") },
+          freshnessDeadline: FRESHNESS_DEADLINE,
+          createdAt: CREATED_AT,
+          attemptCount: 1,
+          announcement: hallRecordBreakAnnouncementEnvelope({
+            guildId,
+            riotMatchId: MATCH_ID,
+            records: hallBreakRecords().map((record) => ({
+              ...record,
+              matchId: MATCH_ID,
+            })),
+          }),
+          state: {
+            kind: "sending",
+            attemptNonce: NONCE_A,
+            startedAt: CREATED_AT,
+          },
+        }),
+      }),
+    ).toEqual({ outcome: "applied" });
+
+    const increment = vi.spyOn(hallRecordBreakDeliveries, "inc");
+    try {
+      const input = {
+        ...attemptRef(intentKey, NONCE_A),
+        delivery: { outcome: "delivered" as const, messageId: MESSAGE_ID },
+      };
+      const first = await recordNotificationOutcomeV2(input);
+      expect(first.commit).toEqual({
+        outcome: "applied",
+      });
+      const retry = await recordNotificationOutcomeV2(input);
+      expect(retry.commit.outcome).not.toBe("applied");
+      expect(increment).toHaveBeenCalledExactlyOnceWith({ status: "sent" });
+    } finally {
+      increment.mockRestore();
+    }
+  });
+
   test("a delivered outcome reaches delivered carrying the message id", async () => {
     const intentKey = await sendingIntent("outcome-delivered", NONCE_A);
 
