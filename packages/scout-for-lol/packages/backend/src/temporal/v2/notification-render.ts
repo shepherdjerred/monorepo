@@ -274,14 +274,8 @@ async function renderByKind(
       return await renderPrematchArtifact(riotMatchId, fence);
     case "settlement":
     case "dare-summary":
-      return { artifact: "none", riotMatchId, reason: "text-only" };
     case "hall-record-break":
-      // Representable before it is deliverable: nothing mints this kind until
-      // its delivery arm ships, so a render request for one is a broken
-      // producer contract rather than something to attest.
-      throw new Error(
-        `This build has no render arm for hall-record-break intents (${riotMatchId})`,
-      );
+      return { artifact: "none", riotMatchId, reason: "text-only" };
   }
 }
 

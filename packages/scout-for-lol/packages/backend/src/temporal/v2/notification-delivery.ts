@@ -9,6 +9,7 @@ import {
 import { DiscordMessageIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   NotificationFailure,
+  NotificationPolicySuppressionReason,
   NotificationTarget,
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
@@ -31,6 +32,10 @@ import {
 import { deliveryAttemptNonce } from "#src/durable/match/delivery-intents.ts";
 import { ArchivedObjectUnusableError } from "#src/report-store/s3-raw-source.ts";
 import { UndeliverableContentError } from "#src/temporal/v2/notification/undeliverable-content.ts";
+import {
+  assertHallRecordBreakTargetGuildV2,
+  hallRecordBreakSuppressionV2,
+} from "#src/temporal/v2/notification/hall-record-break-notification.ts";
 import { buildAttestedMessageV2 } from "#src/temporal/v2/notification/notification-message.ts";
 import {
   PreSendBudgetExpiredError,
@@ -300,7 +305,11 @@ type PreparedSend =
       readonly target: NotificationTarget;
       readonly guildId: DiscordGuildId | undefined;
     }
-  | { readonly phase: "failed"; readonly failure: NotificationFailure };
+  | { readonly phase: "failed"; readonly failure: NotificationFailure }
+  | {
+      readonly phase: "suppressed";
+      readonly reason: NotificationPolicySuppressionReason;
+    };
 
 const PRE_SEND_UNAVAILABLE: NotificationFailure = {
   classification: "retryable",
@@ -354,6 +363,11 @@ async function prepareNotificationSend(
   let message: MessageCreateOptions;
   try {
     message = await buildAttestedMessageV2(record, abortSignal);
+    if (record.intent.kind === "hall-record-break") {
+      const reason = await hallRecordBreakSuppressionV2(record);
+      if (reason !== undefined) return { phase: "suppressed", reason };
+      assertHallRecordBreakTargetGuildV2(record, guildId);
+    }
   } catch (error) {
     if (error instanceof ArchivedObjectUnusableError) {
       logger.error(
@@ -434,6 +448,12 @@ export async function deliverNotificationV2(
     return ScoutNotificationDeliveryV2ResultSchema.parse({
       outcome: "failed",
       failure: prepared.failure,
+    });
+  }
+  if (prepared.phase === "suppressed") {
+    return ScoutNotificationDeliveryV2ResultSchema.parse({
+      outcome: "suppressed",
+      reason: prepared.reason,
     });
   }
 

@@ -679,7 +679,7 @@ load-bearing for anyone extending it.
 ### An intent says what it announces and where it came from
 
 Every intent carries a `kind` (`postmatch` | `prematch` | `settlement` |
-`dare-summary`) and an `origin`
+`dare-summary` | `hall-record-break`) and an `origin`
 (`live`, or `recovery` naming the batch that minted it). Both are fixed at
 mint, mirrored into columns, and versioned in the payload envelope
 (`notificationIntentCodec` version 2; a version-1 payload derives its kind from
@@ -713,6 +713,31 @@ one plain send when the reply itself is refused; a delivered Dare result is
 followed by v1's best-effort callout refresh. Both kinds refuse a DM target as
 terminal: v1's private settlement receipts are a separate, budgeted fan-out
 that is not ported, and is an explicit gap.
+
+A `hall-record-break` intent is one guild's Hall of Fame announcement for one
+match, keyed `hall-record-break:<riotMatchId>:<guildId>` — by guild, not
+channel, so a Hall channel change never mints a second one. Its envelope is
+`{guildId, riotMatchId, records}`, the records being exactly the array v1's
+`HallRecordBreakOutbox` stores, and the arm
+(`notification/hall-record-break-notification.ts`) sends v1's own
+`hallBreakEmbed` for them. An envelope whose every record id was since
+retired, or that does not parse, is terminal `content-unavailable` rather than
+an empty embed. The per-server `hall_of_fame_enabled` policy is re-read before
+delivery by `notification/kind-policy.ts`, in `markNotificationReadyV2` and
+again in `beginNotificationSendV2` (after the recovery gate, before the
+audience check): a guild that turned the Hall off gets the intent suppressed
+`feature-disabled` through the domain's `suppress`, and no attempt is minted.
+The delivery Activity checks the flag again immediately before the Discord
+request. If it changed after the attempt began, the Activity confirms that no
+request left and `confirmUnsentSuppression` records the same terminal reason
+against that attempt's nonce. Channel lookup stays with audience retirement
+before the attempt; the delivery Activity also verifies that Discord resolved
+the target in the envelope's guild and parks a mismatch as terminal
+`content-unavailable` without sending.
+The delivery counter increments only when the durable `delivered` transition
+applies, so retrying its Activity does not count a second send. The best-effort
+post-delivery follow-up captures `hall_record_broken` with a stable event ID
+derived from the intent key, so retrying that Activity keeps one event identity.
 
 ### Delivery sends exactly what the render attested, and establishes nothing
 

@@ -36,6 +36,7 @@ import {
   ScoutRecoveryBatchRefV2Schema,
 } from "./contracts-v2.ts";
 import { ScoutStageSchema } from "./contracts.ts";
+import { ScoutSuppressedNotificationDeliveryV2Schema } from "./notification-suppression-result.ts";
 
 // ─── V2 Activity contracts ─────────────────────────────────────────────────
 
@@ -631,6 +632,7 @@ export const ScoutNotificationDeliveryV2ResultSchema = z.discriminatedUnion(
       outcome: z.literal("failed"),
       failure: NotificationFailureSchema,
     }),
+    ScoutSuppressedNotificationDeliveryV2Schema,
     z.strictObject({ outcome: z.literal("unknown") }),
   ],
 );

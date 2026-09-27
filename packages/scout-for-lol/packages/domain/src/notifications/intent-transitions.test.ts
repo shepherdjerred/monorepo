@@ -3,6 +3,7 @@ import type { NotificationIntent } from "#src/notifications/intent.ts";
 import {
   beginSend,
   confirmDelivered,
+  confirmUnsentSuppression,
   expire,
   markReady,
   operatorResolveUnknown,
@@ -648,6 +649,44 @@ describe("suppress", () => {
       );
     },
   );
+});
+
+describe("confirmUnsentSuppression", () => {
+  test("records a late opt-out against the matching unsent attempt", () => {
+    const result = confirmUnsentSuppression(makeIntent(sendingState()), {
+      attemptNonce: nonceA,
+      reason: "feature-disabled",
+    });
+    expect(expectApplied(result).state).toEqual({
+      kind: "suppressed",
+      reason: "feature-disabled",
+    });
+  });
+
+  test("rejects a different attempt nonce", () => {
+    expectConflict(
+      confirmUnsentSuppression(makeIntent(sendingState()), {
+        attemptNonce: nonceB,
+        reason: "feature-disabled",
+      }),
+      "attempt-nonce-mismatch",
+    );
+  });
+
+  test("cannot rewrite an observed or terminal outcome", () => {
+    for (const state of [
+      unknownDeliveryState(),
+      statesByKind().delivered,
+      statesByKind().suppressed,
+    ]) {
+      expect(
+        confirmUnsentSuppression(makeIntent(state), {
+          attemptNonce: nonceA,
+          reason: "feature-disabled",
+        }).outcome,
+      ).toBe("conflict");
+    }
+  });
 });
 
 describe("expire", () => {

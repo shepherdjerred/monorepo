@@ -1,7 +1,11 @@
 import { vi } from "vitest";
 import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
 import type * as DiscordChannelModule from "#src/league/discord/channel.ts";
-import { NotificationAttemptNonceSchema } from "@scout-for-lol/domain/notifications/intent.ts";
+import {
+  ANNOUNCEMENT_INTENT_KINDS,
+  NotificationAttemptNonceSchema,
+  type NotificationIntentKind,
+} from "@scout-for-lol/domain/notifications/intent.ts";
 import type { ScoutIntentAttemptRefV2 } from "@scout-for-lol/temporal/contracts-v2";
 
 /**
@@ -26,7 +30,7 @@ export function attemptRef(): ScoutIntentAttemptRefV2 {
 
 export function intentRecord(
   target: "channel" | "dm",
-  kind: "postmatch" | "prematch" | "settlement" | "dare-summary" = "postmatch",
+  kind: NotificationIntentKind = "postmatch",
   /** Overridden when a suite delivers one match's intent to two channels. */
   channelId: string = CHANNEL_ID,
 ): unknown {
@@ -36,7 +40,7 @@ export function intentRecord(
       key: intentKey,
       kind,
       origin: { kind: "live" },
-      ...(kind === "settlement" || kind === "dare-summary"
+      ...(ANNOUNCEMENT_INTENT_KINDS.has(kind)
         ? {
             announcement: {
               kind: `scout-${kind}-announcement`,
