@@ -236,6 +236,59 @@ describe("coderabbitProvider", () => {
     expect(keyFor?.({ ...thread, title: null })).toBeNull();
   });
 
+  test("finding keys isolate review rounds but keep same-round copies merged", () => {
+    const keyFor = coderabbitProvider.findingKey;
+    expect(keyFor).not.toBeNull();
+    const base: ReviewThread = {
+      authorLogin: CODERABBIT_LOGIN,
+      isResolved: false,
+      isOutdated: false,
+      path: "package.json",
+      line: 1,
+      url: null,
+      priority: 1,
+      title: "Same headline twice.",
+      threadId: "thread-1",
+      commentId: null,
+      raisedInReview: { ordinal: 1, hadBlockingSeverity: true },
+    };
+    // Inline thread and its body copy share the review round, so they merge
+    // even though only one carries a thread id.
+    const bodyCopy: ReviewThread = {
+      ...base,
+      threadId: null,
+      line: 1,
+      url: null,
+    };
+    expect(keyFor?.(base)).toBe(keyFor?.(bodyCopy));
+    // The same headline re-raised in a later round must not fold into the
+    // earlier finding: resolving one round's copy must not hide the other.
+    const nextRound: ReviewThread = {
+      ...base,
+      threadId: "thread-2",
+      line: 9,
+      raisedInReview: { ordinal: 2, hadBlockingSeverity: true },
+    };
+    expect(keyFor?.(nextRound)).not.toBe(keyFor?.(base));
+  });
+
+  test("an extra-whitespace Critical badge keeps its P0 priority", () => {
+    const body =
+      "<details>\n" +
+      "<summary>package.json (1)</summary><blockquote>\n" +
+      "\n" +
+      "`1-2`: _⚠️ Potential issue_ | _🔴  Critical_ | _⚡ Quick win_\n" +
+      "\n" +
+      "**Downgraded without the stored priority.**\n" +
+      "\n" +
+      "</blockquote></details>\n";
+    const [finding] = parseCoderabbitReviewBodies([
+      { id: "review-5", submittedAt: null, body, commitOid: null },
+    ]);
+    if (finding === undefined) throw new Error("expected one finding");
+    expect(finding.thread.priority).toBe(0);
+  });
+
   test("detects the rate-limit notice as a usage block", () => {
     const blocked = coderabbitProvider.detectBlocked;
     expect(blocked).not.toBeNull();

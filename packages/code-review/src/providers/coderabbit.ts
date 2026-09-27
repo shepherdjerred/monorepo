@@ -81,15 +81,22 @@ function normalizeFindingKeyPart(value: string): string {
 }
 
 /**
- * Collapse an inline thread with its review-body copy: same file plus same
- * headline. Line numbers stay out of the key — the body cites a range start
- * while the thread may be file-level — and a null path or title never merges.
+ * Collapse an inline thread with its review-body copy: same file, same
+ * headline, same review round. Line numbers stay out of the key — the body
+ * cites a range start while the thread may be file-level — and a null path
+ * or title never merges. The round matters: without it, the same headline
+ * re-raised on the same file in a later round would fold into the earlier
+ * finding, and resolving either copy would hide the other — including a new
+ * P0. Attribution groups both copies under their shared review id, so
+ * same-round copies keep the same ordinal and still merge.
  */
 export function coderabbitFindingKey(thread: ReviewThread): string | null {
   if (thread.path === null || thread.title === null) return null;
   const path = normalizeFindingKeyPart(thread.path);
   const title = normalizeFindingKeyPart(thread.title);
-  return path === "" || title === "" ? null : `${path}::${title}`;
+  if (path === "" || title === "") return null;
+  const round = thread.raisedInReview?.ordinal ?? "unattributed";
+  return `${path}::${title}::${String(round)}`;
 }
 
 type BodyChunk = {
@@ -101,17 +108,20 @@ type BodyChunk = {
 
 /** Split a review body at each badged finding's badge line. */
 function splitBodyFindings(body: string): BodyChunk[] {
-  const starts: { index: number; line: number | null; badge: string }[] = [];
+  const starts: { index: number; line: number | null; priority: number }[] = [];
   for (const match of body.matchAll(CODERABBIT_BADGE_LINE_RE)) {
     const badge = match[2];
     if (badge === undefined) continue;
+    // Normalized here, stored, and reused below: the raw badge may carry
+    // extra whitespace ("🔴  Critical") that the priorities map would miss,
+    // silently downgrading an outside-diff P0 to a P2.
     const priority = CODERABBIT_PRIORITIES.get(badge.replaceAll(/\s+/gu, " "));
     if (priority === undefined) continue;
     const line = match[1] === undefined ? null : Number.parseInt(match[1], 10);
     starts.push({
       index: match.index,
       line: Number.isInteger(line) ? line : null,
-      badge,
+      priority,
     });
   }
   return starts.map((start, i) => {
@@ -122,7 +132,7 @@ function splitBodyFindings(body: string): BodyChunk[] {
     return {
       index: start.index,
       line: start.line,
-      priority: CODERABBIT_PRIORITIES.get(start.badge) ?? 2,
+      priority: start.priority,
       title: rawTitle === undefined || rawTitle === "" ? null : rawTitle,
     };
   });
