@@ -10,6 +10,14 @@ sleepPercentage: 50
 crier:
   enabled: false
   world: world
+# One weather-grounded archive bark on arrival near the windmill spawn per
+# Pacific date. Event-driven; no repeating task or automatic server broadcast.
+ambient:
+  enabled: false
+  world: world
+  spawnRadius: 24
+  verticalRadius: 8
+  timeZone: America/Los_Angeles
 worlds:
   - name: wilds
     preset: large_biomes

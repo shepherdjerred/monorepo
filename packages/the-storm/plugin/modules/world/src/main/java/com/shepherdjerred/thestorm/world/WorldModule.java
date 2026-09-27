@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.world;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
+import com.shepherdjerred.thestorm.world.adapter.paper.AmbientBarks;
 import com.shepherdjerred.thestorm.world.adapter.paper.CrierCommands;
 import com.shepherdjerred.thestorm.world.adapter.paper.WorldPaper;
 import com.shepherdjerred.thestorm.world.adapter.remote.FliptCrierGate;
@@ -13,7 +14,8 @@ import java.net.URI;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Creates the extra overworlds, publishes {@link WildWorlds}, and optionally registers the crier.
+ * Creates the extra overworlds, publishes {@link WildWorlds}, and optionally registers crier
+ * interactions.
  */
 public final class WorldModule implements StormModule {
 
@@ -47,6 +49,15 @@ public final class WorldModule implements StormModule {
     context
         .lifecycle()
         .registerEventHandler(LifecycleEvents.COMMANDS, event -> crier.register(event.registrar()));
+    if (config.ambient().enabled()) {
+      context
+          .plugin()
+          .getServer()
+          .getPluginManager()
+          .registerEvents(
+              new AmbientBarks(context.plugin(), config.ambient(), context.time()),
+              context.plugin());
+    }
     context.logger().info("{} module created {}", id(), worlds.defaultWorld().name());
   }
 
