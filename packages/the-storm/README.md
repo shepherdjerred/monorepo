@@ -63,9 +63,15 @@ content stops startup with file and field errors. The objective, condition, and
 action syntax is defined by `quests/domain/content/Dsl.java`.
 
 Quest offers, commands, and progress are restricted to the configured main
-world (`world`). Regions must resolve to that world's registry key. Board
-draws keep a snapshot of their objective and reward data in SQLite so edits to
-templates do not change quests already assigned to players. Shipped content
+world (`world`). Regions must resolve to that world's registry key. Board and
+NPC offers use the same eligibility checks: prerequisites and repeat
+cooldowns are evaluated against player state before an offer appears. NPC
+dialogue gives story and track quests priority, then rotates offers of equal
+priority in a stable order for each player and local day. Hand-ins and active
+choices remain ahead of new offers.
+
+Board draws keep a snapshot of their objective and reward data in SQLite so edits
+to templates do not change quests already assigned to players. Shipped content
 counts and references are checked when the quest module is built.
 
 Quest state and pending world actions commit in one SQLite transaction. Item

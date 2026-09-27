@@ -1,16 +1,14 @@
 package com.shepherdjerred.thestorm.quests.domain.view;
 
-import static java.util.Comparator.comparing;
-
 import com.shepherdjerred.thestorm.quests.domain.config.QuestsConfig.Labels;
 import com.shepherdjerred.thestorm.quests.domain.engine.QuestEngine;
-import com.shepherdjerred.thestorm.quests.domain.engine.QuestEngine.Availability;
 import com.shepherdjerred.thestorm.quests.domain.engine.QuestEngine.Context;
 import com.shepherdjerred.thestorm.quests.domain.model.Objective;
 import com.shepherdjerred.thestorm.quests.domain.model.Quest;
 import com.shepherdjerred.thestorm.quests.domain.model.Stage;
 import com.shepherdjerred.thestorm.quests.domain.state.ActiveQuest.Phase;
 import com.shepherdjerred.thestorm.quests.domain.state.PlayerQuests;
+import com.shepherdjerred.thestorm.quests.domain.storylet.Storylets;
 import com.shepherdjerred.thestorm.quests.domain.view.QuestDialogue.Choice;
 import com.shepherdjerred.thestorm.quests.domain.view.QuestDialogue.Node;
 import com.shepherdjerred.thestorm.quests.domain.view.QuestDialogue.Option;
@@ -98,11 +96,7 @@ public final class Dialogues {
         entries.add(new Entry(Kind.CHOOSE, quest));
       }
     }
-    context.catalog().all().stream()
-        .filter(quest -> quest.giver().equals(npc))
-        .filter(quest -> quest.category() != Quest.Category.HIDDEN)
-        .filter(quest -> QuestEngine.availability(state, quest, context) == Availability.OFFERABLE)
-        .sorted(comparing(Quest::category).thenComparing(Quest::id))
+    Storylets.offers(state, npc, context, Math.max(0, MAX_ENTRIES - entries.size()))
         .forEach(quest -> entries.add(new Entry(Kind.OFFER, quest)));
     return entries.size() > MAX_ENTRIES ? entries.subList(0, MAX_ENTRIES) : entries;
   }
