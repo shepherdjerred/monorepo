@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.qol.adapter.paper;
 
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -20,7 +21,7 @@ final class TravelListener implements Listener {
     flow.moved(event.getPlayer());
   }
 
-  @EventHandler
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   public void onDamage(EntityDamageEvent event) {
     if (event.getEntity() instanceof Player player) {
       flow.hurt(player.getUniqueId());
