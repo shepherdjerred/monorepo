@@ -36,10 +36,10 @@ import org.bukkit.util.BoundingBox;
  * Places and reverts temporary blocks.
  *
  * <p>Every placement is written to storage first and only reaches the world once the write
- * succeeds. A revert only marks its record reverted; the record is forgotten once the world has
- * been saved. So after a crash, whether or not the world on disk still shows the temporary block, a
- * record remains, and the module reverts every remaining record when it starts (and when a world
- * that was not loaded then loads). Reverting is idempotent ({@link RevertRule}).
+ * succeeds. A revert only marks its record reverted; the record is forgotten after a flushed world
+ * save completes. So after a crash, whether or not the world on disk still shows the temporary
+ * block, a record remains, and the module reverts every remaining record when it starts (and when a
+ * world that was not loaded then loads). Reverting is idempotent ({@link RevertRule}).
  *
  * <p>Blocks are set without physics, never drop items, replace only empty space, soft plants or
  * (Freeze) still water, and never go where a creature or hanging entity is. Main thread only.
@@ -240,7 +240,26 @@ public final class TemporaryBlocks {
     settle(done);
   }
 
-  /** {@code world} was saved: its reverted records are no longer needed. */
+  /** Flushes worlds with reverted blocks before forgetting their recovery rows. */
+  void flushReverts() {
+    for (var worldKey : List.copyOf(awaitingSave.keySet())) {
+      var key = NamespacedKey.fromString(worldKey);
+      var world = key == null ? null : server.getWorld(key);
+      if (world == null) {
+        continue;
+      }
+      try {
+        world.save(true);
+        worldSaved(world);
+      } catch (RuntimeException failure) {
+        async
+            .logger()
+            .error("Failed to flush world {} after temporary-block revert", worldKey, failure);
+      }
+    }
+  }
+
+  /** {@code world} has completed a flushed save: its reverted records are no longer needed. */
   void worldSaved(World world) {
     var worldKey = world.getKey().asString();
     var waiting = awaitingSave.get(worldKey);
