@@ -90,6 +90,14 @@ The selected landing chunk has a reference-counted plugin ticket through the
 warmup, charge, and teleport so the final move does not reload it on the main
 thread.
 
+Paid Essentials teleports use the same keyed ledger contract. Essentials writes
+an attempt before charging and clears it after arrival and usage persistence or
+after a keyed refund. On module startup, it checks each unfinished attempt
+against the ledger and refunds any committed charge. If the process stops after
+the player arrives but before confirmation is saved, recovery may refund that
+delivered teleport. A failed recovery keeps Essentials teleports unavailable
+until the ledger or database can be reconciled.
+
 - `@NullMarked` on every package; NullAway (JSpecify mode) runs as an error.
 - Error Prone with Picnic's checks; `-Xlint:all -Werror`. Warnings fail the build.
 - google-java-format via Spotless; PMD enforces the repository's complexity

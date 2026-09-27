@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.essentials.adapter.db.JooqHomeStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqKitClaimStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqModerationLogStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqPlayerStore;
+import com.shepherdjerred.thestorm.essentials.adapter.db.JooqTeleportAttemptStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqTeleportUsageStore;
 import com.shepherdjerred.thestorm.essentials.adapter.db.JooqWarpStore;
 import com.shepherdjerred.thestorm.essentials.adapter.paper.EssentialsPaper;
@@ -67,9 +68,11 @@ public final class EssentialsModule implements StormModule {
     var payments =
         new TeleportPayments(
             new TeleportPricer(config.teleports().pricing()),
-            new JooqTeleportUsageStore(database),
+            new TeleportPayments.Stores(
+                new JooqTeleportUsageStore(database), new JooqTeleportAttemptStore(database)),
             wallets,
             context.time());
+    logLoad(context, payments.loaded(), "pending teleport charges");
     var stores =
         new EssentialsPaper.Stores(
             new JooqHomeStore(database),

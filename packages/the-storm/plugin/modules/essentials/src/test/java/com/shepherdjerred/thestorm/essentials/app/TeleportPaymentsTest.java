@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
+import com.shepherdjerred.thestorm.essentials.app.store.TeleportAttemptStore;
 import com.shepherdjerred.thestorm.essentials.app.store.TeleportUsageStore;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.Exemptions;
 import com.shepherdjerred.thestorm.essentials.domain.teleport.Multiplier;
@@ -19,7 +20,9 @@ import com.shepherdjerred.thestorm.essentials.domain.teleport.TeleportUsage;
 import com.shepherdjerred.thestorm.essentials.testing.FakeClock;
 import com.shepherdjerred.thestorm.essentials.testing.FakeWallets;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,11 +50,37 @@ final class TeleportPaymentsTest {
     }
   }
 
+  static final class MemoryAttempts implements TeleportAttemptStore {
+    final Map<UUID, TeleportAttempt> attempts = new HashMap<>();
+
+    @Override
+    public CompletableFuture<Void> insert(TeleportAttempt attempt) {
+      attempts.put(attempt.id(), attempt);
+      return completedFuture(null);
+    }
+
+    @Override
+    public CompletableFuture<List<TeleportAttempt>> pending() {
+      return completedFuture(new ArrayList<>(attempts.values()));
+    }
+
+    @Override
+    public CompletableFuture<Void> delete(UUID id) {
+      attempts.remove(id);
+      return completedFuture(null);
+    }
+  }
+
   final FakeClock clock = FakeClock.at("2026-09-25T12:00:00Z");
   final FakeWallets wallets = new FakeWallets();
   final MemoryUsage usage = new MemoryUsage();
+  final MemoryAttempts attempts = new MemoryAttempts();
   final TeleportPayments payments =
-      new TeleportPayments(new TeleportPricer(pricing()), usage, wallets, clock);
+      new TeleportPayments(
+          new TeleportPricer(pricing()),
+          new TeleportPayments.Stores(usage, attempts),
+          wallets,
+          clock);
 
   static TeleportPricing pricing() {
     var price = new TeleportPrice(25, Duration.ofMinutes(1));
@@ -64,16 +93,21 @@ final class TeleportPaymentsTest {
   }
 
   Result<Quote, TeleportRefusal> charge(TeleportKind kind, Exemptions exemptions) {
+    return charged(kind, exemptions).map(TeleportPayments.Charge::quote);
+  }
+
+  Result<TeleportPayments.Charge, TeleportRefusal> charged(
+      TeleportKind kind, Exemptions exemptions) {
     return payments.charge(PLAYER, kind, exemptions).join();
   }
 
   /** A teleport that went through: charged, then confirmed on arrival. */
   Result<Quote, TeleportRefusal> pay(TeleportKind kind, Exemptions exemptions) {
-    var charged = charge(kind, exemptions);
-    if (charged instanceof Result.Ok<Quote, TeleportRefusal>(var quote)) {
-      payments.confirm(PLAYER, quote).join();
+    var result = charged(kind, exemptions);
+    if (result instanceof Result.Ok<TeleportPayments.Charge, TeleportRefusal>(var payment)) {
+      payments.confirm(PLAYER, payment).join();
     }
-    return charged;
+    return result.map(TeleportPayments.Charge::quote);
   }
 
   static Quote ok(Result<Quote, TeleportRefusal> result) {
@@ -88,20 +122,33 @@ final class TeleportPaymentsTest {
   void chargingRecordsNoUsageUntilConfirmed() {
     wallets.deposit(WALLET, 100);
 
-    var quote = ok(charge(TeleportKind.HOME, Exemptions.NONE));
+    var charge =
+        charged(TeleportKind.HOME, Exemptions.NONE)
+            .fold(
+                c -> c,
+                e -> {
+                  throw new AssertionError(e);
+                });
 
     assertThat(wallets.balanceOf(WALLET)).isEqualTo(75);
     assertThat(usage.usage).isEmpty();
-    payments.confirm(PLAYER, quote).join();
+    payments.confirm(PLAYER, charge).join();
     assertThat(usage.usage).containsKey(TeleportKind.HOME);
+    assertThat(attempts.attempts).isEmpty();
   }
 
   @Test
   void aRefundedTeleportCostsNothingAndDoesNotEscalate() {
     wallets.deposit(WALLET, 100);
 
-    var failed = ok(charge(TeleportKind.HOME, Exemptions.NONE));
-    payments.refund(PLAYER, failed).join();
+    var failed =
+        charged(TeleportKind.HOME, Exemptions.NONE)
+            .fold(
+                c -> c,
+                e -> {
+                  throw new AssertionError(e);
+                });
+    payments.refund(failed).join();
     var retry = ok(charge(TeleportKind.HOME, Exemptions.NONE));
 
     assertThat(retry.cost()).isEqualTo(25);
@@ -201,15 +248,15 @@ final class TeleportPaymentsTest {
   @Test
   void refundsReturnTheCrystals() {
     wallets.deposit(WALLET, 100);
-    var quote =
-        pay(TeleportKind.HOME, Exemptions.NONE)
+    var charge =
+        charged(TeleportKind.HOME, Exemptions.NONE)
             .fold(
                 q -> q,
                 e -> {
                   throw new AssertionError(e);
                 });
 
-    payments.refund(PLAYER, quote).join();
+    payments.refund(charge).join();
 
     assertThat(wallets.balanceOf(WALLET)).isEqualTo(100);
     assertThat(wallets.receipts().getLast().reason()).isEqualTo("teleport:refund:home");
@@ -217,16 +264,68 @@ final class TeleportPaymentsTest {
 
   @Test
   void refundingAFreeTeleportDoesNothing() {
-    var quote =
-        pay(TeleportKind.SPAWN, Exemptions.NONE)
+    var charge =
+        charged(TeleportKind.SPAWN, Exemptions.NONE)
             .fold(
                 q -> q,
                 e -> {
                   throw new AssertionError(e);
                 });
 
-    payments.refund(PLAYER, quote).join();
+    payments.refund(charge).join();
 
+    assertThat(wallets.receipts()).isEmpty();
+  }
+
+  @Test
+  void startupRefundsACommittedChargeLeftWithoutArrivalConfirmation() {
+    wallets.deposit(WALLET, 100);
+    var charge =
+        charged(TeleportKind.HOME, Exemptions.NONE)
+            .fold(
+                c -> c,
+                e -> {
+                  throw new AssertionError(e);
+                });
+
+    assertThat(wallets.balanceOf(WALLET)).isEqualTo(75);
+    assertThat(attempts.attempts).containsKey(charge.attempt().orElseThrow().id());
+
+    var recovered =
+        new TeleportPayments(
+            new TeleportPricer(pricing()),
+            new TeleportPayments.Stores(usage, attempts),
+            wallets,
+            clock);
+    recovered.loaded().join();
+    var repeated =
+        new TeleportPayments(
+            new TeleportPricer(pricing()),
+            new TeleportPayments.Stores(usage, attempts),
+            wallets,
+            clock);
+    repeated.loaded().join();
+
+    assertThat(wallets.balanceOf(WALLET)).isEqualTo(100);
+    assertThat(wallets.receipts()).hasSize(2);
+    assertThat(usage.usage).isEmpty();
+    assertThat(attempts.attempts).isEmpty();
+  }
+
+  @Test
+  void startupDiscardsAnObligationWithNoLedgerCharge() {
+    var attempt = new TeleportAttempt(UUID.randomUUID(), PLAYER, TeleportKind.HOME, 25);
+    attempts.attempts.put(attempt.id(), attempt);
+
+    var recovered =
+        new TeleportPayments(
+            new TeleportPricer(pricing()),
+            new TeleportPayments.Stores(usage, attempts),
+            wallets,
+            clock);
+    recovered.loaded().join();
+
+    assertThat(attempts.attempts).isEmpty();
     assertThat(wallets.receipts()).isEmpty();
   }
 }

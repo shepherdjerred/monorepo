@@ -34,18 +34,24 @@ public final class JooqKitClaimStore implements KitClaimStore {
                   .fetchOptional(row -> Instant.ofEpochMilli(row.value1()));
           var decision = KitRules.claim(claim.kit(), last, claim.at());
           if (decision instanceof Result.Ok<Instant, KitError>(var at)) {
+            // The delivery marker is a timestamp too. Keep it strictly increasing even when a
+            // zero-cooldown kit is claimed twice in the same millisecond.
+            var claimedAt = at.toEpochMilli();
+            if (last.isPresent()) {
+              claimedAt = Math.max(claimedAt, Math.addExact(last.orElseThrow().toEpochMilli(), 1));
+            }
             dsl.insertInto(ESSENTIALS_KIT_CLAIMS)
                 .set(ESSENTIALS_KIT_CLAIMS.PLAYER, player.toString())
                 .set(ESSENTIALS_KIT_CLAIMS.KIT, claim.name())
-                .set(ESSENTIALS_KIT_CLAIMS.CLAIMED_AT, at.toEpochMilli())
+                .set(ESSENTIALS_KIT_CLAIMS.CLAIMED_AT, claimedAt)
                 .onConflict(ESSENTIALS_KIT_CLAIMS.PLAYER, ESSENTIALS_KIT_CLAIMS.KIT)
                 .doUpdate()
-                .set(ESSENTIALS_KIT_CLAIMS.CLAIMED_AT, at.toEpochMilli())
+                .set(ESSENTIALS_KIT_CLAIMS.CLAIMED_AT, claimedAt)
                 .execute();
             dsl.insertInto(ESSENTIALS_KIT_DELIVERIES)
                 .set(ESSENTIALS_KIT_DELIVERIES.PLAYER, player.toString())
                 .set(ESSENTIALS_KIT_DELIVERIES.KIT, claim.name())
-                .set(ESSENTIALS_KIT_DELIVERIES.CLAIMED_AT, at.toEpochMilli())
+                .set(ESSENTIALS_KIT_DELIVERIES.CLAIMED_AT, claimedAt)
                 .execute();
           }
           return decision;

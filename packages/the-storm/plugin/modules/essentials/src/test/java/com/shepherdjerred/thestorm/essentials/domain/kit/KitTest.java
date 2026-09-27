@@ -52,6 +52,7 @@ final class KitTest {
     var kit = new Kit(List.of(BREAD), List.of(), Duration.ZERO, false);
 
     assertThat(KitRules.claim(kit, Optional.of(T0), T0)).isEqualTo(Result.ok(T0));
+    assertThat(KitRules.claim(kit, Optional.of(T0.plusMillis(1)), T0)).isEqualTo(Result.ok(T0));
   }
 
   @Test

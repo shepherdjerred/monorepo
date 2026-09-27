@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.essentials.app.store;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -12,7 +13,7 @@ public interface PlayerStore {
    * Records a join, remembering {@code name}. Completes with true when this is the player's first
    * join since essentials started tracking.
    */
-  CompletableFuture<Boolean> recordJoin(KnownPlayer player);
+  CompletableFuture<Boolean> recordJoin(KnownPlayer player, Optional<String> starterKit);
 
   /** Every known player. */
   CompletableFuture<List<KnownPlayer>> all();

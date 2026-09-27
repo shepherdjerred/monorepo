@@ -26,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -154,12 +155,14 @@ final class ModerationCommands {
             actor(sender),
             AuditEntry.Term.permanent(reason, runtime.time().instant()));
     var targetName = target.getName();
-    target.kick(BanMessages.kicked(reason));
     runtime.onMain(
         moderation.record(entry),
         "recording a kick",
-        done -> staff(sender.getName() + " kicked " + targetName + ": " + reason),
-        failure -> writeFailed(sender, "The kick happened but was not recorded"));
+        done -> {
+          target.kick(BanMessages.kicked(reason));
+          staff(sender.getName() + " kicked " + targetName + ": " + reason);
+        },
+        failure -> writeFailed(sender, "The kick was NOT recorded and did not happen"));
     return Cmd.OK;
   }
 
@@ -169,32 +172,34 @@ final class ModerationCommands {
     if (tooLong(sender, reason)) {
       return 0;
     }
-    var target = resolve(sender, Cmd.string(context, PLAYER));
-    if (target.isEmpty()
-        || exempt(sender, target.orElseThrow(), EssentialsPermissions.BAN_EXEMPT)) {
-      return 0;
-    }
-    var found = target.orElseThrow();
-    var now = runtime.time().instant();
-    var entry =
-        AuditEntry.of(
-            found.uuid(),
-            ModerationAction.BAN,
-            actor(sender),
-            new AuditEntry.Term(length, reason, now));
-    var ban = new Ban(reason, entry.actor(), now, entry.expiresAt());
-    var term = length.map(l -> " for " + DurationText.format(l)).orElse(" permanently");
-    runtime.onMain(
-        moderation.record(entry),
-        "recording a ban",
-        done -> {
-          var player = runtime.server().getPlayer(found.uuid());
-          if (player != null) {
-            player.kick(BanMessages.banned(ban, runtime.time().instant()));
+    resolveReady(
+        sender,
+        Cmd.string(context, PLAYER),
+        found -> {
+          if (exempt(sender, found, EssentialsPermissions.BAN_EXEMPT)) {
+            return;
           }
-          staff(sender.getName() + " banned " + found.name() + term + ": " + reason);
-        },
-        failure -> writeFailed(sender, "The ban was NOT recorded and is not in force"));
+          var now = runtime.time().instant();
+          var entry =
+              AuditEntry.of(
+                  found.uuid(),
+                  ModerationAction.BAN,
+                  actor(sender),
+                  new AuditEntry.Term(length, reason, now));
+          var ban = new Ban(reason, entry.actor(), now, entry.expiresAt());
+          var term = length.map(l -> " for " + DurationText.format(l)).orElse(" permanently");
+          runtime.onMain(
+              moderation.record(entry),
+              "recording a ban",
+              done -> {
+                var player = runtime.server().getPlayer(found.uuid());
+                if (player != null) {
+                  player.kick(BanMessages.banned(ban, runtime.time().instant()));
+                }
+                staff(sender.getName() + " banned " + found.name() + term + ": " + reason);
+              },
+              failure -> writeFailed(sender, "The ban was NOT recorded and is not in force"));
+        });
     return Cmd.OK;
   }
 
@@ -213,32 +218,31 @@ final class ModerationCommands {
     if (tooLong(sender, reason)) {
       return 0;
     }
-    var target = resolve(sender, Cmd.string(context, PLAYER));
-    if (target.isEmpty()) {
-      return 0;
-    }
-    var found = target.orElseThrow();
-    runtime.onMain(
-        moderation.activeBan(found.uuid()),
-        "checking a ban",
-        ban -> {
-          if (ban.isEmpty()) {
-            Say.error(sender, Say.MODERATION, found.name() + " is not banned.");
-            return;
-          }
-          var entry =
-              AuditEntry.of(
-                  found.uuid(),
-                  ModerationAction.UNBAN,
-                  actor(sender),
-                  AuditEntry.Term.permanent(reason, runtime.time().instant()));
-          runtime.onMain(
-              moderation.record(entry),
-              "recording an unban",
-              done -> staff(sender.getName() + " unbanned " + found.name() + ": " + reason),
-              failure -> writeFailed(sender, "The unban was NOT recorded; the ban stays"));
-        },
-        failure -> writeFailed(sender, "Could not read the ban list"));
+    resolveReady(
+        sender,
+        Cmd.string(context, PLAYER),
+        found ->
+            runtime.onMain(
+                moderation.activeBan(found.uuid()),
+                "checking a ban",
+                ban -> {
+                  if (ban.isEmpty()) {
+                    Say.error(sender, Say.MODERATION, found.name() + " is not banned.");
+                    return;
+                  }
+                  var entry =
+                      AuditEntry.of(
+                          found.uuid(),
+                          ModerationAction.UNBAN,
+                          actor(sender),
+                          AuditEntry.Term.permanent(reason, runtime.time().instant()));
+                  runtime.onMain(
+                      moderation.record(entry),
+                      "recording an unban",
+                      done -> staff(sender.getName() + " unbanned " + found.name() + ": " + reason),
+                      failure -> writeFailed(sender, "The unban was NOT recorded; the ban stays"));
+                },
+                failure -> writeFailed(sender, "Could not read the ban list")));
     return Cmd.OK;
   }
 
@@ -278,17 +282,24 @@ final class ModerationCommands {
 
   private int history(CommandContext<CommandSourceStack> context) {
     var sender = context.getSource().getSender();
-    var target = resolve(sender, Cmd.string(context, PLAYER));
-    if (target.isEmpty()) {
-      return 0;
-    }
-    var found = target.orElseThrow();
-    runtime.onMain(
-        moderation.history(found.uuid(), HISTORY_LIMIT),
-        "loading moderation history",
-        entries -> showHistory(sender, found.name(), entries),
-        failure -> writeFailed(sender, "Could not read the moderation log"));
+    resolveReady(
+        sender,
+        Cmd.string(context, PLAYER),
+        found ->
+            runtime.onMain(
+                moderation.history(found.uuid(), HISTORY_LIMIT),
+                "loading moderation history",
+                entries -> showHistory(sender, found.name(), entries),
+                failure -> writeFailed(sender, "Could not read the moderation log")));
     return Cmd.OK;
+  }
+
+  private void resolveReady(CommandSender sender, String input, Consumer<Target> action) {
+    runtime.onMain(
+        players.loaded(),
+        "loading known players",
+        ready -> resolve(sender, input).ifPresent(action),
+        failure -> writeFailed(sender, "Could not load known players"));
   }
 
   private void showHistory(CommandSender sender, String name, List<AuditEntry> entries) {

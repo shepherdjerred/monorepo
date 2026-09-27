@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.core.schedule.Cancellable;
 import com.shepherdjerred.thestorm.core.text.HouseStyle;
 import com.shepherdjerred.thestorm.essentials.app.GuardRegistry;
 import com.shepherdjerred.thestorm.essentials.app.TeleportPayments;
+import com.shepherdjerred.thestorm.essentials.app.TeleportPayments.Charge;
 import com.shepherdjerred.thestorm.essentials.app.TeleportRefusal;
 import com.shepherdjerred.thestorm.essentials.domain.back.BackEntry;
 import com.shepherdjerred.thestorm.essentials.domain.place.DurationText;
@@ -44,13 +45,25 @@ final class TeleportFlow {
   private final PaperRuntime runtime;
   private final Services services;
   private final Duration warmup;
+  private final Arrival arrival;
   private final Map<UUID, Pending> warmingUp = new HashMap<>();
   private final Map<UUID, Ticket> busy = new HashMap<>();
 
   TeleportFlow(PaperRuntime runtime, Services services, Duration warmup) {
+    this(runtime, services, warmup, Player::teleportAsync);
+  }
+
+  TeleportFlow(PaperRuntime runtime, Services services, Duration warmup, Arrival arrival) {
     this.runtime = runtime;
     this.services = services;
     this.warmup = warmup;
+    this.arrival = arrival;
+  }
+
+  /** Paper's asynchronous move, injectable so the outcome can be exercised without server I/O. */
+  @FunctionalInterface
+  interface Arrival {
+    CompletableFuture<Boolean> move(Player player, Location destination);
   }
 
   /**
@@ -72,14 +85,17 @@ final class TeleportFlow {
     var payer = ticket.payer();
     if (isBusy(mover.getUniqueId()) || isBusy(payer.getUniqueId())) {
       Say.error(payer, Say.TELEPORT, "A teleport is already under way.");
+      notifyAcceptor(ticket, false);
       return;
     }
     var destination = ticket.destination().resolve();
     if (destination.isEmpty()) {
       Say.error(payer, Say.TELEPORT, "Teleport cancelled: the destination is no longer there.");
+      notifyAcceptor(ticket, false);
       return;
     }
     if (refused(ticket, destination.orElseThrow())) {
+      notifyAcceptor(ticket, false);
       return;
     }
     lock(ticket);
@@ -111,12 +127,15 @@ final class TeleportFlow {
     }
   }
 
-  /** {@code player} left: cancels warmups they move in or pay for, and releases their lock. */
+  /** {@code player} left: cancels warmups and releases both participants' locks. */
   void left(UUID player) {
     List.copyOf(warmingUp.values()).stream()
         .filter(p -> involves(p.ticket(), player))
         .forEach(p -> cancel(p.ticket().mover().getUniqueId(), "a player left"));
-    busy.remove(player);
+    var ticket = busy.get(player);
+    if (ticket != null) {
+      release(ticket);
+    }
   }
 
   /** Cancels every warmup, on disable. */
@@ -220,31 +239,31 @@ final class TeleportFlow {
         charged -> afterCharge(ticket, charged, safe.orElseThrow()));
   }
 
-  private void afterCharge(Ticket ticket, Result<Quote, TeleportRefusal> charged, Location safe) {
+  private void afterCharge(Ticket ticket, Result<Charge, TeleportRefusal> charged, Location safe) {
     switch (charged) {
-      case Result.Err<Quote, TeleportRefusal>(var refusal) -> {
+      case Result.Err<Charge, TeleportRefusal>(var refusal) -> {
         release(ticket);
         if (bothOnline(ticket)) {
           tellRefusal(ticket, refusal);
         }
       }
-      case Result.Ok<Quote, TeleportRefusal>(var quote) -> teleport(ticket, quote, safe);
+      case Result.Ok<Charge, TeleportRefusal>(var payment) -> teleport(ticket, payment, safe);
     }
   }
 
-  private void teleport(Ticket ticket, Quote quote, Location safe) {
+  private void teleport(Ticket ticket, Charge payment, Location safe) {
     if (!bothOnline(ticket)) {
-      refundAndRelease(ticket, quote, "a player left");
+      refundAndRelease(ticket, payment, "a player left");
       return;
     }
     var mover = ticket.mover();
     var left = Positions.of(mover);
     CompletableFuture<Boolean> arrival;
     try {
-      arrival = mover.teleportAsync(safe);
+      arrival = this.arrival.move(mover, safe);
     } catch (RuntimeException e) {
       runtime.report("teleporting a player", e);
-      refundAndRelease(ticket, quote, "the teleport failed");
+      refundAndRelease(ticket, payment, "the teleport failed");
       return;
     }
     runtime.onMain(
@@ -252,30 +271,47 @@ final class TeleportFlow {
         "teleporting a player",
         moved -> {
           if (!Boolean.TRUE.equals(moved)) {
-            refundAndRelease(ticket, quote, "the teleport was blocked");
+            refundAndRelease(ticket, payment, "the teleport was blocked");
             return;
           }
-          release(ticket);
-          runtime.logFailure(
-              services.payments().confirm(ticket.payer().getUniqueId(), quote),
-              "recording teleport usage");
           services.back().record(mover.getUniqueId(), left, BackEntry.Cause.TELEPORT);
-          Say.success(
-              mover, Say.TELEPORT, "Teleported to " + ticket.destination().describe() + ".");
+          runtime.onMain(
+              services.payments().confirm(ticket.payer().getUniqueId(), payment),
+              "recording teleport usage",
+              done -> {
+                release(ticket, true);
+                if (mover.isOnline()) {
+                  Say.success(
+                      mover,
+                      Say.TELEPORT,
+                      "Teleported to " + ticket.destination().describe() + ".");
+                }
+              },
+              failure -> {
+                release(ticket, true);
+                if (ticket.payer().isOnline()) {
+                  Say.error(
+                      ticket.payer(),
+                      Say.TELEPORT,
+                      "The teleport completed, but payment bookkeeping failed. Tell staff.");
+                }
+              });
         },
-        failure -> refundAndRelease(ticket, quote, "the teleport failed"));
+        failure -> refundAndRelease(ticket, payment, "the teleport failed"));
   }
 
   /** Returns the crystals, then releases the lock and tells the payer once the refund is done. */
-  private void refundAndRelease(Ticket ticket, Quote quote, String why) {
+  private void refundAndRelease(Ticket ticket, Charge payment, String why) {
     var payer = ticket.payer();
     runtime.onMain(
-        services.payments().refund(payer.getUniqueId(), quote),
+        services.payments().refund(payment),
         "refunding a teleport",
         refunded -> {
           release(ticket);
           var suffix =
-              quote.cost() == 0 ? "." : "; your " + quote.cost() + " crystals were refunded.";
+              payment.quote().cost() == 0
+                  ? "."
+                  : "; your " + payment.quote().cost() + " crystals were refunded.";
           Say.error(payer, Say.TELEPORT, "Teleport cancelled: " + why + suffix);
         },
         failure -> {
@@ -381,8 +417,30 @@ final class TeleportFlow {
   }
 
   private void release(Ticket ticket) {
-    busy.remove(ticket.mover().getUniqueId(), ticket);
+    release(ticket, false);
+  }
+
+  private void release(Ticket ticket, boolean arrived) {
+    var owned = busy.remove(ticket.mover().getUniqueId(), ticket);
     busy.remove(ticket.payer().getUniqueId(), ticket);
+    if (owned) {
+      notifyAcceptor(ticket, arrived);
+    }
+  }
+
+  private static void notifyAcceptor(Ticket ticket, boolean arrived) {
+    ticket
+        .acceptor()
+        .ifPresent(
+            player -> {
+              if (player.isOnline()) {
+                if (arrived) {
+                  Say.success(player, Say.TELEPORT, "The teleport request completed.");
+                } else {
+                  Say.error(player, Say.TELEPORT, "The teleport request was cancelled.");
+                }
+              }
+            });
   }
 
   private static boolean involves(Ticket ticket, UUID player) {

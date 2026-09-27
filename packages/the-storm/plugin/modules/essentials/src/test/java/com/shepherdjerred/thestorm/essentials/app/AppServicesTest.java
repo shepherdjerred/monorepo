@@ -123,7 +123,8 @@ final class AppServicesTest {
     var store =
         new PlayerStore() {
           @Override
-          public CompletableFuture<Boolean> recordJoin(KnownPlayer player) {
+          public CompletableFuture<Boolean> recordJoin(
+              KnownPlayer player, Optional<String> starterKit) {
             var first = saved.stream().noneMatch(p -> p.uuid().equals(player.uuid()));
             saved.add(player);
             return completedFuture(first);
@@ -138,7 +139,10 @@ final class AppServicesTest {
 
     assertThat(directory.find("alice").map(PlayerStore.KnownPlayer::uuid)).contains(ALICE);
     assertThat(
-            directory.joined(new PlayerStore.KnownPlayer(ALICE, "Alyce", clock.instant())).join())
+            directory
+                .joined(
+                    new PlayerStore.KnownPlayer(ALICE, "Alyce", clock.instant()), Optional.empty())
+                .join())
         .isTrue();
     assertThat(directory.find("Alice")).isEmpty();
     assertThat(directory.find("ALYCE").map(PlayerStore.KnownPlayer::uuid)).contains(ALICE);
@@ -151,7 +155,8 @@ final class AppServicesTest {
     var store =
         new PlayerStore() {
           @Override
-          public CompletableFuture<Boolean> recordJoin(KnownPlayer player) {
+          public CompletableFuture<Boolean> recordJoin(
+              KnownPlayer player, Optional<String> starterKit) {
             return completedFuture(false);
           }
 

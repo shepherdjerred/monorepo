@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.db.StormDatabase;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.essentials.app.TeleportAttempt;
 import com.shepherdjerred.thestorm.essentials.app.store.KitClaimStore.KitClaim;
 import com.shepherdjerred.thestorm.essentials.app.store.PlayerStore.KnownPlayer;
 import com.shepherdjerred.thestorm.essentials.domain.back.BackEntry;
@@ -66,6 +67,20 @@ final class JooqStoresTest {
   @Test
   void migratingTwiceIsHarmless() {
     database.migrate("essentials", JooqStoresTest.class.getClassLoader());
+  }
+
+  @Test
+  void teleportChargeObligationsSurviveStoreRecreationUntilDeleted() {
+    var id = UUID.fromString("00000000-0000-0000-0000-000000000042");
+    var attempt = new TeleportAttempt(id, ALICE, TeleportKind.HOME, 25);
+    var first = new JooqTeleportAttemptStore(database);
+
+    first.insert(attempt).join();
+
+    var reopened = new JooqTeleportAttemptStore(database);
+    assertThat(reopened.pending().join()).containsExactly(attempt);
+    reopened.delete(id).join();
+    assertThat(first.pending().join()).isEmpty();
   }
 
   @Test
@@ -153,6 +168,45 @@ final class JooqStoresTest {
   }
 
   @Test
+  void zeroCooldownClaimsInTheSameMillisecondHaveDistinctDeliveryMarkers() {
+    var claims = new JooqKitClaimStore(database);
+    var bread = new KitItem("BREAD", 1, Optional.empty(), Map.of());
+    var reusable = new Kit(List.of(bread), List.of(), Duration.ZERO, false);
+
+    assertThat(claims.claim(ALICE, new KitClaim("bread", reusable, T0)).join())
+        .isEqualTo(Result.ok(T0));
+    assertThat(claims.claim(ALICE, new KitClaim("bread", reusable, T0)).join())
+        .isEqualTo(Result.ok(T0));
+    assertThat(claims.pending(ALICE).join())
+        .extracting(pending -> pending.claimedAt().toEpochMilli())
+        .containsExactly(T0.toEpochMilli(), T0.toEpochMilli() + 1);
+  }
+
+  @Test
+  void firstJoinRecordsStarterClaimAndDeliveryInTheSameTransaction() {
+    var players = new JooqPlayerStore(database);
+    var kits = new JooqKitClaimStore(database);
+
+    assertThat(
+            players.recordJoin(new KnownPlayer(ALICE, "Alice", T0), Optional.of("starter")).join())
+        .isTrue();
+    assertThat(kits.pending(ALICE).join())
+        .containsExactly(
+            new com.shepherdjerred.thestorm.essentials.app.store.KitClaimStore.PendingKit(
+                "starter", T0));
+    assertThat(
+            players
+                .recordJoin(
+                    new KnownPlayer(ALICE, "Alice", T0.plusSeconds(1)), Optional.of("starter"))
+                .join())
+        .isFalse();
+    assertThat(kits.pending(ALICE).join()).hasSize(1);
+    assertThat(players.recordJoin(new KnownPlayer(BOB, "Bob", T0), Optional.empty()).join())
+        .isTrue();
+    assertThat(kits.pending(BOB).join()).isEmpty();
+  }
+
+  @Test
   void teleportUsageRoundTripsAndIsReplaced() {
     var store = new JooqTeleportUsageStore(database);
     var first = new TeleportUsage(Multiplier.of(1.5), T0, T0.plusSeconds(60));
@@ -196,10 +250,15 @@ final class JooqStoresTest {
   void playersAreNewOnlyOnTheirFirstJoinAndKeepTheirLatestName() {
     var players = new JooqPlayerStore(database);
 
-    assertThat(players.recordJoin(new KnownPlayer(ALICE, "Alice", T0)).join()).isTrue();
-    assertThat(players.recordJoin(new KnownPlayer(ALICE, "Alyce", T0.plusSeconds(60))).join())
+    assertThat(players.recordJoin(new KnownPlayer(ALICE, "Alice", T0), Optional.empty()).join())
+        .isTrue();
+    assertThat(
+            players
+                .recordJoin(new KnownPlayer(ALICE, "Alyce", T0.plusSeconds(60)), Optional.empty())
+                .join())
         .isFalse();
-    assertThat(players.recordJoin(new KnownPlayer(BOB, "Bob", T0)).join()).isTrue();
+    assertThat(players.recordJoin(new KnownPlayer(BOB, "Bob", T0), Optional.empty()).join())
+        .isTrue();
 
     assertThat(players.all().join())
         .containsExactlyInAnyOrder(

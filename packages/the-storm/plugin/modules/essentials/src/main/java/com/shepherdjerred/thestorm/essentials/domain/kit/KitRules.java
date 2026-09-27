@@ -21,6 +21,9 @@ public final class KitRules {
     if (kit.once()) {
       return Result.err(new KitError.AlreadyClaimed());
     }
+    if (kit.cooldown().isZero()) {
+      return Result.ok(now);
+    }
     var availableAt = lastClaim.orElseThrow().plus(kit.cooldown());
     if (now.isBefore(availableAt)) {
       return Result.err(new KitError.OnCooldown(Duration.between(now, availableAt)));

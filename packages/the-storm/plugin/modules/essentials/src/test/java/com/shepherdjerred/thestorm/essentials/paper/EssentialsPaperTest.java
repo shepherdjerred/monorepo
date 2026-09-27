@@ -15,6 +15,7 @@ import com.shepherdjerred.thestorm.essentials.domain.moderation.ModerationAction
 import com.shepherdjerred.thestorm.essentials.testing.FakeWallets;
 import com.shepherdjerred.thestorm.essentials.testing.PaperHarness;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -52,6 +53,7 @@ final class EssentialsPaperTest {
         harness.server.dispatchCommand(harness.server.getConsoleSender(), "kick Griefer spamming");
 
     assertThat(handled).isTrue();
+    harness.until(() -> !griefer.isOnline());
     assertThat(griefer.isOnline()).isFalse();
     harness.until(() -> !log(griefer.getUniqueId()).isEmpty());
     assertThat(log(griefer.getUniqueId()))
@@ -93,7 +95,13 @@ final class EssentialsPaperTest {
     moderator.performCommand("ban Admin abuse");
     moderator.performCommand("kick Admin abuse");
 
-    assertThat(messages(moderator)).filteredOn(m -> m.contains("exempt")).hasSize(2);
+    var observed = new ArrayList<String>();
+    harness.until(
+        () -> {
+          observed.addAll(messages(moderator));
+          return observed.stream().filter(m -> m.contains("exempt")).count() == 2;
+        });
+    assertThat(observed).filteredOn(m -> m.contains("exempt")).hasSize(2);
     assertThat(admin.isOnline()).isTrue();
     assertThat(log(admin.getUniqueId())).isEmpty();
   }
@@ -108,7 +116,13 @@ final class EssentialsPaperTest {
 
     moderator.performCommand("ban " + absent + " griefing");
 
-    assertThat(messages(moderator)).anyMatch(m -> m.contains("Use the console"));
+    var observed = new ArrayList<String>();
+    harness.until(
+        () -> {
+          observed.addAll(messages(moderator));
+          return observed.stream().anyMatch(m -> m.contains("Use the console"));
+        });
+    assertThat(observed).anyMatch(m -> m.contains("Use the console"));
     harness.server.dispatchCommand(
         harness.server.getConsoleSender(), "ban " + absent + " griefing");
     harness.until(() -> !log(absent).isEmpty());
@@ -160,5 +174,22 @@ final class EssentialsPaperTest {
 
     bob.performCommand("tpaccept Alice 999");
     assertThat(messages(bob)).anyMatch(m -> m.contains("no longer open"));
+  }
+
+  @Test
+  void tpaAcceptorHearsWhenAConsumedRequestCannotComplete() {
+    harness = PaperHarness.start(directory, new FakeWallets());
+    var alice = harness.server.addPlayer("Alice");
+    var bob = harness.server.addPlayer("Bob");
+    harness.server.getWorld("world").loadChunk(0, 0);
+    messages(alice);
+    messages(bob);
+
+    alice.performCommand("tpa Bob");
+    messages(bob);
+    bob.performCommand("tpaccept Alice");
+
+    assertThat(harness.awaitMessage(bob, "teleport request was cancelled"))
+        .anyMatch(message -> message.contains("teleport request was cancelled"));
   }
 }

@@ -222,7 +222,8 @@ final class TpaCommands {
             mover.orElseThrow(),
             requester.orElseThrow(),
             TeleportKind.TPA,
-            Destination.player(destination.orElseThrow())));
+            Destination.player(destination.orElseThrow()),
+            Optional.of(target)));
   }
 
   private Optional<Player> online(UUID player) {

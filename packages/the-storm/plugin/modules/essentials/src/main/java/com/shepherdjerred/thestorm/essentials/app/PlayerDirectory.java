@@ -41,11 +41,11 @@ public final class PlayerDirectory {
    * Records a join after loading completes. Completes with true on the player's first join since
    * essentials started tracking.
    */
-  public CompletableFuture<Boolean> joined(KnownPlayer player) {
+  public CompletableFuture<Boolean> joined(KnownPlayer player, Optional<String> starterKit) {
     return loaded.thenCompose(
         ready -> {
           remember(player);
-          return store.recordJoin(player);
+          return store.recordJoin(player, starterKit);
         });
   }
 

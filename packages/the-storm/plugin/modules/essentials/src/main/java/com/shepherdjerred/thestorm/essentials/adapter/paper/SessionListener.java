@@ -1,14 +1,11 @@
 package com.shepherdjerred.thestorm.essentials.adapter.paper;
 
-import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.essentials.app.AfkTracker;
 import com.shepherdjerred.thestorm.essentials.app.PlayerDirectory;
 import com.shepherdjerred.thestorm.essentials.app.TpaDesk;
-import com.shepherdjerred.thestorm.essentials.app.store.KitClaimStore;
 import com.shepherdjerred.thestorm.essentials.app.store.PlayerStore.KnownPlayer;
-import com.shepherdjerred.thestorm.essentials.domain.kit.KitError;
 import com.shepherdjerred.thestorm.essentials.domain.place.Position;
-import java.time.Instant;
+import java.util.Optional;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -64,7 +61,9 @@ final class SessionListener implements Listener {
     var playedBefore = player.hasPlayedBefore();
     var known = new KnownPlayer(player.getUniqueId(), player.getName(), runtime.time().instant());
     runtime.onMain(
-        players.joined(known),
+        players.joined(
+            known,
+            playedBefore ? Optional.empty() : Optional.of(arrival.kits().settings().starter())),
         "recording a join",
         first -> {
           if (first && !playedBefore && player.isOnline()) {
@@ -88,18 +87,7 @@ final class SessionListener implements Listener {
         .ifPresent(
             spawn ->
                 runtime.logFailure(player.teleportAsync(spawn), "sending a new player to spawn"));
-    var kits = arrival.kits();
-    var starter = kits.settings().starter();
-    var claim =
-        new KitClaimStore.KitClaim(starter, kits.settings().starterKit(), runtime.time().instant());
-    runtime.onMain(
-        kits.claims().claim(player.getUniqueId(), claim),
-        "granting the starter kit",
-        result -> {
-          if (result instanceof Result.Ok<Instant, KitError>) {
-            kits.deliveries().deliver(player.getUniqueId());
-          }
-        });
+    arrival.kits().deliveries().deliver(player.getUniqueId());
     Say.success(player, Say.STORM, "Welcome to The Storm, " + player.getName() + "! Read /rules.");
   }
 }
