@@ -22,8 +22,9 @@ public interface SkillLevels {
   /** Atomically transfers placed-block markers; true if any source was marked. */
   CompletableFuture<Boolean> movePlaced(List<BlockMove> moves);
 
-  /** Consumes sapling markers and marks grown logs in one write if any sapling was placed. */
-  CompletableFuture<Boolean> growPlacedTree(List<BlockPosition> saplings, List<BlockPosition> logs);
+  /** Consumes starter markers and marks generated XP-bearing blocks if any starter was placed. */
+  CompletableFuture<Boolean> growPlacedTree(
+      List<BlockPosition> starters, List<BlockPosition> generated);
 
   /** Moves placed provenance off its source coordinate when a block begins falling. */
   CompletableFuture<Boolean> launchFalling(BlockPosition source, UUID entityId);

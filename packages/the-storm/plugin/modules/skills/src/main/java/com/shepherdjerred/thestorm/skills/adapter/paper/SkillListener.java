@@ -147,7 +147,7 @@ final class SkillListener implements Listener {
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
   void onFertilize(BlockFertilizeEvent event) {
     event.getBlocks().stream()
-        .filter(state -> SkillActivities.isFertilizedPlant(state.getType()))
+        .filter(state -> SkillActivities.isFertilizedTrackable(state.getType()))
         .map(BlockState::getBlock)
         .distinct()
         .forEach(this::markPlaced);
@@ -160,20 +160,20 @@ final class SkillListener implements Listener {
       return;
     }
     var saplings = treeSaplings(source, event.getSpecies());
-    var logs =
+    var generated =
         event.getBlocks().stream()
-            .filter(state -> Tag.LOGS.isTagged(state.getType()))
+            .filter(state -> SkillActivities.isGeneratedHarvestable(state.getType()))
             .map(BlockState::getBlock)
             .map(SkillListener::position)
             .distinct()
             .toList();
     var _ =
         levels
-            .growPlacedTree(saplings, logs)
+            .growPlacedTree(saplings, generated)
             .whenComplete(
                 (_, failure) -> {
                   if (failure != null) {
-                    context.logger().error("Could not track grown tree logs", failure);
+                    context.logger().error("Could not track generated tree blocks", failure);
                   }
                 });
   }

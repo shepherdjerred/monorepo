@@ -94,6 +94,19 @@ final class SkillActivities {
     return Tag.FLOWERS.isTagged(material) || material == Material.SHORT_GRASS;
   }
 
+  static boolean isFertilizedTrackable(Material material) {
+    return isFertilizedPlant(material) || isTreeStarter(material);
+  }
+
+  /** Blocks a grown tree can create that may later earn gathering XP. */
+  static boolean isGeneratedHarvestable(Material material) {
+    return Tag.LOGS.isTagged(material)
+        || isCrop(material)
+        || isFertilizedPlant(material)
+        || isExcavation(material)
+        || isOre(material);
+  }
+
   static boolean isTreeStarter(Material material) {
     return Tag.SAPLINGS.isTagged(material)
         || material == Material.MANGROVE_PROPAGULE

@@ -112,17 +112,20 @@ final class JooqSkillLevelsTest {
   }
 
   @Test
-  void grownTreeLogsInheritPlacedSaplingMarker() throws Exception {
+  void grownTreeHarvestablesInheritPlacedStarterMarker() throws Exception {
     var world = new UUID(2, 3);
     var sapling = new BlockPosition(world, 10, 64, 10);
     var naturalSapling = new BlockPosition(world, 20, 64, 20);
     var trunk = new BlockPosition(world, 10, 64, 10);
     var branch = new BlockPosition(world, 11, 66, 10);
+    var rootedDirt = new BlockPosition(world, 12, 64, 10);
     var naturalLog = new BlockPosition(world, 20, 64, 20);
     assertThat(await(levels.markPlaced(sapling))).isTrue();
-    assertThat(await(levels.growPlacedTree(List.of(sapling), List.of(trunk, branch)))).isTrue();
+    assertThat(await(levels.growPlacedTree(List.of(sapling), List.of(trunk, branch, rootedDirt))))
+        .isTrue();
     assertThat(await(levels.wasPlacedAndForget(trunk))).isTrue();
     assertThat(await(levels.wasPlacedAndForget(branch))).isTrue();
+    assertThat(await(levels.wasPlacedAndForget(rootedDirt))).isTrue();
     assertThat(await(levels.growPlacedTree(List.of(naturalSapling), List.of(naturalLog))))
         .isFalse();
     assertThat(await(levels.wasPlacedAndForget(naturalLog))).isFalse();

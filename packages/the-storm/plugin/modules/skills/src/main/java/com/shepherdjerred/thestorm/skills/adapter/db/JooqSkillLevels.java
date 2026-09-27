@@ -170,11 +170,11 @@ public final class JooqSkillLevels implements SkillLevels {
 
   @Override
   public CompletableFuture<Boolean> growPlacedTree(
-      List<BlockPosition> saplings, List<BlockPosition> logs) {
+      List<BlockPosition> starters, List<BlockPosition> generated) {
     return database.write(
         dsl -> {
           boolean placed = false;
-          for (var sapling : saplings) {
+          for (var sapling : starters) {
             placed |=
                 dsl.deleteFrom(SKILLS_PLACED_BLOCK)
                         .where(
@@ -186,7 +186,7 @@ public final class JooqSkillLevels implements SkillLevels {
                     > 0;
           }
           if (placed) {
-            for (var log : logs) {
+            for (var log : generated) {
               dsl.insertInto(SKILLS_PLACED_BLOCK)
                   .set(SKILLS_PLACED_BLOCK.WORLD_ID, log.world().toString())
                   .set(SKILLS_PLACED_BLOCK.X, log.x())
