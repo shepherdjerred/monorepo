@@ -109,9 +109,10 @@ export type PilotConfig = z.infer<typeof ConfigSchema>;
 
 export async function loadPilotConfig(path: string): Promise<PilotConfig> {
   const file = Bun.file(path);
-  if (await file.exists()) {
-    ConfigSchema.parse(await file.json());
+  if (!(await file.exists())) {
+    throw new Error(`pilot configuration is missing: ${path}`);
   }
+  ConfigSchema.parse(await file.json());
   const resolver = defineConfig({
     definition,
     sources: { file: await createFileSource({ path }) },
