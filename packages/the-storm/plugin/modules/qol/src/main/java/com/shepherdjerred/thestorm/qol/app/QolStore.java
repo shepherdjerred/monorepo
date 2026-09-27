@@ -15,6 +15,15 @@ public interface QolStore {
   /** Records a successful random teleport. */
   CompletableFuture<Void> setLastRtp(UUID player, Instant when);
 
+  /** Saves an RTP entitlement before its keyed charge is attempted. */
+  CompletableFuture<Void> insertRtpAttempt(RtpAttempt attempt);
+
+  /** RTP entitlements that still need delivery or compensation. */
+  CompletableFuture<List<RtpAttempt>> pendingRtpAttempts();
+
+  /** Removes a delivered or compensated RTP entitlement. */
+  CompletableFuture<Void> deleteRtpAttempt(UUID id);
+
   /** Inserts {@code grave}. */
   CompletableFuture<Void> insertGrave(StoredGrave grave);
 
