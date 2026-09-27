@@ -165,6 +165,33 @@ final class QuestsPaperTest {
   }
 
   @Test
+  void questsOnlyProgressInTheMainWorld() throws InterruptedException {
+    var wilds = server.addSimpleWorld("wilds");
+    var alice = join("alice");
+    alice.teleport(new Location(wilds, 0, 64, 0));
+    server.dispatchCommand(alice, "quests");
+    assertThat(messages(alice)).contains("[Quests]: Quests are only available in world.");
+    plugin().service().accept(alice.getUniqueId(), "hunt", "captain");
+    assertThat(state(alice).active("hunt")).isEmpty();
+
+    alice.teleport(new Location(world, 0, 64, 0));
+    plugin().service().accept(alice.getUniqueId(), "hunt", "captain");
+    assertThat(state(alice).active("hunt")).isPresent();
+    alice.teleport(new Location(wilds, 0, 64, 0));
+    assertThat(plugin().sidebars.get(alice.getUniqueId())).isEmpty();
+    var zombie = (LivingEntity) wilds.spawnEntity(new Location(wilds, 1, 64, 0), EntityType.ZOMBIE);
+    zombie.setKiller(alice);
+    zombie.setHealth(0);
+    assertThat(state(alice).active("hunt").orElseThrow().progress()).containsExactly(0);
+    alice.teleport(new Location(world, 0, 64, 0));
+    var mainZombie =
+        (LivingEntity) world.spawnEntity(new Location(world, 1, 64, 0), EntityType.ZOMBIE);
+    mainZombie.setKiller(alice);
+    mainZombie.setHealth(0);
+    assertThat(state(alice).active("hunt").orElseThrow().progress()).containsExactly(1);
+  }
+
+  @Test
   void placedBlocksDoNotCountAsMined() throws InterruptedException {
     var alice = join("alice");
     plugin().service().accept(alice.getUniqueId(), "dig", "captain");

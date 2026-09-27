@@ -1,6 +1,6 @@
 # Owned by the repository; the plugin never writes it.
-# Quests that send players away from spawn: Alger's Nether Expedition and the
-# South Mines (2017's "MINER"), ported and scaled for one player.
+# The South Mines (2017's "MINER"), ported and scaled for one player.
+# Quest content is restricted to the permanent main world.
 
 factions: {}
 variables: {}
@@ -9,63 +9,6 @@ hooks: {}
 templates: {}
 
 quests:
-  nether-expedition:
-    name: Nether Expedition
-    giver: alger
-    category: side
-    repeat: once
-    estimatedMinutes: 70
-    requirements: []
-    text:
-      offer: I need some stuff from the Nether. Think you could help me?
-      accept: Start with the basics. Netherrack, nether wart, glowstone dust and quartz.
-      decline: Suit yourself. The Nether isn't going anywhere.
-      finish: Thank you! Here's your reward.
-      summary: Alger needs goods and a little pest control from the Nether.
-      questions: []
-    start: gather
-    stages:
-      gather:
-        journal: Bring Alger 64 netherrack, 16 nether wart, 32 glowstone dust and 16 nether quartz.
-        waiting: The warp's right behind me. Mind the heat.
-        complete: Thank you for delivering this to me.
-        objectives:
-          - deliver alger 64 NETHERRACK
-          - deliver alger 16 NETHER_WART
-          - deliver alger 32 GLOWSTONE_DUST
-          - deliver alger 16 QUARTZ
-        onComplete: []
-        next: [{ to: hunt, when: [], label: none }]
-        timeLimit: none
-      hunt:
-        journal: Thin out the Nether. Kill 2 ghasts, 12 blazes and 10 zombified piglins.
-        waiting: Go on, the Nether won't clear itself.
-        complete: I only need one more favour from you.
-        objectives:
-          - kill 2 GHAST
-          - kill 12 BLAZE
-          - kill 10 ZOMBIFIED_PIGLIN
-        onComplete: []
-        next: [{ to: relics, when: [], label: none }]
-        timeLimit: none
-      relics:
-        journal: Bring Alger 6 blaze rods, 32 gold nuggets and 2 ghast tears.
-        waiting: Rods, nuggets and tears. That's all.
-        complete: Mmm, yes. These are very nice!
-        objectives:
-          - deliver alger 6 BLAZE_ROD
-          - deliver alger 32 GOLD_NUGGET
-          - deliver alger 2 GHAST_TEAR
-        onComplete: []
-        next: [{ to: complete, when: [], label: none }]
-        timeLimit: none
-    onAccept: []
-    rewards:
-      - crystals 1000
-      - points 3
-      - title nether-explorer
-      - reputation townsfolk 1
-
   the-south-mines:
     name: The South Mines
     giver: alger

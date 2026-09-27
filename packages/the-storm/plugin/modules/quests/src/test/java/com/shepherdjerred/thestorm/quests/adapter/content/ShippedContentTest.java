@@ -45,7 +45,6 @@ final class ShippedContentTest {
           "fuel-to-the-fire",
           "without-a-home",
           "gearing-up",
-          "nether-expedition",
           "cades-cheese-fetish",
           "out-fishing",
           "an-enchanting-errand",
@@ -80,7 +79,10 @@ final class ShippedContentTest {
   @Test
   void thePvpAndStubQuestsAreNotShipped() {
     assertThat(content.quests())
-        .doesNotContainKeys("a-laymans-guide-to-murder", "testriot", "revenge");
+        .doesNotContainKeys(
+            "a-laymans-guide-to-murder", "nether-expedition", "testriot", "revenge");
+    assertThat(content.regions().values())
+        .allSatisfy(region -> assertThat(region.world()).isEqualTo(ShippedContent.OVERWORLD));
     for (var quest : content.quests().values()) {
       for (var stage : quest.stages().values()) {
         assertThat(stage.objectives())
@@ -138,9 +140,6 @@ final class ShippedContentTest {
     assertThat(rails.stage("materials").orElseThrow().objectives())
         .extracting(objective -> ((Objective.Deliver) objective).item().material())
         .containsExactly("IRON_INGOT", "OAK_LOG");
-    // 2017: Nether Expedition paid "money: 2". Now it pays like its peers.
-    var nether = content.catalog().require("nether-expedition");
-    assertThat(crystals(nether.rewards())).isEqualTo(1000);
     // 2017: An Enchanting Errand required the PvP quest, which is not shipped.
     var errand = content.catalog().require("an-enchanting-errand");
     assertThat(errand.requirements())

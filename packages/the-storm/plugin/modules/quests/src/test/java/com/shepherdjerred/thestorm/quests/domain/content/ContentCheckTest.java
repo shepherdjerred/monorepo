@@ -39,7 +39,7 @@ final class ContentCheckTest {
           Set.of("healing"));
 
   static final ContentCheck.Rules RULES =
-      new ContentCheck.Rules(REGISTRY, new Budget(10, 50), "board");
+      new ContentCheck.Rules(REGISTRY, new Budget(10, 50), "board", "minecraft:overworld");
 
   private static QuestContent content(Quest... quests) {
     return new QuestContent(
@@ -298,7 +298,8 @@ final class ContentCheckTest {
 
   @Test
   void theBoardNpcAndRegionWorldsMustExist() {
-    var rules = new ContentCheck.Rules(REGISTRY, new Budget(10, 50), "nobody");
+    var rules =
+        new ContentCheck.Rules(REGISTRY, new Budget(10, 50), "nobody", "minecraft:overworld");
     var content =
         new QuestContent(
             Map.of(),
@@ -311,6 +312,35 @@ final class ContentCheckTest {
     assertThat(ContentCheck.problems(content, rules))
         .extracting(ContentProblem::message)
         .contains("board NPC nobody does not exist", "world minecraft:the_end is not loaded");
+  }
+
+  @Test
+  void aLoadedWorldOutsideTheMainWorldIsRejected() {
+    var registry =
+        new ContentRegistry(
+            REGISTRY.npcs(),
+            REGISTRY.items(),
+            REGISTRY.blocks(),
+            REGISTRY.entities(),
+            Set.of("minecraft:overworld", "minecraft:the_nether"),
+            REGISTRY.tracks(),
+            REGISTRY.enchantments(),
+            REGISTRY.potions());
+    var rules =
+        new ContentCheck.Rules(registry, new Budget(10, 50), "board", "minecraft:overworld");
+    var content =
+        new QuestContent(
+            Map.of(),
+            Map.of(),
+            Map.of(),
+            Map.of("nether", new Region("nether", "Nether", "minecraft:the_nether", 0, 64, 0, 5)),
+            Map.of(),
+            Map.of(),
+            Map.of());
+    assertThat(ContentCheck.problems(content, rules))
+        .extracting(ContentProblem::message)
+        .contains("world minecraft:the_nether is outside the main world")
+        .doesNotContain("world minecraft:the_nether is not loaded");
   }
 
   @Test

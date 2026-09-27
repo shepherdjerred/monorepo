@@ -14,7 +14,7 @@ import org.bukkit.entity.Player;
 
 /**
  * The server as the quest service sees it; the Paper adapter implements it. Main thread. Every
- * method does nothing for a player who is offline.
+ * method does nothing for a player who is offline or outside the configured main world.
  */
 public interface QuestWorld {
 

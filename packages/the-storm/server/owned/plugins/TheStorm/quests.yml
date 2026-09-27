@@ -6,6 +6,9 @@
 timezone: America/Los_Angeles
 weekStartsOn: MONDAY
 
+# Quests are offered and progressed only in the permanent main world.
+mainWorld: world
+
 # The content linter refuses a quest that can pay more crystals than
 # allowance + crystalsPerMinute x its estimatedMinutes, along its richest path.
 budget:

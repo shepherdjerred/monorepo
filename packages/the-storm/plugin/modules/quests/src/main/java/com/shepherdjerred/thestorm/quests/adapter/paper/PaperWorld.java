@@ -45,6 +45,7 @@ final class PaperWorld implements QuestWorld {
       NpcDirectory npcs,
       NpcMarkers markers,
       SidebarDisplay sidebars,
+      String mainWorld,
       Duration spawnedMobLife) {}
 
   private final Parts parts;
@@ -60,7 +61,9 @@ final class PaperWorld implements QuestWorld {
 
   @Override
   public Optional<Player> player(UUID player) {
-    return Optional.ofNullable(parts.server().getPlayer(player)).filter(Player::isOnline);
+    return Optional.ofNullable(parts.server().getPlayer(player))
+        .filter(Player::isOnline)
+        .filter(found -> found.getWorld().getName().equals(parts.mainWorld()));
   }
 
   @Override

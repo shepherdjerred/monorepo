@@ -12,6 +12,7 @@ import java.util.Locale;
  * @param timezone the IANA time zone days and weeks are counted in, such as {@code
  *     America/Los_Angeles}
  * @param weekStartsOn the first day of a week, such as {@code MONDAY}
+ * @param mainWorld the Bukkit name of the only world where quests run
  * @param budget the reward budget the content validator enforces
  * @param party shared credit between nearby players
  * @param board the radiant quest board
@@ -25,6 +26,7 @@ import java.util.Locale;
 public record QuestsConfig(
     String timezone,
     String weekStartsOn,
+    String mainWorld,
     Budget budget,
     Party party,
     BoardSettings board,
@@ -35,6 +37,9 @@ public record QuestsConfig(
     Labels labels) {
 
   public QuestsConfig {
+    if (mainWorld == null || mainWorld.isBlank()) {
+      throw new IllegalArgumentException("mainWorld must name a world");
+    }
     try {
       ZoneId.of(timezone);
     } catch (DateTimeException e) {
