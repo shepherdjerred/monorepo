@@ -5,6 +5,11 @@
 # the night, on every overworld. Entering a bed is the only vote.
 
 sleepPercentage: 50
+# The crier reads current main-world weather and time only when asked. It
+# remains disabled until the world module and command are playtested live.
+crier:
+  enabled: false
+  world: world
 worlds:
   - name: wilds
     preset: large_biomes

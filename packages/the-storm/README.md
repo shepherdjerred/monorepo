@@ -70,6 +70,17 @@ not expose reliable preset metadata for an existing world, so preset acceptance
 remains an operator check. A mining reset must likewise make the replacement
 world available before TheStorm enables again.
 
+### Main-world crier
+
+The world module also owns an on-demand `/crier` bulletin. Its separate
+`world.yml` `crier.enabled` setting ships as `false`; the world module itself
+also remains disabled in `config.yml`. Once enabled, the command works only
+for players in `world`. It reports the observed weather and game time, then
+rotates one historical Storm fact by full game day. The archive notes come from
+the recovered Storm history (old spawn landmarks, the Bridge Hobo quest, the
+2015 Easter hunt, and Braxton's bank). It makes no claim that those landmarks
+or quests exist in the current world. There is no timer or automatic broadcast.
+
 ## Conventions
 
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating
