@@ -1,0 +1,84 @@
+# Frost Falls was a historical player town. These quests preserve its memory
+# through ordinary winter work without claiming that the old town still exists.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  frost-falls-record:
+    name: Frost Falls Record
+    giver: lenox
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements: []
+    text:
+      offer: People still speak of Frost Falls, though the old town is gone. I want a record that says who built it and how they made winter livable.
+      accept: Bring books, ink and snow. I'll write what I remember.
+      decline: Memories can wait a day, but they should not wait forever.
+      finish: The first pages are written. There is room for more names.
+      summary: Help Lenox preserve the memory of the historical Frost Falls town.
+      questions: []
+    start: record
+    stages:
+      record:
+        journal: Bring Lenox 4 books, 4 ink sacs and 16 snowballs for the Frost Falls record.
+        waiting: A winter story should have a little snow in it.
+        complete: The cover is cold enough. I'll fill the pages.
+        objectives:
+          - deliver lenox 4 BOOK
+          - deliver lenox 4 INK_SAC
+          - deliver lenox 16 SNOWBALL
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 450
+      - points 1
+      - reputation townsfolk 1
+
+  the-last-hearth:
+    name: The Last Hearth
+    giver: lenox
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed frost-falls-record
+    text:
+      offer: One Frost Falls family kept a hearth lit for travellers long after their own supplies ran low. I'd like to do the same for people passing through town.
+      accept: Bring coal, wool and bread. Edgar will help me keep a place warm.
+      decline: The hearth can wait. The travellers cannot always.
+      finish: There is food, a blanket and a fire ready for the next traveller.
+      summary: Carry Frost Falls' tradition of shelter into Spawn Town.
+      questions: []
+    start: shelter
+    stages:
+      shelter:
+        journal: Bring Lenox 24 coal, 8 white wool and 8 bread for a traveller's shelter.
+        waiting: Warmth first, then food and a place to rest.
+        complete: Edgar knows where the hearth should go. Ask him to tend it.
+        objectives:
+          - deliver lenox 24 COAL
+          - deliver lenox 8 WHITE_WOOL
+          - deliver lenox 8 BREAD
+        onComplete: []
+        next: [{ to: edgar, when: [], label: none }]
+        timeLimit: none
+      edgar:
+        journal: Ask Edgar to keep the traveller's hearth lit.
+        waiting: Edgar has kept his own hearth through harder nights.
+        complete: Edgar will tend the fire. The shelter is ready.
+        objectives:
+          - talk edgar
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1

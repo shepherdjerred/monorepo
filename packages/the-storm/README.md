@@ -66,7 +66,10 @@ Quest offers, commands, and progress are restricted to the configured main
 world (`world`). Regions must resolve to that world's registry key. Board
 draws keep a snapshot of their objective and reward data in SQLite so edits to
 templates do not change quests already assigned to players. Shipped content
-counts and references are checked when the quest module is built.
+counts and references are checked when the quest module is built. Regional
+chapters in `quests/regions/` cover Spawn Town, Sewers, Library, Caravan Road,
+the main-world Wilds fringe, South Mines, the old Harbour, and Frost Falls.
+The old sewer, water study, and caravan drafts inform their chapters.
 
 Quest state and pending world actions commit in one SQLite transaction. Item
 hand-ins run from that outbox after the state write succeeds, so a failed write

@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
 import com.shepherdjerred.thestorm.quests.domain.engine.Catalog;
 import com.shepherdjerred.thestorm.quests.domain.model.Action;
 import com.shepherdjerred.thestorm.quests.domain.model.Condition;
+import com.shepherdjerred.thestorm.quests.domain.model.ItemMatch;
 import com.shepherdjerred.thestorm.quests.domain.model.Objective;
 import com.shepherdjerred.thestorm.quests.domain.model.Quest;
 import com.shepherdjerred.thestorm.quests.domain.sim.Simulator;
@@ -55,6 +56,26 @@ final class ShippedContentTest {
           "boberts-request",
           "daily-login");
 
+  /** Two linked quests from each of the first eight regional anthologies. */
+  static final List<String> REGIONAL =
+      List.of(
+          "the-windmills-shadow",
+          "the-mill-register",
+          "clearing-the-sewers",
+          "braxtons-audit",
+          "researching-infinite-water",
+          "unshelved",
+          "broken-axle",
+          "caravan-conundrums",
+          "edge-of-the-wilds",
+          "rain-on-the-trail",
+          "lamps-for-dorran",
+          "a-vein-worth-mapping",
+          "nets-and-knots",
+          "harbour-lights",
+          "frost-falls-record",
+          "the-last-hearth");
+
   private static QuestContent content = QuestContent.empty();
 
   @BeforeAll
@@ -72,7 +93,9 @@ final class ShippedContentTest {
   void theShippedContentPassesTheLinter() {
     assertThat(content.quests().keySet())
         .containsExactlyInAnyOrderElementsOf(
-            Stream.concat(PORTED.stream(), Stream.of("the-gate-ledger")).toList());
+            Stream.concat(
+                    Stream.concat(PORTED.stream(), Stream.of("the-gate-ledger")), REGIONAL.stream())
+                .toList());
     assertThat(content.factions()).containsOnlyKeys("townsfolk", "storm-watch");
     assertThat(content.templates()).isNotEmpty();
   }
@@ -159,6 +182,13 @@ final class ShippedContentTest {
         .contains(new Action.SetVariable("gate-ledger-outcome", 1));
     assertThat(ledger.stage("trace").orElseThrow().onComplete())
         .contains(new Action.SetVariable("gate-ledger-outcome", 2));
+  }
+
+  @Test
+  void unshelvedReturnsTheSherdAfterWalterCopiesIt() {
+    var unshelved = content.catalog().require("unshelved");
+    assertThat(unshelved.rewards())
+        .contains(new Action.Give(ItemMatch.of("ANGLER_POTTERY_SHERD"), 1));
   }
 
   @Test
