@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.economy.app;
 import com.shepherdjerred.thestorm.core.result.Result;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -32,6 +33,22 @@ public final class LedgerWallets implements Wallets {
   public CompletableFuture<Result<Receipt, EconomyError>> transfer(
       AccountId from, AccountId to, Crystals amount, String reason) {
     return store.transfer(from, to, amount, requireReason(reason));
+  }
+
+  @Override
+  public CompletableFuture<Result<Receipt, EconomyError>> transferOnce(KeyedTransfer transfer) {
+    return store.transferOnce(
+        new KeyedTransfer(
+            transfer.key(),
+            transfer.from(),
+            transfer.to(),
+            transfer.amount(),
+            requireReason(transfer.reason())));
+  }
+
+  @Override
+  public CompletableFuture<Optional<Receipt>> receiptFor(UUID key) {
+    return store.receiptFor(key);
   }
 
   @Override

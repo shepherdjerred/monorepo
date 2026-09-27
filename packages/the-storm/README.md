@@ -55,6 +55,12 @@ tests in `architecture/` enforce all of this.
 
 ## Conventions
 
+The economy `Wallets` port supports a stable `KeyedTransfer` for compensating
+payments. It stores the operation key with the ledger row, returns the same
+receipt for an identical retry, and rejects reuse of the key with different
+transfer details. `receiptFor` lets a caller reconcile an uncertain result.
+Ordinary unkeyed transfers keep their existing behavior.
+
 - `@NullMarked` on every package; NullAway (JSpecify mode) runs as an error.
 - Error Prone with Picnic's checks; `-Xlint:all -Werror`. Warnings fail the build.
 - google-java-format via Spotless; PMD enforces the repository's complexity
