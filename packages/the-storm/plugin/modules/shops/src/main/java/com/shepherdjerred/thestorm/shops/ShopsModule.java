@@ -9,11 +9,9 @@ import com.shepherdjerred.thestorm.shops.app.ServerShops;
 import com.shepherdjerred.thestorm.shops.app.ShopRegistry;
 import com.shepherdjerred.thestorm.shops.app.ShutdownDrain;
 import com.shepherdjerred.thestorm.shops.domain.config.ShopsConfig;
+import com.shepherdjerred.thestorm.shops.domain.shop.SignShop;
 import java.time.Duration;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.List;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.jspecify.annotations.Nullable;
 
@@ -21,21 +19,18 @@ import org.jspecify.annotations.Nullable;
  * Player chest shops (ChestShop-style signs on containers), admin sign shops, and the NPC catalog
  * shops. Publishes {@link ServerShops} for the npcs module.
  *
- * <p>The main thread blocks in two places, both bounded and both outside gameplay: {@link #enable}
- * waits up to {@value #LOAD_TIMEOUT_SECONDS} seconds for the shop table (no container may be
- * unguarded once the server ticks), and {@link #disable} waits up to {@link #DRAIN_TIMEOUT} for
- * trades in flight to settle.
+ * <p>Startup installs a fail-closed listener before asynchronously reading shops. Shutdown waits up
+ * to {@link #DRAIN_TIMEOUT} for trades in flight to settle.
  */
 public final class ShopsModule implements StormModule {
-
-  /** How long startup waits for the shops to load before refusing to start. */
-  private static final long LOAD_TIMEOUT_SECONDS = 30;
 
   /** How long shutdown waits for trades in flight before logging them for staff. */
   private static final Duration DRAIN_TIMEOUT = Duration.ofSeconds(5);
 
   private @Nullable ShutdownDrain drain;
   private @Nullable ComponentLogger logger;
+
+  private record Loaded(List<SignShop> shops, long lastId) {}
 
   @Override
   public String id() {
@@ -49,14 +44,40 @@ public final class ShopsModule implements StormModule {
         CatalogDirectory.load(context.dataDirectory().resolve("shops"), ShopsPaper::isItem);
     context.database().migrate(id(), ShopsModule.class.getClassLoader());
     var store = new JooqShopStore(context.database());
-    // Loaded before any listener is registered: hoppers and players must never see a shop
-    // container unguarded, so startup waits for the (small) table rather than racing it.
-    var registry = new ShopRegistry(load(store.loadShops()), load(store.lastShopId()));
+    var registry = ShopRegistry.loading();
     var installed =
         ShopsPaper.install(context, config, new ShopsPaper.State(registry, store, catalogs));
     context.services().provide(ServerShops.class, installed.serverShops());
     this.drain = installed.drain();
     this.logger = context.logger();
+    var _ =
+        store
+            .loadShops()
+            .thenCombine(store.lastShopId(), Loaded::new)
+            .whenCompleteAsync(
+                (loaded, failure) -> {
+                  if (!context.plugin().isEnabled()) {
+                    return;
+                  }
+                  if (failure != null) {
+                    context
+                        .logger()
+                        .error("Shops remain guarded: stored shops could not load", failure);
+                    return;
+                  }
+                  try {
+                    registry.initialize(loaded.shops(), loaded.lastId());
+                    // A catalog edit or stale sign can close an admin shop. Do this before trading.
+                    installed.reconcile().run();
+                    registry.publishReady();
+                    context.logger().info("Loaded {} shops", loaded.shops().size());
+                  } catch (RuntimeException error) {
+                    context
+                        .logger()
+                        .error("Shops remain guarded: startup reconciliation failed", error);
+                  }
+                },
+                context.scheduler().mainThread());
   }
 
   @Override
@@ -67,17 +88,6 @@ public final class ShopsModule implements StormModule {
         logger.error(
             "{} shop trades could not settle before shutdown; see shops_refund_failure", unsettled);
       }
-    }
-  }
-
-  private static <T> T load(CompletableFuture<T> future) {
-    try {
-      return future.get(LOAD_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new IllegalStateException("Interrupted while loading shops", e);
-    } catch (ExecutionException | TimeoutException e) {
-      throw new IllegalStateException("Could not load shops", e);
     }
   }
 }

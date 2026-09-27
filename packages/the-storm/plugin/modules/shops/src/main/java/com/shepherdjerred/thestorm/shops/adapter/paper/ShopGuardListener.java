@@ -104,13 +104,20 @@ final class ShopGuardListener implements Listener {
     if (refusal.isPresent()) {
       event.setCancelled(true);
       player.sendMessage(Replies.error(refusal.orElseThrow()));
+    }
+  }
+
+  /** A later protection listener may still cancel the break after our authorization check. */
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  public void onBreakFinal(BlockBreakEvent event) {
+    var shopsHere = blocks.shopsAt(event.getBlock());
+    if (shopsHere.isEmpty() || !mayManage(event.getPlayer(), shopsHere)) {
       return;
     }
-    var removed = shopsHere;
-    removed.forEach(shops::remove);
-    if (!removed.isEmpty()) {
-      player.sendMessage(Replies.info(removed.size() == 1 ? "Shop removed." : "Shops removed."));
-    }
+    shopsHere.forEach(shops::remove);
+    event
+        .getPlayer()
+        .sendMessage(Replies.info(shopsHere.size() == 1 ? "Shop removed." : "Shops removed."));
   }
 
   /** No one else may join a chest onto a shop chest: the double chest would open for them. */

@@ -1,10 +1,11 @@
 package com.shepherdjerred.thestorm.shops.app;
 
+import static java.util.Collections.unmodifiableMap;
+
 import com.shepherdjerred.thestorm.shops.domain.shop.BlockPos;
 import com.shepherdjerred.thestorm.shops.domain.shop.SignShop;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -26,6 +27,7 @@ public final class ShopRegistry {
   private final Map<BlockPos, Set<Long>> byContainer = new HashMap<>();
   private final Map<Long, String> closed = new LinkedHashMap<>();
   private long lastId;
+  private boolean ready;
 
   /**
    * @param shops the stored shops
@@ -34,6 +36,38 @@ public final class ShopRegistry {
   public ShopRegistry(Collection<SignShop> shops, long lastIssuedId) {
     this.lastId = lastIssuedId;
     shops.forEach(this::add);
+    this.ready = true;
+  }
+
+  /** An empty registry guarded until its stored shops have loaded. */
+  public static ShopRegistry loading() {
+    var registry = new ShopRegistry(List.of(), 0);
+    registry.ready = false;
+    return registry;
+  }
+
+  /** Atomically installs stored shops; the caller publishes readiness after reconciliation. */
+  public void initialize(Collection<SignShop> shops, long lastIssuedId) {
+    if (ready || !byId.isEmpty()) {
+      throw new IllegalStateException("shop registry is already initialized");
+    }
+    var loaded = new ShopRegistry(shops, lastIssuedId);
+    byId.putAll(loaded.byId);
+    bySign.putAll(loaded.bySign);
+    loaded.byContainer.forEach(
+        (position, ids) -> byContainer.put(position, new LinkedHashSet<>(ids)));
+    lastId = loaded.lastId;
+  }
+
+  public void publishReady() {
+    if (ready) {
+      throw new IllegalStateException("shop registry is already ready");
+    }
+    ready = true;
+  }
+
+  public boolean isReady() {
+    return ready;
   }
 
   /** The id the next new shop gets. Ids are never reused. */
@@ -80,7 +114,7 @@ public final class ShopRegistry {
 
   /** Every closed shop and why, in the order they were closed. */
   public Map<Long, String> closed() {
-    return Collections.unmodifiableMap(new LinkedHashMap<>(closed));
+    return unmodifiableMap(new LinkedHashMap<>(closed));
   }
 
   public void remove(long id) {

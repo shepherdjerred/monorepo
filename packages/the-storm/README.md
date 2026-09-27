@@ -321,3 +321,13 @@ only until the grave expires, then anyone can collect it. Loaded chunks are
 reconciled at startup and on chunk load. Interaction and nearby player movement
 also trigger expiry in chunks that stay loaded. Collection pauses while QoL is
 disabled; the stored stacks remain available when it starts again.
+
+## Shop startup
+
+The shops module registers a temporary guard before it reads stored sign shops
+from SQLite. While the read or reconciliation is pending, possible shop signs
+and configured shop containers cannot be opened, changed, or used for inventory
+transfer. Catalog names remain available to NPC validation, but catalog menus
+and `/shop` report that shops are loading. A failed read leaves the guard active
+and logs the startup failure; a successful read publishes the registry only
+after stale admin shops have been closed.

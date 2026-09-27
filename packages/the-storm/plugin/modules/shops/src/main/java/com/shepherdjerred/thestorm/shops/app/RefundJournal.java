@@ -31,14 +31,10 @@ public final class RefundJournal {
             ? Optional.of(new HeldItems(deal.goods(), deal.quantity()))
             : Optional.<HeldItems>empty();
     logger.error("Trade {} was still settling at shutdown: {}", deal.reason(), trail.describe());
-    record(
-        new RefundFailure(
-            deal.payer().account(),
-            deal.payee().account(),
-            deal.price(),
-            reason,
-            held,
-            time.instant()));
+    var paymentCommitted = trail.hasCommittedPayment();
+    var payer = paymentCommitted ? deal.payee().account() : deal.payer().account();
+    var payee = paymentCommitted ? deal.payer().account() : deal.payee().account();
+    record(new RefundFailure(payer, payee, deal.price(), reason, held, time.instant()));
   }
 
   /**

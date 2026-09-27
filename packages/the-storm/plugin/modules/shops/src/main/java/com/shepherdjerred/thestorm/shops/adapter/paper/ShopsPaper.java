@@ -66,8 +66,9 @@ public final class ShopsPaper {
    *
    * @param serverShops the NPC shops, published for other modules
    * @param drain settles trades in flight when the module stops
+   * @param reconcile validates loaded admin shops before publishing readiness
    */
-  public record Installed(ServerShops serverShops, ShutdownDrain drain) {}
+  public record Installed(ServerShops serverShops, ShutdownDrain drain, Runnable reconcile) {}
 
   /**
    * Registers everything and returns the NPC shops for other modules.
@@ -117,13 +118,12 @@ public final class ShopsPaper {
                 new ServerOffers(state.catalogs(), state.registry()),
                 settings.clickCooldown()),
             new PaperShopEffects(notices, blocks));
-    // A catalog edit (or a stale sign) can leave an admin shop looping with the server's prices:
-    // it stays guarded but stops trading, and every one is logged as an error.
-    chestShops.closeLoopingAdminShops();
     var templates = new ItemTemplates();
     var protection = services.require(Protection.class);
     var events = server.getPluginManager();
     ShopsPermissions.register(events);
+    events.registerEvents(
+        new ShopReadinessListener(state.registry(), containers(settings.containers())), plugin);
     events.registerEvents(
         new ShopSignListener(
             new ShopSignListener.Deps(
@@ -152,15 +152,19 @@ public final class ShopsPaper {
                     usage.preload(player.getUniqueId()), logger, "load catalog usage"));
     var catalogTrades =
         new CatalogTrades(state.catalogs(), wiring, usage, config.catalogs().maxLots());
-    var serverShops =
+    var dialogs =
         new DialogServerShops(
             catalogTrades, replies, context.scheduler(), config.catalogs().maxDistance());
+    var serverShops = new ReadyServerShops(dialogs, state.registry());
     var command = new ShopCommand(serverShops, state.registry(), settings.limits());
     context
         .lifecycle()
         .registerEventHandler(
             LifecycleEvents.COMMANDS, event -> command.register(event.registrar()));
-    return new Installed(serverShops, new ShutdownDrain(mainThread, locks, journal));
+    return new Installed(
+        serverShops,
+        new ShutdownDrain(mainThread, locks, journal),
+        chestShops::closeLoopingAdminShops);
   }
 
   /**

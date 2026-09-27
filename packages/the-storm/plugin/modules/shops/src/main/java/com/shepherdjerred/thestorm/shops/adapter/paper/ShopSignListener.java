@@ -80,10 +80,19 @@ final class ShopSignListener implements Listener {
   public void onSignChange(SignChangeEvent event) {
     var block = event.getBlock();
     var player = event.getPlayer();
-    if (registry.atSign(ShopBlocks.pos(block)).isPresent()) {
-      event.setCancelled(true);
-      player.sendMessage(
-          Replies.error("Shop signs cannot be edited; break it and make a new one."));
+    registry
+        .atSign(ShopBlocks.pos(block))
+        .ifPresent(
+            existing -> {
+              if (blocks.shopAtSign(block).isPresent()) {
+                event.setCancelled(true);
+                player.sendMessage(
+                    Replies.error("Shop signs cannot be edited; break it and make a new one."));
+              } else {
+                shops.remove(existing);
+              }
+            });
+    if (event.isCancelled()) {
       return;
     }
     if (event.getSide() != Side.FRONT) {
@@ -175,13 +184,18 @@ final class ShopSignListener implements Listener {
   }
 
   private boolean allowedToBuild(Player player, Block sign, Optional<Block> container) {
-    var checks = new ArrayList<Decision>(2);
+    var checks = new ArrayList<Decision>(3);
     checks.add(protection.check(player.getUniqueId(), ProtectedAction.BUILD, sign.getLocation()));
-    container.ifPresent(
-        block ->
-            checks.add(
-                protection.check(
-                    player.getUniqueId(), ProtectedAction.OPEN_CONTAINER, block.getLocation())));
+    container.stream()
+        .flatMap(block -> ShopBlocks.containerBlocks(block).stream())
+        .map(pos -> blocks.block(pos).orElseThrow())
+        .forEach(
+            block ->
+                checks.add(
+                    protection.check(
+                        player.getUniqueId(),
+                        ProtectedAction.OPEN_CONTAINER,
+                        block.getLocation())));
     for (var decision : checks) {
       if (decision instanceof Decision.Denied(var reason)) {
         player.sendMessage(HouseStyle.error(Replies.LABEL, reason));

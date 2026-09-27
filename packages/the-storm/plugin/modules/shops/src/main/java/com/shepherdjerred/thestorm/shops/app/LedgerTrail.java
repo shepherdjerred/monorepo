@@ -12,9 +12,19 @@ public final class LedgerTrail {
 
   private final List<String> events = new ArrayList<>();
   private boolean escrowHeld;
+  private boolean paymentCommitted;
 
   synchronized void record(String event) {
     events.add(event);
+  }
+
+  synchronized void paymentCommitted(String event) {
+    paymentCommitted = true;
+    events.add(event);
+  }
+
+  public synchronized boolean hasCommittedPayment() {
+    return paymentCommitted;
   }
 
   /** The customer's items have actually left their inventory. */
