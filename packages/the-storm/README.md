@@ -33,6 +33,27 @@ mise exec -- gradle --write-verification-metadata sha256 build
 
 The jar is `plugin/dist/build/libs/TheStorm.jar`.
 
+## Skills
+
+The `skills` module replaces the launch set of mcMMO skills with eleven
+persistent skills: Mining, Woodcutting, Excavation, Herbalism, Fishing, Swords,
+Axes, Archery, Unarmed, Acrobatics and Repair. Each level is earned on a
+1–1000 scale; power level is the sum of those levels. `/skills` shows progress,
+`/skills <skill>` shows XP to the next level, and `/skills top` shows the
+power-level leaderboard. The state lives in the shared SQLite database;
+historical mcMMO player data is intentionally not migrated after the world
+reset.
+
+Gathering and Fishing gain a capped extra-drop chance, combat skills gain a
+capped bonus against eligible mobs, and Acrobatics reduces fall damage.
+Right-click an iron block with a damaged tool in the main hand and its repair
+material in the offhand to use Repair. Spawner-created, scripted quest and
+arena mobs and non-mob entities do not give combat XP. Player-placed gathering
+blocks, fertilized flowers and grass, and logs grown from player-planted
+saplings stay ineligible across restarts through the `skills_placed_block`
+table. Block markers follow pistons, falling blocks, and Enderman movement. The module
+remains off until the old mcMMO plugin is removed in the same rollout.
+
 ## Modules
 
 Every module implements `StormModule` and is listed in `dist`'s `Modules`
