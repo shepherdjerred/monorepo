@@ -182,6 +182,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
     extraEnv: {
       ...getMinecraftExtraEnv(),
       ...getDiscordSrvExtraEnv(SECRET_NAME),
+      // Bootstrap address for the disabled-by-default managed crier flag.
+      FLIPT_URL: "http://flipt-flipt-service.flipt.svc.cluster.local:8080",
       // Scope removeOldMods to only the plugins known to leave orphaned
       // duplicate jars on a version bump. mcMMO and LWCX are intentionally
       // PVC-only (no direct download URL, see pluginUrls comment below) and

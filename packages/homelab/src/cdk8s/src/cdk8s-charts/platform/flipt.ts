@@ -36,6 +36,7 @@ const CONSUMER_NAMESPACES = [
   // namespace, not `temporal` — it needs its own entry here or its
   // temporal-call-graph-tracing check silently degrades to the default false.
   "buildkite",
+  "minecraft-tsmc",
 ] as const;
 
 export function createFliptChart(app: App) {
