@@ -62,9 +62,11 @@ resource "github_repository_ruleset" "monorepo_main" {
     }
   }
 
+  # A repository admin can merge a reviewed PR during a CI control-plane
+  # bootstrap without gaining an exemption for direct pushes.
   bypass_actors {
     actor_id    = 5
     actor_type  = "RepositoryRole"
-    bypass_mode = "always"
+    bypass_mode = "pull_request"
   }
 }

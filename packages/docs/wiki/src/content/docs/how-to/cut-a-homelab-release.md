@@ -12,11 +12,15 @@ the new pipeline cannot run until its own cluster resources have been released.
 This page is for reading the pipeline while it works, and for knowing what a
 failed stage means.
 
-## Bootstrap Woodpecker after the cutover merge
+## Bootstrap Woodpecker across the cutover
 
-1. Confirm the cutover PR is merged and its commit is the current `main`. Keep
-   the old Buildkite required check in place during bootstrap. Reserve a
-   Woodpecker build number by canceling a pipeline before it starts release
+1. Before merging the cutover PR, inspect the live `main` ruleset. If its old
+   Buildkite required check cannot complete, a repository admin must grant the
+   admin role a **pull-request-only** bypass, review the PR's local verification
+   and chart dry run, and use that bypass to merge this PR. Do not report the
+   retired Buildkite check as passing. Keep the old required check in place
+   during bootstrap. Confirm the merged commit is the current `main`. Reserve
+   a Woodpecker build number by canceling a pipeline before it starts release
    work; do not reuse a number that published charts.
 2. From a clean checkout of that exact `main` commit, run the bootstrap script
    once with `--dry-run`. It validates the chart inventory and the exact root
@@ -35,6 +39,8 @@ failed stage means.
    context.
 5. Only after the new required check is active and healthy, retire the old
    Buildkite requirement and service through the repository-owned release path.
+   Confirm the final ruleset has the declared PR-only admin bypass and does not
+   allow direct-push bypass.
 
 ```bash
 bootstrap=packages/homelab/scripts/ci/bootstrap-woodpecker.ts
