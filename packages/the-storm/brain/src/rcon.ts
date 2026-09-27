@@ -25,9 +25,13 @@ export class RconClient {
   private buffer = Buffer.alloc(0);
   private nextId = 1;
   private pending: Pending | undefined;
+  private terminalError: Error | undefined;
   private queue: Promise<void> = Promise.resolve();
 
-  private constructor(private readonly socket: net.Socket) {
+  private constructor(
+    private readonly socket: net.Socket,
+    private readonly timeoutMs: number,
+  ) {
     socket.on("data", (data) => {
       this.onData(Buffer.isBuffer(data) ? data : Buffer.from(data));
     });
@@ -40,24 +44,31 @@ export class RconClient {
   }
 
   static async connect(options: RconConnectOptions): Promise<RconClient> {
+    const timeoutMs = options.timeoutMs ?? 5000;
+    if (!Number.isSafeInteger(timeoutMs) || timeoutMs <= 0) {
+      throw new Error("invalid RCON timeout");
+    }
     const socket = await new Promise<net.Socket>((resolve, reject) => {
       const connection = net.createConnection(
         { host: options.host, port: options.port },
         () => {
           connection.off("error", reject);
+          connection.setTimeout(0);
           resolve(connection);
         },
       );
       connection.once("error", reject);
-      connection.setTimeout(options.timeoutMs ?? 5000, () => {
+      connection.setTimeout(timeoutMs, () => {
         connection.destroy(new Error("RCON connect timed out"));
       });
     });
-    socket.setTimeout(options.timeoutMs ?? 5000, () => {
-      socket.destroy(new Error("RCON command timed out"));
-    });
-    const client = new RconClient(socket);
-    await client.authenticate(options.password);
+    const client = new RconClient(socket, timeoutMs);
+    try {
+      await client.authenticate(options.password);
+    } catch (error) {
+      socket.destroy();
+      throw error;
+    }
     return client;
   }
 
@@ -88,6 +99,12 @@ export class RconClient {
   }
 
   private async send(type: number, body: string): Promise<string> {
+    if (this.terminalError !== undefined) {
+      throw this.terminalError;
+    }
+    if (this.socket.destroyed || this.socket.writableEnded) {
+      throw new Error("RCON socket closed");
+    }
     const id = this.nextId++;
     const payload = Buffer.from(body, "utf8");
     const packet = Buffer.alloc(14 + payload.length);
@@ -96,7 +113,23 @@ export class RconClient {
     packet.writeInt32LE(type, 8);
     payload.copy(packet, 12);
     return new Promise<string>((resolve, reject) => {
-      this.pending = { id, chunks: [], resolve, reject };
+      const timer = setTimeout(() => {
+        const error = new Error("RCON command timed out");
+        this.fail(error);
+        this.socket.destroy(error);
+      }, this.timeoutMs);
+      this.pending = {
+        id,
+        chunks: [],
+        resolve: (response) => {
+          clearTimeout(timer);
+          resolve(response);
+        },
+        reject: (error) => {
+          clearTimeout(timer);
+          reject(error);
+        },
+      };
       this.socket.write(packet);
     });
   }
@@ -105,6 +138,11 @@ export class RconClient {
     this.buffer = Buffer.concat([this.buffer, data]);
     while (this.buffer.length >= 4) {
       const length = this.buffer.readInt32LE(0);
+      if (length < 10 || length > maxResponseBody + 10) {
+        this.fail(new Error(`Invalid RCON frame length: ${length.toString()}`));
+        this.socket.destroy();
+        return;
+      }
       if (this.buffer.length < 4 + length) {
         return;
       }
@@ -143,6 +181,7 @@ export class RconClient {
   }
 
   private fail(error: Error): void {
+    this.terminalError ??= error;
     const pending = this.pending;
     this.pending = undefined;
     pending?.reject(error);

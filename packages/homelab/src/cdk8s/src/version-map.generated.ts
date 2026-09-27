@@ -84,6 +84,8 @@ export const VersionMapSchema = z
     "openebs/velero-plugin": z.string(),
     "kubernetes/kubernetes": z.string(),
     paper: z.string(),
+    "viaversion-paper": z.string(),
+    "viabackwards-paper": z.string(),
     "mc2discord-forge-1.12.2": z.string(),
     recyclarr: z.string(),
     "siderolabs/talos": z.string(),

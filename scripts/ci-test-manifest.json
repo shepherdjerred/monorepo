@@ -947,6 +947,16 @@
           "args": ["-p", "plugin", "test"]
         }
       ]
+    },
+    {
+      "package": "@shepherdjerred/the-storm-brain",
+      "directory": "packages/the-storm/brain",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
+        }
+      ]
     }
   ],
   "testlessWorkspaces": [

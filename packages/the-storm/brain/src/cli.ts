@@ -3,6 +3,7 @@ import { realpath, stat } from "node:fs/promises";
 import mineflayer from "mineflayer";
 import type { Bot } from "mineflayer";
 import { loadBootstrap, loadPilotConfig } from "./config.ts";
+import type { PilotConfig } from "./config.ts";
 import { humanPlayers, inPilotWindow } from "./policy.ts";
 import { RconClient } from "./rcon.ts";
 
@@ -39,6 +40,28 @@ function waitForSpawn(bot: Bot): Promise<void> {
     bot.on("end", onEnd);
     bot.on("kicked", onKicked);
   });
+}
+
+async function verifySpawn(
+  bot: Bot,
+  rcon: RconClient,
+  config: PilotConfig,
+): Promise<void> {
+  await waitForSpawn(bot);
+  if (!inPilotWindow(config, new Date())) {
+    process.stdout.write("pilot ended: window closed before spawn\n");
+    return;
+  }
+  const after = humanPlayers(await rcon.command("list"), bot.username);
+  if (!inPilotWindow(config, new Date())) {
+    process.stdout.write("pilot ended: window closed during spawn check\n");
+    return;
+  }
+  if (after.length === 0) {
+    process.stdout.write("pilot ended: human left before spawn\n");
+    return;
+  }
+  process.stdout.write("pilot connected and verified human presence\n");
 }
 
 async function run(): Promise<void> {
@@ -109,13 +132,7 @@ async function run(): Promise<void> {
       hideErrors: true,
     });
     try {
-      await waitForSpawn(bot);
-      const after = humanPlayers(await rcon.command("list"), bot.username);
-      if (after.length === 0) {
-        process.stdout.write("pilot ended: human left before spawn\n");
-        return;
-      }
-      process.stdout.write("pilot connected and verified human presence\n");
+      await verifySpawn(bot, rcon, config);
     } finally {
       bot.quit();
     }

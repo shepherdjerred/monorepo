@@ -25,7 +25,8 @@ before running `--run`. The other two accounts stay unconfigured.
 
 Mineflayer 4.39.0 speaks Minecraft 26.1. The production server is Paper 26.2,
 so its protocol bridge must be installed and proven before a live pilot. The
-disposable E2E server uses ViaVersion and ViaBackwards for this pairing.
+repository pins ViaVersion and ViaBackwards for the server, but their pairing
+with this Mineflayer build still needs a controlled live acceptance check.
 
 The pilot is a manual, one-shot command. A continuously present companion,
 Temporal-owned 18:00–20:00 scheduling, an authenticated control path, the
