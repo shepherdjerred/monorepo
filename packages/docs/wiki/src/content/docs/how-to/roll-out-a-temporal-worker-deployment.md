@@ -49,8 +49,9 @@ workflow completes before resuming the schedule. This is especially important
 for the billed LLM cost reconciliation: its Activity runs on the isolated
 `billing` queue, while the schedule starts on `monorepo-workflows`. A new
 schedule whose Workflow type only exists in the candidate should register with
-`initialPauseNote`, as `llm-billed-cost-hourly` does, so it cannot fail on the
-stable bundle and trip the alerts that gate `advance`.
+`initialPauseNote`, as `llm-billed-cost-hourly` does, and remain paused until the
+candidate receives 100% of Workflow traffic. Otherwise, a run can reach a stable
+Worker that does not register the Workflow and fail.
 
 Inspect the candidate without changing routing:
 
