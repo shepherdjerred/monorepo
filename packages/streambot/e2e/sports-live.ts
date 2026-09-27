@@ -22,6 +22,7 @@ const environment = z
     USER_TOKENS: z.string().min(1),
     PINCHTAB_TOKEN: z.string().min(1),
     E2E_PINCHTAB_PROFILE: z.string().min(1).optional(),
+    E2E_OBSERVE_SECONDS: z.coerce.number().int().min(10).max(600).default(10),
   })
   .parse(Bun.env);
 
@@ -82,6 +83,29 @@ async function waitForPlayback(): Promise<void> {
   }
 }
 
+async function observePlayback(): Promise<void> {
+  console.info(
+    "sports e2e VIEWING",
+    JSON.stringify({
+      guildId,
+      channelId,
+      observeSeconds: environment.E2E_OBSERVE_SECONDS,
+    }),
+  );
+  const deadline = Date.now() + environment.E2E_OBSERVE_SECONDS * 1000;
+  while (Date.now() < deadline) {
+    await Bun.sleep(Math.min(5000, deadline - Date.now()));
+    const metrics = await register.metrics();
+    if (
+      !actor.getSnapshot().matches("streaming") ||
+      !/streambot_stream_active\{[^}]*\}\s+1\b/.test(metrics)
+    ) {
+      throw new Error("Sports playback ended during the observation window");
+    }
+  }
+  console.info("sports e2e observation complete");
+}
+
 async function main(): Promise<void> {
   try {
     await streamer.login();
@@ -123,7 +147,7 @@ async function main(): Promise<void> {
             audioFrames,
           }),
         );
-        await Bun.sleep(10_000);
+        await observePlayback();
         return;
       }
       if (!actor.getSnapshot().matches("streaming")) {
@@ -150,7 +174,9 @@ const code = await main().then(
     const name = error instanceof Error ? error.name : "unknown error";
     const detail =
       error instanceof Error
-        ? error.message.replaceAll(/https?:\/\/\S+/g, "[redacted URL]")
+        ? error.message
+            .replaceAll(/https?:\/\/\S+/g, "[redacted URL]")
+            .replaceAll(/\s+/g, " ")
         : "no error detail";
     console.error("sports e2e failed", name, detail);
     return 1;
