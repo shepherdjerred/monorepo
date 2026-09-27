@@ -1,4 +1,39 @@
 {
+  "gpt-6-luna": {
+    "id": "gpt-6-luna",
+    "provider": "openai",
+    "displayName": "GPT-6 Luna",
+    "description": "Fast, cost-efficient GPT-6 tier for bounded companion conversations.",
+    "pricing": {
+      "modality": "text",
+      "input": 0.1,
+      "cachedInput": 0.01,
+      "cacheWrite": 0.125,
+      "output": 0.5
+    },
+    "contextWindow": 1050000,
+    "capabilities": {
+      "inputModalities": ["text", "image"],
+      "outputModalities": ["text"],
+      "tools": true,
+      "structuredOutputs": true,
+      "webSearch": false,
+      "reasoning": true,
+      "supportsTemperature": false,
+      "supportsTopP": false,
+      "maxTokens": 128000
+    },
+    "status": "current",
+    "routes": {
+      "openRouter": {
+        "modelId": "openai/gpt-6-luna",
+        "endpoint": "language"
+      },
+      "codexSdk": {
+        "modelId": "gpt-6-luna"
+      }
+    }
+  },
   "gpt-5.6-sol": {
     "id": "gpt-5.6-sol",
     "provider": "openai",
