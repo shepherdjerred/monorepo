@@ -25,10 +25,6 @@
     },
     "status": "current",
     "routes": {
-      "openRouter": {
-        "modelId": "openai/gpt-6-luna",
-        "endpoint": "language"
-      },
       "codexSdk": {
         "modelId": "gpt-6-luna"
       }
