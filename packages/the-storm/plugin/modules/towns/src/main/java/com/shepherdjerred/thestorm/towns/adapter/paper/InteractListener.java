@@ -1,5 +1,7 @@
 package com.shepherdjerred.thestorm.towns.adapter.paper;
 
+import com.shepherdjerred.thestorm.core.module.Services;
+import com.shepherdjerred.thestorm.core.protection.GraveRecovery;
 import com.shepherdjerred.thestorm.towns.domain.protection.Act;
 import com.shepherdjerred.thestorm.towns.domain.protection.Action;
 import com.shepherdjerred.thestorm.towns.domain.protection.Subject;
@@ -20,10 +22,12 @@ final class InteractListener implements Listener {
 
   private final Guard guard;
   private final BlockKinds kinds;
+  private final Services services;
 
-  InteractListener(Guard guard, BlockKinds kinds) {
+  InteractListener(Guard guard, BlockKinds kinds, Services services) {
     this.guard = guard;
     this.kinds = kinds;
+    this.services = services;
   }
 
   @EventHandler(priority = EventPriority.LOW)
@@ -85,11 +89,11 @@ final class InteractListener implements Listener {
    */
   private boolean mayUse(PlayerInteractEvent event, Block block, Act use) {
     var player = event.getPlayer();
-    if (!guard.permits(player, use, guard.land(block))) {
+    if (!permitted(player, block, use)) {
       return false;
     }
     var partner = Chests.partner(block);
-    if (partner.isPresent() && !guard.permits(player, use, guard.land(partner.get()))) {
+    if (partner.isPresent() && !permitted(player, partner.get(), use)) {
       return false;
     }
     for (var shelf : Chests.shelfChain(block)) {
@@ -98,6 +102,17 @@ final class InteractListener implements Listener {
       }
     }
     return true;
+  }
+
+  private boolean permitted(org.bukkit.entity.Player player, Block block, Act use) {
+    if (use.action() == Action.OPEN_CONTAINER
+        && services
+            .find(GraveRecovery.class)
+            .map(graves -> graves.mayOpen(player.getUniqueId(), block))
+            .orElse(false)) {
+      return true;
+    }
+    return guard.permits(player, use, guard.land(block));
   }
 
   private void step(PlayerInteractEvent event, Block block) {

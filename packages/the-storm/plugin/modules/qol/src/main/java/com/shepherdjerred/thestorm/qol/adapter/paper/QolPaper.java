@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
+import com.shepherdjerred.thestorm.core.protection.GraveRecovery;
 import com.shepherdjerred.thestorm.core.protection.SettledLand;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import com.shepherdjerred.thestorm.qol.app.LandingMemory;
@@ -31,11 +32,10 @@ public final class QolPaper {
     var dialog = new ArrivalDialog(config, worlds, flow);
     var commands = new RtpCommands(flow, worlds, config);
     var plugin = context.plugin();
+    var graves = new GraveListener(plugin, store, config, context);
+    context.services().provide(GraveRecovery.class, graves::mayOpen);
     List<Listener> listeners =
-        List.of(
-            new GraveListener(plugin, store, config, context),
-            new JoinListener(store, dialog, context),
-            new TravelListener(flow));
+        List.of(graves, new JoinListener(store, dialog, context), new TravelListener(flow));
     for (var listener : listeners) {
       plugin.getServer().getPluginManager().registerEvents(listener, plugin);
     }

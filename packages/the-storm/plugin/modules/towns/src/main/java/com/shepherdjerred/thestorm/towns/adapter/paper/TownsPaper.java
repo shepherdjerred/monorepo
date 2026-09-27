@@ -56,7 +56,7 @@ public final class TownsPaper {
     List<Listener> listeners =
         List.of(
             new BlockListener(guard, kinds),
-            new InteractListener(guard, kinds),
+            new InteractListener(guard, kinds, context.services()),
             new EntityListener(guard),
             new CombatListener(guard),
             new MovementListener(guard, kinds),

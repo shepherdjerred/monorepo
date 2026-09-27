@@ -172,6 +172,10 @@ final class RtpFlow {
     if (failure != null || result == null) {
       release(player.getUniqueId());
       context.logger().error("Could not charge for a random teleport", failure);
+      if (player.isOnline()) {
+        player.sendMessage(
+            Messages.error("Could not process the teleport charge. Try again later."));
+      }
       return;
     }
     switch (result) {

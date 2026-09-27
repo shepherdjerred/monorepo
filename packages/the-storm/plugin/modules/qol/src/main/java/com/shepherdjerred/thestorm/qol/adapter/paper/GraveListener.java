@@ -49,6 +49,19 @@ final class GraveListener implements Listener {
     return marks;
   }
 
+  boolean mayOpen(java.util.UUID player, Block block) {
+    if (!(block.getState() instanceof Chest chest)) {
+      return false;
+    }
+    return marks
+        .read(chest)
+        .map(
+            grave ->
+                GraveAccess.open(player, grave.owner(), context.time().instant(), grave.expires())
+                    == GraveAccess.Open.OWNER)
+        .orElse(false);
+  }
+
   @EventHandler
   public void onDeath(PlayerDeathEvent event) {
     var player = event.getEntity();
