@@ -128,6 +128,20 @@ export function validatePipelineResourceContracts(
     }
   }
 
+  const paperE2e = containerBlock(
+    "paper-e2e-pr",
+    stepBlocks.get("paper-e2e-pr"),
+    "container-0",
+  );
+  if (
+    !hasTrimmedLine(
+      paperE2e,
+      '{ cpu: "2", memory: "6Gi", ephemeral-storage: "4Gi" }',
+    )
+  ) {
+    fail("paper-e2e-pr is missing its measured command reservation");
+  }
+
   for (const step of ["trivy", "semgrep"]) {
     const command = containerBlock(step, stepBlocks.get(step), "container-0");
     if (

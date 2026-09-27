@@ -1686,6 +1686,123 @@ steps:
             labels:
               ci.sjer.red/step-key: docker-e2e-pr
 
+  - label: ":test_tube: Paper E2E — Paper 26.2 + The Storm (PR)"
+    key: paper-e2e-pr
+    timeout_in_minutes: 45
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/pipeline.yml"
+        - ".buildkite/main-bootstrap.yml"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - ".buildkite/scripts/bun-install.sh"
+        - ".buildkite/scripts/toolchain.sh"
+        - ".mise.toml"
+        - "bun.lock"
+        - "bunfig.toml"
+        - "package.json"
+        - "patches/**"
+        - "turbo.json"
+        - "scripts/ci-test-manifest.json"
+        - "scripts/ci-test-manifest.schema.json"
+        - "packages/the-storm/**"
+        - "packages/eslint-config/**"
+    cancel_on_build_failing: true
+    command: |
+      . .buildkite/scripts/toolchain.sh
+      .buildkite/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/the-storm'
+      bun x --no-install turbo run build --filter=@shepherdjerred/the-storm
+      bun --no-install packages/the-storm/tests/e2e/prepare-sidecar.ts
+      bun --no-install run --cwd packages/the-storm test:e2e
+    retry: *retry
+    plugins:
+      - kubernetes:
+          <<: *pod_kubernetes
+          metadata:
+            labels:
+              ci.sjer.red/step-key: paper-e2e-pr
+          podSpecPatch:
+            <<: *pod_pod_spec
+            containers:
+              - *checkout_container
+              - name: container-0
+                <<: *pod_container
+                env:
+                  - *env_buildkite_shell
+                  - { name: STORM_E2E_HOST, value: "127.0.0.1" }
+                  - { name: STORM_E2E_GAME_PORT, value: "25565" }
+                  - { name: STORM_E2E_RCON_PORT, value: "25575" }
+                  - {
+                      name: STORM_E2E_RCON_PASSWORD,
+                      value: "storm-e2e-ci-rcon-password",
+                    }
+                  - {
+                      name: STORM_E2E_LOG_FILE,
+                      value: "/storm-e2e-data/logs/latest.log",
+                    }
+                  - { name: STORM_E2E_PLUGIN_DIR, value: "/storm-e2e-plugins" }
+                  - { name: STORM_E2E_DATA_DIR, value: "/storm-e2e-data" }
+                resources:
+                  requests:
+                    { cpu: "2", memory: "6Gi", ephemeral-storage: "4Gi" }
+                  limits:
+                    { cpu: "7", memory: "12Gi", ephemeral-storage: "12Gi" }
+                volumeMounts:
+                  - name: buildkite-git-mirrors
+                    mountPath: /buildkite/git-mirrors
+                    readOnly: true
+                  - { name: storm-e2e-plugins, mountPath: /storm-e2e-plugins }
+                  - { name: storm-e2e-data, mountPath: /storm-e2e-data }
+            initContainers:
+              - name: paper-server
+                image: "itzg/minecraft-server:2026.9.1-java25@sha256:e8640538dac5d54c2838d57fa9641e735ad0cf2b71fb0e8a68da3b542a315749"
+                imagePullPolicy: IfNotPresent
+                restartPolicy: Always
+                command:
+                  [
+                    "/bin/sh",
+                    "-ec",
+                    "until test -f /plugins/.ready; do sleep 1; done; exec /start",
+                  ]
+                env:
+                  - { name: EULA, value: "TRUE" }
+                  - { name: TYPE, value: "PAPER" }
+                  - { name: VERSION, value: "26.2" }
+                  - { name: PAPER_BUILD, value: "129" }
+                  - { name: ONLINE_MODE, value: "FALSE" }
+                  - { name: ENABLE_RCON, value: "true" }
+                  - { name: RCON_PASSWORD, value: "storm-e2e-ci-rcon-password" }
+                  - { name: SKIP_DOWNLOAD_DEFAULTS, value: "true" }
+                  - { name: MEMORY, value: "1G" }
+                  - { name: LEVEL_TYPE, value: "minecraft:flat" }
+                  - { name: GENERATE_STRUCTURES, value: "false" }
+                  - { name: SPAWN_PROTECTION, value: "0" }
+                  - { name: DIFFICULTY, value: "peaceful" }
+                  - { name: MODE, value: "survival" }
+                  - { name: VIEW_DISTANCE, value: "4" }
+                  - { name: SIMULATION_DISTANCE, value: "4" }
+                  - { name: ENABLE_AUTOPAUSE, value: "false" }
+                resources:
+                  requests: { cpu: "2", memory: "4Gi" }
+                  limits: { cpu: "4", memory: "8Gi" }
+                volumeMounts:
+                  - { name: storm-e2e-plugins, mountPath: /plugins }
+                  - { name: storm-e2e-data, mountPath: /data }
+            volumes:
+              - {
+                  name: storm-e2e-plugins,
+                  emptyDir: { medium: Memory, sizeLimit: 1Gi },
+                }
+              - {
+                  name: storm-e2e-data,
+                  emptyDir: { medium: Memory, sizeLimit: 2Gi },
+                }
+
   - label: ":test_tube: llm-observability E2E — Tempo + MinIO (main)"
     key: docker-e2e-main
     timeout_in_minutes: 30
@@ -2061,6 +2178,7 @@ steps:
       - tasknotes-windows-cross
       - trmnl-validate-pr
       - docker-e2e-pr
+      - paper-e2e-pr
       - trivy
       - semgrep
       - pr-dryrun
