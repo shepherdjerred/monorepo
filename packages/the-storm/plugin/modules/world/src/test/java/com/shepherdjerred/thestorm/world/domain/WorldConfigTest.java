@@ -26,6 +26,9 @@ final class WorldConfigTest {
     assertThat(config.ambient())
         .isEqualTo(new AmbientConfig(false, "world", -440, 71, -66, 24, 8, "America/Los_Angeles"));
     assertThat(config.digest()).isEqualTo(new DigestConfig(false, "world", "America/Los_Angeles"));
+    assertThat(config.merchant())
+        .isEqualTo(
+            new MerchantConfig(false, "world", java.util.List.of(), 12, 20, "America/Los_Angeles"));
     assertThat(config.worlds())
         .extracting(WorldSpec::name)
         .containsExactly("wilds", "peaks", "mining");
@@ -72,8 +75,39 @@ final class WorldConfigTest {
                     java.util.List.of(new WorldSpec("wilds", "normal", true)),
                     new CrierConfig(false, "world"),
                     new AmbientConfig(false, "world", -440, 71, -66, 24, 8, "America/Los_Angeles"),
-                    new DigestConfig(true, "world", "America/Los_Angeles")))
+                    new DigestConfig(true, "world", "America/Los_Angeles"),
+                    new MerchantConfig(
+                        false, "world", java.util.List.of(), 12, 20, "America/Los_Angeles")))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("requires the crier");
+  }
+
+  @Test
+  void merchantRequiresVerifiedMainWorldAnchorBeforeEnablement() {
+    assertThatThrownBy(
+            () ->
+                new MerchantConfig(
+                    true, "world", java.util.List.of(), 12, 20, "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("measured anchor");
+    assertThatThrownBy(
+            () ->
+                new MerchantConfig(
+                    true,
+                    "mining",
+                    java.util.List.of(new MerchantAnchor(10, 80, 10)),
+                    12,
+                    20,
+                    "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("main world");
+    assertThatThrownBy(
+            () ->
+                new MerchantConfig(
+                    false, "world", java.util.List.of(), 3, 20, "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(
+            () -> new MerchantConfig(false, "world", java.util.List.of(), 12, 20, "not-a-zone"))
+        .isInstanceOf(java.time.DateTimeException.class);
   }
 }

@@ -12,13 +12,15 @@ import java.util.List;
  * @param crier main-world bulletin command, disabled until a live rollout
  * @param ambient main-world arrival barks, disabled until a live rollout
  * @param digest recorded main-world daily activity under {@code /crier digest}
+ * @param merchant event-triggered windmill trader visit, disabled until anchor verification
  */
 public record WorldConfig(
     int sleepPercentage,
     List<WorldSpec> worlds,
     CrierConfig crier,
     AmbientConfig ambient,
-    DigestConfig digest) {
+    DigestConfig digest,
+    MerchantConfig merchant) {
 
   public WorldConfig {
     worlds = List.copyOf(worlds);
@@ -30,6 +32,9 @@ public record WorldConfig(
     }
     if (digest == null) {
       throw new IllegalArgumentException("digest config is required");
+    }
+    if (merchant == null) {
+      throw new IllegalArgumentException("merchant config is required");
     }
     if (digest.enabled() && !crier.enabled()) {
       throw new IllegalArgumentException("the daily digest requires the crier command");

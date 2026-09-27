@@ -28,6 +28,15 @@ digest:
   enabled: false
   world: world
   timeZone: America/Los_Angeles
+# The single anchor must be measured at the current windmill spawn before enabling.
+# A nearby arrival can begin one finite, item-barter visit per Pacific date.
+merchant:
+  enabled: false
+  world: world
+  anchors: []
+  arrivalRadius: 12
+  visitMinutes: 20
+  timeZone: America/Los_Angeles
 worlds:
   - name: wilds
     preset: large_biomes

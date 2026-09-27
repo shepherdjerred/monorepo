@@ -7,6 +7,7 @@ import com.shepherdjerred.thestorm.world.adapter.paper.AmbientBarks;
 import com.shepherdjerred.thestorm.world.adapter.paper.CrierCommands;
 import com.shepherdjerred.thestorm.world.adapter.paper.DailyActivityListener;
 import com.shepherdjerred.thestorm.world.adapter.paper.DailyDigestCommands;
+import com.shepherdjerred.thestorm.world.adapter.paper.WindmillMerchant;
 import com.shepherdjerred.thestorm.world.adapter.paper.WorldPaper;
 import com.shepherdjerred.thestorm.world.adapter.remote.FliptCrierGate;
 import com.shepherdjerred.thestorm.world.app.CrierGate;
@@ -79,6 +80,16 @@ public final class WorldModule implements StormModule {
           .getPluginManager()
           .registerEvents(
               new AmbientBarks(context.plugin(), config.ambient(), context.time()),
+              context.plugin());
+    }
+    if (config.merchant().enabled()) {
+      context
+          .plugin()
+          .getServer()
+          .getPluginManager()
+          .registerEvents(
+              new WindmillMerchant(
+                  context.plugin(), config.merchant(), context.time(), context.logger()),
               context.plugin());
     }
     context.logger().info("{} module created {}", id(), worlds.defaultWorld().name());
