@@ -2,8 +2,11 @@ package com.shepherdjerred.thestorm.world;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
+import com.shepherdjerred.thestorm.world.adapter.db.JooqDailyLedger;
 import com.shepherdjerred.thestorm.world.adapter.paper.AmbientBarks;
 import com.shepherdjerred.thestorm.world.adapter.paper.CrierCommands;
+import com.shepherdjerred.thestorm.world.adapter.paper.DailyActivityListener;
+import com.shepherdjerred.thestorm.world.adapter.paper.DailyDigestCommands;
 import com.shepherdjerred.thestorm.world.adapter.paper.WorldPaper;
 import com.shepherdjerred.thestorm.world.adapter.remote.FliptCrierGate;
 import com.shepherdjerred.thestorm.world.app.CrierGate;
@@ -12,6 +15,7 @@ import com.shepherdjerred.thestorm.world.domain.WorldConfig;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import java.net.URI;
 import org.jspecify.annotations.Nullable;
+import java.util.Optional;
 
 /**
  * Creates the extra overworlds, publishes {@link WildWorlds}, and optionally registers crier
@@ -41,11 +45,30 @@ public final class WorldModule implements StormModule {
       gate = remote;
       rollout = remote;
     }
+    var digest = Optional.<DailyDigestCommands>empty();
+    if (config.digest().enabled()) {
+      context.database().migrate(id(), WorldModule.class.getClassLoader());
+      var ledger = new JooqDailyLedger(context.database());
+      context
+          .plugin()
+          .getServer()
+          .getPluginManager()
+          .registerEvents(
+              new DailyActivityListener(config.digest(), context.time(), ledger, context.logger()),
+              context.plugin());
+      digest =
+          Optional.of(
+              new DailyDigestCommands(
+                  new DailyDigestCommands.Dependencies(
+                      config.digest(), ledger, context.time(), context.scheduler()),
+                  context.logger()));
+    }
     var crier =
         new CrierCommands(
             context.plugin().getServer(),
             config.crier(),
-            new CrierCommands.Ports(rollout, context.scheduler(), context.logger()));
+            new CrierCommands.Ports(rollout, context.scheduler(), context.logger()),
+            digest);
     context
         .lifecycle()
         .registerEventHandler(LifecycleEvents.COMMANDS, event -> crier.register(event.registrar()));

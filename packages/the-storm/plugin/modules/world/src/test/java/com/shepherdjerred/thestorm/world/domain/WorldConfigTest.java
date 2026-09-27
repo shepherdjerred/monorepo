@@ -25,6 +25,7 @@ final class WorldConfigTest {
     assertThat(config.crier()).isEqualTo(new CrierConfig(false, "world"));
     assertThat(config.ambient())
         .isEqualTo(new AmbientConfig(false, "world", -440, 71, -66, 24, 8, "America/Los_Angeles"));
+    assertThat(config.digest()).isEqualTo(new DigestConfig(false, "world", "America/Los_Angeles"));
     assertThat(config.worlds())
         .extracting(WorldSpec::name)
         .containsExactly("wilds", "peaks", "mining");
@@ -55,5 +56,24 @@ final class WorldConfigTest {
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new AmbientConfig(true, "world", 0, 64, 0, 24, 8, "not-a-zone"))
         .isInstanceOf(java.time.DateTimeException.class);
+  }
+
+  @Test
+  void digestRequiresMainWorldAndCrier() {
+    assertThatThrownBy(() -> new DigestConfig(true, "mining", "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("main world");
+    assertThatThrownBy(() -> new DigestConfig(true, "world", "not-a-zone"))
+        .isInstanceOf(java.time.DateTimeException.class);
+    assertThatThrownBy(
+            () ->
+                new WorldConfig(
+                    50,
+                    java.util.List.of(new WorldSpec("wilds", "normal", true)),
+                    new CrierConfig(false, "world"),
+                    new AmbientConfig(false, "world", -440, 71, -66, 24, 8, "America/Los_Angeles"),
+                    new DigestConfig(true, "world", "America/Los_Angeles")))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("requires the crier");
   }
 }

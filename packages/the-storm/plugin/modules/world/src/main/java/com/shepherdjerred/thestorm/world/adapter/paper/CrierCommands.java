@@ -7,6 +7,8 @@ import com.shepherdjerred.thestorm.world.domain.CrierConfig;
 import com.shepherdjerred.thestorm.world.domain.CrierNews;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
+import java.util.Optional;
+import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
@@ -20,11 +22,13 @@ public final class CrierCommands {
   private final CrierGate gate;
   private final Scheduler scheduler;
   private final ComponentLogger logger;
+  private final Optional<DailyDigestCommands> digest;
 
   /** Runtime ports used after a command is invoked. */
   public record Ports(CrierGate gate, Scheduler scheduler, ComponentLogger logger) {}
 
-  public CrierCommands(Server server, CrierConfig config, Ports ports) {
+  public CrierCommands(
+      Server server, CrierConfig config, Ports ports, Optional<DailyDigestCommands> digest) {
     if (server.getWorld(config.world()) == null) {
       throw new IllegalStateException("crier world is not loaded: " + config.world());
     }
@@ -32,15 +36,28 @@ public final class CrierCommands {
     this.gate = ports.gate();
     this.scheduler = ports.scheduler();
     this.logger = ports.logger();
+    this.digest = digest;
   }
 
   public void register(Commands commands) {
-    commands.register(
-        Commands.literal("crier").executes(context -> announce(context.getSource())).build(),
-        "Hear the main-world town crier");
+    var root = Commands.literal("crier").executes(context -> announce(context.getSource()));
+    digest.ifPresent(
+        daily ->
+            root.then(
+                Commands.literal("digest")
+                    .executes(
+                        context ->
+                            runGated(
+                                context.getSource(),
+                                player -> daily.announce(context.getSource())))));
+    commands.register(root.build(), "Hear the main-world town crier");
   }
 
   private int announce(CommandSourceStack source) {
+    return runGated(source, this::bulletin);
+  }
+
+  private int runGated(CommandSourceStack source, Consumer<Player> granted) {
     if (!(source.getSender() instanceof Player player)) {
       source.getSender().sendMessage("The crier can only be heard in the main world.");
       return Command.SINGLE_SUCCESS;
@@ -71,7 +88,7 @@ public final class CrierCommands {
                     return;
                   }
                   if (player.isOnline() && player.getWorld().getName().equals(config.world())) {
-                    bulletin(player);
+                    granted.accept(player);
                   }
                 },
                 scheduler.mainThread());
