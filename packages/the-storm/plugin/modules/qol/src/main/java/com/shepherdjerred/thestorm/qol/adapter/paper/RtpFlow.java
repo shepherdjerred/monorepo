@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.core.protection.SettledLand;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
+import com.shepherdjerred.thestorm.qol.app.Ensured;
 import com.shepherdjerred.thestorm.qol.app.LandingMemory;
 import com.shepherdjerred.thestorm.qol.app.QolStore;
 import com.shepherdjerred.thestorm.qol.domain.QolConfig;
@@ -12,8 +13,11 @@ import com.shepherdjerred.thestorm.qol.domain.rtp.BlockPoint;
 import com.shepherdjerred.thestorm.qol.domain.rtp.RtpDecision;
 import com.shepherdjerred.thestorm.qol.domain.rtp.RtpPricing;
 import com.shepherdjerred.thestorm.world.app.WildWorlds;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -25,6 +29,7 @@ import org.bukkit.entity.Player;
 final class RtpFlow {
 
   private final Set<UUID> busy = new HashSet<>();
+  private final Map<UUID, Instant> unsavedCooldowns = new HashMap<>();
   private final WildWorlds worlds;
   private final SettledLand land;
   private final QolStore store;
@@ -65,11 +70,13 @@ final class RtpFlow {
       release(player.getUniqueId());
       return;
     }
-    player.sendMessage(Messages.info("Looking for a place..."));
-    search.find(
-        request(world.get(), biome),
-        context.random(),
-        outcome -> found(player, world.get(), outcome));
+    var _ =
+        store
+            .ensure(player.getUniqueId(), context.time().instant())
+            .whenCompleteAsync(
+                (ensured, failure) ->
+                    quoted(player, world.get(), biome, new PricingCheck(ensured, failure)),
+                context.scheduler().mainThread());
   }
 
   void moved(Player player) {
@@ -80,7 +87,7 @@ final class RtpFlow {
     warmups.hurt(player);
   }
 
-  private void found(Player player, World world, RtpSearch.Outcome outcome) {
+  private void found(Player player, World world, RtpSearch.Outcome outcome, long cost) {
     if (!player.isOnline() || outcome.spot().isEmpty()) {
       release(player.getUniqueId());
       if (outcome.failure() != null) {
@@ -96,41 +103,56 @@ final class RtpFlow {
       return;
     }
     var at = outcome.spot().get();
-    quote(player, new Location(world, at.x() + 0.5, at.y(), at.z() + 0.5));
+    stand(player, new Location(world, at.x() + 0.5, at.y(), at.z() + 0.5), cost);
   }
 
-  private void quote(Player player, Location destination) {
-    var now = context.time().instant();
-    var _ =
-        store
-            .ensure(player.getUniqueId(), now)
-            .whenCompleteAsync(
-                (ensured, failure) -> quoted(player, destination, ensured, failure),
-                context.scheduler().mainThread());
-  }
-
-  private void quoted(
-      Player player,
-      Location destination,
-      com.shepherdjerred.thestorm.qol.app.Ensured ensured,
-      Throwable failure) {
-    if (failure != null || !player.isOnline()) {
+  private void quoted(Player player, World world, Optional<String> biome, PricingCheck check) {
+    var failure = check.failure();
+    if (failure != null) {
       release(player.getUniqueId());
       context.logger().error("Could not price a random teleport", failure);
+      if (player.isOnline()) {
+        player.sendMessage(Messages.error("Could not check teleport pricing. Try again later."));
+      }
       return;
     }
+    if (!player.isOnline()) {
+      release(player.getUniqueId());
+      return;
+    }
+    var now = context.time().instant();
     var decision =
         pricing.decide(
-            ensured.profile().firstSeen(), ensured.profile().lastRtp(), context.time().instant());
+            check.ensured().profile().firstSeen(),
+            latestCooldown(player.getUniqueId(), check.ensured().profile().lastRtp(), now),
+            now);
     switch (decision) {
       case RtpDecision.CoolingDown(var remaining) -> {
         release(player.getUniqueId());
         player.sendMessage(
             Messages.error("You can teleport again in " + remaining.toSeconds() + "s."));
       }
-      case RtpDecision.Free() -> stand(player, destination, 0);
-      case RtpDecision.Priced(var cost) -> stand(player, destination, cost);
+      case RtpDecision.Free() -> search(player, world, biome, 0);
+      case RtpDecision.Priced(var cost) -> search(player, world, biome, cost);
     }
+  }
+
+  private Optional<Instant> latestCooldown(UUID player, Optional<Instant> persisted, Instant now) {
+    var unsaved = unsavedCooldowns.get(player);
+    if (unsaved == null) {
+      return persisted;
+    }
+    if (!now.isBefore(unsaved.plus(config.cooldownDuration()))) {
+      unsavedCooldowns.remove(player, unsaved);
+      return persisted;
+    }
+    return persisted.filter(saved -> saved.isAfter(unsaved)).or(() -> Optional.of(unsaved));
+  }
+
+  private void search(Player player, World world, Optional<String> biome, long cost) {
+    player.sendMessage(Messages.info("Looking for a place..."));
+    search.find(
+        request(world, biome), context.random(), outcome -> found(player, world, outcome, cost));
   }
 
   private void stand(Player player, Location destination, long cost) {
@@ -206,6 +228,7 @@ final class RtpFlow {
     }
     var now = context.time().instant();
     memory.remember(world.getName(), destination.getBlockX(), destination.getBlockZ(), now);
+    unsavedCooldowns.put(player.getUniqueId(), now);
     var _ =
         store
             .setLastRtp(player.getUniqueId(), now)
@@ -213,6 +236,8 @@ final class RtpFlow {
                 (ok, failure) -> {
                   if (failure != null) {
                     context.logger().error("Could not record a random teleport", failure);
+                  } else {
+                    unsavedCooldowns.remove(player.getUniqueId(), now);
                   }
                 },
                 context.scheduler().mainThread());
@@ -300,4 +325,6 @@ final class RtpFlow {
               com.shepherdjerred.thestorm.economy.app.EconomyError>
           result,
       Throwable failure) {}
+
+  private record PricingCheck(Ensured ensured, Throwable failure) {}
 }
