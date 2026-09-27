@@ -206,6 +206,9 @@ and [Discord delivery Activity](https://github.com/shepherdjerred/monorepo/blob/
 
 BlueBubbles password query authentication remains inside the Activity request.
 Credentials and authenticated URLs do not enter Workflow history or HTTP breadcrumbs.
+The credential-owning gateway evaluates this connector's rollout in Flipt's
+`beta` environment; the Temporal namespace remains `prod`, so the canary is
+limited to ingress activation rather than splitting a conversation's runtime.
 An allowed sender must produce an incoming direct message; messages sent by the
 BlueBubbles account itself are outgoing echoes.
 

@@ -47,6 +47,7 @@ export type TemporalDomainWorkerProps = {
    * defaults to true.
    */
   featureFlagsEnabled?: boolean;
+  featureFlagEnvironment?: "beta" | "prod";
 };
 
 export function createTemporalDomainWorker(
@@ -123,7 +124,7 @@ export function createTemporalDomainWorker(
       envVariables: {
         ...(props.featureFlagsEnabled === false
           ? {}
-          : temporalFeatureFlagEnvironment()),
+          : temporalFeatureFlagEnvironment(props.featureFlagEnvironment)),
         ...props.envVariables,
       },
     }),

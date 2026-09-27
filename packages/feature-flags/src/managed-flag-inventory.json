@@ -1559,6 +1559,14 @@
       "key": "beta",
       "overrides": [
         {
+          "key": "temporal-agent-chat-imessage-enabled",
+          "type": "boolean",
+          "default": true,
+          "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
           "key": "explore_on_demand_riot_enabled",
           "type": "boolean",
           "default": false,

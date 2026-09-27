@@ -17,6 +17,10 @@ export function createTemporalIngressWorkers(
   const gatewayDeployment = createTemporalDomainWorker(chart, {
     name: "temporal-gateway",
     component: "gateway",
+    // The credential-owning ingress gateway is the beta consumer for durable
+    // iMessage chat. Its Temporal namespace remains prod, while only the
+    // feature-flag environment canaries this new ingress behavior.
+    featureFlagEnvironment: "beta",
     // The namespace initializer must create prod and beta before this control
     // worker starts. Keep the gateway with the other namespace-scoped workers
     // in wave 2, after the initializer's wave 1 hook completes.

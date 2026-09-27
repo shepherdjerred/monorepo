@@ -147,11 +147,15 @@ describe("Flipt consumer environments", () => {
 
   test.each(cases)(
     "sets $name to $environment/$namespace",
-    async ({ environment, namespace, count, createChart }) => {
+    async ({ name, environment, namespace, count, createChart }) => {
       const consumers = await fliptConsumers(createChart);
       expect(consumers).toHaveLength(count);
       for (const consumer of consumers) {
-        expect(consumer.environment).toBe(environment);
+        expect(consumer.environment).toBe(
+          name === "Temporal" && consumer.name === "temporal-temporal-gateway"
+            ? "beta"
+            : environment,
+        );
         expect(consumer.namespace).toBe(namespace);
       }
     },
