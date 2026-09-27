@@ -47,10 +47,7 @@ function FinalBuild(props: { card: ExploreLoadoutCard; compact?: boolean }) {
   const compact = props.compact === true;
   const iconSize = compact ? "size-7" : "size-9";
   return (
-    <section
-      className={compact ? "space-y-1" : "space-y-2"}
-      aria-label="Final build"
-    >
+    <section className={compact ? "space-y-1" : "space-y-2"}>
       <h4
         className={
           compact
@@ -116,10 +113,7 @@ function Spells(props: { card: ExploreLoadoutCard; compact?: boolean }) {
   const compact = props.compact === true;
   const iconSize = compact ? "size-6" : "size-8";
   return (
-    <section
-      className={compact ? "space-y-1" : "space-y-2"}
-      aria-label="Summoner spells"
-    >
+    <section className={compact ? "space-y-1" : "space-y-2"}>
       <h4
         className={
           compact
@@ -127,7 +121,7 @@ function Spells(props: { card: ExploreLoadoutCard; compact?: boolean }) {
             : "text-xs font-semibold uppercase tracking-wide text-scout-subtle"
         }
       >
-        Spells
+        Summoner spells
       </h4>
       <div className="flex gap-1.5">
         {props.card.spells.map((spell) =>
