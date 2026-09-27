@@ -22,3 +22,5 @@ modules:
   skills: false
   seasonal: false
   world: false
+  tickets: false
+  agent: false
