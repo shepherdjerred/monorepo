@@ -346,9 +346,9 @@ public final class QuestEngine {
     return current;
   }
 
-  /** Counts talking to {@code npc} if the rest of the stage is done. */
+  /** Counts talking to {@code npc} once the stage's non-conversation work is done. */
   private ActiveQuest report(Stage stage, ActiveQuest active, String npc) {
-    if (!reportsAt(stage, active, npc)) {
+    if (!reportsAt(stage, active)) {
       return active;
     }
     var current = active;
@@ -362,12 +362,11 @@ public final class QuestEngine {
     return current;
   }
 
-  /** Whether every objective other than talking to {@code npc} is done. */
-  public static boolean reportsAt(Stage stage, ActiveQuest active, String npc) {
+  /** Whether every non-conversation objective is done. Conversations can happen in any order. */
+  public static boolean reportsAt(Stage stage, ActiveQuest active) {
     for (var index = 0; index < stage.objectives().size(); index++) {
       var objective = stage.objectives().get(index);
-      var talkHere = objective instanceof Objective.Talk talk && talk.npc().equals(npc);
-      if (!talkHere && active.count(index) < objective.required()) {
+      if (!(objective instanceof Objective.Talk) && active.count(index) < objective.required()) {
         return false;
       }
     }
