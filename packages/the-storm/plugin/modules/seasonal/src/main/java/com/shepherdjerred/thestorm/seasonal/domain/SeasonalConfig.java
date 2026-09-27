@@ -37,6 +37,7 @@ public record SeasonalConfig(String mainWorld, String timeZone, List<Event> even
       String lastDay,
       int spawnRadius,
       int dailyDoors,
+      List<Door> doors,
       List<Reward> rewards) {
 
     public Event {
@@ -54,6 +55,21 @@ public record SeasonalConfig(String mainWorld, String timeZone, List<Event> even
       if (dailyDoors < 1 || dailyDoors > 64) {
         throw new IllegalArgumentException("dailyDoors must be 1..64");
       }
+      doors = List.copyOf(doors);
+      if (doors.size() != dailyDoors) {
+        throw new IllegalArgumentException("dailyDoors must match the authored door count");
+      }
+      var positions = new HashSet<String>();
+      for (var door : doors) {
+        if (!positions.add(door.east() + "," + door.up() + "," + door.south())) {
+          throw new IllegalArgumentException("seasonal doors must have unique positions");
+        }
+        long east = door.east();
+        long south = door.south();
+        if (east * east + south * south > (long) spawnRadius * spawnRadius) {
+          throw new IllegalArgumentException("seasonal door is outside its spawn radius");
+        }
+      }
       rewards = List.copyOf(rewards);
       if (rewards.isEmpty()) {
         throw new IllegalArgumentException("event rewards must not be empty");
@@ -66,6 +82,15 @@ public record SeasonalConfig(String mainWorld, String timeZone, List<Event> even
 
     public AnnualWindow window() {
       return new AnnualWindow(MonthDay.parse("--" + firstDay), MonthDay.parse("--" + lastDay));
+    }
+  }
+
+  /** Lower-half door position relative to the main world's spawn block. */
+  public record Door(int east, int up, int south, String material) {
+    public Door {
+      if (up < -16 || up > 16 || !material.matches("[A-Z][A-Z_]*_DOOR")) {
+        throw new IllegalArgumentException("invalid seasonal door");
+      }
     }
   }
 
