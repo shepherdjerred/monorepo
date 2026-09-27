@@ -60,6 +60,7 @@ final class SessionListener implements Listener {
   void onJoin(PlayerJoinEvent event) {
     var player = event.getPlayer();
     presence.afk().joined(player.getUniqueId());
+    arrival.kits().deliveries().deliver(player.getUniqueId());
     var playedBefore = player.hasPlayedBefore();
     var known = new KnownPlayer(player.getUniqueId(), player.getName(), runtime.time().instant());
     runtime.onMain(
@@ -94,8 +95,8 @@ final class SessionListener implements Listener {
         kits.claims().claim(player.getUniqueId(), claim),
         "granting the starter kit",
         result -> {
-          if (result instanceof Result.Ok<Instant, KitError> && player.isOnline()) {
-            kits.items().give(player, starter);
+          if (result instanceof Result.Ok<Instant, KitError>) {
+            kits.deliveries().deliver(player.getUniqueId());
           }
         });
     Say.success(player, Say.STORM, "Welcome to The Storm, " + player.getName() + "! Read /rules.");
