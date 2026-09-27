@@ -1600,7 +1600,7 @@
       "key": "beta",
       "overrides": [
         {
-          "key": "birmel-image-generation-enabled",
+          "key": "temporal-agent-chat-imessage-enabled",
           "type": "boolean",
           "default": true,
           "rollouts": [],
