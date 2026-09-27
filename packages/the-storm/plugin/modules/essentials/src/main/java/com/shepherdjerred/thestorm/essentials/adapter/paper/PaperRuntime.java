@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.Server;
+import org.bukkit.entity.Player;
 
 /**
  * What the Paper adapters share: the server, the main-thread scheduler, the clock and the logger.
@@ -47,6 +48,20 @@ public record PaperRuntime(
   /** {@link #onMain(CompletableFuture, String, Consumer, Consumer)} that only logs failures. */
   <T> void onMain(CompletableFuture<T> future, String what, Consumer<T> then) {
     onMain(future, what, then, failure -> {});
+  }
+
+  /** Completes a player command on the main thread and reports storage failures to its sender. */
+  <T> void onMainCommand(
+      CompletableFuture<T> future, String what, Player player, Consumer<T> then) {
+    onMain(
+        future,
+        what,
+        then,
+        failure -> {
+          if (player.isOnline()) {
+            Say.error(player, Say.STORM, "Could not complete that request. Please try again.");
+          }
+        });
   }
 
   /** Logs {@code future}'s failure, if any. For writes nobody waits on. */

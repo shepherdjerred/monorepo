@@ -196,9 +196,10 @@ final class TeleportCommands {
   }
 
   private void home(Player player, Optional<PlaceName> requested) {
-    runtime.onMain(
+    runtime.onMainCommand(
         places.homes().homes(player.getUniqueId()),
         "loading homes",
+        player,
         homes -> {
           if (!player.isOnline()) {
             return;
@@ -224,9 +225,10 @@ final class TeleportCommands {
       return;
     }
     var home = new Home(name, Positions.of(player));
-    runtime.onMain(
+    runtime.onMainCommand(
         places.homes().set(player.getUniqueId(), home, config.homeLimit()),
         "setting a home",
+        player,
         result -> {
           switch (result) {
             case Result.Ok<HomeRules.Change, HomeError>(var change) ->
@@ -241,9 +243,10 @@ final class TeleportCommands {
   }
 
   private void deleteHome(Player player, PlaceName name) {
-    runtime.onMain(
+    runtime.onMainCommand(
         places.homes().delete(player.getUniqueId(), name),
         "deleting a home",
+        player,
         deleted -> {
           if (deleted) {
             Say.success(player, Say.HOMES, "Deleted home " + name + ".");
@@ -254,9 +257,10 @@ final class TeleportCommands {
   }
 
   private void listHomes(Player player) {
-    runtime.onMain(
+    runtime.onMainCommand(
         places.homes().homes(player.getUniqueId()),
         "listing homes",
+        player,
         homes -> {
           if (homes.isEmpty()) {
             Say.info(player, Say.HOMES, "You have no homes. Set one with /sethome.");
@@ -277,9 +281,10 @@ final class TeleportCommands {
 
   private void back(Player player) {
     var capacity = config.teleports().backHistorySize();
-    runtime.onMain(
+    runtime.onMainCommand(
         places.back().history(player.getUniqueId(), capacity),
         "loading /back history",
+        player,
         history -> goBack(player, history));
   }
 
@@ -300,34 +305,46 @@ final class TeleportCommands {
   }
 
   private void warp(Player player, PlaceName name) {
-    places
-        .warps()
-        .find(name)
-        .ifPresentOrElse(
-            found -> go(player, TeleportKind.WARP, found.position(), "warp " + name),
-            () -> Say.error(player, Say.WARPS, "There is no warp called " + name + "."));
+    runtime.onMainCommand(
+        places.warps().findReady(name),
+        "loading a warp",
+        player,
+        found ->
+            found.ifPresentOrElse(
+                warp -> go(player, TeleportKind.WARP, warp.position(), "warp " + name),
+                () -> Say.error(player, Say.WARPS, "There is no warp called " + name + ".")));
   }
 
   private void listWarps(Player player) {
-    var names = warpNames();
-    if (names.isEmpty()) {
-      Say.info(player, Say.WARPS, "There are no warps yet.");
-    } else {
-      Say.info(player, Say.WARPS, "Warps: " + String.join(", ", names));
-    }
+    runtime.onMainCommand(
+        places.warps().namesReady(),
+        "listing warps",
+        player,
+        names -> {
+          if (names.isEmpty()) {
+            Say.info(player, Say.WARPS, "There are no warps yet.");
+          } else {
+            Say.info(
+                player,
+                Say.WARPS,
+                "Warps: " + String.join(", ", names.stream().map(PlaceName::value).toList()));
+          }
+        });
   }
 
   private void setWarp(Player player, PlaceName name) {
-    runtime.onMain(
+    runtime.onMainCommand(
         places.warps().set(new Warp(name, Positions.of(player))),
         "setting a warp",
+        player,
         done -> Say.success(player, Say.WARPS, "Warp " + name + " set."));
   }
 
   private void deleteWarp(Player player, PlaceName name) {
-    runtime.onMain(
+    runtime.onMainCommand(
         places.warps().delete(name),
         "deleting a warp",
+        player,
         deleted -> {
           if (deleted) {
             Say.success(player, Say.WARPS, "Deleted warp " + name + ".");

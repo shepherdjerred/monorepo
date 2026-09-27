@@ -36,17 +36,26 @@ public final class WarpDirectory {
     return Optional.ofNullable(warps.get(name));
   }
 
+  /** Resolves a warp only after the durable directory has loaded. */
+  public CompletableFuture<Optional<Warp>> findReady(PlaceName name) {
+    return loaded.thenApply(ready -> find(name));
+  }
+
   /** Every warp name, sorted. */
   public List<PlaceName> names() {
     return warps.keySet().stream().sorted().toList();
+  }
+
+  /** Lists warps only after the durable directory has loaded. */
+  public CompletableFuture<List<PlaceName>> namesReady() {
+    return loaded.thenApply(ready -> names());
   }
 
   /** Creates or moves a warp. */
   public CompletableFuture<Void> set(Warp warp) {
     return loaded.thenCompose(
         ready -> {
-          warps.put(warp.name(), warp);
-          return store.save(warp);
+          return store.save(warp).thenRun(() -> warps.put(warp.name(), warp));
         });
   }
 
@@ -54,8 +63,15 @@ public final class WarpDirectory {
   public CompletableFuture<Boolean> delete(PlaceName name) {
     return loaded.thenCompose(
         ready -> {
-          warps.remove(name);
-          return store.delete(name);
+          return store
+              .delete(name)
+              .thenApply(
+                  deleted -> {
+                    if (deleted) {
+                      warps.remove(name);
+                    }
+                    return deleted;
+                  });
         });
   }
 }

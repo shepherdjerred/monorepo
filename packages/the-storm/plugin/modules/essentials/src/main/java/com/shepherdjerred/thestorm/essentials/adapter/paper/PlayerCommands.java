@@ -94,9 +94,10 @@ final class PlayerCommands {
       return;
     }
     var claim = new KitClaimStore.KitClaim(name, kit, runtime.time().instant());
-    runtime.onMain(
+    runtime.onMainCommand(
         kits.claims().claim(player.getUniqueId(), claim),
         "claiming a kit",
+        player,
         result -> {
           switch (result) {
             case Result.Ok<Instant, KitError> _ -> {
