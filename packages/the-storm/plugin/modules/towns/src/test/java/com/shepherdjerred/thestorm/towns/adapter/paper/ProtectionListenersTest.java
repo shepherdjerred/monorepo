@@ -320,7 +320,8 @@ final class ProtectionListenersTest extends AegisServer {
 
   @Test
   void outsidersCannotClaimOrUnclaimAndClaimsFollowTheRules() throws InterruptedException {
-    bob.teleport(new Location(world, 165, Y, Z));
+    // Arrange positions directly; protected arrivals themselves are covered by teleport checks.
+    bob.setLocation(new Location(world, 165, Y, Z));
     server.dispatchCommand(bob, "unclaim");
     awaitLine(bob, "You are not in a town.");
 
@@ -328,10 +329,10 @@ final class ProtectionListenersTest extends AegisServer {
     awaitLine(bob, "Founded Bastion");
     server.dispatchCommand(bob, "claim");
     awaitLine(bob, "This chunk already belongs to Aegis.");
-    bob.teleport(new Location(world, 8, Y, 8));
+    bob.setLocation(new Location(world, 8, Y, 8));
     server.dispatchCommand(bob, "claim");
     awaitLine(bob, "Spawn is protected and cannot be claimed.");
-    bob.teleport(new Location(world, 140, Y, Z));
+    bob.setLocation(new Location(world, 140, Y, Z));
     server.dispatchCommand(bob, "claim");
     awaitLine(bob, "This chunk is within 2 chunks of Aegis.");
   }

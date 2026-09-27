@@ -148,7 +148,8 @@ final class GriefRegressionTest extends AegisServer {
     assertThat(raidAllowed(bob, town)).isFalse();
     assertThat(raidAllowed(bob, farWild)).isTrue();
     assertThat(raidAllowed(bob, nearTown)).as("Aegis is within the raid's 64 blocks").isFalse();
-    bob.teleport(town);
+    // Arrange a player already inside the claim; teleporting there is now correctly denied.
+    bob.setLocation(town);
     assertThat(raidAllowed(bob, farWild)).isFalse();
     alice.teleport(town);
     assertThat(raidAllowed(alice, town)).isTrue();
