@@ -74,6 +74,9 @@ committed. Module startup and player joins reconcile unfinished attempts against
 the economy ledger. If a process stops after teleport delivery but before the
 attempt is cleared, recovery may refund a delivered teleport; it never drops a
 known charge without either delivery or compensation.
+The selected landing chunk has a reference-counted plugin ticket through the
+warmup, charge, and teleport so the final move does not reload it on the main
+thread.
 
 - `@NullMarked` on every package; NullAway (JSpecify mode) runs as an error.
 - Error Prone with Picnic's checks; `-Xlint:all -Werror`. Warnings fail the build.
