@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.discord.adapter.discord.JdaBridge;
 import com.shepherdjerred.thestorm.discord.adapter.paper.PaperOnlinePlayers;
 import com.shepherdjerred.thestorm.discord.adapter.paper.ServerEventsListener;
+import com.shepherdjerred.thestorm.discord.adapter.paper.VanillaPlainText;
 import com.shepherdjerred.thestorm.discord.app.DiscordConfig;
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
 import com.shepherdjerred.thestorm.discord.domain.DiscordCredentials;
@@ -57,7 +58,10 @@ public final class DiscordModule implements StormModule {
             bridge,
             new DiscordRelay.Game(chat, context.scheduler(), new PaperOnlinePlayers(server)));
     var subscription = chat.subscribe(relay::onChatLine);
-    server.getPluginManager().registerEvents(new ServerEventsListener(relay), context.plugin());
+    var text = new VanillaPlainText(server.getClass().getClassLoader());
+    server
+        .getPluginManager()
+        .registerEvents(new ServerEventsListener(relay, text), context.plugin());
     bridge.start(credentials, relay);
     running = new Running(bridge, relay, subscription);
   }

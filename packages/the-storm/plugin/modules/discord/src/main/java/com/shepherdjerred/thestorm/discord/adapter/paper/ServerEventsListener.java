@@ -1,8 +1,6 @@
 package com.shepherdjerred.thestorm.discord.adapter.paper;
 
 import com.shepherdjerred.thestorm.discord.app.DiscordRelay;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -18,9 +16,11 @@ import org.bukkit.event.player.PlayerQuitEvent;
 public final class ServerEventsListener implements Listener {
 
   private final DiscordRelay relay;
+  private final VanillaPlainText text;
 
-  public ServerEventsListener(DiscordRelay relay) {
+  public ServerEventsListener(DiscordRelay relay, VanillaPlainText text) {
     this.relay = relay;
+    this.text = text;
   }
 
   @EventHandler(priority = EventPriority.MONITOR)
@@ -38,7 +38,7 @@ public final class ServerEventsListener implements Listener {
   public void onDeath(PlayerDeathEvent event) {
     var message = event.deathMessage();
     if (message != null && event.getShowDeathMessages()) {
-      relay.onDeath(plain(message));
+      relay.onDeath(text.plain(message));
     }
   }
 
@@ -46,14 +46,9 @@ public final class ServerEventsListener implements Listener {
   public void onAdvancement(PlayerAdvancementDoneEvent event) {
     var advancement = event.getAdvancement();
     var display = advancement.getDisplay();
-    var title = display == null ? "" : plain(display.title());
+    var title = display == null ? "" : text.plain(display.title());
     var announced = display != null && display.doesAnnounceToChat() && event.message() != null;
     relay.onAdvancement(
         event.getPlayer().getName(), advancement.getKey().getKey(), title, announced);
-  }
-
-  /** Plain text; on Paper, vanilla translation keys are rendered in English. */
-  private static String plain(Component component) {
-    return PlainTextComponentSerializer.plainText().serialize(component);
   }
 }
