@@ -1,4 +1,4 @@
-package com.shepherdjerred.thestorm.world.adapter.paper;
+package com.shepherdjerred.thestorm.world.adapter.remote;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.UUID.randomUUID;
@@ -20,6 +20,7 @@ final class FliptCrierGateTest {
     var response = new AtomicReference<>("{\"enabled\":true}");
     var status = new AtomicInteger(200);
     var request = new AtomicReference<String>();
+    var environment = new AtomicReference<String>();
     var server =
         HttpServer.create(
             new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 0), 0);
@@ -27,6 +28,7 @@ final class FliptCrierGateTest {
         "/evaluate/v1/boolean",
         exchange -> {
           request.set(new String(exchange.getRequestBody().readAllBytes(), UTF_8));
+          environment.set(exchange.getRequestHeaders().getFirst("x-flipt-environment"));
           var bytes = response.get().getBytes(UTF_8);
           exchange.sendResponseHeaders(status.get(), bytes.length);
           try (var body = exchange.getResponseBody()) {
@@ -41,10 +43,11 @@ final class FliptCrierGateTest {
       assertThat(gate.enabled(player).join()).isTrue();
       assertThat(request.get())
           .contains(
-              "\"environment_key\":\"prod\"",
               "\"namespace_key\":\"the-storm\"",
               "\"flag_key\":\"the-storm-crier-enabled\"",
               player.toString());
+      assertThat(environment.get()).isEqualTo("prod");
+      assertThat(request.get()).doesNotContain("environment_key");
 
       response.set("{\"enabled\":false}");
       assertThat(gate.enabled(player).join()).isFalse();

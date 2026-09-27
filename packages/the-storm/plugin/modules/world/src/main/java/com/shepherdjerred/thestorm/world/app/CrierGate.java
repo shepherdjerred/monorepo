@@ -1,4 +1,4 @@
-package com.shepherdjerred.thestorm.world.adapter.paper;
+package com.shepherdjerred.thestorm.world.app;
 
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;

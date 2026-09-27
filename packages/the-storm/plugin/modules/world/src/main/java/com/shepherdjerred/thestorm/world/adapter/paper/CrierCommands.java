@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.world.adapter.paper;
 
 import com.mojang.brigadier.Command;
 import com.shepherdjerred.thestorm.core.schedule.Scheduler;
+import com.shepherdjerred.thestorm.world.app.CrierGate;
 import com.shepherdjerred.thestorm.world.domain.CrierConfig;
 import com.shepherdjerred.thestorm.world.domain.CrierNews;
 import io.papermc.paper.command.brigadier.CommandSourceStack;

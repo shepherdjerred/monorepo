@@ -24,6 +24,7 @@
         "plugin/**/*.yml",
         "plugin/**/*.sql",
         "server/owned/plugins/TheStorm/**",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -48,6 +49,7 @@
         "plugin/**/*.yml",
         "plugin/**/*.sql",
         "server/owned/plugins/TheStorm/**",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -72,6 +74,7 @@
         "plugin/**/*.yml",
         "plugin/**/*.sql",
         "server/owned/plugins/TheStorm/**",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -93,6 +96,7 @@
         "plugin/**/*.properties",
         "plugin/config/**",
         "server/owned/plugins/TheStorm/**",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -116,6 +120,7 @@
         "plugin/**/*.xml",
         "plugin/**/*.sql",
         "server/owned/plugins/TheStorm/**",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
