@@ -203,19 +203,43 @@ export async function recordMatchMvpReportRefs(
   const next = ReportMessageIdsSchema.parse(Object.fromEntries(messageIds));
   // Delivery and vote-button events can record different channels at once.
   // Merge under PostgreSQL's row lock so neither read/modify/write loses refs.
-  const updated = await prismaClient.$executeRaw`
-    UPDATE "MatchMvpContest"
-    SET "reportMessageIds" = COALESCE("reportMessageIds", '{}'::jsonb) || ${JSON.stringify(next)}::jsonb
-    WHERE "matchId" = ${matchId}
-      AND ("reportMessageIds" IS NULL OR jsonb_typeof("reportMessageIds") = 'object')
-  `;
+  const updated = await prismaClient.$transaction(async (tx) => {
+    const changed = await tx.$executeRaw`
+      UPDATE "MatchMvpContest"
+      SET "reportMessageIds" = COALESCE("reportMessageIds", '{}'::jsonb) || ${JSON.stringify(next)}::jsonb
+      WHERE "matchId" = ${matchId}
+        AND ("reportMessageIds" IS NULL OR jsonb_typeof("reportMessageIds") = 'object')
+        AND NOT (COALESCE("reportMessageIds", '{}'::jsonb) @> ${JSON.stringify(next)}::jsonb)
+    `;
+    if (changed > 0) {
+      // A late delivery target must reopen a completed tally atomically with
+      // the new ref, even if the process dies immediately after this write.
+      await tx.matchMvpTallyRefresh.updateMany({
+        where: { matchId },
+        data: {
+          pending: true,
+          nextAttemptAt: new Date(),
+          requeueGeneration: { increment: 1 },
+          targetProgress: {},
+        },
+      });
+    }
+    return changed;
+  });
   if (updated > 0) return;
   const existing = await prismaClient.matchMvpContest.findUnique({
     where: { matchId },
     select: { reportMessageIds: true },
   });
   if (existing === null) return;
-  parseReportMessageIds(existing.reportMessageIds);
+  const stored = parseReportMessageIds(existing.reportMessageIds);
+  if (
+    Object.entries(next).every(
+      ([channelId, messageId]) => stored[channelId] === messageId,
+    )
+  ) {
+    return;
+  }
   throw new Error(`Match MVP contest ${matchId} report refs were not updated`);
 }
 
@@ -309,6 +333,7 @@ export async function upsertMatchMvpVote(
       },
       update: {
         desiredRevision: { increment: 1 },
+        targetProgress: {},
         pending: true,
         nextAttemptAt: new Date(),
         requestedAt: new Date(),

@@ -4,7 +4,14 @@ import {
   type DiscordGuildId,
   type MatchId,
 } from "@scout-for-lol/data";
+import { z } from "zod";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
+import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts";
+import {
+  isMissingChannelError,
+  isPermissionError,
+} from "#src/discord/utils/permissions.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { createLogger } from "#src/logger.ts";
 import { refreshMvpTallyMessages } from "#src/mvp-votes/message-refresh.ts";
 
@@ -12,9 +19,45 @@ const logger = createLogger("mvp-tally-reconciliation");
 // Discord REST retries can outlive one sweep tick. Keep the claim well beyond
 // the normal edit budget so a second worker does not race a slow first edit.
 const LEASE_MS = 10 * 60_000;
-const REPORT_WAIT_MS = 24 * 60 * 60_000;
+const DiscordErrorCodeSchema = z.object({ code: z.number() });
 
 type RefreshKey = { matchId: MatchId; serverId: DiscordGuildId };
+
+async function hasTerminalNoReportOutcome(
+  matchId: MatchId,
+  prismaClient: ExtendedPrismaClient,
+): Promise<boolean> {
+  const found = await listIntentsForMatch(prismaClient, {
+    matchId: RiotMatchIdSchema.parse(matchId),
+  });
+  const intents = found.filter((record) => record.intent.kind === "postmatch");
+  // Absence of an intent is not evidence that delivery is finished. Every
+  // postmatch intent must have a recorded terminal no-send state.
+  return (
+    intents.length > 0 &&
+    intents.every((record) => {
+      const state = record.intent.state.kind;
+      return (
+        state === "expired" ||
+        state === "suppressed" ||
+        state === "permission-denied"
+      );
+    })
+  );
+}
+
+function editErrorCode(error: unknown): string {
+  if (isMissingChannelError(error) || isPermissionError(error)) {
+    return "discord-target-unavailable";
+  }
+  const parsed = DiscordErrorCodeSchema.safeParse(error);
+  if (parsed.success && parsed.data.code === 10_008) {
+    return "discord-target-unavailable";
+  }
+  // A timeout or broken connection may happen after Discord accepted the edit.
+  // The next attempt replaces the same embed, so the unknown outcome is safe.
+  return "discord-edit-unknown";
+}
 
 /** Claim one coalesced request across gateway and background worker replicas. */
 export async function reconcileMvpTallyRefresh(
@@ -39,6 +82,7 @@ export async function reconcileMvpTallyRefresh(
       leaseUntil: new Date(now.getTime() + LEASE_MS),
       attemptCount: { increment: 1 },
       lastAttemptAt: now,
+      lastErrorCode: "discord-edit-unknown",
     },
   });
   if (claimed.count === 0) return;
@@ -47,13 +91,26 @@ export async function reconcileMvpTallyRefresh(
     where: { matchId_serverId: { matchId, serverId } },
   });
   const key = { matchId, serverId, leaseToken: token };
+  const claimVersion = {
+    ...key,
+    desiredRevision: request.desiredRevision,
+    requeueGeneration: request.requeueGeneration,
+  };
   try {
-    const updated = await refreshMessages({ matchId, serverId }, prismaClient);
+    const updated = await refreshMessages(
+      {
+        matchId,
+        serverId,
+        desiredRevision: request.desiredRevision,
+        requeueGeneration: request.requeueGeneration,
+        leaseToken: token,
+      },
+      prismaClient,
+    );
     if (!updated) {
-      const terminal =
-        now.getTime() - request.requestedAt.getTime() >= REPORT_WAIT_MS;
-      await prismaClient.matchMvpTallyRefresh.updateMany({
-        where: { ...key, desiredRevision: request.desiredRevision },
+      const terminal = await hasTerminalNoReportOutcome(matchId, prismaClient);
+      const resolved = await prismaClient.matchMvpTallyRefresh.updateMany({
+        where: claimVersion,
         data: {
           pending: !terminal,
           leaseToken: null,
@@ -63,10 +120,10 @@ export async function reconcileMvpTallyRefresh(
         },
       });
       await prismaClient.matchMvpTallyRefresh.updateMany({
-        where: { ...key, desiredRevision: { not: request.desiredRevision } },
+        where: key,
         data: { leaseToken: null, leaseUntil: null },
       });
-      if (terminal) {
+      if (terminal && resolved.count > 0) {
         logger.warn(
           `MVP tally report unavailable for ${matchId} in ${serverId}`,
         );
@@ -74,7 +131,7 @@ export async function reconcileMvpTallyRefresh(
       return;
     }
     const completed = await prismaClient.matchMvpTallyRefresh.updateMany({
-      where: { ...key, desiredRevision: request.desiredRevision },
+      where: claimVersion,
       data: {
         appliedRevision: request.desiredRevision,
         pending: false,
@@ -100,7 +157,12 @@ export async function reconcileMvpTallyRefresh(
         // a late stale edit by ensuring a subsequent sweep republishes the tally.
         await prismaClient.matchMvpTallyRefresh.updateMany({
           where: { matchId, serverId },
-          data: { pending: true, nextAttemptAt: new Date() },
+          data: {
+            pending: true,
+            nextAttemptAt: new Date(),
+            requeueGeneration: { increment: 1 },
+            targetProgress: {},
+          },
         });
       }
     }
@@ -114,7 +176,7 @@ export async function reconcileMvpTallyRefresh(
       data: {
         leaseToken: null,
         leaseUntil: null,
-        lastErrorCode: "discord-edit-failed",
+        lastErrorCode: editErrorCode(error),
         nextAttemptAt: new Date(Date.now() + delayMs),
       },
     });
@@ -123,7 +185,12 @@ export async function reconcileMvpTallyRefresh(
       // Reconcile once more if another worker finished after this claim lapsed.
       await prismaClient.matchMvpTallyRefresh.updateMany({
         where: { matchId, serverId },
-        data: { pending: true, nextAttemptAt: new Date() },
+        data: {
+          pending: true,
+          nextAttemptAt: new Date(),
+          requeueGeneration: { increment: 1 },
+          targetProgress: {},
+        },
       });
     }
     logger.warn(

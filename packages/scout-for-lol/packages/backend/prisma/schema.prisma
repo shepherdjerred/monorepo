@@ -2808,20 +2808,25 @@ model MatchMvpVote {
 /// its revision increment commit together; a worker may retry an edit safely
 /// because it replaces the tally embed instead of appending another message.
 model MatchMvpTallyRefresh {
-  matchId         String
-  serverId        String
-  desiredRevision Int      @default(0)
-  appliedRevision Int      @default(0)
-  pending         Boolean  @default(true)
-  nextAttemptAt   DateTime @default(now())
-  attemptCount    Int      @default(0)
-  lastErrorCode   String?
-  lastAttemptAt   DateTime?
-  requestedAt     DateTime @default(now())
-  leaseToken      String?
-  leaseUntil      DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  matchId           String
+  serverId          String
+  desiredRevision   Int       @default(0)
+  appliedRevision   Int       @default(0)
+  /// A lost worker increments this after a stale edit; the active worker's
+  /// completion must not clear that requeue even if no new vote arrived.
+  requeueGeneration Int       @default(0)
+  /// Successful channel/message edits for the current revision and generation.
+  targetProgress    Json      @default("{}")
+  pending           Boolean   @default(true)
+  nextAttemptAt     DateTime  @default(now())
+  attemptCount      Int       @default(0)
+  lastErrorCode     String?
+  lastAttemptAt     DateTime?
+  requestedAt       DateTime  @default(now())
+  leaseToken        String?
+  leaseUntil        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   @@id([matchId, serverId])
   @@index([pending, nextAttemptAt, createdAt])

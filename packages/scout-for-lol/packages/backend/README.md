@@ -47,13 +47,21 @@ applied tally revisions. The gateway attempts a prompt edit after acknowledging
 the voter; the `mvp-tally-refresh` Temporal Schedule sweeps pending rows each
 minute on beta and production, including rows left by a gateway restart.
 Workers claim a short database lease, replace the tally embed idempotently,
-and leave a newer revision pending if another vote arrives during the edit.
-An unavailable report is retried for 24 hours after the latest vote, then
-recorded as `report-unavailable`. A later vote reopens that request.
+and leave a newer revision pending if another vote arrives during the edit. A
+late worker requeues its stale edit through a generation check, even when an
+active worker is completing the same vote revision. Each successful target
+edit is checkpointed against the claimed revision and generation, so a partial
+failure retries only unfinished targets. An in-flight edit is recorded as an
+unknown outcome until it is checkpointed; replacing the embed makes a crash
+retry safe. A new delivered report target reopens an applied tally in the same
+transaction that records its message reference. Missing report refs remain
+pending until all postmatch intents record a terminal no-send outcome, when
+the request is recorded as `report-unavailable`. A later vote reopens it.
 
 Operators can inspect `"MatchMvpTallyRefresh"` for `pending = true` rows and
-`lastErrorCode` values `awaiting-report`, `discord-edit-failed`, or
-`report-unavailable`. Compare `desiredRevision` with `appliedRevision` before
+`lastErrorCode` values `awaiting-report`, `discord-target-unavailable`,
+`discord-edit-unknown`, or `report-unavailable`. Compare `desiredRevision`
+with `appliedRevision` before
 closing an incident; a recorded vote alone does not prove the Discord tally
 was edited.
 

@@ -4,6 +4,9 @@ import {
   DiscordGuildIdSchema,
   MatchIdSchema,
 } from "@scout-for-lol/data";
+import { NotificationIntentSchema } from "@scout-for-lol/domain/notifications/intent.ts";
+import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { upsertIntent } from "#src/database/durable/intent-repository.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { bucksTestPuuid } from "#src/testing/bucks-fixtures.ts";
 import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
@@ -48,6 +51,9 @@ afterAll(async () => {
 
 beforeEach(async () => {
   await db.matchMvpTallyRefresh.deleteMany();
+  await db.matchNotificationIntent.deleteMany({
+    where: { riotMatchId: matchId },
+  });
   await db.matchMvpVote.deleteMany();
   await db.matchMvpContest.deleteMany();
   await db.matchMvpContest.create({
@@ -123,6 +129,62 @@ describe("durable MVP tally refresh", () => {
       db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
     ).resolves.toMatchObject({ appliedRevision: 2, pending: false });
   });
+});
+
+describe("MVP tally lease recovery", () => {
+  test("a newer worker cannot clear a stale worker's late requeue", async () => {
+    await vote(1);
+    const firstStarted = Promise.withResolvers<boolean>();
+    const releaseFirst = Promise.withResolvers<boolean>();
+    const secondStarted = Promise.withResolvers<boolean>();
+    const releaseSecond = Promise.withResolvers<boolean>();
+    let visibleRevision = 0;
+    const first = reconcileMvpTallyRefresh(key, db, async () => {
+      firstStarted.resolve(true);
+      await releaseFirst.promise;
+      visibleRevision = 1;
+      return true;
+    });
+    await firstStarted.promise;
+    await expireClaimAfterAnotherVote();
+
+    const second = reconcileMvpTallyRefresh(key, db, async () => {
+      visibleRevision = 2;
+      secondStarted.resolve(true);
+      await releaseSecond.promise;
+      return true;
+    });
+    await secondStarted.promise;
+    releaseFirst.resolve(true);
+    await first;
+    expect(visibleRevision).toBe(1);
+    await expect(
+      db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+    ).resolves.toMatchObject({
+      desiredRevision: 2,
+      pending: true,
+      requeueGeneration: 1,
+    });
+
+    releaseSecond.resolve(true);
+    await second;
+    await expect(
+      db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+    ).resolves.toMatchObject({
+      desiredRevision: 2,
+      appliedRevision: 2,
+      pending: true,
+      requeueGeneration: 1,
+    });
+    await reconcilePendingMvpTallyRefreshes(db, async () => {
+      visibleRevision = 2;
+      return true;
+    });
+    expect(visibleRevision).toBe(2);
+    await expect(
+      db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+    ).resolves.toMatchObject({ pending: false, appliedRevision: 2 });
+  });
 
   test("requeues after a stale multi-message edit partially fails", async () => {
     await vote(1);
@@ -152,7 +214,7 @@ describe("durable MVP tally refresh", () => {
       db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
     ).resolves.toMatchObject({
       pending: true,
-      lastErrorCode: "discord-edit-failed",
+      lastErrorCode: "discord-edit-unknown",
     });
     await db.matchMvpTallyRefresh.update({
       where,
@@ -172,11 +234,35 @@ describe("durable MVP tally refresh", () => {
     });
   });
 
-  test("closes a report that remains unavailable after the delivery window", async () => {
+  test("does not infer a terminal report outcome from elapsed time", async () => {
     await vote(1);
     await db.matchMvpTallyRefresh.update({
       where,
       data: { requestedAt: new Date(0) },
+    });
+    await reconcileMvpTallyRefresh(key, db, async () => false);
+    await expect(
+      db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+    ).resolves.toMatchObject({
+      pending: true,
+      lastErrorCode: "awaiting-report",
+    });
+  });
+
+  test("closes only after postmatch intents record a terminal no-send outcome", async () => {
+    await vote(1);
+    await upsertIntent(db, {
+      matchId: RiotMatchIdSchema.parse(matchId),
+      intent: NotificationIntentSchema.parse({
+        key: "mvp-no-report",
+        kind: "postmatch",
+        origin: { kind: "live" },
+        target: { kind: "channel", channelId: "300000000000000001" },
+        freshnessDeadline: "2026-09-07T11:00:00.000Z",
+        createdAt: "2026-09-07T10:00:00.000Z",
+        attemptCount: 0,
+        state: { kind: "expired" },
+      }),
     });
     await reconcileMvpTallyRefresh(key, db, async () => false);
     await expect(
