@@ -222,15 +222,19 @@ function createSchema(database: Database): void {
   `);
 }
 
+function rebuildSchemaCore(database: Database): void {
+  database.run(`
+    DROP TABLE IF EXISTS history_fts;
+    DROP TABLE IF EXISTS usage_events;
+    DROP TABLE IF EXISTS documents;
+    DROP TABLE IF EXISTS source_state;
+  `);
+  createSchema(database);
+}
+
 function rebuildSchema(database: Database): void {
   database.transaction(() => {
-    database.run(`
-      DROP TABLE IF EXISTS history_fts;
-      DROP TABLE IF EXISTS usage_events;
-      DROP TABLE IF EXISTS documents;
-      DROP TABLE IF EXISTS source_state;
-    `);
-    createSchema(database);
+    rebuildSchemaCore(database);
   })();
 }
 
@@ -297,10 +301,15 @@ export class HistoryIndex {
     results: readonly HistorySourceResult[],
     force = false,
   ): Promise<void> {
-    if (force) {
-      rebuildSchema(this.#database);
-    }
-    ingestResults(this.#database, results, force);
+    // The rebuild and its ingest share one transaction: a failed reindex
+    // rolls back to the previous index instead of leaving an empty one the
+    // unadvanced scan caches could never repopulate.
+    this.#database.transaction(() => {
+      if (force) {
+        rebuildSchemaCore(this.#database);
+      }
+      ingestResults(this.#database, results, force);
+    })();
     await secureIndexFiles(this.#indexPath);
   }
 

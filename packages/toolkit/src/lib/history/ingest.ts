@@ -225,16 +225,18 @@ function ingestSourceResult(
   );
 }
 
+/**
+ * Applies scanned results without opening a transaction: the caller owns
+ * the boundary so a force rebuild and its ingest commit atomically.
+ * `HistoryIndex.ingest` is the only caller.
+ */
 export function ingestResults(
   database: Database,
   results: readonly HistorySourceResult[],
   force: boolean,
 ): void {
   const statements = prepareIngestStatements(database);
-  const transaction = database.transaction(() => {
-    for (const result of results) {
-      ingestSourceResult(database, statements, result, force);
-    }
-  });
-  transaction();
+  for (const result of results) {
+    ingestSourceResult(database, statements, result, force);
+  }
 }

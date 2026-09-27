@@ -3,14 +3,20 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { z } from "zod";
 import { HistoryIndex } from "#lib/history/index.ts";
 import {
   defaultHistoryRuntimePaths,
   type HistoryPaths,
 } from "#lib/history/paths.ts";
 import { rebuildBlockers } from "#lib/history/serve.ts";
+import {
+  createStagedScanner,
+  type StagedScan,
+} from "#lib/history/sources-shared.ts";
 import { createHistorySources } from "#lib/history/sources.ts";
 import type {
+  HistoryDocument,
   HistoryScanOptions,
   HistorySource,
   HistorySourceName,
@@ -578,5 +584,110 @@ describe("reindex rebuild guard", () => {
         [statusFixture("claude", 761)],
       ),
     ).toEqual([]);
+  });
+});
+
+function scriptedScanner(script: (string | null)[]): {
+  scanner: Pick<HistorySource, "scan" | "commitScan">;
+  seen: (string | null)[];
+} {
+  const seen: (string | null)[] = [];
+  const states = [...script];
+  const scanner = createStagedScanner<string>(
+    async (_paths, committed, _force): Promise<StagedScan<string>> => {
+      seen.push(committed);
+      const staged = states.shift() ?? null;
+      return {
+        result: resultFixture("claude", {
+          available: staged !== null,
+          error: staged === null ? "transient failure" : null,
+        }),
+        staged,
+      };
+    },
+  );
+  return { scanner, seen };
+}
+
+function atomicDocument(sourceId: string): HistoryDocument {
+  return {
+    source: "claude",
+    sourceId,
+    title: `session ${sourceId}`,
+    path: `/private/${sourceId}.jsonl`,
+    workspace: null,
+    agent: null,
+    createdAt: "2026-08-01T00:00:00.000Z",
+    updatedAt: "2026-09-02T00:00:00.000Z",
+    runtimeId: null,
+    openingPromptHash: null,
+    dialogueText: `dialogue ${sourceId}`,
+    toolOutputText: "",
+    usageEvents: [],
+  };
+}
+
+function atomicResult(
+  documents: readonly HistoryDocument[],
+): HistorySourceResult {
+  return {
+    source: "claude",
+    available: true,
+    documents,
+    fingerprint: "atomic-fingerprint",
+    error: null,
+    complete: true,
+    sourceIds: documents.map((entry) => entry.sourceId),
+  };
+}
+
+describe("staged scan slot", () => {
+  test("a failed scan discards previously staged state before commit", async () => {
+    const { scanner, seen } = scriptedScanner(["s1", null]);
+    await scanner.scan(paths);
+    await scanner.scan(paths);
+    scanner.commitScan?.();
+    await scanner.scan(paths);
+    // Committing the failure must not advance to s1's signatures for
+    // documents that were never indexed.
+    expect(seen).toEqual([null, null, null]);
+  });
+
+  test("commit is idempotent and clears the staged slot", async () => {
+    const { scanner, seen } = scriptedScanner(["s1", null]);
+    await scanner.scan(paths);
+    scanner.commitScan?.();
+    scanner.commitScan?.();
+    await scanner.scan(paths);
+    scanner.commitScan?.();
+    await scanner.scan(paths);
+    expect(seen).toEqual([null, "s1", "s1"]);
+  });
+});
+
+describe("force ingest atomicity", () => {
+  test("a failed force ingest keeps the previous index", async () => {
+    const runtime = defaultHistoryRuntimePaths(
+      path.join(fixtureRoot, "atomic"),
+    );
+    const index = await HistoryIndex.open(runtime);
+    try {
+      await index.ingest([atomicResult([atomicDocument("keep")])]);
+      const before = dumpIndex(runtime.indexDb);
+      expect(before.documents).toHaveLength(1);
+
+      // A null fingerprint violates the source_state NOT NULL constraint
+      // after the rebuild has dropped the old schema, standing in for any
+      // failure midway through a reindex ingest. The permissive schema
+      // deliberately carries the null past the type system.
+      const poisoned: HistorySourceResult = {
+        ...atomicResult([atomicDocument("keep")]),
+        fingerprint: z.custom<string>(() => true).parse(null),
+      };
+      await expect(index.ingest([poisoned], true)).rejects.toThrow();
+      expect(dumpIndex(runtime.indexDb)).toEqual(before);
+    } finally {
+      index.close();
+    }
   });
 });

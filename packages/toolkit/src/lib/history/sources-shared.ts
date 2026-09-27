@@ -322,8 +322,11 @@ export type StagedScan<TState> = {
 /**
  * Two-phase incremental scanning: `scan` stages the next cache state for
  * its files, and `commitScan` advances to it — called only after the
- * results were ingested. A failed scan stages nothing, so the next scan
- * retries from the last committed state.
+ * results were ingested. Every scan overwrites the staged slot, including
+ * a failed scan staging nothing, so a later commit can never advance to a
+ * previous scan's state for documents that were never indexed; the slot is
+ * cleared after each commit for the same reason. The next scan after a
+ * failure therefore retries from the last committed state.
  */
 export function createStagedScanner<TState>(
   scan: (
@@ -341,14 +344,13 @@ export function createStagedScanner<TState>(
         committed,
         options?.force ?? false,
       );
-      if (next !== null) {
-        staged = next;
-      }
+      staged = next;
       return result;
     },
     commitScan: () => {
       if (staged !== null) {
         committed = staged;
+        staged = null;
       }
     },
   };
