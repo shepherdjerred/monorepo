@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
+import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
 import com.shepherdjerred.thestorm.economy.app.LedgerStore;
 import com.shepherdjerred.thestorm.economy.app.RankedPlayer;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
@@ -53,6 +54,35 @@ public final class JooqLedgerStore implements LedgerStore {
   public CompletableFuture<Result<Receipt, EconomyError>> transfer(
       AccountId from, AccountId to, Crystals amount, String reason) {
     return database.write(dsl -> apply(dsl, new Transfer(from, to, amount), reason));
+  }
+
+  @Override
+  public CompletableFuture<Result<Receipt, EconomyError>> transferOnce(KeyedTransfer transfer) {
+    return database.write(
+        dsl -> {
+          var previous = findReceipt(dsl, transfer.key());
+          if (previous.isPresent()) {
+            var receipt = previous.get();
+            if (!receipt.from().equals(transfer.from())
+                || !receipt.to().equals(transfer.to())
+                || !receipt.amount().equals(transfer.amount())
+                || !receipt.reason().equals(transfer.reason())) {
+              throw new IllegalArgumentException(
+                  "transfer key reused for different details: " + transfer.key());
+            }
+            return new Result.Ok<Receipt, EconomyError>(receipt);
+          }
+          return apply(
+              dsl,
+              new Transfer(transfer.from(), transfer.to(), transfer.amount()),
+              transfer.reason(),
+              Optional.of(transfer.key()));
+        });
+  }
+
+  @Override
+  public CompletableFuture<Optional<Receipt>> receiptFor(UUID key) {
+    return database.read(dsl -> findReceipt(dsl, key));
   }
 
   @Override
@@ -143,13 +173,19 @@ public final class JooqLedgerStore implements LedgerStore {
   }
 
   private Result<Receipt, EconomyError> apply(DSLContext dsl, Transfer transfer, String reason) {
+    return apply(dsl, transfer, reason, Optional.empty());
+  }
+
+  private Result<Receipt, EconomyError> apply(
+      DSLContext dsl, Transfer transfer, String reason, Optional<UUID> key) {
     var pending =
         new PendingTransfer(
             transfer, storedBalance(dsl, transfer.from()), storedBalance(dsl, transfer.to()));
-    return rules.settle(pending).map(settlement -> record(dsl, settlement, reason));
+    return rules.settle(pending).map(settlement -> record(dsl, settlement, reason, key));
   }
 
-  private Receipt record(DSLContext dsl, Settlement settlement, String reason) {
+  private Receipt record(
+      DSLContext dsl, Settlement settlement, String reason, Optional<UUID> operationKey) {
     for (var update : settlement.updates()) {
       var key = AccountKey.of(update.account());
       dsl.insertInto(ECONOMY_ACCOUNT)
@@ -174,10 +210,25 @@ public final class JooqLedgerStore implements LedgerStore {
             .set(ECONOMY_LEDGER.AMOUNT, transfer.amount().amount())
             .set(ECONOMY_LEDGER.REASON, reason)
             .set(ECONOMY_LEDGER.AT, at.toEpochMilli())
+            .set(ECONOMY_LEDGER.IDEMPOTENCY_KEY, operationKey.map(UUID::toString).orElse(null))
             .returning(ECONOMY_LEDGER.ID)
             .fetchSingle()
             .getId();
     return new Receipt(id, transfer.from(), transfer.to(), transfer.amount(), reason, at);
+  }
+
+  private static Optional<Receipt> findReceipt(DSLContext dsl, UUID key) {
+    return dsl.selectFrom(ECONOMY_LEDGER)
+        .where(ECONOMY_LEDGER.IDEMPOTENCY_KEY.eq(key.toString()))
+        .fetchOptional(
+            row ->
+                new Receipt(
+                    row.getId(),
+                    AccountKey.toAccount(row.getFromKind(), row.getFromId()),
+                    AccountKey.toAccount(row.getToKind(), row.getToId()),
+                    new Crystals(row.getAmount()),
+                    row.getReason(),
+                    Instant.ofEpochMilli(row.getAt())));
   }
 
   private static Crystals storedBalance(DSLContext dsl, AccountId account) {
