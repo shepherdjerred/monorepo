@@ -6,6 +6,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.quests.app.QuestStore.PendingWorld;
+import com.shepherdjerred.thestorm.quests.app.QuestStore.Status;
 import com.shepherdjerred.thestorm.quests.domain.board.Template;
 import com.shepherdjerred.thestorm.quests.domain.config.QuestsConfig;
 import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
@@ -22,6 +24,7 @@ import com.shepherdjerred.thestorm.quests.domain.state.PlayerQuests;
 import com.shepherdjerred.thestorm.quests.domain.view.QuestDialogue;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -256,9 +259,11 @@ final class QuestServiceTest {
     store.deferredSave = Optional.of(failed);
     service.handIn(ALICE, "thomas", Optional.empty());
     assertThat(rewards.paid).isEmpty();
-    assertThat(world.actions).contains("take 4 IRON_INGOT").doesNotContain("give 2 GOLD_INGOT");
-    assertThat(world.carry(ALICE).count(IRON)).isZero();
-    assertThat(state(ALICE).completion("smith")).isEmpty();
+    assertThat(world.actions).doesNotContain("take 4 IRON_INGOT", "give 2 GOLD_INGOT");
+    assertThat(world.carry(ALICE).count(IRON)).isEqualTo(4);
+    assertThat(service.state(ALICE)).isEmpty();
+    assertThat(Optional.ofNullable(store.saved.get(ALICE)).orElseThrow().completion("smith"))
+        .isEmpty();
     failed.completeExceptionally(new IllegalStateException("disk unavailable"));
     assertThat(rewards.paid).isEmpty();
     assertThat(state(ALICE).completion("smith")).isEmpty();
@@ -311,13 +316,14 @@ final class QuestServiceTest {
   }
 
   @Test
-  void reservedItemsAndWorldRewardsSurviveDepartureDuringTheStateWrite() {
+  void pendingHandInAndWorldRewardsSurviveDepartureDuringTheStateWrite() {
     join(ALICE);
     service.accept(ALICE, "smith", "thomas");
     world.carry(ALICE).give(IRON, 4);
     var deferred = new CompletableFuture<Void>();
     store.deferredSave = Optional.of(deferred);
     service.handIn(ALICE, "thomas", Optional.empty());
+    var inventory = world.carry(ALICE);
     world.online.remove(ALICE);
     service.quit(ALICE);
     deferred.complete(null);
@@ -326,9 +332,9 @@ final class QuestServiceTest {
         .isPresent();
     assertThat(store.pending.get(ALICE)).isNotEmpty();
     assertThat(rewards.paid).isEmpty();
-    assertThat(world.actions).contains("take 4 IRON_INGOT").doesNotContain("give 2 GOLD_INGOT");
+    assertThat(world.actions).doesNotContain("take 4 IRON_INGOT", "give 2 GOLD_INGOT");
 
-    world.join(ALICE);
+    world.online.put(ALICE, inventory);
     service.join(ALICE).join();
     assertThat(world.actions).contains("take 4 IRON_INGOT", "give 2 GOLD_INGOT");
     assertThat(rewards.paid).containsExactly("100 quest:smith");
@@ -336,24 +342,56 @@ final class QuestServiceTest {
   }
 
   @Test
-  void failedStateWriteReturnsReservedItemsWhenThePlayerRejoins() {
+  void failedStateWriteNeverTakesHandInItems() {
     join(ALICE);
     service.accept(ALICE, "smith", "thomas");
     world.carry(ALICE).give(IRON, 4);
     var failed = new CompletableFuture<Void>();
     store.deferredSave = Optional.of(failed);
     service.handIn(ALICE, "thomas", Optional.empty());
-    assertThat(world.carry(ALICE).count(IRON)).isZero();
+    assertThat(world.carry(ALICE).count(IRON)).isEqualTo(4);
+    var inventory = world.carry(ALICE);
     world.online.remove(ALICE);
     service.quit(ALICE);
     failed.completeExceptionally(new IllegalStateException("disk unavailable"));
     assertThat(store.pending.getOrDefault(ALICE, List.of())).isEmpty();
 
-    world.join(ALICE);
+    world.online.put(ALICE, inventory);
     store.deferredSave = Optional.empty();
     service.join(ALICE).join();
     assertThat(world.carry(ALICE).count(IRON)).isEqualTo(4);
     assertThat(state(ALICE).completion("smith")).isEmpty();
+  }
+
+  @Test
+  void anAmbiguousItemHandInBlocksProgressUntilAnOperatorRetriesIt() {
+    join(ALICE);
+    service.accept(ALICE, "smith", "thomas");
+    world.carry(ALICE).give(IRON, 4);
+    var takeId = new UUID(2, 3);
+    var giveId = new UUID(2, 4);
+    store.pending.put(
+        ALICE,
+        new ArrayList<>(
+            List.of(
+                new PendingWorld(takeId, ALICE, "smith", new Action.Take(IRON, 4), Status.IN_DOUBT),
+                new PendingWorld(
+                    giveId, ALICE, "smith", new Action.Give(ItemMatch.of("GOLD_INGOT"), 2)))));
+
+    service.quit(ALICE);
+    service.join(ALICE).join();
+
+    assertThat(service.handoverPending(ALICE)).isTrue();
+    assertThat(service.state(ALICE)).isEmpty();
+    assertThat(world.actions).doesNotContain("take 4 IRON_INGOT", "give 2 GOLD_INGOT");
+    assertThat(world.carry(ALICE).count(IRON)).isEqualTo(4);
+
+    assertThat(service.retryWorld(ALICE, takeId).join()).isTrue();
+    assertThat(service.handoverPending(ALICE)).isFalse();
+    assertThat(service.state(ALICE)).isPresent();
+    assertThat(world.actions).containsSubsequence("take 4 IRON_INGOT", "give 2 GOLD_INGOT");
+    assertThat(world.carry(ALICE).count(IRON)).isZero();
+    assertThat(store.pending.get(ALICE)).isEmpty();
   }
 
   @Test

@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
@@ -28,6 +29,7 @@ import org.bukkit.Server;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.inventory.ItemStack;
 
 /** {@link QuestWorld} on a live Paper server. Main thread. */
 final class PaperWorld implements QuestWorld {
@@ -88,32 +90,30 @@ final class PaperWorld implements QuestWorld {
     if (found.isEmpty() || ItemStacks.count(found.get(), item) < amount) {
       return false;
     }
-    if (ItemStacks.take(found.get(), item, amount) != amount) {
+    var removed = ItemStacks.take(found.get(), item, amount);
+    if (removed.stream().mapToInt(ItemStack::getAmount).sum() != amount) {
       throw new IllegalStateException("quest item handover changed after its count check");
     }
     return true;
   }
 
   @Override
-  public void teleport(UUID player, Region region) {
-    player(player)
-        .ifPresent(
-            found -> {
-              var destination = location(region);
-              if (destination.isEmpty()) {
-                return;
-              }
-              switch (parts
-                  .protection()
-                  .check(player, ProtectedAction.TELEPORT_INTO, destination.get())) {
-                case Decision.Allowed() -> {
-                  var _ =
-                      found.teleportAsync(
-                          destination.get(), PlayerTeleportEvent.TeleportCause.PLUGIN);
-                }
-                case Decision.Denied(var reason) -> found.sendMessage(reason);
-              }
-            });
+  public CompletableFuture<Boolean> teleport(UUID player, Region region) {
+    var found = player(player);
+    var destination = location(region);
+    if (found.isEmpty() || destination.isEmpty()) {
+      return CompletableFuture.completedFuture(false);
+    }
+    return switch (parts
+        .protection()
+        .check(player, ProtectedAction.TELEPORT_INTO, destination.get())) {
+      case Decision.Allowed() ->
+          found.get().teleportAsync(destination.get(), PlayerTeleportEvent.TeleportCause.PLUGIN);
+      case Decision.Denied(var reason) -> {
+        found.get().sendMessage(reason);
+        yield CompletableFuture.completedFuture(false);
+      }
+    };
   }
 
   @Override

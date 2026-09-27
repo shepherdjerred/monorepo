@@ -259,6 +259,7 @@ public final class QuestEngine {
   }
 
   private void begin(Quest quest, boolean greet) {
+    guard(quest);
     effects.add(new Effect.Accepted(quest.id()));
     if (state.tracked().isEmpty()) {
       state = state.withTracked(Optional.of(quest.id()));

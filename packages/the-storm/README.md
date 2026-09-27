@@ -65,16 +65,29 @@ action syntax is defined by `quests/domain/content/Dsl.java`.
 Quest offers, commands, and progress are restricted to the configured main
 world (`world`). Regions must resolve to that world's registry key. Board
 draws keep a snapshot of their objective and reward data in SQLite so edits to
-templates do not change quests already assigned to players. The content
-currently includes 23 imported historical quests; additional anthology content
-is tracked in the quest PR rather than this reference.
+templates do not change quests already assigned to players. Shipped content
+counts and references are checked when the quest module is built.
 
-Quest state and pending world rewards commit in one SQLite transaction. Item
-hand-ins are taken while the player is present; a failed state write returns
-them immediately or at the next main-world join. The world reward outbox then
-delivers actions in order when the player is online and records each delivery.
-If a process stops after an action runs but before its receipt is written,
-that action can be retried on the next join.
+Quest state and pending world actions commit in one SQLite transaction. Item
+hand-ins run from that outbox after the state write succeeds, so a failed write
+cannot remove items. Actions run in order while the player is in the main
+world. Before an action touches Paper, its row moves to `IN_DOUBT`; the row is
+removed only after the action reports success. A crash or ambiguous failure
+leaves that row for staff to inspect, and later actions pause behind it.
+Quest progression, completion reads, and the journal wait while an item hand-in
+is outstanding, so the saved completion cannot unlock follow-up work early.
+Crystal transfers use the outbox ID as the economy ledger's idempotency key;
+these can resume safely after a crash. Paper inventory, teleports, spawns, and
+custom hooks still need operator reconciliation after an ambiguous attempt.
+
+Use `/quests admin effects <player-uuid>` to inspect the queue. For an
+`IN_DOUBT` effect, inspect the player's inventory, crystal ledger, permissions,
+or world state as appropriate. Use `/quests admin effect complete
+<player-uuid> <effect-uuid>` only when the action took effect; use `/quests admin
+effect retry <player-uuid> <effect-uuid>` only when it did not. Both commands
+require `thestorm.quests.admin`. An item hand-in can remain pending if the
+player leaves the main world or no longer has the items. Do not retry an
+ambiguous action without checking its effect first.
 
 ## Conventions
 

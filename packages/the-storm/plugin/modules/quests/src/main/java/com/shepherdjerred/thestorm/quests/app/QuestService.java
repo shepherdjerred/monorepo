@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.quests.app;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.quests.app.QuestStore.PendingWorld;
+import com.shepherdjerred.thestorm.quests.app.QuestStore.Status;
 import com.shepherdjerred.thestorm.quests.domain.board.BoardQuests;
 import com.shepherdjerred.thestorm.quests.domain.config.QuestsConfig;
 import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
@@ -83,7 +84,9 @@ public final class QuestService implements QuestHooks, QuestProgress {
   private final Set<UUID> departing = new HashSet<>();
   private final Set<UUID> delivering = new HashSet<>();
   private final Set<UUID> deliveryRequested = new HashSet<>();
-  private final Map<UUID, List<Action.Take>> refunds = new HashMap<>();
+  private final Map<UUID, Set<UUID>> pendingHandins = new HashMap<>();
+  private final Set<UUID> handinNoticeSent = new HashSet<>();
+  private final Map<UUID, DeferredNotices> deferredNotices = new HashMap<>();
   private final Map<String, CustomAction> customActions = new HashMap<>();
 
   public QuestService(Wiring wiring) {
@@ -117,8 +120,9 @@ public final class QuestService implements QuestHooks, QuestProgress {
         wiring
             .store()
             .load(player)
+            .thenCombine(wiring.store().pending(player), Loaded::new)
             .thenAcceptAsync(
-                state -> {
+                loaded -> {
                   if (generations.getOrDefault(player, 0L) != generation) {
                     return;
                   }
@@ -126,8 +130,9 @@ public final class QuestService implements QuestHooks, QuestProgress {
                   if (wiring.world().facts(player).isEmpty()) {
                     return;
                   }
-                  sessions.put(player, state);
-                  returnReserved(player);
+                  pendingHandins.put(player, handins(loaded.pending()));
+                  handinNoticeSent.remove(player);
+                  sessions.put(player, loaded.state());
                   deliverPending(player);
                   refresh(player);
                 },
@@ -149,6 +154,15 @@ public final class QuestService implements QuestHooks, QuestProgress {
     return started;
   }
 
+  /** Resumes durable rewards and the journal when a loaded player returns to the main world. */
+  public void resume(UUID player) {
+    if (!sessions.containsKey(player) || wiring.world().facts(player).isEmpty()) {
+      return;
+    }
+    deliverPending(player);
+    refresh(player);
+  }
+
   /** Forgets {@code player} (their state is already saved). */
   public void quit(UUID player) {
     generations.merge(player, 1L, Long::sum);
@@ -159,9 +173,29 @@ public final class QuestService implements QuestHooks, QuestProgress {
 
   /** The loaded state of an online player. */
   public Optional<PlayerQuests> state(UUID player) {
-    return departing.contains(player)
+    return departing.contains(player) || handoverPending(player)
         ? Optional.empty()
         : Optional.ofNullable(sessions.get(player));
+  }
+
+  /** Whether a committed item hand-in has not yet been delivered or reconciled. */
+  public boolean handoverPending(UUID player) {
+    return !pendingHandins.getOrDefault(player, Set.of()).isEmpty();
+  }
+
+  private record Loaded(PlayerQuests state, List<PendingWorld> pending) {}
+
+  private record DeferredNotices(Outcome outcome, Catalog catalog) {}
+
+  private record PendingCommit(Outcome outcome, List<PendingWorld> pending, Catalog catalog) {}
+
+  private static Set<UUID> handins(List<PendingWorld> pending) {
+    var ids = new HashSet<UUID>();
+    pending.stream()
+        .filter(effect -> effect.action() instanceof Action.Take)
+        .map(PendingWorld::id)
+        .forEach(ids::add);
+    return ids;
   }
 
   /** Every online player with loaded state. */
@@ -207,6 +241,9 @@ public final class QuestService implements QuestHooks, QuestProgress {
 
   /** What {@code npc} says to {@code player} about quests, if anything. */
   public Optional<QuestDialogue> dialogue(UUID player, String npc) {
+    if (handoverPending(player)) {
+      return Optional.empty();
+    }
     var state = sessions.get(player);
     if (state == null) {
       return Optional.empty();
@@ -242,6 +279,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
         (state, context) ->
             context.catalog().all().stream()
                 .filter(quest -> quest.giver().equals(npc))
+                .filter(quest -> quest.category() != Quest.Category.HIDDEN)
                 .filter(
                     quest ->
                         QuestEngine.availability(state, quest, context)
@@ -442,6 +480,9 @@ public final class QuestService implements QuestHooks, QuestProgress {
   }
 
   private Result<String, String> admin(UUID player, String quest, AdminStep step, String done) {
+    if (handoverPending(player)) {
+      return Result.err("That player has an unfinished item hand-in. Reconcile it first.");
+    }
     var state = sessions.get(player);
     if (state == null) {
       return Result.err("That player is not online or their quests have not loaded.");
@@ -511,13 +552,88 @@ public final class QuestService implements QuestHooks, QuestProgress {
     return Optional.ofNullable(customActions.get(hook));
   }
 
+  /** Pending and in-doubt world effects for operator reconciliation. */
+  public CompletableFuture<List<PendingWorld>> pendingWorld(UUID player) {
+    return wiring.store().pending(player);
+  }
+
+  /** Replays only after an operator confirms the prior attempt had no side effect. */
+  public CompletableFuture<Boolean> retryWorld(UUID player, UUID effect) {
+    if (delivering.contains(player)) {
+      return CompletableFuture.failedFuture(
+          new IllegalStateException("quest delivery is in progress"));
+    }
+    return wiring
+        .store()
+        .retry(player, effect)
+        .thenApplyAsync(
+            changed -> {
+              if (changed) {
+                deliverPending(player);
+              }
+              return changed;
+            },
+            wiring.mainThread());
+  }
+
+  /** Advances past an action an operator confirms was already delivered. */
+  public CompletableFuture<Boolean> completeWorld(UUID player, UUID effect) {
+    if (delivering.contains(player)) {
+      return CompletableFuture.failedFuture(
+          new IllegalStateException("quest delivery is in progress"));
+    }
+    return wiring
+        .store()
+        .complete(player, effect)
+        .thenApplyAsync(
+            changed -> {
+              if (changed) {
+                handinResolved(player, effect);
+                deliverPending(player);
+              }
+              return changed;
+            },
+            wiring.mainThread());
+  }
+
   // ---- committing ----------------------------------------------------------------------------
 
   private interface Step {
     void run(PlayerQuests state, Context context);
   }
 
+  private void handinResolved(UUID player, UUID effect) {
+    var pending = pendingHandins.get(player);
+    if (pending != null && pending.remove(effect) && pending.isEmpty()) {
+      pendingHandins.remove(player);
+      handinNoticeSent.remove(player);
+      var notices = deferredNotices.remove(player);
+      if (notices != null) {
+        effects(player, notices.outcome(), notices.catalog());
+      }
+      var state = sessions.get(player);
+      if (state != null && wiring.world().facts(player).isPresent()) {
+        present(player, state);
+      }
+    }
+  }
+
+  private boolean blockedByHandin(UUID player) {
+    if (!handoverPending(player)) {
+      return false;
+    }
+    if (handinNoticeSent.add(player)) {
+      wiring
+          .world()
+          .send(player, Notices.info("Your item hand-in is awaiting delivery or staff review."));
+    }
+    return true;
+  }
+
   private void withContext(UUID player, Step step) {
+    if (blockedByHandin(player)) {
+      return;
+    }
     if (saving.containsKey(player)) {
       var facts = wiring.world().facts(player);
       if (facts.isEmpty()) {
@@ -537,6 +653,9 @@ public final class QuestService implements QuestHooks, QuestProgress {
   }
 
   private void withContext(UUID player, Step step, Facts facts) {
+    if (blockedByHandin(player)) {
+      return;
+    }
     if (saving.containsKey(player)) {
       queued
           .computeIfAbsent(player, ignored -> new ArrayDeque<>())
@@ -565,37 +684,24 @@ public final class QuestService implements QuestHooks, QuestProgress {
    */
   private void commit(UUID player, PlayerQuests before, Outcome outcome, Catalog catalog) {
     var after = outcome.state();
-    var reserved =
-        outcome.effects().stream()
-            .filter(Effect.World.class::isInstance)
-            .map(Effect.World.class::cast)
-            .map(Effect.World::action)
-            .filter(Action.Take.class::isInstance)
-            .map(Action.Take.class::cast)
-            .toList();
     var pending =
         outcome.effects().stream()
             .filter(Effect.World.class::isInstance)
             .map(Effect.World.class::cast)
-            .filter(effect -> !(effect.action() instanceof Action.Take))
             .map(
                 effect ->
-                    new PendingWorld(UUID.randomUUID(), player, effect.quest(), effect.action()))
+                    new PendingWorld(
+                        new UUID(wiring.random().nextLong(), wiring.random().nextLong()),
+                        player,
+                        effect.quest(),
+                        effect.action()))
             .toList();
-    if (after.equals(before) && pending.isEmpty() && reserved.isEmpty()) {
+    if (after.equals(before) && pending.isEmpty()) {
       effects(player, outcome, catalog);
       present(player, after);
       return;
     }
-    var taken = new ArrayList<Action.Take>();
-    for (var item : reserved) {
-      if (!wiring.world().take(player, item.item(), item.amount())) {
-        refund(player, taken);
-        wiring.world().send(player, Notices.error("You no longer have the items to hand over."));
-        return;
-      }
-      taken.add(item);
-    }
+    pendingHandins.computeIfAbsent(player, ignored -> new HashSet<>()).addAll(handins(pending));
     var barrier = new CompletableFuture<Void>();
     saving.put(player, barrier);
     var _ =
@@ -605,22 +711,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
             .whenCompleteAsync(
                 (ignored, failure) -> {
                   try {
-                    if (failure != null) {
-                      refund(player, taken);
-                      wiring.logger().error("Could not save quests for {}", player, failure);
-                      wiring
-                          .world()
-                          .send(
-                              player,
-                              Notices.error("Your quest progress could not be saved. Try again."));
-                    } else {
-                      if (sessions.containsKey(player)) {
-                        sessions.put(player, after);
-                      }
-                      effects(player, outcome, catalog);
-                      deliverPending(player);
-                      present(player, after);
-                    }
+                    saved(player, new PendingCommit(outcome, pending, catalog), failure);
                   } finally {
                     saving.remove(player, barrier);
                     drain(player);
@@ -636,31 +727,34 @@ public final class QuestService implements QuestHooks, QuestProgress {
                 });
   }
 
+  private void saved(UUID player, PendingCommit committed, Throwable failure) {
+    if (failure != null) {
+      handins(committed.pending()).forEach(id -> handinResolved(player, id));
+      wiring.logger().error("Could not save quests for {}", player, failure);
+      wiring
+          .world()
+          .send(player, Notices.error("Your quest progress could not be saved. Try again."));
+      return;
+    }
+    if (sessions.containsKey(player)) {
+      sessions.put(player, committed.outcome().state());
+    }
+    if (handoverPending(player)) {
+      deferredNotices.put(player, new DeferredNotices(committed.outcome(), committed.catalog()));
+    } else {
+      effects(player, committed.outcome(), committed.catalog());
+    }
+    deliverPending(player);
+    if (!handoverPending(player)) {
+      present(player, committed.outcome().state());
+    }
+  }
+
   private void effects(UUID player, Outcome outcome, Catalog catalog) {
     var executor = new EffectRunner(player, wiring, notices, this);
     for (var effect : outcome.effects()) {
-      if (!(effect instanceof Effect.World) || effect instanceof Effect.World(_, Action.Take _)) {
+      if (!(effect instanceof Effect.World)) {
         executor.run(effect, catalog);
-      }
-    }
-  }
-
-  private void refund(UUID player, List<Action.Take> taken) {
-    if (taken.isEmpty()) {
-      return;
-    }
-    refunds.computeIfAbsent(player, ignored -> new ArrayList<>()).addAll(taken);
-    returnReserved(player);
-  }
-
-  private void returnReserved(UUID player) {
-    if (wiring.world().facts(player).isEmpty()) {
-      return;
-    }
-    var items = refunds.remove(player);
-    if (items != null) {
-      for (var item : items) {
-        wiring.world().give(player, item.item(), item.amount());
       }
     }
   }
@@ -698,12 +792,53 @@ public final class QuestService implements QuestHooks, QuestProgress {
       return;
     }
     var effect = pending.get(index);
+    if (effect.status() == Status.IN_DOUBT && effect.action() instanceof Action.Crystals) {
+      // The economy ledger owns this stable effect ID; transferOnce can safely confirm or retry.
+      deliverClaimed(player, pending, index);
+      return;
+    }
+    if (effect.status() == Status.IN_DOUBT) {
+      wiring
+          .logger()
+          .error(
+              "Quest action {} for player {} is IN_DOUBT; inspect and reconcile before replay",
+              effect.id(),
+              player);
+      wiring
+          .world()
+          .send(player, Notices.error("A quest reward needs staff review before it can continue."));
+      finishDelivery(player);
+      return;
+    }
+    var _ =
+        wiring
+            .store()
+            .claim(effect.id())
+            .whenCompleteAsync(
+                (claimed, failure) -> {
+                  if (failure != null || !Boolean.TRUE.equals(claimed)) {
+                    wiring.logger().error("Could not claim quest action {}", effect.id(), failure);
+                    finishDelivery(player);
+                    return;
+                  }
+                  deliverClaimed(player, pending, index);
+                },
+                wiring.mainThread());
+  }
+
+  private void deliverClaimed(UUID player, List<PendingWorld> pending, int index) {
+    var effect = pending.get(index);
+    if (wiring.world().facts(player).isEmpty()) {
+      finishDelivery(player);
+      return;
+    }
     var runner = new EffectRunner(player, wiring, notices, this);
     CompletableFuture<Boolean> applied;
     try {
-      applied = runner.world(effect.quest(), effect.action());
+      applied = runner.world(effect.id(), effect.quest(), effect.action());
     } catch (RuntimeException failure) {
       wiring.logger().error("Could not deliver quest action {}", effect.id(), failure);
+      wiring.world().send(player, Notices.error("A quest reward needs staff review."));
       finishDelivery(player);
       return;
     }
@@ -714,6 +849,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
                 if (failure != null) {
                   wiring.logger().error("Quest action {} failed", effect.id(), failure);
                 }
+                wiring.world().send(player, Notices.error("A quest reward needs staff review."));
                 finishDelivery(player);
                 return;
               }
@@ -730,12 +866,17 @@ public final class QuestService implements QuestHooks, QuestProgress {
                                       "Could not acknowledge quest action {}",
                                       effect.id(),
                                       ackFailure);
+                              wiring
+                                  .world()
+                                  .send(
+                                      player, Notices.error("A quest reward needs staff review."));
                               finishDelivery(player);
                               return;
                             }
                             runner.run(
                                 new Effect.World(effect.quest(), effect.action()),
                                 wiring.content().catalog());
+                            handinResolved(player, effect.id());
                             deliverNext(player, pending, index + 1);
                           },
                           wiring.mainThread());

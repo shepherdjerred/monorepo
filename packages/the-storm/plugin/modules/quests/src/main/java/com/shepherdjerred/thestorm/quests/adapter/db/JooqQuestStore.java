@@ -30,6 +30,7 @@ import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.jooq.DSLContext;
+import org.jooq.impl.DSL;
 
 /**
  * Quest state in SQLite. A save replaces all of a player's rows in one transaction on the single
@@ -85,7 +86,45 @@ public final class JooqQuestStore implements QuestStore {
                             UUID.fromString(row.getId()),
                             player,
                             row.getQuestId(),
-                            WorldActionCodec.decode(row.getActionKind(), row.getPayload()))));
+                            WorldActionCodec.decode(row.getActionKind(), row.getPayload()),
+                            Status.valueOf(row.getStatus()))));
+  }
+
+  @Override
+  public CompletableFuture<Boolean> claim(UUID effect) {
+    return database.write(
+        dsl ->
+            dsl.update(QUESTS_PENDING_WORLD)
+                    .set(QUESTS_PENDING_WORLD.STATUS, Status.IN_DOUBT.name())
+                    .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
+                    .and(QUESTS_PENDING_WORLD.STATUS.eq(Status.PENDING.name()))
+                    .execute()
+                == 1);
+  }
+
+  @Override
+  public CompletableFuture<Boolean> retry(UUID player, UUID effect) {
+    return database.write(
+        dsl ->
+            dsl.update(QUESTS_PENDING_WORLD)
+                    .set(QUESTS_PENDING_WORLD.STATUS, Status.PENDING.name())
+                    .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
+                    .and(QUESTS_PENDING_WORLD.PLAYER_ID.eq(player.toString()))
+                    .and(QUESTS_PENDING_WORLD.STATUS.eq(Status.IN_DOUBT.name()))
+                    .execute()
+                == 1);
+  }
+
+  @Override
+  public CompletableFuture<Boolean> complete(UUID player, UUID effect) {
+    return database.write(
+        dsl ->
+            dsl.deleteFrom(QUESTS_PENDING_WORLD)
+                    .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
+                    .and(QUESTS_PENDING_WORLD.PLAYER_ID.eq(player.toString()))
+                    .and(QUESTS_PENDING_WORLD.STATUS.eq(Status.IN_DOUBT.name()))
+                    .execute()
+                == 1);
   }
 
   @Override
@@ -93,9 +132,14 @@ public final class JooqQuestStore implements QuestStore {
     return database
         .write(
             dsl -> {
-              dsl.deleteFrom(QUESTS_PENDING_WORLD)
-                  .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
-                  .execute();
+              var deleted =
+                  dsl.deleteFrom(QUESTS_PENDING_WORLD)
+                      .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
+                      .and(QUESTS_PENDING_WORLD.STATUS.eq(Status.IN_DOUBT.name()))
+                      .execute();
+              if (deleted != 1) {
+                throw new IllegalStateException("claimed quest action disappeared: " + effect);
+              }
               return Boolean.TRUE;
             })
         .thenAccept(deleted -> {});
@@ -108,6 +152,12 @@ public final class JooqQuestStore implements QuestStore {
             dsl.select(QUESTS_PLAYER.PLAYER_ID, QUESTS_PLAYER.POINTS)
                 .from(QUESTS_PLAYER)
                 .where(QUESTS_PLAYER.POINTS.gt(0L))
+                .and(
+                    DSL.notExists(
+                        DSL.selectOne()
+                            .from(QUESTS_PENDING_WORLD)
+                            .where(QUESTS_PENDING_WORLD.PLAYER_ID.eq(QUESTS_PLAYER.PLAYER_ID))
+                            .and(QUESTS_PENDING_WORLD.ACTION_KIND.eq("take"))))
                 .orderBy(QUESTS_PLAYER.POINTS.desc(), QUESTS_PLAYER.PLAYER_ID.asc())
                 .limit(limit)
                 .fetch(row -> new Standing(UUID.fromString(row.value1()), row.value2())));

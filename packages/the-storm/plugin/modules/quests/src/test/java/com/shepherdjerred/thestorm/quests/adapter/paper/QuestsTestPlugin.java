@@ -279,7 +279,7 @@ public class QuestsTestPlugin extends JavaPlugin {
   private final class Paid implements Rewards {
     @Override
     public CompletableFuture<Result<String, String>> pay(
-        UUID player, long crystals, String reason) {
+        UUID effect, UUID player, long crystals, String reason) {
       paid.add(crystals + " " + reason);
       return CompletableFuture.completedFuture(Result.ok(crystals + " crystals"));
     }

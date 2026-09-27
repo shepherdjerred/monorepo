@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.quests.domain.view.Journal;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
@@ -31,7 +32,7 @@ public interface QuestWorld {
   boolean take(UUID player, ItemMatch item, int amount);
 
   /** Teleports to the centre of {@code region} if protection lets the player arrive there. */
-  void teleport(UUID player, Region region);
+  CompletableFuture<Boolean> teleport(UUID player, Region region);
 
   /** Spawns creatures at {@code region}'s centre that despawn after the configured time. */
   void spawn(UUID player, Action.Spawn spawn, Region region);

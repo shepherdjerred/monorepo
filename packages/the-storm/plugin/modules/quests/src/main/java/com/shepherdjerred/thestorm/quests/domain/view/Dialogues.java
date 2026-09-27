@@ -100,6 +100,7 @@ public final class Dialogues {
     }
     context.catalog().all().stream()
         .filter(quest -> quest.giver().equals(npc))
+        .filter(quest -> quest.category() != Quest.Category.HIDDEN)
         .filter(quest -> QuestEngine.availability(state, quest, context) == Availability.OFFERABLE)
         .sorted(comparing(Quest::category).thenComparing(Quest::id))
         .forEach(quest -> entries.add(new Entry(Kind.OFFER, quest)));

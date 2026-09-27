@@ -74,22 +74,26 @@ final class ItemStacks {
     return total;
   }
 
-  /** Takes up to {@code amount} matching items; returns how many were taken. */
-  static int take(Player player, ItemMatch match, int amount) {
+  /** Takes up to {@code amount} matching items, retaining their exact item metadata. */
+  static List<ItemStack> take(Player player, ItemMatch match, int amount) {
     var inventory = player.getInventory();
     var contents = Locations.slots(inventory.getStorageContents());
+    var removed = new ArrayList<ItemStack>();
     var left = amount;
     for (var slot = 0; slot < contents.length && left > 0; slot++) {
       var stack = contents[slot];
       if (stack != null && matches(stack, match)) {
         var taken = Math.min(left, stack.getAmount());
+        var original = stack.clone();
+        original.setAmount(taken);
+        removed.add(original);
         // An amount of zero empties the slot.
         stack.setAmount(stack.getAmount() - taken);
         left -= taken;
       }
     }
     inventory.setStorageContents(contents);
-    return amount - left;
+    return List.copyOf(removed);
   }
 
   /** Stacks holding {@code amount} items made to match {@code match}. */

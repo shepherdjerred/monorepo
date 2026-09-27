@@ -98,7 +98,7 @@ public final class QuestsPaper {
         .lifecycle()
         .registerEventHandler(
             LifecycleEvents.COMMANDS, event -> commands.register(event.registrar()));
-    NpcBridge.install(ports.dialogs(), ports.actions(), service, config);
+    NpcBridge.install(ports.dialogs(), ports.actions(), service);
     // Players already online (after a reload) load their quests too.
     for (var player : server.getOnlinePlayers()) {
       var _ = service.join(player.getUniqueId());

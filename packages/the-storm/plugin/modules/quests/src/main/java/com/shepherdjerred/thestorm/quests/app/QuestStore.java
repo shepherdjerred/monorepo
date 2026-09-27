@@ -25,10 +25,28 @@ public interface QuestStore {
   /** World actions committed with quest state and awaiting delivery to the player. */
   CompletableFuture<List<PendingWorld>> pending(UUID player);
 
+  /** Atomically moves a pending action to an in-doubt state before touching Paper. */
+  CompletableFuture<Boolean> claim(UUID effect);
+
+  /** Reopens an in-doubt action after an operator confirms it did not take effect. */
+  CompletableFuture<Boolean> retry(UUID player, UUID effect);
+
+  /** Removes an in-doubt action after an operator confirms it already took effect. */
+  CompletableFuture<Boolean> complete(UUID player, UUID effect);
+
   /** Removes one action after it has been delivered. */
   CompletableFuture<Void> acknowledge(UUID effect);
 
-  record PendingWorld(UUID id, UUID player, String quest, Action action) {}
+  record PendingWorld(UUID id, UUID player, String quest, Action action, Status status) {
+    public PendingWorld(UUID id, UUID player, String quest, Action action) {
+      this(id, player, quest, action, Status.PENDING);
+    }
+  }
+
+  enum Status {
+    PENDING,
+    IN_DOUBT
+  }
 
   /** The players with the most quest points, highest first. */
   CompletableFuture<List<Standing>> top(int limit);

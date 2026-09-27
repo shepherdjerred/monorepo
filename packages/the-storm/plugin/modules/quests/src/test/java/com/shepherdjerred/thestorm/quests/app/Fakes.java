@@ -86,9 +86,59 @@ final class Fakes {
     }
 
     @Override
+    public CompletableFuture<Boolean> claim(UUID effect) {
+      for (var effects : pending.values()) {
+        for (var index = 0; index < effects.size(); index++) {
+          var found = effects.get(index);
+          if (found.id().equals(effect) && found.status() == Status.PENDING) {
+            effects.set(
+                index,
+                new PendingWorld(
+                    found.id(), found.player(), found.quest(), found.action(), Status.IN_DOUBT));
+            return CompletableFuture.completedFuture(true);
+          }
+        }
+      }
+      return CompletableFuture.completedFuture(false);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> retry(UUID player, UUID effect) {
+      var effects = pending.getOrDefault(player, List.of());
+      for (var index = 0; index < effects.size(); index++) {
+        var found = effects.get(index);
+        if (found.id().equals(effect) && found.status() == Status.IN_DOUBT) {
+          effects.set(
+              index,
+              new PendingWorld(
+                  found.id(), found.player(), found.quest(), found.action(), Status.PENDING));
+          return CompletableFuture.completedFuture(true);
+        }
+      }
+      return CompletableFuture.completedFuture(false);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> complete(UUID player, UUID effect) {
+      var effects = pending.get(player);
+      return CompletableFuture.completedFuture(
+          effects != null
+              && effects.removeIf(
+                  found -> found.id().equals(effect) && found.status() == Status.IN_DOUBT));
+    }
+
+    @Override
     public CompletableFuture<Void> acknowledge(UUID effect) {
-      pending.values().forEach(effects -> effects.removeIf(found -> found.id().equals(effect)));
-      return CompletableFuture.completedFuture(null);
+      var removed =
+          pending.values().stream()
+              .anyMatch(
+                  effects ->
+                      effects.removeIf(
+                          found -> found.id().equals(effect) && found.status() == Status.IN_DOUBT));
+      return removed
+          ? CompletableFuture.completedFuture(null)
+          : CompletableFuture.failedFuture(
+              new IllegalStateException("claimed quest action disappeared: " + effect));
     }
 
     @Override
@@ -96,6 +146,10 @@ final class Fakes {
       return CompletableFuture.completedFuture(
           saved.values().stream()
               .filter(state -> state.points() > 0)
+              .filter(
+                  state ->
+                      pending.getOrDefault(state.player(), List.of()).stream()
+                          .noneMatch(effect -> effect.action() instanceof Action.Take))
               .sorted((a, b) -> Long.compare(b.points(), a.points()))
               .limit(limit)
               .map(state -> new Standing(state.player(), state.points()))
@@ -153,8 +207,9 @@ final class Fakes {
     }
 
     @Override
-    public void teleport(UUID player, Region region) {
+    public CompletableFuture<Boolean> teleport(UUID player, Region region) {
       actions.add("teleport " + region.id());
+      return CompletableFuture.completedFuture(true);
     }
 
     @Override
@@ -186,16 +241,19 @@ final class Fakes {
   /** Pays and grants into lists; can be told to refuse payments. */
   static final class Rewards implements com.shepherdjerred.thestorm.quests.app.Rewards {
     final List<String> paid = new ArrayList<>();
+    final Map<UUID, String> paidByEffect = new HashMap<>();
     final List<String> granted = new ArrayList<>();
     boolean refuse;
 
     @Override
     public CompletableFuture<Result<String, String>> pay(
-        UUID player, long crystals, String reason) {
+        UUID effect, UUID player, long crystals, String reason) {
       if (refuse) {
         return CompletableFuture.completedFuture(Result.err("bank closed"));
       }
-      paid.add(crystals + " " + reason);
+      if (paidByEffect.putIfAbsent(effect, crystals + " " + reason) == null) {
+        paid.add(crystals + " " + reason);
+      }
       return CompletableFuture.completedFuture(Result.ok(crystals + " crystals"));
     }
 

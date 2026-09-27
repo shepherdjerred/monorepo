@@ -28,7 +28,7 @@ final class EffectRunner {
     notices.actionBar(effect, catalog).ifPresent(line -> wiring.world().actionBar(player, line));
   }
 
-  CompletableFuture<Boolean> world(String quest, Action action) {
+  CompletableFuture<Boolean> world(UUID effect, String quest, Action action) {
     var world = wiring.world();
     if (world.facts(player).isEmpty()) {
       return CompletableFuture.completedFuture(false);
@@ -38,9 +38,9 @@ final class EffectRunner {
         world.give(player, item, amount);
         yield CompletableFuture.completedFuture(true);
       }
-      case Action.Take _ ->
-          throw new IllegalStateException("item handover was not reserved before the state save");
-      case Action.Crystals(var amount) -> pay(quest, amount);
+      case Action.Take(var item, var amount) ->
+          CompletableFuture.completedFuture(world.take(player, item, amount));
+      case Action.Crystals(var amount) -> pay(effect, quest, amount);
       case Action.Grant(var node) -> grant(node, "");
       case Action.Title(var id) ->
           grant(PermissionGrants.title(id), "You earned the title " + Names.pretty(id) + ".");
@@ -51,13 +51,12 @@ final class EffectRunner {
         yield CompletableFuture.completedFuture(true);
       }
       case Action.Teleport(var region) -> {
-        world.teleport(
+        yield world.teleport(
             player,
             wiring
                 .content()
                 .region(region)
                 .orElseThrow(() -> new IllegalStateException("missing quest region: " + region)));
-        yield CompletableFuture.completedFuture(true);
       }
       case Action.Spawn spawn -> {
         world.spawn(
@@ -81,10 +80,10 @@ final class EffectRunner {
     };
   }
 
-  private CompletableFuture<Boolean> pay(String quest, long amount) {
+  private CompletableFuture<Boolean> pay(UUID effect, String quest, long amount) {
     return wiring
         .rewards()
-        .pay(player, amount, "quest:" + quest)
+        .pay(effect, player, amount, "quest:" + quest)
         .handleAsync(
             (result, failure) -> {
               if (failure != null) {

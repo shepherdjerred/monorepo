@@ -123,6 +123,7 @@ final class JooqQuestStoreTest {
     store.save(rich(ALICE), List.of(give, grant)).join();
     store.save(PlayerQuests.empty(ALICE)).join();
     assertThat(store.pending(ALICE).join()).containsExactly(give, grant);
+    assertThat(store.claim(give.id()).join()).isTrue();
     store.acknowledge(give.id()).join();
     assertThat(store.pending(ALICE).join()).containsExactly(grant);
   }

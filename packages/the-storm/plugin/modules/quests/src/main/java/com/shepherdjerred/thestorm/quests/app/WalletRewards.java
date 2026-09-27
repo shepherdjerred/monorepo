@@ -5,6 +5,7 @@ import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
+import com.shepherdjerred.thestorm.economy.app.KeyedTransfer;
 import com.shepherdjerred.thestorm.economy.app.Receipt;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.util.UUID;
@@ -24,10 +25,13 @@ public final class WalletRewards implements Rewards {
   }
 
   @Override
-  public CompletableFuture<Result<String, String>> pay(UUID player, long crystals, String reason) {
+  public CompletableFuture<Result<String, String>> pay(
+      UUID effect, UUID player, long crystals, String reason) {
     var amount = Crystals.of(crystals);
     return wallets
-        .transfer(new AccountId.Server(), new AccountId.Player(player), amount, reason)
+        .transferOnce(
+            new KeyedTransfer(
+                effect, new AccountId.Server(), new AccountId.Player(player), amount, reason))
         .thenApply(
             result ->
                 switch (result) {

@@ -5,7 +5,6 @@ import com.shepherdjerred.thestorm.npcs.app.NpcDialogs;
 import com.shepherdjerred.thestorm.quests.app.DialogueBridge;
 import com.shepherdjerred.thestorm.quests.app.QuestService;
 import com.shepherdjerred.thestorm.quests.domain.board.BoardQuests;
-import com.shepherdjerred.thestorm.quests.domain.config.QuestsConfig;
 import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
 import com.shepherdjerred.thestorm.quests.domain.model.Quest;
 import com.shepherdjerred.thestorm.quests.domain.model.Stage;
@@ -24,8 +23,7 @@ final class NpcBridge {
 
   private NpcBridge() {}
 
-  static void install(
-      NpcDialogs dialogs, NpcActions actions, QuestService service, QuestsConfig config) {
+  static void install(NpcDialogs dialogs, NpcActions actions, QuestService service) {
     dialogs.register(
         (player, npc) ->
             service
@@ -37,7 +35,7 @@ final class NpcBridge {
     actions.register(
         DialogueBridge.TURN_IN,
         (player, npc) -> service.handIn(player.getUniqueId(), npc.id(), Optional.empty()));
-    for (var quest : questIds(service.content(), config)) {
+    for (var quest : questIds(service.content())) {
       actions.register(
           DialogueBridge.accept(quest),
           (player, npc) -> service.accept(player.getUniqueId(), quest, npc.id()));
@@ -56,12 +54,11 @@ final class NpcBridge {
   }
 
   /** Every quest id a dialogue can name: the content's and every board slot. */
-  static List<String> questIds(QuestContent content, QuestsConfig config) {
+  static List<String> questIds(QuestContent content) {
     var ids = new TreeSet<>(content.quests().keySet());
-    for (var slot = 1; slot <= config.board().dailies(); slot++) {
+    // Persisted board slots may outlive a reduction in the configured slot counts.
+    for (var slot = 1; slot <= 5; slot++) {
       ids.add(BoardQuests.DAILY_PREFIX + slot);
-    }
-    for (var slot = 1; slot <= config.board().weeklies(); slot++) {
       ids.add(BoardQuests.WEEKLY_PREFIX + slot);
     }
     return new ArrayList<>(ids);

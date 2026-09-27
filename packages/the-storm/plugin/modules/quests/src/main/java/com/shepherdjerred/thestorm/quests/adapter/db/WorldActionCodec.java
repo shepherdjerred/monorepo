@@ -22,8 +22,7 @@ final class WorldActionCodec {
   static String kind(Action action) {
     return switch (action) {
       case Action.Give _ -> "give";
-      case Action.Take _ ->
-          throw new IllegalArgumentException("consumables must be reserved before save");
+      case Action.Take _ -> "take";
       case Action.Crystals _ -> "crystals";
       case Action.Grant _ -> "grant";
       case Action.Title _ -> "title";
@@ -49,6 +48,7 @@ final class WorldActionCodec {
   static Action decode(String kind, String payload) {
     return switch (kind) {
       case "give" -> JSON.readValue(payload, Action.Give.class);
+      case "take" -> JSON.readValue(payload, Action.Take.class);
       case "crystals" -> JSON.readValue(payload, Action.Crystals.class);
       case "grant" -> JSON.readValue(payload, Action.Grant.class);
       case "title" -> JSON.readValue(payload, Action.Title.class);

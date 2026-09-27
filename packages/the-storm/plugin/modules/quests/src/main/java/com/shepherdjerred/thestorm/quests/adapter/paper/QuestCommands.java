@@ -45,6 +45,7 @@ final class QuestCommands {
   private static final String QUEST = "quest";
   private static final String PLAYER = "player";
   private static final String STAGE = "stage";
+  private static final String EFFECT = "effect";
 
   /**
    * What the commands drive.
@@ -144,7 +145,109 @@ final class QuestCommands {
                                                             .adminStage(
                                                                 target,
                                                                 getString(context, QUEST),
-                                                                getString(context, STAGE))))))));
+                                                                getString(context, STAGE))))))))
+        .then(
+            Commands.literal("effects")
+                .then(Commands.argument(PLAYER, word()).executes(this::listEffects)))
+        .then(
+            Commands.literal("effect")
+                .then(effectCommand("retry"))
+                .then(effectCommand("complete")));
+  }
+
+  private ArgumentBuilder<CommandSourceStack, ?> effectCommand(String resolution) {
+    return Commands.literal(resolution)
+        .then(
+            Commands.argument(PLAYER, word())
+                .then(
+                    Commands.argument(EFFECT, word())
+                        .executes(context -> resolveEffect(context, resolution))));
+  }
+
+  private int listEffects(CommandContext<CommandSourceStack> context)
+      throws CommandSyntaxException {
+    var sender = context.getSource().getSender();
+    var player = playerId(context, sender);
+    if (player.isEmpty()) {
+      return Command.SINGLE_SUCCESS;
+    }
+    var _ =
+        wiring
+            .service()
+            .pendingWorld(player.get())
+            .whenCompleteAsync(
+                (effects, failure) -> {
+                  if (failure != null) {
+                    wiring
+                        .logger()
+                        .error("Could not list quest effects for {}", player.get(), failure);
+                    sender.sendMessage(error("Quest effects are unavailable right now."));
+                    return;
+                  }
+                  sender.sendMessage(info("Quest effects for " + player.get() + ":"));
+                  if (effects.isEmpty()) {
+                    sender.sendMessage(info("None."));
+                  }
+                  effects.forEach(
+                      effect ->
+                          sender.sendMessage(
+                              info(
+                                  effect.id()
+                                      + " "
+                                      + effect.status()
+                                      + " "
+                                      + effect.quest()
+                                      + " "
+                                      + effect.action())));
+                },
+                wiring.mainThread());
+    return Command.SINGLE_SUCCESS;
+  }
+
+  private int resolveEffect(CommandContext<CommandSourceStack> context, String resolution)
+      throws CommandSyntaxException {
+    var sender = context.getSource().getSender();
+    UUID effect;
+    try {
+      effect = UUID.fromString(getString(context, EFFECT));
+    } catch (IllegalArgumentException invalid) {
+      sender.sendMessage(error("Invalid quest effect ID."));
+      return Command.SINGLE_SUCCESS;
+    }
+    var player = playerId(context, sender);
+    if (player.isEmpty()) {
+      return Command.SINGLE_SUCCESS;
+    }
+    var decision =
+        resolution.equals("retry")
+            ? wiring.service().retryWorld(player.get(), effect)
+            : wiring.service().completeWorld(player.get(), effect);
+    var _ =
+        decision.whenCompleteAsync(
+            (changed, failure) -> {
+              if (failure != null) {
+                wiring.logger().error("Could not reconcile quest effect {}", effect, failure);
+                sender.sendMessage(error("Could not reconcile quest effect " + effect + "."));
+              } else if (Boolean.TRUE.equals(changed)) {
+                sender.sendMessage(
+                    success("Quest effect " + effect + " marked " + resolution + "."));
+              } else {
+                sender.sendMessage(
+                    error("No in-doubt quest effect " + effect + " for " + player.get() + "."));
+              }
+            },
+            wiring.mainThread());
+    return Command.SINGLE_SUCCESS;
+  }
+
+  private static java.util.Optional<UUID> playerId(
+      CommandContext<CommandSourceStack> context, CommandSender sender) {
+    try {
+      return java.util.Optional.of(UUID.fromString(getString(context, PLAYER)));
+    } catch (IllegalArgumentException invalid) {
+      sender.sendMessage(error("Use the player's UUID for quest effect reconciliation."));
+      return java.util.Optional.empty();
+    }
   }
 
   private RequiredArgumentBuilder<CommandSourceStack, String> activeQuest() {
@@ -189,7 +292,11 @@ final class QuestCommands {
     }
     var view = wiring.service().journal(player.getUniqueId());
     if (view.isEmpty()) {
-      sender.sendMessage(error("Your quests are still loading."));
+      sender.sendMessage(
+          error(
+              wiring.service().handoverPending(player.getUniqueId())
+                  ? "Your item hand-in is awaiting delivery or staff review."
+                  : "Your quests are still loading."));
     } else {
       wiring.journal().accept(player, view.get());
     }

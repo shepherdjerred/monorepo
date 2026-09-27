@@ -99,6 +99,7 @@ public final class ContentCheck {
     new TreeMap<>(content.quests()).values().forEach(this::quest);
     new TreeMap<>(content.templates()).values().forEach(this::template);
     requirementCycles();
+    startQuestCycles();
     variablesRead.forEach(
         (variable, where) -> {
           if (!variablesSet.contains(variable)) {
@@ -113,6 +114,9 @@ public final class ContentCheck {
 
   private void quest(Quest quest) {
     at(content.source(quest.id()), "quests." + quest.id());
+    if (quest.id().matches("(?:daily|weekly)-[1-9][0-9]*")) {
+      problem("quest ID " + quest.id() + " is reserved for a generated board slot");
+    }
     text("name", quest.name(), MAX_NAME);
     npc(quest.giver());
     if ((quest.category() == Quest.Category.DAILY || quest.category() == Quest.Category.WEEKLY)
@@ -306,6 +310,29 @@ public final class ContentCheck {
       if (requiresItself(quest, requires)) {
         at(content.source(quest), "quests." + quest);
         problem("requires completing itself through other quests' requirements");
+      }
+    }
+  }
+
+  private void startQuestCycles() {
+    var starts = new HashMap<String, List<String>>();
+    for (var quest : content.quests().values()) {
+      var actions = new ArrayList<Action>();
+      actions.addAll(quest.onAccept());
+      actions.addAll(quest.rewards());
+      quest.stages().values().forEach(stage -> actions.addAll(stage.onComplete()));
+      starts.put(
+          quest.id(),
+          actions.stream()
+              .filter(Action.StartQuest.class::isInstance)
+              .map(Action.StartQuest.class::cast)
+              .map(Action.StartQuest::quest)
+              .toList());
+    }
+    for (var quest : new TreeMap<>(content.quests()).keySet()) {
+      if (requiresItself(quest, starts)) {
+        at(content.source(quest), "quests." + quest);
+        problem("starts itself through other quests' actions");
       }
     }
   }

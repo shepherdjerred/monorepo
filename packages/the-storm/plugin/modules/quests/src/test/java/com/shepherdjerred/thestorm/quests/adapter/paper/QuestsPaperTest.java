@@ -151,7 +151,14 @@ final class QuestsPaperTest {
     assertThat(plugin().markers.get(alice.getUniqueId()))
         .containsEntry("thomas", QuestMarker.TURN_IN);
     clickAction(alice, "thomas", id -> id.equals("quests.turnin.smith"));
-    await("smith completed", () -> state(alice).completion("smith").isPresent());
+    await(
+        "smith completed",
+        () ->
+            plugin()
+                .service()
+                .state(alice.getUniqueId())
+                .map(quests -> quests.completion("smith").isPresent())
+                .orElse(false));
     assertThat(state(alice).completion("smith")).isPresent();
     await(
         "smith world actions delivered",
