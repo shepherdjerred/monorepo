@@ -75,7 +75,7 @@ public record QuestsConfig(
 
     /** The most a quest estimated at {@code minutes} may pay. */
     public long limit(int minutes) {
-      return allowance + crystalsPerMinute * minutes;
+      return Math.addExact(allowance, Math.multiplyExact(crystalsPerMinute, minutes));
     }
   }
 

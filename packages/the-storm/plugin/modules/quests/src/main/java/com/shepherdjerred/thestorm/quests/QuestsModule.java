@@ -22,6 +22,7 @@ import com.shepherdjerred.thestorm.quests.app.QuestHooks;
 import com.shepherdjerred.thestorm.quests.app.QuestProgress;
 import com.shepherdjerred.thestorm.quests.app.QuestService;
 import com.shepherdjerred.thestorm.quests.app.WalletRewards;
+import com.shepherdjerred.thestorm.quests.domain.board.BoardQuests;
 import com.shepherdjerred.thestorm.quests.domain.config.QuestsConfig;
 import com.shepherdjerred.thestorm.quests.domain.content.ContentCheck;
 import com.shepherdjerred.thestorm.quests.domain.content.ContentProblem;
@@ -63,6 +64,13 @@ public final class QuestsModule implements StormModule {
             config.board().npc(),
             mainWorld.getKey().asString());
     var content = requireValid(ContentLoader.load(context.dataDirectory(), rules));
+    // Fail module enable before players join if an enabled board period has no templates.
+    var _ =
+        new BoardQuests.Pool(
+            config.calendar(),
+            content.templates(),
+            config.board().dailies(),
+            config.board().weeklies());
     var paper =
         new QuestsPaper(
             context,

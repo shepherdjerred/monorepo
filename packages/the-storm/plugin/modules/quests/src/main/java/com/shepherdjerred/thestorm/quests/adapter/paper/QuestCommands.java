@@ -296,7 +296,9 @@ final class QuestCommands {
           error(
               wiring.service().handoverPending(player.getUniqueId())
                   ? "Your item hand-in is awaiting delivery or staff review."
-                  : "Your quests are still loading."));
+                  : wiring.service().state(player.getUniqueId()).isPresent()
+                      ? "Your quest board is updating. Try again."
+                      : "Your quests are still loading."));
     } else {
       wiring.journal().accept(player, view.get());
     }

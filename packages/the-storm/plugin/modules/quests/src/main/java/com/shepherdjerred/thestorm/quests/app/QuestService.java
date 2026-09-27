@@ -16,12 +16,14 @@ import com.shepherdjerred.thestorm.quests.domain.engine.QuestEngine.Refusal;
 import com.shepherdjerred.thestorm.quests.domain.engine.QuestEvent;
 import com.shepherdjerred.thestorm.quests.domain.model.Action;
 import com.shepherdjerred.thestorm.quests.domain.model.Quest;
+import com.shepherdjerred.thestorm.quests.domain.state.Board;
 import com.shepherdjerred.thestorm.quests.domain.state.PlayerQuests;
 import com.shepherdjerred.thestorm.quests.domain.view.Describe;
 import com.shepherdjerred.thestorm.quests.domain.view.Dialogues;
 import com.shepherdjerred.thestorm.quests.domain.view.Journal;
 import com.shepherdjerred.thestorm.quests.domain.view.Markers;
 import com.shepherdjerred.thestorm.quests.domain.view.QuestDialogue;
+import java.time.Instant;
 import java.time.InstantSource;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -39,6 +41,7 @@ import java.util.function.UnaryOperator;
 import java.util.random.RandomGenerator;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.entity.Player;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The quest use cases, on the main thread. Each online player's state is held in memory and saved
@@ -58,7 +61,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
    * @param npcNames an NPC id to its display name
    * @param mainThread completes futures back on the main thread
    * @param time the clock
-   * @param random draws board quests
+   * @param random draws board quests from the host-provided generator
    * @param logger the module logger
    */
   public record Wiring(
@@ -248,21 +251,37 @@ public final class QuestService implements QuestHooks, QuestProgress {
     if (state == null) {
       return Optional.empty();
     }
-    return context(player, state)
-        .flatMap(
-            context ->
-                Dialogues.forNpc(
-                    state,
-                    new Dialogues.Npc(npc, wiring.npcNames().apply(npc)),
-                    context,
-                    wiring.config().labels()));
+    var current = context(player, state);
+    if (current.isEmpty()) {
+      return Optional.empty();
+    }
+    if (npc.equals(wiring.config().board().npc()) && boardExpired(state, current.get().now())) {
+      refresh(player);
+      wiring
+          .world()
+          .send(player, Notices.info("The quest board has changed. Talk again for new offers."));
+      return Optional.empty();
+    }
+    return Dialogues.forNpc(
+        state,
+        new Dialogues.Npc(npc, wiring.npcNames().apply(npc)),
+        current.get(),
+        wiring.config().labels());
   }
 
   /** {@code player} accepts {@code quest} from {@code npc}. */
   public void accept(UUID player, String quest, String npc) {
+    var current = sessions.get(player);
+    var offered = current == null ? Board.EMPTY : current.board();
     withContext(
         player,
         (state, context) -> {
+          if (offered.entry(quest).isPresent() && !offered.equals(state.board())) {
+            wiring
+                .world()
+                .send(player, Notices.info("The quest board has changed. Check its new offers."));
+            return;
+          }
           var found = context.catalog().quest(quest);
           if (found.isEmpty() || !found.get().giver().equals(npc)) {
             wiring.world().send(player, Notices.error("That quest isn't offered here."));
@@ -274,23 +293,33 @@ public final class QuestService implements QuestHooks, QuestProgress {
 
   /** {@code player} accepts the first quest {@code npc} offers them. */
   public void acceptFirst(UUID player, String npc) {
+    var boardNpc = npc.equals(wiring.config().board().npc());
+    var current = sessions.get(player);
+    var offered = current == null ? Board.EMPTY : current.board();
     withContext(
         player,
-        (state, context) ->
-            context.catalog().all().stream()
-                .filter(quest -> quest.giver().equals(npc))
-                .filter(quest -> quest.category() != Quest.Category.HIDDEN)
-                .filter(
-                    quest ->
-                        QuestEngine.availability(state, quest, context)
-                            == QuestEngine.Availability.OFFERABLE)
-                .findFirst()
-                .ifPresentOrElse(
-                    quest -> accept(player, quest.id(), npc),
-                    () ->
-                        wiring
-                            .world()
-                            .send(player, Notices.info("There's nothing to take on here."))));
+        (state, context) -> {
+          if (boardNpc && !offered.equals(state.board())) {
+            wiring
+                .world()
+                .send(player, Notices.info("The quest board has changed. Check its new offers."));
+            return;
+          }
+          context.catalog().all().stream()
+              .filter(quest -> quest.giver().equals(npc))
+              .filter(quest -> quest.category() != Quest.Category.HIDDEN)
+              .filter(
+                  quest ->
+                      QuestEngine.availability(state, quest, context)
+                          == QuestEngine.Availability.OFFERABLE)
+              .findFirst()
+              .ifPresentOrElse(
+                  quest -> accept(player, quest.id(), npc),
+                  () ->
+                      wiring
+                          .world()
+                          .send(player, Notices.info("There's nothing to take on here.")));
+        });
   }
 
   /** {@code player} hands in at {@code npc}, for one quest or all. */
@@ -356,8 +385,16 @@ public final class QuestService implements QuestHooks, QuestProgress {
 
   /** The journal for {@code player}. */
   public Optional<Journal.View> journal(UUID player) {
-    return state(player)
-        .map(state -> Journal.journal(state, catalog(state), lookup, wiring.content().factions()));
+    var loaded = state(player);
+    if (loaded.isEmpty()) {
+      return Optional.empty();
+    }
+    var state = loaded.get();
+    if (boardExpired(state, wiring.time().instant())) {
+      refresh(player);
+      return Optional.empty();
+    }
+    return Optional.of(Journal.journal(state, catalog(state), lookup, wiring.content().factions()));
   }
 
   /** The players with the most quest points. */
@@ -395,24 +432,44 @@ public final class QuestService implements QuestHooks, QuestProgress {
             commit(player, state, QuestEngine.handle(state, event, context), context.catalog()));
   }
 
-  /** Re-checks every online player: board, held items, levels, time limits, markers, sidebar. */
+  /** Re-checks held items, levels, time limits, markers and sidebars for online players. */
   public void tick() {
     for (var player : List.copyOf(sessions.keySet())) {
-      refresh(player);
+      withContext(
+          player,
+          (state, context) ->
+              commit(player, state, QuestEngine.refresh(state, context), context.catalog()),
+          false);
     }
   }
 
   private void refresh(UUID player) {
+    refresh(player, null);
+  }
+
+  private void refresh(UUID player, @Nullable Runnable afterSave) {
     withContext(
         player,
         (state, context) -> {
           var drawn = drawBoard(player, state, context);
           var next = drawn.state();
-          var outcome = QuestEngine.refresh(next, context(next, context.facts()));
+          var nextContext =
+              new Context(catalog(next), context.facts(), context.now(), context.calendar());
+          var outcome = QuestEngine.refresh(next, nextContext);
           var effects = new ArrayList<>(drawn.effects());
           effects.addAll(outcome.effects());
-          commit(player, state, new Outcome(outcome.state(), effects), context.catalog());
-        });
+          commit(
+              player,
+              state,
+              new Save(new Outcome(outcome.state(), effects), context.catalog(), afterSave));
+        },
+        false);
+  }
+
+  private boolean boardExpired(PlayerQuests state, Instant now) {
+    var calendar = wiring.config().calendar();
+    return !state.board().day().equals(calendar.day(now).toString())
+        || !state.board().week().equals(calendar.week(now).toString());
   }
 
   /** Draws a new board if the day or week has turned, dropping expired board quests. */
@@ -631,6 +688,10 @@ public final class QuestService implements QuestHooks, QuestProgress {
   }
 
   private void withContext(UUID player, Step step) {
+    withContext(player, step, true);
+  }
+
+  private void withContext(UUID player, Step step, boolean requireCurrentBoard) {
     if (blockedByHandin(player)) {
       return;
     }
@@ -642,29 +703,43 @@ public final class QuestService implements QuestHooks, QuestProgress {
       var captured = facts.get();
       queued
           .computeIfAbsent(player, ignored -> new ArrayDeque<>())
-          .addLast(() -> withContext(player, step, captured));
+          .addLast(() -> withContext(player, step, requireCurrentBoard, captured));
       return;
     }
     var state = sessions.get(player);
     if (state == null) {
       return;
     }
-    context(player, state).ifPresent(context -> step.run(state, context));
+    context(player, state)
+        .ifPresent(
+            context -> {
+              if (requireCurrentBoard && boardExpired(state, context.now())) {
+                refresh(
+                    player, () -> withContext(player, step, requireCurrentBoard, context.facts()));
+              } else {
+                step.run(state, context);
+              }
+            });
   }
 
-  private void withContext(UUID player, Step step, Facts facts) {
+  private void withContext(UUID player, Step step, boolean requireCurrentBoard, Facts facts) {
     if (blockedByHandin(player)) {
       return;
     }
     if (saving.containsKey(player)) {
       queued
           .computeIfAbsent(player, ignored -> new ArrayDeque<>())
-          .addLast(() -> withContext(player, step, facts));
+          .addLast(() -> withContext(player, step, requireCurrentBoard, facts));
       return;
     }
     var state = sessions.get(player);
     if (state != null) {
-      step.run(state, context(state, facts));
+      var context = context(state, facts);
+      if (requireCurrentBoard && boardExpired(state, context.now())) {
+        refresh(player, () -> withContext(player, step, requireCurrentBoard, facts));
+      } else {
+        step.run(state, context);
+      }
     }
   }
 
@@ -683,6 +758,15 @@ public final class QuestService implements QuestHooks, QuestProgress {
    * arriving during the write are replayed in order against the persisted state.
    */
   private void commit(UUID player, PlayerQuests before, Outcome outcome, Catalog catalog) {
+    commit(player, before, new Save(outcome, catalog, null));
+  }
+
+  private record Save(Outcome outcome, Catalog catalog, @Nullable Runnable afterSave) {}
+
+  private void commit(UUID player, PlayerQuests before, Save save) {
+    var outcome = save.outcome();
+    var catalog = save.catalog();
+    var afterSave = save.afterSave();
     var after = outcome.state();
     var pending =
         outcome.effects().stream()
@@ -699,6 +783,9 @@ public final class QuestService implements QuestHooks, QuestProgress {
     if (after.equals(before) && pending.isEmpty()) {
       effects(player, outcome, catalog);
       present(player, after);
+      if (afterSave != null) {
+        afterSave.run();
+      }
       return;
     }
     pendingHandins.computeIfAbsent(player, ignored -> new HashSet<>()).addAll(handins(pending));
@@ -710,10 +797,17 @@ public final class QuestService implements QuestHooks, QuestProgress {
             .save(after, pending)
             .whenCompleteAsync(
                 (ignored, failure) -> {
+                  var persisted = false;
                   try {
+                    persisted = failure == null;
                     saved(player, new PendingCommit(outcome, pending, catalog), failure);
                   } finally {
                     saving.remove(player, barrier);
+                    if (persisted && afterSave != null) {
+                      queued
+                          .computeIfAbsent(player, ignoredPlayer -> new ArrayDeque<>())
+                          .addFirst(afterSave);
+                    }
                     drain(player);
                     finishDeparture(player);
                     barrier.complete(null);

@@ -384,4 +384,40 @@ final class ContentCheckTest {
     assertThat(found).anyMatch(message -> message.startsWith("ZOMBIE x50 pays"));
     assertThat(found).anyMatch(message -> message.contains("1..48"));
   }
+
+  @Test
+  void overflowingBoardNumbersReportTheirSourceAndKeepLinting() {
+    var template =
+        new Template(
+            "overflow",
+            Template.Period.DAILY,
+            Template.Kind.KILL,
+            "Bounty {target}",
+            "offer",
+            "accept",
+            "decline",
+            "finish",
+            0,
+            List.of(
+                new Template.Target("ZOMBIE", 1, 2, 2, Long.MAX_VALUE, 1),
+                new Template.Target("PLAYER", 1, 1, 1, 1, 1)));
+    var content =
+        new QuestContent(
+            Map.of(),
+            Map.of(),
+            Map.of(),
+            Map.of(),
+            Map.of(),
+            Map.of("overflow", template),
+            Map.of("overflow", "quests/board/overflow.yml"));
+
+    assertThat(ContentCheck.problems(content, RULES))
+        .contains(
+            new ContentProblem(
+                "quests/board/overflow.yml",
+                "templates.overflow",
+                "ZOMBIE x2 has invalid board numbers: long overflow"))
+        .extracting(ContentProblem::message)
+        .contains("killing players is not a quest objective");
+  }
 }

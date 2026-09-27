@@ -128,17 +128,21 @@ public final class ContentCheck {
     quest.onAccept().forEach(action -> action(quest, action));
     quest.rewards().forEach(action -> action(quest, action));
     Graph.problems(quest).forEach(this::problem);
-    var limit = rules.budget().limit(quest.estimatedMinutes());
-    var richest = Graph.richestPath(quest);
-    if (richest > limit) {
-      problem(
-          "pays up to "
-              + richest
-              + " crystals, over the budget of "
-              + limit
-              + " for "
-              + quest.estimatedMinutes()
-              + " minutes");
+    try {
+      var limit = rules.budget().limit(quest.estimatedMinutes());
+      var richest = Graph.richestPath(quest);
+      if (richest > limit) {
+        problem(
+            "pays up to "
+                + richest
+                + " crystals, over the budget of "
+                + limit
+                + " for "
+                + quest.estimatedMinutes()
+                + " minutes");
+      }
+    } catch (ArithmeticException invalid) {
+      problem("reward budget overflows for " + quest.estimatedMinutes() + " minutes");
     }
     var questPath = path;
     for (var stage : new TreeMap<>(quest.stages()).values()) {
@@ -265,22 +269,7 @@ public final class ContentCheck {
         case DELIVER -> item(ItemMatch.of(target.id()));
       }
       for (var amount : List.of(target.min(), target.max())) {
-        var draw = BoardQuests.priced(template, target, amount);
-        var minutes = BoardQuests.minutes(target, amount);
-        var limit = rules.budget().limit(minutes);
-        if (draw.reward() > limit) {
-          problem(
-              target.id()
-                  + " x"
-                  + amount
-                  + " pays "
-                  + draw.reward()
-                  + " crystals, over the budget of "
-                  + limit
-                  + " for "
-                  + minutes
-                  + " minutes");
-        }
+        templateBudget(template, target, amount);
         var filled =
             template
                 .name()
@@ -290,6 +279,29 @@ public final class ContentCheck {
           problem("name \"" + filled + "\" is longer than " + MAX_NAME + " characters");
         }
       }
+    }
+  }
+
+  private void templateBudget(Template template, Template.Target target, int amount) {
+    try {
+      var draw = BoardQuests.priced(template, target, amount);
+      var minutes = BoardQuests.minutes(target, amount);
+      var limit = rules.budget().limit(minutes);
+      if (draw.reward() > limit) {
+        problem(
+            target.id()
+                + " x"
+                + amount
+                + " pays "
+                + draw.reward()
+                + " crystals, over the budget of "
+                + limit
+                + " for "
+                + minutes
+                + " minutes");
+      }
+    } catch (ArithmeticException | IllegalArgumentException invalid) {
+      problem(target.id() + " x" + amount + " has invalid board numbers: " + invalid.getMessage());
     }
   }
 
