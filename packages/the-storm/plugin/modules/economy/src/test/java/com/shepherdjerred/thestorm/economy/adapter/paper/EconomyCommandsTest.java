@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.economy.app.CrystalFormatter;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.Wallets;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -94,8 +95,12 @@ final class EconomyCommandsTest {
         .get(10, TimeUnit.SECONDS);
   }
 
-  private PlayerMock join(String name) throws InterruptedException {
+  private PlayerMock join(String name) throws Exception {
     var player = server.addPlayer(name);
+    plugin
+        .players()
+        .recordJoin(player.getUniqueId(), name, Instant.EPOCH)
+        .get(10, TimeUnit.SECONDS);
     awaitLine(player, WELCOME);
     return player;
   }
