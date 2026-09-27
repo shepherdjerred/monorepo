@@ -442,3 +442,42 @@ test("the sites lane installs and pre-builds the Storybook catalogs", () => {
   );
   expect(commands).not.toContain("turbo run");
 });
+
+test("the sites lane deploys both Minecraft sites when their paths change", () => {
+  const sites = step("sites");
+  const dryRun = step("pr-dryrun");
+  if (sites === undefined || dryRun === undefined) {
+    throw new Error("site deploy or dry-run step missing");
+  }
+  const commands = sites.commands.join("\n");
+  for (const [lane, site, workspace] of [
+    ["site-ts-mc", "ts-mc", "@shepherdjerred/ts-mc"],
+    ["site-ts-mc-docs", "ts-mc-docs", "@shepherdjerred/ts-mc-docs"],
+  ] as const) {
+    expect(commands).toContain(`ci/scripts/selectors/ci-changed.ts ${lane}`);
+    expect(commands).toContain(`--filter '${workspace}'`);
+    expect(commands).toContain(
+      `bun --no-install scripts/release/deploy-site.ts ${site}`,
+    );
+    expect(dryRun.commands.join("\n")).toContain(site);
+  }
+});
+
+test("the sites lane selects every declared per-site change filter", async () => {
+  const sites = step("sites");
+  if (sites === undefined) throw new Error("sites step missing");
+  const selectorSource = await Bun.file(
+    new URL(
+      "../../../ci/scripts/selectors/site-lane-paths.ts",
+      import.meta.url,
+    ),
+  ).text();
+  const lanes = [...selectorSource.matchAll(/"(site-[^"]+)": \[/gu)].flatMap(
+    (match) => (match[1] === undefined ? [] : [match[1]]),
+  );
+  expect(lanes.length).toBeGreaterThan(0);
+  const commands = sites.commands.join("\n");
+  for (const lane of lanes) {
+    expect(commands).toContain(`ci/scripts/selectors/ci-changed.ts ${lane}`);
+  }
+});

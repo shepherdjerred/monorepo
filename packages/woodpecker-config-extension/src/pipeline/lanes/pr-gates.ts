@@ -29,9 +29,13 @@ const DRY_RUN_SITES = [
   "webring",
   "cooklang-rich-preview",
   "stocks-sjer-red",
+  "macos-cross-site",
   "wiki",
   "better-skill-capped",
   "glitter",
+  "ts-mc",
+  "ts-mc-docs",
+  "scout-design-system",
 ];
 
 export function prGateSteps(images: CiImages): CiStep[] {

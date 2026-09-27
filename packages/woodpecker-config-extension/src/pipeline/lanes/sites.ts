@@ -12,7 +12,7 @@ import {
  * Static site deploys and package publishing.
  *
  * Both lanes select per-target inside the step rather than at pipeline level,
- * because one lane covers eight sites (or two publish groups) and each has its
+ * because one lane covers many sites (or two publish groups) and each has its
  * own answer. Selection decides whether the LANE runs; the step decides which
  * targets within it do.
  *
@@ -63,6 +63,12 @@ const SOURCE_BUILT_SITES = [
   // declared workspace dependency; under Bun's isolated linker the consumer
   // has to be selected so its production closure is installed.
   { lane: "site-glitter", site: "glitter", filter: "glitter" },
+  { lane: "site-ts-mc", site: "ts-mc", filter: "'@shepherdjerred/ts-mc'" },
+  {
+    lane: "site-ts-mc-docs",
+    site: "ts-mc-docs",
+    filter: "'@shepherdjerred/ts-mc-docs'",
+  },
 ] as const;
 
 /**
