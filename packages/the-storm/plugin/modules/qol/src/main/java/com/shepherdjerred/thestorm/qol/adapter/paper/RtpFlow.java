@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.qol.adapter.paper;
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.protection.SettledLand;
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.core.world.ChunkTickets;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
 import com.shepherdjerred.thestorm.economy.app.EconomyError;
@@ -37,6 +38,7 @@ final class RtpFlow {
   private final Set<UUID> busy = new HashSet<>();
   private final Set<UUID> recovering = new HashSet<>();
   private final Map<UUID, Instant> unsavedCooldowns = new HashMap<>();
+  private final Map<UUID, LandingChunk> heldLandings = new HashMap<>();
   private final WildWorlds worlds;
   private final SettledLand land;
   private final QolStore store;
@@ -47,6 +49,7 @@ final class RtpFlow {
   private final RtpSearch search;
   private final Warmups warmups;
   private final RtpPricing pricing;
+  private final ChunkTickets tickets;
 
   RtpFlow(Ports ports, ModuleContext context, QolConfig config, LandingMemory memory) {
     this.worlds = ports.worlds();
@@ -60,6 +63,7 @@ final class RtpFlow {
     this.warmups = new Warmups(context.scheduler());
     this.pricing =
         new RtpPricing(config.freeForDuration(), config.cooldownDuration(), config.cost());
+    this.tickets = context.services().require(ChunkTickets.class);
   }
 
   Warmups warmups() {
@@ -183,11 +187,23 @@ final class RtpFlow {
   }
 
   private void stand(Player player, Location destination, long cost) {
-    warmups.start(
-        player,
-        config.warmupDuration(),
-        () -> arrive(player, destination, cost),
-        () -> cancelled(player));
+    var world = destination.getWorld();
+    if (world == null) {
+      throw new IllegalStateException("teleport has no world");
+    }
+    var chunk = new LandingChunk(world, destination.getBlockX() >> 4, destination.getBlockZ() >> 4);
+    tickets.hold(chunk.world(), chunk.x(), chunk.z());
+    heldLandings.put(player.getUniqueId(), chunk);
+    try {
+      warmups.start(
+          player,
+          config.warmupDuration(),
+          () -> arrive(player, destination, cost),
+          () -> cancelled(player));
+    } catch (RuntimeException failure) {
+      release(player.getUniqueId());
+      throw failure;
+    }
   }
 
   private void cancelled(Player player) {
@@ -272,35 +288,38 @@ final class RtpFlow {
   }
 
   private boolean finish(Player player, Location destination) {
-    release(player.getUniqueId());
-    if (!player.isOnline()) {
-      return false;
+    try {
+      if (!player.isOnline()) {
+        return false;
+      }
+      var world = destination.getWorld();
+      if (world == null) {
+        throw new IllegalStateException("teleport has no world");
+      }
+      if (!player.teleport(destination)) {
+        player.sendMessage(Messages.error("Teleport failed. Your crystals will be returned."));
+        return false;
+      }
+      var now = context.time().instant();
+      memory.remember(world.getName(), destination.getBlockX(), destination.getBlockZ(), now);
+      unsavedCooldowns.put(player.getUniqueId(), now);
+      var _ =
+          store
+              .setLastRtp(player.getUniqueId(), now)
+              .whenCompleteAsync(
+                  (ok, failure) -> {
+                    if (failure != null) {
+                      context.logger().error("Could not record a random teleport", failure);
+                    } else {
+                      unsavedCooldowns.remove(player.getUniqueId(), now);
+                    }
+                  },
+                  context.scheduler().mainThread());
+      player.sendMessage(Messages.info("Teleported."));
+      return true;
+    } finally {
+      release(player.getUniqueId());
     }
-    var world = destination.getWorld();
-    if (world == null) {
-      throw new IllegalStateException("teleport has no world");
-    }
-    if (!player.teleport(destination)) {
-      player.sendMessage(Messages.error("Teleport failed. Your crystals will be returned."));
-      return false;
-    }
-    var now = context.time().instant();
-    memory.remember(world.getName(), destination.getBlockX(), destination.getBlockZ(), now);
-    unsavedCooldowns.put(player.getUniqueId(), now);
-    var _ =
-        store
-            .setLastRtp(player.getUniqueId(), now)
-            .whenCompleteAsync(
-                (ok, failure) -> {
-                  if (failure != null) {
-                    context.logger().error("Could not record a random teleport", failure);
-                  } else {
-                    unsavedCooldowns.remove(player.getUniqueId(), now);
-                  }
-                },
-                context.scheduler().mainThread());
-    player.sendMessage(Messages.info("Teleported."));
-    return true;
   }
 
   private CompletableFuture<Void> refund(RtpAttempt attempt) {
@@ -355,6 +374,10 @@ final class RtpFlow {
 
   private void release(UUID player) {
     busy.remove(player);
+    var landing = heldLandings.remove(player);
+    if (landing != null) {
+      tickets.release(landing.world(), landing.x(), landing.z());
+    }
   }
 
   private Optional<World> destination(Player player, String worldName, Optional<String> biome) {
@@ -408,4 +431,6 @@ final class RtpFlow {
       RtpAttempt attempt, Result<Receipt, EconomyError> result, Throwable failure) {}
 
   private record PricingCheck(Ensured ensured, Throwable failure) {}
+
+  private record LandingChunk(World world, int x, int z) {}
 }
