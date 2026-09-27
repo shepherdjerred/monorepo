@@ -95,6 +95,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runHomelabAuditWorkflow: "infra",
   runOpsSnapshot: "infra",
   runOpsDigest: "infra",
+  runMiningWorldResetWorkflow: "infra",
 
   // TASK_QUEUES.REPO_AUTOMATION
   runLlmCatalogRefresh: "repo",
