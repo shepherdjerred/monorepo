@@ -53,6 +53,15 @@ function catalogStateBytes(state: AgentChatCatalogState): number {
   return new TextEncoder().encode(JSON.stringify(state)).byteLength;
 }
 
+function compactBindingOperations(state: AgentChatCatalogState): void {
+  while (
+    (state.bindingOperations?.length ?? 0) > MAX_AGENT_CHAT_CATALOG_BINDINGS ||
+    catalogStateBytes(state) > MAX_AGENT_CHAT_CATALOG_STATE_BYTES
+  ) {
+    if (state.bindingOperations?.shift() === undefined) break;
+  }
+}
+
 function timestampInstant(timestamp: string): number {
   const instant = Date.parse(timestamp);
   if (!Number.isFinite(instant)) {
@@ -132,6 +141,8 @@ export function compactAgentChatCatalogState(
   state: AgentChatCatalogState,
   protectedRecord: { chatId?: string; bindingKey?: string } = {},
 ): void {
+  compactBindingOperations(state);
+
   while (
     state.bindings.length > MAX_AGENT_CHAT_CATALOG_BINDINGS ||
     catalogStateBytes(state) > MAX_AGENT_CHAT_CATALOG_STATE_BYTES
@@ -327,6 +338,7 @@ function bind(
   ) {
     const selected = entryForBinding(state, existing.chatId);
     retainBindingOperation(state, next, selected.config.chatId);
+    compactAgentChatCatalogState(state, { bindingKey });
     return selected;
   }
   retainBindingOperation(state, next);

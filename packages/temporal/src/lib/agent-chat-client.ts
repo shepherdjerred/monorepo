@@ -20,6 +20,7 @@ import {
   AgentChatWorkflowStateSchema,
   agentChatWorkflowId,
   type AgentChatBinding,
+  type AgentChatBindingUpdate,
   type AgentChatBindingUpdateInput,
   type AgentChatCatalogEntry,
   type AgentChatCatalogState,
@@ -98,7 +99,7 @@ function catalogEntryFromWorkflowState(
   });
 }
 
-export async function registerAgentChat(
+async function catalogEntryForAgentChat(
   client: WorkflowClient,
   rawConfig: AgentChatConfig,
 ): Promise<AgentChatCatalogEntry> {
@@ -118,9 +119,43 @@ export async function registerAgentChat(
       `Agent chat ${config.chatId} is already owned by different immutable configuration`,
     );
   }
-  const entry = catalogEntryFromWorkflowState(state);
+  return catalogEntryFromWorkflowState(state);
+}
+
+export async function registerAgentChat(
+  client: WorkflowClient,
+  rawConfig: AgentChatConfig,
+): Promise<AgentChatCatalogEntry> {
+  const entry = await catalogEntryForAgentChat(client, rawConfig);
   return await client.executeUpdateWithStart(registerAgentChatUpdate, {
     args: [entry],
+    startWorkflowOperation: catalogStart(),
+  });
+}
+
+/**
+ * Creates (or validates) the owner Workflow and atomically records its catalog
+ * entry with the ingress binding. This avoids a durable unbound catalog entry
+ * when a promptless ingress request is interrupted between two updates.
+ */
+export async function registerAndBindAgentChat(
+  client: WorkflowClient,
+  rawConfig: AgentChatConfig,
+  rawBinding: AgentChatBinding,
+  rawUpdate: AgentChatBindingUpdate,
+): Promise<AgentChatCatalogEntry> {
+  const entry = await catalogEntryForAgentChat(client, rawConfig);
+  const binding = AgentChatBindingSchema.parse(rawBinding);
+  const update = AgentChatBindingUpdateSchema.parse({
+    ...rawUpdate,
+    ...(rawUpdate.sourceSequence === undefined ? {} : { orderingVersion: 1 }),
+  });
+  const updateId = createHash("sha256")
+    .update(JSON.stringify({ binding, entry, update }))
+    .digest("hex");
+  return await client.executeUpdateWithStart(registerAndBindAgentChatUpdate, {
+    args: [entry, binding, update],
+    updateId: `agent-chat-register-and-bind/${updateId}`,
     startWorkflowOperation: catalogStart(),
   });
 }

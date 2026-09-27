@@ -8,6 +8,7 @@ import {
   bindAgentChat,
   getAgentChat,
   listAgentChats,
+  registerAndBindAgentChat,
   registerAgentChat,
   resolveAgentChatBinding,
 } from "#lib/agent-chat-client.ts";
@@ -48,6 +49,8 @@ import {
   AgentChatRegistrationConflictError,
   conflictMessage,
   ingressTimestamp,
+  registerAndBindIdempotently,
+  requestedConfigMatches,
   sourceOrdering,
 } from "./agent-chat-api/route-support.ts";
 
@@ -56,6 +59,12 @@ export type AgentChatApiOperations = {
   register: (
     client: WorkflowClient,
     config: AgentChatConfig,
+  ) => Promise<AgentChatCatalogEntry>;
+  registerAndBind: (
+    client: WorkflowClient,
+    config: AgentChatConfig,
+    binding: AgentChatBinding,
+    update: AgentChatBindingUpdate,
   ) => Promise<AgentChatCatalogEntry>;
   bind: (
     client: WorkflowClient,
@@ -86,6 +95,7 @@ export type AgentChatApiOperations = {
 };
 const defaultOperations: AgentChatApiOperations = {
   register: registerAgentChat,
+  registerAndBind: registerAndBindAgentChat,
   bind: bindAgentChat,
   get: getAgentChat,
   list: listAgentChats,
@@ -145,19 +155,6 @@ function configForIngress(
     createdAt: now,
     maxTurnsPerMessage: input.maxTurnsPerMessage,
   };
-}
-function requestedConfigMatches(
-  existing: AgentChatConfig,
-  requested: AgentChatConfig,
-): boolean {
-  return (
-    existing.chatId === requested.chatId &&
-    existing.title === requested.title &&
-    existing.provider === requested.provider &&
-    existing.model === requested.model &&
-    JSON.stringify(existing.origin) === JSON.stringify(requested.origin) &&
-    existing.maxTurnsPerMessage === requested.maxTurnsPerMessage
-  );
 }
 async function findMatchingRegistration(
   operations: AgentChatApiOperations,
@@ -314,15 +311,24 @@ export function buildAgentChatApiRoutes(
       validateAgentChatIngressTimestamp(timestamp, currentTime);
       const config = configForIngress(input, timestamp);
       if (input.prompt === undefined) {
-        const entry = await registerIdempotently(
+        const existing = await findMatchingRegistration(
           operations,
           client.workflow,
           config,
         );
-        await operations.bind(client.workflow, input.source, config.chatId, {
-          updatedAt: entry.config.createdAt,
-          ...sourceOrdering(input),
-          tieBreaker: input.bindingId,
+        const entry = await registerAndBindIdempotently({
+          client: client.workflow,
+          existing,
+          config,
+          binding: input.source,
+          updateForConfig: (registeredConfig) => ({
+            updatedAt: registeredConfig.createdAt,
+            ...sourceOrdering(input),
+            tieBreaker: input.bindingId,
+          }),
+          get: operations.get,
+          registerAndBind: operations.registerAndBind,
+          requestedConfigMatches,
         });
         return c.json({ chat: entry }, 201);
       }
