@@ -98,7 +98,9 @@ final class BoardQuestsTest {
 
   @Test
   void killQuestsReportBackAndDeliverQuestsHandInAtTheBoard() {
-    var kill = BoardQuests.quest(BOUNTY, new Board.Entry("daily-1", "bounty", 3), "board");
+    var kill =
+        BoardQuests.quest(
+            BOUNTY, BoardQuests.entry("daily-1", BOUNTY, BoardQuests.draw(BOUNTY, 3)), "board");
     assertThat(kill.id()).isEqualTo("daily-1");
     assertThat(kill.giver()).isEqualTo("board");
     assertThat(kill.category()).isEqualTo(Quest.Category.DAILY);
@@ -109,10 +111,31 @@ final class BoardQuestsTest {
         .containsExactly(new Objective.Talk("board", java.util.Optional.empty()));
     assertThat(kill.name()).startsWith("Bounty: ");
     assertThat(kill.text().offer()).contains("(Difficulty: ");
-    var deliver = BoardQuests.quest(SUPPLY, new Board.Entry("weekly-1", "supply", 9), "board");
+    var deliver =
+        BoardQuests.quest(
+            SUPPLY, BoardQuests.entry("weekly-1", SUPPLY, BoardQuests.draw(SUPPLY, 9)), "board");
     assertThat(deliver.repeat()).isEqualTo(Quest.Repeat.WEEKLY);
     assertThat(deliver.start()).isEqualTo("gather");
     assertThat(deliver.rewards()).contains(new Action.Points(1));
+  }
+
+  @Test
+  void editingTheTemplateDoesNotChangeAnAlreadyDrawnQuest() {
+    var entry = BoardQuests.entry("daily-1", BOUNTY, BoardQuests.draw(BOUNTY, 3));
+    var edited =
+        new Template(
+            BOUNTY.id(),
+            Template.Period.WEEKLY,
+            Template.Kind.DELIVER,
+            BOUNTY.name(),
+            BOUNTY.offer(),
+            BOUNTY.accept(),
+            BOUNTY.decline(),
+            BOUNTY.finish(),
+            999,
+            List.of(new Template.Target("IRON_INGOT", 5, 100, 100, 999, 10)));
+    assertThat(BoardQuests.quest(edited, entry, "board"))
+        .isEqualTo(BoardQuests.quest(BOUNTY, entry, "board"));
   }
 
   @Test

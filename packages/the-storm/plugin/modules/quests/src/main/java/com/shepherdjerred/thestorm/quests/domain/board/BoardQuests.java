@@ -102,20 +102,35 @@ public final class BoardQuests {
     return (int) Math.max(1, Math.ceil(target.minutes() * amount));
   }
 
-  /** The quest a board entry stands for. */
+  /** A board entry for {@code slot} snapshotting {@code draw}. */
+  public static Board.Entry entry(String slot, Template template, Draw draw) {
+    return new Board.Entry(
+        slot,
+        template.id(),
+        template.period(),
+        template.kind(),
+        draw.target().id(),
+        draw.amount(),
+        draw.stars(),
+        draw.reward(),
+        minutes(draw.target(), draw.amount()));
+  }
+
+  /** The quest a board entry stands for; text comes from the template, the rest from the entry. */
   public static Quest quest(Template template, Board.Entry entry, String npc) {
-    var draw = draw(template, entry.seed());
-    var name = fill(template.name(), draw);
-    var offer = fill(template.offer(), draw) + " (Difficulty: " + draw.stars() + "/5)";
+    var name = fill(template.name(), entry);
+    var offer = fill(template.offer(), entry) + " (Difficulty: " + entry.stars() + "/5)";
+    var target = entry.target();
+    var amount = entry.amount();
     var stages =
-        switch (template.kind()) {
+        switch (entry.kind()) {
           case KILL ->
               Map.of(
                   "hunt",
                   stage(
                       "hunt",
-                      "Kill " + draw.amount() + " " + Names.pretty(draw.target().id()) + ".",
-                      new Objective.Kill(draw.target().id(), draw.amount(), Optional.empty()),
+                      "Kill " + amount + " " + Names.pretty(target) + ".",
+                      new Objective.Kill(target, amount, Optional.empty()),
                       "report"),
                   "report",
                   stage(
@@ -128,30 +143,29 @@ public final class BoardQuests {
                   "gather",
                   stage(
                       "gather",
-                      "Bring " + draw.amount() + " " + Names.pretty(draw.target().id()) + ".",
-                      new Objective.Deliver(
-                          npc, ItemMatch.of(draw.target().id()), draw.amount(), Optional.empty()),
+                      "Bring " + amount + " " + Names.pretty(target) + ".",
+                      new Objective.Deliver(npc, ItemMatch.of(target), amount, Optional.empty()),
                       Stage.COMPLETE));
         };
     var rewards = new ArrayList<Action>();
-    if (draw.reward() > 0) {
-      rewards.add(new Action.Crystals(draw.reward()));
+    if (entry.reward() > 0) {
+      rewards.add(new Action.Crystals(entry.reward()));
     }
-    if (draw.stars() >= POINT_STARS) {
+    if (entry.stars() >= POINT_STARS) {
       rewards.add(new Action.Points(1));
     }
-    var daily = template.period() == Template.Period.DAILY;
+    var daily = entry.period() == Template.Period.DAILY;
     return new Quest(
         entry.slot(),
         name,
         npc,
         daily ? Quest.Category.DAILY : Quest.Category.WEEKLY,
         daily ? Quest.Repeat.DAILY : Quest.Repeat.WEEKLY,
-        minutes(draw.target(), draw.amount()),
+        entry.minutes(),
         List.<Condition>of(),
         new Quest.QuestText(
             offer, template.accept(), template.decline(), template.finish(), name, List.of()),
-        template.kind() == Template.Kind.KILL ? "hunt" : "gather",
+        entry.kind() == Template.Kind.KILL ? "hunt" : "gather",
         stages,
         List.of(),
         rewards);
@@ -207,7 +221,7 @@ public final class BoardQuests {
       }
       var template = candidates.get(random.nextInt(candidates.size()));
       used.add(template.id());
-      drawn.add(new Board.Entry(prefix + slot, template.id(), random.nextLong()));
+      drawn.add(entry(prefix + slot, template, draw(template, random.nextLong())));
     }
     return drawn;
   }
@@ -231,8 +245,8 @@ public final class BoardQuests {
         Optional.empty());
   }
 
-  private static String fill(String text, Draw draw) {
-    return text.replace("{amount}", Integer.toString(draw.amount()))
-        .replace("{target}", Names.pretty(draw.target().id()));
+  private static String fill(String text, Board.Entry entry) {
+    return text.replace("{amount}", Integer.toString(entry.amount()))
+        .replace("{target}", Names.pretty(entry.target()));
   }
 }
