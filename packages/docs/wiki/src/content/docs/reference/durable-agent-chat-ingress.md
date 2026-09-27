@@ -59,8 +59,10 @@ native ordered identifier when it has one, such as a Discord interaction
 snowflake. Retries must preserve the original sequence. Binding precedence is
 decided by this sequence, not by arrival time or `bindingId`. Values must be
 non-negative integers no greater than `9223372036854775806`. If a source must
-reset that bounded sequence, advance a decimal `sourceEpoch`; delayed events
-from the previous epoch remain older than the new epoch.
+reset that bounded sequence, change a decimal `sourceEpoch`. Within an epoch,
+the sequence decides precedence; across epochs, `submittedAt` does. This lets a
+source recover from an exhausted epoch without allowing a delayed prior event
+to overwrite a newer selection.
 
 Explicit binding requests also require `binding`, a caller-stable `bindingId`,
 and an ISO-8601 `submittedAt`:
