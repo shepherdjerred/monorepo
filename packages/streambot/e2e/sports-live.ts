@@ -21,6 +21,7 @@ const environment = z
     E2E_VIDEO_CHANNEL_ID: z.string(),
     USER_TOKENS: z.string().min(1),
     PINCHTAB_TOKEN: z.string().min(1),
+    E2E_PINCHTAB_PROFILE: z.string().min(1).optional(),
   })
   .parse(Bun.env);
 
@@ -43,6 +44,9 @@ if (userToken === undefined || config.pinchtab.baseUrl === undefined) {
 const browser = new PinchtabSportsBrowser({
   baseUrl: config.pinchtab.baseUrl,
   token: config.pinchtab.token,
+  ...(environment.E2E_PINCHTAB_PROFILE === undefined
+    ? {}
+    : { profileName: environment.E2E_PINCHTAB_PROFILE }),
 });
 const sportsResolver = new BrowserSportsResolver(browser);
 const streamer = new StreambotStreamer(userToken, config);
@@ -64,6 +68,20 @@ function frameCount(metrics: string, kind: "audio" | "video"): number {
   return Number(found?.[1] ?? 0);
 }
 
+async function waitForPlayback(): Promise<void> {
+  try {
+    await waitFor(actor, (snapshot) => snapshot.matches("streaming"), {
+      timeout: 60_000,
+    });
+  } catch (error) {
+    const snapshot = actor.getSnapshot();
+    throw new Error(
+      `Sports playback did not start (state=${snapshot.value}, reason=${snapshot.context.lastError ?? "none"})`,
+      { cause: error },
+    );
+  }
+}
+
 async function main(): Promise<void> {
   try {
     await streamer.login();
@@ -80,9 +98,7 @@ async function main(): Promise<void> {
       },
       requesterId,
     });
-    await waitFor(actor, (snapshot) => snapshot.matches("streaming"), {
-      timeout: 60_000,
-    });
+    await waitForPlayback();
     const deadline = Date.now() + 30_000;
     for (;;) {
       const metrics = await register.metrics();
@@ -97,13 +113,16 @@ async function main(): Promise<void> {
         if (!/streambot_source_info\{[^}]*\}\s+1\b/.test(metrics)) {
           throw new Error("Live source was not ffprobed");
         }
-        console.info("sports e2e PASS", {
-          guildId,
-          channelId,
-          streamerUserId: streamer.userId(),
-          videoFrames,
-          audioFrames,
-        });
+        console.info(
+          "sports e2e PASS",
+          JSON.stringify({
+            guildId,
+            channelId,
+            streamerUserId: streamer.userId(),
+            videoFrames,
+            audioFrames,
+          }),
+        );
         await Bun.sleep(10_000);
         return;
       }
@@ -128,10 +147,12 @@ async function main(): Promise<void> {
 const code = await main().then(
   () => 0,
   (error: unknown) => {
-    console.error(
-      "sports e2e failed",
-      error instanceof Error ? error.name : "unknown error",
-    );
+    const name = error instanceof Error ? error.name : "unknown error";
+    const detail =
+      error instanceof Error
+        ? error.message.replaceAll(/https?:\/\/\S+/g, "[redacted URL]")
+        : "no error detail";
+    console.error("sports e2e failed", name, detail);
     return 1;
   },
 );

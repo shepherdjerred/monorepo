@@ -15,7 +15,7 @@ export const SportsEventSchema = z.strictObject({
   id: z.string().min(1),
   provider: SportsProviderSchema,
   title: z.string().min(1),
-  status: z.enum(["live", "scheduled"]),
+  status: z.enum(["live", "scheduled", "unknown"]),
   startsAt: z.iso.datetime().nullable(),
   pageUrl: z.url(),
 });
@@ -44,5 +44,6 @@ export type SportsResolver = {
     readonly title: string;
     readonly input: string;
     readonly headers: Readonly<Record<string, string>>;
+    readonly inputOptions?: readonly string[];
   }>;
 };

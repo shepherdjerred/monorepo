@@ -1,4 +1,7 @@
-import { redactHeaderArgument } from "../src/media/newApi.ts";
+import {
+  redactHeaderArgument,
+  redactMediaUrls,
+} from "../src/media/newApi.ts";
 import { describe, expect, test } from "vitest";
 import {
   type FfmpegProcessHandle,
@@ -28,6 +31,13 @@ function killQuietly(command: FfmpegProcessHandle): void {
 }
 
 describe("ffmpeg command redaction", () => {
+  test("redacts signed CDN URLs from diagnostics", () => {
+    const message = "Input #0 from https://cdn.example/live.m3u8?token=secret123";
+    expect(redactMediaUrls(message)).toBe(
+      "Input #0 from [redacted media URL]",
+    );
+  });
+
   test("redacts credential headers but keeps the rest of the line", () => {
     const rendered = redactHeaderArgument(
       "User-Agent: Mozilla/5.0\r\nCookie: session=abc123\r\nAuthorization: Bearer tok\r\nAccept: */*",
@@ -453,6 +463,26 @@ describe("prepareStream audioVolume", () => {
 });
 
 describe("prepareStream default argument vector (regression lock)", () => {
+  test("can select one HLS video rendition without changing the legacy default", () => {
+    const { command, output, promise } = prepareStream("live.m3u8", {
+      videoStreamIndex: 1,
+      audioStreamIndex: 1,
+    });
+    promise.catch(() => {});
+    try {
+      const args = ffmpegArgs(command);
+      const mapIndex = args.findIndex(
+        (arg, index) => arg === "-map" && args[index + 1] === "0:v:1",
+      );
+      expect(mapIndex).toBeGreaterThanOrEqual(0);
+      expect(args).toContain("0:a:1");
+      expect(args).not.toContain("0:v");
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+
   // discord-plays-pokemon and discord-plays-mario-kart run these exact command lines. `audioOnly`,
   // `audioVolume` and `audioSink` are additive and default-off; this pins the whole vector, in
   // order, so a future edit to the audio-only branches cannot quietly move a video argument.

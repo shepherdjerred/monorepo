@@ -65,9 +65,12 @@ Sports listings and live sports playback are a separate, default-off Flipt
 feature. `/stream playback sports` lists the provider entries for today; voice
 can list them on request, and a game title tries StreamEast before TVSportsLive
 unless a provider is named. Future events are informational and are never
-queued. Playback uses the stable provider page as the source identity, resolves
-the live HLS input at play time through PinchTab, and requires ffprobe to confirm
-both audio and video. HLS URLs are not written to media history. Live sports
+queued; TVSportsLive posts without a kickoff time are marked unconfirmed and
+validated when selected. Playback uses the stable provider page as the source
+identity and resolves the live HLS input at play time through PinchTab. The
+resolver opens the approved embedded player, captures its successful HLS request,
+and has ffprobe select a rendition with real video dimensions and audio before
+FFmpeg sends it to Discord. HLS URLs are not written to media history. Live sports
 offer play, skip/stop, and volume controls only. The bot needs PinchTab's
 `PINCHTAB_BASE_URL` and `PINCHTAB_TOKEN`; the homelab deployment supplies the
 service address and the shared 1Password-backed token. See
@@ -125,7 +128,8 @@ bun run smoke            # smoke script
 
 The live e2e runs need real tokens and test-guild IDs via environment.
 `e2e:sports` additionally needs `E2E_SPORTS_URL`, `PINCHTAB_BASE_URL`, and
-`PINCHTAB_TOKEN`; run it against an empty voice channel while that event's HLS
+`PINCHTAB_TOKEN`; `E2E_PINCHTAB_PROFILE` can isolate local browser state. Run it
+against an empty voice channel while that event's HLS
 stream is available. It checks browser discovery, ffprobe, and actual Discord
 audio/video sends, then leaves the channel. See
 [AGENTS.md](AGENTS.md) for the small set of always-on package constraints and

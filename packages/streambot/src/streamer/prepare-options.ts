@@ -74,6 +74,9 @@ export function buildMusicPrepareOptions(
     readrate: input.stream.readrate,
     ...startTimeOption(input.startSeconds),
     ...headerOptions(input.resolved.ffmpegInputHeaders),
+    ...(input.resolved.ffmpegInputOptions === undefined
+      ? {}
+      : { customInputOptions: [...input.resolved.ffmpegInputOptions] }),
   };
 }
 
@@ -132,6 +135,15 @@ export function buildVideoPrepareOptions(
       ? { hardwarePipelineMode: "upload" as const }
       : {}),
     ...headerOptions(resolved.ffmpegInputHeaders),
+    ...(resolved.ffmpegInputOptions === undefined
+      ? {}
+      : { customInputOptions: [...resolved.ffmpegInputOptions] }),
+    ...(resolved.ffmpegVideoStreamIndex === undefined
+      ? {}
+      : { videoStreamIndex: resolved.ffmpegVideoStreamIndex }),
+    ...(resolved.ffmpegAudioStreamIndex === undefined
+      ? {}
+      : { audioStreamIndex: resolved.ffmpegAudioStreamIndex }),
     ...(resolved.audioInput === undefined
       ? {}
       : {

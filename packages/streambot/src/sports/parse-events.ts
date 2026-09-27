@@ -159,7 +159,10 @@ export function parseTVSportsLiveEvents(
       id: `tvsportslive:${new URL(pageUrl).pathname}`,
       provider: "tvsportslive",
       title,
-      status: live ? "live" : "scheduled",
+      // Dated posts have no reliable kickoff time. They may already be
+      // playable; do not claim they are future events solely because the
+      // feed lacks a "live now" marker.
+      status: live ? "live" : "unknown",
       startsAt: null,
       pageUrl,
     });
@@ -170,6 +173,7 @@ export function parseTVSportsLiveEvents(
 
 export function sportsEventTimeLabel(event: SportsEvent): string {
   if (event.status === "live") return "LIVE";
+  if (event.status === "unknown") return "Today (time unconfirmed)";
   if (event.startsAt === null) return "Later today";
   return new Intl.DateTimeFormat("en-US", {
     timeZone: SPORTS_TIME_ZONE,
@@ -182,7 +186,9 @@ export function sortSportsEvents(
   events: readonly SportsEvent[],
 ): SportsEvent[] {
   return [...events].sort((left, right) => {
-    if (left.status !== right.status) return left.status === "live" ? -1 : 1;
+    const rank = { live: 0, unknown: 1, scheduled: 2 } as const;
+    if (left.status !== right.status)
+      return rank[left.status] - rank[right.status];
     if (left.startsAt === null) return right.startsAt === null ? 0 : 1;
     return right.startsAt === null
       ? -1

@@ -83,7 +83,12 @@ function assertSportsHasAudioAndVideo(info: MediaInfo | null): void {
   if (
     info === null ||
     info.videoCodec === "unknown" ||
-    info.audioCodec === "unknown"
+    info.audioCodec === "unknown" ||
+    info.width === undefined ||
+    info.width <= 0 ||
+    info.height === undefined ||
+    info.height <= 0 ||
+    info.audioChannels === 0
   ) {
     throw new Error(
       "The sports HLS source did not provide both audio and video",
@@ -104,6 +109,9 @@ async function resolveSportsPage(
     title: stream.title,
     ffmpegInput: stream.input,
     ffmpegInputHeaders: stream.headers,
+    ...(stream.inputOptions === undefined
+      ? {}
+      : { ffmpegInputOptions: stream.inputOptions }),
     mediaKind: "video",
     chapters: [],
     provenance: { provider: "url", canonicalUrl: source.url },
@@ -124,10 +132,14 @@ async function probeAndRecordSourceMetadata(
     readonly input: string;
     readonly title: string;
     readonly headers?: Readonly<Record<string, string>> | undefined;
+    readonly inputOptions?: readonly string[] | undefined;
   },
   signal: AbortSignal,
 ): Promise<MediaInfo | null> {
-  const info = await probeMedia(config, target.input, signal, target.headers);
+  const info = await probeMedia(config, target.input, signal, {
+    headers: target.headers,
+    inputOptions: target.inputOptions,
+  });
   if (info === null) {
     return null;
   }
@@ -224,6 +236,21 @@ export function finalizeResolved(
   };
 }
 
+function withSportsRenditions(
+  resolved: ResolvedSource,
+  info: MediaInfo,
+): ResolvedSource {
+  return {
+    ...resolved,
+    ...(info.videoStreamIndex === undefined
+      ? {}
+      : { ffmpegVideoStreamIndex: info.videoStreamIndex }),
+    ...(info.audioStreamIndex === undefined
+      ? {}
+      : { ffmpegAudioStreamIndex: info.audioStreamIndex }),
+  };
+}
+
 /**
  * Resolve a {@link Source} to a {@link ResolvedSource} ffmpeg can read: local files pass straight
  * through, URL/search sources go through the system yt-dlp. Adult sources are rejected here — once
@@ -276,6 +303,7 @@ export async function resolveSource(
             input: resolved.ffmpegInput,
             title: resolved.title,
             headers: resolved.ffmpegInputHeaders,
+            inputOptions: resolved.ffmpegInputOptions,
           },
           signal,
         )
@@ -301,5 +329,7 @@ export async function resolveSource(
       decidedBy: "no-video-stream",
     });
   }
-  return finalized;
+  return sportsSource && info !== null
+    ? withSportsRenditions(finalized, info)
+    : finalized;
 }

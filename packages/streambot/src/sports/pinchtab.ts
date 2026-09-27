@@ -1,5 +1,13 @@
 import { z } from "zod";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
+import {
+  approvedPlayerFrameUrl,
+  approvedRuntimePlayerUrl,
+  capturedHeaders,
+  playerControlRef,
+  playerFrameRef,
+  playerHlsUrl,
+} from "@shepherdjerred/streambot/sports/pinchtab-player.ts";
 
 const log = logger.child("sports-browser");
 const MAX_RESPONSE_BYTES = 2_097_152;
@@ -45,6 +53,8 @@ const SnapshotSchema = z.looseObject({
     z.looseObject({
       ref: z.string(),
       tag: z.string().optional(),
+      role: z.string().optional(),
+      name: z.string().optional(),
       frameUrl: z.string().optional(),
       childFrameUrl: z.string().optional(),
     }),
@@ -64,82 +74,6 @@ class PinchtabHttpError extends Error {
   }
 }
 
-function approvedPlayerFrameUrl(value: string): boolean {
-  try {
-    const frame = new URL(value);
-    return (
-      frame.protocol === "https:" &&
-      frame.hostname === "streame.center" &&
-      frame.pathname === "/stream-east/hls.php" &&
-      frame.username.length === 0 &&
-      frame.password.length === 0 &&
-      frame.port.length === 0
-    );
-  } catch {
-    return false;
-  }
-}
-
-function isPlayerControl(
-  node: z.infer<typeof SnapshotSchema>["nodes"][number],
-): boolean {
-  return (
-    node.tag === "svg" &&
-    node.frameUrl !== undefined &&
-    approvedPlayerFrameUrl(node.frameUrl)
-  );
-}
-
-function capturedHeaders(
-  entry: z.infer<typeof NetworkEntrySchema>,
-  fallbackReferer: string,
-): Readonly<Record<string, string>> {
-  const requestHeaders = entry.requestHeaders ?? {};
-  const header = (name: string): string | undefined =>
-    Object.entries(requestHeaders).find(
-      ([key]) => key.toLowerCase() === name.toLowerCase(),
-    )?.[1];
-  const headers: Record<string, string> = {};
-  const userAgent = header("user-agent");
-  const origin = header("origin");
-  if (userAgent !== undefined) headers["User-Agent"] = userAgent;
-  if (origin !== undefined) headers["Origin"] = origin;
-  headers["Referer"] = header("referer") ?? fallbackReferer;
-  return headers;
-}
-
-function playerFrameRef(
-  snapshot: z.infer<typeof SnapshotSchema>,
-): string | undefined {
-  return snapshot.nodes.find((node) => {
-    return (
-      node.tag === "iframe" &&
-      node.childFrameUrl !== undefined &&
-      approvedPlayerFrameUrl(node.childFrameUrl)
-    );
-  })?.ref;
-}
-
-function playerHlsUrl(html: string): string | null {
-  const raw =
-    /\b(?:var|let|const)\s+streamUrl\s*=\s*["']([^"']+\.m3u8(?:\?[^"']*)?)["']/.exec(
-      html,
-    )?.[1];
-  if (raw === undefined) return null;
-  try {
-    const url = new URL(raw);
-    return url.protocol === "https:" &&
-      /^edgestream\d+\.pro$/.test(url.hostname) &&
-      url.username.length === 0 &&
-      url.password.length === 0 &&
-      url.port.length === 0
-      ? url.toString()
-      : null;
-  } catch {
-    return null;
-  }
-}
-
 export type SportsPageRenderer = {
   readonly html: (url: string, signal: AbortSignal) => Promise<string>;
   readonly runtimeStreams: (
@@ -154,6 +88,8 @@ export type SportsPageRenderer = {
 export type PinchtabConfig = {
   readonly baseUrl: string;
   readonly token: string | undefined;
+  /** A separate profile can be selected for isolated local acceptance tests. */
+  readonly profileName?: string;
 };
 
 export class PinchtabSportsBrowser implements SportsPageRenderer {
@@ -164,10 +100,23 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
   async html(url: string, signal: AbortSignal): Promise<string> {
     const { tabId } = await this.openTab(url, signal);
     try {
-      const page = PageSchema.parse(
-        await this.json(`/tabs/${encodeURIComponent(tabId)}/html`, signal),
-      );
-      return page.html;
+      const deadline = Date.now() + 20_000;
+      for (;;) {
+        signal.throwIfAborted();
+        const page = PageSchema.parse(
+          await this.json(`/tabs/${encodeURIComponent(tabId)}/html`, signal),
+        );
+        if (
+          new URL(url).hostname !== "tvsportslive.fr" ||
+          !/<title[^>]*>\s*Just a moment/i.test(page.html)
+        ) {
+          return page.html;
+        }
+        if (Date.now() >= deadline) {
+          throw new Error("TvSportsLive browser verification did not complete");
+        }
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
     } finally {
       await this.closeTab(tabId);
     }
@@ -181,13 +130,7 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
     readonly headers: Readonly<Record<string, string>>;
   }> {
     const requestedPage = new URL(url);
-    if (
-      requestedPage.protocol !== "https:" ||
-      requestedPage.hostname !== "streame.center" ||
-      requestedPage.username.length > 0 ||
-      requestedPage.password.length > 0 ||
-      requestedPage.port.length > 0
-    ) {
+    if (!approvedRuntimePlayerUrl(requestedPage)) {
       throw new Error("Sports player page is not an approved HTTPS source");
     }
     const { tabId } = await this.openTab(url, signal);
@@ -201,10 +144,8 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
       while (Date.now() < deadline) {
         signal.throwIfAborted();
         const streams = await this.captureStreams(tabId, signal);
-        if (streams.length > 0) {
-          const first = streams[0];
-          if (first === undefined)
-            throw new Error("Missing captured HLS stream");
+        const first = streams[0];
+        if (first !== undefined) {
           return {
             resources: streams.map((entry) => entry.url),
             headers: capturedHeaders(first, requestedPage.toString()),
@@ -216,7 +157,10 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
             signal,
           ),
         );
-        const frameRef = playerFrameRef(snapshot);
+        const frameRef =
+          requestedPage.hostname === "streame.center"
+            ? playerFrameRef(snapshot.nodes)
+            : undefined;
         if (frameRef !== undefined) {
           const frameStream = await this.streamFromPlayerFrame(
             tabId,
@@ -227,7 +171,12 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
           if (frameStream !== null) return frameStream;
         }
         if (!clickedPlay) {
-          clickedPlay = await this.clickPlayerIfReady(tabId, snapshot, signal);
+          clickedPlay = await this.clickPlayerIfReady(
+            tabId,
+            snapshot,
+            requestedPage,
+            signal,
+          );
         }
         await new Promise((resolve) => setTimeout(resolve, 250));
       }
@@ -255,14 +204,15 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
   private async clickPlayerIfReady(
     tabId: string,
     snapshot: z.infer<typeof SnapshotSchema>,
+    requestedPage: URL,
     signal: AbortSignal,
   ): Promise<boolean> {
-    const playControl = snapshot.nodes.find((node) => isPlayerControl(node));
-    if (playControl === undefined) return false;
+    const playControlRef = playerControlRef(snapshot.nodes, requestedPage);
+    if (playControlRef === undefined) return false;
     const click = ClickSchema.parse(
       await this.json(`/tabs/${encodeURIComponent(tabId)}/action`, signal, {
         method: "POST",
-        body: JSON.stringify({ kind: "click", ref: playControl.ref }),
+        body: JSON.stringify({ kind: "click", ref: playControlRef }),
       }),
     );
     if (!click.success || !click.result.clicked) {
@@ -373,12 +323,13 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
 
   private async ensureInstance(signal: AbortSignal): Promise<string> {
     if (this.instanceId !== null) return this.instanceId;
+    const profileName = this.config.profileName ?? PROFILE_NAME;
     const raw = await this.json("/instances", signal);
     const parsed = InstancesSchema.parse(raw);
     const instances = Array.isArray(parsed) ? parsed : parsed.instances;
     const existing = instances.find(
       (instance) =>
-        instance.profileName === PROFILE_NAME && instance.status === "running",
+        instance.profileName === profileName && instance.status === "running",
     );
     const existingId = existing?.instanceId ?? existing?.id;
     if (existingId !== undefined) {
@@ -387,13 +338,13 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
     }
 
     const profiles = ProfilesSchema.parse(await this.json("/profiles", signal));
-    const profile = profiles.find((item) => item.name === PROFILE_NAME);
+    const profile = profiles.find((item) => item.name === profileName);
     const profileId =
       profile?.id ??
       ProfileSchema.parse(
         await this.json("/profiles", signal, {
           method: "POST",
-          body: JSON.stringify({ name: PROFILE_NAME }),
+          body: JSON.stringify({ name: profileName }),
         }),
       ).id;
 

@@ -9,6 +9,7 @@ const PAGE_HOSTS = new Set([
   "v2.streameast.ga",
   "tvsportslive.fr",
   "streame.center",
+  "embed.st",
 ]);
 const MAX_EMBED_DEPTH = 3;
 const STREAM_URL =
@@ -37,8 +38,24 @@ function allowedPageHost(host: string): boolean {
 }
 
 function allowedStreamHost(host: string): boolean {
-  return host === "streame.center" || /^edgestream\d+\.pro$/.test(host);
+  return (
+    host === "streame.center" ||
+    /^edgestream\d+\.pro$/.test(host) ||
+    tvSportsStreamHost(host)
+  );
 }
+
+function tvSportsStreamHost(host: string): boolean {
+  return /^lb\d+\.strmd\.st$/.test(host);
+}
+
+/** TvSportsLive's HLS CDN serves extensionless MPEG-TS segments. */
+const TVSPORTS_HLS_INPUT_OPTIONS = [
+  "-allowed_segment_extensions",
+  "none,ts,m4s,m3u8",
+  "-extension_picky",
+  "0",
+] as const;
 
 function normalizeEmbeddedHtml(html: string): string {
   return html
@@ -113,6 +130,11 @@ type FindHlsContext = {
   readonly sourceHtml: string;
 };
 
+type ResolvedHls = {
+  readonly input: URL;
+  readonly headers: Readonly<Record<string, string>>;
+};
+
 export class BrowserSportsResolver implements SportsResolver {
   constructor(private readonly browser: SportsPageRenderer) {}
 
@@ -123,6 +145,7 @@ export class BrowserSportsResolver implements SportsResolver {
     title: string;
     input: string;
     headers: Readonly<Record<string, string>>;
+    inputOptions?: readonly string[];
   }> {
     const page = validPublicHttpsUrl(
       sourceUrl,
@@ -146,6 +169,9 @@ export class BrowserSportsResolver implements SportsResolver {
       title: titleFromHtml(sourceHtml, sourceUrl),
       input: result.input.toString(),
       headers: result.headers,
+      ...(tvSportsStreamHost(result.input.hostname)
+        ? { inputOptions: TVSPORTS_HLS_INPUT_OPTIONS }
+        : {}),
     };
   }
 
@@ -153,14 +179,14 @@ export class BrowserSportsResolver implements SportsResolver {
     page: URL,
     context: FindHlsContext,
     depth = 0,
-  ): Promise<{
-    input: URL;
-    headers: Readonly<Record<string, string>>;
-  } | null> {
+  ): Promise<ResolvedHls | null> {
     if (depth > MAX_EMBED_DEPTH || context.visited.has(page.toString())) {
       return null;
     }
     context.visited.add(page.toString());
+    if (page.hostname === "embed.st") {
+      return await this.runtimeHls(page, context.signal, tvSportsStreamHost);
+    }
     const html =
       depth === 0
         ? context.sourceHtml
@@ -173,27 +199,27 @@ export class BrowserSportsResolver implements SportsResolver {
       };
     }
     if (page.hostname === "streame.center") {
-      const runtime = await this.browser.runtimeStreams(
-        page.toString(),
-        context.signal,
-      );
-      for (const resource of runtime.resources) {
-        const input = validPublicHttpsUrl(resource, allowedStreamHost);
-        if (input !== null) {
-          return {
-            input,
-            headers: runtime.headers,
-          };
-        }
-      }
       // Inspecting its nested player as a top-level page loses the browser
       // frame context and can change the site's Referer-dependent response.
       // PinchTab's network capture above covers requests from its subframes.
-      return null;
+      return await this.runtimeHls(page, context.signal, allowedStreamHost);
     }
     for (const frame of iframeUrls(html, page.toString())) {
       const result = await this.findHls(frame, context, depth + 1);
       if (result !== null) return result;
+    }
+    return null;
+  }
+
+  private async runtimeHls(
+    page: URL,
+    signal: AbortSignal,
+    allowedHost: (host: string) => boolean,
+  ): Promise<ResolvedHls | null> {
+    const runtime = await this.browser.runtimeStreams(page.toString(), signal);
+    for (const resource of runtime.resources) {
+      const input = validPublicHttpsUrl(resource, allowedHost);
+      if (input !== null) return { input, headers: runtime.headers };
     }
     return null;
   }

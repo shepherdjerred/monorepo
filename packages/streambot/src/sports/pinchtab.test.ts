@@ -191,7 +191,112 @@ describe("PinchtabSportsBrowser streams", () => {
   });
 });
 
+describe("PinchtabSportsBrowser TvSportsLive player", () => {
+  it("plays a TvSportsLive embed and captures its browser HLS request", async () => {
+    const requests: { url: string; init: RequestInit | undefined }[] = [];
+    let captures = 0;
+    vi.stubGlobal(
+      "fetch",
+      async (input: string | URL | Request, init?: RequestInit) => {
+        const url = input instanceof Request ? input.url : String(input);
+        requests.push({ url, init });
+        const session = sessionResponse(url, "tab-tv");
+        if (session !== null) return session;
+        if (url.includes("/network?filter=m3u8")) {
+          captures += 1;
+          return Response.json({
+            entries:
+              captures === 1
+                ? []
+                : [
+                    {
+                      url: "https://lb16.strmd.st/secure/live/mono.m3u8",
+                      status: 200,
+                      requestHeaders: {
+                        Referer: "https://embed.st/",
+                        "User-Agent": "Chrome test user agent",
+                      },
+                    },
+                  ],
+          });
+        }
+        if (url.includes("/snapshot?interactive=true")) {
+          return Response.json({
+            nodes: [
+              {
+                ref: "e1",
+                role: "button",
+                name: "Play",
+                tag: "div",
+                frameUrl:
+                  "https://embed.st/embed/admin/ppv-baltimore-ravens-at-dallas-cowboys/1",
+              },
+            ],
+          });
+        }
+        return url.endsWith("/action")
+          ? Response.json({ success: true, result: { clicked: true } })
+          : Response.json({ status: "ok" });
+      },
+    );
+
+    const result = await testBrowser().runtimeStreams(
+      "https://embed.st/embed/admin/ppv-baltimore-ravens-at-dallas-cowboys/1",
+      new AbortController().signal,
+    );
+
+    expect(result).toEqual({
+      resources: ["https://lb16.strmd.st/secure/live/mono.m3u8"],
+      headers: {
+        Referer: "https://embed.st/",
+        "User-Agent": "Chrome test user agent",
+      },
+    });
+    expect(
+      requests.find(({ url }) => url.endsWith("/action"))?.init?.body,
+    ).toBe(JSON.stringify({ kind: "click", ref: "e1" }));
+    expect(requests.some(({ url }) => url.endsWith("/tabs/tab-tv/close"))).toBe(
+      true,
+    );
+  });
+
+  it("rejects unapproved TvSportsLive player paths", async () => {
+    await expect(
+      testBrowser().runtimeStreams(
+        "https://embed.st/redirect?url=https://private.invalid/",
+        new AbortController().signal,
+      ),
+    ).rejects.toThrow("approved HTTPS source");
+  });
+});
+
 describe("PinchtabSportsBrowser lifecycle", () => {
+  it("waits for an automatic TvSportsLive browser check to clear", async () => {
+    let htmlReads = 0;
+    vi.stubGlobal("fetch", (input: string) => {
+      const session = sessionResponse(input, "tab-challenge");
+      if (session !== null) return session;
+      if (input.endsWith("/html")) {
+        htmlReads += 1;
+        return Response.json({
+          html:
+            htmlReads === 1
+              ? "<title>Just a moment...</title>"
+              : "<title>TvSportsLive</title>",
+        });
+      }
+      return Response.json({ closed: true });
+    });
+
+    expect(
+      await testBrowser().html(
+        "https://tvsportslive.fr/",
+        new AbortController().signal,
+      ),
+    ).toBe("<title>TvSportsLive</title>");
+    expect(htmlReads).toBe(2);
+  });
+
   it("creates its dedicated profile before starting a fresh browser", async () => {
     const requests: {
       url: string;

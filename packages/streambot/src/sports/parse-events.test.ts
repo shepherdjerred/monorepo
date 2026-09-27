@@ -25,13 +25,17 @@ describe("sports listings", () => {
     });
   });
 
-  it("treats undated current-feed items as Later today", () => {
+  it("keeps a current-feed item without a kickoff time available for a playback attempt", () => {
     const events = parseTVSportsLiveEvents(
       '<article><h2 class="entry-title"><a href="https://tvsportslive.fr/game/">Ducks vs Kings</a></h2><p>Watch live</p></article>',
       NOW,
     );
     expect(events).toHaveLength(1);
-    expect(sportsEventTimeLabel(events[0]!)).toBe("Later today");
+    expect(events[0]?.status).toBe("unknown");
+    expect(sportsEventTimeLabel(events[0]!)).toBe("Today (time unconfirmed)");
+    expect(matchSportsEvents("Ducks Kings", events, "tvsportslive").kind).toBe(
+      "found",
+    );
   });
 
   it("prefers a live provider copy over a scheduled copy but preserves provider-specific requests", () => {
@@ -62,6 +66,31 @@ describe("sports listings", () => {
     ).toMatchObject({
       kind: "upcoming",
       event: { provider: "streameast" },
+    });
+  });
+
+  it("tries an unknown-time TvSportsLive copy after the preferred live StreamEast copy", () => {
+    const events: SportsEvent[] = [
+      {
+        id: "tv:game",
+        provider: "tvsportslive",
+        title: "Bears vs Packers",
+        status: "unknown",
+        startsAt: null,
+        pageUrl: "https://tvsportslive.fr/game/",
+      },
+      {
+        id: "stream:game",
+        provider: "streameast",
+        title: "Bears vs Packers",
+        status: "live",
+        startsAt: null,
+        pageUrl: "https://v2.streameast.ga/nfl/bears-vs-packers/",
+      },
+    ];
+    expect(matchSportsEvents("Bears Packers", events, "auto")).toMatchObject({
+      kind: "found",
+      events: [{ provider: "streameast" }, { provider: "tvsportslive" }],
     });
   });
 });

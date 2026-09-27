@@ -72,8 +72,11 @@ export function matchSportsEvents(
       (left, right) =>
         providerRank(left.provider) - providerRank(right.provider),
     );
-  const live = candidates.filter((event) => event.status === "live");
-  if (live.length > 0) return { kind: "found", events: live };
+  // TvSportsLive's feed does not supply kickoff times. Let its unknown-time
+  // posts reach the resolver, which verifies real A/V before playback. A
+  // definitely scheduled StreamEast event must still remain upcoming.
+  const playable = candidates.filter((event) => event.status !== "scheduled");
+  if (playable.length > 0) return { kind: "found", events: playable };
   return candidates[0]?.status === "scheduled"
     ? { kind: "upcoming", event: candidates[0] }
     : { kind: "found", events: candidates };

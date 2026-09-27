@@ -159,7 +159,7 @@ describe("probeMedia sends yt-dlp's signed headers to ffprobe", () => {
 
   test("with the headers threaded through, ffprobe reads the stream", async () => {
     const info = await probeMedia(config, signedVideoUrl, NEVER_ABORT, {
-      [REQUIRED_HEADER]: REQUIRED_VALUE,
+      headers: { [REQUIRED_HEADER]: REQUIRED_VALUE },
     });
     expect(info).not.toBeNull();
     expect(info?.videoCodec).toBe("h264");

@@ -120,4 +120,45 @@ describe("BrowserSportsResolver", () => {
       "https://streame.center/stream-east/ch49.php",
     ]);
   });
+
+  it("resolves a TvSportsLive player through its approved embed and scopes extensionless HLS options", async () => {
+    const htmlReads: string[] = [];
+    const runtimeReads: string[] = [];
+    const browser: SportsPageRenderer = {
+      html: async (url) => {
+        htmlReads.push(url);
+        return '<title>Ravens vs Cowboys – TvSportsLive</title><iframe src="https://embed.st/embed/admin/ppv-baltimore-ravens-at-dallas-cowboys/1"></iframe>';
+      },
+      runtimeStreams: async (url) => {
+        runtimeReads.push(url);
+        return {
+          resources: ["https://lb16.strmd.st/secure/live/mono.m3u8"],
+          headers: { Referer: "https://embed.st/", "User-Agent": "Chrome" },
+        };
+      },
+    };
+
+    const result = await new BrowserSportsResolver(browser).resolve(
+      "https://tvsportslive.fr/baltimore-ravens-vs-dallas-cowboys-2/",
+      new AbortController().signal,
+    );
+
+    expect(result).toEqual({
+      title: "Ravens vs Cowboys",
+      input: "https://lb16.strmd.st/secure/live/mono.m3u8",
+      headers: { Referer: "https://embed.st/", "User-Agent": "Chrome" },
+      inputOptions: [
+        "-allowed_segment_extensions",
+        "none,ts,m4s,m3u8",
+        "-extension_picky",
+        "0",
+      ],
+    });
+    expect(htmlReads).toEqual([
+      "https://tvsportslive.fr/baltimore-ravens-vs-dallas-cowboys-2/",
+    ]);
+    expect(runtimeReads).toEqual([
+      "https://embed.st/embed/admin/ppv-baltimore-ravens-at-dallas-cowboys/1",
+    ]);
+  });
 });
