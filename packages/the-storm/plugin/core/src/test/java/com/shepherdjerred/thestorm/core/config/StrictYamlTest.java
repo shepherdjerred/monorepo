@@ -51,6 +51,26 @@ final class StrictYamlTest {
   }
 
   @Test
+  void rejectsDuplicateKeysAtEveryDepth() {
+    var topLevel = "name: first\nname: second\nrewards: []\n";
+    assertThat(problems(StrictYaml.parse("quest.yml", topLevel, Quest.class)))
+        .singleElement()
+        .satisfies(problem -> assertThat(problem.message()).contains("Duplicate", "name"));
+
+    var nested =
+        """
+        name: x
+        rewards:
+          - item: COD
+            amount: 1
+            amount: 2
+        """;
+    assertThat(problems(StrictYaml.parse("quest.yml", nested, Quest.class)))
+        .singleElement()
+        .satisfies(problem -> assertThat(problem.message()).contains("Duplicate", "amount"));
+  }
+
+  @Test
   void rejectsMissingProperties() {
     var result = StrictYaml.parse("quest.yml", "name: x\n", Quest.class);
 
