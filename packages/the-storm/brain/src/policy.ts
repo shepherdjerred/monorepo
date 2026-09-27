@@ -15,7 +15,7 @@ const LIST =
   /^There are (?<online>\d+) of a max of (?<max>\d+) players online: ?(?<names>.*)$/u;
 
 /** Fail closed if Paper changes `/list` format or its count disagrees. */
-export function humanPlayers(listOutput: string, botName: string): string[] {
+export function onlinePlayers(listOutput: string): string[] {
   const match = LIST.exec(listOutput.trim());
   const online = Number(match?.groups?.["online"]);
   const names = match?.groups?.["names"];
@@ -26,5 +26,9 @@ export function humanPlayers(listOutput: string, botName: string): string[] {
   if (players.length !== online || new Set(players).size !== players.length) {
     throw new Error("RCON player count does not match names");
   }
-  return players.filter((player) => player !== botName);
+  return players;
+}
+
+export function humanPlayers(listOutput: string, botName: string): string[] {
+  return onlinePlayers(listOutput).filter((player) => player !== botName);
 }

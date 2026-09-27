@@ -4,7 +4,7 @@ import mineflayer from "mineflayer";
 import type { Bot } from "mineflayer";
 import { loadBootstrap, loadPilotConfig } from "./config.ts";
 import type { PilotConfig } from "./config.ts";
-import { humanPlayers, inPilotWindow } from "./policy.ts";
+import { humanPlayers, inPilotWindow, onlinePlayers } from "./policy.ts";
 import { RconClient } from "./rcon.ts";
 
 const CONFIG = new URL("../pilot.json", import.meta.url).pathname;
@@ -52,7 +52,11 @@ async function verifySpawn(
     process.stdout.write("pilot ended: window closed before spawn\n");
     return;
   }
-  const after = humanPlayers(await rcon.command("list"), bot.username);
+  const online = onlinePlayers(await rcon.command("list"));
+  if (!online.includes(bot.username)) {
+    throw new Error("bot left before the post-spawn presence check completed");
+  }
+  const after = online.filter((player) => player !== bot.username);
   if (!inPilotWindow(config, new Date())) {
     process.stdout.write("pilot ended: window closed during spawn check\n");
     return;
