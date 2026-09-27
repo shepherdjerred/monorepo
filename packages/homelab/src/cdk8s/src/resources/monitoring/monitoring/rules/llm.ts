@@ -70,6 +70,13 @@ const BILLED_COST_TODAY = 'sum(llm_billed_cost_usd{window="today"})';
 const BILLING_WORKER =
   'namespace="temporal",container="temporal-billing-worker"';
 const BILLED_RECONCILIATION_STALE_SECONDS = 7200;
+const BILLED_RECONCILIATION_PROVIDERS = ["openai", "anthropic"] as const;
+const BILLED_RECONCILIATION_SUCCESS = `llm_billed_reconciliation_last_success_timestamp_seconds{${BILLING_WORKER}}`;
+const BILLED_RECONCILIATION_MISSING_PROVIDER =
+  BILLED_RECONCILIATION_PROVIDERS.map(
+    (provider) =>
+      `absent(llm_billed_reconciliation_last_success_timestamp_seconds{${BILLING_WORKER},provider="${provider}"})`,
+  ).join(" or ");
 
 export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
   return [
@@ -105,10 +112,11 @@ export function getLlmRuleGroups(): PrometheusRuleSpecGroups[] {
           alert: "LlmBilledReconciliationStale",
           // Gated on worker uptime so a fresh pod, whose gauges start empty,
           // has two hourly runs to succeed before this fires. `absent` covers a
-          // worker that has never succeeded; `on()` is needed because the
-          // uptime side carries no provider label.
+          // provider that has never succeeded; check each expected provider
+          // independently so one healthy provider cannot mask the other. `on()`
+          // is needed because the uptime side carries no provider label.
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            `(time() - max(temporal_worker_app_process_start_time_seconds{${BILLING_WORKER}})) > ${BILLED_RECONCILIATION_STALE_SECONDS.toString()} and on() ((time() - max by (provider) (llm_billed_reconciliation_last_success_timestamp_seconds{${BILLING_WORKER}})) > ${BILLED_RECONCILIATION_STALE_SECONDS.toString()} or on() absent(llm_billed_reconciliation_last_success_timestamp_seconds{${BILLING_WORKER}}))`,
+            `(time() - max(temporal_worker_app_process_start_time_seconds{${BILLING_WORKER}})) > ${BILLED_RECONCILIATION_STALE_SECONDS.toString()} and on() (((time() - max by (provider) (${BILLED_RECONCILIATION_SUCCESS})) > ${BILLED_RECONCILIATION_STALE_SECONDS.toString()}) or ${BILLED_RECONCILIATION_MISSING_PROVIDER})`,
           ),
           for: "5m",
           labels: { severity: "warning", category: "llm" },

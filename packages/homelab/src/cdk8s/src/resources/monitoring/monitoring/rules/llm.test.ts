@@ -115,9 +115,11 @@ test("detects a billed reconciliation that stopped succeeding", () => {
   expect(stale).toContain(
     "llm_billed_reconciliation_last_success_timestamp_seconds",
   );
-  // Without `absent`, a worker that never once succeeded has no series and the
-  // staleness comparison can never fire.
-  expect(stale).toContain("absent(");
+  // Check each expected provider separately: one healthy provider's series
+  // must not mask a provider that has never successfully reconciled.
+  expect(stale).toContain('provider="openai"');
+  expect(stale).toContain('provider="anthropic"');
+  expect(String(stale).match(/absent\(/g)).toHaveLength(2);
   // The uptime side has no provider label; a plain `and` would never match.
   expect(stale).toContain("and on()");
 });
