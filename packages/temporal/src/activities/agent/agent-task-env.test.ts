@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   agentTaskSecretTokens,
   createAgentTaskSecretTokenState,
+  envForTrustedAgent,
   refreshAgentTaskSecretTokenStateInBackground,
 } from "./agent-task-env.ts";
 
@@ -69,5 +70,19 @@ describe("agent-task secret token state", () => {
     );
 
     expect(observed).toBe(refreshError);
+  });
+});
+
+describe("envForTrustedAgent", () => {
+  it("does not forward the retired OpenRouter credential", () => {
+    const environment = envForTrustedAgent(
+      {},
+      {
+        PATH: "/usr/bin",
+        OPENROUTER_API_KEY: "retired-secret",
+      },
+    );
+
+    expect(environment).toEqual({ PATH: "/usr/bin" });
   });
 });

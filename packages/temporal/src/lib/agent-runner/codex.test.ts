@@ -337,6 +337,7 @@ describe("runCodexAgentTurn", () => {
         GOOGLE_GENERATIVE_AI_API_KEY: "must-not-forward",
         GROQ_API_KEY: "must-not-forward",
         OPENAI_API_KEY: "must-not-forward",
+        OPENROUTER_API_KEY: "must-not-forward",
         XAI_API_KEY: "must-not-forward",
       },
       signal: new AbortController().signal,
