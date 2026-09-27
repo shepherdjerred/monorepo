@@ -10,13 +10,18 @@ import java.util.List;
  * @param sleepPercentage players in bed required to skip the night, on every overworld
  * @param worlds the created worlds, in order; the first with {@code rtp} is the default landing
  * @param crier main-world bulletin command, disabled until a live rollout
+ * @param ambient main-world arrival barks, disabled until a live rollout
  */
-public record WorldConfig(int sleepPercentage, List<WorldSpec> worlds, CrierConfig crier) {
+public record WorldConfig(
+    int sleepPercentage, List<WorldSpec> worlds, CrierConfig crier, AmbientConfig ambient) {
 
   public WorldConfig {
     worlds = List.copyOf(worlds);
     if (crier == null) {
       throw new IllegalArgumentException("crier config is required");
+    }
+    if (ambient == null) {
+      throw new IllegalArgumentException("ambient config is required");
     }
     if (sleepPercentage < 1 || sleepPercentage > 100) {
       throw new IllegalArgumentException("sleepPercentage must be 1-100: " + sleepPercentage);

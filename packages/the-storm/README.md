@@ -177,6 +177,14 @@ the recovered Storm history (old spawn landmarks, the Bridge Hobo quest, the
 2015 Easter hunt, and Braxton's bank). It makes no claim that those landmarks
 or quests exist in the current world. There is no timer or automatic broadcast.
 
+`world.yml` also keeps `ambient.enabled` off. When enabled, a player arriving
+within the configured radius and height of the `world` spawn hears one crier
+bark, grounded in current weather and a rotating archival fact. Join, world
+entry, and movement into the spawn area can trigger it, at most once per
+Pacific date per player. The last-heard date persists on the player. This is
+new authored behavior inspired by the old windmill and Storm history, not a
+recovered NPC script. It has no recurring task or server-wide broadcast.
+
 ## Conventions
 
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating

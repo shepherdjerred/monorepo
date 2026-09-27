@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.world.domain;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.shepherdjerred.thestorm.core.config.StrictYaml;
 import java.nio.file.Files;
@@ -22,6 +23,8 @@ final class WorldConfigTest {
                 });
     assertThat(config.sleepPercentage()).isEqualTo(50);
     assertThat(config.crier()).isEqualTo(new CrierConfig(false, "world"));
+    assertThat(config.ambient())
+        .isEqualTo(new AmbientConfig(false, "world", 24, 8, "America/Los_Angeles"));
     assertThat(config.worlds())
         .extracting(WorldSpec::name)
         .containsExactly("wilds", "peaks", "mining");
@@ -33,8 +36,21 @@ final class WorldConfigTest {
 
   @Test
   void theCrierCannotBeMovedOutOfTheMainWorld() {
-    org.assertj.core.api.Assertions.assertThatThrownBy(() -> new CrierConfig(true, "mining"))
+    assertThatThrownBy(() -> new CrierConfig(true, "mining"))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("main world");
+  }
+
+  @Test
+  void ambientBarksRequireMainWorldAndBoundedSpawnArea() {
+    assertThatThrownBy(() -> new AmbientConfig(true, "mining", 24, 8, "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("main world");
+    assertThatThrownBy(() -> new AmbientConfig(true, "world", 0, 8, "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new AmbientConfig(true, "world", 24, 33, "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new AmbientConfig(true, "world", 24, 8, "not-a-zone"))
+        .isInstanceOf(java.time.DateTimeException.class);
   }
 }
