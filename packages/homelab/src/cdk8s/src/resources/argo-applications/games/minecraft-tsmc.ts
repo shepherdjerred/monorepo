@@ -124,9 +124,10 @@ export function createMinecraftTsmcApp(chart: Chart) {
         "https://cdn.modrinth.com/data/sYpvDxGJ/versions/lc5JHiNJ/EssentialsXSpawn-2.22.0.jar",
         "https://github.com/dmulloy2/ProtocolLib/releases/download/5.4.0/ProtocolLib.jar",
         // Mineflayer 4.39.0 speaks 26.1; the companion pilot needs this bridge
-        // to join the Paper 26.2 server. Both jars are exercised by test:e2e.
-        "https://cdn.modrinth.com/data/P1OZGk5p/versions/FaishMnD/ViaVersion-5.12.0.jar",
-        "https://cdn.modrinth.com/data/NpvuJQoq/versions/SxGhdsPK/ViaBackwards-5.12.0.jar",
+        // to join the Paper 26.2 server. Verify the pairing on a live pilot
+        // server before enabling the authenticated companion session.
+        versions["viaversion-paper"],
+        versions["viabackwards-paper"],
         "https://github.com/DecentSoftware-eu/DecentHolograms/releases/download/2.10.1/DecentHolograms-2.10.1.jar",
         "https://github.com/garbagemule/MobArena/releases/download/0.109/MobArena-0.109.jar",
         // Core plugins (all servers)
@@ -195,7 +196,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
       // must be excluded, or the default *.jar glob would delete them since
       // they aren't part of the declared pluginUrls list.
       REMOVE_OLD_MODS_INCLUDE:
-        "worldguard-bukkit-*.jar,PlaceholderAPI-*.jar,LevelledMobs-*.jar",
+        "worldguard-bukkit-*.jar,PlaceholderAPI-*.jar,LevelledMobs-*.jar,ViaVersion-*.jar,ViaBackwards-*.jar",
     },
 
     // Init container to copy plugin configs (bypasses itzg sync which fails with DirectoryNotEmptyException)

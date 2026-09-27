@@ -1,5 +1,6 @@
 import { Database } from "bun:sqlite";
 import { costForTextUsage } from "@shepherdjerred/llm-models";
+import type { TextUsage } from "@shepherdjerred/llm-models";
 import { z } from "zod";
 
 const MODEL = "gpt-6-luna";
@@ -11,6 +12,13 @@ const Row = z.object({ spent: z.number().int().nonnegative() });
 const ReservationRow = z.object({
   month: z.string(),
   estimate: z.number().int().positive(),
+});
+const Usage = z.object({
+  inputTokens: z.number().int().nonnegative(),
+  outputTokens: z.number().int().nonnegative(),
+  cachedInputTokens: z.number().int().nonnegative().optional(),
+  cacheReadTokens: z.number().int().nonnegative().optional(),
+  cacheWriteTokens: z.number().int().nonnegative().optional(),
 });
 
 function monthInPacific(instant: Date): string {
@@ -31,6 +39,8 @@ export function maximumTurnMicroUsd(): number {
   const usd = costForTextUsage(MODEL, {
     inputTokens: MAX_INPUT_TOKENS,
     outputTokens: MAX_OUTPUT_TOKENS,
+    cacheReadTokens: MAX_INPUT_TOKENS,
+    cacheWriteTokens: MAX_INPUT_TOKENS,
   });
   if (usd === undefined) {
     throw new Error("GPT-6 Luna has no catalog price");
@@ -97,16 +107,27 @@ export class MonthlyBudget {
     })();
   }
 
-  settle(id: string, inputTokens: number, outputTokens: number): void {
+  settle(id: string, usage: TextUsage): void {
+    const parsed = Usage.parse(usage);
     if (
-      !Number.isSafeInteger(inputTokens) ||
-      inputTokens < 0 ||
-      !Number.isSafeInteger(outputTokens) ||
-      outputTokens < 0
+      parsed.cachedInputTokens !== undefined &&
+      parsed.cachedInputTokens > parsed.inputTokens
     ) {
       throw new Error("invalid model usage");
     }
-    const actualUsd = costForTextUsage(MODEL, { inputTokens, outputTokens });
+    const actualUsd = costForTextUsage(MODEL, {
+      inputTokens: parsed.inputTokens,
+      outputTokens: parsed.outputTokens,
+      ...(parsed.cachedInputTokens === undefined
+        ? {}
+        : { cachedInputTokens: parsed.cachedInputTokens }),
+      ...(parsed.cacheReadTokens === undefined
+        ? {}
+        : { cacheReadTokens: parsed.cacheReadTokens }),
+      ...(parsed.cacheWriteTokens === undefined
+        ? {}
+        : { cacheWriteTokens: parsed.cacheWriteTokens }),
+    });
     if (actualUsd === undefined)
       throw new Error("GPT-6 Luna has no catalog price");
     const actual = Math.ceil(actualUsd * 1_000_000);

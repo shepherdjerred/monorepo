@@ -1024,6 +1024,32 @@
       ]
     },
     {
+      "name": "viaversion-paper",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": false
+      },
+      "value": "https://cdn.modrinth.com/data/P1OZGk5p/versions/FaishMnD/ViaVersion-5.12.0.jar",
+      "notes": [
+        "Keep paired with ViaBackwards and the Paper protocol pin; update only after",
+        "a controlled Mineflayer-to-Paper compatibility check."
+      ]
+    },
+    {
+      "name": "viabackwards-paper",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": false
+      },
+      "value": "https://cdn.modrinth.com/data/NpvuJQoq/versions/SxGhdsPK/ViaBackwards-5.12.0.jar",
+      "notes": [
+        "Keep paired with ViaVersion and the Paper protocol pin; update only after",
+        "a controlled Mineflayer-to-Paper compatibility check."
+      ]
+    },
+    {
       "name": "mc2discord-forge-1.12.2",
       "category": "upstream",
       "artifactType": "source",
