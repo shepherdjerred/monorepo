@@ -1,14 +1,12 @@
-# Graves and random teleport. Owned by the repository; the plugin never writes it.
+# Arrival and random teleport. Owned by the repository; the plugin never writes it.
 # Durations are ISO-8601. The first freeFor after qol first sees a player, /rtp
 # costs nothing. After that it costs crystals. The cooldown begins when a search
 # starts, even if warmup is cancelled or the charge is refused.
-# A grave chest spills into drops after graveLifetime. Recent landings repel the
-# next teleport for landingMemory.
+# Recent landings repel the next teleport for landingMemory.
 
 freeFor: P7D
 cooldown: PT15S
 warmup: PT3S
-graveLifetime: PT10M
 landingMemory: PT5M
 cost: 25
 batchSize: 24

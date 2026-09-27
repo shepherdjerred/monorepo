@@ -1,4 +1,4 @@
-/** Paper listeners and commands for graves and random teleport. */
+/** Paper listeners and commands for arrival and random teleport. */
 @NullMarked
 package com.shepherdjerred.thestorm.qol.adapter.paper;
 

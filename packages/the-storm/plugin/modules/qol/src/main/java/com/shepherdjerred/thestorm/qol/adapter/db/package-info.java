@@ -1,4 +1,4 @@
-/** SQLite graves and first-seen times. */
+/** SQLite player profiles and RTP attempts. */
 @NullMarked
 package com.shepherdjerred.thestorm.qol.adapter.db;
 

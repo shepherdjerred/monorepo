@@ -6,7 +6,7 @@ import com.shepherdjerred.thestorm.qol.adapter.db.JooqQolStore;
 import com.shepherdjerred.thestorm.qol.adapter.paper.QolPaper;
 import com.shepherdjerred.thestorm.qol.domain.QolConfig;
 
-/** Graves and random teleport far from claims. */
+/** Arrival and random teleport far from claims. */
 public final class QolModule implements StormModule {
 
   @Override
