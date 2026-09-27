@@ -10,6 +10,7 @@ const REDACTED_CREDENTIAL_NAMES = [
   "OPENAI_API_KEY",
   "ANTHROPIC_API_KEY",
   "GOOGLE_API_KEY",
+  "GEMINI_API_KEY",
 ];
 
 export function configuredSecretValues(
