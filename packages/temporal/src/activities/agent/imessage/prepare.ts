@@ -60,6 +60,7 @@ export async function prepareImessageCommand(rawCommand: ImessageCommand) {
     const selected = await bindAgentChat(client, source, action.chatId, {
       updatedAt: input.submittedAt,
       sourceSequence: input.sourceSequence,
+      sourceEpoch: input.sourceEpoch,
     });
     return message(
       `Selected ${selected.config.chatId}. Send ordinary text to continue.`,
@@ -74,6 +75,7 @@ export async function prepareImessageCommand(rawCommand: ImessageCommand) {
     submittedAt: input.submittedAt,
     source,
     sourceSequence: input.sourceSequence,
+    sourceEpoch: input.sourceEpoch,
   };
   if (action.kind === "new") {
     const config = await imessageIngressConfig();
