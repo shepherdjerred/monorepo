@@ -7,9 +7,10 @@ describe("BrowserSportsResolver", () => {
     const browser: SportsPageRenderer = {
       html: async (url) => {
         return url === "https://v2.streameast.ga/nfl/game/"
-          ? '<iframe src="https://streame.center/embed/ch1.php"></iframe>'
+          ? '<title>Bears vs Packers | StreamEast</title><iframe src="https://streame.center/embed/ch1.php"></iframe>'
           : '<title>Bears vs Packers | StreamEast</title><video src="https://edgestream12.pro/live.m3u8?token=secret"></video>';
       },
+      runtimeStreams: async () => ({ resources: [], headers: {} }),
     };
     const result = await new BrowserSportsResolver(browser).resolve(
       "https://v2.streameast.ga/nfl/game/",
@@ -29,6 +30,7 @@ describe("BrowserSportsResolver", () => {
         reads += 1;
         return '<iframe src="https://untrusted.invalid/embed"></iframe>';
       },
+      runtimeStreams: async () => ({ resources: [], headers: {} }),
     };
     const resolver = new BrowserSportsResolver(browser);
     await expect(
@@ -44,5 +46,78 @@ describe("BrowserSportsResolver", () => {
       ),
     ).rejects.toThrow("No supported live HLS stream");
     expect(reads).toBe(1);
+  });
+
+  it("finds a player-created HLS URL and preserves browser request headers", async () => {
+    const htmlReads: string[] = [];
+    const browser: SportsPageRenderer = {
+      html: async (url) => {
+        htmlReads.push(url);
+        return url === "https://v2.streameast.ga/nfl/game/"
+          ? '<title>Bears vs Packers | StreamEast</title><iframe src="https://streame.center/stream-east/ch49.php"></iframe>'
+          : '<iframe src="https://streame.center/stream-east/ch49.php"></iframe>';
+      },
+      runtimeStreams: async (url) => ({
+        resources:
+          url === "https://streame.center/stream-east/ch49.php"
+            ? ["https://edgestream12.pro/live.m3u8?token=secret"]
+            : [],
+        headers: {
+          "User-Agent": "Chrome",
+          Origin: "https://streame.center",
+          Referer: "https://streame.center/stream-east/ch49.php",
+        },
+      }),
+    };
+    const result = await new BrowserSportsResolver(browser).resolve(
+      "https://v2.streameast.ga/nfl/game/",
+      new AbortController().signal,
+    );
+
+    expect(result).toEqual({
+      title: "Bears vs Packers",
+      input: "https://edgestream12.pro/live.m3u8?token=secret",
+      headers: {
+        "User-Agent": "Chrome",
+        Origin: "https://streame.center",
+        Referer: "https://streame.center/stream-east/ch49.php",
+      },
+    });
+    expect(htmlReads).toEqual([
+      "https://v2.streameast.ga/nfl/game/",
+      "https://streame.center/stream-east/ch49.php",
+    ]);
+  });
+
+  it("does not reopen nested player frames as top-level pages when capture is empty", async () => {
+    const htmlReads: string[] = [];
+    const runtimeReads: string[] = [];
+    const browser: SportsPageRenderer = {
+      html: async (url) => {
+        htmlReads.push(url);
+        return url ===
+          "https://v2.streameast.ga/boxing/henry-cejudo-vs-javon-walton/"
+          ? '<iframe src="https://streame.center/stream-east/ch49.php"></iframe>'
+          : '<iframe src="https://v2.streameast.ga/"></iframe>';
+      },
+      runtimeStreams: async (url) => {
+        runtimeReads.push(url);
+        return { resources: [], headers: {} };
+      },
+    };
+
+    await expect(
+      new BrowserSportsResolver(browser).resolve(
+        "https://v2.streameast.ga/boxing/henry-cejudo-vs-javon-walton/",
+        new AbortController().signal,
+      ),
+    ).rejects.toThrow("No supported live HLS stream");
+    expect(htmlReads).toEqual([
+      "https://v2.streameast.ga/boxing/henry-cejudo-vs-javon-walton/",
+      "https://streame.center/stream-east/ch49.php",
+    ]);
+    expect(runtimeReads).toEqual([
+      "https://streame.center/stream-east/ch49.php",
+    ]);
   });
 });

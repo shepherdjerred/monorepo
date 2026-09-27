@@ -115,6 +115,7 @@ bun run start            # run once
 bun run test             # unit tests (machine, config, sources) — no ffmpeg needed
 bun run test:integration # real-ffmpeg subtitle tests (needs ffmpeg + libass)
 bun run e2e              # live e2e against the dedicated test Discord server
+bun run e2e:sports       # manual live sports browser → Discord Go Live check
 bun run e2e:voice-recovery # live voice-loss recovery e2e
 bun run typecheck
 bun run lint
@@ -122,6 +123,10 @@ bun run docker:build     # build the image (repo-root build context)
 bun run smoke            # smoke script
 ```
 
-The live e2e runs need real tokens and test-guild IDs via environment. See
+The live e2e runs need real tokens and test-guild IDs via environment.
+`e2e:sports` additionally needs `E2E_SPORTS_URL`, `PINCHTAB_BASE_URL`, and
+`PINCHTAB_TOKEN`; run it against an empty voice channel while that event's HLS
+stream is available. It checks browser discovery, ffprobe, and actual Discord
+audio/video sends, then leaves the channel. See
 [AGENTS.md](AGENTS.md) for the small set of always-on package constraints and
 the linked wiki pages above for voice architecture and diagnostics.

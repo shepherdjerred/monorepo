@@ -107,6 +107,12 @@ function titleFromHtml(html: string, fallbackUrl: string): string {
   return slug === undefined || slug.length === 0 ? "Live sports" : slug;
 }
 
+type FindHlsContext = {
+  readonly visited: Set<string>;
+  readonly signal: AbortSignal;
+  readonly sourceHtml: string;
+};
+
 export class BrowserSportsResolver implements SportsResolver {
   constructor(private readonly browser: SportsPageRenderer) {}
 
@@ -125,35 +131,68 @@ export class BrowserSportsResolver implements SportsResolver {
     if (page === null) {
       throw new Error("Sports watch-page URL is not an approved HTTPS source");
     }
-    const visited = new Set<string>();
-    const result = await this.findHls(page, 0, visited, signal);
+    const sourceHtml = await this.browser.html(page.toString(), signal);
+    const result = await this.findHls(page, {
+      visited: new Set<string>(),
+      signal,
+      sourceHtml,
+    });
     if (result === null) {
       throw new Error(
         "No supported live HLS stream was available on this event page",
       );
     }
     return {
-      title: titleFromHtml(result.html, sourceUrl),
+      title: titleFromHtml(sourceHtml, sourceUrl),
       input: result.input.toString(),
-      headers: { Referer: result.referer },
+      headers: result.headers,
     };
   }
 
   private async findHls(
     page: URL,
-    depth: number,
-    visited: Set<string>,
-    signal: AbortSignal,
-  ): Promise<{ input: URL; referer: string; html: string } | null> {
-    if (depth > MAX_EMBED_DEPTH || visited.has(page.toString())) return null;
-    visited.add(page.toString());
-    const html = await this.browser.html(page.toString(), signal);
+    context: FindHlsContext,
+    depth = 0,
+  ): Promise<{
+    input: URL;
+    headers: Readonly<Record<string, string>>;
+  } | null> {
+    if (depth > MAX_EMBED_DEPTH || context.visited.has(page.toString())) {
+      return null;
+    }
+    context.visited.add(page.toString());
+    const html =
+      depth === 0
+        ? context.sourceHtml
+        : await this.browser.html(page.toString(), context.signal);
     const direct = hlsUrls(html, page.toString())[0];
     if (direct !== undefined) {
-      return { input: direct, referer: page.toString(), html };
+      return {
+        input: direct,
+        headers: { Referer: page.toString() },
+      };
+    }
+    if (page.hostname === "streame.center") {
+      const runtime = await this.browser.runtimeStreams(
+        page.toString(),
+        context.signal,
+      );
+      for (const resource of runtime.resources) {
+        const input = validPublicHttpsUrl(resource, allowedStreamHost);
+        if (input !== null) {
+          return {
+            input,
+            headers: runtime.headers,
+          };
+        }
+      }
+      // Inspecting its nested player as a top-level page loses the browser
+      // frame context and can change the site's Referer-dependent response.
+      // PinchTab's network capture above covers requests from its subframes.
+      return null;
     }
     for (const frame of iframeUrls(html, page.toString())) {
-      const result = await this.findHls(frame, depth + 1, visited, signal);
+      const result = await this.findHls(frame, context, depth + 1);
       if (result !== null) return result;
     }
     return null;
