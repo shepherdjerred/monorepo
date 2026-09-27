@@ -35,6 +35,11 @@
       "key": "alert-dashboard",
       "name": "Alert Dashboard",
       "description": "Ops dashboard (alert-dashboard) feature flags."
+    },
+    {
+      "key": "the-storm",
+      "name": "The Storm",
+      "description": "Minecraft main-world gameplay rollout flags."
     }
   ],
   "flags": [
@@ -1421,6 +1426,18 @@
       "purpose": "Enable Streambot subtitles.",
       "type": "boolean",
       "default": true,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "the-storm-crier-enabled",
+      "owner": "the-storm",
+      "namespace": "the-storm",
+      "source": "the-storm-world",
+      "purpose": "Enable the main-world crier for targeted players after live acceptance.",
+      "type": "boolean",
+      "default": false,
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []

@@ -74,8 +74,11 @@ world available before TheStorm enables again.
 
 The world module also owns an on-demand `/crier` bulletin. Its separate
 `world.yml` `crier.enabled` setting ships as `false`; the world module itself
-also remains disabled in `config.yml`. Once enabled, the command works only
-for players in `world`. It reports the observed weather and game time, then
+also remains disabled in `config.yml`. The `/crier` command registers with the
+module and evaluates `the-storm-crier-enabled` in Flipt for each player. Both
+the typed file safety gate and the managed flag must allow the command; a
+missing or failed Flipt evaluation leaves it unavailable. Once enabled, it
+works only for players in `world`. It reports the observed weather and game time, then
 rotates one historical Storm fact by full game day. The archive notes come from
 the recovered Storm history (old spawn landmarks, the Bridge Hobo quest, the
 2015 Easter hunt, and Braxton's bank). It makes no claim that those landmarks
