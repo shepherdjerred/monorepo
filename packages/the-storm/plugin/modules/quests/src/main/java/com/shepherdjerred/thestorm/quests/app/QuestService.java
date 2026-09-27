@@ -18,6 +18,7 @@ import com.shepherdjerred.thestorm.quests.domain.model.Action;
 import com.shepherdjerred.thestorm.quests.domain.model.Quest;
 import com.shepherdjerred.thestorm.quests.domain.state.Board;
 import com.shepherdjerred.thestorm.quests.domain.state.PlayerQuests;
+import com.shepherdjerred.thestorm.quests.domain.storylet.Storylets;
 import com.shepherdjerred.thestorm.quests.domain.view.Describe;
 import com.shepherdjerred.thestorm.quests.domain.view.Dialogues;
 import com.shepherdjerred.thestorm.quests.domain.view.Journal;
@@ -305,13 +306,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
                 .send(player, Notices.info("The quest board has changed. Check its new offers."));
             return;
           }
-          context.catalog().all().stream()
-              .filter(quest -> quest.giver().equals(npc))
-              .filter(quest -> quest.category() != Quest.Category.HIDDEN)
-              .filter(
-                  quest ->
-                      QuestEngine.availability(state, quest, context)
-                          == QuestEngine.Availability.OFFERABLE)
+          Storylets.offers(state, npc, context, 1).stream()
               .findFirst()
               .ifPresentOrElse(
                   quest -> accept(player, quest.id(), npc),

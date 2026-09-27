@@ -74,6 +74,11 @@ weekly slots require a template pool at module startup, and reward arithmetic
 is checked before a board can be drawn. Boards turn over on player join or the
 first quest interaction or journal view after the calendar boundary; the
 recurring quest tick only rechecks objective progress.
+Board and NPC offers use the same eligibility checks: prerequisites and repeat
+cooldowns are evaluated against player state before an offer appears. NPC
+dialogue gives story and track quests priority, then rotates offers of equal
+priority in a stable order for each player and local day. Hand-ins and active
+choices remain ahead of new offers.
 
 Quest state and pending world actions commit in one SQLite transaction. Item
 hand-ins run from that outbox after the state write succeeds, so a failed write
