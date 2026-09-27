@@ -53,6 +53,22 @@ Modules reach each other only through the other module's `app` package, and
 schedule main-thread work only through `core.schedule.Scheduler`. ArchUnit
 tests in `architecture/` enforce all of this.
 
+## Quest content
+
+The `quests` module reads authored quests, board templates, regions, factions,
+and hooks from `server/owned/plugins/TheStorm/quests/`. Its runtime settings are
+in `server/owned/plugins/TheStorm/quests.yml`. Content is validated against the
+loaded Minecraft registries and NPC directory when the module starts; invalid
+content stops startup with file and field errors. The objective, condition, and
+action syntax is defined by `quests/domain/content/Dsl.java`.
+
+Quest offers, commands, and progress are restricted to the configured main
+world (`world`). Regions must resolve to that world's registry key. Board
+draws keep a snapshot of their objective and reward data in SQLite so edits to
+templates do not change quests already assigned to players. The content
+currently includes 23 imported historical quests; additional anthology content
+is tracked in the quest PR rather than this reference.
+
 ## Conventions
 
 - `@NullMarked` on every package; NullAway (JSpecify mode) runs as an error.
