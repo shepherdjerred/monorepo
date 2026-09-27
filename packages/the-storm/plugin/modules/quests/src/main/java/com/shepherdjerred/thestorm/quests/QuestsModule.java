@@ -13,6 +13,7 @@ import com.shepherdjerred.thestorm.npcs.app.NpcDialogs;
 import com.shepherdjerred.thestorm.npcs.app.NpcDirectory;
 import com.shepherdjerred.thestorm.npcs.app.NpcMarkers;
 import com.shepherdjerred.thestorm.npcs.app.NpcRef;
+import com.shepherdjerred.thestorm.quests.adapter.content.CollectionsLoader;
 import com.shepherdjerred.thestorm.quests.adapter.content.ContentLoader;
 import com.shepherdjerred.thestorm.quests.adapter.db.JooqQuestStore;
 import com.shepherdjerred.thestorm.quests.adapter.luckperms.LuckPermsGrants;
@@ -23,6 +24,7 @@ import com.shepherdjerred.thestorm.quests.app.QuestProgress;
 import com.shepherdjerred.thestorm.quests.app.QuestService;
 import com.shepherdjerred.thestorm.quests.app.WalletRewards;
 import com.shepherdjerred.thestorm.quests.domain.config.QuestsConfig;
+import com.shepherdjerred.thestorm.quests.domain.content.Collections;
 import com.shepherdjerred.thestorm.quests.domain.content.ContentCheck;
 import com.shepherdjerred.thestorm.quests.domain.content.ContentProblem;
 import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
@@ -63,6 +65,9 @@ public final class QuestsModule implements StormModule {
             config.board().npc(),
             mainWorld.getKey().asString());
     var content = requireValid(ContentLoader.load(context.dataDirectory(), rules));
+    var collections =
+        requireCollections(
+            CollectionsLoader.load(context.dataDirectory(), rules.registry().items()));
     var paper =
         new QuestsPaper(
             context,
@@ -84,6 +89,7 @@ public final class QuestsModule implements StormModule {
         new QuestService(
             new QuestService.Wiring(
                 content,
+                collections,
                 config,
                 new JooqQuestStore(context.database()),
                 paper.world(content),
@@ -99,9 +105,10 @@ public final class QuestsModule implements StormModule {
     context
         .logger()
         .info(
-            "Loaded {} quests and {} board templates",
+            "Loaded {} quests, {} board templates and {} collections",
             content.quests().size(),
-            content.templates().size());
+            content.templates().size(),
+            collections.entries().size());
   }
 
   @Override
@@ -124,6 +131,16 @@ public final class QuestsModule implements StormModule {
       case Result.Err<QuestContent, List<ContentProblem>>(var problems) ->
           throw new IllegalStateException(
               "Invalid quest content:\n"
+                  + String.join("\n", problems.stream().map(ContentProblem::toString).toList()));
+    };
+  }
+
+  private static Collections requireCollections(Result<Collections, List<ContentProblem>> loaded) {
+    return switch (loaded) {
+      case Result.Ok<Collections, List<ContentProblem>>(var content) -> content;
+      case Result.Err<Collections, List<ContentProblem>>(var problems) ->
+          throw new IllegalStateException(
+              "Invalid collection content:\n"
                   + String.join("\n", problems.stream().map(ContentProblem::toString).toList()));
     };
   }

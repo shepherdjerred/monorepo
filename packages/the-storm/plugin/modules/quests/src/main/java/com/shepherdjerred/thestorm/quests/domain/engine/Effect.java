@@ -38,4 +38,7 @@ public sealed interface Effect {
 
   /** Quest points rose by {@code amount} to {@code total}. */
   record PointsGained(long amount, long total) implements Effect {}
+
+  /** A collection entry was revealed by a first eligible pickup. */
+  record Discovered(String name) implements Effect {}
 }

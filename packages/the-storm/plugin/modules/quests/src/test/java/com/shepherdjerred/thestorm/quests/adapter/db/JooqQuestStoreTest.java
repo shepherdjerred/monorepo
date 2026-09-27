@@ -90,7 +90,8 @@ final class JooqQuestStoreTest {
                     4,
                     350L,
                     30))),
-        Map.of("nat", NpcMark.TURN_IN, "cade", NpcMark.AVAILABLE));
+        Map.of("nat", NpcMark.TURN_IN, "cade", NpcMark.AVAILABLE),
+        Map.of("iron-from-the-old-road", AT));
   }
 
   @Test
