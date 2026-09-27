@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SplittableRandom;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -158,6 +159,22 @@ final class QuestServiceTest {
   void aPlayerWhoLeftBeforeLoadingIsNotKept() {
     service.join(ALICE).join();
     assertThat(service.state(ALICE)).isEmpty();
+  }
+
+  @Test
+  void repeatedJoinsShareOnePendingLoad() {
+    world.join(ALICE);
+    var deferred = new CompletableFuture<PlayerQuests>();
+    store.deferredLoad = Optional.of(deferred);
+    var first = service.join(ALICE);
+    var second = service.join(ALICE);
+    assertThat(second).isSameAs(first);
+    assertThat(store.loads).isEqualTo(1);
+
+    deferred.complete(PlayerQuests.empty(ALICE));
+    first.join();
+    assertThat(service.state(ALICE)).isPresent();
+    assertThat(store.loads).isEqualTo(1);
   }
 
   @Test

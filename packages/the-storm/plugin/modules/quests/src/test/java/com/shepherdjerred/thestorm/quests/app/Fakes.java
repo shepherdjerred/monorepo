@@ -49,10 +49,16 @@ final class Fakes {
   /** Keeps state in a map; futures complete immediately. */
   static final class Store implements QuestStore {
     final Map<UUID, PlayerQuests> saved = new HashMap<>();
+    Optional<CompletableFuture<PlayerQuests>> deferredLoad = Optional.empty();
+    int loads;
     int saves;
 
     @Override
     public CompletableFuture<PlayerQuests> load(UUID player) {
+      loads++;
+      if (deferredLoad.isPresent()) {
+        return deferredLoad.orElseThrow();
+      }
       return CompletableFuture.completedFuture(
           saved.getOrDefault(player, PlayerQuests.empty(player)));
     }
