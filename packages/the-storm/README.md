@@ -201,6 +201,33 @@ because those sources are not connected. Before a live rollout, enable the
 world module and crier, then enable the digest and verify an arrival, a death,
 and an on-demand read in `world` after GitOps deployment.
 
+### Windmill trader visit
+
+The world module's `world.yml` `merchant.enabled` setting ships as `false`,
+with `anchors: []`. Before enabling it, inspect the current main-world
+windmill area and set `anchors` to a list with exactly one measured `x`, `y`,
+and `z` block for the trader's feet. The block below must be solid, with two
+air blocks above it. Use a spot players can reach without obstructing the
+windmill. The listener refuses an unsafe or unloaded anchor; it never chooses
+another position. The world module itself must also be enabled in `config.yml`.
+
+On the first join, world entry, or block movement within `arrivalRadius` of
+the anchor on a Pacific date, one named Wandering Trader appears in `world`.
+The visit is recorded on the world and cannot be repeated that date, even if
+the trader is removed. Paper's native trader despawn delay is set to
+`visitMinutes`; no plugin timer or scheduled job runs. The trader has two
+finite item barters each date, rotated deterministically among bread for
+wheat, torches for coal, and a lantern for iron ingots. It does not transact
+crystals, connect to player shops, travel to towns, or offer escort or robbery
+quests. The windmill and NPC shops are historical facts; this visit, its
+stock, and its timing are new authored behavior, not recovered mechanics.
+
+For live acceptance, first verify the measured anchor and open the feature
+through GitOps. With a player in `world`, verify the spawn, trade offers,
+same-day limit, natural despawn, and next-day rotation. Roll back by setting
+`merchant.enabled` to `false`; a trader already spawned can remain until its
+native despawn. Keep this feature off until that placement and gameplay check.
+
 ## Conventions
 
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating
