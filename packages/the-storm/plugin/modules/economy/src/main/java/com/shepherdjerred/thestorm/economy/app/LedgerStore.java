@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.economy.app;
 import com.shepherdjerred.thestorm.core.result.Result;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -19,6 +20,12 @@ public interface LedgerStore {
   /** Applies the transfer rules and, when they allow it, moves the crystals and records it. */
   CompletableFuture<Result<Receipt, EconomyError>> transfer(
       AccountId from, AccountId to, Crystals amount, String reason);
+
+  /** Performs one keyed transfer and returns the same receipt on an identical retry. */
+  CompletableFuture<Result<Receipt, EconomyError>> transferOnce(KeyedTransfer transfer);
+
+  /** Reads a committed keyed transfer. */
+  CompletableFuture<Optional<Receipt>> receiptFor(UUID key);
 
   /** Up to {@code limit} player accounts with a positive balance, richest first, with names. */
   CompletableFuture<List<RankedPlayer>> top(int limit);
