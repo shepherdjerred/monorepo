@@ -76,6 +76,26 @@ final class ShippedContentTest {
           "frost-falls-record",
           "the-last-hearth");
 
+  /** Two more quests in each region, linked after its first chapter. */
+  static final List<String> CONTINUATIONS =
+      List.of(
+          "the-altar-ledger",
+          "storm-signatures",
+          "the-mint-mark",
+          "the-sealed-drain",
+          "catalogue-of-rain",
+          "the-missing-margin",
+          "roadside-warnings",
+          "the-returning-cart",
+          "the-third-marker",
+          "watch-at-dusk",
+          "the-tremor-ledger",
+          "rails-below",
+          "the-bell-casting",
+          "names-on-the-tide",
+          "winter-vigil",
+          "the-frost-falls-banner");
+
   private static QuestContent content = QuestContent.empty();
 
   @BeforeAll
@@ -93,8 +113,12 @@ final class ShippedContentTest {
   void theShippedContentPassesTheLinter() {
     assertThat(content.quests().keySet())
         .containsExactlyInAnyOrderElementsOf(
-            Stream.concat(
-                    Stream.concat(PORTED.stream(), Stream.of("the-gate-ledger")), REGIONAL.stream())
+            Stream.of(
+                    PORTED.stream(),
+                    Stream.of("the-gate-ledger"),
+                    REGIONAL.stream(),
+                    CONTINUATIONS.stream())
+                .flatMap(stream -> stream)
                 .toList());
     assertThat(content.factions()).containsOnlyKeys("townsfolk", "storm-watch");
     assertThat(content.templates()).isNotEmpty();

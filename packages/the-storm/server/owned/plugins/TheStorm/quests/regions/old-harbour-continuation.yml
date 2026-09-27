@@ -1,0 +1,94 @@
+# The 2014 harbour was lost with its world. These are present-day memorial
+# errands, not travel to the vanished docks.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-bell-casting:
+    name: The Bell Casting
+    giver: stanley
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed harbour-lights
+    text:
+      offer: Oswin remembered the old harbour bell. We cannot bring that bell back, but we can give the new river lights a voice.
+      accept: Bring a bell, copper and iron. Oswin can decide where the memorial belongs.
+      decline: The sound is still in my memory.
+      finish: Oswin has the bell and its fittings. The new river welcome will be heard as well as seen.
+      summary: Prepare a memorial bell for the old harbour's river welcome.
+      questions: []
+    start: fittings
+    stages:
+      fittings:
+        journal: Bring Stanley a bell, 8 copper ingots and 8 iron ingots.
+        waiting: A memorial should be strong enough to last.
+        complete: The fittings are ready. Ask Oswin to receive the bell.
+        objectives:
+          - deliver stanley 1 BELL
+          - deliver stanley 8 COPPER_INGOT
+          - deliver stanley 8 IRON_INGOT
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: Tell Oswin the memorial bell is ready.
+        waiting: Oswin tends the river lights.
+        complete: Oswin will keep the bell with the new lights.
+        objectives:
+          - talk oswin
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  names-on-the-tide:
+    name: Names on the Tide
+    giver: oswin
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-bell-casting
+    text:
+      offer: A bell and lights remember the harbour, but somebody should write down why they are here for people who never saw the old docks.
+      accept: Bring books, ink and a name tag. Stanley and I will record the story without pretending the old world remains.
+      decline: The story will be here when you return.
+      finish: The old harbour has a written memory beside its new welcome.
+      summary: Record the lost harbour's story for future visitors.
+      questions: []
+    start: account
+    stages:
+      account:
+        journal: Bring Oswin 4 books, 2 ink sacs and a name tag.
+        waiting: Write the old harbour's name clearly for new arrivals.
+        complete: The account is ready. Stanley should check the memory.
+        objectives:
+          - deliver oswin 4 BOOK
+          - deliver oswin 2 INK_SAC
+          - deliver oswin 1 NAME_TAG
+        onComplete: []
+        next: [{ to: witness, when: [], label: none }]
+        timeLimit: none
+      witness:
+        journal: Ask Stanley to check the old harbour account.
+        waiting: Stanley remembers the bell and the working docks.
+        complete: Stanley confirms the account. Oswin will keep it by the lights.
+        objectives:
+          - talk stanley
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1

@@ -1,0 +1,92 @@
+# Patrol stories stay on the main-world fringe and name no unverified route.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-third-marker:
+    name: The Third Marker
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed rain-on-the-trail
+    text:
+      offer: The wet trail notes have two clear markers and one blank space. Travellers need a third warning before they wander too far.
+      accept: Bring fence posts, signs and a compass. The watch can choose the right spot in the main world.
+      decline: I will keep the blank space on the map.
+      finish: The marker kit is ready and the patrol has a bearing.
+      summary: Equip the watch to mark a safe return route at the Wilds fringe.
+      questions: []
+    start: marker-kit
+    stages:
+      marker-kit:
+        journal: Bring Iovita 16 oak fences, 4 oak signs and a compass.
+        waiting: The marker must be visible without leading travellers astray.
+        complete: The kit is ready. Ask the Guard Captain to place it on patrol.
+        objectives:
+          - deliver iovita 16 OAK_FENCE
+          - deliver iovita 4 OAK_SIGN
+          - deliver iovita 1 COMPASS
+        onComplete: []
+        next: [{ to: patrol, when: [], label: none }]
+        timeLimit: none
+      patrol:
+        journal: Ask the Guard Captain to place the third marker.
+        waiting: Only the current patrol knows a safe position.
+        complete: The patrol has the kit and the warning will face homeward.
+        objectives:
+          - talk guard-captain
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation storm-watch 1
+
+  watch-at-dusk:
+    name: Watch at Dusk
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-third-marker
+    text:
+      offer: A marker helps in daylight. At dusk the patrol still needs light and supplies for anyone returning late.
+      accept: Clear the threats along your journey and bring lanterns and bread to the watch.
+      decline: Keep the marker in sight if you travel late.
+      finish: The patrol can guide travellers home after dark.
+      summary: Supply a dusk patrol for the main-world Wilds fringe.
+      questions: []
+    start: threats
+    stages:
+      threats:
+        journal: Defeat 8 zombies in the main world before the dusk patrol.
+        waiting: Fewer threats make the return journey safer.
+        complete: The route is quieter. Bring supplies to the watch.
+        objectives:
+          - kill 8 ZOMBIE
+        onComplete: []
+        next: [{ to: supplies, when: [], label: none }]
+        timeLimit: none
+      supplies:
+        journal: Bring the Guard Captain 6 lanterns and 12 bread.
+        waiting: The watch needs light and food for a late return.
+        complete: The dusk patrol is supplied.
+        objectives:
+          - deliver guard-captain 6 LANTERN
+          - deliver guard-captain 12 BREAD
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation storm-watch 1
