@@ -2,6 +2,7 @@ package com.shepherdjerred.thestorm.npcs.adapter.paper;
 
 import com.shepherdjerred.thestorm.npcs.app.MarkerService;
 import com.shepherdjerred.thestorm.npcs.app.NpcCatalog;
+import com.shepherdjerred.thestorm.npcs.domain.brain.Intent;
 import com.shepherdjerred.thestorm.npcs.domain.brain.NpcBrain;
 import com.shepherdjerred.thestorm.npcs.domain.config.NpcsConfig;
 import com.shepherdjerred.thestorm.npcs.domain.geo.Rotation;
@@ -28,9 +29,9 @@ import java.util.function.Function;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
 import org.bukkit.Location;
 import org.bukkit.Server;
+import org.bukkit.entity.Enemy;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Mannequin;
-import org.bukkit.entity.Monster;
 import org.bukkit.entity.Player;
 import org.jspecify.annotations.Nullable;
 
@@ -308,28 +309,42 @@ final class NpcWorld {
     var position = Mannequins.position(feet);
     var facing = Mannequins.facing(feet);
     var threat = nearestThreat(entry, feet);
-    threat.ifPresent(monster -> repel(entry, feet, monster));
+    threat.ifPresent(enemy -> repel(entry, feet, enemy));
     var listener = listener(entry.npc, feet);
-    if (listener.isPresent()) {
-      attend(entry, new PathFollower.At(position, facing), listener.get());
+    if (shouldAttend(listener, threat)) {
+      attend(entry, new PathFollower.At(position, facing), listener.orElseThrow());
       return;
     }
     var walker = entry.walker;
-    if (walker == null || thinkingNow(entry.npc)) {
+    if (shouldReconsider(walker, thinkingNow(entry.npc), threat.isPresent())) {
       var decided = decide(entry.npc, walker, feet, threat);
       walker = decided.walker();
       apply(entry, decided.moves());
     }
+    var activeWalker = Objects.requireNonNull(walker, "guard decision supplies a walker");
     var npc = entry.npc;
     var path =
-        walker.pathTarget().flatMap(target -> parts.navigators().find(npc.id(), feet, target));
+        activeWalker
+            .pathTarget()
+            .flatMap(target -> parts.navigators().find(npc.id(), feet, target));
     var watcher =
         nearest
             .filter(player -> feetOf(player).distance(feet) <= config.animation().lookRadius())
             .map(player -> Mannequins.position(player.getEyeLocation()));
-    var ticked = follower.tick(walker, new Observation(tick, position, facing, path, watcher));
+    var ticked =
+        follower.tick(activeWalker, new Observation(tick, position, facing, path, watcher));
     entry.walker = ticked.walker();
     apply(entry, ticked.moves());
+  }
+
+  static boolean shouldAttend(Optional<Player> listener, Optional<Enemy> threat) {
+    return listener.isPresent() && threat.isEmpty();
+  }
+
+  static boolean shouldReconsider(@Nullable Walker walker, boolean scheduled, boolean threatened) {
+    return walker == null
+        || scheduled
+        || (threatened && !(walker.intent() instanceof Intent.Pursue));
   }
 
   /** The nearest player talking to {@code npc} who is still close enough to be waited for. */
@@ -361,7 +376,7 @@ final class NpcWorld {
   }
 
   private PathFollower.Tick decide(
-      NpcDefinition npc, @Nullable Walker walker, Location feet, Optional<Monster> threat) {
+      NpcDefinition npc, @Nullable Walker walker, Location feet, Optional<Enemy> threat) {
     var world = feet.getWorld();
     var at = new PathFollower.At(Mannequins.position(feet), Mannequins.facing(feet));
     var content = catalog.content();
@@ -374,39 +389,33 @@ final class NpcWorld {
                 TimeOfDay.fromWorldTicks(world.getTime()),
                 world.hasStorm(),
                 threat.map(
-                    monster ->
+                    enemy ->
                         new Spot(
                             npc.home().world(),
-                            Mannequins.position(monster.getLocation()),
-                            Mannequins.facing(monster.getLocation())))));
+                            Mannequins.position(enemy.getLocation()),
+                            Mannequins.facing(enemy.getLocation())))));
     return walker == null
         ? follower.start(intent, at, tick)
         : follower.retarget(walker, intent, at, tick);
   }
 
-  private Optional<Monster> nearestThreat(Live entry, Location feet) {
+  private Optional<Enemy> nearestThreat(Live entry, Location feet) {
     if (!entry.npc.roles().contains("guard")) {
       return Optional.empty();
     }
     var guard = config.guard();
     var home = homeLocation(entry.npc);
-    var homeLimit = guard.homeRadius() * guard.homeRadius();
-    return feet
-        .getWorld()
-        .getNearbyEntities(
-            feet, guard.detectionRadius(), guard.detectionRadius(), guard.detectionRadius())
-        .stream()
-        .filter(entity -> entity instanceof Monster)
-        .map(entity -> (Monster) entity)
-        .filter(monster -> monster.isValid() && !monster.isDead())
-        .filter(monster -> monster.getLocation().distanceSquared(home) <= homeLimit)
-        .filter(entry.entity::hasLineOfSight)
-        .min(Comparator.comparingDouble(monster -> monster.getLocation().distanceSquared(feet)));
+    return GuardThreats.nearest(
+        feet.getWorld()
+            .getNearbyEntities(
+                feet, guard.detectionRadius(), guard.detectionRadius(), guard.detectionRadius()),
+        new GuardThreats.Search(feet, home, guard),
+        entry.entity::hasLineOfSight);
   }
 
-  private void repel(Live entry, Location feet, Monster monster) {
+  private void repel(Live entry, Location feet, Enemy enemy) {
     var guard = config.guard();
-    if (monster.getLocation().distanceSquared(feet) > guard.attackReach() * guard.attackReach()
+    if (enemy.getLocation().distanceSquared(feet) > guard.attackReach() * guard.attackReach()
         || (entry.lastAttackTick != Long.MIN_VALUE
             && tick - entry.lastAttackTick < guard.cooldownTicks())) {
       return;
@@ -416,8 +425,8 @@ final class NpcWorld {
         entry,
         PathFollower.face(
             new PathFollower.At(Mannequins.position(feet), Mannequins.facing(feet)),
-            Mannequins.position(monster.getEyeLocation())));
-    monster.damage(guard.damage(), entry.entity);
+            Mannequins.position(enemy.getEyeLocation())));
+    enemy.damage(guard.damage(), entry.entity);
   }
 
   private Optional<Player> nearestPlayer(Location feet, double radius) {
