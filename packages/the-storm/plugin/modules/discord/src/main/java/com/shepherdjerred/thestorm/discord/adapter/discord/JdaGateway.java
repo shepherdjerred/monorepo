@@ -183,7 +183,7 @@ public final class JdaGateway extends ListenerAdapter implements AutoCloseable {
     }
     var channel = jda.getTextChannelById(bootstrap.channelId());
     if (channel == null) {
-      context.logger().error("Discord bridge channel disappeared");
+      failServer("Discord bridge channel disappeared; stopping the server");
       return;
     }
     var clean = BridgeText.clean(message);
