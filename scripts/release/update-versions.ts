@@ -9,6 +9,7 @@ import {
   parsePinCandidates,
   parsePinCandidatesState,
   parseVersionCatalogSource,
+  retainCurrentImagePins,
   rewriteVersionCatalogSource,
   serializePinCandidatesState,
   validateCandidateKeys,
@@ -125,7 +126,16 @@ async function prepareAttempt(
       await readBranchFile(git, pendingRef, PIN_STATE_FILE_REL),
     );
     validateStateAgainstVersions(pendingState, pendingVersions);
-    aggregate = mergePinStates(aggregate, pendingState);
+    const { state: activePendingState, retiredKeys } = retainCurrentImagePins(
+      pendingState,
+      mainVersions,
+    );
+    if (retiredKeys.length > 0) {
+      console.log(
+        `Dropping retired image pins from pending version bump: ${retiredKeys.join(", ")}`,
+      );
+    }
+    aggregate = mergePinStates(aggregate, activePendingState);
   }
   aggregate = mergePinCandidates(aggregate, batch);
 

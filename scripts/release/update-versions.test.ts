@@ -14,6 +14,7 @@ import {
   parsePinCandidates,
   parsePinCandidatesState,
   parseVersionCatalogSource,
+  retainCurrentImagePins,
   rewriteVersionCatalogSource,
   serializePinCandidatesState,
   validateStateAgainstVersions,
@@ -191,6 +192,25 @@ describe("key-wise monotonic arbitration", () => {
       "left",
       "right",
     ]);
+  });
+
+  test("drops retired pins from an older pending branch", () => {
+    const pending = mergePinCandidates(
+      mergePinCandidates(empty, batch(12, "v12", B)),
+      batch(11, "v11", A, "shepherdjerred/retired"),
+    );
+    const { state, retiredKeys } = retainCurrentImagePins(
+      pending,
+      new Map([[KEY, `v12@${B}`]]),
+    );
+
+    expect(Object.keys(state.pins)).toEqual([KEY]);
+    expect(state.pins[KEY]).toEqual({
+      buildNumber: 12,
+      version: "v12",
+      digest: B,
+    });
+    expect(retiredKeys).toEqual(["shepherdjerred/retired"]);
   });
 });
 
