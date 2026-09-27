@@ -69,7 +69,11 @@ templates do not change quests already assigned to players. Shipped content
 counts and references are checked when the quest module is built. Regional
 chapters in `quests/regions/` cover Spawn Town, Sewers, Library, Caravan Road,
 the main-world Wilds fringe, South Mines, the old Harbour, and Frost Falls.
-The old sewer, water study, and caravan drafts inform their chapters.
+The old sewer, water study, and caravan drafts inform their chapters. Enabled daily and
+weekly slots require a template pool at module startup, and reward arithmetic
+is checked before a board can be drawn. Boards turn over on player join or the
+first quest interaction or journal view after the calendar boundary; the
+recurring quest tick only rechecks objective progress.
 
 Quest state and pending world actions commit in one SQLite transaction. Item
 hand-ins run from that outbox after the state write succeeds, so a failed write

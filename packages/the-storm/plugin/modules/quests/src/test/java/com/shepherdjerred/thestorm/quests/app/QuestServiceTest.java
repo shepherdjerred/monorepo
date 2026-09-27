@@ -383,12 +383,14 @@ final class QuestServiceTest {
 
     assertThat(service.handoverPending(ALICE)).isTrue();
     assertThat(service.state(ALICE)).isEmpty();
+    assertThat(service.journal(ALICE)).isEmpty();
     assertThat(world.actions).doesNotContain("take 4 IRON_INGOT", "give 2 GOLD_INGOT");
     assertThat(world.carry(ALICE).count(IRON)).isEqualTo(4);
 
     assertThat(service.retryWorld(ALICE, takeId).join()).isTrue();
     assertThat(service.handoverPending(ALICE)).isFalse();
     assertThat(service.state(ALICE)).isPresent();
+    assertThat(service.journal(ALICE)).isPresent();
     assertThat(world.actions).containsSubsequence("take 4 IRON_INGOT", "give 2 GOLD_INGOT");
     assertThat(world.carry(ALICE).count(IRON)).isZero();
     assertThat(store.pending.get(ALICE)).isEmpty();
@@ -438,7 +440,7 @@ final class QuestServiceTest {
   }
 
   @Test
-  void theBoardIsOfferedAtTheBoardNpcAndExpiresAtMidnight() {
+  void theBoardIsOfferedAtTheBoardNpcAndExpiresOnTheNextInteraction() {
     join(ALICE);
     var dialogue = service.dialogue(ALICE, "board").orElseThrow();
     assertThat(dialogue.node(dialogue.start()).options().getFirst().choice())
@@ -447,9 +449,83 @@ final class QuestServiceTest {
     assertThat(state(ALICE).active("daily-1")).isPresent();
     clock.now = WEDNESDAY.plus(Duration.ofHours(12));
     service.tick();
+    assertThat(state(ALICE).board().day()).isEqualTo("2026-09-23");
+    service.dialogue(ALICE, "board");
     assertThat(state(ALICE).active("daily-1")).isEmpty();
     assertThat(state(ALICE).board().day()).isEqualTo("2026-09-24");
     assertThat(world.said(ALICE)).contains("[Quests]: Quest dropped: Bounty: 2 Cod");
+  }
+
+  @Test
+  void openingTheJournalAfterMidnightRefreshesItsBoardView() {
+    join(ALICE);
+    service.accept(ALICE, "daily-1", "board");
+    clock.now = WEDNESDAY.plus(Duration.ofHours(12));
+    assertThat(service.journal(ALICE)).isEmpty();
+    assertThat(state(ALICE).active("daily-1")).isEmpty();
+    assertThat(service.journal(ALICE)).isPresent();
+  }
+
+  @Test
+  void anExpiredBoardCannotPayARewardWhenHandedInBeforeTheNextTick() {
+    join(ALICE);
+    service.accept(ALICE, "daily-1", "board");
+    world.carry(ALICE).give(ItemMatch.of("COD"), 2);
+    clock.now = WEDNESDAY.plus(Duration.ofHours(12));
+    service.handIn(ALICE, "board", Optional.of("daily-1"));
+    assertThat(state(ALICE).active("daily-1")).isEmpty();
+    assertThat(rewards.paid).isEmpty();
+    assertThat(world.actions).doesNotContain("take 2 COD");
+  }
+
+  @Test
+  void aStaleOfferMustBeReadAgainBeforeItCanBeAccepted() {
+    join(ALICE);
+    clock.now = WEDNESDAY.plus(Duration.ofHours(12));
+    service.accept(ALICE, "daily-1", "board");
+    assertThat(state(ALICE).board().day()).isEqualTo("2026-09-24");
+    assertThat(state(ALICE).active("daily-1")).isEmpty();
+    assertThat(world.said(ALICE)).last().asString().contains("Check its new offers");
+    service.accept(ALICE, "daily-1", "board");
+    assertThat(state(ALICE).active("daily-1")).isPresent();
+  }
+
+  @Test
+  void aFailedRolloverSaveDoesNotReplayThePendingHandIn() {
+    join(ALICE);
+    service.accept(ALICE, "daily-1", "board");
+    world.carry(ALICE).give(ItemMatch.of("COD"), 2);
+    clock.now = WEDNESDAY.plus(Duration.ofHours(12));
+    var failed = new CompletableFuture<Void>();
+    store.deferredSave = Optional.of(failed);
+    service.handIn(ALICE, "board", Optional.of("daily-1"));
+    failed.completeExceptionally(new IllegalStateException("disk unavailable"));
+    assertThat(state(ALICE).active("daily-1")).isPresent();
+    assertThat(rewards.paid).isEmpty();
+    assertThat(world.actions).doesNotContain("take 2 COD");
+  }
+
+  @Test
+  void theFirstEventAfterRolloverKeepsItsFactsWhenThePlayerLeavesDuringTheSave() {
+    join(ALICE);
+    service.accept(ALICE, "hunt", "captain");
+    clock.now = WEDNESDAY.plus(Duration.ofHours(12));
+    var deferred = new CompletableFuture<Void>();
+    store.deferredSave = Optional.of(deferred);
+
+    service.event(ALICE, new QuestEvent.Killed("ZOMBIE"), List.of());
+    world.online.remove(ALICE);
+    service.quit(ALICE);
+    deferred.complete(null);
+
+    assertThat(
+            Optional.ofNullable(store.saved.get(ALICE))
+                .orElseThrow()
+                .active("hunt")
+                .orElseThrow()
+                .progress())
+        .containsExactly(1);
+    assertThat(service.online()).isEmpty();
   }
 
   @Test

@@ -65,6 +65,14 @@ public final class BoardQuests {
       Calendar calendar, Map<String, Template> templates, int dailies, int weeklies) {
     public Pool {
       templates = Map.copyOf(templates);
+      if ((dailies > 0
+              && templates.values().stream().noneMatch(t -> t.period() == Template.Period.DAILY))
+          || (weeklies > 0
+              && templates.values().stream()
+                  .noneMatch(t -> t.period() == Template.Period.WEEKLY))) {
+        throw new IllegalArgumentException(
+            "every enabled board period needs at least one template");
+      }
     }
   }
 
@@ -87,8 +95,12 @@ public final class BoardQuests {
   /** The stars and reward for {@code amount} of {@code target}. */
   public static Draw priced(Template template, Template.Target target, int amount) {
     var stars = stars(target.difficulty() * amount);
-    var base = template.baseReward() + target.reward() * amount;
-    var reward = Math.round(base * (1 + STAR_BONUS * (stars - 1)));
+    var base = Math.addExact(template.baseReward(), Math.multiplyExact(target.reward(), amount));
+    var scaled = base * (1 + STAR_BONUS * (stars - 1));
+    if (!Double.isFinite(scaled) || scaled >= 0x1.0p63) {
+      throw new IllegalArgumentException("board reward exceeds the supported range");
+    }
+    var reward = Math.round(scaled);
     return new Draw(target, amount, stars, reward);
   }
 
@@ -99,7 +111,11 @@ public final class BoardQuests {
 
   /** The estimated minutes for {@code amount} of {@code target}. */
   public static int minutes(Template.Target target, int amount) {
-    return (int) Math.max(1, Math.ceil(target.minutes() * amount));
+    var minutes = Math.ceil(target.minutes() * amount);
+    if (!Double.isFinite(minutes) || minutes > Integer.MAX_VALUE) {
+      throw new IllegalArgumentException("board duration exceeds the supported range");
+    }
+    return (int) Math.max(1, minutes);
   }
 
   /** A board entry for {@code slot} snapshotting {@code draw}. */
@@ -210,9 +226,6 @@ public final class BoardQuests {
   private static List<Board.Entry> drawSlots(
       String prefix, int count, List<Template> pool, RandomGenerator random) {
     var drawn = new ArrayList<Board.Entry>();
-    if (pool.isEmpty()) {
-      return drawn;
-    }
     var used = new HashSet<String>();
     for (var slot = 1; slot <= count; slot++) {
       var candidates = pool.stream().filter(template -> !used.contains(template.id())).toList();

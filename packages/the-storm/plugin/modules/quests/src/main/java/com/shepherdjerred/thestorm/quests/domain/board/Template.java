@@ -64,7 +64,13 @@ public record Template(
   public record Target(
       String id, double difficulty, int min, int max, long reward, double minutes) {
     public Target {
-      if (difficulty <= 0 || min < 1 || max < min || reward < 0 || minutes <= 0) {
+      if (!Double.isFinite(difficulty)
+          || !Double.isFinite(minutes)
+          || difficulty <= 0
+          || min < 1
+          || max < min
+          || reward < 0
+          || minutes <= 0) {
         throw new IllegalArgumentException(
             "a target needs a positive difficulty and minutes, 1 <= min <= max, reward >= 0");
       }

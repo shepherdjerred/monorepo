@@ -185,9 +185,11 @@ final class BoardQuestsTest {
         BoardQuests.refresh(
             Board.EMPTY,
             WEDNESDAY,
-            new BoardQuests.Pool(CALENDAR, Map.of(), 3, 1),
+            new BoardQuests.Pool(CALENDAR, Map.of(), 0, 0),
             new SplittableRandom(3));
     assertThat(refresh.board().entries()).isEmpty();
+    assertThatThrownBy(() -> new BoardQuests.Pool(CALENDAR, Map.of(), 1, 0))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -195,6 +197,16 @@ final class BoardQuestsTest {
     assertThatThrownBy(() -> new Template.Target("X", 0, 1, 2, 1, 1))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> new Template.Target("X", 1, 3, 2, 1, 1))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new Template.Target("X", Double.NaN, 1, 2, 1, 1))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new Template.Target("X", 1, 1, 2, 1, Double.POSITIVE_INFINITY))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(
+            () ->
+                BoardQuests.priced(BOUNTY, new Template.Target("X", 1, 1, 2, Long.MAX_VALUE, 1), 2))
+        .isInstanceOf(ArithmeticException.class);
+    assertThatThrownBy(() -> BoardQuests.minutes(new Template.Target("X", 1, 1, 2, 1, 1.0e12), 2))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(
             () ->
