@@ -1,0 +1,19 @@
+# Annual events use the server's local date in this time zone. The first and
+# last days are inclusive, and a window may cross New Year.
+mainWorld: world
+timeZone: America/Los_Angeles
+events:
+  - id: stormnight
+    title: Stormnight
+    firstDay: 10-28
+    lastDay: 10-31
+    spawnRadius: 64
+    dailyDoors: 11
+    rewards:
+      - { kind: TRICK, material: ROTTEN_FLESH, amount: 3, weight: 25 }
+      - { kind: TRICK, material: POISONOUS_POTATO, amount: 1, weight: 10 }
+      - { kind: TREAT, material: BREAD, amount: 4, weight: 30 }
+      - { kind: TREAT, material: PUMPKIN_PIE, amount: 2, weight: 20 }
+      - { kind: TREAT, material: DIAMOND, amount: 1, weight: 10 }
+      - { kind: TREAT, material: MUSIC_DISC_13, amount: 1, weight: 4 }
+      - { kind: TREAT, material: BEACON, amount: 1, weight: 1 }

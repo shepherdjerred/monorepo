@@ -73,4 +73,22 @@ tests in `architecture/` enforce all of this.
   as skips, so a skip proves nothing.
 - Dependencies are locked (`gradle.lockfile`) and checksum-verified
   (`gradle/verification-metadata.xml`).
+
+## Seasonal events
+
+`seasonal.yml` defines annual date windows in `America/Los_Angeles` and weighted
+item outcomes. The first event, Stormnight, follows the 2015 trick-or-treat hunt:
+October 28–31, with up to 11 different doors per player each day. A player
+right-clicks a door within 64 blocks of the `world` spawn. Only the main hand
+counts; opening either half of a door records the lower half. Visits are stored
+on the player's persistent data, so they survive restarts and reset on the next
+local day. The module is disabled in `config.yml` until its spawn-door layout
+has been checked live.
+
+The historical map's 11 door coordinates were not recovered. Before enabling
+the module, place or identify 11 public doors in the spawn radius and ensure
+normal players can open them. Any accessible door in that radius currently
+qualifies, with the same 11-visit daily cap. The historical premium ranks,
+disguise packs, and horse prizes are not granted by the item-only event.
+
 - Code copied from GPL/LGPL plugins keeps its license header.
