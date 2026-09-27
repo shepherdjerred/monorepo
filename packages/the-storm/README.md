@@ -40,6 +40,10 @@ Every module implements `StormModule` and is listed in `dist`'s `Modules`
 module under `modules:` with `true` or `false`; a missing or unknown key stops
 the plugin. The repository owns that file; the plugin never writes it.
 
+Storm Shards award ore drops only in chunks generated after the shards module
+activates. Older chunks may contain player-placed ore from before provenance
+tracking existed, so their ores stay ineligible. Mob drops are unaffected.
+
 Inside a module, packages are layered:
 
 | Package         | May use                                                                                                                                           |

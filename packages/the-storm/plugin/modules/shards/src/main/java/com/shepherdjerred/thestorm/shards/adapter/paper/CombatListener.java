@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import org.bukkit.damage.DamageType;
 import org.bukkit.entity.AbstractArrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Firework;
@@ -40,6 +41,12 @@ final class CombatListener implements Listener {
   private static final Set<DamageCause> SWINGS =
       Set.of(DamageCause.ENTITY_ATTACK, DamageCause.ENTITY_SWEEP_ATTACK);
 
+  record Hit(DamageCause cause, @Nullable DamageType type) {
+    boolean isMelee() {
+      return SWINGS.contains(cause) || DamageType.MACE_SMASH.equals(type);
+    }
+  }
+
   private final Bonuses bonuses;
   private final StormGear gear;
 
@@ -70,7 +77,7 @@ final class CombatListener implements Listener {
         dealtMultiplier(
             source.getCausingEntity(),
             source.getDirectEntity(),
-            event.getCause(),
+            new Hit(event.getCause(), source.getDamageType()),
             event.getEntity());
     if (multiplier != 1) {
       event.setDamage(event.getDamage() * multiplier);
@@ -83,7 +90,7 @@ final class CombatListener implements Listener {
    * bow swung in melee, self-harm and every other cause get exactly 1.
    */
   double dealtMultiplier(
-      @Nullable Entity causing, @Nullable Entity direct, DamageCause cause, Entity victim) {
+      @Nullable Entity causing, @Nullable Entity direct, Hit hit, Entity victim) {
     if (!(causing instanceof Player attacker)
         || !(victim instanceof LivingEntity)
         || victim.equals(attacker)) {
@@ -92,7 +99,7 @@ final class CombatListener implements Listener {
     var opponent = victim instanceof Player ? Opponent.PLAYER : Opponent.MOB;
     Optional<StormPiece> weapon;
     Attack attack;
-    if (attacker.equals(direct) && SWINGS.contains(cause)) {
+    if (attacker.equals(direct) && hit.isMelee()) {
       weapon = gear.pieceOf(attacker.getInventory().getItemInMainHand());
       attack = Attack.MELEE;
     } else if (direct instanceof AbstractArrow projectile) {

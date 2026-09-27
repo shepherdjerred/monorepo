@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.random.RandomGenerator;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.NamespacedKey;
 import org.bukkit.Particle;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -23,6 +24,9 @@ import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityTransformEvent;
+import org.bukkit.event.world.ChunkPopulateEvent;
+import org.bukkit.persistence.PersistentDataType;
 
 /**
  * Drops shards from mob kills and ore breaks, and tracks player-placed ore so it never drops. Drops
@@ -35,13 +39,42 @@ final class DropListener implements Listener {
   private final ShardItems shards;
   private final ShardText text;
   private final RandomGenerator random;
+  private final ProvenanceKeys keys;
 
-  DropListener(ShardDrops drops, PlacedBlocks placed, ShardKit kit) {
+  record ProvenanceKeys(NamespacedKey excludedOrigin, NamespacedKey freshChunk) {}
+
+  DropListener(ShardDrops drops, PlacedBlocks placed, ShardKit kit, ProvenanceKeys keys) {
     this.drops = drops;
     this.placed = placed;
     this.shards = kit.shards();
     this.text = kit.text();
     this.random = kit.random();
+    this.keys = keys;
+  }
+
+  /**
+   * Existing chunks contain ores placed before placement tracking existed. Only chunks generated
+   * while drops are active can have ore provenance trusted for a shard roll.
+   */
+  @EventHandler
+  void onPopulate(ChunkPopulateEvent event) {
+    event
+        .getChunk()
+        .getPersistentDataContainer()
+        .set(keys.freshChunk(), PersistentDataType.BYTE, (byte) 1);
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  void onTransform(EntityTransformEvent event) {
+    if (!(event.getEntity() instanceof LivingEntity source)
+        || (!drops.isExcludedSpawnReason(spawnReason(source)) && !hasExcludedOrigin(source))) {
+      return;
+    }
+    for (var transformed : event.getTransformedEntities()) {
+      transformed
+          .getPersistentDataContainer()
+          .set(keys.excludedOrigin(), PersistentDataType.BYTE, (byte) 1);
+    }
   }
 
   @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -88,6 +121,12 @@ final class DropListener implements Listener {
     var tool = player.getInventory().getItemInMainHand();
     var wasPlaced = placed.isPlaced(block);
     placed.clear(block);
+    if (!block
+        .getChunk()
+        .getPersistentDataContainer()
+        .has(keys.freshChunk(), PersistentDataType.BYTE)) {
+      return;
+    }
     var broken =
         new BlockBreak(
             material,
@@ -109,6 +148,9 @@ final class DropListener implements Listener {
     if (!drops.isMobSource(type)) {
       return;
     }
+    if (hasExcludedOrigin(entity)) {
+      return;
+    }
     var killer = entity.getKiller();
     var kill =
         new MobKill(
@@ -123,6 +165,10 @@ final class DropListener implements Listener {
   private static String spawnReason(LivingEntity entity) {
     var reason = entity.getEntitySpawnReason();
     return (reason == null ? SpawnReason.DEFAULT : reason).name();
+  }
+
+  private boolean hasExcludedOrigin(LivingEntity entity) {
+    return entity.getPersistentDataContainer().has(keys.excludedOrigin(), PersistentDataType.BYTE);
   }
 
   private void drop(Location location, int amount, Player finder) {

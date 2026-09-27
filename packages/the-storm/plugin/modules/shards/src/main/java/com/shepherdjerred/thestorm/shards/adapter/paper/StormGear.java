@@ -77,8 +77,11 @@ final class StormGear {
     var container = projectile.getPersistentDataContainer();
     var level = container.get(tierKey, PersistentDataType.INTEGER);
     var category = container.get(gearKey, PersistentDataType.STRING);
-    if (level == null || category == null) {
+    if (level == null && category == null) {
       return Optional.empty();
+    }
+    if (level == null || category == null) {
+      throw new IllegalStateException("projectile has an incomplete Storm gear tag");
     }
     return Optional.of(new StormPiece(GearCategory.valueOf(category), new StormTier(level)));
   }

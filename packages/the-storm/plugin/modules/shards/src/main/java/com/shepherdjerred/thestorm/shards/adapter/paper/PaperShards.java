@@ -47,7 +47,13 @@ public final class PaperShards {
 
     List<Listener> listeners =
         List.of(
-            new DropListener(new ShardDrops(config.drops()), placed, kit),
+            new DropListener(
+                new ShardDrops(config.drops()),
+                placed,
+                kit,
+                new DropListener.ProvenanceKeys(
+                    new NamespacedKey(plugin, "excluded_shard_origin"),
+                    new NamespacedKey(plugin, "fresh_shard_chunk"))),
             new AltarListener(
                 new AltarSetup(altars, upgrades, context.scheduler(), AltarSetup::paperSky), kit),
             new CombatListener(bonuses, gear),

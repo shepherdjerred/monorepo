@@ -36,8 +36,23 @@ final class PaperNames {
   static List<String> problems(ShardsConfig config, Server server) {
     var problems = new ArrayList<String>();
     check(problems, "item.material", List.of(config.item().material()), PaperNames::isItem);
+    check(problems, "drops.worlds", config.drops().worlds(), name -> world(server, name) != null);
     check(problems, "drops.mobs", config.drops().mobs().keySet(), PaperNames::isEntityType);
     check(problems, "drops.blocks", config.drops().blocks().keySet(), PaperNames::isBlock);
+    if (isItem(config.item().material())) {
+      var stackSize = item("item.material", config.item().material()).getMaxStackSize();
+      config
+          .drops()
+          .mobs()
+          .forEach(
+              (mob, rule) -> checkDropStack(problems, "drops.mobs." + mob, rule.max(), stackSize));
+      config
+          .drops()
+          .blocks()
+          .forEach(
+              (block, rule) ->
+                  checkDropStack(problems, "drops.blocks." + block, rule.max(), stackSize));
+    }
     check(
         problems,
         "drops.excludedSpawnReasons",
@@ -139,6 +154,12 @@ final class PaperNames {
       if (!valid.test(name)) {
         problems.add(field + ": unknown name " + name);
       }
+    }
+  }
+
+  private static void checkDropStack(List<String> problems, String field, int max, int stackSize) {
+    if (max > stackSize) {
+      problems.add(field + ": maximum " + max + " exceeds shard stack size " + stackSize);
     }
   }
 
