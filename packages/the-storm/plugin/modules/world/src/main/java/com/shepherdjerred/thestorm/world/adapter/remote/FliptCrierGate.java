@@ -19,12 +19,17 @@ public final class FliptCrierGate implements CrierGate, AutoCloseable {
   private final HttpClient client;
   private final URI endpoint;
   private final String environment;
+  private final String flagKey;
 
   public FliptCrierGate(URI base) {
     this(base, "prod");
   }
 
   public FliptCrierGate(URI base, String environment) {
+    this(base, environment, FLAG_KEY);
+  }
+
+  FliptCrierGate(URI base, String environment, String flagKey) {
     if (!"http".equals(base.getScheme()) && !"https".equals(base.getScheme())) {
       throw new IllegalArgumentException("Flipt URL must use HTTP or HTTPS");
     }
@@ -37,6 +42,7 @@ public final class FliptCrierGate implements CrierGate, AutoCloseable {
     this.endpoint = base.resolve("/evaluate/v1/boolean");
     this.client = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build();
     this.environment = environment;
+    this.flagKey = flagKey;
   }
 
   @Override
@@ -45,7 +51,7 @@ public final class FliptCrierGate implements CrierGate, AutoCloseable {
         "{\"namespace_key\":\""
             + NAMESPACE_KEY
             + "\",\"flag_key\":\""
-            + FLAG_KEY
+            + flagKey
             + "\",\"entity_id\":\""
             + player
             + "\",\"context\":{\"world\":\"world\"}}";

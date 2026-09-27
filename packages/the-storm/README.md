@@ -120,8 +120,12 @@ and `z` block for the trader's feet. The block below must be solid, with two
 air blocks above it. Use a spot players can reach without obstructing the
 windmill. The listener refuses an unsafe or unloaded anchor; it never chooses
 another position. The world module itself must also be enabled in `config.yml`.
+The independent managed `the-storm-merchant-enabled` flag must evaluate true
+for the arriving player. It defaults off in production; Flipt errors or missing
+bootstrap settings keep visits off. The beta declaration is enabled for
+acceptance, but the YAML placement gate remains off until measured.
 
-On the first join, world entry, or block movement within `arrivalRadius` of
+On the first join, world entry, teleport, respawn, or block movement within `arrivalRadius` of
 the anchor on a Pacific date, one named Wandering Trader appears in `world`.
 The visit is recorded on the world and cannot be repeated that date, even if
 the trader is removed. Paper's native trader despawn delay is set to
@@ -133,7 +137,7 @@ quests. The windmill and NPC shops are historical facts; this visit, its
 stock, and its timing are new authored behavior, not recovered mechanics.
 
 For live acceptance, first verify the measured anchor and open the feature
-through GitOps. With a player in `world`, verify the spawn, trade offers,
+through GitOps and target the managed flag. With a player in `world`, verify the spawn, trade offers,
 same-day limit, natural despawn, and next-day rotation. Roll back by setting
 `merchant.enabled` to `false`; a trader already spawned can remain until its
 native despawn. Keep this feature off until that placement and gameplay check.

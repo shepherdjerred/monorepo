@@ -7,6 +7,9 @@ val verifyManagedCrierFlag =
       clientSource =
           layout.projectDirectory.file(
               "src/main/java/com/shepherdjerred/thestorm/world/adapter/remote/FliptCrierGate.java")
+      merchantSource =
+          layout.projectDirectory.file(
+              "src/main/java/com/shepherdjerred/thestorm/world/adapter/remote/FliptMerchantGate.java")
   }
 
 tasks.named("compileJava") { dependsOn(verifyManagedCrierFlag) }

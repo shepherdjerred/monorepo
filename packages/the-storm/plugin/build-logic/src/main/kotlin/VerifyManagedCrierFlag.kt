@@ -17,27 +17,38 @@ abstract class VerifyManagedCrierFlag : DefaultTask() {
   @get:PathSensitive(PathSensitivity.RELATIVE)
   abstract val clientSource: RegularFileProperty
 
+  @get:InputFile
+  @get:PathSensitive(PathSensitivity.RELATIVE)
+  abstract val merchantSource: RegularFileProperty
+
   @TaskAction
   fun verify() {
     val root =
         JsonSlurper().parse(inventory.get().asFile) as? Map<*, *>
             ?: throw GradleException("invalid flag inventory")
     val flags = root["flags"] as? List<*> ?: throw GradleException("flag inventory has no flags")
-    val flag =
-        flags.filterIsInstance<Map<*, *>>().singleOrNull { it["source"] == "the-storm-world" }
-            ?: throw GradleException("expected exactly one world-module flag")
-    if (flag["type"] != "boolean" || flag["default"] != false) {
-      throw GradleException("world-module flag must be a disabled boolean")
-    }
-    val source = clientSource.get().asFile.readText()
-    fun constant(name: String): String =
+    fun constant(source: String, name: String): String =
         Regex("""private static final String $name = "([^"]+)";""")
             .find(source)
             ?.groupValues
             ?.get(1)
             ?: throw GradleException("missing Flipt client constant $name")
-    if (constant("NAMESPACE_KEY") != flag["namespace"] || constant("FLAG_KEY") != flag["key"]) {
-      throw GradleException("Flipt crier identifiers differ from managed inventory")
+    val crier = clientSource.get().asFile.readText()
+    val merchant = merchantSource.get().asFile.readText()
+    val expected =
+        listOf(
+            "the-storm-world" to constant(crier, "FLAG_KEY"),
+            "the-storm-merchant" to constant(merchant, "FLAG_KEY"))
+    for ((source, key) in expected) {
+      val flag =
+          flags.filterIsInstance<Map<*, *>>().singleOrNull { it["source"] == source }
+              ?: throw GradleException("expected exactly one managed flag for $source")
+      if (flag["type"] != "boolean" ||
+          flag["default"] != false ||
+          flag["key"] != key ||
+          flag["namespace"] != constant(crier, "NAMESPACE_KEY")) {
+        throw GradleException("Flipt $source identifiers differ from managed inventory")
+      }
     }
   }
 }

@@ -283,11 +283,17 @@ export const ALERT_DASHBOARD_VARIANT_FLAG_KEYS = [] as const;
 export type AlertDashboardVariantFlagKey =
   (typeof ALERT_DASHBOARD_VARIANT_FLAG_KEYS)[number];
 
-export const THE_STORM_FLAG_KEYS = ["the-storm-crier-enabled"] as const;
+export const THE_STORM_FLAG_KEYS = [
+  "the-storm-crier-enabled",
+  "the-storm-merchant-enabled",
+] as const;
 
 export type TheStormFlagKey = (typeof THE_STORM_FLAG_KEYS)[number];
 
-export const THE_STORM_BOOLEAN_FLAG_KEYS = ["the-storm-crier-enabled"] as const;
+export const THE_STORM_BOOLEAN_FLAG_KEYS = [
+  "the-storm-crier-enabled",
+  "the-storm-merchant-enabled",
+] as const;
 
 export type TheStormBooleanFlagKey =
   (typeof THE_STORM_BOOLEAN_FLAG_KEYS)[number];

@@ -122,8 +122,11 @@ final class WindmillMerchantTest {
     return new WindmillMerchant(
         plugin,
         config,
-        InstantSource.fixed(Instant.parse(at)),
-        ComponentLogger.logger("windmill-merchant-test"));
+        new WindmillMerchant.Services(
+            InstantSource.fixed(Instant.parse(at)),
+            ComponentLogger.logger("windmill-merchant-test"),
+            playerId -> java.util.concurrent.CompletableFuture.completedFuture(true),
+            Runnable::run));
   }
 
   private Location place() {
