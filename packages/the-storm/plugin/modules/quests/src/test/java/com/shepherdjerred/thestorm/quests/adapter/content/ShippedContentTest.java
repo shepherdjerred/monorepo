@@ -14,6 +14,7 @@ import com.shepherdjerred.thestorm.quests.domain.sim.Simulator;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -136,6 +137,26 @@ final class ShippedContentTest {
           "a-place-to-rest",
           "the-hearth-kept");
 
+  /** The fifth two-quest chapter in each historical region. */
+  static final List<String> CHAPTER_FIVE =
+      List.of(
+          "the-grain-measure",
+          "bread-for-the-watch",
+          "the-patrol-report",
+          "a-rainwater-check",
+          "the-clock-index",
+          "the-study-circle",
+          "a-trade-sample",
+          "the-next-manifest",
+          "campfire-signal",
+          "the-trail-menders",
+          "the-lantern-check",
+          "the-rail-order",
+          "the-river-chart",
+          "the-first-catch-share",
+          "the-blanket-drive",
+          "the-hearth-turn");
+
   private static QuestContent content = QuestContent.empty();
 
   @BeforeAll
@@ -159,7 +180,8 @@ final class ShippedContentTest {
                     REGIONAL.stream(),
                     CONTINUATIONS.stream(),
                     CHAPTER_THREE.stream(),
-                    CHAPTER_FOUR.stream())
+                    CHAPTER_FOUR.stream(),
+                    CHAPTER_FIVE.stream())
                 .flatMap(stream -> stream)
                 .toList());
     assertThat(content.factions()).containsOnlyKeys("townsfolk", "storm-watch");
@@ -184,6 +206,17 @@ final class ShippedContentTest {
       var second = content.catalog().require(CHAPTER_FOUR.get(index + 1));
       assertThat(first.requirements())
           .containsExactly(new Condition.Completed(CHAPTER_THREE.get(index + 1)));
+      assertThat(second.requirements()).containsExactly(new Condition.Completed(first.id()));
+    }
+  }
+
+  @Test
+  void fifthChaptersContinueEachRegionalStoryInOrder() {
+    for (var index = 0; index < CHAPTER_FIVE.size(); index += 2) {
+      var first = content.catalog().require(CHAPTER_FIVE.get(index));
+      var second = content.catalog().require(CHAPTER_FIVE.get(index + 1));
+      assertThat(first.requirements())
+          .containsExactly(new Condition.Completed(CHAPTER_FOUR.get(index + 1)));
       assertThat(second.requirements()).containsExactly(new Condition.Completed(first.id()));
     }
   }
@@ -277,6 +310,16 @@ final class ShippedContentTest {
     var unshelved = content.catalog().require("unshelved");
     assertThat(unshelved.rewards())
         .contains(new Action.Give(ItemMatch.of("ANGLER_POTTERY_SHERD"), 1));
+  }
+
+  @Test
+  void theFirstCatchShareRequiresARealCodHandIn() {
+    var meal = content.catalog().require("the-first-catch-share").stage("meal").orElseThrow();
+    var cod = ItemMatch.of("COD");
+    assertThat(meal.objectives())
+        .contains(
+            new Objective.Fish(Optional.of(cod), 8, Optional.empty()),
+            new Objective.Deliver("oswin", cod, 8, Optional.empty()));
   }
 
   @Test
