@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.shards.domain.DropsConfig;
 import com.shepherdjerred.thestorm.shards.domain.ShardsConfig;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import org.bukkit.Material;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,9 @@ final class PaperNamesTest {
 
   @Test
   void everyShippedNameExistsAndOnlyThePlaceholderAltarIsMissing() {
-    assertThat(PaperNames.problems(shipped, harness.server)).containsExactly(PLACEHOLDER_ALTAR);
+    assertThat(PaperNames.problems(shipped, harness.server)).isEmpty();
+    assertThat(PaperNames.altarProblemsAsync(shipped, this::block).join())
+        .containsExactly(PLACEHOLDER_ALTAR);
   }
 
   @Test
@@ -65,15 +68,16 @@ final class PaperNamesTest {
         .containsExactlyInAnyOrder(
             "drops.mobs: unknown name PIG_ZOMBIE",
             "drops.blocks: unknown name WOOD_SWORD",
-            "drops.excludedSpawnReasons: unknown name SPAWNR",
-            PLACEHOLDER_ALTAR);
+            "drops.excludedSpawnReasons: unknown name SPAWNR");
   }
 
   @Test
   void anAltarOnTheConfiguredBlockPasses() {
     harness.world.getBlockAt(3, 64, 0).setType(Material.EMERALD_BLOCK);
 
-    assertThat(PaperNames.problems(withAltar(altarAt(3, "EMERALD_BLOCK")), harness.server))
+    assertThat(
+            PaperNames.altarProblemsAsync(withAltar(altarAt(3, "EMERALD_BLOCK")), this::block)
+                .join())
         .isEmpty();
   }
 
@@ -82,7 +86,9 @@ final class PaperNamesTest {
     harness.world.getBlockAt(3, 64, 0).setType(Material.DIRT);
     var world = harness.world.getKey().asString();
 
-    assertThat(PaperNames.problems(withAltar(altarAt(3, "EMERALD_BLOCK")), harness.server))
+    assertThat(
+            PaperNames.altarProblemsAsync(withAltar(altarAt(3, "EMERALD_BLOCK")), this::block)
+                .join())
         .containsExactly("altars: expected EMERALD_BLOCK at " + world + " 3 64 0 but found DIRT");
   }
 
@@ -92,5 +98,10 @@ final class PaperNamesTest {
 
     assertThat(PaperNames.problems(withAltar(altarAt(3, "DIAMOND_SWORD")), harness.server))
         .containsExactly("altars: DIAMOND_SWORD at " + world + " 3 64 0 is not a block");
+  }
+
+  private CompletableFuture<String> block(AltarLocation altar) {
+    return CompletableFuture.completedFuture(
+        harness.world.getBlockAt(altar.x(), altar.y(), altar.z()).getType().name());
   }
 }

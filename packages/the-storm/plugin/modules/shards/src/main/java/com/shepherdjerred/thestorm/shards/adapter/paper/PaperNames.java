@@ -6,17 +6,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.entity.EntityType;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.jspecify.annotations.Nullable;
 
-/**
- * Checks the names in {@code shards.yml} against the running server's registries, so a typo or a
- * pre-1.13 name stops the module at enable instead of silently never matching.
- */
+/** Checks configured names immediately, then altar blocks after asynchronous chunk loading. */
 final class PaperNames {
 
   private PaperNames() {}
@@ -30,7 +32,7 @@ final class PaperNames {
     return material;
   }
 
-  /** Every problem with the config's Paper names; empty when all resolve. */
+  /** Every name or world problem available without loading a chunk. */
   static List<String> problems(ShardsConfig config, Server server) {
     var problems = new ArrayList<String>();
     check(problems, "item.material", List.of(config.item().material()), PaperNames::isItem);
@@ -48,32 +50,87 @@ final class PaperNames {
             (category, table) ->
                 check(problems, "bonuses." + category, table.materials(), PaperNames::isItem));
     for (var altar : config.altars()) {
-      altarProblem(altar, server).ifPresent(problems::add);
+      altarNameProblem(altar, server).ifPresent(problems::add);
     }
     return problems;
   }
 
   /**
-   * An altar must be the configured block, so a wrong or stale coordinate fails at startup instead
-   * of turning some other block into an upgrade altar. Reading the block loads its chunk, which is
-   * fine once, at enable.
+   * An altar must be the configured block. The world and material are checked synchronously, but
+   * the block is inspected only after Paper loads the existing chunk asynchronously. All block
+   * reads run on the main thread.
    */
-  private static Optional<String> altarProblem(AltarLocation altar, Server server) {
-    var where = altar.world() + " " + altar.x() + " " + altar.y() + " " + altar.z();
+  static CompletableFuture<List<String>> altarProblemsAsync(
+      ShardsConfig config, Server server, Executor mainThread) {
+    return altarProblemsAsync(config, altar -> blockAsync(altar, server, mainThread));
+  }
+
+  /** The block loader is supplied by Paper in production and by an in-memory world in tests. */
+  static CompletableFuture<List<String>> altarProblemsAsync(
+      ShardsConfig config, Function<AltarLocation, CompletableFuture<String>> blocks) {
+    CompletableFuture<List<String>> problems = CompletableFuture.completedFuture(List.of());
+    for (var altar : config.altars()) {
+      problems =
+          problems.thenCombine(
+              blocks.apply(altar).thenApply(found -> altarProblem(altar, found)),
+              (found, problem) -> {
+                if (problem.isEmpty()) {
+                  return found;
+                }
+                var next = new ArrayList<>(found);
+                next.add(problem.get());
+                return List.copyOf(next);
+              });
+    }
+    return problems;
+  }
+
+  private static CompletableFuture<String> blockAsync(
+      AltarLocation altar, Server server, Executor mainThread) {
+    var location = where(altar);
+    var loadedWorld = world(server, altar.world());
+    if (loadedWorld == null) {
+      return CompletableFuture.failedFuture(
+          new IllegalStateException("altars: world " + altar.world() + " is not loaded"));
+    }
+    return loadedWorld
+        .getChunkAtAsync(altar.x() >> 4, altar.z() >> 4, false)
+        .thenApplyAsync(
+            chunk -> {
+              if (chunk == null) {
+                throw new IllegalStateException(
+                    "altars: existing chunk at " + location + " is missing");
+              }
+              return chunk.getBlock(altar.x() & 15, altar.y(), altar.z() & 15).getType().name();
+            },
+            mainThread);
+  }
+
+  private static Optional<String> altarProblem(AltarLocation altar, String found) {
+    return found.equals(altar.material())
+        ? Optional.empty()
+        : Optional.of(
+            "altars: expected " + altar.material() + " at " + where(altar) + " but found " + found);
+  }
+
+  private static Optional<String> altarNameProblem(AltarLocation altar, Server server) {
+    var where = where(altar);
     if (!isBlock(altar.material())) {
       return Optional.of("altars: " + altar.material() + " at " + where + " is not a block");
     }
-    var key = NamespacedKey.fromString(altar.world());
-    var world = key == null ? null : server.getWorld(key);
-    if (world == null) {
+    if (world(server, altar.world()) == null) {
       return Optional.of("altars: world " + altar.world() + " is not loaded");
     }
-    var found = world.getBlockAt(altar.x(), altar.y(), altar.z()).getType().name();
-    if (!found.equals(altar.material())) {
-      return Optional.of(
-          "altars: expected " + altar.material() + " at " + where + " but found " + found);
-    }
     return Optional.empty();
+  }
+
+  private static String where(AltarLocation altar) {
+    return altar.world() + " " + altar.x() + " " + altar.y() + " " + altar.z();
+  }
+
+  private static @Nullable World world(Server server, String name) {
+    var key = NamespacedKey.fromString(name);
+    return key == null ? null : server.getWorld(key);
   }
 
   private static void check(
