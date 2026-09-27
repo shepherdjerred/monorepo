@@ -32,6 +32,11 @@ public final class ChatListener implements Listener {
   @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
   public void onChat(AsyncChatEvent event) {
     var player = event.getPlayer();
+    if (!service.ready()) {
+      event.setCancelled(true);
+      player.sendMessage(Feedback.error("Chat is loading; try again shortly."));
+      return;
+    }
     var raw = PlainTextComponentSerializer.plainText().serialize(event.message());
     var channel = service.profile(player.getUniqueId()).focus();
     switch (service.prepare(Speakers.of(player), channel, raw)) {

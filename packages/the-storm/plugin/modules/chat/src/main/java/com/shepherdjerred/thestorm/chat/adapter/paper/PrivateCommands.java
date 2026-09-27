@@ -52,7 +52,7 @@ public final class PrivateCommands {
 
   private LiteralCommandNode<CommandSourceStack> messageCommand(String label) {
     return Commands.literal(label)
-        .requires(source -> source.getSender() instanceof Player)
+        .requires(source -> service.ready() && source.getSender() instanceof Player)
         .then(
             Commands.argument(PLAYER, ArgumentTypes.player())
                 .then(
@@ -68,7 +68,7 @@ public final class PrivateCommands {
 
   private LiteralCommandNode<CommandSourceStack> replyCommand() {
     return Commands.literal("r")
-        .requires(source -> source.getSender() instanceof Player)
+        .requires(source -> service.ready() && source.getSender() instanceof Player)
         .then(
             Commands.argument(MESSAGE, StringArgumentType.greedyString())
                 .executes(

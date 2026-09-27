@@ -82,7 +82,7 @@ public final class ChatCommands {
 
   private LiteralCommandNode<CommandSourceStack> emoteCommand() {
     return Commands.literal("me")
-        .requires(ChatCommands::isPlayer)
+        .requires(source -> service.ready() && isPlayer(source))
         .then(
             Commands.argument(MESSAGE, StringArgumentType.greedyString())
                 .executes(
@@ -107,7 +107,8 @@ public final class ChatCommands {
     return Commands.literal(label)
         .requires(
             source ->
-                source.getSender() instanceof Player player
+                service.ready()
+                    && source.getSender() instanceof Player player
                     && (channel != ChannelKey.STAFF || Speakers.isStaff(player)))
         .executes(context -> focus(player(context), channel))
         .then(
@@ -123,7 +124,7 @@ public final class ChatCommands {
 
   private LiteralCommandNode<CommandSourceStack> ignoreCommand() {
     return Commands.literal("ignore")
-        .requires(ChatCommands::isPlayer)
+        .requires(source -> service.ready() && isPlayer(source))
         .executes(context -> listIgnored(player(context)))
         .then(
             Commands.argument(PLAYER, ArgumentTypes.player())
@@ -133,7 +134,7 @@ public final class ChatCommands {
 
   private LiteralCommandNode<CommandSourceStack> unignoreCommand() {
     return Commands.literal("unignore")
-        .requires(ChatCommands::isPlayer)
+        .requires(source -> service.ready() && isPlayer(source))
         .then(
             Commands.argument(PLAYER, StringArgumentType.word())
                 .suggests(this::suggestIgnored)
@@ -145,7 +146,7 @@ public final class ChatCommands {
 
   private LiteralCommandNode<CommandSourceStack> channelsCommand() {
     return Commands.literal("channels")
-        .requires(ChatCommands::isPlayer)
+        .requires(source -> service.ready() && isPlayer(source))
         .executes(context -> listChannels(player(context)))
         .then(
             Commands.literal("hide")
