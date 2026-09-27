@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 public record Template(List<Segment> segments) {
 
   /** Anything that looks like a MiniMessage tag, such as {@code <red>} or {@code </#4DCCC4>}. */
-  private static final Pattern TAG = Pattern.compile("</?[#!?a-zA-Z_][^<>]*>");
+  private static final Pattern TAG = Pattern.compile("</?[^<>\\s]+>");
 
   /** One piece of a template. */
   public sealed interface Segment {

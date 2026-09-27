@@ -100,7 +100,9 @@ final class TemplateTest {
         "<#4DCCC4>{player}</#4DCCC4> fell",
         "{player} <gren>fell",
         "{player} <red>died</red>",
-        "{player} fell<newline>hard"
+        "{player} fell<newline>hard",
+        "{player} met <-gray>",
+        "{player} met <0>"
       })
   void rejectsMiniMessageTags(String source) {
     assertThatThrownBy(() -> Template.parse(source))
