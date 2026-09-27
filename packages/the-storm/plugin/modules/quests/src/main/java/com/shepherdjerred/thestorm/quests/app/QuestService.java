@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.quests.app;
 
 import com.shepherdjerred.thestorm.core.result.Result;
+import com.shepherdjerred.thestorm.quests.app.QuestStore.PendingWorld;
 import com.shepherdjerred.thestorm.quests.domain.board.BoardQuests;
 import com.shepherdjerred.thestorm.quests.domain.config.QuestsConfig;
 import com.shepherdjerred.thestorm.quests.domain.content.QuestContent;
@@ -12,6 +13,7 @@ import com.shepherdjerred.thestorm.quests.domain.engine.QuestEngine;
 import com.shepherdjerred.thestorm.quests.domain.engine.QuestEngine.Context;
 import com.shepherdjerred.thestorm.quests.domain.engine.QuestEngine.Refusal;
 import com.shepherdjerred.thestorm.quests.domain.engine.QuestEvent;
+import com.shepherdjerred.thestorm.quests.domain.model.Action;
 import com.shepherdjerred.thestorm.quests.domain.model.Quest;
 import com.shepherdjerred.thestorm.quests.domain.state.PlayerQuests;
 import com.shepherdjerred.thestorm.quests.domain.view.Describe;
@@ -20,12 +22,15 @@ import com.shepherdjerred.thestorm.quests.domain.view.Journal;
 import com.shepherdjerred.thestorm.quests.domain.view.Markers;
 import com.shepherdjerred.thestorm.quests.domain.view.QuestDialogue;
 import java.time.InstantSource;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -72,6 +77,13 @@ public final class QuestService implements QuestHooks, QuestProgress {
   private final Describe.Lookup lookup;
   private final Map<UUID, PlayerQuests> sessions = new HashMap<>();
   private final Map<UUID, CompletableFuture<Void>> loading = new HashMap<>();
+  private final Map<UUID, CompletableFuture<Void>> saving = new HashMap<>();
+  private final Map<UUID, ArrayDeque<Runnable>> queued = new HashMap<>();
+  private final Map<UUID, Long> generations = new HashMap<>();
+  private final Set<UUID> departing = new HashSet<>();
+  private final Set<UUID> delivering = new HashSet<>();
+  private final Set<UUID> deliveryRequested = new HashSet<>();
+  private final Map<UUID, List<Action.Take>> refunds = new HashMap<>();
   private final Map<String, CustomAction> customActions = new HashMap<>();
 
   public QuestService(Wiring wiring) {
@@ -87,26 +99,44 @@ public final class QuestService implements QuestHooks, QuestProgress {
 
   /** Loads {@code player}'s state; until it arrives they have no quests. */
   public CompletableFuture<Void> join(UUID player) {
+    if (wiring.world().facts(player).isEmpty()) {
+      return CompletableFuture.completedFuture(null);
+    }
+    var save = saving.get(player);
+    if (save != null) {
+      return save.handleAsync((ignored, failure) -> null, wiring.mainThread())
+          .thenCompose(ignored -> join(player));
+    }
+    departing.remove(player);
     var pending = loading.get(player);
     if (pending != null) {
       return pending;
     }
+    long generation = generations.getOrDefault(player, 0L);
     var started =
         wiring
             .store()
             .load(player)
             .thenAcceptAsync(
                 state -> {
+                  if (generations.getOrDefault(player, 0L) != generation) {
+                    return;
+                  }
                   loading.remove(player);
                   if (wiring.world().facts(player).isEmpty()) {
                     return;
                   }
                   sessions.put(player, state);
+                  returnReserved(player);
+                  deliverPending(player);
                   refresh(player);
                 },
                 wiring.mainThread())
             .exceptionallyAsync(
                 failure -> {
+                  if (generations.getOrDefault(player, 0L) != generation) {
+                    return null;
+                  }
                   loading.remove(player);
                   wiring.logger().error("Could not load quests for {}", player, failure);
                   return null;
@@ -121,17 +151,22 @@ public final class QuestService implements QuestHooks, QuestProgress {
 
   /** Forgets {@code player} (their state is already saved). */
   public void quit(UUID player) {
-    sessions.remove(player);
+    generations.merge(player, 1L, Long::sum);
+    loading.remove(player);
+    departing.add(player);
+    finishDeparture(player);
   }
 
   /** The loaded state of an online player. */
   public Optional<PlayerQuests> state(UUID player) {
-    return Optional.ofNullable(sessions.get(player));
+    return departing.contains(player)
+        ? Optional.empty()
+        : Optional.ofNullable(sessions.get(player));
   }
 
   /** Every online player with loaded state. */
   public List<UUID> online() {
-    return List.copyOf(sessions.keySet());
+    return sessions.keySet().stream().filter(player -> !departing.contains(player)).toList();
   }
 
   /** The quest content. */
@@ -418,6 +453,9 @@ public final class QuestService implements QuestHooks, QuestProgress {
     if (context.get().catalog().quest(quest).isEmpty()) {
       return Result.err("There is no quest " + quest + ".");
     }
+    if (saving.containsKey(player)) {
+      return Result.err("That player's quest progress is still saving. Try again.");
+    }
     return switch (step.apply(state, context.get())) {
       case Result.Ok<Outcome, Refusal>(var outcome) -> {
         commit(player, state, outcome, context.get().catalog());
@@ -480,11 +518,35 @@ public final class QuestService implements QuestHooks, QuestProgress {
   }
 
   private void withContext(UUID player, Step step) {
+    if (saving.containsKey(player)) {
+      var facts = wiring.world().facts(player);
+      if (facts.isEmpty()) {
+        return;
+      }
+      var captured = facts.get();
+      queued
+          .computeIfAbsent(player, ignored -> new ArrayDeque<>())
+          .addLast(() -> withContext(player, step, captured));
+      return;
+    }
     var state = sessions.get(player);
     if (state == null) {
       return;
     }
     context(player, state).ifPresent(context -> step.run(state, context));
+  }
+
+  private void withContext(UUID player, Step step, Facts facts) {
+    if (saving.containsKey(player)) {
+      queued
+          .computeIfAbsent(player, ignored -> new ArrayDeque<>())
+          .addLast(() -> withContext(player, step, facts));
+      return;
+    }
+    var state = sessions.get(player);
+    if (state != null) {
+      step.run(state, context(state, facts));
+    }
   }
 
   private void commitOrRefuse(
@@ -498,28 +560,211 @@ public final class QuestService implements QuestHooks, QuestProgress {
   }
 
   /**
-   * Keeps {@code outcome}'s state, saves it if it changed, carries out its effects and redraws the
-   * player's markers and sidebar.
+   * Persists a changed state before exposing it or carrying out any effects. Player operations
+   * arriving during the write are replayed in order against the persisted state.
    */
   private void commit(UUID player, PlayerQuests before, Outcome outcome, Catalog catalog) {
     var after = outcome.state();
-    sessions.put(player, after);
-    if (!after.equals(before)) {
-      var _ =
-          wiring
-              .store()
-              .save(after)
-              .exceptionally(
-                  failure -> {
-                    wiring.logger().error("Could not save quests for {}", player, failure);
-                    return null;
-                  });
+    var reserved =
+        outcome.effects().stream()
+            .filter(Effect.World.class::isInstance)
+            .map(Effect.World.class::cast)
+            .map(Effect.World::action)
+            .filter(Action.Take.class::isInstance)
+            .map(Action.Take.class::cast)
+            .toList();
+    var pending =
+        outcome.effects().stream()
+            .filter(Effect.World.class::isInstance)
+            .map(Effect.World.class::cast)
+            .filter(effect -> !(effect.action() instanceof Action.Take))
+            .map(
+                effect ->
+                    new PendingWorld(UUID.randomUUID(), player, effect.quest(), effect.action()))
+            .toList();
+    if (after.equals(before) && pending.isEmpty() && reserved.isEmpty()) {
+      effects(player, outcome, catalog);
+      present(player, after);
+      return;
     }
+    var taken = new ArrayList<Action.Take>();
+    for (var item : reserved) {
+      if (!wiring.world().take(player, item.item(), item.amount())) {
+        refund(player, taken);
+        wiring.world().send(player, Notices.error("You no longer have the items to hand over."));
+        return;
+      }
+      taken.add(item);
+    }
+    var barrier = new CompletableFuture<Void>();
+    saving.put(player, barrier);
+    var _ =
+        wiring
+            .store()
+            .save(after, pending)
+            .whenCompleteAsync(
+                (ignored, failure) -> {
+                  try {
+                    if (failure != null) {
+                      refund(player, taken);
+                      wiring.logger().error("Could not save quests for {}", player, failure);
+                      wiring
+                          .world()
+                          .send(
+                              player,
+                              Notices.error("Your quest progress could not be saved. Try again."));
+                    } else {
+                      if (sessions.containsKey(player)) {
+                        sessions.put(player, after);
+                      }
+                      effects(player, outcome, catalog);
+                      deliverPending(player);
+                      present(player, after);
+                    }
+                  } finally {
+                    saving.remove(player, barrier);
+                    drain(player);
+                    finishDeparture(player);
+                    barrier.complete(null);
+                  }
+                },
+                wiring.mainThread())
+            .exceptionally(
+                failure -> {
+                  wiring.logger().error("Quest commit callback failed for {}", player, failure);
+                  return null;
+                });
+  }
+
+  private void effects(UUID player, Outcome outcome, Catalog catalog) {
     var executor = new EffectRunner(player, wiring, notices, this);
     for (var effect : outcome.effects()) {
-      executor.run(effect, catalog);
+      if (!(effect instanceof Effect.World) || effect instanceof Effect.World(_, Action.Take _)) {
+        executor.run(effect, catalog);
+      }
     }
-    present(player, after);
+  }
+
+  private void refund(UUID player, List<Action.Take> taken) {
+    if (taken.isEmpty()) {
+      return;
+    }
+    refunds.computeIfAbsent(player, ignored -> new ArrayList<>()).addAll(taken);
+    returnReserved(player);
+  }
+
+  private void returnReserved(UUID player) {
+    if (wiring.world().facts(player).isEmpty()) {
+      return;
+    }
+    var items = refunds.remove(player);
+    if (items != null) {
+      for (var item : items) {
+        wiring.world().give(player, item.item(), item.amount());
+      }
+    }
+  }
+
+  /** Replays committed world actions in order, stopping at the first action that cannot run. */
+  private void deliverPending(UUID player) {
+    if (wiring.world().facts(player).isEmpty()) {
+      return;
+    }
+    if (!delivering.add(player)) {
+      deliveryRequested.add(player);
+      return;
+    }
+    var _ =
+        wiring
+            .store()
+            .pending(player)
+            .whenCompleteAsync(
+                (pending, failure) -> {
+                  if (failure != null) {
+                    wiring
+                        .logger()
+                        .error("Could not load pending quest actions for {}", player, failure);
+                    finishDelivery(player);
+                  } else {
+                    deliverNext(player, pending, 0);
+                  }
+                },
+                wiring.mainThread());
+  }
+
+  private void deliverNext(UUID player, List<PendingWorld> pending, int index) {
+    if (index >= pending.size() || wiring.world().facts(player).isEmpty()) {
+      finishDelivery(player);
+      return;
+    }
+    var effect = pending.get(index);
+    var runner = new EffectRunner(player, wiring, notices, this);
+    CompletableFuture<Boolean> applied;
+    try {
+      applied = runner.world(effect.quest(), effect.action());
+    } catch (RuntimeException failure) {
+      wiring.logger().error("Could not deliver quest action {}", effect.id(), failure);
+      finishDelivery(player);
+      return;
+    }
+    var _ =
+        applied.whenCompleteAsync(
+            (success, failure) -> {
+              if (failure != null || !Boolean.TRUE.equals(success)) {
+                if (failure != null) {
+                  wiring.logger().error("Quest action {} failed", effect.id(), failure);
+                }
+                finishDelivery(player);
+                return;
+              }
+              var _ =
+                  wiring
+                      .store()
+                      .acknowledge(effect.id())
+                      .whenCompleteAsync(
+                          (ignored, ackFailure) -> {
+                            if (ackFailure != null) {
+                              wiring
+                                  .logger()
+                                  .error(
+                                      "Could not acknowledge quest action {}",
+                                      effect.id(),
+                                      ackFailure);
+                              finishDelivery(player);
+                              return;
+                            }
+                            runner.run(
+                                new Effect.World(effect.quest(), effect.action()),
+                                wiring.content().catalog());
+                            deliverNext(player, pending, index + 1);
+                          },
+                          wiring.mainThread());
+            },
+            wiring.mainThread());
+  }
+
+  private void finishDelivery(UUID player) {
+    delivering.remove(player);
+    if (deliveryRequested.remove(player)) {
+      deliverPending(player);
+    }
+  }
+
+  private void drain(UUID player) {
+    var actions = queued.get(player);
+    while (actions != null && !actions.isEmpty() && !saving.containsKey(player)) {
+      actions.removeFirst().run();
+    }
+    if (actions != null && actions.isEmpty()) {
+      queued.remove(player);
+    }
+  }
+
+  private void finishDeparture(UUID player) {
+    if (departing.contains(player) && !saving.containsKey(player) && !queued.containsKey(player)) {
+      sessions.remove(player);
+      departing.remove(player);
+    }
   }
 
   private void present(UUID player, PlayerQuests state) {

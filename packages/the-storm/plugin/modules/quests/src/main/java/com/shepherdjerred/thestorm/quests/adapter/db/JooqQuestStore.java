@@ -5,6 +5,7 @@ import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUE
 import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_COMPLETION;
 import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_MARKER;
 import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_OBJECTIVE;
+import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_PENDING_WORLD;
 import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_PLAYER;
 import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_REPUTATION;
 import static com.shepherdjerred.thestorm.quests.adapter.db.generated.Tables.QUESTS_VARIABLE;
@@ -49,14 +50,55 @@ public final class JooqQuestStore implements QuestStore {
   }
 
   @Override
-  public CompletableFuture<Void> save(PlayerQuests state) {
+  public CompletableFuture<Void> save(PlayerQuests state, List<PendingWorld> effects) {
     return database
         .write(
             dsl -> {
               store(dsl, state);
+              for (var effect : effects) {
+                if (!effect.player().equals(state.player())) {
+                  throw new IllegalArgumentException("pending effect belongs to another player");
+                }
+                dsl.insertInto(QUESTS_PENDING_WORLD)
+                    .set(QUESTS_PENDING_WORLD.ID, effect.id().toString())
+                    .set(QUESTS_PENDING_WORLD.PLAYER_ID, effect.player().toString())
+                    .set(QUESTS_PENDING_WORLD.QUEST_ID, effect.quest())
+                    .set(QUESTS_PENDING_WORLD.ACTION_KIND, WorldActionCodec.kind(effect.action()))
+                    .set(QUESTS_PENDING_WORLD.PAYLOAD, WorldActionCodec.payload(effect.action()))
+                    .execute();
+              }
               return Boolean.TRUE;
             })
         .thenAccept(stored -> {});
+  }
+
+  @Override
+  public CompletableFuture<List<PendingWorld>> pending(UUID player) {
+    return database.read(
+        dsl ->
+            dsl.selectFrom(QUESTS_PENDING_WORLD)
+                .where(QUESTS_PENDING_WORLD.PLAYER_ID.eq(player.toString()))
+                .orderBy(QUESTS_PENDING_WORLD.SEQUENCE.asc())
+                .fetch(
+                    row ->
+                        new PendingWorld(
+                            UUID.fromString(row.getId()),
+                            player,
+                            row.getQuestId(),
+                            WorldActionCodec.decode(row.getActionKind(), row.getPayload()))));
+  }
+
+  @Override
+  public CompletableFuture<Void> acknowledge(UUID effect) {
+    return database
+        .write(
+            dsl -> {
+              dsl.deleteFrom(QUESTS_PENDING_WORLD)
+                  .where(QUESTS_PENDING_WORLD.ID.eq(effect.toString()))
+                  .execute();
+              return Boolean.TRUE;
+            })
+        .thenAccept(deleted -> {});
   }
 
   @Override

@@ -95,7 +95,14 @@ final class QuestsPaperTest {
   private PlayerMock join(String name) throws InterruptedException {
     var player = server.addPlayer(name);
     player.teleport(new Location(world, 0, 64, 0));
-    await(name + " loaded", () -> plugin().service().state(player.getUniqueId()).isPresent());
+    await(
+        name + " loaded and board saved",
+        () ->
+            plugin()
+                .service()
+                .state(player.getUniqueId())
+                .map(state -> !state.board().day().isEmpty())
+                .orElse(false));
     return player;
   }
 
@@ -136,6 +143,7 @@ final class QuestsPaperTest {
         .containsEntry("thomas", QuestMarker.AVAILABLE)
         .containsEntry("captain", QuestMarker.AVAILABLE);
     clickAction(alice, "thomas", id -> id.equals("quests.accept.smith"));
+    await("smith accepted", () -> state(alice).active("smith").isPresent());
     assertThat(state(alice).active("smith")).isPresent();
     assertThat(plugin().sidebars.get(alice.getUniqueId())).isPresent();
     alice.getInventory().addItem(new ItemStack(Material.IRON_INGOT, 5));
@@ -143,7 +151,16 @@ final class QuestsPaperTest {
     assertThat(plugin().markers.get(alice.getUniqueId()))
         .containsEntry("thomas", QuestMarker.TURN_IN);
     clickAction(alice, "thomas", id -> id.equals("quests.turnin.smith"));
+    await("smith completed", () -> state(alice).completion("smith").isPresent());
     assertThat(state(alice).completion("smith")).isPresent();
+    await(
+        "smith world actions delivered",
+        () ->
+            alice.getInventory().all(Material.IRON_INGOT).values().stream()
+                        .mapToInt(ItemStack::getAmount)
+                        .sum()
+                    == 3
+                && plugin().paid.size() == 1);
     assertThat(
             alice.getInventory().all(Material.IRON_INGOT).values().stream()
                 .mapToInt(ItemStack::getAmount)
@@ -165,10 +182,16 @@ final class QuestsPaperTest {
     var service = plugin().service();
     service.accept(alice.getUniqueId(), "hunt", "captain");
     service.accept(bob.getUniqueId(), "hunt", "captain");
+    await(
+        "hunts accepted",
+        () -> state(alice).active("hunt").isPresent() && state(bob).active("hunt").isPresent());
     var zombie = (LivingEntity) world.spawnEntity(new Location(world, 1, 64, 0), EntityType.ZOMBIE);
     ((EntityMock) zombie).setSpawnReason(CreatureSpawnEvent.SpawnReason.NATURAL);
     zombie.setKiller(alice);
     zombie.setHealth(0);
+    await(
+        "shared kill saved",
+        () -> state(bob).active("hunt").orElseThrow().progress().getFirst() == 1);
     assertThat(state(alice).active("hunt").orElseThrow().progress()).containsExactly(1);
     assertThat(state(bob).active("hunt").orElseThrow().progress()).containsExactly(1);
 
@@ -199,6 +222,7 @@ final class QuestsPaperTest {
 
     alice.teleport(new Location(world, 0, 64, 0));
     plugin().service().accept(alice.getUniqueId(), "hunt", "captain");
+    await("main-world hunt accepted", () -> state(alice).active("hunt").isPresent());
     assertThat(state(alice).active("hunt")).isPresent();
     alice.teleport(new Location(wilds, 0, 64, 0));
     assertThat(plugin().sidebars.get(alice.getUniqueId())).isEmpty();
@@ -213,6 +237,9 @@ final class QuestsPaperTest {
     ((EntityMock) mainZombie).setSpawnReason(CreatureSpawnEvent.SpawnReason.NATURAL);
     mainZombie.setKiller(alice);
     mainZombie.setHealth(0);
+    await(
+        "main-world kill saved",
+        () -> state(alice).active("hunt").orElseThrow().progress().getFirst() == 1);
     assertThat(state(alice).active("hunt").orElseThrow().progress()).containsExactly(1);
   }
 
@@ -234,6 +261,7 @@ final class QuestsPaperTest {
   void pickupsCountOnlyNewItemsAndNeverCountPlayerDrops() throws InterruptedException {
     var alice = join("alice");
     plugin().service().accept(alice.getUniqueId(), "collect", "captain");
+    await("collection accepted", () -> state(alice).active("collect").isPresent());
     var at = new Location(world, 1, 64, 0);
     Item dropped = world.dropItem(at, new ItemStack(Material.IRON_INGOT, 6));
     server.getPluginManager().callEvent(new PlayerDropItemEvent(alice, dropped));
@@ -242,6 +270,9 @@ final class QuestsPaperTest {
 
     Item natural = world.dropItem(at, new ItemStack(Material.IRON_INGOT, 6));
     server.getPluginManager().callEvent(new EntityPickupItemEvent(alice, natural, 4));
+    await(
+        "natural pickup saved",
+        () -> state(alice).active("collect").orElseThrow().progress().getFirst() == 2);
     assertThat(state(alice).active("collect").orElseThrow().progress()).containsExactly(2);
 
     Item merged = world.dropItem(at, new ItemStack(Material.IRON_INGOT, 6));
@@ -252,6 +283,7 @@ final class QuestsPaperTest {
 
     Item more = world.dropItem(at, new ItemStack(Material.IRON_INGOT, 5));
     server.getPluginManager().callEvent(new EntityPickupItemEvent(alice, more, 1));
+    await("collection completed", () -> state(alice).completion("collect").isPresent());
     assertThat(state(alice).completion("collect")).isPresent();
   }
 
@@ -259,6 +291,7 @@ final class QuestsPaperTest {
   void placedBlocksDoNotCountAsMined() throws InterruptedException {
     var alice = join("alice");
     plugin().service().accept(alice.getUniqueId(), "dig", "captain");
+    await("dig accepted", () -> state(alice).active("dig").isPresent());
     var at = new Location(world, 5, 64, 5);
     new PlayerSimulation(alice).simulateBlockPlace(Material.STONE, at);
     new PlayerSimulation(alice).simulateBlockBreak(at.getBlock());
@@ -266,6 +299,7 @@ final class QuestsPaperTest {
     var natural = new Location(world, 6, 64, 5);
     natural.getBlock().setType(Material.STONE);
     new PlayerSimulation(alice).simulateBlockBreak(natural.getBlock());
+    await("dig completed", () -> state(alice).completion("dig").isPresent());
     assertThat(state(alice).completion("dig")).isPresent();
   }
 
@@ -274,11 +308,16 @@ final class QuestsPaperTest {
     assertThat(world.getKey().asString()).isEqualTo("minecraft:overworld");
     var alice = join("alice");
     plugin().service().accept(alice.getUniqueId(), "trip", "captain");
+    await("trip accepted", () -> state(alice).active("trip").isPresent());
     new PlayerSimulation(alice).simulatePlayerMove(new Location(world, 50, 64, 50));
     assertThat(state(alice).active("trip").orElseThrow().progress()).containsExactly(0, 0);
     new PlayerSimulation(alice).simulatePlayerMove(new Location(world, 101, 64, 100));
+    await(
+        "region visit saved",
+        () -> state(alice).active("trip").orElseThrow().progress().getFirst() == 1);
     assertThat(state(alice).active("trip").orElseThrow().progress()).containsExactly(1, 0);
     clickAction(alice, "captain", id -> id.equals("quests.turnin.trip"));
+    await("trip completed", () -> state(alice).completion("trip").isPresent());
     assertThat(state(alice).completion("trip")).isPresent();
   }
 
@@ -288,14 +327,19 @@ final class QuestsPaperTest {
     var service = plugin().service();
     service.accept(alice.getUniqueId(), "hunt", "captain");
     service.accept(alice.getUniqueId(), "dig", "captain");
+    await(
+        "both quests accepted",
+        () -> state(alice).active("hunt").isPresent() && state(alice).active("dig").isPresent());
     messages(alice);
     server.dispatchCommand(alice, "quests");
     assertThat(plugin().journals)
         .singleElement()
         .satisfies(view -> assertThat(view.active()).containsExactly("dig", "hunt"));
     server.dispatchCommand(alice, "quests track dig");
+    await("dig tracked", () -> state(alice).tracked().filter("dig"::equals).isPresent());
     assertThat(state(alice).tracked()).contains("dig");
     server.dispatchCommand(alice, "quests abandon dig");
+    await("dig abandoned", () -> state(alice).active("dig").isEmpty());
     assertThat(state(alice).active("dig")).isEmpty();
     assertThat(messages(alice))
         .contains("[Quests]: Tracking Quest dig.", "[Quests]: Quest dropped: Quest dig");
@@ -308,11 +352,14 @@ final class QuestsPaperTest {
     assertThat(state(alice).completion("hunt")).isEmpty();
     alice.setOp(true);
     server.dispatchCommand(alice, "quests admin complete alice hunt");
+    await("admin completion saved", () -> state(alice).completion("hunt").isPresent());
     assertThat(state(alice).completion("hunt")).isPresent();
     assertThat(state(alice).points()).isEqualTo(2);
     server.dispatchCommand(alice, "quests admin stage alice smith s");
+    await("admin stage saved", () -> state(alice).active("smith").isPresent());
     assertThat(state(alice).active("smith")).isPresent();
     server.dispatchCommand(alice, "quests admin reset alice hunt");
+    await("admin reset saved", () -> state(alice).completion("hunt").isEmpty());
     assertThat(state(alice).completion("hunt")).isEmpty();
     server.dispatchCommand(alice, "quests admin reset alice ghost");
     assertThat(messages(alice)).contains("[Quests]: There is no quest ghost.");

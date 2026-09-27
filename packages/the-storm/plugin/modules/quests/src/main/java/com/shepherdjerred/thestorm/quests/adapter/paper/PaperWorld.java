@@ -83,8 +83,15 @@ final class PaperWorld implements QuestWorld {
   }
 
   @Override
-  public void take(UUID player, ItemMatch item, int amount) {
-    player(player).ifPresent(found -> ItemStacks.take(found, item, amount));
+  public boolean take(UUID player, ItemMatch item, int amount) {
+    var found = player(player);
+    if (found.isEmpty() || ItemStacks.count(found.get(), item) < amount) {
+      return false;
+    }
+    if (ItemStacks.take(found.get(), item, amount) != amount) {
+      throw new IllegalStateException("quest item handover changed after its count check");
+    }
+    return true;
   }
 
   @Override

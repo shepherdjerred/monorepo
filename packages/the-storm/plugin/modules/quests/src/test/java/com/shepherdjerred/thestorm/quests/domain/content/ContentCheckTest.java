@@ -229,6 +229,22 @@ final class ContentCheckTest {
   }
 
   @Test
+  void objectiveGatedLoopsCannotPayCrystalsRepeatedly() {
+    var repeatable =
+        quest("q")
+            .minutes(10)
+            .stage(
+                stage("a")
+                    .objective(talk("giver"))
+                    .onComplete(new Action.Crystals(10))
+                    .choice(new Stage.Option("Again", "b"), new Stage.Option("Done", "complete")))
+            .stage(stage("b").objective(talk("giver")).then("a"))
+            .build();
+    assertThat(messages(content(repeatable)))
+        .contains("stage a pays crystals in a repeatable cycle; rewards must fit a finite budget");
+  }
+
+  @Test
   void textMustFitTheDialogs() {
     var longJournal =
         new Quest(

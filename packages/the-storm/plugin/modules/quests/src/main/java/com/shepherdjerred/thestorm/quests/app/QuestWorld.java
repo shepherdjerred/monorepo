@@ -27,8 +27,8 @@ public interface QuestWorld {
   /** Gives items, dropping what does not fit at the player's feet. */
   void give(UUID player, ItemMatch item, int amount);
 
-  /** Takes up to {@code amount} matching items. */
-  void take(UUID player, ItemMatch item, int amount);
+  /** Takes exactly {@code amount} matching items, or none if the player cannot hand them over. */
+  boolean take(UUID player, ItemMatch item, int amount);
 
   /** Teleports to the centre of {@code region} if protection lets the player arrive there. */
   void teleport(UUID player, Region region);
