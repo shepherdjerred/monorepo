@@ -125,6 +125,14 @@ function makeOperations(): AgentChatApiOperations {
         turnCount: 0,
       }),
     ),
+    registerAndBind: vi.fn<AgentChatApiOperations["registerAndBind"]>(
+      async (_client, config) => ({
+        schemaVersion: 1 as const,
+        config,
+        updatedAt: config.createdAt,
+        turnCount: 0,
+      }),
+    ),
     bind: vi.fn(async () => ENTRY),
     get: vi.fn(async (_client, chatId) =>
       chatId === COMPLETED_ENTRY.config.chatId ? COMPLETED_ENTRY : undefined,
@@ -149,6 +157,9 @@ function operationsWithConflictingRegistration(): AgentChatApiOperations {
     .mockResolvedValueOnce(undefined)
     .mockResolvedValueOnce(conflicting);
   operations.register = vi.fn(() =>
+    Promise.reject(new Error("owner already exists")),
+  );
+  operations.registerAndBind = vi.fn(() =>
     Promise.reject(new Error("owner already exists")),
   );
   return operations;
@@ -448,17 +459,18 @@ describe("buildAgentChatApiRoutes", () => {
     );
 
     expect(response.status).toBe(201);
-    expect(operations.register).toHaveBeenCalledOnce();
-    expect(operations.bind).toHaveBeenCalledWith(
+    expect(operations.registerAndBind).toHaveBeenCalledWith(
       expect.anything(),
+      expect.objectContaining({ chatId: EMPTY_CHAT_REQUEST.chatId }),
       EMPTY_CHAT_REQUEST.source,
-      EMPTY_CHAT_REQUEST.chatId,
       {
         updatedAt: expect.any(String),
         sourceSequence: SOURCE_SEQUENCE,
         tieBreaker: EMPTY_CHAT_REQUEST.bindingId,
       },
     );
+    expect(operations.register).not.toHaveBeenCalled();
+    expect(operations.bind).not.toHaveBeenCalled();
     expect(operations.submit).not.toHaveBeenCalled();
   });
 
@@ -489,6 +501,7 @@ describe("buildAgentChatApiRoutes", () => {
     const existing = EMPTY_CHAT_ENTRY;
     operations.get = vi.fn(async () => existing);
     operations.register = vi.fn(async () => existing);
+    operations.registerAndBind = vi.fn(async () => existing);
     const app = appWith(operations);
 
     const response = await app.fetch(
@@ -500,21 +513,18 @@ describe("buildAgentChatApiRoutes", () => {
     );
 
     expect(response.status).toBe(201);
-    expect(operations.register).toHaveBeenCalledWith(
+    expect(operations.registerAndBind).toHaveBeenCalledWith(
       expect.anything(),
       existing.config,
-    );
-    expect(await response.json()).toEqual({ chat: existing });
-    expect(operations.bind).toHaveBeenCalledWith(
-      expect.anything(),
       EMPTY_CHAT_REQUEST.source,
-      EMPTY_CHAT_REQUEST.chatId,
       {
         updatedAt: existing.config.createdAt,
         sourceSequence: SOURCE_SEQUENCE,
         tieBreaker: EMPTY_CHAT_REQUEST.bindingId,
       },
     );
+    expect(await response.json()).toEqual({ chat: existing });
+    expect(operations.bind).not.toHaveBeenCalled();
   });
 
   it("returns a conflict when another request races registration", async () => {
