@@ -218,6 +218,20 @@
       "file": "Vault-1.7.3.jar"
     },
     {
+      "name": "ViaBackwards",
+      "version": "5.12.0",
+      "url": "https://cdn.modrinth.com/data/NpvuJQoq/versions/SxGhdsPK/ViaBackwards-5.12.0.jar",
+      "sha256": "f902f7da7eb99e8bfaf461f80283c4e2750b7d9727e6b508ea4bb9163f55b1db",
+      "file": "ViaBackwards-5.12.0.jar"
+    },
+    {
+      "name": "ViaVersion",
+      "version": "5.12.0",
+      "url": "https://cdn.modrinth.com/data/P1OZGk5p/versions/FaishMnD/ViaVersion-5.12.0.jar",
+      "sha256": "c4d512fa9760fa41d17abaedde12aa1f4c9bde920d0a992fe0fc016962f126be",
+      "file": "ViaVersion-5.12.0.jar"
+    },
+    {
       "name": "VentureChat",
       "version": "3.8.0",
       "url": "https://github.com/Aust1n46/VentureChat/releases/download/v3.8.0/VentureChat-3.8.0.jar",
