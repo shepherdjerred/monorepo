@@ -178,6 +178,26 @@ final class ShippedContentTest {
           "the-hearth-store",
           "a-warm-window");
 
+  /** The seventh two-quest chapter in each historical region. */
+  static final List<String> CHAPTER_SEVEN =
+      List.of(
+          "the-market-weights",
+          "the-harvest-account",
+          "the-surface-watch",
+          "the-grate-spares",
+          "a-second-observation",
+          "the-readers-copy",
+          "the-drivers-kit",
+          "the-return-ledger",
+          "the-dusk-patrol",
+          "the-marker-log",
+          "the-cart-brakes",
+          "the-ore-account",
+          "the-loaner-rods",
+          "the-catch-register",
+          "the-guestbook",
+          "the-travellers-pack");
+
   private static QuestContent content = QuestContent.empty();
 
   @BeforeAll
@@ -203,7 +223,8 @@ final class ShippedContentTest {
                     CHAPTER_THREE.stream(),
                     CHAPTER_FOUR.stream(),
                     CHAPTER_FIVE.stream(),
-                    CHAPTER_SIX.stream())
+                    CHAPTER_SIX.stream(),
+                    CHAPTER_SEVEN.stream())
                 .flatMap(stream -> stream)
                 .toList());
     assertThat(content.factions()).containsOnlyKeys("townsfolk", "storm-watch");
@@ -250,6 +271,17 @@ final class ShippedContentTest {
       var second = content.catalog().require(CHAPTER_SIX.get(index + 1));
       assertThat(first.requirements())
           .containsExactly(new Condition.Completed(CHAPTER_FIVE.get(index + 1)));
+      assertThat(second.requirements()).containsExactly(new Condition.Completed(first.id()));
+    }
+  }
+
+  @Test
+  void seventhChaptersContinueEachRegionalStoryInOrder() {
+    for (var index = 0; index < CHAPTER_SEVEN.size(); index += 2) {
+      var first = content.catalog().require(CHAPTER_SEVEN.get(index));
+      var second = content.catalog().require(CHAPTER_SEVEN.get(index + 1));
+      assertThat(first.requirements())
+          .containsExactly(new Condition.Completed(CHAPTER_SIX.get(index + 1)));
       assertThat(second.requirements()).containsExactly(new Condition.Completed(first.id()));
     }
   }
