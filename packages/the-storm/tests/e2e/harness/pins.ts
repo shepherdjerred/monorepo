@@ -59,4 +59,13 @@ export const thirdPartyPlugins: readonly PluginPin[] = z
       sha256:
         "49cecb66fa1fd22a133039a490e9c1e5095a238e7cd66eb9d2a16fe6c897550d",
     },
+    {
+      // The world module requires Multiverse to load before TheStorm, even
+      // when the smoke config switches all gameplay modules off.
+      name: "Multiverse-Core",
+      version: "5.8.0",
+      url: "https://cdn.modrinth.com/data/3wmN97b8/versions/bzFXz39N/multiverse-core-5.8.0.jar",
+      sha256:
+        "c527d9e21a25a71cb2442ac1f1bfd3a8a1efb7d89e0cb0e6a94f600304fde6c1",
+    },
   ]);
