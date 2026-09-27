@@ -2122,6 +2122,22 @@
     },
     "type": "full"
   },
+  "71": {
+    "id": 71,
+    "apiName": "ScopierWeapons",
+    "name": "Scopier Weapons",
+    "desc": "Gain @MeleeRangeIncrease@ Attack Range, reduced to @RangedRangeIncrease@ if you are Ranged.",
+    "tooltip": "Gain @MeleeRangeIncrease@ Attack Range, reduced to @RangedRangeIncrease@ if you are Ranged.",
+    "iconLarge": "assets/ux/cherry/augments/icons/scopierweapons_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/scopierweapons_small.png",
+    "rarity": "prismatic",
+    "dataValues": {
+      "MeleeRangeIncrease": 200,
+      "RangedRangeIncrease": 100
+    },
+    "calculations": {},
+    "type": "full"
+  },
   "72": {
     "id": 72,
     "apiName": "SearingDawn",
@@ -5291,6 +5307,37 @@
       "MaxLevel": [1, 1, 1, 1, 1, 1, 1]
     },
     "calculations": {},
+    "type": "full"
+  },
+  "250": {
+    "id": 250,
+    "apiName": "SlowAndSteady",
+    "name": "Slow and Steady",
+    "desc": "Your <speed>Attack Speed</speed> becomes @StaticRatio@. All Bonus <speed>Attack Speed</speed> is converted to <scaleAD>Attack Damage</scaleAD>. (<scaleAD>@ADPerAS@AD</scaleAD> per <speed>1% AS</speed>).<br>",
+    "tooltip": "Your <speed>Attack Speed</speed> becomes @StaticRatio@. All bonus <speed>Attack Speed</speed> is converted to <scaleAD>Attack Damage</scaleAD> (<scaleAD>@ADPerAS@ AD</scaleAD> per <speed>1% AS</speed>).<br><br>Currently Gaining: @f1@ <scaleAD>Attack Damage</scaleAD>",
+    "iconLarge": "assets/ux/cherry/augments/icons/slowandsteady_large.png",
+    "iconSmall": "assets/ux/cherry/augments/icons/slowandsteady_small.png",
+    "rarity": "prismatic",
+    "dataValues": {
+      "ASMultiplier": 75,
+      "StaticRatio": 1
+    },
+    "calculations": {
+      "ADPerAS": {
+        "__type": "GameCalculation",
+        "mFormulaParts": [
+          {
+            "__type": "NamedDataValueCalculationPart",
+            "mDataValue": "ASMultiplier"
+          }
+        ],
+        "mMultiplier": {
+          "__type": "NumberCalculationPart",
+          "mNumber": 0.009999999776482582
+        },
+        "mPrecision": 2
+      }
+    },
     "type": "full"
   },
   "251": {

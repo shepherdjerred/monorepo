@@ -92,6 +92,11 @@ bun run update-data-dragon            # full refresh to the latest version
 bun run update-data-dragon 16.16.1    # full refresh to a specific version
 ```
 
+Arena augment generation also preserves IDs 71 and 250 from CommunityDragon
+15.23, which appear in recorded matches but are absent from the current
+catalog. `--arena-augments-only` regenerates that cache against the committed
+version without refreshing unrelated assets.
+
 The refresh runs weekly via the `scout-data-dragon-weekly-refresh` Temporal
 schedule. Typed readers live beside the assets in `src/data-dragon/`
 (`champion.ts`, `item.ts`, `ability-facts.ts`, ...); all of them validate with

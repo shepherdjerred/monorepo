@@ -1,7 +1,10 @@
+import { readFile } from "node:fs/promises";
 import { describe, expect, test } from "vitest";
+import { RawMatchSchema } from "@scout-for-lol/data";
 import {
   UnknownArenaAugmentError,
   arenaAugmentsFromLakeRow,
+  participantAugmentLakeFields,
 } from "#src/report-lake/arena.ts";
 
 function row(first: number | null) {
@@ -20,6 +23,21 @@ describe("Arena augment lake read", () => {
     expect(arenaAugmentsFromLakeRow(row(1))).toEqual([
       { id: 1, name: "Accelerating Sorcery" },
     ]);
+  });
+
+  test("resolves every historical augment in the committed Arena match", async () => {
+    const fixture: unknown = JSON.parse(
+      await readFile(
+        new URL("../../../../testdata/arena.json", import.meta.url),
+        "utf8",
+      ),
+    );
+    const match = RawMatchSchema.parse(fixture);
+    const augments = match.info.participants.flatMap((participant) =>
+      arenaAugmentsFromLakeRow(participantAugmentLakeFields(participant)),
+    );
+    expect(augments).toContainEqual({ id: 71, name: "Scopier Weapons" });
+    expect(augments).toContainEqual({ id: 250, name: "Slow and Steady" });
   });
 
   test("fails loudly when a recorded augment has no pinned asset", () => {
