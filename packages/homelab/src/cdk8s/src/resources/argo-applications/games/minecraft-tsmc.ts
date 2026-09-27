@@ -181,13 +181,26 @@ export function createMinecraftTsmcApp(chart: Chart) {
     extraEnv: {
       ...getMinecraftExtraEnv(),
       ...getDiscordSrvExtraEnv(SECRET_NAME),
+      // The owned bridge stays off until DiscordSRV is retired in the same
+      // rollout. Reuse its existing 1Password item; no credential is copied
+      // into a ConfigMap or repository-owned plugin config.
+      THE_STORM_DISCORD_BOT_TOKEN: {
+        valueFrom: {
+          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
+        },
+      },
+      THE_STORM_DISCORD_CHANNEL_ID: {
+        valueFrom: {
+          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_CHANNEL_ID" },
+        },
+      },
       // Scope removeOldMods to only the plugins known to leave orphaned
       // duplicate jars on a version bump. mcMMO and LWCX are intentionally
       // PVC-only (no direct download URL, see pluginUrls comment below) and
       // must be excluded, or the default *.jar glob would delete them since
       // they aren't part of the declared pluginUrls list.
       REMOVE_OLD_MODS_INCLUDE:
-        "worldguard-bukkit-*.jar,PlaceholderAPI-*.jar,LevelledMobs-*.jar",
+        "worldguard-bukkit-*.jar,PlaceholderAPI-*.jar,LevelledMobs-*.jar,DiscordSRV*.jar",
     },
 
     // Init container to copy plugin configs (bypasses itzg sync which fails with DirectoryNotEmptyException)
