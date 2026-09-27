@@ -24,6 +24,26 @@ const TeamLabelsSchema = z.object({
   nodes: z.array(z.object({ id: z.string().min(1), name: z.string().min(1) })),
 });
 
+const TeamStatesSchema = z.object({
+  data: z.object({
+    teams: z.object({
+      nodes: z.array(
+        z.object({
+          states: z.object({
+            nodes: z.array(
+              z.object({
+                name: z.string().min(1),
+                type: z.string().min(1),
+                position: z.number(),
+              }),
+            ),
+          }),
+        }),
+      ),
+    }),
+  }),
+});
+
 const MANAGED_LABELS = [
   {
     name: "agent:codex",
@@ -147,7 +167,16 @@ export class LinearClient {
   private readonly labelIdsCache = new Map<string, Map<string, string>>();
 
   private issueTeam(issue: LinearIssue): string {
-    return issue.team?.key ?? this.team;
+    // No configured-team fallback: issue snapshots without a team predate
+    // team tracking, and mutating them with another team's IDs fails or
+    // worse. Requeue refreshes the snapshot with the team attached.
+    const team = issue.team?.key;
+    if (team === undefined) {
+      throw new Error(
+        `${issue.identifier} has no team; remove agent:needs-human to requeue it with a fresh snapshot`,
+      );
+    }
+    return team;
   }
 
   private async labelIds(team: string): Promise<Map<string, string>> {
@@ -183,7 +212,7 @@ export class LinearClient {
         const id = ids.get(name);
         if (id === undefined) {
           throw new Error(
-            `Linear label ${name} does not exist on team ${this.team}`,
+            `Linear label ${name} does not exist on team ${input.team}`,
           );
         }
         return id;
@@ -200,8 +229,58 @@ export class LinearClient {
     ]);
   }
 
-  private async setState(identifier: string, state: string): Promise<void> {
-    await this.command(["issue", "update", identifier, "--state", state]);
+  private readonly teamStatesCache = new Map<
+    string,
+    { name: string; type: string; position: number }[]
+  >();
+
+  private async teamStates(
+    team: string,
+  ): Promise<{ name: string; type: string; position: number }[]> {
+    const cached = this.teamStatesCache.get(team);
+    if (cached !== undefined) return cached;
+    const output = await this.command([
+      "api",
+      "query($key: String!) { teams(filter: {key: {eq: $key}}) { nodes { states { nodes { name type position } } } } }",
+      "--variables-json",
+      JSON.stringify({ key: team }),
+    ]);
+    const parsed = TeamStatesSchema.parse(JSON.parse(output));
+    const states = parsed.data.teams.nodes[0]?.states.nodes ?? [];
+    this.teamStatesCache.set(team, states);
+    return states;
+  }
+
+  private async workflowState(
+    team: string,
+    type: string,
+    preferred: string,
+  ): Promise<string> {
+    // State names are per-team; resolve by type so renamed workflows keep
+    // working, preferring the conventional name when it exists.
+    const states = await this.teamStates(team);
+    const candidates = states
+      .filter((state) => state.type === type)
+      .sort((left, right) => left.position - right.position);
+    const chosen =
+      candidates.find((state) => state.name === preferred) ?? candidates[0];
+    if (chosen === undefined) {
+      throw new Error(`Team ${team} has no ${type} workflow state`);
+    }
+    return chosen.name;
+  }
+
+  private async setState(
+    issue: LinearIssue,
+    type: string,
+    preferred: string,
+  ): Promise<void> {
+    const name = await this.workflowState(
+      this.issueTeam(issue),
+      type,
+      preferred,
+    );
+    await this.command(["issue", "update", issue.identifier, "--state", name]);
   }
 
   private removableLabels(issue: LinearIssue): string[] {
@@ -215,7 +294,7 @@ export class LinearClient {
   public async claim(issue: LinearIssue): Promise<void> {
     // The provider label stays on through the whole task so that clearing
     // agent:needs-human requeues without relabeling. Only legacy labels go.
-    await this.setState(issue.identifier, "In Progress");
+    await this.setState(issue, "started", "In Progress");
     const present = labels(issue);
     await this.mutateLabels({
       nodeId: issue.id,
@@ -274,7 +353,7 @@ export class LinearClient {
   }
 
   public async complete(issue: LinearIssue, prUrl: string): Promise<void> {
-    await this.setState(issue.identifier, "Done");
+    await this.setState(issue, "completed", "Done");
     await this.mutateLabels({
       nodeId: issue.id,
       team: this.issueTeam(issue),
@@ -285,7 +364,7 @@ export class LinearClient {
   }
 
   public async completeNoChange(issue: LinearIssue): Promise<void> {
-    await this.setState(issue.identifier, "Done");
+    await this.setState(issue, "completed", "Done");
     await this.mutateLabels({
       nodeId: issue.id,
       team: this.issueTeam(issue),

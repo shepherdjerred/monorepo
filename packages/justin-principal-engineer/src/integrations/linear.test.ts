@@ -16,7 +16,7 @@ function issue(input: {
   createdAt?: string;
   labels?: string[];
   stateType?: string;
-  teamKey?: string;
+  teamKey?: string | null;
 }): LinearIssue {
   return {
     id: input.identifier,
@@ -25,7 +25,7 @@ function issue(input: {
     description: null,
     url: `https://linear.app/example/issue/${input.identifier}`,
     priority: input.priority ?? 0,
-    team: { key: input.teamKey ?? "SJ" },
+    ...(input.teamKey === null ? {} : { team: { key: input.teamKey ?? "SJ" } }),
     createdAt: input.createdAt ?? "2026-01-01T00:00:00.000Z",
     state: { name: "Todo", type: input.stateType ?? "unstarted" },
     labels: {
@@ -100,12 +100,51 @@ function defaultTeams(): Record<string, { id: string; name: string }[]> {
   };
 }
 
+function defaultStates(): Record<
+  string,
+  { name: string; type: string; position: number }[]
+> {
+  return {
+    SJ: [
+      { name: "In Progress", type: "started", position: 2 },
+      { name: "Done", type: "completed", position: 3 },
+    ],
+    AI: [
+      { name: "In Progress", type: "started", position: 2 },
+      { name: "Done", type: "completed", position: 3 },
+    ],
+  };
+}
+
+const TeamKeySchema = z.object({ key: z.string() });
+
 function recordingRunner(
   recorded: string[][],
   teams: Record<string, { id: string; name: string }[]> = defaultTeams(),
+  states: Record<
+    string,
+    { name: string; type: string; position: number }[]
+  > = defaultStates(),
 ): CommandRunner {
   return async (args) => {
     recorded.push([...args]);
+    if (args[2] === "api" && args[3]?.includes("teams(") === true) {
+      const variables = TeamKeySchema.parse(
+        JSON.parse(args[args.indexOf("--variables-json") + 1] ?? "{}"),
+      );
+      return {
+        exitCode: 0,
+        stdout: JSON.stringify({
+          data: {
+            teams: {
+              nodes: [{ states: { nodes: states[variables.key] ?? [] } }],
+            },
+          },
+        }),
+        stderr: "",
+        timedOut: false,
+      };
+    }
     if (args[2] === "label" && args[3] === "create") {
       const team = args[args.indexOf("--team") + 1] ?? "SJ";
       const name = args[args.indexOf("--name") + 1] ?? "";
@@ -155,7 +194,9 @@ function apiVariables(recorded: string[][]): {
   add: string[];
   remove: string[];
 } {
-  const call = recorded.find((args) => args[2] === "api");
+  const call = recorded.find(
+    (args) => args[2] === "api" && args[3]?.includes("issueUpdate") === true,
+  );
   expect(call).toBeDefined();
   const raw = call?.[call.indexOf("--variables-json") + 1] ?? "{}";
   return ApiVariablesSchema.parse(JSON.parse(raw));
@@ -170,7 +211,9 @@ describe("Linear label mutations", () => {
       "reason",
     );
     expect(recorded.flat()).not.toContain("--add-label");
-    const call = recorded.find((args) => args[2] === "api");
+    const call = recorded.find(
+      (args) => args[2] === "api" && args[3]?.includes("issueUpdate") === true,
+    );
     expect(call?.[3]).toContain("issueUpdate(id: $id, input:");
     expect(apiVariables(recorded)).toEqual({
       id: "AI-3",
@@ -229,5 +272,43 @@ describe("Linear label mutations", () => {
       add: [],
       remove: ["sj-codex-id"],
     });
+  });
+
+  test("claim resolves the preferred started state by type", async () => {
+    const recorded: string[][] = [];
+    const client = new LinearClient("SJ", recordingRunner(recorded));
+    await client.claim(issue({ identifier: "SJ-9", labels: ["agent:codex"] }));
+    const update = recorded.find(
+      (args) => args[2] === "issue" && args[3] === "update",
+    );
+    expect(update).toEqual(expect.arrayContaining(["--state", "In Progress"]));
+  });
+
+  test("claim falls back to positional started state", async () => {
+    const recorded: string[][] = [];
+    const states = {
+      XX: [{ name: "Doing", type: "started", position: 1 }],
+    };
+    const client = new LinearClient(
+      "SJ",
+      recordingRunner(recorded, defaultTeams(), states),
+    );
+    await client.claim(
+      issue({ identifier: "XX-1", teamKey: "XX", labels: ["agent:codex"] }),
+    );
+    const update = recorded.find(
+      (args) => args[2] === "issue" && args[3] === "update",
+    );
+    expect(update).toEqual(expect.arrayContaining(["--state", "Doing"]));
+  });
+
+  test("mutations reject issues without a team", async () => {
+    const recorded: string[][] = [];
+    const client = new LinearClient("SJ", recordingRunner(recorded));
+    await expect(
+      client.claim(
+        issue({ identifier: "XX-1", teamKey: null, labels: ["agent:codex"] }),
+      ),
+    ).rejects.toThrow(/has no team/);
   });
 });
