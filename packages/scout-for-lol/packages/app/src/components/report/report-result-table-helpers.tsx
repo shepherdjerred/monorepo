@@ -102,6 +102,35 @@ export function formatCell(
   return `${formatReportDisplayValue(column, result.value)}${suffix}`;
 }
 
+/** Sort by the same name people see whenever a column represents an asset. */
+export function reportRowSortValue(
+  column: ReportResultColumn,
+  row: PreviewRow,
+  evidenceRow: PreviewEvidence | undefined,
+  hasGamesColumn: boolean,
+): string | number | null {
+  if (column.key === "label") {
+    return formatCell(column, row, evidenceRow, hasGamesColumn);
+  }
+  const value = row.values.find((entry) => entry.column === column.key)?.value;
+  return value !== null && value !== undefined && column.asset !== undefined
+    ? formatReportDisplayValue(column, value)
+    : (value ?? null);
+}
+
+/** Give drill-down prompts the label shown to the user, not an asset ID. */
+export function reportRowForFollowUp(
+  columns: ReportResultColumn[],
+  row: PreviewRow,
+): PreviewRow {
+  const labelColumn = columns.find((column) => column.key === "label");
+  if (labelColumn?.asset === undefined) return row;
+  return {
+    ...row,
+    label: formatReportDisplayValue(labelColumn, row.label),
+  };
+}
+
 export function hasThinRateRows(
   columns: ReportResultColumn[],
   rows: PreviewRow[],

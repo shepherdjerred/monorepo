@@ -122,7 +122,12 @@ export const ResultTableInteractive: Story = {
 export const ResultTableWithGameAssets: Story = {
   args: {
     columns: [
-      { key: "label", label: "Keystone", format: "text", asset: "rune" },
+      {
+        key: "label",
+        label: "Champion",
+        format: "text",
+        asset: "champion",
+      },
       { key: "item0", label: "Item", format: "text", asset: "item" },
       {
         key: "summoner1_id",
@@ -133,20 +138,21 @@ export const ResultTableWithGameAssets: Story = {
     ],
     rows: [
       {
-        label: "Conqueror",
+        label: "62",
         values: [
           { column: "item0", value: 3031 },
           { column: "summoner1_id", value: 4 },
         ],
       },
       {
-        label: "Arcane Comet",
+        label: "64",
         values: [
           { column: "item0", value: 6655 },
           { column: "summoner1_id", value: 14 },
         ],
       },
     ],
+    interactive: true,
   },
 };
 

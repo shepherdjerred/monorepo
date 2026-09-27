@@ -63,6 +63,29 @@ describe("conversationToMarkdown", () => {
     expect(markdown).not.toContain("0.5833");
   });
 
+  test("exports asset-backed grouping labels as display names", () => {
+    const preview = {
+      ...PREVIEW,
+      columns: [
+        { key: "label", label: "Champion", format: "text", asset: "champion" },
+        { key: "games", label: "Games", format: "integer" },
+      ],
+      rows: [
+        {
+          label: "62",
+          values: [{ column: "games", value: 3 }],
+        },
+      ],
+    };
+    const markdown = conversationToMarkdown(
+      "Wukong wins",
+      answerWithPreview(preview),
+    );
+
+    expect(markdown).toContain("| Wukong | 3 |");
+    expect(markdown).not.toContain("| 62 | 3 |");
+  });
+
   test("includes game basis when games column is absent", () => {
     const previewWithoutGames = {
       ...PREVIEW,

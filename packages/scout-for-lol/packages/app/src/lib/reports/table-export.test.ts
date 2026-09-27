@@ -40,6 +40,18 @@ describe("table-export", () => {
     expect(csv).toBe("Player,Win rate,Total Games");
   });
 
+  test("exports asset-backed grouping labels as display names", () => {
+    const csv = tableToCsv(
+      [
+        { key: "label", label: "Champion", format: "text", asset: "champion" },
+        { key: "games", label: "Games", format: "integer" },
+      ],
+      [{ label: "62", values: [{ column: "games", value: 3 }] }],
+    );
+
+    expect(csv).toBe("Champion,Games\nWukong,3");
+  });
+
   test("neutralizes spreadsheet formulas in text fields", () => {
     const csv = tableToCsv(
       [
