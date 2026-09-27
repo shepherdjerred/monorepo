@@ -350,7 +350,7 @@ describe("The Storm companion pilot rollout", () => {
 });
 
 describe("durable iMessage ingress rollout", () => {
-  test("stages the feature in beta before production", () => {
+  test("remains disabled until an explicit deployment rollout", () => {
     const betaFlag = materializeManagedNamespaceEnvironment(
       managedFlagInventory,
       "beta",
@@ -366,7 +366,7 @@ describe("durable iMessage ingress rollout", () => {
       (candidate) => candidate.key === "temporal-agent-chat-imessage-enabled",
     );
 
-    expect(betaFlag?.default).toBe(true);
+    expect(betaFlag?.default).toBe(false);
     expect(prodFlag?.default).toBe(false);
   });
 });

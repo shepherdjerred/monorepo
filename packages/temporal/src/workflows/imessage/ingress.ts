@@ -8,7 +8,7 @@ import {
   WorkflowIdReusePolicy,
 } from "@temporalio/workflow";
 import { WorkflowExecutionAlreadyStartedError } from "@temporalio/common";
-import { AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS } from "#shared/agent/agent-chat.ts";
+import { AGENT_CHAT_IMESSAGE_COMMAND_WORKFLOW_TIMEOUT_MS } from "#shared/agent/agent-chat.ts";
 import {
   BlueBubblesCursorSchema,
   BlueBubblesPollResultSchema,
@@ -28,7 +28,7 @@ const duplicateCommandWait = proxyActivities<
   Pick<ImessageActivities, "waitForImessageCommand">
 >({
   taskQueue: TASK_QUEUES.AGENT_CHAT_IMESSAGE,
-  startToCloseTimeout: AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS,
+  startToCloseTimeout: AGENT_CHAT_IMESSAGE_COMMAND_WORKFLOW_TIMEOUT_MS,
   retry: { maximumAttempts: 1 },
 });
 async function settleCommand(command: ImessageCommand): Promise<void> {
@@ -41,10 +41,18 @@ async function settleCommand(command: ImessageCommand): Promise<void> {
       args: [command],
       parentClosePolicy: ParentClosePolicy.ABANDON,
       workflowIdReusePolicy: WorkflowIdReusePolicy.REJECT_DUPLICATE,
+      workflowExecutionTimeout: AGENT_CHAT_IMESSAGE_COMMAND_WORKFLOW_TIMEOUT_MS,
     });
   } catch (error: unknown) {
     if (error instanceof WorkflowExecutionAlreadyStartedError) {
-      await duplicateCommandWait.waitForImessageCommand(workflowId);
+      try {
+        await duplicateCommandWait.waitForImessageCommand(workflowId);
+      } catch {
+        log.error(
+          "iMessage command failed; inspect its durable execution before retrying",
+          { workflowId },
+        );
+      }
       return;
     }
     throw error;
@@ -84,7 +92,12 @@ export async function blueBubblesIngressWorkflow(
           startedAt: batch.startedAt,
           initialized: false,
           lastRowId: batch.lastRowId,
-          initializationHighWaterRowId: batch.initializationHighWaterRowId,
+          ...(batch.initializationHighWaterRowId === undefined
+            ? {}
+            : {
+                initializationHighWaterRowId:
+                  batch.initializationHighWaterRowId,
+              }),
         };
     await sleep(progressed ? "1 second" : "30 seconds");
   }

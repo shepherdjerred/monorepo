@@ -8,6 +8,9 @@ import {
 } from "#shared/agent/agent-chat.ts";
 
 type CatalogBinding = AgentChatCatalogState["bindings"][number];
+type StoredBindingOperation = NonNullable<
+  AgentChatCatalogState["bindingOperations"]
+>[number];
 
 function sourceSequenceAtLeast(
   existing: string | number,
@@ -20,13 +23,6 @@ function sourceSequenceAtLeast(
     : existingDigits.length > nextDigits.length;
 }
 
-function sourceEpochAtLeast(
-  existing: string | number | undefined,
-  next: string | number | undefined,
-): boolean {
-  return sourceSequenceAtLeast(existing ?? 0, next ?? 0);
-}
-
 function sourceEpochMatches(
   existing: string | number | undefined,
   next: string | number | undefined,
@@ -37,6 +33,7 @@ function sourceEpochMatches(
 export function existingBindingWins(
   existing: CatalogBinding,
   next: CatalogBinding,
+  sourceEpochTimestampOrdering = true,
 ): boolean {
   if (
     existing.orderingVersion === undefined &&
@@ -49,9 +46,15 @@ export function existingBindingWins(
     existing.sourceSequence !== undefined &&
     next.sourceSequence !== undefined
   ) {
-    return sourceEpochMatches(existing.sourceEpoch, next.sourceEpoch)
-      ? sourceSequenceAtLeast(existing.sourceSequence, next.sourceSequence)
-      : sourceEpochAtLeast(existing.sourceEpoch, next.sourceEpoch);
+    if (sourceEpochMatches(existing.sourceEpoch, next.sourceEpoch)) {
+      return sourceSequenceAtLeast(
+        existing.sourceSequence,
+        next.sourceSequence,
+      );
+    }
+    return sourceEpochTimestampOrdering
+      ? Date.parse(existing.updatedAt) >= Date.parse(next.updatedAt)
+      : sourceSequenceAtLeast(existing.sourceEpoch ?? 0, next.sourceEpoch ?? 0);
   }
   const existingInstant = Date.parse(existing.updatedAt);
   const nextInstant = Date.parse(next.updatedAt);
@@ -64,11 +67,12 @@ export function existingBindingWins(
 }
 
 export function sameBindingOperation(
-  existing: CatalogBinding,
+  existing: CatalogBinding | StoredBindingOperation,
   next: CatalogBinding,
 ): boolean {
   return (
-    existing.chatId === next.chatId &&
+    (("requestedChatId" in existing ? existing.requestedChatId : undefined) ??
+      existing.chatId) === next.chatId &&
     existing.updatedAt === next.updatedAt &&
     existing.sourceSequence === next.sourceSequence &&
     existing.sourceEpoch === next.sourceEpoch
@@ -106,7 +110,19 @@ export function retainedOperationEntry(
 export function assertDistinctSourceOrdering(
   existing: CatalogBinding | undefined,
   next: CatalogBinding,
+  sourceEpochTimestampOrdering = true,
 ): void {
+  if (
+    sourceEpochTimestampOrdering &&
+    existing?.sourceSequence !== undefined &&
+    next.sourceSequence !== undefined &&
+    !sourceEpochMatches(existing.sourceEpoch, next.sourceEpoch) &&
+    Date.parse(existing.updatedAt) === Date.parse(next.updatedAt)
+  ) {
+    throw new AgentChatBindingConflictError(
+      "Agent chat binding conflict: distinct source epochs share an update timestamp",
+    );
+  }
   if (
     existing?.sourceSequence !== undefined &&
     next.sourceSequence !== undefined &&
@@ -123,16 +139,17 @@ export function assertDistinctSourceOrdering(
 export function retainBindingOperation(
   state: AgentChatCatalogState,
   next: CatalogBinding,
+  resultChatId = next.chatId,
 ): void {
   if (next.tieBreaker === undefined) return;
   const operations = state.bindingOperations?.slice() ?? [];
-  if (operations.length >= MAX_AGENT_CHAT_CATALOG_BINDINGS) {
-    throw new AgentChatBindingConflictError(
-      "Agent chat binding conflict: operation retention is full",
-    );
-  }
+  if (operations.length >= MAX_AGENT_CHAT_CATALOG_BINDINGS) operations.shift();
   state.bindingOperations = [
     ...operations,
-    AgentChatCatalogBindingOperationSchema.parse(next),
+    AgentChatCatalogBindingOperationSchema.parse({
+      ...next,
+      chatId: resultChatId,
+      requestedChatId: next.chatId,
+    }),
   ];
 }

@@ -642,6 +642,68 @@ test("keeps a completed binding operation idempotent after a newer selection", (
   expect(state.bindings[0]?.chatId).toBe(secondEntry.config.chatId);
 });
 
+test("retains a stale binding operation's selected result", () => {
+  const firstEntry: AgentChatCatalogEntry = {
+    schemaVersion: 1,
+    config: CONFIG,
+    updatedAt: CONFIG.createdAt,
+    turnCount: 0,
+  };
+  const secondEntry: AgentChatCatalogEntry = {
+    ...firstEntry,
+    config: { ...CONFIG, chatId: "selected-chat" },
+  };
+  const binding = { kind: "discord" as const, channelId: "stale-operation" };
+  const state: AgentChatCatalogState = {
+    schemaVersion: 1,
+    entries: [firstEntry, secondEntry],
+    bindings: [],
+    retiredChatIds: [],
+  };
+
+  registerAndBindAgentChatCatalogEntry({
+    state,
+    entry: secondEntry,
+    binding,
+    update: {
+      updatedAt: "2026-09-14T16:02:00.000Z",
+      sourceSequence: "2",
+      tieBreaker: "newer-selection",
+      orderingVersion: 1,
+    },
+  });
+  const stale = {
+    updatedAt: "2026-09-14T16:01:00.000Z",
+    sourceSequence: "1",
+    tieBreaker: "stale-operation",
+    orderingVersion: 1 as const,
+  };
+  expect(
+    registerAndBindAgentChatCatalogEntry({
+      state,
+      entry: firstEntry,
+      binding,
+      update: stale,
+    }),
+  ).toEqual(secondEntry);
+  expect(
+    registerAndBindAgentChatCatalogEntry({
+      state,
+      entry: firstEntry,
+      binding,
+      update: stale,
+    }),
+  ).toEqual(secondEntry);
+  expect(() =>
+    registerAndBindAgentChatCatalogEntry({
+      state,
+      entry: secondEntry,
+      binding,
+      update: stale,
+    }),
+  ).toThrow("operation stale-operation was reused with different input");
+});
+
 test("accepts a new ordering epoch after a source sequence reset", () => {
   const firstEntry: AgentChatCatalogEntry = {
     schemaVersion: 1,
@@ -668,6 +730,7 @@ test("accepts a new ordering epoch after a source sequence reset", () => {
     update: {
       updatedAt: "2026-09-14T16:01:00.000Z",
       sourceSequence: "9223372036854775806",
+      sourceEpoch: "99999999999999999999999999999999",
       orderingVersion: 1,
     },
   });
@@ -679,7 +742,7 @@ test("accepts a new ordering epoch after a source sequence reset", () => {
       update: {
         updatedAt: "2026-09-14T16:02:00.000Z",
         sourceSequence: "1",
-        sourceEpoch: "1",
+        sourceEpoch: "0",
         orderingVersion: 1,
       },
     }),

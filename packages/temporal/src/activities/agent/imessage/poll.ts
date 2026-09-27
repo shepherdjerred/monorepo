@@ -105,6 +105,10 @@ async function initialBlueBubblesPage(cursor: BlueBubblesCursor): Promise<{
 export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
   const cursor = BlueBubblesCursorSchema.parse(rawCursor);
   const config = await imessageIngressConfig();
+  // A provider outage is not a deliberate kill switch. Preserve the cursor so
+  // a later successful evaluation can process messages received in the gap.
+  if (!config.sourceAvailable)
+    return BlueBubblesPollResultSchema.parse({ ...cursor, commands: [] });
   if (!config.enabled || config.owners.length === 0) {
     const progress = await initialBlueBubblesPage(cursor);
     return BlueBubblesPollResultSchema.parse({
