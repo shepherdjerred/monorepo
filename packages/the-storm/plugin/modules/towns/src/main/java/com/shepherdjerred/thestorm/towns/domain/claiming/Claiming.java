@@ -18,6 +18,7 @@ public final class Claiming {
   private final ClaimPolicy policy;
   private final List<ClaimRule> claimRules;
   private final List<ClaimRule> manageRules;
+  private final List<ClaimRule> unclaimRules;
 
   /** Claiming with {@code policy}'s flat per-town cap. */
   public Claiming(ClaimPolicy policy) {
@@ -36,6 +37,7 @@ public final class Claiming {
             new BufferRule(policy.buffer()),
             new LimitRule(limits));
     this.manageRules = List.of(new ManagerRule(), new OwnClaimRule());
+    this.unclaimRules = List.of(new ManagerRule(), new OwnClaimRule(), new ConnectedRemovalRule());
   }
 
   /** The attempt of {@code player}, who must be in a town, on {@code chunk}. */
@@ -54,7 +56,7 @@ public final class Claiming {
 
   /** The claim to remove. */
   public Result<Claim, List<ClaimProblem>> unclaim(ClaimAttempt attempt) {
-    return check(manageRules, attempt).map(ok -> held(attempt));
+    return check(unclaimRules, attempt).map(ok -> held(attempt));
   }
 
   /** The claim with {@code flag} switched to {@code on}. */

@@ -66,12 +66,8 @@ final class MovementListener implements Listener {
         switch (event.getCause()) {
           case ENDER_PEARL -> Subject.ENDER_PEARL;
           case CONSUMABLE_EFFECT -> Subject.CHORUS_FRUIT;
-          case NETHER_PORTAL, END_PORTAL, END_GATEWAY -> Subject.LOCATION;
-          default -> null;
+          default -> Subject.LOCATION;
         };
-    if (subject == null) {
-      return;
-    }
     var act = new Act(Action.TELEPORT_INTO, subject);
     if (!guard.permits(event.getPlayer(), act, guard.land(event.getTo()))) {
       event.setCancelled(true);
