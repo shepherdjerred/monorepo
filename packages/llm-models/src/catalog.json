@@ -584,7 +584,8 @@
     "description": "State-of-the-art image generation (codename: Nano Banana Pro). Per-image rate is the Standard 1K-2K tier (4K is higher).",
     "pricing": {
       "modality": "image",
-      "perImage": 0.134
+      "perImage": 0.134,
+      "inputPerMillionTokens": 2
     },
     "capabilities": {
       "inputModalities": ["text", "image"],
@@ -612,7 +613,8 @@
     "description": "High-efficiency image generation (codename: Nano Banana 2). Per-image rate is the Standard 1K tier.",
     "pricing": {
       "modality": "image",
-      "perImage": 0.067
+      "perImage": 0.067,
+      "inputPerMillionTokens": 0.5
     },
     "capabilities": {
       "inputModalities": ["text", "image"],
@@ -640,7 +642,8 @@
     "description": "Fast image generation (1024px, codename: Nano Banana).",
     "pricing": {
       "modality": "image",
-      "perImage": 0.039
+      "perImage": 0.039,
+      "inputPerMillionTokens": 0.3
     },
     "capabilities": {
       "inputModalities": ["text", "image"],

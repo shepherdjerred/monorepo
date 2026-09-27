@@ -526,7 +526,11 @@ describe("reconcile applies plausible drift and withholds the rest", () => {
 
   test("ignores image models entirely", () => {
     const subject = entry({
-      pricing: { modality: "image", perImage: 0.134 },
+      pricing: {
+        modality: "image",
+        perImage: 0.134,
+        inputPerMillionTokens: 2,
+      },
       contextWindow: undefined,
     });
     const result = reconcile(

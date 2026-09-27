@@ -113,6 +113,8 @@ const PR_FLEET_CREDENTIAL_REDACTION_PATH =
   "packages/pr-fleet-controller/src/cli/credential-redaction.ts";
 const RETIRED_OPENROUTER_CREDENTIAL_DENYLIST_PATH =
   "packages/temporal/src/shared/agent/provider-credentials.ts";
+const RETIRED_OPENROUTER_CREDENTIAL_REDACTION_PATH =
+  "packages/llm-observability/src/redact.ts";
 const POKEMON_CODEX_SUBSCRIPTION_PATHS = new Set([
   "packages/discord-plays-pokemon/config.example.toml",
   "packages/discord-plays-pokemon/packages/backend/src/goal/codex/codex-auth.ts",
@@ -287,6 +289,16 @@ function isRetiredOpenRouterCredentialDenylist(
   );
 }
 
+function isRetiredOpenRouterCredentialRedaction(
+  filePath: string,
+  source: string,
+): boolean {
+  return (
+    filePath === RETIRED_OPENROUTER_CREDENTIAL_REDACTION_PATH &&
+    source.trim() === '"OPENROUTER_API_KEY",'
+  );
+}
+
 function underRoot(root: string): Exemption {
   return (filePath) => filePath.startsWith(root);
 }
@@ -297,10 +309,11 @@ const inLlmRuntime = underRoot(LLM_RUNTIME_ROOT);
 const RULE_EXEMPTIONS: Readonly<Record<string, readonly Exemption[]>> = {
   openrouter: [
     // Tests may name the retired credential to prove it is scrubbed. Runtime
-    // code may name it only in this exact denylist declaration until the
-    // post-acceptance key revocation is complete.
+    // code may name it only in the exact denylist declaration and the exact
+    // literal-value redaction entry until post-acceptance key revocation.
     isTestOrFixture,
     isRetiredOpenRouterCredentialDenylist,
+    isRetiredOpenRouterCredentialRedaction,
   ],
   "federation-shadowing-key": [
     inLlmRuntime,

@@ -327,7 +327,8 @@ function recordImageSuccess(input: {
   const pricing = getPricing(input.modelId);
   const catalogCostUsd =
     pricing?.modality === "image"
-      ? pricing.perImage * input.result.images.length
+      ? pricing.perImage * input.result.images.length +
+        (pricing.inputPerMillionTokens * inputTokens) / 1_000_000
       : undefined;
 
   input.options.metrics?.requests.inc({ ...input.labels, outcome: "success" });

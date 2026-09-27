@@ -199,13 +199,17 @@
             },
             {
               "type": "object",
-              "required": ["modality", "perImage"],
+              "required": ["modality", "perImage", "inputPerMillionTokens"],
               "additionalProperties": false,
               "properties": {
                 "modality": {
                   "const": "image"
                 },
                 "perImage": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "inputPerMillionTokens": {
                   "type": "number",
                   "minimum": 0
                 }

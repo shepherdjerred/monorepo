@@ -6,8 +6,8 @@
  * is the TypeScript view: it validates the JSON with Zod at load and exposes
  * typed accessors. Python consumers validate the same JSON with Pydantic.
  *
- * Units: token prices are **USD per 1,000,000 tokens**; image prices are
- * **USD per image**.
+ * Units: text and image-input token prices are **USD per 1,000,000 tokens**;
+ * image-output prices are **USD per image**.
  */
 import { z } from "zod";
 import catalogJson from "./catalog.json" with { type: "json" };
@@ -82,10 +82,11 @@ export const TextPricingSchema = z.strictObject({
 });
 export type TextPricing = z.infer<typeof TextPricingSchema>;
 
-/** USD per generated image. */
+/** Image output is USD per image; image input is USD per 1M tokens. */
 export const ImagePricingSchema = z.strictObject({
   modality: z.literal("image"),
   perImage: z.number().nonnegative(),
+  inputPerMillionTokens: z.number().nonnegative(),
 });
 export type ImagePricing = z.infer<typeof ImagePricingSchema>;
 

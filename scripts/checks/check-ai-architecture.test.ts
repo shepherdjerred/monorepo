@@ -204,6 +204,31 @@ describe("AI architecture guard", () => {
   });
 });
 
+describe("AI architecture sanitizer exception", () => {
+  test("allows retired-key literal redaction only in the observability sanitizer", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/llm-observability/src/redact.ts",
+          contents: '"OPENROUTER_API_KEY",',
+        },
+      ]),
+    ).toEqual([]);
+
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/llm-observability/src/redact.ts",
+          contents: [
+            '"OPENROUTER_API_KEY",',
+            'const endpoint = "https://openrouter.ai/api/v1";',
+          ].join("\n"),
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["openrouter"]);
+  });
+});
+
 describe("AI architecture compatibility exceptions", () => {
   test("allows native subscriptions only in the durable chat adapters", () => {
     expect(

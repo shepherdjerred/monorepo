@@ -105,6 +105,7 @@ afterEach(() => {
   delete Bun.env["OPENAI_API_KEY"];
   delete Bun.env["XAI_API_KEY"];
   delete Bun.env["GEMINI_API_KEY"];
+  delete Bun.env["OPENROUTER_API_KEY"];
 });
 
 // Composed from fragments so no single string literal trips the no-secrets rule.
@@ -130,6 +131,15 @@ test("redactText masks every documented provider credential", () => {
   expect(out).not.toContain(xaiSecret);
   expect(out).not.toContain(geminiSecret);
   expect(out.match(/\[REDACTED\]/g)).toHaveLength(2);
+});
+
+test("redactText keeps retired OpenRouter values masked through credential revocation", () => {
+  const retiredSecret = ["router", "provider", "credential"].join("-");
+  Bun.env["OPENROUTER_API_KEY"] = retiredSecret;
+
+  const out = redactText(`archived span: ${retiredSecret}`);
+  expect(out).not.toContain(retiredSecret);
+  expect(out).toContain("[REDACTED]");
 });
 
 test("redactSecrets applies literal-value masking inside nested strings", () => {

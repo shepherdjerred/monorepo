@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 import { createFederatedAnthropicFetch } from "#src/anthropic-federation.ts";
 
@@ -158,5 +158,134 @@ describe("Anthropic workload identity federation", () => {
     // Three simultaneous exchanges would present three JWTs and burn two of
     // them for nothing.
     expect(h.exchanges).toHaveLength(1);
+  });
+});
+
+describe("Anthropic federation cancellation", () => {
+  test("one caller can abort while other callers keep the shared exchange", async () => {
+    let resolveExchange!: (response: Response) => void;
+    let markExchangeStarted!: () => void;
+    const exchangeStarted = new Promise<void>((resolve) => {
+      markExchangeStarted = resolve;
+    });
+    const exchangeResponse = new Promise<Response>((resolve) => {
+      resolveExchange = resolve;
+    });
+    let exchangeCount = 0;
+    const apiSignals: (AbortSignal | null | undefined)[] = [];
+    const exchangeSignals: (AbortSignal | null | undefined)[] = [];
+    const federated = createFederatedAnthropicFetch(
+      {
+        identityTokenFile: "/var/run/secrets/anthropic.com/token",
+        federationRuleId: "fdrl_test",
+        organizationId: "00000000-0000-0000-0000-000000000000",
+        serviceAccountId: "svac_test",
+      },
+      {
+        fetch: async (input, init) => {
+          if (requestUrl(input).endsWith("/v1/oauth/token")) {
+            exchangeCount += 1;
+            exchangeSignals.push(init?.signal);
+            markExchangeStarted();
+            return exchangeResponse;
+          }
+          apiSignals.push(init?.signal);
+          return Response.json({ ok: true });
+        },
+        readIdentityToken: async () => "jwt-test",
+      },
+    );
+    const abandonedCaller = new AbortController();
+    const remainingCaller = new AbortController();
+    const abandonedRequest = federated(
+      "https://api.anthropic.com/v1/messages",
+      {
+        signal: abandonedCaller.signal,
+      },
+    );
+    await exchangeStarted;
+    const remainingRequest = federated(
+      "https://api.anthropic.com/v1/messages",
+      {
+        signal: remainingCaller.signal,
+      },
+    );
+
+    abandonedCaller.abort(new DOMException("caller cancelled", "AbortError"));
+    await expect(abandonedRequest).rejects.toThrow("caller cancelled");
+    resolveExchange(
+      Response.json({ access_token: "sk-ant-oat-shared", expires_in: 1200 }),
+    );
+    await remainingRequest;
+
+    expect(exchangeCount).toBe(1);
+    expect(exchangeSignals[0]).not.toBe(abandonedCaller.signal);
+    expect(apiSignals).toEqual([remainingCaller.signal]);
+  });
+
+  test("bounds the shared token exchange and allows a later retry", async () => {
+    const timeoutController = new AbortController();
+    const timeoutSpy = vi
+      .spyOn(AbortSignal, "timeout")
+      .mockReturnValueOnce(timeoutController.signal);
+    let markExchangeStarted!: () => void;
+    const exchangeStarted = new Promise<void>((resolve) => {
+      markExchangeStarted = resolve;
+    });
+    let exchangeCount = 0;
+    const federated = createFederatedAnthropicFetch(
+      {
+        identityTokenFile: "/var/run/secrets/anthropic.com/token",
+        federationRuleId: "fdrl_test",
+        organizationId: "00000000-0000-0000-0000-000000000000",
+        serviceAccountId: "svac_test",
+      },
+      {
+        fetch: async (input, init) => {
+          if (requestUrl(input).endsWith("/v1/oauth/token")) {
+            exchangeCount += 1;
+            if (exchangeCount === 1) {
+              markExchangeStarted();
+              return new Promise<Response>((_resolve, reject) => {
+                const signal = init?.signal;
+                signal?.addEventListener(
+                  "abort",
+                  () => {
+                    const reason: unknown = signal.reason;
+                    reject(
+                      reason instanceof Error
+                        ? reason
+                        : new Error("exchange aborted"),
+                    );
+                  },
+                  { once: true },
+                );
+              });
+            }
+            return Response.json({
+              access_token: "sk-ant-oat-retry",
+              expires_in: 1200,
+            });
+          }
+          return Response.json({ ok: true });
+        },
+        readIdentityToken: async () => "jwt-test",
+      },
+    );
+
+    try {
+      const stalledRequest = federated("https://api.anthropic.com/v1/messages");
+      await exchangeStarted;
+      expect(timeoutSpy).toHaveBeenCalledWith(10_000);
+      timeoutController.abort(
+        new DOMException("exchange timed out", "TimeoutError"),
+      );
+      await expect(stalledRequest).rejects.toThrow("exchange timed out");
+
+      await federated("https://api.anthropic.com/v1/messages");
+      expect(exchangeCount).toBe(2);
+    } finally {
+      timeoutSpy.mockRestore();
+    }
   });
 });

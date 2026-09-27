@@ -41,6 +41,9 @@ const SECRET_ENV_NAMES = [
   "ANTHROPIC_API_KEY",
   "XAI_API_KEY",
   "GEMINI_API_KEY",
+  // Keep until the provider key is revoked after production acceptance; old
+  // archived output can still contain the bare credential value.
+  "OPENROUTER_API_KEY",
   "POKEMONCTL_TOKEN",
   "GH_TOKEN",
 ] as const;

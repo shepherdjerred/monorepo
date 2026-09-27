@@ -29,7 +29,11 @@ function successfulImageResponse(): Awaited<
       modelId: MODEL_ID,
       headers: undefined,
     },
-    usage: { inputTokens: 3, outputTokens: 5, totalTokens: 8 },
+    usage: {
+      inputTokens: 1_000_000,
+      outputTokens: 5,
+      totalTokens: 1_000_005,
+    },
   };
 }
 
@@ -73,7 +77,7 @@ describe("image metrics", () => {
       'llm_requests_total{service="runtime-test",workload="test.image",provider="google",model="gemini-3-pro-image-preview",outcome="success"} 1',
     );
     expect(metrics).toContain(
-      'llm_cost_usd_total{service="runtime-test",workload="test.image",provider="google",model="gemini-3-pro-image-preview",type="catalog"} 0.268',
+      'llm_cost_usd_total{service="runtime-test",workload="test.image",provider="google",model="gemini-3-pro-image-preview",type="catalog"} 2.268',
     );
     expect(metrics).toContain(
       'llm_tokens_total{service="runtime-test",workload="test.image",provider="google",model="gemini-3-pro-image-preview",type="output"} 5',
@@ -83,7 +87,7 @@ describe("image metrics", () => {
         event: "llm.provider.response",
         provider: "google",
         model: MODEL_ID,
-        catalogCostUsd: 0.268,
+        catalogCostUsd: 2.268,
       },
     ]);
   });

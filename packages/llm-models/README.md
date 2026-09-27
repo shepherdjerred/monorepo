@@ -5,8 +5,9 @@ pricing and capabilities. The source of truth is `src/catalog.json`, described
 by [catalog.schema.json](catalog.schema.json) (JSON Schema 2020-12) and
 validated at runtime by Zod in TypeScript and Pydantic in Python.
 
-Units: token prices are **USD per 1,000,000 tokens**; image prices are **USD
-per image**. Each entry carries provider (`openai` | `anthropic` | `google`),
+Units: text and image-input token prices are **USD per 1,000,000 tokens**;
+image-output prices are **USD per image**. Each entry carries provider
+(`openai` | `anthropic` | `google`),
 display name, pricing (text or image modality, including cache pricing),
 capabilities (temperature/top-p support, effort tiers, adaptive thinking),
 context window, and status (`current` | `preview` | `deprecated`).

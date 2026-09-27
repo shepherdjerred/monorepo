@@ -32,6 +32,10 @@ const JWT_BEARER_GRANT = "urn:ietf:params:oauth:grant-type:jwt-bearer";
  */
 const ADVISORY_REFRESH_MS = 120_000;
 const MANDATORY_REFRESH_MS = 30_000;
+// The token endpoint is on the critical path before the Anthropic request.
+// Bound it independently of any one model caller because concurrent callers
+// share one exchange and one caller's signal must not cancel it for everyone.
+const TOKEN_EXCHANGE_TIMEOUT_MS = 10_000;
 
 const TokenResponseSchema = z
   .object({
@@ -80,6 +84,7 @@ async function exchange(
   const requestedAt = deps.now();
   const response = await deps.fetch(TOKEN_ENDPOINT, {
     method: "POST",
+    signal: AbortSignal.timeout(TOKEN_EXCHANGE_TIMEOUT_MS),
     headers: { "content-type": "application/json" },
     body: JSON.stringify({
       grant_type: JWT_BEARER_GRANT,
@@ -110,6 +115,44 @@ async function exchange(
     value: parsed.data.access_token,
     expiresAtMs: requestedAt + parsed.data.expires_in * 1000,
   };
+}
+
+/**
+ * Let one model call stop waiting for the shared token exchange without
+ * cancelling that exchange for other callers.
+ */
+async function waitForCaller<T>(
+  promise: Promise<T>,
+  signal?: AbortSignal | null,
+): Promise<T> {
+  if (signal === undefined || signal === null) return await promise;
+  signal.throwIfAborted();
+
+  let rejectAborted!: (reason: Error) => void;
+  const aborted = new Promise<never>((_resolve, reject) => {
+    rejectAborted = reject;
+  });
+  const onAbort = () => {
+    rejectAborted(abortError(signal));
+  };
+  signal.addEventListener("abort", onAbort, { once: true });
+  // Close the race between throwIfAborted() and registering the listener.
+  if (signal.aborted) {
+    onAbort();
+  }
+
+  try {
+    return await Promise.race([promise, aborted]);
+  } finally {
+    signal.removeEventListener("abort", onAbort);
+  }
+}
+
+function abortError(signal: AbortSignal): Error {
+  const reason: unknown = signal.reason;
+  return reason instanceof Error
+    ? reason
+    : new DOMException("The operation was aborted", "AbortError");
 }
 
 /**
@@ -144,7 +187,7 @@ export function createFederatedAnthropicFetch(
     return inFlight;
   }
 
-  async function currentToken(): Promise<string> {
+  async function currentToken(signal?: AbortSignal | null): Promise<string> {
     const token = cached;
     const remainingMs = token === undefined ? 0 : token.expiresAtMs - now();
 
@@ -152,21 +195,23 @@ export function createFederatedAnthropicFetch(
       return token.value;
     }
     if (token === undefined || remainingMs <= MANDATORY_REFRESH_MS) {
-      const refreshed = await refresh();
+      const refreshed = await waitForCaller(refresh(), signal);
       return refreshed.value;
     }
     // Advisory window: try to refresh, but the cached token is still good for
     // roughly another 90 seconds, so a transient failure must not fail the call.
     try {
-      const refreshed = await refresh();
+      const refreshed = await waitForCaller(refresh(), signal);
       return refreshed.value;
     } catch {
+      signal?.throwIfAborted();
       return token.value;
     }
   }
 
   return async (input, init) => {
-    const token = await currentToken();
+    init?.signal?.throwIfAborted();
+    const token = await currentToken(init?.signal);
     const headers = new Headers(init?.headers);
     headers.set("authorization", `Bearer ${token}`);
     // A stale x-api-key alongside a bearer token is exactly the shadowing this

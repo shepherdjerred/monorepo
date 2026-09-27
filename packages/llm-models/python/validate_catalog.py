@@ -72,6 +72,7 @@ class ImagePricing(BaseModel):
     model_config = {"extra": "forbid"}
     modality: Literal["image"]
     perImage: float = Field(ge=0)
+    inputPerMillionTokens: float = Field(ge=0)
 
 
 Pricing = Annotated[TextPricing | ImagePricing, Field(discriminator="modality")]

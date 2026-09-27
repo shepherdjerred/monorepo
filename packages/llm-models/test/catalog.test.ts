@@ -231,11 +231,12 @@ describe("pricing accessors", () => {
     });
   });
 
-  test("image models expose perImage and are not text-costable (scout parity)", () => {
+  test("image models expose output and input prices and are not text-costable (scout parity)", () => {
     const pricing = getPricing("gemini-3-pro-image-preview");
     expect(pricing?.modality).toBe("image");
     if (pricing?.modality === "image") {
       expect(pricing.perImage).toBeCloseTo(0.134, 6);
+      expect(pricing.inputPerMillionTokens).toBe(2);
     }
     expect(
       costForTextUsage("gemini-3-pro-image-preview", {
@@ -243,6 +244,22 @@ describe("pricing accessors", () => {
         outputTokens: 1000,
       }),
     ).toBeUndefined();
+  });
+
+  test("Gemini image catalog has the published Standard input token rates", () => {
+    const expected = [
+      ["gemini-3-pro-image-preview", 0.134, 2],
+      ["gemini-3.1-flash-image-preview", 0.067, 0.5],
+      ["gemini-2.5-flash-image", 0.039, 0.3],
+    ] as const;
+
+    for (const [modelId, perImage, inputPerMillionTokens] of expected) {
+      expect(getPricing(modelId)).toEqual({
+        modality: "image",
+        perImage,
+        inputPerMillionTokens,
+      });
+    }
   });
 });
 
