@@ -3,10 +3,15 @@ package com.shepherdjerred.thestorm.essentials.adapter.paper;
 import com.shepherdjerred.thestorm.essentials.app.store.KitClaimStore;
 import com.shepherdjerred.thestorm.essentials.app.store.KitClaimStore.PendingKit;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import org.bukkit.NamespacedKey;
+import org.bukkit.persistence.PersistentDataType;
+import org.bukkit.plugin.Plugin;
 
 /** Delivers durable kit claims to an online player, one at a time on the main thread. */
 final class KitDeliveries {
@@ -16,13 +21,21 @@ final class KitDeliveries {
   private final PaperRuntime runtime;
   private final KitClaimStore claims;
   private final KitItems items;
+  private final Plugin plugin;
   private final Set<UUID> delivering = new HashSet<>();
   private final Set<UUID> rerun = new HashSet<>();
+  private final Map<UUID, Set<PendingKit>> deliveredThisSession = new HashMap<>();
 
-  KitDeliveries(PaperRuntime runtime, KitClaimStore claims, KitItems items) {
+  KitDeliveries(PaperRuntime runtime, KitClaimStore claims, KitItems items, Plugin plugin) {
     this.runtime = runtime;
     this.claims = claims;
     this.items = items;
+    this.plugin = plugin;
+  }
+
+  /** Forget only volatile delivery guards. The player's inventory and marker save together. */
+  void quit(UUID player) {
+    deliveredThisSession.remove(player);
   }
 
   /** Checks what is owed now or on the next join if the player has disconnected. Main thread. */
@@ -53,15 +66,34 @@ final class KitDeliveries {
       return;
     }
     var kit = pending.get(index);
+    if (deliveredThisSession.getOrDefault(player, Set.of()).contains(kit)) {
+      next(player, pending, index + 1);
+      return;
+    }
+    var marker = new NamespacedKey(plugin, "kit_delivery_" + kit.name());
+    var persistedAt = online.getPersistentDataContainer().get(marker, PersistentDataType.LONG);
+    if (persistedAt != null && persistedAt >= kit.claimedAt().toEpochMilli()) {
+      acknowledge(player, pending, index);
+      return;
+    }
     try {
-      items.give(online, kit.name());
+      if (!items.give(online, kit.name())) {
+        Say.error(
+            online, Say.KITS, "Make room in your inventory to receive the " + kit.name() + " kit.");
+        finished(player);
+        return;
+      }
     } catch (RuntimeException failure) {
       runtime.report("delivering kit " + kit.name() + " to " + player, failure);
       finished(player);
       return;
     }
+    online
+        .getPersistentDataContainer()
+        .set(marker, PersistentDataType.LONG, kit.claimedAt().toEpochMilli());
+    deliveredThisSession.computeIfAbsent(player, ignored -> new HashSet<>()).add(kit);
     Say.success(online, Say.KITS, "You received the " + kit.name() + " kit.");
-    acknowledge(player, pending, index);
+    next(player, pending, index + 1);
   }
 
   private void acknowledge(UUID player, List<PendingKit> pending, int index) {

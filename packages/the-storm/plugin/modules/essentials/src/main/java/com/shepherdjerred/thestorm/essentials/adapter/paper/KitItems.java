@@ -49,17 +49,26 @@ final class KitItems {
     return new KitItems(templates);
   }
 
-  /** Gives {@code player} the kit called {@code name}, dropping what does not fit at their feet. */
-  void give(Player player, String name) {
+  /** Gives the kit only when storage has room for every stack; returns false otherwise. */
+  boolean give(Player player, String name) {
     var stacks = templates.get(name);
     if (stacks == null) {
       throw new IllegalArgumentException("unknown kit " + name);
     }
+    var emptySlots =
+        java.util.Arrays.stream(player.getInventory().getStorageContents())
+            .filter(item -> item == null || item.isEmpty())
+            .count();
+    if (emptySlots < stacks.size()) {
+      return false;
+    }
     var copies = stacks.stream().map(ItemStack::clone).toArray(ItemStack[]::new);
     var leftovers = player.getInventory().addItem(copies);
-    leftovers
-        .values()
-        .forEach(item -> player.getWorld().dropItemNaturally(Positions.current(player), item));
+    if (!leftovers.isEmpty()) {
+      throw new IllegalStateException(
+          "kit did not fit after reserving " + stacks.size() + " slots");
+    }
+    return true;
   }
 
   /** A written book item. */
