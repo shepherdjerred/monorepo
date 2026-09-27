@@ -70,7 +70,9 @@ final class ShippedContentTest {
 
   @Test
   void theShippedContentPassesTheLinter() {
-    assertThat(content.quests().keySet()).containsExactlyInAnyOrderElementsOf(PORTED);
+    assertThat(content.quests().keySet())
+        .containsExactlyInAnyOrderElementsOf(
+            Stream.concat(PORTED.stream(), Stream.of("the-gate-ledger")).toList());
     assertThat(content.factions()).containsOnlyKeys("townsfolk", "storm-watch");
     assertThat(content.templates()).isNotEmpty();
   }
@@ -145,6 +147,18 @@ final class ShippedContentTest {
     var errand = content.catalog().require("an-enchanting-errand");
     assertThat(errand.requirements())
         .containsExactly(new Condition.Completed("a-blacksmiths-task"));
+  }
+
+  @Test
+  void theGateLedgerKeepsBothConsequences() {
+    var ledger = content.catalog().require("the-gate-ledger");
+    var runs =
+        Simulator.simulate(content.catalog(), ledger, ShippedContent.config().calendar(), NOW);
+    assertThat(runs).hasSize(2).allSatisfy(run -> assertThat(run.completed()).isTrue());
+    assertThat(ledger.stage("accuse").orElseThrow().onComplete())
+        .contains(new Action.SetVariable("gate-ledger-outcome", 1));
+    assertThat(ledger.stage("trace").orElseThrow().onComplete())
+        .contains(new Action.SetVariable("gate-ledger-outcome", 2));
   }
 
   @Test

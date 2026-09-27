@@ -93,7 +93,7 @@ public final class Markers {
       }
       if (objective instanceof Objective.Talk talk
           && talk.npc().equals(npc)
-          && QuestEngine.reportsAt(stage, active, npc)) {
+          && QuestEngine.reportsAt(stage, active)) {
         return true;
       }
     }
