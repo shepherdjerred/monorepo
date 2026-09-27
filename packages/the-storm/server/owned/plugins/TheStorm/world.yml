@@ -22,6 +22,12 @@ ambient:
   spawnRadius: 24
   verticalRadius: 8
   timeZone: America/Los_Angeles
+# Records only observed arrivals and deaths after activation. The command is
+# read-only, on demand, and requires crier.enabled above.
+digest:
+  enabled: false
+  world: world
+  timeZone: America/Los_Angeles
 worlds:
   - name: wilds
     preset: large_biomes

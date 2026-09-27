@@ -188,6 +188,19 @@ Pacific date per player. The last-heard date persists on the player. This is
 new authored behavior inspired by the old windmill and Storm history, not a
 recovered NPC script. It has no recurring task or server-wide broadcast.
 
+The separate `world.yml` `digest.enabled` setting also ships as `false` and
+requires `crier.enabled`. When enabled, `/crier digest` reads the current
+Pacific date's ledger for `world` and replies only to the requesting player in
+that world. It counts distinct players who joined or entered the main world
+and player deaths observed there after recording was enabled. The reply shows
+the first observed time so a partial first day is clear. Online player count
+and weather are current at reply time. The ledger uses the plugin's SQLite
+database and asynchronous reads and writes; there is no recurring task. It
+does not report town founding, trades, arena records, or earlier server history
+because those sources are not connected. Before a live rollout, enable the
+world module and crier, then enable the digest and verify an arrival, a death,
+and an on-demand read in `world` after GitOps deployment.
+
 ## Conventions
 
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating

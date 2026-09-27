@@ -11,9 +11,14 @@ import java.util.List;
  * @param worlds the created worlds, in order; the first with {@code rtp} is the default landing
  * @param crier main-world bulletin command, disabled until a live rollout
  * @param ambient main-world arrival barks, disabled until a live rollout
+ * @param digest recorded main-world daily activity under {@code /crier digest}
  */
 public record WorldConfig(
-    int sleepPercentage, List<WorldSpec> worlds, CrierConfig crier, AmbientConfig ambient) {
+    int sleepPercentage,
+    List<WorldSpec> worlds,
+    CrierConfig crier,
+    AmbientConfig ambient,
+    DigestConfig digest) {
 
   public WorldConfig {
     worlds = List.copyOf(worlds);
@@ -22,6 +27,12 @@ public record WorldConfig(
     }
     if (ambient == null) {
       throw new IllegalArgumentException("ambient config is required");
+    }
+    if (digest == null) {
+      throw new IllegalArgumentException("digest config is required");
+    }
+    if (digest.enabled() && !crier.enabled()) {
+      throw new IllegalArgumentException("the daily digest requires the crier command");
     }
     if (sleepPercentage < 1 || sleepPercentage > 100) {
       throw new IllegalArgumentException("sleepPercentage must be 1-100: " + sleepPercentage);
