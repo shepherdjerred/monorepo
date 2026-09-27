@@ -67,15 +67,14 @@ public final class ChatModule implements StormModule {
               privateCommands.register(event.registrar());
               muteCommands.register(event.registrar());
             });
-    var plugin = context.plugin();
     var _ =
         service
             .load()
             .whenCompleteAsync(
                 (ignored, failure) -> {
                   if (failure != null) {
-                    logger.error("Loading chat state failed; disabling TheStorm", failure);
-                    server.getPluginManager().disablePlugin(plugin);
+                    logger.error("Loading chat state failed; stopping the server", failure);
+                    server.shutdown();
                     return;
                   }
                   server.getOnlinePlayers().forEach(Player::updateCommands);

@@ -198,7 +198,7 @@ public final class ChatService {
     return switch (checked) {
       case Result.Err<AcceptedMessage, List<ChatDenial>>(var denials) -> Result.err(denials);
       case Result.Ok<AcceptedMessage, List<ChatDenial>>(var message) -> {
-        if (profile(recipient.id()).ignores(sender.id())) {
+        if (!sender.staff() && profile(recipient.id()).ignores(sender.id())) {
           yield Result.err(List.of(new ChatDenial.Undeliverable()));
         }
         recent.put(sender.id(), RecentMessage.of(message.text(), now));
