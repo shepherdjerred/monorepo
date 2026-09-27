@@ -653,8 +653,6 @@ describe("temporal homelab audit tooling access boundaries", () => {
     for (const required of [
       "TEMPORAL_ADDRESS",
       "TEMPORAL_WORKER_ROLE",
-<<<<<<< HEAD
-      "OPENROUTER_API_KEY",
       "CLAUDE_CODE_OAUTH_TOKEN",
       "CODEX_AUTH_JSON_B64",
       "S3_ENDPOINT",

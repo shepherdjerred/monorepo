@@ -18,6 +18,15 @@ const ContainerSchema = z.object({
   args: z.array(z.string()).optional(),
   env: z.array(z.object({ name: z.string(), value: z.string().optional() })),
   securityContext: SecurityContextSchema,
+  volumeMounts: z
+    .array(
+      z.object({
+        name: z.string(),
+        mountPath: z.string(),
+        readOnly: z.boolean().optional(),
+      }),
+    )
+    .optional(),
 });
 
 const DeploymentSchema = z.object({
@@ -30,8 +39,10 @@ const DeploymentSchema = z.object({
         labels: z.record(z.string(), z.string()),
       }),
       spec: z.object({
+        automountServiceAccountToken: z.boolean(),
         containers: z.array(ContainerSchema),
         initContainers: z.array(ContainerSchema),
+        volumes: z.array(z.looseObject({ name: z.string() })),
       }),
     }),
   }),
@@ -158,6 +169,31 @@ describe("Temporal agent provider network boundary", () => {
       runAsUser: 0,
       allowPrivilegeEscalation: false,
       capabilities: { add: ["CHOWN", "DAC_OVERRIDE", "SETUID"], drop: ["ALL"] },
+    });
+    expect(deployment.spec.template.spec.automountServiceAccountToken).toBe(
+      false,
+    );
+    expect(
+      deployment.spec.template.spec.volumes.find(
+        (volume) => volume.name === "provider-hidden-service-account",
+      ),
+    ).toMatchObject({
+      projected: {
+        defaultMode: 384,
+        sources: expect.arrayContaining([
+          {
+            serviceAccountToken: {
+              path: "token",
+              expirationSeconds: 3600,
+            },
+          },
+        ]),
+      },
+    });
+    expect(worker.volumeMounts).toContainEqual({
+      name: "provider-hidden-service-account",
+      mountPath: "/var/run/secrets/kubernetes.io/serviceaccount",
+      readOnly: true,
     });
     expect(
       worker.env.find((variable) => variable.name === "AGENT_PROVIDER_UID")

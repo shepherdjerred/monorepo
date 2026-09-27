@@ -430,7 +430,10 @@ describe("agent chat catalog and schedules", () => {
         args: [binding, secondEntry.config.chatId, "2026-09-14T16:05:00.000Z"],
       });
       await handle.executeUpdate(bindAgentChatUpdate, {
-        args: [binding, CONFIG.chatId, "2026-09-14T16:04:30.000Z"],
+        args: [binding, CONFIG.chatId, "2026-09-14T16:05:00.000Z"],
+      });
+      await handle.executeUpdate(bindAgentChatUpdate, {
+        args: [binding, secondEntry.config.chatId, "2026-09-14T16:04:30.000Z"],
       });
       await handle.executeUpdate(recordAgentChatTurnUpdate, {
         args: [CONFIG.chatId, 3, "2026-09-14T16:06:00.000Z"],
@@ -445,7 +448,7 @@ describe("agent chat catalog and schedules", () => {
         resolveAgentChatBindingQuery,
         binding,
       );
-      expect(resolved?.config.chatId).toBe(secondEntry.config.chatId);
+      expect(resolved?.config.chatId).toBe(CONFIG.chatId);
       const updated = await handle.query(
         getAgentChatCatalogEntryQuery,
         CONFIG.chatId,

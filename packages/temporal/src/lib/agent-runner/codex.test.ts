@@ -448,7 +448,9 @@ describe("runCodexAgentTurn", () => {
       onEvent: vi.fn(),
     });
 
-    expect(wrapperScript).toContain("'setpriv' '--reuid=1001' '--'");
+    expect(wrapperScript).toContain(
+      "'setpriv' '--reuid=1001' '--regid=1001' '--clear-groups' '--'",
+    );
     expect(wrapperScript).toContain(shellQuoteForTest(process.execPath));
     expect(wrapperScript).toContain("codex.js");
     expect(await Bun.file(wrapperPath).exists()).toBe(false);

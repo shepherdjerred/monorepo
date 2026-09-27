@@ -1,7 +1,8 @@
 import type { Chart } from "cdk8s";
-import { Size } from "cdk8s";
+import { ApiObject, JsonPatch, Size } from "cdk8s";
 import {
   Capability,
+  ConfigMap,
   Cpu,
   Deployment,
   DeploymentStrategy,
@@ -62,7 +63,7 @@ export function createTemporalAgentWorker(
       annotations: { "argocd.argoproj.io/sync-wave": "3" },
     },
     serviceAccount: props.serviceAccount,
-    automountServiceAccountToken: true,
+    automountServiceAccountToken: false,
     securityContext: {
       fsGroup: AGENT_WORKER_UID,
     },
@@ -166,6 +167,66 @@ ip6tables -L OUTPUT -n`,
       },
       ...temporalWorkerHealthProbes(),
       envVariables: props.envVariables,
+    }),
+  );
+
+  const publicClusterCa = Volume.fromConfigMap(
+    chart,
+    "temporal-agent-worker-public-cluster-ca",
+    ConfigMap.fromConfigMapName(
+      chart,
+      "temporal-agent-worker-cluster-ca-config-map",
+      "kube-root-ca.crt",
+    ),
+    {
+      items: { "ca.crt": { path: "ca.crt" } },
+      defaultMode: 0o444,
+    },
+  );
+  container.mount("/etc/kubernetes", publicClusterCa, { readOnly: true });
+
+  // The root poller needs read-only Kubernetes evidence, but provider code runs
+  // as uid/gid 1001 with supplementary groups cleared. Project the token at
+  // owner-only mode instead of using Kubernetes' world-readable automount.
+  const hiddenServiceAccountVolume = "provider-hidden-service-account";
+  ApiObject.of(deployment).addJsonPatch(
+    JsonPatch.add("/spec/template/spec/volumes/-", {
+      name: hiddenServiceAccountVolume,
+      projected: {
+        defaultMode: 0o600,
+        sources: [
+          {
+            serviceAccountToken: {
+              path: "token",
+              expirationSeconds: 3600,
+            },
+          },
+          {
+            configMap: {
+              name: "kube-root-ca.crt",
+              items: [{ key: "ca.crt", path: "ca.crt" }],
+            },
+          },
+          {
+            downwardAPI: {
+              items: [
+                {
+                  path: "namespace",
+                  fieldRef: {
+                    apiVersion: "v1",
+                    fieldPath: "metadata.namespace",
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    }),
+    JsonPatch.add("/spec/template/spec/containers/0/volumeMounts/-", {
+      name: hiddenServiceAccountVolume,
+      mountPath: "/var/run/secrets/kubernetes.io/serviceaccount",
+      readOnly: true,
     }),
   );
 
