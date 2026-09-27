@@ -59,7 +59,13 @@ public final class LedgerWallets implements Wallets {
    * empty.
    */
   public CompletableFuture<Optional<Receipt>> welcome(SeenPlayer player) {
-    return store.welcome(player, startingBalance, STARTING_BALANCE_REASON);
+    return welcome(player, true);
+  }
+
+  /** Records a join; only a genuinely new player can receive the starting grant. */
+  public CompletableFuture<Optional<Receipt>> welcome(SeenPlayer player, boolean firstServerJoin) {
+    return store.welcome(
+        player, firstServerJoin ? startingBalance : Crystals.ZERO, STARTING_BALANCE_REASON);
   }
 
   /** Sets {@code account}'s balance through a ledgered transfer to or from the server. */

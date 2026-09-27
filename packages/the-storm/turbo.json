@@ -23,6 +23,7 @@
         "plugin/**/*.xml",
         "plugin/**/*.yml",
         "plugin/**/*.sql",
+        "server/owned/plugins/TheStorm/**",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -46,6 +47,7 @@
         "plugin/**/*.xml",
         "plugin/**/*.yml",
         "plugin/**/*.sql",
+        "server/owned/plugins/TheStorm/**",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -69,6 +71,7 @@
         "plugin/**/*.xml",
         "plugin/**/*.yml",
         "plugin/**/*.sql",
+        "server/owned/plugins/TheStorm/**",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -89,6 +92,7 @@
         "plugin/**/*.toml",
         "plugin/**/*.properties",
         "plugin/config/**",
+        "server/owned/plugins/TheStorm/**",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -111,6 +115,7 @@
         "plugin/**/*.lockfile",
         "plugin/**/*.xml",
         "plugin/**/*.sql",
+        "server/owned/plugins/TheStorm/**",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],

@@ -32,7 +32,7 @@ public final class FirstJoinListener implements Listener {
     var player = event.getPlayer();
     var uuid = player.getUniqueId();
     replies.whenDone(
-        wallets.welcome(new SeenPlayer(uuid, player.getName())),
+        wallets.welcome(new SeenPlayer(uuid, player.getName()), !player.hasPlayedBefore()),
         player,
         granted ->
             granted.ifPresent(
