@@ -1,0 +1,92 @@
+# The sewer and bank were spawn landmarks. The work here follows the sealed
+# drain and names no inaccessible tunnel or old-world coordinates.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  a-dry-inventory:
+    name: A Dry Inventory
+    giver: braxton
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-sealed-drain
+    text:
+      offer: The drain is sealed. The lost tally belongs in a dry inventory where nobody mistakes it for a coin again.
+      accept: Bring paper and a chest. Iovita can make the final identification before I file it.
+      decline: I will keep the fragment wrapped for now.
+      finish: Iovita's note is attached. The fragment is counted once and stored safely.
+      summary: File the recovered sewer tally in Braxton's bank inventory.
+      questions: []
+    start: filing
+    stages:
+      filing:
+        journal: Bring Braxton 8 paper and a chest for the recovered tally.
+        waiting: The fragment needs a separate entry from ordinary coin.
+        complete: The inventory has a place for it. Ask Iovita to confirm the mark.
+        objectives:
+          - deliver braxton 8 PAPER
+          - deliver braxton 1 CHEST
+        onComplete: []
+        next: [{ to: identify, when: [], label: none }]
+        timeLimit: none
+      identify:
+        journal: Ask Iovita to confirm the fragment's inventory mark.
+        waiting: A second witness prevents another false bank count.
+        complete: Iovita confirms the mark. The tally can be filed.
+        objectives:
+          - talk iovita
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-drain-rota:
+    name: The Drain Rota
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed a-dry-inventory
+    text:
+      offer: The grate is sound today. A watch schedule will keep us from finding the next breach only after creatures arrive.
+      accept: Bring lanterns and iron bars for the patrol kit, then tell Braxton when the bank should report damage.
+      decline: The watch will make do with its current kit.
+      finish: Braxton knows the reporting route and the patrol has supplies for its checks.
+      summary: Set a regular sewer-drain patrol and bank reporting route.
+      questions: []
+    start: kit
+    stages:
+      kit:
+        journal: Bring the Guard Captain 6 lanterns and 12 iron bars.
+        waiting: The grate is easiest to check with enough light.
+        complete: The patrol kit is ready. Braxton should know how to report a breach.
+        objectives:
+          - deliver guard-captain 6 LANTERN
+          - deliver guard-captain 12 IRON_BARS
+        onComplete: []
+        next: [{ to: bank, when: [], label: none }]
+        timeLimit: none
+      bank:
+        journal: Tell Braxton how to report damage at the sewer drain.
+        waiting: The bank's inventory should never be the first sign of a leak.
+        complete: Braxton will call the patrol before moving bank stock.
+        objectives:
+          - talk braxton
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation storm-watch 1

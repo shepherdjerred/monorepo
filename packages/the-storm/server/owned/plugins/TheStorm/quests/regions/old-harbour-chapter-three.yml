@@ -1,0 +1,92 @@
+# The old harbour is gone. Oswin and Stanley preserve its working customs by
+# the present-day river, where fishing remains a main-world activity.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  river-tally:
+    name: River Tally
+    giver: oswin
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed names-on-the-tide
+    text:
+      offer: Stanley checked the old harbour account. Let us add a page for the fishers who use this river now.
+      accept: Catch a few fish in the main world, then bring paper for a catch tally.
+      decline: The river will be here on another day.
+      finish: The first new catch sits beside the old harbour story, without pretending these are the same docks.
+      summary: Begin a present-day river catch tally beside the harbour memorial.
+      questions: []
+    start: catch
+    stages:
+      catch:
+        journal: Catch 5 fish in the main world for Oswin's tally.
+        waiting: Count what the river gives, not what an old story promises.
+        complete: The catch is counted. Oswin needs a page for it.
+        objectives:
+          - fish 5 any
+        onComplete: []
+        next: [{ to: page, when: [], label: none }]
+        timeLimit: none
+      page:
+        journal: Bring Oswin 8 paper and 2 ink sacs for the river tally.
+        waiting: Future fishers should know what was actually caught.
+        complete: The first present-day river tally is filed.
+        objectives:
+          - deliver oswin 8 PAPER
+          - deliver oswin 2 INK_SAC
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  a-net-for-newcomers:
+    name: A Net for Newcomers
+    giver: oswin
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed river-tally
+    text:
+      offer: A tally is useful, but a newcomer needs a way to fish before they can add a line to it. The old harbour shared its nets.
+      accept: Bring string and fishing rods, then ask Stanley to tell the story behind the custom.
+      decline: I will keep teaching knots while you gather supplies.
+      finish: The rods are ready to lend, and Stanley's account explains why we share them.
+      summary: Pass the old harbour's shared-fishing custom to new arrivals.
+      questions: []
+    start: gear
+    stages:
+      gear:
+        journal: Bring Oswin 24 string and 3 fishing rods to share.
+        waiting: A loaner rod should be sound enough for a first catch.
+        complete: The rods are ready. Stanley can add the story to the tally.
+        objectives:
+          - deliver oswin 24 STRING
+          - deliver oswin 3 FISHING_ROD
+        onComplete: []
+        next: [{ to: memory, when: [], label: none }]
+        timeLimit: none
+      memory:
+        journal: Ask Stanley to explain the old harbour's shared nets.
+        waiting: The custom matters as much as the gear.
+        complete: New fishers will know why the rods are shared.
+        objectives:
+          - talk stanley
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

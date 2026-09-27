@@ -96,6 +96,26 @@ final class ShippedContentTest {
           "winter-vigil",
           "the-frost-falls-banner");
 
+  /** The third two-quest chapter in each historical region. */
+  static final List<String> CHAPTER_THREE =
+      List.of(
+          "the-mill-watch",
+          "a-clear-record",
+          "a-dry-inventory",
+          "the-drain-rota",
+          "the-observers-copy",
+          "water-under-test",
+          "the-waystation-kit",
+          "an-arrival-notice",
+          "the-patrol-cache",
+          "the-safe-return",
+          "ore-cart-manifest",
+          "the-miners-share",
+          "river-tally",
+          "a-net-for-newcomers",
+          "the-shelter-register",
+          "a-warm-welcome");
+
   private static QuestContent content = QuestContent.empty();
 
   @BeforeAll
@@ -117,11 +137,23 @@ final class ShippedContentTest {
                     PORTED.stream(),
                     Stream.of("the-gate-ledger"),
                     REGIONAL.stream(),
-                    CONTINUATIONS.stream())
+                    CONTINUATIONS.stream(),
+                    CHAPTER_THREE.stream())
                 .flatMap(stream -> stream)
                 .toList());
     assertThat(content.factions()).containsOnlyKeys("townsfolk", "storm-watch");
     assertThat(content.templates()).isNotEmpty();
+  }
+
+  @Test
+  void thirdChaptersContinueEachRegionalStoryInOrder() {
+    for (var index = 0; index < CHAPTER_THREE.size(); index += 2) {
+      var first = content.catalog().require(CHAPTER_THREE.get(index));
+      var second = content.catalog().require(CHAPTER_THREE.get(index + 1));
+      assertThat(first.requirements())
+          .containsExactly(new Condition.Completed(CONTINUATIONS.get(index + 1)));
+      assertThat(second.requirements()).containsExactly(new Condition.Completed(first.id()));
+    }
   }
 
   @Test
