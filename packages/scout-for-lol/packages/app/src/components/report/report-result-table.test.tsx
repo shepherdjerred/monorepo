@@ -80,6 +80,25 @@ describe("ReportResultTable", () => {
     expect(markup).toContain('aria-label="Explore Faker"');
   });
 
+  test("uses an asset display name for drill-down accessibility text", () => {
+    const markup = renderToStaticMarkup(
+      <ReportResultTable
+        columns={[
+          {
+            key: "label",
+            label: "Champion",
+            format: "text",
+            asset: "champion",
+          },
+        ]}
+        rows={[{ label: "62", values: [] }]}
+        onRowClick={(row) => row.label}
+      />,
+    );
+
+    expect(markup).toContain('aria-label="Explore Wukong"');
+  });
+
   test("renders empty state when no rows are provided", () => {
     const markup = renderToStaticMarkup(
       <ReportResultTable columns={columns} rows={[]} />,

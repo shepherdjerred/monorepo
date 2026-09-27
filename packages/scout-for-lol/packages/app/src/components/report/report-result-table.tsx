@@ -26,6 +26,8 @@ import { tableToCsv, downloadCsv } from "#src/lib/reports/table-export.ts";
 import {
   formatCell,
   hasThinRateRows,
+  reportRowForFollowUp,
+  reportRowSortValue,
   ReportAssetIcon,
   type PreviewEvidence,
   type PreviewRow,
@@ -100,17 +102,21 @@ export function ReportResultTable(props: {
     }
 
     if (sortColumn !== null) {
+      const column = props.columns.find((entry) => entry.key === sortColumn);
+      if (column === undefined) return result;
       result = [...result].sort((a, b) => {
-        const valA =
-          sortColumn === "label"
-            ? a.row.label
-            : (a.row.values.find((e) => e.column === sortColumn)?.value ??
-              null);
-        const valB =
-          sortColumn === "label"
-            ? b.row.label
-            : (b.row.values.find((e) => e.column === sortColumn)?.value ??
-              null);
+        const valA = reportRowSortValue(
+          column,
+          a.row,
+          props.evidence?.[a.originalIndex],
+          hasGamesColumn,
+        );
+        const valB = reportRowSortValue(
+          column,
+          b.row,
+          props.evidence?.[b.originalIndex],
+          hasGamesColumn,
+        );
 
         if (valA === null) return 1;
         if (valB === null) return -1;
@@ -288,7 +294,9 @@ export function ReportResultTable(props: {
                     props.onRowClick === undefined
                       ? undefined
                       : () => {
-                          props.onRowClick?.(row);
+                          props.onRowClick?.(
+                            reportRowForFollowUp(props.columns, row),
+                          );
                         }
                   }
                   className={
@@ -335,11 +343,13 @@ export function ReportResultTable(props: {
                         column.key === "label" ? (
                           <button
                             type="button"
-                            aria-label={`Explore ${row.label}`}
+                            aria-label={`Explore ${reportRowForFollowUp(props.columns, row).label}`}
                             className="w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-scout-accent"
                             onClick={(event) => {
                               event.stopPropagation();
-                              props.onRowClick?.(row);
+                              props.onRowClick?.(
+                                reportRowForFollowUp(props.columns, row),
+                              );
                             }}
                           >
                             {renderedValue}
