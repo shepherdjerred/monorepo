@@ -53,6 +53,34 @@ describe("AI architecture guard", () => {
     ).toEqual(["openrouter", "openrouter", "openrouter", "openrouter"]);
   });
 
+  test("allows the retired credential only in its denylist and test fixtures", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/temporal/src/shared/agent/provider-credentials.ts",
+          contents:
+            'const RETIRED_PROVIDER_CREDENTIAL_KEYS = ["OPENROUTER_API_KEY"] as const;',
+        },
+        {
+          path: "packages/temporal/src/lib/agent-runner/codex.test.ts",
+          contents: 'env: { OPENROUTER_API_KEY: "must-not-forward" }',
+        },
+      ]),
+    ).toEqual([]);
+
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/temporal/src/shared/agent/provider-credentials.ts",
+          contents: [
+            'const RETIRED_PROVIDER_CREDENTIAL_KEYS = ["OPENROUTER_API_KEY"] as const;',
+            'const endpoint = "https://openrouter.ai/api/v1";',
+          ].join("\n"),
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["openrouter"]);
+  });
+
   test("constructs provider SDKs only in llm-runtime and the Scout workbench", () => {
     expect(
       findAiArchitectureViolations([

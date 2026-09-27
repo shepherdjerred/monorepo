@@ -111,6 +111,8 @@ const CREDENTIAL_SANITIZER_PATHS = new Set([
 // agent subprocesses. It never reads them.
 const PR_FLEET_CREDENTIAL_REDACTION_PATH =
   "packages/pr-fleet-controller/src/cli/credential-redaction.ts";
+const RETIRED_OPENROUTER_CREDENTIAL_DENYLIST_PATH =
+  "packages/temporal/src/shared/agent/provider-credentials.ts";
 const POKEMON_CODEX_SUBSCRIPTION_PATHS = new Set([
   "packages/discord-plays-pokemon/config.example.toml",
   "packages/discord-plays-pokemon/packages/backend/src/goal/codex/codex-auth.ts",
@@ -274,6 +276,17 @@ function isPath(expected: string): Exemption {
   return (filePath) => filePath === expected;
 }
 
+function isRetiredOpenRouterCredentialDenylist(
+  filePath: string,
+  source: string,
+): boolean {
+  return (
+    filePath === RETIRED_OPENROUTER_CREDENTIAL_DENYLIST_PATH &&
+    source.trim() ===
+      'const RETIRED_PROVIDER_CREDENTIAL_KEYS = ["OPENROUTER_API_KEY"] as const;'
+  );
+}
+
 function underRoot(root: string): Exemption {
   return (filePath) => filePath.startsWith(root);
 }
@@ -282,6 +295,13 @@ const inLlmRuntime = underRoot(LLM_RUNTIME_ROOT);
 
 // Each rule's reviewed exceptions. A rule with no entry has none.
 const RULE_EXEMPTIONS: Readonly<Record<string, readonly Exemption[]>> = {
+  openrouter: [
+    // Tests may name the retired credential to prove it is scrubbed. Runtime
+    // code may name it only in this exact denylist declaration until the
+    // post-acceptance key revocation is complete.
+    isTestOrFixture,
+    isRetiredOpenRouterCredentialDenylist,
+  ],
   "federation-shadowing-key": [
     inLlmRuntime,
     isLocalBootstrapFile,
