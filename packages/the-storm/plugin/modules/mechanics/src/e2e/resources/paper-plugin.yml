@@ -1,0 +1,11 @@
+name: TheStormMechanicsE2E
+version: "1.0.0"
+main: com.shepherdjerred.thestorm.mechanics.e2e.MechanicsE2EPlugin
+api-version: "26.2"
+description: Test-only real-Paper harness for The Storm mechanics
+dependencies:
+  server:
+    TheStorm:
+      load: BEFORE
+      required: true
+      join-classpath: true
