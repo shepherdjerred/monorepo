@@ -75,7 +75,9 @@ final class ArenaPaperTest {
     player.setTotalExperience(160);
     player.setHealth(13);
     player.setFoodLevel(15);
-    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 1200, 1));
+    // The harness can advance many server ticks while waiting for async database work.
+    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 1_000_000, 1));
+    assertThat(player.getActivePotionEffects()).hasSize(1);
     return player;
   }
 
@@ -146,6 +148,7 @@ final class ArenaPaperTest {
     var alice = loadedPlayer("Alice");
     enter(alice, "arena join colosseum");
     harness.until(() -> inLobby(alice));
+    assertThat(stored()).singleElement().satisfies(s -> assertThat(s.effects()).hasSize(1));
     alice.performCommand("arena class knight");
 
     alice.performCommand("arena leave");
@@ -250,7 +253,12 @@ final class ArenaPaperTest {
     harness.until(() -> inLobby(alice));
     alice.performCommand("arena class knight");
 
-    harness.server.dispatchCommand(harness.server.getConsoleSender(), "arena start colosseum");
+    harness.until(
+        () -> {
+          harness.server.dispatchCommand(
+              harness.server.getConsoleSender(), "arena start colosseum");
+          return alice.getLocation().getX() == 1030.5;
+        });
 
     assertThat(alice.getLocation().getX()).isEqualTo(1030.5);
     assertThat(alice.getLocation().getZ()).isEqualTo(1025.5);

@@ -1,6 +1,5 @@
 package com.shepherdjerred.thestorm.arena.adapter.paper;
 
-import com.shepherdjerred.thestorm.arena.domain.game.Member;
 import com.shepherdjerred.thestorm.arena.domain.game.Notice;
 import com.shepherdjerred.thestorm.arena.domain.game.NoticeKind;
 import java.util.List;
@@ -189,11 +188,17 @@ final class WorldListener implements Listener {
    * Mobs born inside a running arena from its own mobs (slime splits, an evoker's vexes, zombie
    * reinforcements) belong to the wave: counted, contained and cleaned up.
    */
-  @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+  @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
   void onOffspring(CreatureSpawnEvent event) {
     switch (event.getSpawnReason()) {
       case SLIME_SPLIT, SPELL, REINFORCEMENTS ->
-          running(event.getLocation()).ifPresent(runner -> runner.world().adopt(event.getEntity()));
+          running(event.getLocation())
+              .ifPresent(
+                  runner -> {
+                    if (!runner.world().adopt(event.getEntity())) {
+                      event.setCancelled(true);
+                    }
+                  });
       default -> {
         // Only offspring are adopted; the arena tags its own spawns itself.
       }
@@ -289,12 +294,25 @@ final class WorldListener implements Listener {
   @EventHandler(ignoreCancelled = true)
   void onTarget(EntityTargetLivingEntityEvent event) {
     var arena = keys.arenaOf(event.getEntity());
-    if (arena.isEmpty() || !(event.getTarget() instanceof Player target)) {
+    if (arena.isEmpty() || event.getTarget() == null) {
+      return;
+    }
+    var target = event.getTarget();
+    var arenaId = arena.orElseThrow();
+    var runner = arenas.byId(arenaId);
+    if (runner.isEmpty()) {
+      event.setCancelled(true);
+      return;
+    }
+    var world = runner.orElseThrow().world();
+    if (world.isFriendlyWolf(event.getEntity())) {
+      event.setCancelled(!world.isWaveMob(target));
       return;
     }
     var fighter =
-        arenas.byId(arena.orElseThrow()).filter(runner -> runner.isFighter(target.getUniqueId()));
-    if (fighter.isEmpty()) {
+        target instanceof Player player && runner.orElseThrow().isFighter(player.getUniqueId());
+    var arenaWolf = world.isFriendlyWolf(target);
+    if (!fighter && !arenaWolf) {
       event.setCancelled(true);
     }
   }
@@ -314,27 +332,30 @@ final class WorldListener implements Listener {
         .ifPresent(boss -> event.setCancelled(true));
   }
 
-  /** Fighters cannot hurt each other or each other's wolves, not even with TNT or arrows. */
+  /** Fighters can hurt only their own arena's hostile mobs, even with TNT or arrows. */
   @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
   void onFriendlyFire(EntityDamageByEntityEvent event) {
     var attacker = responsible(event.getDamager());
     if (attacker.isEmpty()) {
       return;
     }
+    var victim = event.getEntity();
     var runner = arenas.of(attacker.orElseThrow().getUniqueId());
-    if (runner.isEmpty()) {
+    if (runner.isPresent()) {
+      var world = runner.orElseThrow().world();
+      var arenaId = runner.orElseThrow().id();
+      if (!runner.orElseThrow().isFighter(attacker.orElseThrow().getUniqueId())
+          || !world.isWaveMob(victim)
+          || keys.arenaOf(victim).filter(arenaId::equals).isEmpty()) {
+        event.setCancelled(true);
+      }
       return;
     }
-    var victim = event.getEntity();
-    var friendly =
+    var victimArena =
         victim instanceof Player player
-            ? runner
-                .orElseThrow()
-                .member(player.getUniqueId())
-                .filter(Member.Fighter.class::isInstance)
-                .isPresent()
-            : keys.arenaOf(victim).isPresent() && victim instanceof Wolf;
-    if (friendly) {
+            ? arenas.of(player.getUniqueId())
+            : keys.arenaOf(victim).flatMap(arenas::byId);
+    if (victimArena.isPresent()) {
       event.setCancelled(true);
     }
   }
@@ -345,6 +366,7 @@ final class WorldListener implements Listener {
       case Projectile projectile when projectile.getShooter() instanceof Player shooter ->
           Optional.of(shooter);
       case TNTPrimed tnt when tnt.getSource() instanceof Player source -> Optional.of(source);
+      case Wolf wolf when wolf.getOwner() instanceof Player owner -> Optional.of(owner);
       default -> Optional.empty();
     };
   }

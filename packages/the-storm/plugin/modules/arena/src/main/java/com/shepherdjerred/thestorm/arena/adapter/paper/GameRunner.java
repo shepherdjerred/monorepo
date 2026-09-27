@@ -10,6 +10,7 @@ import com.shepherdjerred.thestorm.arena.domain.game.GameEvent;
 import com.shepherdjerred.thestorm.arena.domain.game.Member;
 import com.shepherdjerred.thestorm.arena.domain.game.Notice;
 import com.shepherdjerred.thestorm.arena.domain.game.NoticeKind;
+import com.shepherdjerred.thestorm.arena.domain.game.Phase;
 import com.shepherdjerred.thestorm.arena.domain.kit.ClassBook;
 import com.shepherdjerred.thestorm.arena.domain.kit.ItemSpec;
 import com.shepherdjerred.thestorm.arena.domain.reward.VaultSettings;
@@ -45,6 +46,12 @@ final class GameRunner {
   private final ArrayDeque<GameEvent> waiting = new ArrayDeque<>();
   private ArenaGame game;
   private boolean applying;
+
+  private record ChunkGate(boolean waiting, Optional<GameError> refusal) {
+    static ChunkGate ready() {
+      return new ChunkGate(false, Optional.empty());
+    }
+  }
 
   /**
    * What a runner uses besides its world.
@@ -104,6 +111,11 @@ final class GameRunner {
       waiting.add(event);
       return Optional.empty();
     }
+    var gate = chunkGate(event);
+    if (gate.waiting()) {
+      return gate.refusal();
+    }
+    var wasCountdown = game.phase() instanceof Phase.Countdown;
     var refusal =
         switch (game.on(event)) {
           case Result.Err<ArenaGame.Step, GameError>(var error) -> Optional.of(error);
@@ -115,6 +127,12 @@ final class GameRunner {
             } finally {
               applying = false;
             }
+            if (game.phase() instanceof Phase.Countdown) {
+              world.preload();
+            } else if (game.phase() instanceof Phase.Lobby
+                && (wasCountdown || game.isEmpty() || event instanceof GameEvent.Stop)) {
+              world.cancelPreload();
+            }
             yield Optional.<GameError>empty();
           }
         };
@@ -124,8 +142,45 @@ final class GameRunner {
     return refusal;
   }
 
+  private ChunkGate chunkGate(GameEvent event) {
+    if (event instanceof GameEvent.ForceStart
+        && !game.phase().running()
+        && game.members().stream()
+            .anyMatch(member -> member instanceof Member.InLobby lobby && lobby.kit().isPresent())
+        && !world.chunksReady()) {
+      if (world.preloadFailed()) {
+        return new ChunkGate(true, Optional.of(GameError.UNAVAILABLE));
+      }
+      world.preload();
+      return new ChunkGate(true, Optional.of(GameError.PREPARING));
+    }
+    if (event instanceof GameEvent.Tick tick
+        && game.phase() instanceof Phase.Countdown countdown
+        && !tick.now().isBefore(countdown.startsAt())
+        && readyLobby()
+        && !world.chunksReady()) {
+      world.preload();
+      return new ChunkGate(true, Optional.empty());
+    }
+    return ChunkGate.ready();
+  }
+
+  private boolean readyLobby() {
+    var lobby =
+        game.members().stream()
+            .filter(Member.InLobby.class::isInstance)
+            .map(Member.InLobby.class::cast)
+            .toList();
+    return lobby.size() >= game.setup().minPlayers()
+        && lobby.stream().allMatch(Member.InLobby::ready);
+  }
+
   /** One second of the arena: containment, custom AI, the boss, then the game's clock. */
   void tick() {
+    if (world.preloadFailed()) {
+      handle(new GameEvent.Stop());
+      return;
+    }
     var alive = world.alive();
     if (game.phase().running()) {
       world.contain();

@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.arena.adapter.paper;
 import com.shepherdjerred.thestorm.arena.domain.arena.ArenaDefinition;
 import com.shepherdjerred.thestorm.arena.domain.boss.HeartState;
 import com.shepherdjerred.thestorm.arena.domain.geometry.BlockPos;
+import com.shepherdjerred.thestorm.arena.domain.geometry.ChunkPos;
 import com.shepherdjerred.thestorm.arena.domain.wave.Behavior;
 import com.shepherdjerred.thestorm.arena.domain.wave.BossOrder;
 import com.shepherdjerred.thestorm.arena.domain.wave.MobArchetype;
@@ -20,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -52,6 +54,12 @@ final class ArenaWorld {
   private final Map<UUID, List<Wolf>> wolves = new HashMap<>();
   private @Nullable BossFight boss;
   private boolean prepared;
+  private boolean preloading;
+  private boolean chunksReady;
+  private boolean preloadFailed;
+  private int preloadGeneration;
+  private CompletableFuture<Void> preloadCompletion = CompletableFuture.completedFuture(null);
+  private final List<ChunkPos> heldChunks = new ArrayList<>();
 
   /**
    * What an arena world is built from.
@@ -87,6 +95,14 @@ final class ArenaWorld {
 
   ArenaDefinition definition() {
     return definition;
+  }
+
+  List<String> chestProblems() {
+    if (!chunksReady) {
+      throw new IllegalStateException(
+          "arena " + definition.id() + " chests checked before chunks loaded");
+    }
+    return parts.chests().problems();
   }
 
   /** Whether {@code location} is inside the arena's region. */
@@ -130,8 +146,95 @@ final class ArenaWorld {
     parts.chests().empty();
   }
 
+  /** Loads each chunk asynchronously, then attaches its ticket on the main thread. */
+  void preload() {
+    if (preloading || chunksReady || preloadFailed || prepared) {
+      return;
+    }
+    preloading = true;
+    preloadCompletion = new CompletableFuture<>();
+    var generation = ++preloadGeneration;
+    var loads =
+        definition.region().chunks().stream()
+            .map(
+                chunk ->
+                    world
+                        .getChunkAtAsync(chunk.x(), chunk.z(), false)
+                        .thenAcceptAsync(
+                            loaded -> {
+                              if (generation != preloadGeneration) {
+                                return;
+                              }
+                              if (loaded == null || !world.isChunkLoaded(chunk.x(), chunk.z())) {
+                                throw new IllegalStateException(
+                                    "arena chunk " + chunk + " is unavailable");
+                              }
+                              parts.chunks().keep(world, List.of(chunk));
+                              heldChunks.add(chunk);
+                            },
+                            parts.context().mainThread()))
+            .toArray(CompletableFuture[]::new);
+    var _ =
+        CompletableFuture.allOf(loads)
+            .whenCompleteAsync(
+                (ignored, failure) -> {
+                  if (generation != preloadGeneration) {
+                    return;
+                  }
+                  preloading = false;
+                  if (failure != null) {
+                    parts
+                        .context()
+                        .logger()
+                        .error("Could not preload arena {}", definition.id(), failure);
+                    preloadFailed = true;
+                    releaseChunks();
+                    preloadCompletion.completeExceptionally(failure);
+                  } else {
+                    chunksReady = true;
+                    preloadCompletion.complete(null);
+                  }
+                },
+                parts.context().mainThread());
+  }
+
+  /** Startup's asynchronous chunk load, completed after its main-thread tickets are held. */
+  CompletableFuture<Void> startupPreload() {
+    preload();
+    return preloadCompletion;
+  }
+
+  boolean chunksReady() {
+    return chunksReady;
+  }
+
+  boolean preloadFailed() {
+    return preloadFailed;
+  }
+
+  void cancelPreload() {
+    preloadGeneration++;
+    if (!preloadCompletion.isDone()) {
+      preloadCompletion.completeExceptionally(
+          new IllegalStateException("arena " + definition.id() + " preload cancelled"));
+    }
+    preloading = false;
+    preloadFailed = false;
+    chunksReady = false;
+    releaseChunks();
+  }
+
+  private void releaseChunks() {
+    for (var chunk : heldChunks) {
+      parts.chunks().release(world, List.of(chunk));
+    }
+    heldChunks.clear();
+  }
+
   void prepare() {
-    parts.chunks().keep(world, definition.region().chunks());
+    if (!chunksReady) {
+      throw new IllegalStateException("arena " + definition.id() + " started before chunks loaded");
+    }
     prepared = true;
     parts.chests().fill(parts.context().random());
   }
@@ -196,10 +299,14 @@ final class ArenaWorld {
    * Adopts a mob born inside the running arena from one of its own (a slime split, an evoker's
    * vexes, zombie reinforcements): tagged, counted towards the wave and kept inside.
    */
-  void adopt(LivingEntity offspring) {
+  boolean adopt(LivingEntity offspring) {
+    if (alive() >= parts.entityCap()) {
+      return false;
+    }
     parts.keys().tag(offspring, definition.id());
     offspring.setPersistent(false);
     mobs.add(offspring);
+    return true;
   }
 
   private void track(String mob, List<LivingEntity> spawned) {
@@ -208,6 +315,14 @@ final class ArenaWorld {
     if (archetype.behavior() != Behavior.VANILLA) {
       brains.put(spawned.getFirst().getUniqueId(), archetype);
     }
+  }
+
+  boolean isWaveMob(Entity entity) {
+    return mobs.contains(entity);
+  }
+
+  boolean isFriendlyWolf(Entity entity) {
+    return wolves.values().stream().anyMatch(pack -> pack.contains(entity));
   }
 
   /** Arena mobs alive now, riders and boss included. */
@@ -345,10 +460,8 @@ final class ArenaWorld {
       }
     }
     parts.chests().empty();
-    if (prepared) {
-      parts.chunks().release(world, definition.region().chunks());
-      prepared = false;
-    }
+    cancelPreload();
+    prepared = false;
   }
 
   int randomMobSpawn() {

@@ -17,13 +17,13 @@ public interface RewardStore {
   CompletableFuture<Claim> claimVault(VaultClaim claim);
 
   /**
-   * Claims all the loot waiting for {@code player}, oldest first: returns it and removes it in one
-   * transaction, so the same loot can never be handed out twice. Hand out only what this returns.
+   * Reads the loot waiting for {@code player}, oldest first. Rows remain durable until a later
+   * login proves the delivered inventory and its receipt reached player data together.
    */
-  CompletableFuture<List<PendingReward>> claimAll(UUID player);
+  CompletableFuture<List<PendingReward>> pending(UUID player);
 
-  /** Puts claimed loot back (the player went offline or into an arena before it was handed out). */
-  CompletableFuture<Void> requeue(UUID player, List<PendingReward> rewards, Instant at);
+  /** Retires only this player's rows whose inventory receipts survived a fresh login. */
+  CompletableFuture<Void> acknowledge(UUID player, List<Long> ids);
 
   /** Whether a vault opened. */
   enum Claim {

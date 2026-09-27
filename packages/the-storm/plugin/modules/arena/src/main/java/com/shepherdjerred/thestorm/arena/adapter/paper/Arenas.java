@@ -17,6 +17,8 @@ public final class Arenas implements ArenaPresence {
 
   private final Map<String, GameRunner> runners;
   private final Snapshots snapshots;
+  private boolean ready;
+  private boolean startupFailed;
 
   Arenas(List<GameRunner> runners, Snapshots snapshots) {
     var byId = new TreeMap<String, GameRunner>();
@@ -84,6 +86,14 @@ public final class Arenas implements ArenaPresence {
     return List.copyOf(runners.keySet());
   }
 
+  void ready() {
+    ready = true;
+  }
+
+  void startupFailed() {
+    startupFailed = true;
+  }
+
   void tick() {
     runners.values().forEach(GameRunner::tick);
   }
@@ -113,6 +123,14 @@ public final class Arenas implements ArenaPresence {
 
   /** Whether {@code player} may join or watch an arena now. */
   private boolean admit(Player player) {
+    if (!ready) {
+      Texts.error(
+          player,
+          startupFailed
+              ? "The arena could not start. Please contact staff."
+              : "The arena is still starting up; try again in a moment.");
+      return false;
+    }
     var current = arenaOf(player.getUniqueId());
     if (current.isPresent()) {
       Texts.error(

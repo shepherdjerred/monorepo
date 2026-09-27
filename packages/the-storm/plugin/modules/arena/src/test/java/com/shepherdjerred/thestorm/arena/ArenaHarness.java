@@ -19,19 +19,23 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.random.RandomGenerator;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.mockbukkit.mockbukkit.MockBukkit;
 import org.mockbukkit.mockbukkit.ServerMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
+import org.mockbukkit.mockbukkit.world.WorldMock;
 
 /**
  * The arena module enabled on a MockBukkit server with the shipped content, a temp SQLite database,
@@ -72,6 +76,20 @@ public final class ArenaHarness implements AutoCloseable {
     }
   }
 
+  /** MockBukkit has no async chunk API; complete its chunk load without changing arena code. */
+  private static final class ArenaWorldMock extends WorldMock {
+    ArenaWorldMock() {
+      super(new WorldCreator("world"));
+    }
+
+    @Override
+    public CompletableFuture<Chunk> getChunkAtAsync(
+        int x, int z, boolean generate, boolean urgent) {
+      loadChunk(x, z);
+      return CompletableFuture.completedFuture(getChunkAt(x, z));
+    }
+  }
+
   final ServerMock server;
   final World world;
   final StormDatabase database;
@@ -89,7 +107,8 @@ public final class ArenaHarness implements AutoCloseable {
   /** Starts a server and database; {@link #enable} starts the module. */
   static ArenaHarness prepare(Path directory) {
     var server = MockBukkit.mock();
-    var world = server.addSimpleWorld("world");
+    var world = new ArenaWorldMock();
+    server.addWorld(world);
     copyShipped(directory);
     for (var chest :
         List.of(
@@ -127,6 +146,7 @@ public final class ArenaHarness implements AutoCloseable {
       close();
       throw e;
     }
+    until(() -> chunks.kept > 0 && chunks.released == chunks.kept);
     return this;
   }
 
