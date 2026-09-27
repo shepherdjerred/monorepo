@@ -47,6 +47,7 @@ import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
 import { seaweedFsBackupActivities } from "./homelab/seaweedfs-backup.ts";
 import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
+import { miningResetActivities } from "./homelab/mining-reset.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -76,6 +77,7 @@ export const infraActivities = {
   ...tasknotesCanaryActivities,
   ...golinkClusterActivities,
   ...opsActivities,
+  ...miningResetActivities,
 };
 
 export const repoActivities = {

@@ -46,6 +46,72 @@ export function createTemporalWorkerIngressReaderRbac(
   });
 }
 
+export function createTemporalMiningResetRbac(
+  chart: Chart,
+  serviceAccount: ServiceAccount,
+): void {
+  const subject = {
+    kind: "ServiceAccount",
+    name: serviceAccount.name,
+    namespace: serviceAccount.metadata.namespace ?? "temporal",
+  };
+  new KubeRole(chart, "temporal-mining-reset-minecraft", {
+    metadata: { name: "temporal-mining-reset", namespace: "minecraft-tsmc" },
+    rules: [
+      {
+        apiGroups: ["apps"],
+        resources: ["statefulsets"],
+        resourceNames: ["minecraft-tsmc"],
+        verbs: ["get", "patch"],
+      },
+      {
+        apiGroups: [""],
+        resources: ["services"],
+        resourceNames: ["minecraft-tsmc"],
+        verbs: ["get", "patch"],
+      },
+      {
+        apiGroups: [""],
+        resources: ["pods", "persistentvolumeclaims"],
+        verbs: ["list"],
+      },
+      {
+        apiGroups: ["batch"],
+        resources: ["jobs"],
+        verbs: ["create", "get"],
+      },
+    ],
+  });
+  new KubeRoleBinding(chart, "temporal-mining-reset-minecraft-binding", {
+    metadata: { name: "temporal-mining-reset", namespace: "minecraft-tsmc" },
+    roleRef: {
+      apiGroup: "rbac.authorization.k8s.io",
+      kind: "Role",
+      name: "temporal-mining-reset",
+    },
+    subjects: [subject],
+  });
+  new KubeRole(chart, "temporal-mining-reset-velero", {
+    metadata: { name: "temporal-mining-reset", namespace: "velero" },
+    rules: [
+      {
+        apiGroups: ["velero.io"],
+        resources: ["backups"],
+        verbs: ["create", "get"],
+      },
+    ],
+  });
+  new KubeRoleBinding(chart, "temporal-mining-reset-velero-binding", {
+    metadata: { name: "temporal-mining-reset", namespace: "velero" },
+    roleRef: {
+      apiGroup: "rbac.authorization.k8s.io",
+      kind: "Role",
+      name: "temporal-mining-reset",
+    },
+    subjects: [subject],
+  });
+}
+
 export function createTemporalWorkerMaintenanceRbac(
   chart: Chart,
   serviceAccounts: readonly ServiceAccount[],

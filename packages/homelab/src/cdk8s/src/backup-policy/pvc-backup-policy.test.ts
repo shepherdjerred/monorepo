@@ -160,8 +160,9 @@ describe("PVC backup policy", () => {
     expect(operatorManagedPvcCount).toBeGreaterThan(0);
     expect(admissionKinds.get("MutatingAdmissionPolicy")).toBe(3);
     expect(admissionKinds.get("MutatingAdmissionPolicyBinding")).toBe(3);
-    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(2);
-    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(2);
+    // Includes The Storm's server stop guard in addition to the PVC policies.
+    expect(admissionKinds.get("ValidatingAdmissionPolicy")).toBe(3);
+    expect(admissionKinds.get("ValidatingAdmissionPolicyBinding")).toBe(3);
   }, 20_000);
 
   it("syncs admission policy updates before PVC changes", () => {

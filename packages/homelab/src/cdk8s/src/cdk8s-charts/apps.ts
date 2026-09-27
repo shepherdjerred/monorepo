@@ -69,6 +69,7 @@ import { createBuildkitdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/
 import { createAlertDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alert-dashboard.ts";
 import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/media/stash.ts";
 import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
+import { createMinecraftMiningResetGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-mining-reset-guard.ts";
 import { createArgoCdApplicationAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/argocd-application-admission.ts";
 
 export async function createAppsChart(app: App) {
@@ -81,6 +82,7 @@ export async function createAppsChart(app: App) {
   createPriorityClasses(chart);
   createArgoCdApplicationAdmissionPolicies(chart);
   createPvcBackupAdmissionPolicies(chart);
+  createMinecraftMiningResetGuard(chart);
 
   new Namespace(chart, `maintenance-namespace`, {
     metadata: {
