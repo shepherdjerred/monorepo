@@ -11,6 +11,7 @@ export const MANAGED_NAMESPACES = [
   "temporal",
   "alert-dashboard",
   "the-storm",
+  "the-storm-companion",
 ] as const;
 
 export type ManagedNamespaceKey = (typeof MANAGED_NAMESPACES)[number];
@@ -303,6 +304,25 @@ export const THE_STORM_VARIANT_FLAG_KEYS = [] as const;
 export type TheStormVariantFlagKey =
   (typeof THE_STORM_VARIANT_FLAG_KEYS)[number];
 
+export const THE_STORM_COMPANION_FLAG_KEYS = [
+  "the-storm-companion-pilot-enabled",
+] as const;
+
+export type TheStormCompanionFlagKey =
+  (typeof THE_STORM_COMPANION_FLAG_KEYS)[number];
+
+export const THE_STORM_COMPANION_BOOLEAN_FLAG_KEYS = [
+  "the-storm-companion-pilot-enabled",
+] as const;
+
+export type TheStormCompanionBooleanFlagKey =
+  (typeof THE_STORM_COMPANION_BOOLEAN_FLAG_KEYS)[number];
+
+export const THE_STORM_COMPANION_VARIANT_FLAG_KEYS = [] as const;
+
+export type TheStormCompanionVariantFlagKey =
+  (typeof THE_STORM_COMPANION_VARIANT_FLAG_KEYS)[number];
+
 export const MANAGED_FLAG_KEYS = [
   ...SCOUT_FLAG_KEYS,
   ...BIRMEL_FLAG_KEYS,
@@ -312,6 +332,7 @@ export const MANAGED_FLAG_KEYS = [
   ...TEMPORAL_FLAG_KEYS,
   ...ALERT_DASHBOARD_FLAG_KEYS,
   ...THE_STORM_FLAG_KEYS,
+  ...THE_STORM_COMPANION_FLAG_KEYS,
 ] as const;
 
 export type ManagedFlagKey = (typeof MANAGED_FLAG_KEYS)[number];
@@ -325,6 +346,7 @@ export const MANAGED_BOOLEAN_FLAG_KEYS = [
   ...TEMPORAL_BOOLEAN_FLAG_KEYS,
   ...ALERT_DASHBOARD_BOOLEAN_FLAG_KEYS,
   ...THE_STORM_BOOLEAN_FLAG_KEYS,
+  ...THE_STORM_COMPANION_BOOLEAN_FLAG_KEYS,
 ] as const;
 
 export type ManagedBooleanFlagKey = (typeof MANAGED_BOOLEAN_FLAG_KEYS)[number];
@@ -338,6 +360,7 @@ export const MANAGED_VARIANT_FLAG_KEYS = [
   ...TEMPORAL_VARIANT_FLAG_KEYS,
   ...ALERT_DASHBOARD_VARIANT_FLAG_KEYS,
   ...THE_STORM_VARIANT_FLAG_KEYS,
+  ...THE_STORM_COMPANION_VARIANT_FLAG_KEYS,
 ] as const;
 
 export type ManagedVariantFlagKey = (typeof MANAGED_VARIANT_FLAG_KEYS)[number];

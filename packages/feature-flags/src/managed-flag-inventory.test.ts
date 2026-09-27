@@ -96,6 +96,7 @@ describe("ManagedFlagInventorySchema", () => {
       "temporal",
       "alert-dashboard",
       "the-storm",
+      "the-storm-companion",
     ]);
     expect(
       materializeManagedNamespaceEnvironment(
@@ -288,6 +289,39 @@ describe("ManagedFlagInventorySchema", () => {
     ).text();
     const expected = await generateFlagTypesSource();
     expect(generatedOnDisk).toBe(expected);
+  });
+});
+
+describe("The Storm companion pilot rollout", () => {
+  test("targets Alt 1 in beta while keeping production and fallback off", () => {
+    const key = "the-storm-companion-pilot-enabled";
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === key,
+    );
+    expect(declared).toMatchObject({ default: false, rollouts: [] });
+
+    const beta = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "beta",
+      "the-storm-companion",
+    ).find((flag) => flag.key === key);
+    expect(beta).toMatchObject({
+      default: false,
+      rollouts: [
+        {
+          segmentKey: "the-storm-companion-alt-1",
+          constraints: [{ property: "pilot", value: "alt-1" }],
+          result: true,
+        },
+      ],
+    });
+
+    const prod = materializeManagedNamespaceEnvironment(
+      managedFlagInventory,
+      "prod",
+      "the-storm-companion",
+    ).find((flag) => flag.key === key);
+    expect(prod).toMatchObject({ default: false, rollouts: [] });
   });
 });
 

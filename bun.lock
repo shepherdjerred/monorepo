@@ -2083,6 +2083,7 @@
       "version": "0.1.0",
       "dependencies": {
         "@shepherdjerred/config": "workspace:*",
+        "@shepherdjerred/feature-flags": "workspace:*",
         "@shepherdjerred/llm-models": "workspace:*",
         "mineflayer": "4.39.0",
         "zod": "^4.4.3",

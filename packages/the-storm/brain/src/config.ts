@@ -1,5 +1,6 @@
 import { defineConfig } from "@shepherdjerred/config";
 import { createFileSource } from "@shepherdjerred/config/sources/file.ts";
+import type { ConfigSource } from "@shepherdjerred/config/source.ts";
 import { z } from "zod";
 
 const Hour = z.number().int().min(0).max(23);
@@ -7,8 +8,9 @@ const Port = z.number().int().min(1).max(65_535);
 const definition = {
   enabled: {
     schema: z.boolean(),
-    sources: ["file", "default"],
+    sources: ["flag", "file", "default"],
     default: false,
+    names: { flag: "the-storm-companion-pilot-enabled" },
   },
   timeZone: {
     schema: z.string().min(1),
@@ -107,7 +109,10 @@ const ConfigSchema = z
 
 export type PilotConfig = z.infer<typeof ConfigSchema>;
 
-export async function loadPilotConfig(path: string): Promise<PilotConfig> {
+export async function loadPilotConfig(
+  path: string,
+  flagSource?: ConfigSource,
+): Promise<PilotConfig> {
   const file = Bun.file(path);
   if (!(await file.exists())) {
     throw new Error(`pilot configuration is missing: ${path}`);
@@ -115,7 +120,10 @@ export async function loadPilotConfig(path: string): Promise<PilotConfig> {
   ConfigSchema.parse(await file.json());
   const resolver = defineConfig({
     definition,
-    sources: { file: await createFileSource({ path }) },
+    sources: {
+      file: await createFileSource({ path }),
+      ...(flagSource === undefined ? {} : { flag: flagSource }),
+    },
   });
   const entries = await Promise.all(
     resolver.keys.map(async (key) => [key, await resolver.value(key)] as const),
