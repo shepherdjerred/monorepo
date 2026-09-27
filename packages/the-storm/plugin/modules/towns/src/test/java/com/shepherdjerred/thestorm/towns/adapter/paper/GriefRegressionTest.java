@@ -7,12 +7,17 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Raid;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Arrow;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Vehicle;
+import org.bukkit.entity.Wither;
 import org.bukkit.entity.Wolf;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityInteractEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
 import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.event.raid.RaidTriggerEvent;
@@ -156,6 +161,50 @@ final class GriefRegressionTest extends AegisServer {
     assertThat(raidAllowed(alice, nearTown)).isTrue();
   }
 
+  @Test
+  void staffBypassAllowsRaidsNearForeignLand() {
+    bob.addAttachment(plugin, Guard.BYPASS_PERMISSION, true);
+    bob.setLocation(new Location(world, 120, Y, Z));
+
+    assertThat(raidAllowed(bob, new Location(world, 120, Y, Z))).isTrue();
+  }
+
+  @Test
+  void explosiveBedsNeedBuildPermissionEvenWhenPublicSwitchesAreAllowed()
+      throws InterruptedException {
+    alice.setLocation(new Location(world, CLAIM_X, Y, Z));
+    server.dispatchCommand(alice, "claim flag public-switches true");
+    awaitLine(alice, "public-switches is now on here.");
+    var bed = typed(CLAIM_X, Material.RED_BED);
+    var click =
+        call(
+            new PlayerInteractEvent(
+                bob, Action.RIGHT_CLICK_BLOCK, null, bed, BlockFace.UP, EquipmentSlot.HAND));
+
+    assertThat(click.useInteractedBlock()).isEqualTo(org.bukkit.event.Event.Result.DENY);
+    assertThat(click.useItemInHand()).isEqualTo(org.bukkit.event.Event.Result.DENY);
+  }
+
+  @Test
+  void chargingAnAnchorNeedsBuildPermissionEvenWhenPublicSwitchesAreAllowed()
+      throws InterruptedException {
+    alice.setLocation(new Location(world, CLAIM_X, Y, Z));
+    server.dispatchCommand(alice, "claim flag public-switches true");
+    awaitLine(alice, "public-switches is now on here.");
+    var anchor = typed(CLAIM_X, Material.RESPAWN_ANCHOR);
+    var click =
+        call(
+            new PlayerInteractEvent(
+                bob,
+                Action.RIGHT_CLICK_BLOCK,
+                new ItemStack(Material.GLOWSTONE),
+                anchor,
+                BlockFace.UP,
+                EquipmentSlot.HAND));
+
+    assertThat(click.useItemInHand()).isEqualTo(org.bukkit.event.Event.Result.DENY);
+  }
+
   // P1-7: vehicles carrying animals off. (MockBukkit's boats cannot report being leashed, so a
   // pig stands in as the vehicle; leashed boats are in E2E-CASES.md.)
 
@@ -181,5 +230,16 @@ final class GriefRegressionTest extends AegisServer {
     assertThat(placeAllowed(bob, 250, Material.WITHER_SKELETON_SKULL)).isFalse();
     assertThat(placeAllowed(alice, 250, Material.WITHER_SKELETON_SKULL)).isTrue();
     assertThat(placeAllowed(bob, 1000, Material.WITHER_SKELETON_SKULL)).isTrue();
+  }
+
+  @Test
+  void staffBypassAllowsWitherSkullsNearForeignLand() {
+    bob.addAttachment(plugin, Guard.BYPASS_PERMISSION, true);
+    block(250, Y - 1, Z).setType(Material.SOUL_SAND);
+
+    assertThat(placeAllowed(bob, 250, Material.WITHER_SKELETON_SKULL)).isTrue();
+    var wither = (Wither) world.spawnEntity(new Location(world, 250, Y, Z), EntityType.WITHER);
+    var spawn = call(new CreatureSpawnEvent(wither, CreatureSpawnEvent.SpawnReason.BUILD_WITHER));
+    assertThat(spawn.isCancelled()).isFalse();
   }
 }

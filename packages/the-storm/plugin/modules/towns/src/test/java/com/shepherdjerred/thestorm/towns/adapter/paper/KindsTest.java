@@ -102,6 +102,7 @@ final class KindsTest {
     assertThat(kinds.changesBlocks(Material.IRON_AXE)).isTrue();
     assertThat(kinds.changesBlocks(Material.WOODEN_HOE)).isTrue();
     assertThat(kinds.changesBlocks(Material.HONEYCOMB)).isTrue();
+    assertThat(kinds.changesBlocks(Material.GLOWSTONE)).isTrue();
     assertThat(kinds.changesBlocks(Material.BRUSH)).isTrue();
     assertThat(kinds.changesBlocks(Material.ZOMBIE_SPAWN_EGG)).isTrue();
     assertThat(kinds.changesBlocks(Material.RED_DYE)).isTrue();

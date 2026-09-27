@@ -89,6 +89,10 @@ final class WitherListener implements Listener {
   }
 
   private boolean nearForeignLand(UUID player, Location at) {
+    var online = server.getPlayer(player);
+    if (online != null && online.hasPermission(Guard.BYPASS_PERMISSION)) {
+      return false;
+    }
     var center = ChunkPos.ofBlock(Guard.world(at).getName(), at.getBlockX(), at.getBlockZ());
     return neighbourhood.foreignLandNear(player, center, radius).isPresent();
   }

@@ -51,6 +51,14 @@ final class InteractListener implements Listener {
       event.setUseItemInHand(Event.Result.DENY);
       return;
     }
+    // Bed and anchor explosions have no player source in BlockExplodeEvent. Paper has no
+    // reliable bed-explosion query for every dimension and biome, so protect every use.
+    if (canExplodeWhenUsed(block)
+        && !guard.permits(player, new Act(Action.BUILD, Subject.BLOCK), land)) {
+      event.setUseInteractedBlock(Event.Result.DENY);
+      event.setUseItemInHand(Event.Result.DENY);
+      return;
+    }
     var item = event.getItem();
     if (item == null || !kinds.changesBlocks(item.getType())) {
       return;
@@ -64,6 +72,11 @@ final class InteractListener implements Listener {
     if (!allowed) {
       event.setUseItemInHand(Event.Result.DENY);
     }
+  }
+
+  private static boolean canExplodeWhenUsed(Block block) {
+    return block.getType() == Material.RESPAWN_ANCHOR
+        || org.bukkit.Tag.BEDS.isTagged(block.getType());
   }
 
   /**

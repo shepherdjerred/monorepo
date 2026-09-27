@@ -159,7 +159,10 @@ final class MobListener implements Listener {
     }
     var chunk =
         ChunkPos.ofBlock(Guard.world(centre).getName(), centre.getBlockX(), centre.getBlockZ());
-    if (neighbourhood.foreignLandNear(player.getUniqueId(), chunk, raidRadiusChunks).isPresent()) {
+    if (!player.hasPermission(Guard.BYPASS_PERMISSION)
+        && neighbourhood
+            .foreignLandNear(player.getUniqueId(), chunk, raidRadiusChunks)
+            .isPresent()) {
       event.setCancelled(true);
     }
   }

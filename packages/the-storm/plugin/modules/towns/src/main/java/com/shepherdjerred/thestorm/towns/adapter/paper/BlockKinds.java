@@ -82,6 +82,7 @@ final class BlockKinds {
           Material.POTION,
           Material.SHEARS,
           Material.ENDER_EYE,
+          Material.GLOWSTONE,
           Material.FLINT_AND_STEEL,
           Material.FIRE_CHARGE);
 
