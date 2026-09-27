@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.core.module;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -28,6 +29,11 @@ public final class Services {
           type.getName() + " is not provided; is its module enabled and ordered earlier?");
     }
     return type.cast(service);
+  }
+
+  /** An optional provider, for features whose modules may be disabled. */
+  public <T> Optional<T> find(Class<T> type) {
+    return Optional.ofNullable(services.get(type)).map(type::cast);
   }
 
   /** Removes every provider (on plugin disable). */

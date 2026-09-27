@@ -3,6 +3,7 @@ package com.shepherdjerred.thestorm.towns.adapter.paper;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.shepherdjerred.thestorm.core.protection.Decision;
+import com.shepherdjerred.thestorm.core.protection.GraveRecovery;
 import com.shepherdjerred.thestorm.core.protection.ProtectedAction;
 import com.shepherdjerred.thestorm.core.protection.Protection;
 import java.lang.reflect.Proxy;
@@ -81,6 +82,26 @@ final class ProtectionListenersTest extends AegisServer {
     assertThat(rightClick(alice, chest)).isNotEqualTo(Event.Result.DENY);
     assertThat(rightClick(bob, spawnDoor)).isNotEqualTo(Event.Result.DENY);
     assertThat(rightClick(bob, spawnChest)).isEqualTo(Event.Result.DENY);
+  }
+
+  @Test
+  void aGraveOwnerCanRecoverThroughTownAndAdminContainerProtection() {
+    var claimGrave = block(CLAIM_X, Y, Z);
+    claimGrave.setType(Material.CHEST);
+    var adminGrave = block(1, Y, 0);
+    adminGrave.setType(Material.CHEST);
+    var ordinary = block(CLAIM_X + 2, Y, Z);
+    ordinary.setType(Material.CHEST);
+    plugin.services.provide(
+        GraveRecovery.class,
+        (player, block) ->
+            player.equals(bob.getUniqueId())
+                && (block.equals(claimGrave) || block.equals(adminGrave)));
+
+    assertThat(rightClick(bob, claimGrave)).isNotEqualTo(Event.Result.DENY);
+    assertThat(rightClick(bob, adminGrave)).isNotEqualTo(Event.Result.DENY);
+    assertThat(rightClick(bob, ordinary)).isEqualTo(Event.Result.DENY);
+    assertThat(rightClick(server.addPlayer("Carol"), claimGrave)).isEqualTo(Event.Result.DENY);
   }
 
   private Event.Result rightClick(PlayerMock player, Block block) {
