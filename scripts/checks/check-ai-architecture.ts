@@ -182,6 +182,8 @@ const CODEX_AND_RELEASE_CREDENTIAL_PATHS = new Set([
   "packages/temporal/src/activities/scout/scout-season-refresh-codex.ts",
   "packages/temporal/src/schedules/schedule-definitions.ts",
   "scripts/checks/ci/check-ci-env.ts",
+  // The Woodpecker release step grants only the release refiner's project key.
+  "packages/woodpecker-config-extension/src/pipeline/lanes/scout.ts",
   "scripts/release/release.ts",
 ]);
 
