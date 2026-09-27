@@ -36,6 +36,9 @@ const CONSUMER_NAMESPACES = [
   // namespace, not `temporal` — it needs its own entry here or its
   // temporal-call-graph-tracing check silently degrades to the default false.
   "buildkite",
+  // storm-brain reads the storm namespace flags (classify/triage gates);
+  // without this entry Flipt ingress rejects it and both endpoints 503.
+  "storm-brain",
 ] as const;
 
 export function createFliptChart(app: App) {

@@ -9,6 +9,7 @@ import { createIngress } from "@shepherdjerred/homelab/cdk8s/src/misc/tailscale.
 import { createCloudflareTunnelBinding } from "@shepherdjerred/homelab/cdk8s/src/misc/cloudflare-tunnel.ts";
 import { NVME_STORAGE_CLASS } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import type { HelmValuesForChart } from "@shepherdjerred/homelab/cdk8s/src/misc/typed-helm-parameters.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import {
   DISCORDSRV_PLUGIN_URL,
   getDiscordSrvConfigMapManifest,
@@ -24,6 +25,7 @@ import {
 
 const NAMESPACE = "minecraft-tsmc";
 const SECRET_NAME = "minecraft-tsmc-discord";
+const BRAIN_SECRET_NAME = "minecraft-tsmc-storm-brain";
 
 export function createMinecraftTsmcApp(chart: Chart) {
   // Create ConfigMaps externally (not in Helm values) to avoid Application size limits
@@ -42,6 +44,19 @@ export function createMinecraftTsmcApp(chart: Chart) {
     },
     metadata: {
       name: SECRET_NAME,
+      namespace: NAMESPACE,
+    },
+  });
+
+  // Shared storm-brain bearer token for the in-game agent module. Secrets
+  // cannot cross namespaces, so the game side syncs the same owning vault
+  // item into its own namespace; only the token field is consumed below.
+  new OnePasswordItem(chart, "minecraft-tsmc-storm-brain-1p", {
+    spec: {
+      itemPath: vaultItemPath("storm-brain"),
+    },
+    metadata: {
+      name: BRAIN_SECRET_NAME,
       namespace: NAMESPACE,
     },
   });
@@ -177,10 +192,20 @@ export function createMinecraftTsmcApp(chart: Chart) {
       ...getDiscordSrvExtraVolumes(NAMESPACE),
     ],
 
-    // Config sync settings + DiscordSRV secrets
+    // Config sync settings + DiscordSRV secrets + storm-brain token
     extraEnv: {
       ...getMinecraftExtraEnv(),
       ...getDiscordSrvExtraEnv(SECRET_NAME),
+      // The agent module aborts plugin startup without this; must match the
+      // token projected into the storm-brain namespace (same vault item).
+      STORM_BRAIN_BEARER_TOKEN: {
+        valueFrom: {
+          secretKeyRef: {
+            name: BRAIN_SECRET_NAME,
+            key: "STORM_BRAIN_BEARER_TOKEN",
+          },
+        },
+      },
       // Scope removeOldMods to only the plugins known to leave orphaned
       // duplicate jars on a version bump. mcMMO and LWCX are intentionally
       // PVC-only (no direct download URL, see pluginUrls comment below) and

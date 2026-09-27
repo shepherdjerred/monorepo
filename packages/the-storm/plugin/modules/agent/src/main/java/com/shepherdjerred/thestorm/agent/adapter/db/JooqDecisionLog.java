@@ -95,7 +95,8 @@ public final class JooqDecisionLog implements DecisionLog {
   }
 
   @Override
-  public CompletableFuture<Integer> strikes(UUID player, Offense offense, Instant since) {
+  public CompletableFuture<Integer> strikes(
+      UUID player, Offense offense, Instant since, boolean includeShadow) {
     return database.read(
         dsl ->
             dsl
@@ -107,7 +108,7 @@ public final class JooqDecisionLog implements DecisionLog {
                 .fetch()
                 .stream()
                 .map(JooqDecisionLog::toDecision)
-                .filter(decision -> !decision.shadow())
+                .filter(decision -> includeShadow || !decision.shadow())
                 .filter(decision -> decision.overturnedBy().isEmpty())
                 .filter(decision -> decision.action().isStrike())
                 .mapToInt(decision -> 1)
