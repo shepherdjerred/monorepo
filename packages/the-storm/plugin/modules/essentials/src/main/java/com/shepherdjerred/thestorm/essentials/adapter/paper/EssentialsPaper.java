@@ -74,7 +74,7 @@ public final class EssentialsPaper {
 
   /**
    * Registers everything. Throws if the configured kits name unknown items or enchantments, or the
-   * spawn is not a safe place to stand in a loaded world.
+   * spawn is not a safe place to stand in a loaded chunk.
    */
   public static EssentialsPaper start(ModuleContext context, EssentialsConfig config, App app) {
     var server = context.plugin().getServer();
@@ -143,7 +143,7 @@ public final class EssentialsPaper {
 
   /**
    * The spawn is where new players arrive, so a bad one would drop them into a wall, lava or the
-   * void. Checked on the main thread at enable; loads the spawn chunk if needed.
+   * void. Checked on the main thread at enable, only when the spawn chunk is already loaded.
    */
   private static void requireSafeSpawn(PaperRuntime runtime, EssentialsConfig config) {
     var spawn = config.spawn();
@@ -152,7 +152,12 @@ public final class EssentialsPaper {
       throw new IllegalStateException(
           "essentials.yml spawn names world '" + spawn.world() + "', which is not loaded");
     }
-    if (!SafeLocations.isSafe(location.orElseThrow())) {
+    var at = location.orElseThrow();
+    if (!at.getWorld().isChunkLoaded(at.getBlockX() >> 4, at.getBlockZ() >> 4)) {
+      throw new IllegalStateException(
+          "essentials.yml spawn at " + spawn.describe() + " is in an unloaded chunk");
+    }
+    if (!SafeLocations.isSafe(at)) {
       throw new IllegalStateException(
           "essentials.yml spawn at "
               + spawn.describe()

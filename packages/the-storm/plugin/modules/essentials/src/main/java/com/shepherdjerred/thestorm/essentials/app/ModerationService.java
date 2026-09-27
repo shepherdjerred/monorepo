@@ -25,11 +25,18 @@ public final class ModerationService {
   private final InstantSource time;
   private final Map<UUID, Standing> standings = new ConcurrentHashMap<>();
   private final CompletableFuture<Void> loaded;
+  private volatile boolean ready;
 
   private ModerationService(ModerationLogStore log, InstantSource time) {
     this.log = log;
     this.time = time;
-    this.loaded = log.all().thenAccept(entries -> entries.forEach(this::apply));
+    this.loaded =
+        log.all()
+            .thenAccept(
+                entries -> {
+                  entries.forEach(this::apply);
+                  ready = true;
+                });
   }
 
   /**
@@ -48,6 +55,19 @@ public final class ModerationService {
   /** Completes once the audit log has been replayed. */
   public CompletableFuture<Void> loaded() {
     return loaded;
+  }
+
+  /** Whether login checks can safely read the complete in-memory ban list. */
+  public boolean ready() {
+    return ready;
+  }
+
+  /** Checks the in-memory ban list without waiting for storage. Requires {@link #ready()}. */
+  public Optional<Ban> activeBanNow(UUID player) {
+    if (!ready) {
+      throw new IllegalStateException("ban list has not loaded");
+    }
+    return standings.getOrDefault(player, Standing.CLEAN).activeBan(time.instant());
   }
 
   /**
