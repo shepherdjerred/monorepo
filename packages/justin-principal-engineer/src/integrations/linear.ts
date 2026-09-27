@@ -24,6 +24,12 @@ const TeamLabelsSchema = z.object({
   nodes: z.array(z.object({ id: z.string().min(1), name: z.string().min(1) })),
 });
 
+const MutationResultSchema = z.object({
+  data: z.object({
+    issueUpdate: z.object({ success: z.literal(true) }),
+  }),
+});
+
 const TeamStatesSchema = z.object({
   data: z.object({
     teams: z.object({
@@ -217,7 +223,7 @@ export class LinearClient {
         }
         return id;
       });
-    await this.command([
+    const output = await this.command([
       "api",
       "mutation($id: String!, $add: [String!], $remove: [String!]) { issueUpdate(id: $id, input: {addedLabelIds: $add, removedLabelIds: $remove}) { success } }",
       "--variables-json",
@@ -227,6 +233,15 @@ export class LinearClient {
         remove: toIds(input.remove),
       }),
     ]);
+    // A zero exit does not mean the mutation applied: Linear can answer
+    // success:false inside a 200. Reject it here so a failed park never
+    // leaves the issue eligible.
+    const applied = MutationResultSchema.safeParse(JSON.parse(output));
+    if (!applied.success) {
+      throw new Error(
+        `Linear label mutation failed for ${input.nodeId}: ${output.slice(0, 200)}`,
+      );
+    }
   }
 
   private readonly teamStatesCache = new Map<

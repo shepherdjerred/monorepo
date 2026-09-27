@@ -125,6 +125,7 @@ function recordingRunner(
     string,
     { name: string; type: string; position: number }[]
   > = defaultStates(),
+  mutateSuccess = true,
 ): CommandRunner {
   return async (args) => {
     recorded.push([...args]);
@@ -173,7 +174,7 @@ function recordingRunner(
       return {
         exitCode: 0,
         stdout: JSON.stringify({
-          data: { issueUpdate: { success: true } },
+          data: { issueUpdate: { success: mutateSuccess } },
         }),
         stderr: "",
         timedOut: false,
@@ -300,6 +301,20 @@ describe("Linear label mutations", () => {
       (args) => args[2] === "issue" && args[3] === "update",
     );
     expect(update).toEqual(expect.arrayContaining(["--state", "Doing"]));
+  });
+
+  test("rejects unsuccessful label mutations", async () => {
+    const recorded: string[][] = [];
+    const client = new LinearClient(
+      "SJ",
+      recordingRunner(recorded, defaultTeams(), defaultStates(), false),
+    );
+    await expect(
+      client.needsHuman(
+        issue({ identifier: "SJ-1", labels: ["agent:codex"] }),
+        "reason",
+      ),
+    ).rejects.toThrow(/label mutation failed/);
   });
 
   test("mutations reject issues without a team", async () => {
