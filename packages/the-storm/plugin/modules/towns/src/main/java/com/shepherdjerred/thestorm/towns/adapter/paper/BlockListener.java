@@ -54,19 +54,17 @@ final class BlockListener implements Listener {
   /**
    * Breaking a block drops what hangs on it: torches, signs, buttons and ladders beside it and item
    * frames and paintings on it. On a border those can be on someone else's land, so they must be
-   * the player's to break too. Blocks away from a border (every neighbour on the same land) skip
-   * the check.
+   * the player's to break too. Hanging entities need their own permission even when every
+   * neighboring block belongs to the same land.
    */
   private boolean mayDropSupported(Player player, Block block) {
     var own = guard.land(block);
-    var border = false;
     for (var face : Redstone.FACES) {
       var neighbour = block.getRelative(face);
       var land = guard.land(neighbour);
       if (land.sameOwnerAs(own)) {
         continue;
       }
-      border = true;
       var type = neighbour.getType();
       if (!type.isAir()
           && !type.isSolid()
@@ -74,7 +72,7 @@ final class BlockListener implements Listener {
         return false;
       }
     }
-    return !border || mayDropHanging(player, block);
+    return mayDropHanging(player, block);
   }
 
   private boolean mayDropHanging(Player player, Block block) {
