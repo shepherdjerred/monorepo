@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.economy.adapter.paper;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
+import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.economy.app.LedgerWallets;
 import com.shepherdjerred.thestorm.economy.domain.CrystalFormat;
 import com.shepherdjerred.thestorm.economy.domain.EconomyConfig;
@@ -20,7 +21,11 @@ public final class EconomyPaper {
         .registerEvents(new FirstJoinListener(wallets, format, server, replies), context.plugin());
     var commands =
         new EconomyCommands(
-            wallets, format, config.baltopSize(), new EconomyCommands.Paper(server, replies));
+            wallets,
+            format,
+            config.baltopSize(),
+            new EconomyCommands.Paper(
+                server, replies, context.services().require(PlayerDirectory.class)));
     context
         .lifecycle()
         .registerEventHandler(

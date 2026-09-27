@@ -10,6 +10,7 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import com.shepherdjerred.thestorm.core.players.PlayerDirectory;
 import com.shepherdjerred.thestorm.core.result.Result;
 import com.shepherdjerred.thestorm.economy.app.AccountId;
 import com.shepherdjerred.thestorm.economy.app.Crystals;
@@ -36,9 +37,8 @@ import org.bukkit.entity.Player;
  * /eco give|take|set}. Every change is a ledgered transfer; {@code /eco} moves crystals to or from
  * the server and records the administrator's name in the reason.
  *
- * <p>A named player is found among online players first, then in the economy's own record of
- * everyone who has joined (read off the main thread). Players who have never joined cannot be paid
- * or looked up.
+ * <p>A named player is found among online players first, then in the shared player directory (read
+ * off the main thread). Players who have never joined cannot be paid or looked up.
  */
 final class EconomyCommands {
 
@@ -61,7 +61,7 @@ final class EconomyCommands {
    * @param server the server, for online players
    * @param replies messages and main-thread completion
    */
-  record Paper(Server server, Replies replies) {}
+  record Paper(Server server, Replies replies, PlayerDirectory players) {}
 
   EconomyCommands(LedgerWallets wallets, CrystalFormat format, int baltopSize, Paper paper) {
     this.wallets = wallets;
@@ -268,7 +268,7 @@ final class EconomyCommands {
             });
   }
 
-  /** Finds {@code name} online, else in the economy's records, and runs {@code action} on them. */
+  /** Finds {@code name} online, else in the shared directory, and runs {@code action} on them. */
   private void withPlayer(CommandSender sender, String name, Consumer<SeenPlayer> action) {
     Player online = paper.server().getPlayerExact(name);
     if (online != null) {
@@ -278,11 +278,11 @@ final class EconomyCommands {
     paper
         .replies()
         .whenDone(
-            wallets.findPlayer(name),
+            paper.players().byName(name),
             sender,
             found ->
                 found.ifPresentOrElse(
-                    action,
+                    known -> action.accept(new SeenPlayer(known.uuid(), known.lastName())),
                     () ->
                         sender.sendMessage(
                             Replies.error("Nobody named " + name + " has played on The Storm."))));
