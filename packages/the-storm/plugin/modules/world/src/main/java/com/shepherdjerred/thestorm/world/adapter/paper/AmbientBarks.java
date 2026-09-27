@@ -18,6 +18,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
@@ -60,6 +62,19 @@ public final class AmbientBarks implements Listener {
     if (!nearSpawn(event.getFrom())) {
       announce(event.getPlayer(), destination);
     }
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+  public void onTeleport(PlayerTeleportEvent event) {
+    var destination = event.getTo();
+    if (destination != null && !nearSpawn(event.getFrom())) {
+      announce(event.getPlayer(), destination);
+    }
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR)
+  public void onRespawn(PlayerRespawnEvent event) {
+    announce(event.getPlayer(), event.getRespawnLocation());
   }
 
   private void announce(Player player, Location destination) {
