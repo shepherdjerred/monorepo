@@ -1,16 +1,20 @@
 package com.shepherdjerred.thestorm.shards.adapter.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
 import com.shepherdjerred.thestorm.shards.domain.StormTier;
 import java.util.UUID;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.damage.DamageType;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockbukkit.mockbukkit.ServerMock;
@@ -54,7 +58,8 @@ final class CombatListenerTest {
   }
 
   private double swing(DamageCause cause, LivingEntity victim) {
-    return listener.dealtMultiplier(attacker, attacker, cause, victim);
+    return listener.dealtMultiplier(
+        attacker, attacker, new CombatListener.Hit(cause, null), victim);
   }
 
   @Test
@@ -69,6 +74,19 @@ final class CombatListenerTest {
     attacker.getInventory().setItemInMainHand(storm(Material.DIAMOND_SWORD, 5));
 
     assertThat(swing(DamageCause.ENTITY_SWEEP_ATTACK, zombie)).isCloseTo(1.25, within(EPSILON));
+  }
+
+  @Test
+  void maceSmashGetsTheMeleeBonus() {
+    attacker.getInventory().setItemInMainHand(storm(Material.MACE, 5));
+
+    assertThat(
+            listener.dealtMultiplier(
+                attacker,
+                attacker,
+                new CombatListener.Hit(DamageCause.CUSTOM, DamageType.MACE_SMASH),
+                zombie))
+        .isCloseTo(1.15, within(EPSILON));
   }
 
   @Test
@@ -104,7 +122,9 @@ final class CombatListenerTest {
   void mobsAndSelfHarmGetNoBonus() {
     attacker.getInventory().setItemInMainHand(storm(Material.DIAMOND_SWORD, 5));
 
-    assertThat(listener.dealtMultiplier(zombie, zombie, DamageCause.ENTITY_ATTACK, attacker))
+    assertThat(
+            listener.dealtMultiplier(
+                zombie, zombie, new CombatListener.Hit(DamageCause.ENTITY_ATTACK, null), attacker))
         .isEqualTo(1);
     assertThat(swing(DamageCause.ENTITY_ATTACK, attacker)).isEqualTo(1);
   }
@@ -115,7 +135,9 @@ final class CombatListenerTest {
     // The player now holds something else; the arrow's bow still counts.
     attacker.getInventory().setItemInMainHand(ItemStack.of(Material.DIRT));
 
-    assertThat(listener.dealtMultiplier(attacker, arrow, DamageCause.PROJECTILE, zombie))
+    assertThat(
+            listener.dealtMultiplier(
+                attacker, arrow, new CombatListener.Hit(DamageCause.PROJECTILE, null), zombie))
         .isCloseTo(1.15, within(EPSILON));
   }
 
@@ -124,7 +146,9 @@ final class CombatListenerTest {
     attacker.getInventory().setItemInMainHand(storm(Material.DIAMOND_SWORD, 5));
     var arrow = new FiredArrow(harness.server, ItemStack.of(Material.BOW));
 
-    assertThat(listener.dealtMultiplier(attacker, arrow, DamageCause.PROJECTILE, zombie))
+    assertThat(
+            listener.dealtMultiplier(
+                attacker, arrow, new CombatListener.Hit(DamageCause.PROJECTILE, null), zombie))
         .isEqualTo(1);
   }
 
@@ -133,7 +157,12 @@ final class CombatListenerTest {
     var rocket = harness.world.spawn(attacker.getLocation(), Firework.class);
     listener.tagRocket(rocket, storm(Material.CROSSBOW, 2));
 
-    assertThat(listener.dealtMultiplier(attacker, rocket, DamageCause.ENTITY_EXPLOSION, zombie))
+    assertThat(
+            listener.dealtMultiplier(
+                attacker,
+                rocket,
+                new CombatListener.Hit(DamageCause.ENTITY_EXPLOSION, null),
+                zombie))
         .isCloseTo(1.10, within(EPSILON));
   }
 
@@ -144,10 +173,32 @@ final class CombatListenerTest {
     var handThrown = harness.world.spawn(attacker.getLocation(), Firework.class);
     listener.tagRocket(handThrown, null);
 
-    assertThat(listener.dealtMultiplier(attacker, plain, DamageCause.ENTITY_EXPLOSION, zombie))
+    assertThat(
+            listener.dealtMultiplier(
+                attacker,
+                plain,
+                new CombatListener.Hit(DamageCause.ENTITY_EXPLOSION, null),
+                zombie))
         .isEqualTo(1);
-    assertThat(listener.dealtMultiplier(attacker, handThrown, DamageCause.ENTITY_EXPLOSION, zombie))
+    assertThat(
+            listener.dealtMultiplier(
+                attacker,
+                handThrown,
+                new CombatListener.Hit(DamageCause.ENTITY_EXPLOSION, null),
+                zombie))
         .isEqualTo(1);
+  }
+
+  @Test
+  void aProjectileWithOnlyOneStormTagIsCorrupt() {
+    var rocket = harness.world.spawn(attacker.getLocation(), Firework.class);
+    rocket
+        .getPersistentDataContainer()
+        .set(new NamespacedKey(harness.plugin, "storm_tier"), PersistentDataType.INTEGER, 2);
+
+    assertThatThrownBy(() -> harness.gear.projectilePiece(rocket))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("incomplete Storm gear tag");
   }
 
   private PlayerMock armored() {

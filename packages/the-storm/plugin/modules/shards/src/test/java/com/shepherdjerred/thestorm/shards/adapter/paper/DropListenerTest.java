@@ -13,16 +13,23 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPistonExtendEvent;
 import org.bukkit.event.block.BlockPistonRetractEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
+import org.bukkit.event.entity.EntityTransformEvent;
+import org.bukkit.event.entity.EntityTransformEvent.TransformReason;
+import org.bukkit.event.world.ChunkPopulateEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.mockbukkit.mockbukkit.block.BlockMock;
+import org.mockbukkit.mockbukkit.entity.EntityMock;
 import org.mockbukkit.mockbukkit.entity.PlayerMock;
 
 final class DropListenerTest {
@@ -39,7 +46,10 @@ final class DropListenerTest {
                   Map.of("ZOMBIE", new DropRule(1, 1, 1)),
                   Map.of("DIAMOND_ORE", new DropRule(1, 2, 2)))),
           placed,
-          harness.kit(0.0));
+          harness.kit(0.0),
+          new DropListener.ProvenanceKeys(
+              new NamespacedKey(harness.plugin, "excluded_shard_origin"),
+              new NamespacedKey(harness.plugin, "fresh_shard_chunk")));
   private final PlayerMock miner = harness.server.addPlayer();
 
   DropListenerTest() {
@@ -56,6 +66,7 @@ final class DropListenerTest {
     var block = harness.world.getBlockAt(x, 12, 0);
     block.setType(Material.DIAMOND_ORE);
     block.setDrops(List.of(ItemStack.of(Material.DIAMOND)));
+    listener.onPopulate(new ChunkPopulateEvent(block.getChunk()));
     return block;
   }
 
@@ -89,6 +100,17 @@ final class DropListenerTest {
     mine(ore(0));
 
     assertThat(shardsOnTheGround()).isEqualTo(2);
+  }
+
+  @Test
+  void oreInAChunkFromBeforeActivationCannotDropShards() {
+    var oldOre = harness.world.getBlockAt(0, 12, 0);
+    oldOre.setType(Material.DIAMOND_ORE);
+    oldOre.setDrops(List.of(ItemStack.of(Material.DIAMOND)));
+
+    mine(oldOre);
+
+    assertThat(shardsOnTheGround()).isZero();
   }
 
   @Test
@@ -198,5 +220,23 @@ final class DropListenerTest {
     listener.onBreak(event);
 
     assertThat(shardsOnTheGround()).isZero();
+  }
+
+  @Test
+  void convertedSpawnerMobRetainsItsExcludedOrigin() {
+    var source = (EntityMock) harness.world.spawnEntity(miner.getLocation(), EntityType.ZOMBIE);
+    source.setSpawnReason(SpawnReason.SPAWNER);
+    var converted = (EntityMock) harness.world.spawnEntity(miner.getLocation(), EntityType.DROWNED);
+    listener.onTransform(
+        new EntityTransformEvent(source, List.of(converted), TransformReason.DROWNED));
+
+    var marker = new NamespacedKey(harness.plugin, "excluded_shard_origin");
+    assertThat(converted.getPersistentDataContainer().has(marker, PersistentDataType.BYTE))
+        .isTrue();
+
+    var second = (EntityMock) harness.world.spawnEntity(miner.getLocation(), EntityType.ZOMBIE);
+    listener.onTransform(
+        new EntityTransformEvent(converted, List.of(second), TransformReason.CURED));
+    assertThat(second.getPersistentDataContainer().has(marker, PersistentDataType.BYTE)).isTrue();
   }
 }

@@ -29,6 +29,11 @@ public final class ShardDrops {
     return config.mobs().containsKey(entityType);
   }
 
+  /** Whether this origin disqualifies a mob and every entity transformed from it. */
+  public boolean isExcludedSpawnReason(String reason) {
+    return excludedSpawnReasons.contains(reason);
+  }
+
   public DropOutcome evaluate(MobKill kill, RandomGenerator random) {
     if (!worlds.contains(kill.world())) {
       return new Nothing(Reason.WORLD_EXCLUDED);
