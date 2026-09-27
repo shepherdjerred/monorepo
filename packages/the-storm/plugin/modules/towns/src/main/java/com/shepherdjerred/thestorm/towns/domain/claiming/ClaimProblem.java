@@ -24,6 +24,9 @@ public sealed interface ClaimProblem {
   /** The chunk shares no edge with the town's existing claims. */
   record NotAdjacent() implements ClaimProblem {}
 
+  /** Removing this chunk would split the town's remaining land. */
+  record WouldDisconnect() implements ClaimProblem {}
+
   /** Another town's claim is within the buffer. */
   record TooCloseToTown(UUID townId, int buffer) implements ClaimProblem {}
 

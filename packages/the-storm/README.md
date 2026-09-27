@@ -53,6 +53,13 @@ Modules reach each other only through the other module's `app` package, and
 schedule main-thread work only through `core.schedule.Scheduler`. ArchUnit
 tests in `architecture/` enforce all of this.
 
+Towns protection loads persisted claims before registering listeners. If a town
+save fails, it reloads persisted state before accepting another change. If that
+reload also fails, the server shuts down because its in-memory protection state
+may no longer reflect stored claims. A denied join or respawn relocates only to
+an already loaded, permitted location; when none exists, the player is
+disconnected rather than triggering terrain generation in the arrival event.
+
 ## Conventions
 
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating
