@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.core.module;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -22,12 +23,20 @@ public final class Services {
 
   /** The provider of {@code type}. */
   public <T> T require(Class<T> type) {
-    var service = services.get(type);
-    if (service == null) {
+    var found = find(type);
+    if (found.isEmpty()) {
       throw new IllegalStateException(
           type.getName() + " is not provided; is its module enabled and ordered earlier?");
     }
-    return type.cast(service);
+    return found.orElseThrow();
+  }
+
+  /**
+   * The provider of {@code type}, when one is enabled. For optional integrations, where a missing
+   * module degrades the feature instead of breaking startup.
+   */
+  public <T> Optional<T> find(Class<T> type) {
+    return Optional.ofNullable(type.cast(services.get(type)));
   }
 
   /** Removes every provider (on plugin disable). */

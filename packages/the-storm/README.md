@@ -53,6 +53,19 @@ Modules reach each other only through the other module's `app` package, and
 schedule main-thread work only through `core.schedule.Scheduler`. ArchUnit
 tests in `architecture/` enforce all of this.
 
+## AI staff
+
+The `tickets` and `agent` modules are the AI staff: a ticket system plus
+proactive chat enforcement with LLM judgments from the `storm-brain`
+service (`packages/storm-brain`). Operator docs live in the wiki:
+
+- [The Storm AI staff](https://wiki.sjer.red/explanation/the-storm-ai-staff/) —
+  architecture and rationale
+- [Review AI staff decisions](https://wiki.sjer.red/how-to/review-ai-staff-decisions/) —
+  the daily review loop
+- [The Storm agent reference](https://wiki.sjer.red/reference/the-storm-agent/) —
+  commands, permissions, and config
+
 ## Conventions
 
 - `@NullMarked` on every package; NullAway (JSpecify mode) runs as an error.

@@ -1,15 +1,30 @@
 {
   "name": "@shepherdjerred/the-storm",
   "private": true,
-  "description": "Turbo shim over the Gradle build of The Storm's Paper plugin (plugin/) \u2014 scripts wrap Gradle so the workspace joins the task graph (caching + affected). Same pattern as the Go and Rust shims.",
+  "type": "module",
+  "description": "Turbo shim over the Gradle build of The Storm's Paper plugin (plugin/) — scripts wrap Gradle so the workspace joins the task graph (caching + affected). Same pattern as the Go and Rust shims. tests/e2e is the TypeScript real-server harness.",
   "scripts": {
     "build": "mise exec -- gradle -p plugin assemble --console=plain",
     "test": "mise exec -- gradle -p plugin test --console=plain",
-    "lint": "mise exec -- gradle -p plugin spotlessCheck pmdMain pmdTest --console=plain",
-    "typecheck": "mise exec -- gradle -p plugin compileJava compileTestJava --console=plain",
+    "test:e2e": "bun --no-install --bun vitest run --config vitest.e2e.config.ts",
+    "lint": "mise exec -- gradle -p plugin spotlessCheck pmdMain pmdTest --console=plain && bunx --no-install eslint --cache .",
+    "typecheck": "mise exec -- gradle -p plugin compileJava compileTestJava --console=plain && PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",
     "check": "mise exec -- gradle -p plugin check --console=plain",
     "format": "mise exec -- gradle -p plugin spotlessApply --console=plain",
     "test:ci": "bun run test:report",
     "test:report": "bun ../../scripts/ci/run-ci-test.ts"
+  },
+  "devDependencies": {
+    "@shepherdjerred/eslint-config": "workspace:*",
+    "@types/bun": "1.4.2",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "eslint": "^10.7.0",
+    "jiti": "^2.7.0",
+    "minecraft-data": "3.117.0",
+    "mineflayer": "4.39.0",
+    "typescript": "^6.0.3",
+    "vec3": "^0.1.7",
+    "vitest": "5.0.1",
+    "zod": "^4.4.3"
   }
 }
