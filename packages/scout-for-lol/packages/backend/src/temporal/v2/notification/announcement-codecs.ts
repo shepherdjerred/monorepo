@@ -11,6 +11,18 @@ import {
   LeaguePuuidSchema,
 } from "@scout-for-lol/data";
 import { defineVersionedCodec } from "@scout-for-lol/domain/codec/versioned.ts";
+import {
+  RiotMatchIdSchema,
+  type RiotMatchId,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  DiscordGuildIdSchema,
+  type DiscordGuildId,
+} from "@scout-for-lol/domain/identity/discord.ts";
+import {
+  HallBreakRecordsSchema,
+  type HallBreakPayload,
+} from "#src/progression/hall/break-payload.ts";
 import { UndeliverableContentError } from "#src/temporal/v2/notification/undeliverable-content.ts";
 import type {
   EarnedAward,
@@ -31,7 +43,8 @@ import type { SettlementSummary } from "#src/betting/settlement/settlement-types
 import type { SettlementBet } from "#src/betting/settlement/settlement-types.ts";
 
 /**
- * The wire shape of what a `settlement` or `dare-summary` intent announces.
+ * The wire shape of what a `settlement`, `dare-summary` or
+ * `hall-record-break` intent announces.
  *
  * The intent row carries these as an opaque versioned envelope (the domain
  * must not mirror the betting slice's types), and this module is the one
@@ -329,6 +342,58 @@ export function dareSummaryAnnouncementEnvelope(
     ...(summary.leafCounts === undefined
       ? {}
       : { leafCounts: summary.leafCounts }),
+  });
+}
+
+/**
+ * What a `hall-record-break` intent announces: the records one match broke in
+ * one guild's Hall of Fame.
+ *
+ * The records are v1's own `HallBreakPayloadSchema` entries — the exact array
+ * the break outbox stores as `payloadJson` — so the V2 arm renders the same
+ * embed from the same data through v1's `hallBreakEmbed`. Parsing drops a
+ * record id retired by a catalog rename, as v1's reader does; an announcement
+ * left with no records has nothing to say, which the arm reports as
+ * undeliverable content rather than an empty message.
+ *
+ * The guild travels in the payload because the target column names only the
+ * channel, and the delivery policy (`hall_of_fame_enabled`) is per server.
+ * The channel is the intent's target and is deliberately NOT in the payload:
+ * the target column is what the send reads, and a copy here could disagree.
+ */
+export type HallRecordBreakAnnouncement = z.infer<
+  typeof HallRecordBreakAnnouncementSchema
+>;
+export const HallRecordBreakAnnouncementSchema = z
+  .strictObject({
+    guildId: DiscordGuildIdSchema,
+    riotMatchId: RiotMatchIdSchema,
+    records: HallBreakRecordsSchema,
+  })
+  .refine(
+    (announcement) =>
+      announcement.records.every(
+        (record) => record.matchId === announcement.riotMatchId,
+      ),
+    { message: "Hall records must belong to the announced match" },
+  );
+
+export const hallRecordBreakAnnouncementCodec = defineVersionedCodec({
+  kind: "scout-hall-record-break-announcement",
+  version: 1,
+  schema: HallRecordBreakAnnouncementSchema,
+});
+
+/** What a minter puts on a `hall-record-break` intent. */
+export function hallRecordBreakAnnouncementEnvelope(input: {
+  guildId: DiscordGuildId;
+  riotMatchId: RiotMatchId;
+  records: readonly HallBreakPayload[];
+}) {
+  return hallRecordBreakAnnouncementCodec.serialize({
+    guildId: input.guildId,
+    riotMatchId: input.riotMatchId,
+    records: [...input.records],
   });
 }
 

@@ -5,7 +5,9 @@ import type {
   NotificationFailure,
   NotificationIntent,
   NotificationIntentState,
+  NotificationPolicySuppressionReason,
   NotificationRetirementReason,
+  NotificationSuppressionReason,
   OperatorUnknownResolution,
 } from "#src/notifications/intent.ts";
 
@@ -298,6 +300,65 @@ export function suppressStale(
   }
 }
 
+/**
+ * Suppress an unattempted intent because a delivery policy says it must not go
+ * out: the feature is off for the recipient's server, or the recipient opted
+ * out.
+ *
+ * The sibling of {@link suppressStale}, with the same source states and the
+ * same refusals, and without the clock: a policy decision is not refuted by
+ * the intent still being fresh. It never touches an attempt that has begun —
+ * `sending` may already have reached Discord and `unknown-delivery` is the
+ * operator's — because suppressing either would record "not sent" over a send
+ * nobody can rule out.
+ *
+ * A replay under the same reason is `already-applied`; an intent already
+ * suppressed for a DIFFERENT reason is a terminal conflict, so the stored
+ * reason stays the one that actually stopped it.
+ */
+export function suppress(
+  intent: NotificationIntent,
+  args: { reason: NotificationPolicySuppressionReason },
+): NotificationTransitionResult {
+  return suppressUnattempted(intent, args.reason);
+}
+
+/**
+ * The guard every reasoned, clock-free suppression shares: move an intent
+ * nobody is sending to `suppressed` under one reason, and never re-target a
+ * reason already recorded. `sending` loses to the attempt in flight and
+ * `unknown-delivery` stays the operator's, exactly as {@link expire} refuses
+ * them. {@link suppress} and {@link retireOrphaned} differ only in which
+ * reasons they may record, so this is the one place those refusals live.
+ */
+function suppressUnattempted(
+  intent: NotificationIntent,
+  reason: NotificationSuppressionReason,
+): NotificationTransitionResult {
+  const state = intent.state;
+  switch (state.kind) {
+    case "pending":
+    case "ready":
+      return applied(withState(intent, { kind: "suppressed", reason }));
+    case "sending":
+      return conflict("send-in-flight");
+    case "unknown-delivery":
+      return conflict("unknown-delivery-requires-operator");
+    case "suppressed":
+      return state.reason === reason
+        ? alreadyApplied
+        : conflict("terminal-state");
+    case "delivered":
+    case "expired":
+    case "permission-denied":
+      return conflict("terminal-state");
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
 export function expire(
   intent: NotificationIntent,
 ): NotificationTransitionResult {
@@ -342,30 +403,7 @@ export function retireOrphaned(
   intent: NotificationIntent,
   args: { reason: NotificationRetirementReason },
 ): NotificationTransitionResult {
-  const state = intent.state;
-  switch (state.kind) {
-    case "pending":
-    case "ready":
-      return applied(
-        withState(intent, { kind: "suppressed", reason: args.reason }),
-      );
-    case "sending":
-      return conflict("send-in-flight");
-    case "unknown-delivery":
-      return conflict("unknown-delivery-requires-operator");
-    case "suppressed":
-      return state.reason === args.reason
-        ? alreadyApplied
-        : conflict("terminal-state");
-    case "delivered":
-    case "expired":
-    case "permission-denied":
-      return conflict("terminal-state");
-    default: {
-      const _exhaustive: never = state;
-      return _exhaustive;
-    }
-  }
+  return suppressUnattempted(intent, args.reason);
 }
 
 /**

@@ -32,11 +32,13 @@ import {
  * rendered from the archived spectator snapshot; a `postmatch` intent reports
  * a finished game from its MatchV5 payload; a `settlement` intent tells one
  * guild channel how its Bryan Bucks pool and parlay settled; a `dare-summary`
- * intent tells a channel how one Dare resolved. The kind is a property of the
+ * intent tells a channel how one Dare resolved; a `hall-record-break` intent
+ * tells one guild's Hall of Fame channel which records a match broke. The
+ * kind is a property of the
  * decision to notify, fixed at mint, so a consumer never has to infer it from
  * the key or from whatever payload happens to be available when it runs.
  *
- * The two announcement kinds carry their presentation inputs on the intent
+ * The three announcement kinds carry their presentation inputs on the intent
  * (see `announcement` below); the two report kinds carry nothing, because
  * everything they deliver is derived from the match's own durable artifacts.
  */
@@ -48,11 +50,16 @@ export const NotificationIntentKindSchema = z.enum([
   "prematch",
   "settlement",
   "dare-summary",
+  "hall-record-break",
 ]);
 
 /** The kinds whose message is built from an `announcement` payload. */
 export const ANNOUNCEMENT_INTENT_KINDS: ReadonlySet<NotificationIntentKind> =
-  new Set<NotificationIntentKind>(["settlement", "dare-summary"]);
+  new Set<NotificationIntentKind>([
+    "settlement",
+    "dare-summary",
+    "hall-record-break",
+  ]);
 
 /**
  * Where the decision to notify came from.
@@ -143,6 +150,24 @@ export const NotificationSuppressionReasonSchema = z.enum([
   "recipient-preference",
   ...NotificationRetirementReasonSchema.options,
 ]);
+
+/**
+ * The suppressions a delivery POLICY decides, as opposed to the clock.
+ *
+ * `stale` is deliberately absent: it is a fact about the freshness deadline and
+ * has its own guarded transition (`suppressStale`) that re-checks the instant.
+ * These two are decisions somebody made about whether the notification should
+ * go out at all — a feature turned off for the recipient's server, or the
+ * recipient's own opt-out — and nothing about the intent's age can refute them.
+ */
+export type NotificationPolicySuppressionReason = z.infer<
+  typeof NotificationPolicySuppressionReasonSchema
+>;
+export const NotificationPolicySuppressionReasonSchema =
+  NotificationSuppressionReasonSchema.extract([
+    "feature-disabled",
+    "recipient-preference",
+  ]);
 
 export type NotificationRetryableFailureReason = z.infer<
   typeof NotificationRetryableFailureReasonSchema
@@ -281,6 +306,6 @@ export const NotificationIntentSchema = z
       (intent.announcement !== undefined),
     {
       message:
-        "an announcement payload is carried by exactly the settlement and dare-summary kinds",
+        "an announcement payload is carried by exactly the settlement, dare-summary and hall-record-break kinds",
     },
   );

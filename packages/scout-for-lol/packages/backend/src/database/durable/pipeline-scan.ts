@@ -158,7 +158,7 @@ export const NOTIFICATION_INTENT_STATE_KINDS: readonly string[] =
  * archived spectator snapshot, and post "game starting" after the score was
  * already public.
  *
- * The other three are `after-result` and must keep being driven, which is why
+ * The others are `after-result` and must keep being driven, which is why
  * this is a per-KIND table rather than a postmatch-only filter. `settlement`
  * and `dare-summary` are minted INSIDE the fenced settlement effect, so they
  * exist only once the result is known; a filter that kept just `postmatch`
@@ -173,6 +173,9 @@ const INTENT_TRUTH_WINDOW = {
   postmatch: "after-result",
   settlement: "after-result",
   "dare-summary": "after-result",
+  // A record break is a fact the finished game established; it is minted by
+  // post-match progression, so it exists only once the result is known.
+  "hall-record-break": "after-result",
 } satisfies Record<NotificationIntentKind, "before-result" | "after-result">;
 
 const BEFORE_RESULT_INTENT_KINDS: readonly string[] = Object.entries(
