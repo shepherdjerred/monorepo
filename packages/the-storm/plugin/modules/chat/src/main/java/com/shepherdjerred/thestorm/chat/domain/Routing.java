@@ -12,20 +12,20 @@ public final class Routing {
    * Whether {@code viewer} receives a message {@code speaker} sent in {@code channel}.
    *
    * <p>The speaker always sees their own message. Otherwise a viewer must not have hidden the
-   * channel, must not ignore the speaker (except in staff chat, which staff cannot ignore away),
-   * and must be in the channel's reach: everyone, staff, or the speaker's town.
+   * channel, must not ignore a non-staff speaker (except in staff chat), and must be in the
+   * channel's reach: everyone, staff, or the speaker's town.
    *
    * @param groupMembers the speaker's town for town chat; ignored otherwise
    */
   public static boolean receives(
-      ChannelKey channel, UUID speaker, Viewer viewer, Set<UUID> groupMembers) {
-    if (viewer.id().equals(speaker)) {
+      ChannelKey channel, Speaker speaker, Viewer viewer, Set<UUID> groupMembers) {
+    if (viewer.id().equals(speaker.id())) {
       return true;
     }
     if (!viewer.profile().receives(channel)) {
       return false;
     }
-    if (channel != ChannelKey.STAFF && viewer.profile().ignores(speaker)) {
+    if (channel != ChannelKey.STAFF && !speaker.staff() && viewer.profile().ignores(speaker.id())) {
       return false;
     }
     return switch (channel.reach()) {

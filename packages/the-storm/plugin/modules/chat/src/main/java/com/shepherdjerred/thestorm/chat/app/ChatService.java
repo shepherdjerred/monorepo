@@ -241,7 +241,7 @@ public final class ChatService {
   public boolean receives(OutgoingLine line, UUID viewer, boolean viewerIsStaff) {
     return Routing.receives(
         line.channel(),
-        line.speaker().id(),
+        line.speaker(),
         new Routing.Viewer(viewer, viewerIsStaff, profile(viewer)),
         line.members());
   }

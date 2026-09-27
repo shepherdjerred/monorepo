@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 final class RoutingTest {
 
   private static final UUID SPEAKER = UUID.fromString("00000000-0000-0000-0000-000000000001");
+  private static final Speaker SPEAKER_REF = new Speaker(SPEAKER, "Speaker", false, false);
   private static final UUID VIEWER = UUID.fromString("00000000-0000-0000-0000-000000000002");
   private static final ChatProfile LISTENS = ChatProfile.fresh(ChannelKey.GLOBAL);
 
@@ -19,17 +20,17 @@ final class RoutingTest {
 
   @Test
   void openChannelsReachEveryone() {
-    assertThat(Routing.receives(ChannelKey.GLOBAL, SPEAKER, viewer(false, LISTENS), Set.of()))
+    assertThat(Routing.receives(ChannelKey.GLOBAL, SPEAKER_REF, viewer(false, LISTENS), Set.of()))
         .isTrue();
-    assertThat(Routing.receives(ChannelKey.WAR, SPEAKER, viewer(false, LISTENS), Set.of()))
+    assertThat(Routing.receives(ChannelKey.WAR, SPEAKER_REF, viewer(false, LISTENS), Set.of()))
         .isTrue();
   }
 
   @Test
   void staffChatReachesOnlyStaff() {
-    assertThat(Routing.receives(ChannelKey.STAFF, SPEAKER, viewer(false, LISTENS), Set.of()))
+    assertThat(Routing.receives(ChannelKey.STAFF, SPEAKER_REF, viewer(false, LISTENS), Set.of()))
         .isFalse();
-    assertThat(Routing.receives(ChannelKey.STAFF, SPEAKER, viewer(true, LISTENS), Set.of()))
+    assertThat(Routing.receives(ChannelKey.STAFF, SPEAKER_REF, viewer(true, LISTENS), Set.of()))
         .isTrue();
   }
 
@@ -37,9 +38,10 @@ final class RoutingTest {
   void townChatReachesOnlyTheTown() {
     assertThat(
             Routing.receives(
-                ChannelKey.TOWN, SPEAKER, viewer(false, LISTENS), Set.of(SPEAKER, VIEWER)))
+                ChannelKey.TOWN, SPEAKER_REF, viewer(false, LISTENS), Set.of(SPEAKER, VIEWER)))
         .isTrue();
-    assertThat(Routing.receives(ChannelKey.TOWN, SPEAKER, viewer(true, LISTENS), Set.of(SPEAKER)))
+    assertThat(
+            Routing.receives(ChannelKey.TOWN, SPEAKER_REF, viewer(true, LISTENS), Set.of(SPEAKER)))
         .as("staff outside the town do not hear it")
         .isFalse();
   }
@@ -48,7 +50,7 @@ final class RoutingTest {
   void hiddenChannelsAreNotReceived() {
     var profile = new ChatProfile(ChannelKey.GLOBAL, Set.of(ChannelKey.WAR), Map.of());
 
-    assertThat(Routing.receives(ChannelKey.WAR, SPEAKER, viewer(false, profile), Set.of()))
+    assertThat(Routing.receives(ChannelKey.WAR, SPEAKER_REF, viewer(false, profile), Set.of()))
         .isFalse();
     assertThat(Routing.receivesExternal(viewer(false, profile))).isTrue();
 
@@ -60,9 +62,9 @@ final class RoutingTest {
   void ignoredSpeakersAreNotReceivedExceptInStaffChat() {
     var profile = new ChatProfile(ChannelKey.GLOBAL, Set.of(), Map.of(SPEAKER, "Speaker"));
 
-    assertThat(Routing.receives(ChannelKey.GLOBAL, SPEAKER, viewer(true, profile), Set.of()))
+    assertThat(Routing.receives(ChannelKey.GLOBAL, SPEAKER_REF, viewer(true, profile), Set.of()))
         .isFalse();
-    assertThat(Routing.receives(ChannelKey.STAFF, SPEAKER, viewer(true, profile), Set.of()))
+    assertThat(Routing.receives(ChannelKey.STAFF, SPEAKER_REF, viewer(true, profile), Set.of()))
         .isTrue();
   }
 
@@ -71,7 +73,7 @@ final class RoutingTest {
     var profile = new ChatProfile(ChannelKey.GLOBAL, Set.of(ChannelKey.WAR), Map.of());
     var self = new Routing.Viewer(SPEAKER, false, profile);
 
-    assertThat(Routing.receives(ChannelKey.WAR, SPEAKER, self, Set.of())).isTrue();
-    assertThat(Routing.receives(ChannelKey.STAFF, SPEAKER, self, Set.of())).isTrue();
+    assertThat(Routing.receives(ChannelKey.WAR, SPEAKER_REF, self, Set.of())).isTrue();
+    assertThat(Routing.receives(ChannelKey.STAFF, SPEAKER_REF, self, Set.of())).isTrue();
   }
 }
