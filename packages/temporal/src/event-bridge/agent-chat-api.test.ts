@@ -301,6 +301,17 @@ describe("submitHttpAgentChatCommand", () => {
     ).rejects.toBeInstanceOf(AgentChatTurnConflictError);
   });
 
+  it("rejects a retry that changes the source epoch", async () => {
+    const retry: HttpAgentChatCommand = {
+      ...accepted,
+      request: { ...accepted.request, sourceEpoch: "1" },
+    };
+
+    await expect(
+      submitHttpAgentChatCommand(clientWithAcceptedCommand(accepted), retry),
+    ).rejects.toBeInstanceOf(AgentChatTurnConflictError);
+  });
+
   it("reconciles an ambiguous activation with the same update id", async () => {
     const executeUpdate = vi
       .fn()
