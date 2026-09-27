@@ -35,6 +35,7 @@ public final class WorldPaper {
   private static World load(Server server, WorldSpec spec) {
     var existing = server.getWorld(spec.name());
     if (existing != null) {
+      validate(existing, spec);
       return existing;
     }
     var created =
@@ -45,7 +46,14 @@ public final class WorldPaper {
     if (created == null) {
       throw new IllegalStateException("Paper did not create world " + spec.name());
     }
+    validate(created, spec);
     return created;
+  }
+
+  private static void validate(World world, WorldSpec spec) {
+    if (world.getEnvironment() != World.Environment.NORMAL) {
+      throw new IllegalStateException("loaded world " + spec.name() + " is not a NORMAL world");
+    }
   }
 
   private static WorldType type(String preset) {
