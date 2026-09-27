@@ -1,7 +1,7 @@
 package com.shepherdjerred.thestorm.world.domain;
 
 /**
- * One world this module creates.
+ * One world this module requires to be loaded before it enables.
  *
  * @param name the world folder name
  * @param preset {@code normal}, {@code large_biomes} or {@code amplified}

@@ -60,6 +60,16 @@ may no longer reflect stored claims. A denied join or respawn relocates only to
 an already loaded, permitted location; when none exists, the player is
 disconnected rather than triggering terrain generation in the arrival event.
 
+The world module requires every world in `server/owned/plugins/TheStorm/world.yml`
+to be provisioned and loaded before TheStorm enables. A missing world stops the
+server rather than generating terrain during plugin startup. Keep the world
+module disabled until an operator has provisioned `wilds` (large biomes),
+`peaks` (amplified), and `mining` (normal), and confirmed their loaded names and
+presets. The plugin checks the loaded name and NORMAL environment; Paper does
+not expose reliable preset metadata for an existing world, so preset acceptance
+remains an operator check. A mining reset must likewise make the replacement
+world available before TheStorm enables again.
+
 ## Conventions
 
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating
