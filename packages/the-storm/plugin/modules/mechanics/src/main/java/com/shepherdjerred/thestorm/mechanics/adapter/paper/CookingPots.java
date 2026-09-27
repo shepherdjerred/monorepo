@@ -35,7 +35,7 @@ final class CookingPots {
       return;
     }
     var held = player.getInventory().getItemInMainHand();
-    var fuel = kit.signs().fuel(sign);
+    var fuel = kit.signs().fuel(sign, config.maxFuel());
     if (held.isEmpty()) {
       Replies.info(
           player, Feature.COOKING_POT, "The pot has " + fuel + " fuel. Right-click with food.");
@@ -50,7 +50,7 @@ final class CookingPots {
   }
 
   private void refuel(Player player, Sign sign, ItemStack held, int unitsEach) {
-    var before = kit.signs().fuel(sign);
+    var before = kit.signs().fuel(sign, kit.config().cookingPot().maxFuel());
     var refuel =
         CookingPot.refuel(
             before,
@@ -72,7 +72,9 @@ final class CookingPots {
       Replies.error(player, Feature.COOKING_POT, "That can't be cooked.");
       return;
     }
-    var cook = CookingPot.cook(kit.signs().fuel(sign), held.getAmount());
+    var cook =
+        CookingPot.cook(
+            kit.signs().fuel(sign, kit.config().cookingPot().maxFuel()), held.getAmount());
     if (cook.cooked() == 0) {
       Replies.error(player, Feature.COOKING_POT, "The pot needs fuel first.");
       return;

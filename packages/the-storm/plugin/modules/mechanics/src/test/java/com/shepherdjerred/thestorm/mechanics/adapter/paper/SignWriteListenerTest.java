@@ -1,6 +1,7 @@
 package com.shepherdjerred.thestorm.mechanics.adapter.paper;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -13,6 +14,8 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.block.Sign;
 import org.bukkit.block.sign.Side;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -124,6 +127,26 @@ final class SignWriteListenerTest {
   }
 
   @Test
+  void aLaterCancellationLeavesNoPersistedMechanism() {
+    grant(2);
+    var block = signAt(5);
+    server
+        .getPluginManager()
+        .registerEvent(
+            SignChangeEvent.class,
+            new Listener() {},
+            EventPriority.HIGHEST,
+            (listener, event) -> ((SignChangeEvent) event).setCancelled(true),
+            plugin);
+
+    var event = write(block, Side.FRONT, "", "[Lift Up]", "", "");
+
+    assertThat(event.isCancelled()).isTrue();
+    assertThat(owner(block)).isEqualTo("none");
+    assertThat(messages()).isEmpty();
+  }
+
+  @Test
   void landProtectionRefusesWithItsReason() {
     grant(5);
     var block = signAt(-5);
@@ -168,5 +191,26 @@ final class SignWriteListenerTest {
     assertThat(event.isCancelled()).isTrue();
     assertThat(messages())
         .containsExactly("[Elevator]: Mechanism signs are written on the front of a sign.");
+  }
+
+  @Test
+  void persistedCookingPotFuelMustStayWithinConfiguredBounds() {
+    var sign = (Sign) signAt(5).getState();
+    var signs = new Signs(plugin);
+    var key = new NamespacedKey(plugin, "mechanic_fuel");
+
+    assertThat(signs.fuel(sign, 64)).isZero();
+    sign.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, -1);
+    assertThatThrownBy(() -> signs.fuel(sign, 64))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("invalid fuel");
+    sign.getPersistentDataContainer().set(key, PersistentDataType.INTEGER, 65);
+    assertThatThrownBy(() -> signs.fuel(sign, 64))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("invalid fuel");
+    sign.getPersistentDataContainer().set(key, PersistentDataType.STRING, "corrupt");
+    assertThatThrownBy(() -> signs.fuel(sign, 64))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("invalid fuel");
   }
 }

@@ -9,6 +9,9 @@ import com.shepherdjerred.thestorm.mechanics.domain.structure.BlockChange;
 import com.shepherdjerred.thestorm.mechanics.domain.structure.Structure;
 import java.util.List;
 import org.bukkit.Material;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.type.Fence;
+import org.bukkit.block.data.type.Gate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -79,5 +82,25 @@ final class PlacerTest {
 
     assertThat(grid.block(FIRST).getType()).isEqualTo(Material.AIR);
     assertThat(grid.block(SECOND).getType()).isEqualTo(Material.OAK_PLANKS);
+  }
+
+  @Test
+  void restoredFenceConnectsToCompatibleFenceAndAlignedGate() {
+    grid.block(TEMPLATE).setType(Material.OAK_FENCE);
+    grid.block(FIRST).setType(Material.AIR);
+    grid.block(SECOND).setType(Material.SPRUCE_FENCE);
+    var gateBlock = world.getBlockAt(1, 64, -1);
+    gateBlock.setType(Material.OAK_FENCE_GATE);
+    var gate = (Gate) gateBlock.getBlockData();
+    gate.setFacing(BlockFace.EAST);
+    gateBlock.setBlockData(gate);
+    var fence = new Structure("minecraft:oak_fence", TEMPLATE, List.of(FIRST));
+
+    Placer.check(grid, fence, List.of(new BlockChange(FIRST, Cell.AIR, "minecraft:oak_fence")))
+        .apply();
+
+    var restored = (Fence) grid.block(FIRST).getBlockData();
+    assertThat(restored.hasFace(BlockFace.EAST)).isTrue();
+    assertThat(restored.hasFace(BlockFace.NORTH)).isTrue();
   }
 }

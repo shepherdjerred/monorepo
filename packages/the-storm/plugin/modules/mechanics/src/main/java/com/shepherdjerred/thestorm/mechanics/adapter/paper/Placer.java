@@ -6,11 +6,14 @@ import com.shepherdjerred.thestorm.mechanics.domain.structure.Structure;
 import java.util.ArrayList;
 import java.util.List;
 import org.bukkit.Material;
+import org.bukkit.Tag;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.MultipleFacing;
 import org.bukkit.block.data.Waterlogged;
+import org.bukkit.block.data.type.Fence;
+import org.bukkit.block.data.type.Gate;
 
 /**
  * Applies domain plans to the world. Plans are made and applied in the same tick, so each change
@@ -82,8 +85,18 @@ final class Placer {
     }
     for (var side : SIDES) {
       if (facing.getAllowedFaces().contains(side)) {
-        var neighbor = block.getRelative(side).getType();
-        facing.setFace(side, neighbor == block.getType() || neighbor.isOccluding());
+        var neighbor = block.getRelative(side);
+        var neighborType = neighbor.getType();
+        var connects = neighborType == block.getType() || neighborType.isOccluding();
+        if (facing instanceof Fence) {
+          connects =
+              connects
+                  || Tag.FENCES.isTagged(neighborType)
+                  || (neighbor.getBlockData() instanceof Gate gate
+                      && gate.getFacing() != side
+                      && gate.getFacing() != side.getOppositeFace());
+        }
+        facing.setFace(side, connects);
       }
     }
     block.setBlockData(facing, false);

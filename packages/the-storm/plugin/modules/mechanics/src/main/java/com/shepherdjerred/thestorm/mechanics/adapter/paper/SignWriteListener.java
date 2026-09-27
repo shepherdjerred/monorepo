@@ -8,6 +8,7 @@ import com.shepherdjerred.thestorm.mechanics.app.SignCreation;
 import com.shepherdjerred.thestorm.mechanics.app.Writer;
 import com.shepherdjerred.thestorm.mechanics.domain.sign.Feature;
 import com.shepherdjerred.thestorm.mechanics.domain.sign.SignTags;
+import java.util.IdentityHashMap;
 import java.util.Optional;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
@@ -30,6 +31,7 @@ final class SignWriteListener implements Listener {
   private final Signs signs;
   private final Protection protection;
   private final Structures structures;
+  private final IdentityHashMap<SignChangeEvent, Runnable> pending = new IdentityHashMap<>();
 
   SignWriteListener(
       SignCreation creation, Signs signs, Protection protection, Structures structures) {
@@ -58,7 +60,8 @@ final class SignWriteListener implements Listener {
     var pos = PaperGrid.pos(block);
     var view = PaperGrid.view(block, lines);
     switch (creation.create(pos, view, grid, writer(event))) {
-      case SignCreation.Outcome.Plain() -> record(block, Optional.empty(), Optional.empty());
+      case SignCreation.Outcome.Plain() ->
+          pending.put(event, () -> record(block, Optional.empty(), Optional.empty()));
       case SignCreation.Outcome.Refused(Feature feature, Component reason) -> {
         event.setCancelled(true);
         Replies.error(player, feature, reason);
@@ -75,11 +78,24 @@ final class SignWriteListener implements Listener {
           }
           case Result.Ok<Runnable, Component>(var bind) -> {
             event.line(SignTags.TAG_LINE, Component.text(mechanism.tag()));
-            record(block, Optional.of(player.getUniqueId()), Optional.of(bind));
-            Replies.success(player, mechanism.feature(), "Built. " + hint(mechanism.feature()));
+            pending.put(
+                event,
+                () -> {
+                  record(block, Optional.of(player.getUniqueId()), Optional.of(bind));
+                  Replies.success(
+                      player, mechanism.feature(), "Built. " + hint(mechanism.feature()));
+                });
           }
         }
       }
+    }
+  }
+
+  @EventHandler(priority = EventPriority.MONITOR)
+  void commitSignChange(SignChangeEvent event) {
+    var commit = pending.remove(event);
+    if (commit != null && !event.isCancelled()) {
+      commit.run();
     }
   }
 

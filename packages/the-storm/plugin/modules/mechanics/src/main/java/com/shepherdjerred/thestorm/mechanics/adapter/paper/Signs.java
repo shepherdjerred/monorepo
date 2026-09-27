@@ -104,8 +104,15 @@ final class Signs {
     data.set(stockCount, PersistentDataType.LONG, stock.count());
   }
 
-  int fuel(Sign sign) {
-    return sign.getPersistentDataContainer().getOrDefault(fuel, PersistentDataType.INTEGER, 0);
+  int fuel(Sign sign, int maxFuel) {
+    var data = sign.getPersistentDataContainer();
+    var units = data.getOrDefault(fuel, PersistentDataType.INTEGER, 0);
+    if (units < 0
+        || units > maxFuel
+        || (data.has(fuel) && !data.has(fuel, PersistentDataType.INTEGER))) {
+      throw new IllegalStateException("a cooking pot has invalid fuel: " + units);
+    }
+    return units;
   }
 
   /** Stores a cooking pot's fuel. Call {@link Sign#update()} afterwards. */
