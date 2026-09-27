@@ -104,28 +104,6 @@ export const HANDOFF_KEYS: SecretGrant[] = [
   },
 ];
 
-/**
- * Read-only access to the private `apple-sdks` bucket, which holds the Apple
- * SDK tarballs the macos-cross-compiler images are built from.
- *
- * Read and list only, and only that bucket: the SDKs are staged by an operator
- * from a Mac with the matching Xcode, never by CI. That is what makes it safe
- * to hand the pull-request smoke build, which the Buildkite lane it replaces
- * did with the cluster-wide deploy key instead.
- */
-export const APPLE_SDKS_KEYS: SecretGrant[] = [
-  {
-    secret: "ci-seaweedfs-credentials",
-    key: "SEAWEEDFS_APPLE_SDKS_ACCESS_KEY_ID",
-    env: "SEAWEEDFS_APPLE_SDKS_ACCESS_KEY_ID",
-  },
-  {
-    secret: "ci-seaweedfs-credentials",
-    key: "SEAWEEDFS_APPLE_SDKS_SECRET_ACCESS_KEY",
-    env: "SEAWEEDFS_APPLE_SDKS_SECRET_ACCESS_KEY",
-  },
-];
-
 /** Shorthand for one grant; `env` defaults to the Secret's key name. */
 export function grant(secret: string, key: string, env = key): SecretGrant {
   return { secret, key, env };
@@ -200,7 +178,6 @@ const PLATFORM_STACKS = [
   "openai",
   "anthropic",
   "discord",
-  "openrouter",
   "cloudflare-tokens",
 ] as const;
 

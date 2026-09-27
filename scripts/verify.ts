@@ -194,6 +194,10 @@ export async function main(
       "run",
       ...turboTasks,
       "--continue",
+      // The CI verify pod has a 12-CPU limit. Several package test tasks each
+      // start their own Vitest workers, so Turbo's default parallelism can
+      // overwhelm the pod before any individual test reaches its timeout.
+      "--concurrency=3",
       ...affectedFilters,
       ...forwardedArgs,
     ],

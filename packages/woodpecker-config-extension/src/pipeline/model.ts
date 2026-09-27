@@ -146,4 +146,8 @@ export type CiStep = {
    * that logic with the step rather than relying on this flag alone.
    */
   readonly allowFailure?: boolean;
+  /** The workflow needs no source checkout. */
+  readonly skipClone?: boolean;
+  /** Run after failed dependencies so a final verdict can be reported. */
+  readonly runOnFailure?: boolean;
 };

@@ -14,7 +14,6 @@ import {
 } from "#src/pipeline/lanes/tofu-apply.ts";
 import { releaseChainSteps } from "#src/pipeline/lanes/release.ts";
 import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
-import { macosCrossCompilerSteps } from "#src/pipeline/lanes/macos-cross-compiler.ts";
 import { scoutSteps } from "#src/pipeline/lanes/scout.ts";
 import { siteSteps } from "#src/pipeline/lanes/sites.ts";
 import { macosSteps } from "#src/pipeline/lanes/macos.ts";
@@ -28,13 +27,8 @@ import { prGateSteps } from "#src/pipeline/lanes/pr-gates.ts";
  * original key so the generated workflow names, the `ci.sjer.red/step-key`
  * pod label, and any existing triage muscle memory all still line up.
  *
- * PORT STATUS: complete. All 56 Buildkite steps are covered, except two with
- * no successor: `build-summary` existed only to produce the annotation this
- * migration drops, and `macos-native-dispatch` was a watchdog polling
- * Buildkite job state that Woodpecker's own queueing makes redundant. The remaining lanes (images, tofu, playwright,
- * release, sites, macOS native) are not yet ported; until they are, this
- * service generates a strictly smaller graph than Buildkite runs, so it must
- * not be made the required status check.
+ * The macOS and Windows compiler image builds remain paused. Their sources
+ * stay in the repository so a separate reliability decision can restore them.
  */
 
 /**
@@ -48,6 +42,14 @@ function verifyCommands(): string[] {
   return [
     ". ci/scripts/toolchain.sh",
     "ci/scripts/bun-install.sh --frozen-lockfile",
+    'if [ "$CI_PIPELINE_EVENT" = "pull_request" ]; then',
+    '  if git fetch --no-tags --depth=100 origin "$CI_COMMIT_SHA" "$CI_REPO_DEFAULT_BRANCH"; then',
+    '    if ! CI_CHANGED_BASE="$(git merge-base HEAD FETCH_HEAD)"; then CI_CHANGED_BASE=""; fi',
+    "  else",
+    '    CI_CHANGED_BASE=""',
+    "  fi",
+    "  export CI_CHANGED_BASE",
+    "fi",
     // CI_CHANGED_BASE arrives in the environment, resolved before this step
     // was generated. It is empty when the branch has never gone green, which
     // correctly makes turbo compare against nothing and build everything.
@@ -70,6 +72,8 @@ export type PipelineInputs = {
    * when the branch has never gone green.
    */
   readonly changedBase: string | undefined;
+  /** Last successful verify workflow, even if a later release lane failed. */
+  readonly verifyBase?: string | undefined;
   /**
    * Newest commit whose images were built, pushed, AND pinned. Stricter than
    * `changedBase`, and undefined when no recent build qualifies.
@@ -80,6 +84,7 @@ export type PipelineInputs = {
 export function buildPipelineSteps({
   images,
   changedBase,
+  verifyBase,
   imageReleaseBase,
 }: PipelineInputs): CiStep[] {
   const sharedEnvironment = {
@@ -93,7 +98,10 @@ export function buildPipelineSteps({
       label: "verify",
       image: images.base,
       commands: verifyCommands(),
-      environment: sharedEnvironment,
+      environment: {
+        ...sharedEnvironment,
+        CI_CHANGED_BASE: verifyBase ?? changedBase ?? "",
+      },
       timeoutMinutes: 30,
       resources: VERIFY_TIER,
       secrets: [
@@ -121,7 +129,6 @@ export function buildPipelineSteps({
     ...tofuApplySteps(images),
     ...releaseChainSteps(images, sharedEnvironment),
     ...ciImageSteps(images),
-    ...macosCrossCompilerSteps(images),
     ...scoutSteps(images),
     ...siteSteps(images),
     ...macosSteps(),

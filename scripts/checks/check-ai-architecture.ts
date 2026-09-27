@@ -153,8 +153,7 @@ const SCOUT_WORKBENCH_ROOT = "packages/scout-for-lol/packages/frontend/";
 // per-app, per-environment provider credential. Anthropic is federated in
 // production, so these hold OpenAI and Gemini keys only.
 const PROVIDER_CREDENTIAL_WIRING_PATHS = new Set([
-  ".buildkite/pipeline.yml",
-  ".buildkite/scripts/images/smoke-app-in-image.ts",
+  "ci/scripts/images/smoke-app-in-image.ts",
   // Wires the per-workload Gemini key and Anthropic federation identifiers
   // that the operator-applied OpenTofu stacks write to 1Password.
   "packages/homelab/src/cdk8s/src/misc/llm-provider-credentials.ts",

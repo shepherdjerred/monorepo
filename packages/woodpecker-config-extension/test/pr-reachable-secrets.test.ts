@@ -43,19 +43,10 @@ const pullRequestAgainstMain = (steps: ReturnType<typeof allSteps>) =>
  * - `tofu-plan-*` hold their stack's provider credentials because a plan has
  *   to talk to the provider. They are the reason most of this list exists.
  * - `codex-review-gate` mints a review token; `pr-dryrun` reads ArgoCD.
- * - `GITHUB_PACKAGES_TOKEN` can publish packages, and reaches
- *   `windows-cross-compiler-pr` although that step only reads: its build
- *   imports cache from a private ghcr package, and without registry login
- *   BuildKit silently rebuilds from scratch past the lane's timeout. Accepted
- *   deliberately to match the Buildkite lane it replaces; a read-only
- *   packages token would remove it from this list.
  * - The SeaweedFS names are three distinct identities, each scoped in the
  *   gateway to the buckets its job touches. `SEAWEEDFS_HANDOFF_*` reaches only
  *   the `ci-handoff` bucket and `SEAWEEDFS_TOFU_STATE_*` only
  *   `homelab-tofu-state`, so neither can touch a published site.
- * - `SEAWEEDFS_APPLE_SDKS_*` lets `macos-cross-compiler-pr` read the private
- *   Apple SDK tarballs its smoke build needs. Read and list on that one bucket
- *   only; the Buildkite lane it replaces held the cluster-wide deploy key.
  * - `SEAWEEDFS_TOFU_ADMIN_*` is the one genuinely broad credential left here.
  *   It belongs to `tofu-plan-seaweedfs`, whose stack manages the buckets
  *   themselves, and SeaweedFS requires unscoped `Admin` to create one.
@@ -74,16 +65,12 @@ const PR_REACHABLE_SECRETS = [
   "GITHUB_APP_INSTALLATION_ID",
   "GITHUB_APP_PRIVATE_KEY",
   "GITHUB_DOWNLOAD_TOKEN",
-  "GITHUB_PACKAGES_TOKEN",
   "GITHUB_REVIEW_TOKEN",
-  "OPENROUTER_API_KEY",
   "PRIVATEHD_PASSWORD",
   "PRIVATEHD_PID",
   "PROWLARR_API_KEY",
   "QBITTORRENT_PASSWORD",
   "RADARR_API_KEY",
-  "SEAWEEDFS_APPLE_SDKS_ACCESS_KEY_ID",
-  "SEAWEEDFS_APPLE_SDKS_SECRET_ACCESS_KEY",
   "SEAWEEDFS_HANDOFF_ACCESS_KEY_ID",
   "SEAWEEDFS_HANDOFF_SECRET_ACCESS_KEY",
   "SEAWEEDFS_TOFU_ADMIN_ACCESS_KEY_ID",

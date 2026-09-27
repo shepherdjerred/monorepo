@@ -1,14 +1,13 @@
 ---
-title: Why the CI pipeline has so many steps
-description: What each CI lane actually covers, why the step count is not redundancy, and how a pipeline is generated per commit rather than committed.
+title: How CI selects work
+description: How Woodpecker selects workflows from changed files, limits concurrent work, and reports one required PR result.
 sidebar:
   order: 2
 ---
 
-The CI pipeline has a lot of steps, and several of them look like copies of
-each other. They are not. Each lane exists because it has a different scope, a
-different failure meaning, or a different side effect, and collapsing any two of
-them would lose information the pipeline is built to preserve.
+Woodpecker generates a workflow only for work selected by the event and changed
+files. Dependencies are included with that selection so every emitted workflow
+has its required inputs.
 
 ## The pipeline is generated, not committed
 
@@ -35,6 +34,22 @@ Three consequences are worth stating plainly:
   request carries repository credentials, so the extension checks Woodpecker's
   ed25519 signature — and recomputes the body digest rather than trusting the
   `Content-Digest` header it covers — before reading anything.
+
+Feature-branch pushes and pull-request metadata events emit one clone-free
+no-op workflow. Pull requests select from their changed files. Main pushes
+compare the head to the last fully green main build, so a failed release's
+changes stay selected on the next push. If that comparison cannot prove the
+complete diff, the extension emits the full graph. The Linux `verify` workflow
+uses its own last successful base, and checks PR changes against the merge base
+with the default branch. Within that workflow, Turbo runs at most three tasks
+at once and each Vitest process uses at most four workers, matching the pod's
+12-CPU limit.
+
+Woodpecker reports a GitHub status per workflow. A final, clone-free PR
+workflow checks the selected blocking workflows at the same pipeline URL and
+reports the single required `ci/woodpecker/pr/ci-complete` status. This avoids a
+ruleset that names a status Woodpecker never emits. The cluster's CI admission
+quota also bounds concurrent workflow pods and their aggregate storage request.
 
 ## CI runs only for the owner's own accounts
 
@@ -94,7 +109,7 @@ fails.
   that stack's provider identity. The dependency chain preserves release
   ordering while the job boundary prevents one provider's configuration from
   running with another provider's credential. OpenAI, Anthropic, Discord,
-  OpenRouter, and Cloudflare token management add a second serialized group: PRs
+  and Cloudflare token management add a second serialized group: PRs
   validate them without credentials or a backend, while main gives each
   no-retry job only its platform credential and unique state passphrase.
   Ordinary main builds plan only; an exact-stack `TOFU_PLATFORM_APPLY` request
@@ -102,14 +117,10 @@ fails.
 - **Scout** has three deliberate promotion phases: archive and deploy beta, mint
   the immutable tag, then reconcile the production `versions.ts` pin. They are
   three stages of one release, not three independent Scout test suites.
-- **Toolchain image candidates** rebuild the images other steps run inside:
-  `ci-base`, `ci-playwright`, and the two
-  [`windows-cross-compiler`](https://github.com/shepherdjerred/monorepo/tree/main/packages/windows-cross-compiler)
-  images. Main builds publish a content-addressed candidate and open a pull
-  request that moves the committed digest, so a consumer changes toolchains
-  only when that pull request's CI passes on the new image. The
-  windows-cross-compiler images also run their sample self-tests on pull
-  requests, because their consumers do not exercise every compiler they ship.
+- **Toolchain image candidates** rebuild `ci-base` and `ci-playwright`. Main
+  builds publish a content-addressed candidate and open a pull request that
+  moves the committed digest. The macOS and Windows cross-compiler build lanes
+  are paused; they do not add work to the default pipeline.
 
 ## Native Apple checks are a separate execution surface
 

@@ -47,21 +47,17 @@ resource "github_repository_ruleset" "monorepo_main" {
         context = "ci/merge-conflict"
       }
 
-      # Aggregate CI check. Woodpecker posts one rolled-up status per pipeline
-      # event, so this is the pipeline-level verdict rather than a per-workflow
-      # one -- requiring individual workflows would block every PR whose lane
-      # selection legitimately skipped them.
+      # The generated ci-complete workflow waits for every selected blocking
+      # PR workflow and verifies their statuses belong to that exact pipeline.
       #
       # ROLLOUT ORDERING — do NOT `tofu apply` this context until a Woodpecker
       # pipeline has actually run on a PR head and posted it. Requiring a
       # context nothing posts blocks every open PR on a missing check, which is
       # the same trap the merge-conflict note above describes.
       #
-      # The exact spelling must be verified against a real PR head before this
-      # is applied: it is Woodpecker's own status context, not a name this
-      # repository chooses.
+      # Apply only after this context passes on a real post-bootstrap PR head.
       required_check {
-        context = "ci/woodpecker/pr"
+        context = "ci/woodpecker/pr/ci-complete"
       }
     }
   }

@@ -114,7 +114,12 @@ const MACOS_TIMEOUT = "/opt/homebrew/bin/gtimeout";
  */
 export function wrapCommands(step: CiStep): string[] {
   const seconds = step.timeoutMinutes * 60;
-  const body = step.commands.join("\n");
+  // Buildkite already published 2.0.0-17xxx charts and images. Woodpecker's
+  // pipeline counter starts near zero, so release versions need a new range.
+  const body = [
+    'export CI_RELEASE_NUMBER="$((1000000 + CI_PIPELINE_NUMBER))"',
+    ...step.commands,
+  ].join("\n");
   const timeout = step.backend === "local" ? MACOS_TIMEOUT : "timeout";
   const attemptScript = `${timeout} ${seconds.toString()}s bash -euo pipefail -c ${shellQuote(body)}`;
 
@@ -210,12 +215,10 @@ function backendOptions(
  * workflows are the unit that gets its own workspace — and the unit
  * `concurrency` applies to, which the serialized lanes depend on.
  *
- * Deliberately emits no `when` clause. The selector has already decided which
- * steps run, using the same changed-file list Woodpecker would filter on, and
- * it guarantees the result is dependency-closed. Emitting `when: path` as well
- * would filter a second time against a graph that no longer expects it, and a
- * workflow whose dependency was filtered out never becomes runnable — a lane
- * that silently never runs rather than one that fails.
+ * Deliberately emits no path filter. The selector has already decided which
+ * steps run and guarantees the result is dependency-closed. A second path
+ * filter could strand a dependent. The completion workflow alone carries a
+ * status condition so it runs after a failed prerequisite.
  *
  * The rendered text is escaped for Woodpecker's variable substitution; see
  * `escapeSubstitution`.
@@ -271,6 +274,10 @@ export function emitWorkflow(step: CiStep, identity: PipelineIdentity): string {
     ...(step.dependsOn === undefined || step.dependsOn.length === 0
       ? {}
       : { depends_on: [...step.dependsOn] }),
+    ...(step.skipClone === true ? { skip_clone: true } : {}),
+    ...(step.runOnFailure === true
+      ? { when: [{ status: ["success", "failure"] }] }
+      : {}),
     labels: agentLabels(step),
     ...(step.concurrency === undefined
       ? {}

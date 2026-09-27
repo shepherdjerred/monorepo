@@ -155,11 +155,11 @@ describe("kueue-config", () => {
   it("takes the CI budget from its language-neutral source", () => {
     expect(quota(CI_CLUSTER_QUEUE, "cpu")).toBe("24");
     expect(quota(CI_CLUSTER_QUEUE, "memory")).toBe("80Gi");
-    expect(quota(CI_CLUSTER_QUEUE, "ephemeral-storage")).toBe("100Gi");
+    expect(quota(CI_CLUSTER_QUEUE, "ephemeral-storage")).toBe("60Gi");
     expect(CI_ADMISSION_BUDGET.quota).toEqual({
       cpu: "24",
       memory: "80Gi",
-      "ephemeral-storage": "100Gi",
+      "ephemeral-storage": "60Gi",
     });
   });
 

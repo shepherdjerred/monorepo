@@ -272,6 +272,20 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     workflowExecutionTimeout: "2 hours",
     memo: "Trivy vulnerability database refresh every six hours",
   },
+  {
+    id: "ci-io-telemetry-daily",
+    workflowType: "runCiIoTelemetry",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "15 7 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Daily CI I/O recording rule and dashboard health check",
+  },
   ...SECURITY_SCHEDULES,
   {
     id: "bugsink-housekeeping",

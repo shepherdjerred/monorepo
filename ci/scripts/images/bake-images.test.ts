@@ -24,6 +24,7 @@ import type { BuildxCommandResult } from "./bake-retry.ts";
 import { TransientError } from "../../../scripts/lib/transient-error.ts";
 import { productionBakeEnvironment } from "./production-bake-environment.ts";
 import { ALL_IMAGE_TARGETS } from "./image-targets.ts";
+import { readLiveVersionCatalogSource } from "./live-version-catalog.ts";
 import {
   caddyfileEntitlementArguments,
   expandTargets,
@@ -55,6 +56,47 @@ function versionCatalogSource(
     })),
   });
 }
+
+test("reads and validates the version catalog from live main", async () => {
+  const source = versionCatalogSource([{ name: "ci-base", value: "1.0.0" }]);
+  const observed: string[][] = [];
+  const result = await readLiveVersionCatalogSource(async (command) => {
+    observed.push([...command]);
+    return command[1] === "show" ? commandResult(0, source) : commandResult();
+  });
+  expect(result).toBe(source);
+  expect(observed).toEqual([
+    ["git", "fetch", "origin", "main"],
+    ["git", "show", "origin/main:packages/version-catalog/src/catalog.json"],
+  ]);
+});
+
+test("keeps live catalog transport failures retryable", async () => {
+  for (const failedCommand of ["fetch", "show"]) {
+    await expect(
+      readLiveVersionCatalogSource(async (command) =>
+        command[1] === failedCommand
+          ? commandResult(1)
+          : commandResult(0, versionCatalogSource([])),
+      ),
+    ).rejects.toBeInstanceOf(TransientError);
+  }
+});
+
+test("rejects malformed live catalogs before image release", async () => {
+  for (const source of [
+    "{}",
+    JSON.stringify({ entries: [null] }),
+    JSON.stringify({ entries: [{ name: 1, value: "1.0.0" }] }),
+    JSON.stringify({ entries: [{ name: "ci-base", value: 1 }] }),
+  ]) {
+    await expect(
+      readLiveVersionCatalogSource(async (command) =>
+        command[1] === "show" ? commandResult(0, source) : commandResult(),
+      ),
+    ).rejects.toThrow("Live version catalog has an invalid");
+  }
+});
 async function targetSelectionFailureExecutor(
   command: readonly string[],
 ): Promise<BuildxCommandResult> {
@@ -528,6 +570,11 @@ test("annotates with the expected report arguments", async () => {
       "selection.json",
     ],
   ]);
+});
+test("keeps optional image annotation failures nonfatal", async () => {
+  await expect(
+    annotate(["--report", "selection.json"], async () => commandResult(1)),
+  ).resolves.toBeUndefined();
 });
 test("uses the image-release base the extension resolved, after validating it", async () => {
   const commands: string[][] = [];

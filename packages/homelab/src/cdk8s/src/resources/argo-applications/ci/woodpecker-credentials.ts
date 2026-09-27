@@ -56,7 +56,7 @@ const CI_CREDENTIAL_ITEMS = [
   },
   { secretName: "ci-npm-credentials", itemId: "4fmd5otmvwcpsrxjaptrloppvu" },
   {
-    secretName: "ci-release-openrouter-credentials",
+    secretName: "ci-release-openai-credentials",
     itemId: "2r6nqphyvaegtnbjgcg4avff3m",
   },
   { secretName: "ci-trmnl-credentials", itemId: "p7th6tqeel7k2sm47mrrto7oca" },
@@ -89,10 +89,6 @@ const CI_CREDENTIAL_ITEMS = [
   {
     secretName: "discord-tofu-credentials",
     itemId: "z2tt5eswusadzfsztg4uwr6vay",
-  },
-  {
-    secretName: "openrouter-tofu-credentials",
-    itemId: "msklmk7gk2r3rq4kyeywpuafny",
   },
   {
     secretName: "cloudflare-tokens-tofu-credentials",

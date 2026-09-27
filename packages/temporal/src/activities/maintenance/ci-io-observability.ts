@@ -32,7 +32,7 @@ export type CiIoObservabilityResult = ObservabilityDefinition & {
  * packages/woodpecker-config-extension/src/pipeline/emit.ts.
  */
 const ACTIVE_NODES =
-  'max by (node) (kube_pod_info{namespace="woodpecker"} * on (namespace, pod) group_left kube_pod_labels{namespace="woodpecker", label_ci_sjer_red_step_key!=""})';
+  'max by (node) (kube_pod_info{namespace="woodpecker-ci"} * on (namespace, pod) group_left kube_pod_labels{namespace="woodpecker-ci", label_ci_sjer_red_step_key!=""})';
 const DISKS = "nvme[0-9]+n[0-9]+|sd[a-z]+|vd[a-z]+|xvd[a-z]+";
 
 const QUERIES: readonly ObservabilityDefinition[] = [

@@ -56,6 +56,7 @@ import type {
 } from "#activities/scout/scout-season-refresh.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab/homelab-audit.ts";
 import { runProtobufWatch as _runProtobufWatch } from "./ci/protobuf-watch.ts";
+import { runCiIoTelemetry as _runCiIoTelemetry } from "./ci/ci-io-telemetry.ts";
 import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
 import { monitorReportFreshness as _monitorReportFreshness } from "./scout/report-freshness.ts";
 import { deliverReportWorkflow as _deliverReportWorkflow } from "./scout/report-delivery.ts";
@@ -151,6 +152,10 @@ export async function runKometaWorkflow(): Promise<void> {
 
 export async function runMainVulnScanWorkflow(): Promise<void> {
   return runMainVulnScanWorkflowImplementation();
+}
+
+export async function runCiIoTelemetry(): Promise<void> {
+  return _runCiIoTelemetry();
 }
 
 export async function runLinkRotScanWorkflow(): Promise<void> {

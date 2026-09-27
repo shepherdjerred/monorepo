@@ -15,6 +15,14 @@ function normalizeEvent(event: string): StepEvent | undefined {
   return event === "push" || event === "pull_request" ? event : undefined;
 }
 
+export function isWorkEvent(context: SelectionContext): boolean {
+  return (
+    context.event === "pull_request" ||
+    ((context.event === "push" || context.event === "manual") &&
+      context.branch === context.defaultBranch)
+  );
+}
+
 /**
  * Events that may run a step marked `defaultBranchOnly`.
  *
@@ -103,6 +111,7 @@ export function selectSteps(
   steps: readonly CiStep[],
   context: SelectionContext,
 ): CiStep[] {
+  if (!isWorkEvent(context)) return [];
   const byKey = new Map(steps.map((step) => [step.key, step]));
   if (byKey.size !== steps.length) {
     throw new Error("duplicate step key in pipeline definition");

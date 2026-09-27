@@ -191,6 +191,9 @@ export default {
   test: {
     env: { TZ: "UTC" },
     pool: "forks",
+    // A verify run admits three package tasks at once on a 12-CPU pod.
+    // Bound each test runner as well, or nested worker pools oversubscribe it.
+    maxWorkers: 4,
     exclude: [
       ...defaultTestExclude,
       ...(workspace === "packages/scout-for-lol"

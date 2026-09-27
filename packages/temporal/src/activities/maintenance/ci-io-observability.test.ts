@@ -54,4 +54,37 @@ describe("CI I/O observability evidence", () => {
 
     await expect(collectCiIoObservability()).rejects.toThrow(/HTTP 503/);
   });
+
+  test("joins node I/O metrics to job pods in the CI namespace", async () => {
+    Bun.env["PROMETHEUS_URL"] = "https://prometheus.example.test";
+    Bun.env["GRAFANA_URL"] = "https://grafana.example.test";
+    Bun.env["GRAFANA_API_KEY"] = "test-token";
+    const queries: string[] = [];
+    globalThis.fetch = Object.assign(
+      async (input: string | URL | Request) => {
+        const url = new URL(
+          input instanceof Request ? input.url : input.toString(),
+        );
+        if (url.pathname === "/api/v1/query") {
+          queries.push(url.searchParams.get("query") ?? "");
+          return Response.json({
+            status: "success",
+            data: { result: [{ value: [0, "1"] }] },
+          });
+        }
+        return Response.json({ dashboard: {} });
+      },
+      { preconnect: originalFetch.preconnect },
+    );
+
+    await collectCiIoObservability();
+    const nodeQueries = queries.filter((query) =>
+      query.includes("kube_pod_info"),
+    );
+    expect(nodeQueries.length).toBeGreaterThan(0);
+    for (const query of nodeQueries) {
+      expect(query).toContain('kube_pod_info{namespace="woodpecker-ci"}');
+      expect(query).toContain('kube_pod_labels{namespace="woodpecker-ci"');
+    }
+  });
 });

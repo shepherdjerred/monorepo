@@ -11,6 +11,7 @@
     }
   },
   "include": [
+    "scripts/ci/bootstrap-woodpecker.ts",
     "scripts/argocd/argocd.ts",
     "scripts/argocd/argocd-apply-safety.ts",
     "scripts/argocd/argocd-apply-safety.test.ts",
@@ -39,6 +40,7 @@
     "scripts/platform-desired-state.ts",
     "scripts/tofu/tofu-stack-manifest.ts",
     "scripts/tofu/tofu-stack.ts",
-    "scripts/tofu/tofu-stack.test.ts"
+    "scripts/tofu/tofu-stack.test.ts",
+    "scripts/tofu/github-ruleset-ready.ts"
   ]
 }

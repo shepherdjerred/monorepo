@@ -5,12 +5,49 @@ sidebar:
   order: 8
 ---
 
-The main CI pipeline is the only writer for repository-backed homelab
-releases. You do not run these steps by hand — merging to `main` runs one
-`release-root` command that owns the complete sequence.
+The main CI pipeline normally writes repository-backed homelab releases. The
+first Woodpecker release uses the one-time bootstrap procedure below because
+the new pipeline cannot run until its own cluster resources have been released.
 
 This page is for reading the pipeline while it works, and for knowing what a
 failed stage means.
+
+## Bootstrap Woodpecker after the cutover merge
+
+1. Confirm the cutover PR is merged and its commit is the current `main`. Keep
+   the old Buildkite required check in place during bootstrap. Reserve a
+   Woodpecker build number by canceling a pipeline before it starts release
+   work; do not reuse a number that published charts.
+2. From a clean checkout of that exact `main` commit, run the bootstrap script
+   once with `--dry-run`. It validates the chart inventory and the exact root
+   request without changing the cluster.
+3. Supply the existing ArgoCD and ChartMuseum credentials through the
+   configured credential wrapper, then run the same command without
+   `--dry-run`. The script suspends root auto-sync, publishes the complete chart
+   set at the reserved number plus 1,000,000, and calls `release-root` with an
+   exact revision and stable request ID.
+4. Check the `apps` ArgoCD Application and Woodpecker server, agent, and config
+   extension health. Trigger a PR pipeline and require its
+   `ci/woodpecker/pr/ci-complete` status to pass. The first main GitHub OpenTofu
+   apply defers the required-check switch until this status exists on a real
+   open PR. Trigger a current-main Woodpecker pipeline after that proof, watch
+   its GitHub OpenTofu workflow, then verify the GitHub ruleset requires the new
+   context.
+5. Only after the new required check is active and healthy, retire the old
+   Buildkite requirement and service through the repository-owned release path.
+
+```bash
+bootstrap=packages/homelab/scripts/ci/bootstrap-woodpecker.ts
+commit="EXACT_MAIN_SHA"
+number="RESERVED_BUILD_NUMBER"
+bun --no-install "$bootstrap" "$commit" "$number" --dry-run
+bun --no-install "$bootstrap" "$commit" "$number"
+```
+
+The script refuses a dirty checkout, a commit other than current `main`, or a
+missing credential. It leaves the generated release inventory in a temporary
+directory named in its output. If publication or reconciliation fails, inspect
+that inventory and the ArgoCD operation before retrying with the same number.
 
 ## The sequence
 

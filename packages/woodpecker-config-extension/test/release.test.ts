@@ -95,7 +95,7 @@ describe("release applies", () => {
     const groups = allSteps()
       .filter((s) => s.key.startsWith("tofu-platform-"))
       .map((s) => s.concurrency?.group);
-    expect(groups).toHaveLength(5);
+    expect(groups).toHaveLength(4);
     expect(new Set(groups)).toEqual(new Set(["tofu-platform-credentials"]));
   });
 
@@ -163,6 +163,8 @@ describe("release chain", () => {
   test("argocd-sync uses release-root, never a bare sync", () => {
     const joined = step("argocd-sync")?.commands.join("\n") ?? "";
     expect(joined).toContain("release-root apps argocd-release-expected.json");
+    expect(joined).toContain('--revision "$apps_revision"');
+    expect(joined).toContain('--request-id "$request_id"');
     expect(joined).not.toMatch(/argocd\.ts sync\b/u);
   });
 
@@ -354,7 +356,6 @@ describe("coverage of the Buildkite pipeline", () => {
     "tofu-platform-openai": "tofu-platform-openai",
     "tofu-platform-anthropic": "tofu-platform-anthropic",
     "tofu-platform-discord": "tofu-platform-discord",
-    "tofu-platform-openrouter": "tofu-platform-openrouter",
     "tofu-platform-cloudflare-tokens": "tofu-platform-cloudflare-tokens",
     sites: "sites",
     publish: "publish",
@@ -362,10 +363,6 @@ describe("coverage of the Buildkite pipeline", () => {
     "version-commit-back": "version-commit-back",
     "ci-base-refresh": "ci-base-refresh",
     "ci-playwright-refresh": "ci-playwright-refresh",
-    "windows-cross-compiler-refresh": "windows-cross-compiler-refresh",
-    "windows-cross-compiler-pr": "windows-cross-compiler-pr",
-    "macos-cross-compiler-pr": "macos-cross-compiler-pr",
-    "macos-cross-compiler": "macos-cross-compiler",
     "scout-beta-release": "scout-beta-release",
     "scout-tag-release": "scout-tag-release",
     "scout-prod-reconcile": "scout-prod-reconcile",
@@ -386,6 +383,11 @@ describe("coverage of the Buildkite pipeline", () => {
       "plans the Buildkite cluster stack, which is deleted rather than ported",
     "tofu-apply-buildkite":
       "applies the Buildkite cluster stack, which is deleted rather than ported",
+    "windows-cross-compiler-refresh": "paused by #3211",
+    "windows-cross-compiler-pr": "paused by #3211",
+    "macos-cross-compiler-pr": "paused by #3211",
+    "macos-cross-compiler": "paused by #3211",
+    "tofu-platform-openrouter": "retired with the OpenRouter platform stack",
   };
 
   test("accounts for all 60 Buildkite steps", () => {

@@ -68,7 +68,7 @@ export function scoutSteps(images: CiImages): CiStep[] {
         '  scout_backend="$(bun --no-install scripts/release/scout-site-release.ts resolve-backend-digest)"',
         "fi",
         "mkdir -p .scout-release",
-        'bun --no-install scripts/release/scout-site-release.ts prepare-state --build-number "$CI_PIPELINE_NUMBER" --backend-digest "$scout_backend" --output .scout-release/state.json',
+        'bun --no-install scripts/release/scout-site-release.ts prepare-state --build-number "$CI_RELEASE_NUMBER" --backend-digest "$scout_backend" --output .scout-release/state.json',
         'scout_state="$(cat .scout-release/state.json)"',
         'bun --no-install scripts/release/scout-site-release.ts archive --state "$scout_state"',
         // Published before the beta deploy so a failed deploy still leaves the
@@ -144,10 +144,10 @@ export function scoutSteps(images: CiImages): CiStep[] {
       concurrency: { limit: 1, group: "release-please" },
       secrets: [
         GITHUB_DOWNLOAD,
+        grant("ci-release-openai-credentials", "OPENAI_API_KEY"),
         grant("ci-github-credentials", "GITHUB_APP_ID"),
         grant("ci-github-credentials", "GITHUB_APP_INSTALLATION_ID"),
         grant("ci-github-credentials", "GITHUB_APP_PRIVATE_KEY"),
-        grant("ci-release-openrouter-credentials", "OPENROUTER_API_KEY"),
       ],
     },
   ];

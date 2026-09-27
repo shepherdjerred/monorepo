@@ -92,12 +92,6 @@ export const DELETED_SCHEDULE_IDS = [
   // Replaced by per-execution temporal-failure-watch alerts and worker-task
   // health guardrails. Delete the old aggregate alert on worker startup.
   "agent-task-timeout-watch",
-  // The CI I/O post-merge impact observation (PR #1602, frozen 2026-07-19
-  // cohort) completed its seven-day and 100-build window; the workflow
-  // itself recommended retirement. The workflow type (`runCiIoImpact`) is
-  // no longer in the bundle, so this schedule must be deleted or it would
-  // keep firing a missing workflow.
-  "ci-io-post-merge-impact",
   // Monitored the one OpenAI project OpenRouter billed through. Replaced by
   // `llm-billed-cost-hourly`, which covers every OpenAI project and Anthropic
   // workspace now that each app calls its provider directly.

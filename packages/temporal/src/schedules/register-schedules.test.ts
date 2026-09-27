@@ -122,6 +122,7 @@ describe("central Workflow schedule routing", () => {
     ["kometa-daily", "runKometaWorkflow", "2 hours"],
     ["ci-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
     ["ci-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
+    ["ci-io-telemetry-daily", "runCiIoTelemetry", "30 minutes"],
     ["turbo-cache-clean-daily", "runTurboCacheCleanWorkflow", "30 minutes"],
   ] as const;
 
@@ -470,6 +471,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runKometaWorkflow",
   "runUvCachePruneWorkflow",
   "runTrivyDbRefreshWorkflow",
+  "runCiIoTelemetry",
   "runMainVulnScanWorkflow",
   "runLinkRotScanWorkflow",
   "runTurboCacheCleanWorkflow",

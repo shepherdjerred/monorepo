@@ -4,9 +4,11 @@ import { ConfigExtensionRequestSchema } from "#src/schemas.ts";
 import { authorizePipeline } from "#src/authorization.ts";
 import { verifySignedRequest } from "#src/signature.ts";
 import { emitWorkflows } from "#src/pipeline/emit.ts";
-import { selectSteps } from "#src/pipeline/select.ts";
+import { isWorkEvent, selectSteps } from "#src/pipeline/select.ts";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
+import { completionStep, noWorkStep } from "#src/pipeline/completion.ts";
 import { resolveCiImages, type ImageFetcher } from "#src/images.ts";
+import { changedFilesSince } from "#src/github-compare.ts";
 
 export type AppOptions = {
   /** Resolves Woodpecker's signing key; the caller caches it. */
@@ -18,6 +20,10 @@ export type AppOptions = {
     repoId: number,
     branch: string,
   ) => Promise<string | undefined>;
+  readonly verifyBase: (
+    repoId: number,
+    branch: string,
+  ) => Promise<string | undefined>;
   /**
    * Resolves the newest commit whose images were built, pushed and pinned --
    * a stricter question than "last green", answered from per-workflow outcomes.
@@ -26,6 +32,7 @@ export type AppOptions = {
     repoId: number,
     branch: string,
   ) => Promise<string | undefined>;
+  readonly compareChangedFiles?: typeof changedFilesSince;
 };
 
 export function createApp(options: AppOptions): Hono {
@@ -73,27 +80,56 @@ export function createApp(options: AppOptions): Hono {
       return context.json({ error: "actor is not permitted to run CI" }, 403);
     }
 
-    const [images, changedBase, imageReleaseBase] = await Promise.all([
-      resolveCiImages(pipeline.commit, options.imageFetcher),
+    const selectionContext = {
+      event: pipeline.event,
+      branch: pipeline.branch,
+      defaultBranch: repo.default_branch,
+      changedFiles: pipeline.changed_files,
+    };
+    const images = await resolveCiImages(pipeline.commit, options.imageFetcher);
+    const identity = {
+      commit: pipeline.commit,
+      branch: pipeline.branch,
+      linkUrl: pipeline.forge_url,
+    };
+    if (!isWorkEvent(selectionContext)) {
+      return context.json({
+        configs: emitWorkflows([noWorkStep(images.base)], identity),
+      });
+    }
+
+    const [changedBase, verifyBase, imageReleaseBase] = await Promise.all([
       options.changedBase(repo.id, repo.default_branch),
+      options.verifyBase(repo.id, repo.default_branch),
       options.imageReleaseBase(repo.id, repo.default_branch),
     ]);
+    const changedFiles =
+      pipeline.event === "push" && pipeline.branch === repo.default_branch
+        ? changedBase === undefined
+          ? undefined
+          : await (options.compareChangedFiles ?? changedFilesSince)(
+              `shepherdjerred/${repo.name}`,
+              changedBase,
+              pipeline.commit,
+            )
+        : pipeline.changed_files;
+    if (changedFiles === undefined) {
+      console.warn(
+        "could not establish complete main diff; selecting all lanes",
+      );
+    }
     const selected = selectSteps(
-      buildPipelineSteps({ images, changedBase, imageReleaseBase }),
-      {
-        event: pipeline.event,
-        branch: pipeline.branch,
-        defaultBranch: repo.default_branch,
-        changedFiles: pipeline.changed_files,
-      },
+      buildPipelineSteps({ images, changedBase, verifyBase, imageReleaseBase }),
+      { ...selectionContext, changedFiles: changedFiles ?? [] },
     );
 
     return context.json({
-      configs: emitWorkflows(selected, {
-        commit: pipeline.commit,
-        branch: pipeline.branch,
-        linkUrl: pipeline.forge_url,
-      }),
+      configs: emitWorkflows(
+        pipeline.event === "pull_request"
+          ? [...selected, completionStep(selected, images.base)]
+          : selected,
+        identity,
+      ),
     });
   });
 

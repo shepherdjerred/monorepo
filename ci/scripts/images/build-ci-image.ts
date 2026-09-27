@@ -78,10 +78,10 @@ if (import.meta.main) {
   if (sourceCommit === undefined || !/^[\da-f]{40}$/.test(sourceCommit)) {
     throw new Error("CI_COMMIT_SHA must be a full lowercase commit SHA");
   }
-  const rawBuildNumber = Bun.env["CI_PIPELINE_NUMBER"];
+  const rawBuildNumber = Bun.env["CI_RELEASE_NUMBER"];
   const buildNumber = Number(rawBuildNumber);
   if (!Number.isSafeInteger(buildNumber) || buildNumber <= 0) {
-    throw new Error("CI_PIPELINE_NUMBER must be a positive integer");
+    throw new Error("CI_RELEASE_NUMBER must be a positive integer");
   }
   const sourceFingerprint = await ciImageSourceFingerprint(definition);
   const metadataFile = `/tmp/${definition.name}-buildx-metadata-${buildNumber.toString()}.json`;

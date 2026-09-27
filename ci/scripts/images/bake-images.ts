@@ -422,9 +422,9 @@ export async function pushImages(
 async function main(): Promise<void> {
   const options = parseBakeArguments(Bun.argv.slice(2));
   const commit = Bun.env["CI_COMMIT_SHA"];
-  const buildNumber = Bun.env["CI_PIPELINE_NUMBER"];
+  const buildNumber = Bun.env["CI_RELEASE_NUMBER"];
   if (commit === undefined || buildNumber === undefined) {
-    throw new Error("CI_COMMIT_SHA and CI_PIPELINE_NUMBER are required");
+    throw new Error("CI_COMMIT_SHA and CI_RELEASE_NUMBER are required");
   }
   await Promise.all([
     rm(selectionReport, { force: true }),

@@ -46,6 +46,11 @@ const app = createApp({
       baseUrl: serverUrl,
       token: apiToken,
     }),
+  verifyBase: (repoId, branch) =>
+    lastCommitWithSuccessfulWorkflows(repoId, branch, ["verify"], {
+      baseUrl: serverUrl,
+      token: apiToken,
+    }),
   // The image lane's base must be a commit whose images were built, pushed
   // AND pinned -- the two workflows named here.
   imageReleaseBase: (repoId, branch) =>

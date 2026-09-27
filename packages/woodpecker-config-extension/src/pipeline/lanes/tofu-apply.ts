@@ -46,6 +46,13 @@ function applyCommands(stack: string): string[] {
     ...admissionGate(),
     ". ci/scripts/toolchain.sh",
     "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
+    ...(stack === "github"
+      ? [
+          'ruleset_readiness="$(bun --no-install packages/homelab/scripts/tofu/github-ruleset-ready.ts)"',
+          'if [ "$ruleset_readiness" = "deferred" ]; then echo "GitHub ruleset apply deferred until a Woodpecker PR completes"; exit 0; fi',
+          'if [ "$ruleset_readiness" != "ready" ]; then echo "invalid GitHub ruleset readiness result" >&2; exit 1; fi',
+        ]
+      : []),
     `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
     `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts ${stack} apply`,
   ];
@@ -127,14 +134,6 @@ const PLATFORM_APPLIES: readonly {
         "DISCORD_BOT_TOKEN",
         "DISCORD_MINECRAFT_BOT_TOKEN",
       ),
-    ],
-  },
-  {
-    stack: "openrouter",
-    secrets: [
-      grant("openrouter-tofu-credentials", "OPENROUTER_MANAGEMENT_KEY"),
-      grant("openrouter-tofu-credentials", "OPENROUTER_BYOK_KEYS_JSON"),
-      grant("openrouter-tofu-credentials", STATE_PASSPHRASE_KEY),
     ],
   },
   {

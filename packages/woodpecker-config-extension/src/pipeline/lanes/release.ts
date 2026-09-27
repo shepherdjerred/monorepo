@@ -124,8 +124,8 @@ export function releaseChainSteps(
         "bun --no-install packages/homelab/scripts/argocd/argocd.ts suspend-auto-sync apps --timeout 300",
         digestsAssignment,
         'export HOMELAB_VERSION_CATALOG_JSON="$(bun --no-install scripts/ci/read-ci-handoff.ts version-catalog)"',
-        'export HOMELAB_RELEASE_VERSION="2.0.0-$CI_PIPELINE_NUMBER"',
-        'bun --no-install packages/homelab/scripts/helm/helm-push.ts "$CI_PIPELINE_NUMBER"',
+        'export HOMELAB_RELEASE_VERSION="2.0.0-$CI_RELEASE_NUMBER"',
+        'bun --no-install packages/homelab/scripts/helm/helm-push.ts "$CI_RELEASE_NUMBER"',
         // argocd-sync reads the expected revision back out of this.
         "bun --no-install scripts/ci/write-ci-handoff.ts argocd-release-expected < argocd-release-expected.json",
         "bun --no-install scripts/ci/write-ci-handoff.ts helm-release-plan < helm-release-plan.json",
@@ -165,7 +165,9 @@ export function releaseChainSteps(
         "bun --no-install scripts/ci/read-ci-handoff.ts argocd-release-expected > argocd-release-expected.json",
         // release-root owns the exact-revision, lifecycle, immutable-field and
         // request-ownership checks; it must not be replaced with a bare sync.
-        "bun --no-install packages/homelab/scripts/argocd/argocd.ts release-root apps argocd-release-expected.json",
+        'apps_revision="$(jq -er \'.[] | select(.name == "apps") | .revision\' argocd-release-expected.json)"',
+        'request_id="00000000-0000-4000-8000-$(printf \'%012d\' "$CI_PIPELINE_NUMBER")"',
+        'bun --no-install packages/homelab/scripts/argocd/argocd.ts release-root apps argocd-release-expected.json --revision "$apps_revision" --request-id "$request_id"',
       ],
       // Infrastructure is applied before ArgoCD reconciles against it, so
       // the sync sees the cluster the charts were built for.
