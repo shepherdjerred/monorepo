@@ -77,6 +77,9 @@ export const infraActivities = {
   ...tasknotesCanaryActivities,
   ...golinkClusterActivities,
   ...opsActivities,
+};
+
+export const miningResetWorkerActivities = {
   ...miningResetActivities,
 };
 

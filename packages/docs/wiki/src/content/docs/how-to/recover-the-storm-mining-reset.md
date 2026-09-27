@@ -7,7 +7,7 @@ Recover a failed mining reset by inspecting its exact Temporal run, Velero Backu
 
 The [quarterly schedule](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/schedule-definitions.ts) is initially paused. Keep it paused until the backup restore and reset Job have been rehearsed on disposable storage, and the live world rollout has been accepted.
 
-1. Inspect the `the-storm-mining-reset-quarterly` schedule in Temporal namespace `prod`. Record the Workflow ID and run ID. Confirm the infra worker on queue `infra` handled the Activity. Read the failure and heartbeat phase before touching Kubernetes.
+1. Inspect the `the-storm-mining-reset-quarterly` schedule in Temporal namespace `prod`. Record the Workflow ID and run ID. Confirm the infra worker on its isolated `mining-reset` queue handled the Activity. Read the failure and heartbeat phase before touching Kubernetes.
 
 2. Read the `minecraft-tsmc` StatefulSet and Service in namespace `minecraft-tsmc`. The maintenance lock is `sjer.red/mining-reset-lock` on the StatefulSet. The Service carries `mc-router.itzg.me/autoScaleUp=false` during the reset. Keep the StatefulSet at zero replicas and confirm no ordinary server Pod exists. The [admission guard](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/cdk8s-charts/apps.ts) rejects scale-up while the lock is present.
 

@@ -9,6 +9,8 @@ export const TASK_QUEUES = {
   REPORTS: "reports",
   /** Privileged homelab inspection and operator automation. */
   INFRA: "infra",
+  /** Long-running mining reset, isolated from latency-sensitive infra audits. */
+  MINING_RESET: "mining-reset",
   /** Repository refreshes, CI analysis, and GitHub event automation. */
   REPO_AUTOMATION: "repo-automation",
   /** Scout refresh and competition workflows. */
@@ -47,6 +49,7 @@ export const TaskQueueSchema = z.enum([
   TASK_QUEUES.HOME,
   TASK_QUEUES.REPORTS,
   TASK_QUEUES.INFRA,
+  TASK_QUEUES.MINING_RESET,
   TASK_QUEUES.REPO_AUTOMATION,
   TASK_QUEUES.SCOUT,
   TASK_QUEUES.MAINTENANCE,

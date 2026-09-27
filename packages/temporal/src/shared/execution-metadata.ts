@@ -37,6 +37,7 @@ export function executionDomainForTaskQueue(
     case TASK_QUEUES.REPORTS:
       return "reports";
     case TASK_QUEUES.INFRA:
+    case TASK_QUEUES.MINING_RESET:
       return "infra";
     case TASK_QUEUES.REPO_AUTOMATION:
       return "repo";

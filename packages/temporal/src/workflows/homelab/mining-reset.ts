@@ -3,7 +3,7 @@ import type { MiningResetActivities } from "#activities/homelab/mining-reset.ts"
 import { TASK_QUEUES } from "#shared/task-queues.ts";
 
 const { resetMiningWorld } = proxyActivities<MiningResetActivities>({
-  taskQueue: TASK_QUEUES.INFRA,
+  taskQueue: TASK_QUEUES.MINING_RESET,
   startToCloseTimeout: "3 hours",
   heartbeatTimeout: "2 minutes",
   retry: {

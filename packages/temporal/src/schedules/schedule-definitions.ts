@@ -55,14 +55,13 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     args: [],
     timing: {
       kind: "cron",
-      // Start after the 05:00 golink sync; leave the 03:30–05:00 audits free.
+      // The Activity uses its own queue so it cannot delay 05:30–07:30 infra audits.
       expression: "15 5 1 1,4,7,10 *",
       timezone: "America/Los_Angeles",
     },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "7 hours",
-    catchupWindow: CATCHUP_TIGHT,
     memo: "Reset The Storm's disposable mining world after an isolated Velero PVC snapshot while the server is hibernated",
     initialPauseNote:
       "Awaiting restored-backup rehearsal, reset Job dry run, and live server/world rollout acceptance",
