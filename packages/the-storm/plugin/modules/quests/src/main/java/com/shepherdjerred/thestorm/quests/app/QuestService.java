@@ -75,6 +75,7 @@ public final class QuestService implements QuestHooks, QuestProgress {
   private final Wiring wiring;
   private final Notices notices;
   private final Describe.Lookup lookup;
+  private final QuestTextRenderer textRenderer;
   private final Map<UUID, PlayerQuests> sessions = new HashMap<>();
   private final Map<UUID, CompletableFuture<Void>> loading = new HashMap<>();
   private final Map<UUID, CompletableFuture<Void>> saving = new HashMap<>();
@@ -87,7 +88,13 @@ public final class QuestService implements QuestHooks, QuestProgress {
   private final Map<String, CustomAction> customActions = new HashMap<>();
 
   public QuestService(Wiring wiring) {
+    this(wiring, (source, state, context) -> source);
+  }
+
+  /** Wires optional authored dialogue rendering into the existing quest graph. */
+  public QuestService(Wiring wiring, QuestTextRenderer textRenderer) {
     this.wiring = wiring;
+    this.textRenderer = textRenderer;
     this.lookup =
         new Describe.Lookup(
             wiring.npcNames(),
@@ -225,10 +232,24 @@ public final class QuestService implements QuestHooks, QuestProgress {
         .flatMap(
             context ->
                 Dialogues.forNpc(
-                    state,
-                    new Dialogues.Npc(npc, wiring.npcNames().apply(npc)),
-                    context,
-                    wiring.config().labels()));
+                        state,
+                        new Dialogues.Npc(npc, wiring.npcNames().apply(npc)),
+                        context,
+                        wiring.config().labels())
+                    .map(dialogue -> render(dialogue, state, context)));
+  }
+
+  private QuestDialogue render(QuestDialogue dialogue, PlayerQuests state, Context context) {
+    var nodes = new HashMap<String, QuestDialogue.Node>();
+    dialogue
+        .nodes()
+        .forEach(
+            (id, node) ->
+                nodes.put(
+                    id,
+                    new QuestDialogue.Node(
+                        textRenderer.render(node.text(), state, context), node.options())));
+    return new QuestDialogue(dialogue.title(), dialogue.start(), nodes);
   }
 
   /** {@code player} accepts {@code quest} from {@code npc}. */

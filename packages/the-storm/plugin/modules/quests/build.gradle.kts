@@ -9,6 +9,9 @@ dependencies {
   implementation(project(":economy"))
   // Level objectives and track conditions read the tracks' TrackLevels port.
   implementation(project(":tracks"))
+  // Ink dialogue is compiled from repository-owned source at module enable.
+  implementation(libs.findLibrary("ink-runtime").get())
+  implementation(libs.findLibrary("ink-compiler").get())
   // LuckPerms is on the server; permission, title and spell rewards are LuckPerms nodes.
   compileOnly(libs.findLibrary("luckperms-api").get())
 }

@@ -3,6 +3,8 @@
 # This file is expected to be part of source control.
 # To regenerate this file, run: ./gradlew :architecture:dependencies --write-locks
 biz.aQute.bnd:biz.aQute.bnd.annotation:7.1.0=compileClasspath,testCompileClasspath
+com.bladecoder.ink:blade-ink-compiler:1.3.2=testPmdAuxClasspath,testRuntimeClasspath
+com.bladecoder.ink:blade-ink:1.3.2=testPmdAuxClasspath,testRuntimeClasspath
 com.fasterxml.jackson.core:jackson-annotations:2.22=compileClasspath,mainPmdAuxClasspath,runtimeClasspath,testCompileClasspath,testPmdAuxClasspath,testRuntimeClasspath
 com.fasterxml.jackson.core:jackson-core:2.22.2=testPmdAuxClasspath,testRuntimeClasspath
 com.fasterxml.jackson.core:jackson-databind:2.22.2=testPmdAuxClasspath,testRuntimeClasspath

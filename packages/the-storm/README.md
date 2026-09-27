@@ -69,6 +69,20 @@ templates do not change quests already assigned to players. The content
 currently includes 23 imported historical quests; additional anthology content
 is tracked in the quest PR rather than this reference.
 
+Quest dialogue text may reference an Ink knot as `ink:<script>#<knot>`. Scripts
+live under `quests/dialogue/` and compile at module enable; invalid scripts or
+references stop startup. Ink currently renders text inside the existing NPC
+dialogue graph. `quest_active(id)`, `quest_completed(id)`,
+`quest_can_accept(id)`, `quest_variable(name)`, `quest_reputation(faction)`, and
+`quest_points()` are read-only external functions over the current player's
+main-world quest state. Quest buttons still invoke the quest engine's guarded
+accept, hand-in, and choice actions. Ink snippets must end without Ink choices;
+the authored quest statechart owns those buttons and their side effects.
+Scripts cannot use `INCLUDE`, so all source is auditable in one file.
+Board template accept, decline and finish text can use Ink references. Board
+offers retain the board's `{amount}` and `{target}` interpolation and reject
+Ink references at startup.
+
 Quest state and pending world rewards commit in one SQLite transaction. Item
 hand-ins are taken while the player is present; a failed state write returns
 them immediately or at the next main-world join. The world reward outbox then
