@@ -2,9 +2,8 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
-    // Gradle keeps its own build cache in plugin/**/build and ~/.gradle, both
-    // outside turbo's concern; no task declares outputs. Turbo's win is the
-    // cached log/exit replay keyed on source hash. MISE_DATA_DIR and JAVA_HOME
+    // Gradle keeps its own build cache in plugin/**/build and ~/.gradle. Turbo
+    // restores the assembled jar on build cache hits. MISE_DATA_DIR and JAVA_HOME
     // must pass through or strict env mode hides the mise-managed JDK/Gradle.
     //
     // Every task is a separate Gradle process on the same project directory,
@@ -26,7 +25,7 @@
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
-      "outputs": [],
+      "outputs": ["plugin/dist/build/libs/TheStorm.jar"],
       "passThroughEnv": [
         "MISE_DATA_DIR",
         "JAVA_HOME",
