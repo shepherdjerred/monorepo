@@ -1,0 +1,82 @@
+# The memorial shelter closes its handover with a durable promise to future travellers.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-returning-guest:
+    name: "The Returning Guest"
+    giver: lenox
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-travellers-pack
+    text:
+      offer: "The guestbook has a returning name. We should be ready with dry wool and bread so the welcome is more than a note on a page."
+      accept: "Bring wool and bread for the next returning traveller."
+      decline: "I will set aside the last pack by the hearth."
+      finish: "The memorial shelter can welcome a returning guest with food and warmth."
+      summary: "Stock a welcome for returning Frost Falls memorial guests."
+      questions: []
+    start: welcome
+    stages:
+      welcome:
+        journal: "Bring Lenox 12 white wool and 20 bread."
+        waiting: "A guest should find warmth before being asked for their story."
+        complete: "Lenox has a returning guest's welcome ready."
+        objectives:
+          - deliver lenox 12 WHITE_WOOL
+          - deliver lenox 20 BREAD
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1
+
+  the-memorial-promise:
+    name: "The Memorial Promise"
+    giver: edgar
+    category: side
+    repeat: once
+    estimatedMinutes: 50
+    requirements:
+      - completed the-returning-guest
+    text:
+      offer: "Lenox has made room for returning guests. Keep the lights and hearth ready, then ask her to carry the welcome into the next watch."
+      accept: "Craft lanterns and campfires, then report to Lenox."
+      decline: "I will tend this watch alone for now."
+      finish: "The Frost Falls name marks a present shelter whose promise another keeper can uphold."
+      summary: "Hand the Frost Falls memorial hearth to its next keeper."
+      questions: []
+    start: hearth-kit
+    stages:
+      hearth-kit:
+        journal: "Craft 8 lanterns and 4 campfires in the main world."
+        waiting: "The memorial light should outlast one keeper's watch."
+        complete: "Edgar has light and fire ready for the next watch."
+        objectives:
+          - craft 8 LANTERN
+          - craft 4 CAMPFIRE
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Ask Lenox to take the next memorial hearth watch."
+        waiting: "The promise is durable only when another keeper accepts it."
+        complete: "Lenox accepts the next memorial watch."
+        objectives:
+          - talk lenox
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 650
+      - points 1
+      - reputation townsfolk 1

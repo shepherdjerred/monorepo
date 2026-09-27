@@ -198,6 +198,26 @@ final class ShippedContentTest {
           "the-guestbook",
           "the-travellers-pack");
 
+  /** The eighth two-quest chapter in each historical region. */
+  static final List<String> CHAPTER_EIGHT =
+      List.of(
+          "the-season-marker",
+          "the-shared-harvest",
+          "the-comparison-sample",
+          "the-open-inspection",
+          "the-comparison-chart",
+          "the-open-archive",
+          "the-return-check",
+          "the-fair-exchange",
+          "the-daylight-survey",
+          "the-watch-handover",
+          "the-repair-bench",
+          "the-line-handover",
+          "the-loaner-boats",
+          "a-river-welcome",
+          "the-returning-guest",
+          "the-memorial-promise");
+
   private static QuestContent content = QuestContent.empty();
 
   @BeforeAll
@@ -213,6 +233,7 @@ final class ShippedContentTest {
 
   @Test
   void theShippedContentPassesTheLinter() {
+    assertThat(content.quests()).hasSize(152);
     assertThat(content.quests().keySet())
         .containsExactlyInAnyOrderElementsOf(
             Stream.of(
@@ -224,7 +245,8 @@ final class ShippedContentTest {
                     CHAPTER_FOUR.stream(),
                     CHAPTER_FIVE.stream(),
                     CHAPTER_SIX.stream(),
-                    CHAPTER_SEVEN.stream())
+                    CHAPTER_SEVEN.stream(),
+                    CHAPTER_EIGHT.stream())
                 .flatMap(stream -> stream)
                 .toList());
     assertThat(content.factions()).containsOnlyKeys("townsfolk", "storm-watch");
@@ -283,6 +305,18 @@ final class ShippedContentTest {
       assertThat(first.requirements())
           .containsExactly(new Condition.Completed(CHAPTER_SIX.get(index + 1)));
       assertThat(second.requirements()).containsExactly(new Condition.Completed(first.id()));
+    }
+  }
+
+  @Test
+  void eighthChaptersContinueEachRegionalStoryInOrder() {
+    for (var index = 0; index < CHAPTER_EIGHT.size(); index += 2) {
+      var first = content.catalog().require(CHAPTER_EIGHT.get(index));
+      var second = content.catalog().require(CHAPTER_EIGHT.get(index + 1));
+      assertThat(first.requirements())
+          .containsExactly(new Condition.Completed(CHAPTER_SEVEN.get(index + 1)));
+      assertThat(second.requirements()).containsExactly(new Condition.Completed(first.id()));
+      assertThat(second.stages()).containsKey("handoff");
     }
   }
 

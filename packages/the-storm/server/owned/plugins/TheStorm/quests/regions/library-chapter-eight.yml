@@ -1,0 +1,81 @@
+# The study circle makes an indexed comparison available to other readers.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-comparison-chart:
+    name: "The Comparison Chart"
+    giver: walter
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-readers-copy
+    text:
+      offer: "Readers have copies of both observations. A chart with times will make differences visible instead of letting one result win by habit."
+      accept: "Bring clocks and paper for the comparison chart."
+      decline: "The observations can stay in separate notebooks."
+      finish: "Anyone can compare the two trials by method and time."
+      summary: "Chart the library water-study observations for readers."
+      questions: []
+    start: chart
+    stages:
+      chart:
+        journal: "Bring Walter 2 clocks and 20 paper."
+        waiting: "A comparison should show both trials on the same scale."
+        complete: "Walter has a time-indexed comparison chart."
+        objectives:
+          - deliver walter 2 CLOCK
+          - deliver walter 20 PAPER
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1
+
+  the-open-archive:
+    name: "The Open Archive"
+    giver: winston
+    category: side
+    repeat: once
+    estimatedMinutes: 50
+    requirements:
+      - completed the-comparison-chart
+    text:
+      offer: "The chart makes the results readable. Set out reading stands for the public copies, then ask Walter to confirm the method can still be repeated."
+      accept: "Craft lecterns for the readers, then report back to Walter."
+      decline: "The books can remain stacked for now."
+      finish: "The library's study is open to readers and remains open to challenge."
+      summary: "Open the library study archive to the public."
+      questions: []
+    start: stands
+    stages:
+      stands:
+        journal: "Craft 6 lecterns in the main world for the study circle."
+        waiting: "Readers need a place to compare pages without borrowing the original."
+        complete: "The public copies have reading stands."
+        objectives:
+          - craft 6 LECTERN
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Ask Walter to confirm the open archive includes the method."
+        waiting: "A result is useful only if its method is kept beside it."
+        complete: "Walter confirms the method is public."
+        objectives:
+          - talk walter
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 650
+      - points 1
+      - reputation townsfolk 1
