@@ -2,6 +2,7 @@ import type { Chart } from "cdk8s";
 import { Size } from "cdk8s";
 import { Application } from "@shepherdjerred/homelab/cdk8s/generated/imports/argoproj.io.ts";
 import { OnePasswordItem } from "@shepherdjerred/homelab/cdk8s/generated/imports/onepassword.com.ts";
+import { vaultItemPath } from "@shepherdjerred/homelab/cdk8s/src/misc/onepassword-vault.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { BURST_SERVICE_PRIORITY } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { getMinecraftBlueMapPort } from "@shepherdjerred/homelab/cdk8s/src/misc/minecraft/minecraft-ports.ts";
@@ -24,6 +25,7 @@ import {
 
 const NAMESPACE = "minecraft-tsmc";
 const SECRET_NAME = "minecraft-tsmc-discord";
+const RCON_SECRET_NAME = "minecraft-tsmc-brain";
 
 export function createMinecraftTsmcApp(chart: Chart) {
   // Create ConfigMaps externally (not in Helm values) to avoid Application size limits
@@ -44,6 +46,13 @@ export function createMinecraftTsmcApp(chart: Chart) {
       name: SECRET_NAME,
       namespace: NAMESPACE,
     },
+  });
+
+  // The brain item must contain MINECRAFT_RCON_PASSWORD before this chart is
+  // released. The server pod cannot start if the operator has not supplied it.
+  new OnePasswordItem(chart, "minecraft-tsmc-brain-1p", {
+    spec: { itemPath: vaultItemPath("mpv7cti3fpwrfobgr6ydnemydy") },
+    metadata: { name: RCON_SECRET_NAME, namespace: NAMESPACE },
   });
 
   createIngress(chart, "minecraft-tsmc-bluemap-ingress", {
@@ -103,6 +112,7 @@ export function createMinecraftTsmcApp(chart: Chart) {
       pvp: true,
       gameMode: "survival",
       forcegameMode: true,
+      overrideServerProperties: true,
       spawnProtection: 0,
       ops: "XiguaJerred",
       version: versions.paper,
@@ -159,7 +169,10 @@ export function createMinecraftTsmcApp(chart: Chart) {
 
       rcon: {
         enabled: true,
-        withGeneratedPassword: true,
+        withGeneratedPassword: false,
+        existingSecret: RCON_SECRET_NAME,
+        secretKey: "MINECRAFT_RCON_PASSWORD",
+        serviceType: "ClusterIP",
       },
     },
     persistence: {

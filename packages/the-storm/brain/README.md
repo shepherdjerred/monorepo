@@ -36,7 +36,7 @@ op run --env-file=account.env -- bun run pilot --run
 | -------------------------- | ----------------------------------------------------------------- |
 | `MINECRAFT_BOT_EMAIL`      | Injected from Alt 1's 1Password `username` field                  |
 | `MINECRAFT_AUTH_CACHE_DIR` | Absolute private directory for Mineflayer's Microsoft token cache |
-| `MINECRAFT_RCON_PASSWORD`  | RCON authentication for the local server                          |
+| `MINECRAFT_RCON_PASSWORD`  | Injected from the homelab `storm-brain` 1Password item            |
 
 Never put the resolved values or token cache in the repository. The cache directory
 must already exist with mode `0700`; the runtime does not create it. Authorize
@@ -45,10 +45,12 @@ before running `--run`. The 1Password password field is never read; Mineflayer
 uses Microsoft OAuth and writes its tokens only to the private cache. The
 other two accounts stay unconfigured.
 
-The repository's current production `server.properties` has RCON disabled.
-Enabling an authenticated RCON path and supplying `MINECRAFT_RCON_PASSWORD`
-are separate prerequisites for a live pilot; this credential reference does
-not change the server.
+The companion RCON configuration is declared in the homelab chart. The
+`storm-brain` item must contain a concealed `MINECRAFT_RCON_PASSWORD` field
+before release or local `op run`. The server pod fails to start when the
+Kubernetes Secret lacks this key. See the
+[operator guide](../../docs/wiki/src/content/docs/how-to/prepare-the-storm-companion-rcon.md)
+before any live pilot.
 
 Mineflayer 4.39.0 speaks Minecraft 26.1. The production server is Paper 26.2,
 so its protocol bridge must be installed and proven before a live pilot. The
