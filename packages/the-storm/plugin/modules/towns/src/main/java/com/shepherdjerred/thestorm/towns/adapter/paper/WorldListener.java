@@ -99,8 +99,12 @@ final class WorldListener implements Listener {
 
   private boolean halvesMayTrade(Inventory source, Inventory destination) {
     for (var from : Chests.locations(source)) {
+      var fromLand = guard.land(from);
+      if (!(fromLand instanceof Land.Wilderness) && !cartMayLoad(destination, fromLand)) {
+        return false;
+      }
       for (var to : Chests.locations(destination)) {
-        if (!Guard.flows(WorldEffect.ITEM_TRANSFER, guard.land(from), guard.land(to))) {
+        if (!Guard.flows(WorldEffect.ITEM_TRANSFER, fromLand, guard.land(to))) {
           return false;
         }
       }

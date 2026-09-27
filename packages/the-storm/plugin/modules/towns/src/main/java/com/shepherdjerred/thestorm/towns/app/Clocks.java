@@ -12,7 +12,7 @@ import java.util.random.RandomGenerator;
  * @param random for new town ids
  * @param mainThread runs rollbacks on the main thread, where the state lives
  * @param reloadFailed told when towns cannot be reloaded from storage after a failed save; every
- *     change is refused until the server restarts
+ *     change is refused and the server is stopped to prevent stale land protection
  */
 public record Clocks(
     InstantSource time,

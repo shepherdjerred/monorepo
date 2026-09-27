@@ -33,6 +33,8 @@ public final class Explanations {
           "This chunk already belongs to " + townName.apply(town) + ".";
       case ClaimProblem.NotAdjacent() ->
           "New claims must share an edge with your town's land; corners do not count.";
+      case ClaimProblem.WouldDisconnect() ->
+          "You cannot unclaim this chunk because it would split your town's land.";
       case ClaimProblem.TooCloseToTown(var town, var buffer) ->
           "This chunk is within "
               + buffer
