@@ -116,7 +116,7 @@ export async function ensureDevServer(
   const root = await repoRoot();
   if (root === null) {
     throw new Error(
-      "Not inside the monorepo (git rev-parse --show-toplevel failed or versions.ts is missing) — toolkit screenshot must run from within the repo checkout.",
+      "Not inside the monorepo (git rev-parse --show-toplevel failed or the version catalog is missing) — toolkit screenshot must run from within the repo checkout.",
     );
   }
   // `detached` puts the child in its own process group so `stop()` can signal

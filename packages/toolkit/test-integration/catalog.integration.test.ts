@@ -1,22 +1,22 @@
 import { test, expect, describe } from "vitest";
 import { SERVICES, resolveServiceSelector } from "#lib/deployed/catalog.ts";
-import { showVersionsAt } from "#lib/deployed/git.ts";
-import { parseVersionsFile } from "#lib/deployed/versions-file.ts";
+import { showCatalogAt } from "#lib/deployed/git.ts";
+import { parseCatalogPins } from "#lib/deployed/catalog-pins.ts";
 
 /**
  * Drift guard: every versionKey in the service registry must exist in the real
- * versions.ts on HEAD. This catches typos and renamed pins without importing
- * across the package boundary (banned by no-parent-imports). versions.ts is the
+ * version catalog on HEAD. This catches typos and renamed pins without importing
+ * across the package boundary (banned by no-parent-imports). The catalog is the
  * source of truth the command reads live, so validating against it is stronger
  * than checking scripts/ci/src/catalog.ts.
  */
 describe("deployed service registry", () => {
-  test("every registry versionKey exists in versions.ts on HEAD", async () => {
-    const text = await showVersionsAt("HEAD");
+  test("every registry versionKey exists in the version catalog on HEAD", async () => {
+    const text = await showCatalogAt("HEAD");
     if (text == null) {
-      throw new Error("could not read versions.ts on HEAD");
+      throw new Error("could not read the version catalog on HEAD");
     }
-    const pins = parseVersionsFile(text);
+    const pins = parseCatalogPins(text);
     const missing: string[] = [];
     for (const service of SERVICES) {
       for (const variant of service.variants) {
