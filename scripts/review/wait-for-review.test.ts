@@ -12,8 +12,10 @@ import {
   validateReviewRequestSchedule,
 } from "../lib/review/review-gate-policy.ts";
 import {
+  confirmPass,
   DEFAULT_TIMEOUT_SECONDS,
   parseMaxBlockingPriority,
+  PASS_CONFIRMATION_TICKS,
   resolveReviewGateProvider,
   resolveReviewGateProviders,
 } from "./wait-for-review.ts";
@@ -357,5 +359,24 @@ describe("review gate source", () => {
     expect(quotaBranch).toMatch(
       /out of quota[\s\S]*exit 0\nfi\nexit "\$GATE_STATUS"/u,
     );
+  });
+});
+
+describe("confirmPass", () => {
+  test("accepts a pass only on consecutive passing ticks", () => {
+    expect(PASS_CONFIRMATION_TICKS).toBe(2);
+    const first = confirmPass(true, 0);
+    expect(first).toEqual({ streak: 1, accepted: false });
+    expect(confirmPass(true, first.streak)).toEqual({
+      streak: 2,
+      accepted: true,
+    });
+  });
+
+  test("a waiting tick resets the streak", () => {
+    const first = confirmPass(true, 0);
+    const reset = confirmPass(false, first.streak);
+    expect(reset).toEqual({ streak: 0, accepted: false });
+    expect(confirmPass(true, reset.streak).accepted).toBe(false);
   });
 });

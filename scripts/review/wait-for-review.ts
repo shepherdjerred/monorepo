@@ -492,6 +492,75 @@ function failAtDeadline(
 }
 
 /**
+ * How many consecutive passing ticks it takes to accept a pass. Provider
+ * snapshots within one tick are fetched sequentially, so a P0 posted by an
+ * earlier provider after its fetch — but before a later provider's clean
+ * snapshot in the same tick — would otherwise be missed: acceptance is
+ * terminal and the next tick never runs. Failing decisions still throw
+ * immediately; only acceptance waits for confirmation.
+ */
+export const PASS_CONFIRMATION_TICKS = 2;
+
+export type PassConfirmation = { streak: number; accepted: boolean };
+
+/** Pure transition for the pass-confirmation rule (see PASS_CONFIRMATION_TICKS). */
+export function confirmPass(passed: boolean, streak: number): PassConfirmation {
+  const next = passed ? streak + 1 : 0;
+  return { streak: next, accepted: next >= PASS_CONFIRMATION_TICKS };
+}
+
+/** Mutable per-run state for the poll loop (see pollOnce). */
+type PollLoopState = {
+  passStreak: number;
+  lastPollError: Error | null;
+};
+
+/**
+ * Run one poll iteration: observe every provider, conclude the tick, and
+ * fold the decision into the pass-confirmation streak. Returns true when a
+ * pass has been confirmed and the gate is decided; throws on a blocking
+ * failure or a non-retryable error (both propagate to the caller).
+ */
+async function pollOnce(
+  config: GateConfig,
+  poll: GatePollState,
+  startedAt: number,
+  state: PollLoopState,
+): Promise<boolean> {
+  let observed: ProviderObservation[];
+  try {
+    const tick = await observeTick(config, poll, startedAt);
+    // Unanimous skip passes, but through the same confirmation as any
+    // other pass: a skipped provider's stale P0 is still a snapshot taken
+    // mid-tick and must survive a second observation to be trusted absent.
+    if (tick === null) {
+      state.passStreak = confirmPass(true, state.passStreak).streak;
+      return state.passStreak >= PASS_CONFIRMATION_TICKS;
+    }
+    observed = tick;
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    if (!isRetryablePollError(err)) throw err;
+    state.lastPollError = err;
+    state.passStreak = 0;
+    console.warn(
+      `Transient error querying GitHub for the review gate (will retry until the deadline): ${err.message}`,
+    );
+    return false;
+  }
+  state.lastPollError = null;
+  const passed = concludeTick(config, poll, observed, startedAt);
+  const confirmation = confirmPass(passed, state.passStreak);
+  state.passStreak = confirmation.streak;
+  if (passed && !confirmation.accepted) {
+    console.log(
+      `Pass observed for ${config.head}; confirming on the next tick before accepting, so a P0 posted mid-tick still vetoes.`,
+    );
+  }
+  return confirmation.accepted;
+}
+
+/**
  * Poll GitHub until the gate passes, fails, or the deadline is reached.
  * Resolves cleanly on pass; throws on a blocking failure or a timeout.
  */
@@ -512,32 +581,16 @@ async function pollReviewGate(config: GateConfig): Promise<void> {
     warnedMismatch: false,
     warnedOversized: new Set(),
   };
-  let lastPollError: Error | null = null;
+  const state: PollLoopState = { passStreak: 0, lastPollError: null };
 
   while (Date.now() <= deadline) {
-    let observed: ProviderObservation[];
-    try {
-      const tick = await observeTick(config, poll, startedAt);
-      if (tick === null) return;
-      observed = tick;
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      if (!isRetryablePollError(err)) throw err;
-      lastPollError = err;
-      console.warn(
-        `Transient error querying GitHub for the review gate (will retry until the deadline): ${err.message}`,
-      );
-      await Bun.sleep(intervalSeconds * 1000);
-      continue;
-    }
-    lastPollError = null;
-    if (concludeTick(config, poll, observed, startedAt)) return;
+    if (await pollOnce(config, poll, startedAt, state)) return;
     await Bun.sleep(intervalSeconds * 1000);
   }
 
   // Deadline reached. Per-provider terminal signal events plus the deadline
   // error live in failAtDeadline; this function never returns.
-  failAtDeadline(config, poll, startedAt, lastPollError);
+  failAtDeadline(config, poll, startedAt, state.lastPollError);
 }
 
 if (import.meta.main) {
