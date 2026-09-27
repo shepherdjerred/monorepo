@@ -9,6 +9,18 @@ events:
     lastDay: 10-31
     spawnRadius: 64
     dailyDoors: 11
+    doors:
+      - { east: 24, up: 0, south: 0, material: DARK_OAK_DOOR }
+      - { east: 20, up: 0, south: 12, material: DARK_OAK_DOOR }
+      - { east: 12, up: 0, south: 20, material: DARK_OAK_DOOR }
+      - { east: 0, up: 0, south: 24, material: DARK_OAK_DOOR }
+      - { east: -12, up: 0, south: 20, material: DARK_OAK_DOOR }
+      - { east: -20, up: 0, south: 12, material: DARK_OAK_DOOR }
+      - { east: -24, up: 0, south: 0, material: DARK_OAK_DOOR }
+      - { east: -20, up: 0, south: -12, material: DARK_OAK_DOOR }
+      - { east: -12, up: 0, south: -20, material: DARK_OAK_DOOR }
+      - { east: 0, up: 0, south: -24, material: DARK_OAK_DOOR }
+      - { east: 12, up: 0, south: -20, material: DARK_OAK_DOOR }
     rewards:
       - { kind: TRICK, material: ROTTEN_FLESH, amount: 3, weight: 25 }
       - { kind: TRICK, material: POISONOUS_POTATO, amount: 1, weight: 10 }
@@ -17,3 +29,24 @@ events:
       - { kind: TREAT, material: DIAMOND, amount: 1, weight: 10 }
       - { kind: TREAT, material: MUSIC_DISC_13, amount: 1, weight: 4 }
       - { kind: TREAT, material: BEACON, amount: 1, weight: 1 }
+  - id: winter_vigil
+    title: Winter Vigil
+    firstDay: 12-24
+    lastDay: 01-01
+    spawnRadius: 64
+    dailyDoors: 7
+    doors:
+      - { east: 8, up: 0, south: 0, material: SPRUCE_DOOR }
+      - { east: 4, up: 0, south: 7, material: SPRUCE_DOOR }
+      - { east: -4, up: 0, south: 7, material: SPRUCE_DOOR }
+      - { east: -8, up: 0, south: 0, material: SPRUCE_DOOR }
+      - { east: -4, up: 0, south: -7, material: SPRUCE_DOOR }
+      - { east: 4, up: 0, south: -7, material: SPRUCE_DOOR }
+      - { east: 0, up: 0, south: -10, material: SPRUCE_DOOR }
+    rewards:
+      - { kind: TREAT, material: COOKIE, amount: 4, weight: 30 }
+      - { kind: TREAT, material: PUMPKIN_PIE, amount: 2, weight: 25 }
+      - { kind: TREAT, material: CAMPFIRE, amount: 1, weight: 18 }
+      - { kind: TREAT, material: LANTERN, amount: 2, weight: 15 }
+      - { kind: TREAT, material: EMERALD, amount: 1, weight: 10 }
+      - { kind: TREAT, material: DIAMOND, amount: 1, weight: 2 }

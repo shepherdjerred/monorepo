@@ -54,7 +54,8 @@ final class SeasonalDoorsTest {
                     "10-28",
                     "10-31",
                     64,
-                    11,
+                    1,
+                    List.of(new SeasonalConfig.Door(1, 0, 0, "OAK_DOOR")),
                     List.of(new SeasonalConfig.Reward(SeasonalConfig.Kind.TREAT, "BREAD", 1, 1)))));
     var listener =
         new SeasonalDoors(
@@ -63,7 +64,8 @@ final class SeasonalDoorsTest {
             InstantSource.fixed(Instant.parse("2026-10-29T12:00:00Z")),
             RandomGenerator.getDefault());
     var world = server.addSimpleWorld("world");
-    var door = world.getBlockAt(world.getSpawnLocation().getBlockX() + 1, 64, 0);
+    var spawn = world.getSpawnLocation();
+    var door = world.getBlockAt(spawn.getBlockX() + 1, spawn.getBlockY(), spawn.getBlockZ());
     door.setType(Material.OAK_DOOR);
     var player = server.addPlayer();
     var click =
@@ -102,6 +104,19 @@ final class SeasonalDoorsTest {
             EquipmentSlot.HAND));
     assertThat(traveler.getInventory().contains(Material.BREAD)).isFalse();
 
+    var unlisted = world.getBlockAt(spawn.getBlockX() + 2, spawn.getBlockY(), spawn.getBlockZ());
+    unlisted.setType(Material.OAK_DOOR);
+    var visitor = server.addPlayer();
+    listener.onDoor(
+        new PlayerInteractEvent(
+            visitor,
+            Action.RIGHT_CLICK_BLOCK,
+            new ItemStack(Material.AIR),
+            unlisted,
+            BlockFace.UP,
+            EquipmentSlot.HAND));
+    assertThat(visitor.getInventory().contains(Material.BREAD)).isFalse();
+
     var remoteDoor = world.getBlockAt(world.getSpawnLocation().getBlockX() + 46_341, 64, 0);
     remoteDoor.setType(Material.OAK_DOOR);
     var remotePlayer = server.addPlayer();
@@ -114,5 +129,67 @@ final class SeasonalDoorsTest {
             BlockFace.UP,
             EquipmentSlot.HAND));
     assertThat(remotePlayer.getInventory().contains(Material.BREAD)).isFalse();
+  }
+
+  @Test
+  void winterVigilUsesItsOwnYearCrossingWindowAndSpruceDoor() {
+    var config =
+        new SeasonalConfig(
+            "world",
+            "America/Los_Angeles",
+            List.of(
+                new SeasonalConfig.Event(
+                    "winter_vigil",
+                    "Winter Vigil",
+                    "12-24",
+                    "01-01",
+                    64,
+                    1,
+                    List.of(new SeasonalConfig.Door(8, 0, 0, "SPRUCE_DOOR")),
+                    List.of(
+                        new SeasonalConfig.Reward(SeasonalConfig.Kind.TREAT, "COOKIE", 2, 1)))));
+    var world = server.addSimpleWorld("world");
+    var spawn = world.getSpawnLocation();
+    var door = world.getBlockAt(spawn.getBlockX() + 8, spawn.getBlockY(), spawn.getBlockZ());
+    door.setType(Material.SPRUCE_DOOR);
+    var player = server.addPlayer();
+    var click =
+        new PlayerInteractEvent(
+            player,
+            Action.RIGHT_CLICK_BLOCK,
+            new ItemStack(Material.AIR),
+            door,
+            BlockFace.UP,
+            EquipmentSlot.HAND);
+    var onChristmas =
+        new SeasonalDoors(
+            plugin,
+            config,
+            InstantSource.fixed(Instant.parse("2026-12-26T12:00:00Z")),
+            RandomGenerator.getDefault());
+    onChristmas.onDoor(click);
+    onChristmas.onDoor(click);
+    assertThat(
+            player.getInventory().all(Material.COOKIE).values().stream()
+                .mapToInt(ItemStack::getAmount)
+                .sum())
+        .isEqualTo(2);
+
+    var afterWindow =
+        new SeasonalDoors(
+            plugin,
+            config,
+            InstantSource.fixed(Instant.parse("2027-01-03T12:00:00Z")),
+            RandomGenerator.getDefault());
+    var lateVisitor = server.addPlayer();
+    afterWindow.onDoor(
+        new PlayerInteractEvent(
+            lateVisitor,
+            Action.RIGHT_CLICK_BLOCK,
+            new ItemStack(Material.AIR),
+            door,
+            BlockFace.UP,
+            EquipmentSlot.HAND));
+    assertThat(lateVisitor.getInventory().contains(Material.COOKIE)).isFalse();
   }
 }

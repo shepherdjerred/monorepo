@@ -50,6 +50,12 @@ public final class SeasonalDoors implements Listener {
                 java.util.stream.Collectors.toUnmodifiableMap(
                     SeasonalConfig.Event::id, SeasonalConfig.Event::window));
     for (var event : config.events()) {
+      for (var door : event.doors()) {
+        var material = Material.getMaterial(door.material());
+        if (material == null || !material.isBlock()) {
+          throw new IllegalArgumentException("invalid seasonal door material: " + door.material());
+        }
+      }
       for (var reward : event.rewards()) {
         var material = Material.getMaterial(reward.material());
         if (material == null || !material.isItem() || material == Material.AIR) {
@@ -80,17 +86,24 @@ public final class SeasonalDoors implements Listener {
       if (window == null) {
         throw new IllegalStateException("missing seasonal window: " + event.id());
       }
-      if (window.contains(today) && nearSpawn(lower, event.spawnRadius())) {
+      if (window.contains(today) && authoredDoor(lower, event)) {
         visit(player, lower, event, today);
       }
     }
   }
 
-  private static boolean nearSpawn(Block door, int radius) {
+  private static boolean authoredDoor(Block door, SeasonalConfig.Event event) {
     var spawn = door.getWorld().getSpawnLocation();
     long dx = (long) door.getX() - spawn.getBlockX();
+    long dy = (long) door.getY() - spawn.getBlockY();
     long dz = (long) door.getZ() - spawn.getBlockZ();
-    return dx * dx + dz * dz <= (long) radius * radius;
+    return event.doors().stream()
+        .anyMatch(
+            expected ->
+                expected.east() == dx
+                    && expected.up() == dy
+                    && expected.south() == dz
+                    && door.getType().name().equals(expected.material()));
   }
 
   private void visit(Player player, Block door, SeasonalConfig.Event event, LocalDate today) {
