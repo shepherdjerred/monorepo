@@ -21,6 +21,7 @@ final class WorldConfigTest {
                   throw new AssertionError(err.toString());
                 });
     assertThat(config.sleepPercentage()).isEqualTo(50);
+    assertThat(config.crier()).isEqualTo(new CrierConfig(false, "world"));
     assertThat(config.worlds())
         .extracting(WorldSpec::name)
         .containsExactly("wilds", "peaks", "mining");
@@ -28,5 +29,12 @@ final class WorldConfigTest {
         .extracting(WorldSpec::preset)
         .containsExactly("large_biomes", "amplified", "normal");
     assertThat(SleepFraction.skips(1, 2, config.sleepPercentage())).isTrue();
+  }
+
+  @Test
+  void theCrierCannotBeMovedOutOfTheMainWorld() {
+    org.assertj.core.api.Assertions.assertThatThrownBy(() -> new CrierConfig(true, "mining"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("main world");
   }
 }

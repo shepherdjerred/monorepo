@@ -160,6 +160,17 @@ replays pending payouts on the next module start; a failed payout remains
 recorded and is logged for recovery. Treasury deposits and withdrawals hold the
 town busy until their transfers finish, so deletion cannot race a balance change.
 
+### Main-world crier
+
+The world module also owns an on-demand `/crier` bulletin. Its separate
+`world.yml` `crier.enabled` setting ships as `false`; the world module itself
+also remains disabled in `config.yml`. Once enabled, the command works only
+for players in `world`. It reports the observed weather and game time, then
+rotates one historical Storm fact by full game day. The archive notes come from
+the recovered Storm history (old spawn landmarks, the Bridge Hobo quest, the
+2015 Easter hunt, and Braxton's bank). It makes no claim that those landmarks
+or quests exist in the current world. There is no timer or automatic broadcast.
+
 ## Conventions
 
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating
