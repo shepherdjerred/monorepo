@@ -56,6 +56,15 @@ export async function startAgentChatDiscordBot(
   }
   signal.throwIfAborted();
   const discord = new Client({ intents: [GatewayIntentBits.Guilds] });
+  // EventEmitter treats an unhandled `error` event as fatal. Keep a transient
+  // gateway failure scoped to this ingress rather than taking down every
+  // colocated Temporal gateway API and Activity worker.
+  discord.on(Events.Error, (error) => {
+    Sentry.captureException(error);
+    jsonLog("error", "Discord agent chat gateway error", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  });
   discord.on(Events.InteractionCreate, (interaction) => {
     if (interaction.isChatInputCommand()) {
       void handleDiscordInteractionSafely(temporal, interaction);
