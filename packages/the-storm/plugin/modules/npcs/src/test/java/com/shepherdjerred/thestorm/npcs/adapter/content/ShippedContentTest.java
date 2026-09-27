@@ -49,14 +49,30 @@ final class ShippedContentTest {
     assertThat(config.navigator().entity()).isEqualTo("minecraft:llama");
     assertThat(config.markers().available()).isEqualTo("!");
     assertThat(config.markers().turnIn()).isEqualTo("?");
+    assertThat(config.guard().attackReach()).isLessThan(config.guard().detectionRadius());
   }
 
   @Test
   void theShippedContentValidates() {
     var content = shipped();
     assertThat(content.npcs().keySet())
-        .contains("stan", "darren", "zavier", "lynn", "aldric", "braxton", "nat", "thomas");
+        .contains(
+            "stan",
+            "darren",
+            "zavier",
+            "lynn",
+            "aldric",
+            "braxton",
+            "nat",
+            "thomas",
+            "east-guard",
+            "west-guard");
     assertThat(content.chunks()).isNotEmpty();
+    for (var id : List.of("east-guard", "west-guard")) {
+      var guard = content.npc(id).orElseThrow();
+      assertThat(guard.roles()).contains("guard");
+      assertThat(content.schedule(guard)).isPresent();
+    }
   }
 
   @Test

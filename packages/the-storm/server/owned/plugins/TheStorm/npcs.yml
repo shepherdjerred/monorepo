@@ -28,6 +28,14 @@ animation:
   # How often NPCs re-check their schedule and the weather, in ticks.
   thinkIntervalTicks: 20
 
+guard:
+  # A guard reacts to hostile mobs it can see near itself and its home post.
+  detectionRadius: 12
+  homeRadius: 16
+  attackReach: 2.5
+  damage: 4
+  cooldownTicks: 20
+
 navigator:
   # The hidden mob whose pathfinder plans NPC walks. It must be a passive mob
   # (monsters do not exist in Peaceful) about the size of a player: a llama is

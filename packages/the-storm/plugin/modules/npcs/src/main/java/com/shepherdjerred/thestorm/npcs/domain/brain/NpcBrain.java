@@ -14,9 +14,8 @@ import java.util.Optional;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Chooses an NPC's {@link Intent} from its schedule, the time of day and the weather, with a small
- * behavior tree: shelter from a storm if the schedule names a shelter; otherwise follow the
- * schedule; otherwise stand at home.
+ * Chooses an NPC's {@link Intent} from its surroundings and schedule. Guards approach nearby
+ * hostiles before following their ordinary routines.
  */
 public final class NpcBrain {
 
@@ -26,6 +25,10 @@ public final class NpcBrain {
   private static final Behavior<Mind> TREE =
       Behavior.selector(
           List.of(
+              Behavior.sequence(
+                  List.of(
+                      Behavior.condition(Mind::shouldDefend),
+                      Behavior.action(mind -> mind.choose(mind.defend())))),
               Behavior.sequence(
                   List.of(
                       Behavior.condition(Mind::shouldShelter),
@@ -56,8 +59,14 @@ public final class NpcBrain {
    *
    * @param time the time of day in the NPC's world
    * @param storming whether it is raining or storming there
+   * @param threat a nearby hostile mob inside the guard's patrol area, if any
    */
-  public record Situation(TimeOfDay time, boolean storming) {}
+  public record Situation(TimeOfDay time, boolean storming, Optional<Spot> threat) {
+
+    public Situation(TimeOfDay time, boolean storming) {
+      this(time, storming, Optional.empty());
+    }
+  }
 
   /** The tree's scratch space for one decision. */
   private static final class Mind {
@@ -89,6 +98,14 @@ public final class NpcBrain {
 
     boolean shouldShelter() {
       return now.storming() && schedule.flatMap(Schedule::shelter).isPresent();
+    }
+
+    boolean shouldDefend() {
+      return npc.roles().contains("guard") && now.threat().isPresent();
+    }
+
+    Intent defend() {
+      return new Intent.Pursue(now.threat().orElseThrow());
     }
 
     Intent shelter() {
@@ -128,7 +145,7 @@ public final class NpcBrain {
     return switch (intent) {
       case Intent.Stand(var _, var pose) -> pose;
       case Intent.Sleep _ -> NpcPose.SLEEPING;
-      case Intent.Wander _, Intent.Patrol _ -> NpcPose.STANDING;
+      case Intent.Wander _, Intent.Patrol _, Intent.Pursue _ -> NpcPose.STANDING;
     };
   }
 }
