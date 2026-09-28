@@ -81,8 +81,10 @@ if ! rg -Fq 'flock --shared 9' "$BUN_INSTALL_WRAPPER" ||
   exit 1
 fi
 
-if ! rg -Fq 'BUN_INSTALL_LOCK_MODE=shared "$GATE_DIR/ci/scripts/bun-install.sh"' "$REVIEW_GATE"; then
-  echo "main-sourced review gate must select shared locking for older PR pipelines" >&2
+if rg -Fq 'BUN_INSTALL_LOCK_MODE=shared' "$REVIEW_GATE" ||
+  ! rg -Fq '"$GATE_DIR/ci/scripts/bun-install.sh" --frozen-lockfile' "$REVIEW_GATE" ||
+  ! rg -Fq -- "--filter '@shepherdjerred/root-scripts' --production" "$REVIEW_GATE"; then
+  echo "main-sourced review gate must use an isolated production install" >&2
   exit 1
 fi
 

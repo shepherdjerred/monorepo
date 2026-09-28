@@ -43,13 +43,20 @@ describe("variable substitution", () => {
     }
   });
 
-  /** The bash array expansions that made Woodpecker refuse to compile. */
+  /** Keep the envsubst guard even when no production lane uses an array. */
   test("keeps bash array expansions intact", () => {
     const sites = steps.find((step) => step.key === "sites");
     expect(sites).toBeDefined();
     if (sites === undefined) return;
+    const probe = {
+      ...sites,
+      commands: [
+        "filters=(one two)",
+        'printf "%s" "${filters[@]}" "${#filters[@]}"',
+      ],
+    };
     const command = EmittedCommands.parse(
-      parse(substitute(emitWorkflow(sites, TEST_IDENTITY))),
+      parse(substitute(emitWorkflow(probe, TEST_IDENTITY))),
     ).steps[0].commands[0];
     expect(command).toContain('"${filters[@]}"');
     expect(command).toContain("${#filters[@]}");
@@ -73,6 +80,10 @@ describe("Bun cache install mode", () => {
       const shared =
         cacheClaims.has(BUN_CACHE.claim) &&
         cacheClaims.has(BUN_CACHE_CONTROL.claim);
+
+      if (step.key === "codex-review-gate") {
+        expect(shared).toBe(false);
+      }
 
       expect(environment["BUN_INSTALL_LOCK_MODE"], step.key).toBe(
         shared ? "shared" : "local",

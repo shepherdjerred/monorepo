@@ -125,6 +125,7 @@
         "LOCALAPPDATA",
         "MISE_DATA_DIR",
         "NO_PROXY",
+        "TASKNOTES_COVERAGE_BASE",
         "TEMP",
         "TMP",
         "USERPROFILE"
