@@ -17,13 +17,12 @@ import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
  * it, and the suite reaches each service by its name as a hostname. The ConfigMap, the
  * yq init container, and the version-lag problem all go away together.
  *
- * The bucket creation that was a second init container moves into the step,
- * which has to wait for MinIO to accept connections anyway.
+ * The suite creates its bucket through its existing signed S3 helper after
+ * MinIO becomes ready, avoiding a third pod or a client binary in ci-base.
  */
 
 const TEMPO_CONFIG = "packages/llm-observability/test/tempo.yaml";
 const MINIO_ROOT = "minioadmin";
-const ARCHIVE_BUCKET = "llm-archive";
 
 export function observabilityE2eSteps(images: CiImages): CiStep[] {
   return [
@@ -34,11 +33,6 @@ export function observabilityE2eSteps(images: CiImages): CiStep[] {
       commands: [
         ". ci/scripts/toolchain.sh",
         "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/llm-observability'",
-        // Services are separate pods reached by name, and start with the step
-        // rather than before it, so wait rather than assume. `mc alias set` is
-        // the readiness probe MinIO actually has.
-        `until mc alias set local http://minio:9000 ${MINIO_ROOT} ${MINIO_ROOT}; do sleep 1; done`,
-        `mc mb --ignore-existing local/${ARCHIVE_BUCKET}`,
         "bun --no-install run --cwd packages/llm-observability test:e2e:ci",
       ],
       timeoutMinutes: 30,

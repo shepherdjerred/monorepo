@@ -50,6 +50,8 @@ export const PipelineSchema = z.looseObject({
    * of shelling out to git in a bootstrap pod.
    */
   changed_files: z.array(z.string()).default([]),
+  /** Operator parameters from a manual trigger, signed with this request. */
+  variables: z.record(z.string(), z.string()).default({}),
 });
 
 export const RepoSchema = z.looseObject({

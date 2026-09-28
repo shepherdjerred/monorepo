@@ -12,6 +12,7 @@ import {
   releaseAdmissionStep,
   tofuApplySteps,
 } from "#src/pipeline/lanes/tofu-apply.ts";
+import type { PlatformApplyStack } from "#src/pipeline/lanes/tofu-apply.ts";
 import { releaseChainSteps } from "#src/pipeline/lanes/release.ts";
 import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
 import { scoutSteps } from "#src/pipeline/lanes/scout.ts";
@@ -85,6 +86,8 @@ export type PipelineInputs = {
    * `changedBase`, and undefined when no recent build qualifies.
    */
   readonly imageReleaseBase?: string | undefined;
+  /** One operator-requested platform apply on a targeted manual build. */
+  readonly platformApplyStack?: PlatformApplyStack;
 };
 
 export function buildPipelineSteps({
@@ -92,6 +95,7 @@ export function buildPipelineSteps({
   changedBase,
   verifyBase,
   imageReleaseBase,
+  platformApplyStack,
 }: PipelineInputs): CiStep[] {
   const sharedEnvironment = {
     CI_CHANGED_BASE: changedBase ?? "",
@@ -129,7 +133,7 @@ export function buildPipelineSteps({
     ...tofuPlanSteps(images),
     ...playwrightSteps(images, changedBase),
     releaseAdmissionStep(images),
-    ...tofuApplySteps(images),
+    ...tofuApplySteps(images, platformApplyStack),
     ...releaseChainSteps(images, sharedEnvironment),
     ...ciImageSteps(images),
     ...scoutSteps(images),

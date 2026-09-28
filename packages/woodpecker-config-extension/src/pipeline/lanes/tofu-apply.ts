@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { CiImages } from "#src/images.ts";
 import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
 import { LIGHT_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
@@ -14,8 +15,8 @@ import {
  * Default-branch OpenTofu work, and the admission token that gates it.
  *
  * Applies mutate live external control planes. Platform credential stacks
- * only plan on ordinary main builds; an operator applies a reviewed plan
- * through the OpenTofu wrapper. Every step here first asks whether this build
+ * only plan on ordinary main builds; a targeted manual build plans and applies
+ * exactly one requested stack. Every step here first asks whether this build
  * is still the one allowed to release.
  *
  * The standalone work that depends on nothing but admission is here. The
@@ -45,7 +46,10 @@ function admissionGate(): string[] {
   ];
 }
 
-function stackCommands(stack: string, action: "plan" | "apply"): string[] {
+function stackCommands(
+  stack: string,
+  action: "plan" | "apply" | "plan-apply",
+): string[] {
   return [
     ...admissionGate(),
     ". ci/scripts/toolchain.sh",
@@ -57,7 +61,10 @@ function stackCommands(stack: string, action: "plan" | "apply"): string[] {
         ]
       : []),
     `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
-    `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts ${stack} ${action}`,
+    ...(action === "plan-apply" ? (["plan", "apply"] as const) : [action]).map(
+      (command) =>
+        `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts ${stack} ${command}`,
+    ),
   ];
 }
 
@@ -68,6 +75,15 @@ function stackCommands(stack: string, action: "plan" | "apply"): string[] {
  * 1Password item, but they all spell the field the same way.
  */
 const STATE_PASSPHRASE_KEY = "TOFU_STATE_ENCRYPTION_PASSPHRASE";
+
+export const PlatformApplyStackSchema = z.enum([
+  "openai",
+  "anthropic",
+  "discord",
+  "cloudflare-tokens",
+] as const);
+
+export type PlatformApplyStack = z.infer<typeof PlatformApplyStackSchema>;
 
 function stackChanged(stack: string, platform = false) {
   return {
@@ -89,7 +105,7 @@ function stackChanged(stack: string, platform = false) {
  * read their separate live states and provider APIs.
  */
 const PLATFORM_PLANS: readonly {
-  readonly stack: string;
+  readonly stack: PlatformApplyStack;
   readonly secrets: readonly SecretGrant[];
 }[] = [
   {
@@ -168,7 +184,10 @@ export function releaseAdmissionStep(images: CiImages): CiStep {
   };
 }
 
-export function tofuApplySteps(images: CiImages): CiStep[] {
+export function tofuApplySteps(
+  images: CiImages,
+  platformApplyStack?: PlatformApplyStack,
+): CiStep[] {
   const standalone: CiStep[] = [
     {
       key: "tofu-apply-github",
@@ -217,9 +236,12 @@ export function tofuApplySteps(images: CiImages): CiStep[] {
 
   const platform: CiStep[] = PLATFORM_PLANS.map(({ stack, secrets }) => ({
     key: `tofu-platform-${stack}`,
-    label: `tofu plan ${stack}`,
+    label: `tofu ${stack === platformApplyStack ? "apply" : "plan"} ${stack}`,
     image: images.base,
-    commands: stackCommands(stack, "plan"),
+    commands: stackCommands(
+      stack,
+      stack === platformApplyStack ? "plan-apply" : "plan",
+    ),
     dependsOn: ["homelab-release-admission"],
     timeoutMinutes: 60,
     resources: MEDIUM_TIER,

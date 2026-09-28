@@ -166,11 +166,11 @@ health gate.
 
 After verification, watch the serialized `openai`, `anthropic`, `discord`, and
 `cloudflare-tokens` jobs selected by the changed paths. Each job plans its
-encrypted platform state. To apply a reviewed change, run that stack's
-OpenTofu plan and apply from the current main checkout through the
-[vault-scoped service-account wrapper](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/README.md#unattended-local-1password-access),
-with its provider credentials supplied as 1Password references. Review the
-fresh local plan before applying; a manual Woodpecker build also plans only.
+encrypted platform state. After reviewing a plan, trigger a manual build of
+the current main commit with `TOFU_PLATFORM_APPLY` set to exactly one of those
+stack names. The extension schedules only the release-admission and selected
+platform workflows. That job runs a fresh plan immediately before applying;
+it receives only that stack's credentials.
 
 If one fails, stop the rollout at that platform. Inspect its vendor resources,
 encrypted state object, and intended 1Password rotation units. Resume only

@@ -1,11 +1,15 @@
 import { Hono } from "hono";
 import type { KeyObject } from "node:crypto";
-import { ConfigExtensionRequestSchema } from "#src/schemas.ts";
+import { ConfigExtensionRequestSchema, type Pipeline } from "#src/schemas.ts";
 import { authorizePipeline } from "#src/authorization.ts";
 import { verifySignedRequest } from "#src/signature.ts";
 import { emitWorkflows } from "#src/pipeline/emit.ts";
 import { isWorkEvent, selectSteps } from "#src/pipeline/select.ts";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
+import {
+  PlatformApplyStackSchema,
+  type PlatformApplyStack,
+} from "#src/pipeline/lanes/tofu-apply.ts";
 import { completionStep, noWorkStep } from "#src/pipeline/completion.ts";
 import { resolveCiImages, type ImageFetcher } from "#src/images.ts";
 import { changedFilesSince } from "#src/github-compare.ts";
@@ -34,6 +38,22 @@ export type AppOptions = {
   ) => Promise<string | undefined>;
   readonly compareChangedFiles?: typeof changedFilesSince;
 };
+
+function platformApplyRequest(
+  pipeline: Pipeline,
+  defaultBranch: string,
+):
+  | { readonly stack: PlatformApplyStack }
+  | { readonly invalid: true }
+  | undefined {
+  const requested = pipeline.variables["TOFU_PLATFORM_APPLY"];
+  if (requested === undefined) return undefined;
+  if (pipeline.event !== "manual" || pipeline.branch !== defaultBranch) {
+    return { invalid: true };
+  }
+  const parsed = PlatformApplyStackSchema.safeParse(requested);
+  return parsed.success ? { stack: parsed.data } : { invalid: true };
+}
 
 export function createApp(options: AppOptions): Hono {
   const app = new Hono();
@@ -80,6 +100,11 @@ export function createApp(options: AppOptions): Hono {
       return context.json({ error: "actor is not permitted to run CI" }, 403);
     }
 
+    const platformApply = platformApplyRequest(pipeline, repo.default_branch);
+    if (platformApply !== undefined && "invalid" in platformApply) {
+      return context.json({ error: "invalid platform apply request" }, 400);
+    }
+
     const selectionContext = {
       event: pipeline.event,
       branch: pipeline.branch,
@@ -96,6 +121,24 @@ export function createApp(options: AppOptions): Hono {
       return context.json({
         configs: emitWorkflows([noWorkStep(images.base)], identity),
       });
+    }
+
+    if (platformApply !== undefined && "stack" in platformApply) {
+      const { stack } = platformApply;
+      const steps = buildPipelineSteps({
+        images,
+        changedBase: undefined,
+        platformApplyStack: stack,
+      }).filter(
+        (step) =>
+          step.key === "homelab-release-admission" ||
+          step.key === `tofu-platform-${stack}`,
+      );
+      const selected = selectSteps(steps, {
+        ...selectionContext,
+        changedFiles: [],
+      });
+      return context.json({ configs: emitWorkflows(selected, identity) });
     }
 
     const [changedBase, verifyBase, imageReleaseBase] = await Promise.all([
