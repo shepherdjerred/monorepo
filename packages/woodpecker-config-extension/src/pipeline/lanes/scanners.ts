@@ -94,10 +94,9 @@ const SEMGREP_SOURCE_GLOBS = [
 ] as const;
 
 /**
- * Trivy's vulnerability database, supplied by a shared claim.
- *
- * The scan runs with --skip-db-update so a pull-request lane never waits on a
- * database download, which means the database has to come from somewhere.
+ * Trivy's vulnerability database, supplied by the Temporal maintenance
+ * worker's ci-trivy-db-refresh schedule through a shared claim. PR scans must
+ * stay read-only so they cannot race the single refresh writer.
  */
 const TRIVY_DB = {
   claim: "woodpecker-trivy-db",
