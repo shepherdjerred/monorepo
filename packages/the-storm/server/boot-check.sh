@@ -10,8 +10,9 @@
 #      plugins/TheStorm/the-storm.db, a runtime file next to it) and a stray
 #      jar REMOVE_OLD_MODS must delete;
 #   3. second boot with --network none: the runtime state survived, the stray
-#      jar is gone, /data/plugins/*.jar is exactly the image's jar set, and
-#      the patches (including ${CFG_*} interpolation) applied.
+#      jar is gone, /data/plugins/*.jar is the image's jar set on this fixture,
+#      and the patches (including ${CFG_*} interpolation) applied. The live
+#      LWCX jar exception is outside this synthetic fixture.
 #
 # legacy: a volume pre-filled with the config tree the old minecraft-tsmc init
 #   container copied (packages/homelab/src/cdk8s/config/minecraft-tsmc from
