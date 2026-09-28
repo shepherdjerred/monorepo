@@ -68,7 +68,7 @@ export function buildMainVulnScanReport(
         label: "Trivy filesystem scan of main completed",
         required: true,
         status: "passed",
-        summary: `Scanned main@${result.repoSha.slice(0, 12)} with the warm Buildkite Trivy DB; ${String(total)} HIGH/CRITICAL findings.`,
+        summary: `Scanned main@${result.repoSha.slice(0, 12)} with the warm Woodpecker Trivy DB; ${String(total)} HIGH/CRITICAL findings.`,
         evidenceReceiptIds: [SCAN_RECEIPT_ID],
       },
     ],

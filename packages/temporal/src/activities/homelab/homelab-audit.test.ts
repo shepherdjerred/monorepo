@@ -68,13 +68,13 @@ describe("homelabAuditActivities", () => {
 
   it("classifies missing tools and env as fatal preflight failures", () => {
     const result = classifyHomelabAuditPreflight({
-      missingBinaries: ["bk", "temporal"],
+      missingBinaries: ["woodpecker-cli", "temporal"],
       missingEnvGroups: ["WOODPECKER_TOKEN"],
       remoteWarnings: ["Bugsink: exit 1"],
     });
 
     expect(result.fatalMessages).toEqual([
-      "Missing required audit binaries: bk, temporal",
+      "Missing required audit binaries: woodpecker-cli, temporal",
       "Missing required audit environment: WOODPECKER_TOKEN",
     ]);
     expect(result.markdown).toContain("Bugsink: exit 1");
