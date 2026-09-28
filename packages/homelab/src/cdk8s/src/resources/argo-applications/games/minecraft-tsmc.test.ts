@@ -167,6 +167,12 @@ describe("minecraft-tsmc runs The Storm's image", () => {
     expect(server["spawnProtection"]).toBe(0);
   });
 
+  test("preserves the legacy LWCX jar until towns protection is enabled", async () => {
+    const text = await dockerfile();
+    expect(text).toContain("REMOVE_OLD_MODS_EXCLUDE=LWCX*.jar,LWC*.jar");
+    expect(tsmcValues()["minecraftServer"]).toMatchObject({ removeOldMods: true });
+  });
+
   test("builds the image on the catalog's itzg/minecraft-server pin", async () => {
     const text = await dockerfile();
     const bases = [

@@ -26,7 +26,7 @@ Done with every plugin enabled:
 
 - **fresh**: two boots on a new volume, the second with `--network none`.
   `the-storm.db` and other runtime files survive, `REMOVE_OLD_MODS` leaves
-  exactly the image's jars, the patches apply, and Geyser uses Floodgate on the
+  the image's jars on a fresh volume, the patches apply, and Geyser uses Floodgate on the
   first boot with Floodgate's runtime key generated on the volume.
 - **legacy**: a volume pre-filled with the config tree the old
   `minecraft-tsmc` init container copied (from git history), which is what the
@@ -54,7 +54,8 @@ Done with every plugin enabled:
    then mirrors each directory listed in `owned.roots` into `/data` with
    `rsync --delete` (none yet; reserved for content-only trees such as
    `plugins/TheStorm/content/quests`), and execs itzg's start script.
-2. itzg deletes every top-level jar in `/data/plugins` (`REMOVE_OLD_MODS`),
+2. itzg deletes stale top-level jars in `/data/plugins` (`REMOVE_OLD_MODS`),
+   except the existing PVC-only LWCX jar (`REMOVE_OLD_MODS_EXCLUDE`),
    then copies `/plugins` into `/data/plugins`: the baked jars and every file
    under `server/owned/plugins/`. Files are overwritten when they differ
    (`SYNC_SKIP_NEWER_IN_DESTINATION=false`) and never deleted, so plugin data
@@ -157,9 +158,10 @@ both are pinned by sha256 in `plugins.json`.
 > (new URL and sha256) or host the jar; the `skills` module replaces mcMMO
 > later.
 
-Removed from the former set: LWCX (container locks; the `towns` module will protect
-containers inside claims, and its `lwc.db` stays on the volume) and
-LiteBans (a paid jar; only its config was shipped).
+LWCX remains PVC-only and keeps existing container locks while the `towns`
+module is disabled. Its jar and `lwc.db` stay on the live volume; a fresh
+volume has no LWCX jar or historical locks. Remove it only with a tested towns
+cutover. LiteBans is removed (a paid jar; only its config was shipped).
 
 ## Config classification
 
@@ -217,7 +219,7 @@ copy onto the volume, and where its content lives now.
 | `LevelledMobs/settings.yml`                                                                                                | `patches/levelledmobs-settings.json`          | Async task tuning                                                                                                                    |
 | `LevelledMobs/rules.yml`, `customdrops.yml`                                                                                | Defaults                                      | LevelledMobs 3 files; LevelledMobs 4 backs up `rules.yml` and resets it, and migrates `customdrops.yml`                              |
 | `LuckPerms/*`                                                                                                              | Defaults                                      | Groups and permissions are runtime data                                                                                              |
-| `LWC/*`                                                                                                                    | Dropped                                       | LWCX is no longer installed; its data folder (`lwc.db`) stays on the volume                                                          |
+| `LWC/*`                                                                                                                    | Runtime                                      | LWCX remains installed from the live PVC until towns protection is enabled; its lock database stays on the volume                  |
 | `mcMMO/config.yml`                                                                                                         | `patches/mcmmo-config.json`                   | MOTD and mob health bars off                                                                                                         |
 | `mcMMO/*` (the other 13 files)                                                                                             | Defaults                                      | Their differences are an older mcMMO's XP and potion defaults                                                                        |
 | `MobArena/*`                                                                                                               | Defaults                                      | Arenas themselves are runtime (`MobArena/config.yml`)                                                                                |
@@ -240,10 +242,9 @@ module work and loaded strictly by the plugin.
 
 The first release onto the existing `minecraft-tsmc` volume:
 
-1. **Announce and back up.** Tell players before the release: existing LWC
-   locks disappear at this deploy, and containers inside claims are protected
-   again once the `towns` module is switched on. Run an on-demand Velero backup
-   of `datadir-minecraft-tsmc-0` and confirm it completed. Keep the server
+1. **Announce and back up.** Keep the existing LWCX jar and lock database on
+   the live volume while `towns` is disabled. Confirm a restore-capable backup
+   of `datadir-minecraft-tsmc-0` before the image change, and keep the server
    asleep until step 6.
 2. **Dry-run the patches against the live configs.** Copy the live
    `plugins/`, `bukkit.yml`, `spigot.yml` and `config/` out read-only (for
@@ -267,13 +268,15 @@ The first release onto the existing `minecraft-tsmc` volume:
    repository's `release-root` workflow; the Application's automated sync does
    not prune.
 6. **First wake.** Expect in the log: `[storm-entrypoint] removed stale …` for
-   the `remove.list` files, `REMOVE_OLD_MODS` deleting every top-level jar
-   (including the hand-placed mcMMO and LWCX jars), then installing the pinned
-   Multiverse-Core jar and all 32 plugins enabling. mcMMO upgrades its stored data in place.
+   the `remove.list` files, `REMOVE_OLD_MODS` deleting stale jars other than
+   LWCX, then installing the pinned Multiverse-Core jar and enabling the
+   plugins. Confirm LWCX still loads and honors an existing lock. mcMMO
+   upgrades its stored data in place.
 7. **In game:** `/setspawn` at the windmill (the pinned spawn was removed),
    `/settpr` if random teleport has no centre, check that DiscordSRV relays
    chat and that bluemap.ts-mc.net renders. Multiverse remains installed until
    the `world` module is ready to create `wilds`, `peaks`, and `mining`.
 
-Rolling back to the old chart is not a clean revert: the hand-placed mcMMO and
-LWCX jars are gone and must come back from the Velero backup.
+Rolling back to the old chart is not a clean revert: the hand-placed mcMMO jar
+is replaced by the pinned image copy. Restore it from a verified backup or a
+verified artifact before reverting; the existing LWCX jar is retained.

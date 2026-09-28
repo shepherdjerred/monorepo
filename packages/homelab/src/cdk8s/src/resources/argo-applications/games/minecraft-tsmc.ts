@@ -121,8 +121,8 @@ export function createMinecraftTsmcApp(chart: Chart) {
       version: THE_STORM_PAPER_VERSION,
       type: "PAPER",
       serviceType: "ClusterIP",
-      // The image already sets REMOVE_OLD_MODS=true; plugin jars come only
-      // from the image, so /data/plugins/*.jar is exactly the baked set.
+      // The image removes stale jars but preserves the PVC-only LWCX jar
+      // until the towns module takes over container protection.
       removeOldMods: true,
 
       extraPorts: [
