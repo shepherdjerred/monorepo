@@ -2,8 +2,8 @@
 
 /**
  * Hold the one-time required-check switch until Woodpecker has completed a
- * real PR. The first main build must be able to bootstrap Woodpecker before
- * GitHub starts requiring a status that its old extension cannot publish.
+ * real PR. Include merged PRs: the proof remains valid after the PR closes,
+ * and the first main build may finish after that merge.
  */
 
 import { z } from "zod";
@@ -49,7 +49,7 @@ function fromWoodpeckerPipeline(target: string | null): boolean {
 export async function hasLiveCompletionStatus(token: string): Promise<boolean> {
   for (let page = 1; page <= 10; page++) {
     const pullsUrl = new URL(
-      `https://api.github.com/repos/shepherdjerred/monorepo/pulls?state=open&per_page=100&page=${page.toString()}`,
+      `https://api.github.com/repos/shepherdjerred/monorepo/pulls?state=all&sort=updated&direction=desc&per_page=100&page=${page.toString()}`,
     );
     const pulls = PullsSchema.parse(await githubJson(pullsUrl, token));
     for (const pull of pulls) {
