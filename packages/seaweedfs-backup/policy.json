@@ -75,6 +75,13 @@
       "reason": "Rebuildable static site"
     },
     {
+      "name": "ts-mc-docs",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
       "name": "webring",
       "mode": "excluded",
       "cadences": [],

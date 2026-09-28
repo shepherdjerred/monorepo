@@ -180,7 +180,7 @@
         "minecraft-tsmc",
         "mc-router"
       ],
-      "analyticsSites": ["ts-mc"]
+      "analyticsSites": ["ts-mc", "ts-mc-docs"]
     },
     {
       "id": "temporal",
