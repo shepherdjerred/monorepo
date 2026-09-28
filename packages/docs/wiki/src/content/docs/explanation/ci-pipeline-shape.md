@@ -199,8 +199,9 @@ has its own checkout and dependency tree. The
 and [artifact](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/ci/ci-artifact.ts)
 helpers import an S3 signer declared by the [root scripts
 package](https://github.com/shepherdjerred/monorepo/blob/main/scripts/package.json).
-Lanes that use either helper install that package's production closure before
-their first handoff. This keeps each lane's install filtered to its own work.
+The [Helm release lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
+installs that package's production closure with its own packages before writing
+release handoffs. This keeps the lane's install filtered to its own work.
 
 The store has its own SeaweedFS identity, scoped to the `ci-handoff` bucket and
 nothing else. That is what lets `verify`, `playwright-e2e` and `resume-build`
