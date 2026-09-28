@@ -41,7 +41,7 @@ compare the head to the last fully green main build, so a failed release's
 changes stay selected on the next push. If that comparison cannot prove the
 complete diff, the extension emits the full graph. The Linux `verify` workflow
 uses its own last successful base, and checks PR changes against the merge base
-with the default branch. Within that workflow, Turbo runs at most three tasks
+with the PR target branch. Within that workflow, Turbo runs at most three tasks
 at once and each Vitest process uses at most four workers, matching the pod's
 12-CPU limit.
 
@@ -89,6 +89,12 @@ exclusive mode, so there is no committed YAML to fall back to when the extension
 fails.
 
 ## The lanes are phases, not duplicated test suites
+
+The [browser lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/playwright.ts)
+compares PRs against their target branch. Its
+[selector](https://github.com/shepherdjerred/monorepo/blob/main/ci/scripts/selection/run-playwright.ts)
+runs affected projects. When the base is unavailable, it runs all projects to
+preserve coverage.
 
 - **Browser E2E** covers the shipped Playwright consumers: `sjer.red`, the docs
   wiki, the alert dashboard, and Scout's public/docs/app design

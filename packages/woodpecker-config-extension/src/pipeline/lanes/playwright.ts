@@ -15,15 +15,29 @@ import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
  * pipeline-level guard decides whether the LANE runs at all, and the in-step
  * selector decides which of the seven Playwright projects inside it do.
  */
-export function playwrightSteps(images: CiImages): CiStep[] {
+export function playwrightSteps(
+  images: CiImages,
+  changedBase: string | undefined,
+): CiStep[] {
   return [
     {
       key: "playwright-e2e",
       label: "playwright e2e",
       image: images.playwright,
+      environment: { CI_CHANGED_BASE: changedBase ?? "" },
       commands: [
         // Postgres scope: several suites need a live database.
         "MISE_TOOLCHAIN_SCOPE=postgres . ci/scripts/toolchain.sh",
+        // A PR compares against its target branch even before main has a
+        // successful Woodpecker pipeline to supply a changed-file base.
+        'if [ "$CI_PIPELINE_EVENT" = "pull_request" ]; then',
+        '  if git fetch --no-tags --depth=100 origin "$CI_COMMIT_TARGET_BRANCH"; then',
+        '    if ! CI_CHANGED_BASE="$(git merge-base HEAD FETCH_HEAD)"; then CI_CHANGED_BASE=""; fi',
+        "  else",
+        '    CI_CHANGED_BASE=""',
+        "  fi",
+        "  export CI_CHANGED_BASE",
+        "fi",
         'if [ -n "$CI_CHANGED_BASE" ]; then export TURBO_SCM_BASE="$CI_CHANGED_BASE"; fi',
         'export TURBO_CACHE="local:rw,remote:rw"',
         "bun --no-install ci/scripts/selection/run-playwright.ts",
