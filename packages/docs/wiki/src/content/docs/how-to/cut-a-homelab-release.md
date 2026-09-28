@@ -26,12 +26,18 @@ failed stage means.
 2. From a clean checkout of that exact `main` commit, run the bootstrap script
    once with `--dry-run`. It validates the chart inventory and the exact root
    request without changing the cluster.
-3. Supply the existing ArgoCD and ChartMuseum credentials through the
+3. Supply an ArgoCD admin token and the ChartMuseum credentials through the
    configured credential wrapper, then run the same command without
    `--dry-run`. The script suspends root auto-sync, publishes the complete chart
    set at the reserved number plus 1,000,000, and calls `release-root` with an
-   exact revision and stable request ID.
-4. Check the `apps` ArgoCD Application and Woodpecker server, agent, and config
+   exact revision and stable request ID. The old `buildkite` account is removed
+   during this release, so its token cannot complete the child syncs.
+4. [Enroll the vault-scoped 1Password service account](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/README.md#unattended-local-1password-access)
+   once in the operator's login Keychain. Apply the operator-run `argocd`
+   OpenTofu stack through that wrapper to create the `woodpecker` account token
+   in its 1Password item. Confirm the `ci-argocd-credentials`
+   Kubernetes Secret contains the new key and that its token can read `apps`.
+   Check the `apps` ArgoCD Application and Woodpecker server, agent, and config
    extension health. Trigger a PR pipeline and require its
    `ci/woodpecker/pr/ci-complete` status to pass. The first main GitHub OpenTofu
    apply defers the required-check switch until this status exists on a real
@@ -50,11 +56,13 @@ The normal GitHub OpenTofu apply later uses the Woodpecker context default.
 
 ```bash
 export TF_VAR_github_token='op://v64ocnykdqju4ui6j6pua56xw4/34gzcrhwdm34lpadyly3rcsu44/TOFU_GITHUB_TOKEN'
-op run --env-file packages/homelab/src/tofu/.env -- \
+scripts/onepassword/with-service-account.sh \
+  op run --env-file packages/homelab/src/tofu/service-account.env -- \
   tofu -chdir=packages/homelab/src/tofu/github plan -input=false \
   -target=github_repository_ruleset.monorepo_main \
   -var=required_ci_status_context=buildkite/monorepo/pr
-op run --env-file packages/homelab/src/tofu/.env -- \
+scripts/onepassword/with-service-account.sh \
+  op run --env-file packages/homelab/src/tofu/service-account.env -- \
   tofu -chdir=packages/homelab/src/tofu/github apply -input=false \
   -target=github_repository_ruleset.monorepo_main \
   -var=required_ci_status_context=buildkite/monorepo/pr

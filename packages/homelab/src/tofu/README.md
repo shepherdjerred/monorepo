@@ -6,7 +6,7 @@ Manages external resources with [OpenTofu](https://opentofu.org/), including inf
 
 ```text
 tofu/
-├── argocd/              # ArgoCD account token for Buildkite, stored in 1Password
+├── argocd/              # ArgoCD account token for Woodpecker, stored in 1Password
 ├── arr/                 # Radarr/Sonarr/Prowlarr config, imported from the live instances
 ├── asuswrt/             # Asus routers & APs (custom provider, local-run only)
 ├── buildkite/           # Buildkite cluster + monorepo pipeline settings
@@ -34,7 +34,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
   - `github` — `TF_VAR_github_token` (fine-grained PAT, classic PAT, or GitHub App token)
   - `tailscale` — `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` (scope `acl`)
   - `buildkite` — `TF_VAR_buildkite_api_token`
-  - `argocd` — ArgoCD admin credentials plus `OP_CONNECT_TOKEN` for the 1Password provider
+  - `argocd` — ArgoCD admin credentials plus `OP_SERVICE_ACCOUNT_TOKEN` for 1Password item writes
   - `arr` — Radarr/Sonarr/Prowlarr API credentials (see `arr/providers.tf`)
   - `asuswrt` — `TF_VAR_asuswrt_username` / `TF_VAR_asuswrt_password`, the shared router/AP admin login
   - `discord` — one bot token per imported application plus `TOFU_STATE_ENCRYPTION_PASSPHRASE`
@@ -53,6 +53,49 @@ stack's unique state passphrase remain in 1Password.
 
 To validate without state or platform access, run
 `bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate`.
+
+### Unattended local 1Password access
+
+The `argocd` stack updates an item in the homelab vault. The Connect token used
+by the in-cluster operator can read this vault but cannot write it. Desktop app
+authentication prompts for each provider or CLI invocation. Use a separate
+1Password service account for operator-run work:
+
+1. In 1Password.com, create a service account with **Read Items** and **Write
+   Items** access only to the homelab vault (`v64ocnykdqju4ui6j6pua56xw4`).
+   Leave vault creation and access to other vaults disabled. Save the token in
+   your Personal vault, which service accounts cannot access.
+2. On the operator's Mac, copy the newly issued token into the login Keychain
+   once with the enrollment helper. It accepts the full token as hidden terminal
+   input, validates it with service-account authentication, and updates the
+   Keychain entry. The `security add-generic-password -w` password prompt can
+   truncate long tokens, so do not use it here. Do not paste the token into a
+   shell argument, environment file, terminal output, or repository file:
+
+   ```bash
+   swift scripts/onepassword/enroll-service-account.swift
+   ```
+
+3. Prefix commands that need this vault with the wrapper. It reads the token
+   from Keychain into the child process environment without invoking desktop
+   authentication. An already supplied `OP_SERVICE_ACCOUNT_TOKEN` also works
+   on non-macOS hosts. Set `ARGOCD_AUTH_TOKEN` to the admin token's secret
+   reference in this vault before an ArgoCD plan or apply. The separate
+   `service-account.env` contains only vault references the service account can
+   read; the general `.env` also contains Personal vault references. Do not
+   print the token:
+
+   ```bash
+   scripts/onepassword/with-service-account.sh op vault list
+   scripts/onepassword/with-service-account.sh \
+     op run --env-file packages/homelab/src/tofu/service-account.env -- \
+     bun packages/homelab/scripts/tofu/tofu-stack.ts argocd plan
+   ```
+
+The service account's vault access and permissions are fixed at creation. Revoke
+and replace it if the token is exposed or the scope needs to change. The same
+wrapper works for the vault snapshot command; it does not change Kubernetes
+operator credentials or grant CI jobs write access.
 
 ## Usage
 
@@ -222,7 +265,7 @@ Radarr/Sonarr/Prowlarr configuration imported from the live instances. Quality p
 
 ### ArgoCD
 
-Mints the `buildkite` ArgoCD account token and writes it to 1Password for the CI sync steps.
+Mints the `woodpecker` ArgoCD account token and writes it to 1Password for the CI sync steps.
 
 ### Asus routers
 
