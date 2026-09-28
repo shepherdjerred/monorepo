@@ -231,7 +231,6 @@ const commands: Record<
       "tofu version",
       "argocd version --client",
       "velero version --client-only",
-      "bk --version",
       "temporal --version",
       "iptables --version",
       "ip6tables --version",

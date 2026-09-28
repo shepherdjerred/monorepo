@@ -229,7 +229,7 @@ export function siteSteps(images: CiImages): CiStep[] {
         "  fi",
         "fi",
         'if [ "$cooklang_changed" = "true" ]; then',
-        "  bun --no-install run --cwd packages/cooklang-for-obsidian publish:npm",
+        "  bun --no-install run --cwd packages/cooklang-for-obsidian publish:plugin",
         "fi",
       ],
       dependsOn: ["verify", "release-please"],
