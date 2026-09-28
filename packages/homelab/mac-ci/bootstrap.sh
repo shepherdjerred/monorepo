@@ -109,7 +109,10 @@ mise reshim
 # host architecture's standard library with a new toolchain, so provision both
 # slices against the repository-pinned Rust version.
 echo "==> Installing TaskNotes Rust targets"
-mise exec --cd "$REPO_ROOT" -- rustup target add \
+RUST_VERSION="$(mise current --cd "$REPO_ROOT" rust)"
+# Run outside the repository so mise does not install every unrelated tool in
+# its root config just to invoke rustup for this host.
+mise exec --cd /tmp "rust@$RUST_VERSION" -- rustup target add \
   aarch64-apple-darwin \
   x86_64-apple-darwin
 
