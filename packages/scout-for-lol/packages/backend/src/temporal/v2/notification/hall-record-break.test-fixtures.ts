@@ -16,7 +16,10 @@ export const hallRiotMatchId = RiotMatchIdSchema.parse("NA1_9301");
  * in the catalog's first queue family, with a tie on the last one so the
  * holders list is exercised beyond a single name.
  */
-export function hallBreakRecords(count = 2): HallBreakPayload[] {
+export function hallBreakRecords(
+  count = 2,
+  matchId = hallRiotMatchId,
+): HallBreakPayload[] {
   const queueFamily = COMPETITIVE_PROGRESSION_CATALOG.hall.queueFamilies[0];
   if (queueFamily === undefined) {
     throw new Error("The Hall catalog requires a queue family");
@@ -39,7 +42,7 @@ export function hallBreakRecords(count = 2): HallBreakPayload[] {
     .slice(0, count)
     .map((record, index) =>
       HallBreakPayloadSchema.parse({
-        matchId: hallRiotMatchId,
+        matchId,
         gameEndAt: "2026-09-04T00:00:00.000Z",
         value: 12_345 + index,
         holder,

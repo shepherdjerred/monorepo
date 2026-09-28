@@ -96,6 +96,7 @@ describe("competitive progression post-match ordering", () => {
       matchDataSource: "RIOT",
       timeline: null,
       trackedPlayers: [],
+      delivery: { kind: "temporal-v2" },
     });
 
     expect(mocks.calls).toEqual([
@@ -122,6 +123,7 @@ describe("competitive progression post-match ordering", () => {
       matchDataSource: "RIOT",
       timeline: null,
       trackedPlayers: [],
+      delivery: { kind: "temporal-v2" },
     });
 
     expect(mocks.calls).toEqual([
@@ -150,6 +152,7 @@ describe("competitive progression post-match ordering", () => {
       matchDataSource: "SCOUT_CLIENT",
       timeline: undefined,
       trackedPlayers: [],
+      delivery: { kind: "temporal-v2" },
     });
 
     expect(mocks.calls).toEqual([

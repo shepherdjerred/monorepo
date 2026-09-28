@@ -819,6 +819,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "scout_v2_progression_notifications_enabled",
+      "owner": "scout",
+      "namespace": "scout",
+      "source": "scout-policy",
+      "purpose": "Per server, mint new progression announcements (Hall of Fame record breaks) as V2 notification intents instead of v1 outbox rows. The first path to record a (guild, match) announcement keeps it, so flipping this never announces one twice.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "llm-daily-token-budget",
       "owner": "scout",
       "namespace": "scout",
@@ -1564,6 +1576,29 @@
           "type": "boolean",
           "default": true,
           "rollouts": [],
+          "rules": [],
+          "thresholdRollouts": []
+        },
+        {
+          "key": "scout_v2_progression_notifications_enabled",
+          "type": "boolean",
+          "default": false,
+          "rollouts": [
+            {
+              "segmentKey": "scout-guild-1337623164146155593",
+              "segmentOperator": "OR_SEGMENT_OPERATOR",
+              "matchType": "ALL_SEGMENT_MATCH_TYPE",
+              "constraints": [
+                {
+                  "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
+                  "property": "server",
+                  "operator": "eq",
+                  "value": "1337623164146155593"
+                }
+              ],
+              "result": true
+            }
+          ],
           "rules": [],
           "thresholdRollouts": []
         }

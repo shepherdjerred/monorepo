@@ -208,6 +208,7 @@ export async function processMatchAndUpdatePlayers(
             matchDataSource: "RIOT",
             timeline: prefetchedTimeline,
             trackedPlayers: allTrackedPlayers,
+            delivery: { kind: "legacy-v1", silent },
           });
         },
       });
