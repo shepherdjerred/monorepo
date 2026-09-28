@@ -125,9 +125,11 @@ preserve coverage.
   validate them without credentials or a backend, while main gives each
   no-retry job only its platform credential and unique state passphrase.
   Ordinary main builds plan only and select each stack by its own changed
-  paths. An operator can trigger a manual build with `TOFU_PLATFORM_APPLY` set
-  to one exact stack; it schedules only the release-admission and selected
-  platform workflows, then plans and applies that stack.
+  paths. An operator triggers one targeted manual build with
+  `TOFU_PLATFORM_PLAN` set to an exact stack to save an encrypted plan. After
+  reviewing that build's output, a second targeted manual build supplies
+  `TOFU_PLATFORM_APPLY` and `TOFU_PLATFORM_PLAN_PIPELINE`. It applies those
+  saved plan bytes without replanning. Both builds include release admission.
 - **Scout** has three deliberate promotion phases: archive and deploy beta, mint
   the immutable tag, then reconcile the production `versions.ts` pin. They are
   three stages of one release, not three independent Scout test suites.

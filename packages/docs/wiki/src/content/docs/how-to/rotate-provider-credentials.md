@@ -29,9 +29,12 @@ command output, or chat.
 1. Add a new `openai_service_accounts` entry for the workload in
    `openai/desired-state.json`, with a new dated name and the same
    `onepassword_targets`. Keep the old entry.
-2. Merge, review the Woodpecker plan, then trigger a manual build of the
-   current main commit with `TOFU_PLATFORM_APPLY=openai`. That build schedules
-   only the OpenAI plan and apply, after release admission.
+2. Merge, then trigger a manual build of the current main commit with
+   `TOFU_PLATFORM_PLAN=openai`. Review its successful saved plan and record the
+   pipeline number. Within 24 hours, trigger a second manual build of the same
+   commit with `TOFU_PLATFORM_APPLY=openai` and
+   `TOFU_PLATFORM_PLAN_PIPELINE=<reviewed pipeline number>`. The second build
+   applies the exact reviewed plan after release admission.
 3. Read the new key from the stack's sensitive `openai_service_account_handoffs`
    output and write it to the target field.
 4. Wait for the 1Password Connect operator to refresh the Kubernetes Secret, then

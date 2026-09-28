@@ -15,8 +15,8 @@ import {
  * Default-branch OpenTofu work, and the admission token that gates it.
  *
  * Applies mutate live external control planes. Platform credential stacks
- * only plan on ordinary main builds; a targeted manual build plans and applies
- * exactly one requested stack. Every step here first asks whether this build
+ * only plan on ordinary main builds; targeted manual builds prepare and later
+ * apply one reviewed, encrypted plan. Every step here first asks whether this build
  * is still the one allowed to release.
  *
  * The standalone work that depends on nothing but admission is here. The
@@ -48,10 +48,16 @@ function admissionGate(): string[] {
 
 function stackCommands(
   stack: string,
-  action: "plan" | "apply" | "plan-apply",
+  action: "plan" | "apply" | "prepare" | "apply-saved",
+  sourcePipeline?: string,
 ): string[] {
   return [
     ...admissionGate(),
+    ...(action === "prepare" || action === "apply-saved"
+      ? [
+          "bun --no-install scripts/ci/homelab-release-admission.ts require-current",
+        ]
+      : []),
     ". ci/scripts/toolchain.sh",
     ...(stack === "github" && action === "apply"
       ? [
@@ -61,10 +67,10 @@ function stackCommands(
         ]
       : []),
     `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
-    ...(action === "plan-apply" ? (["plan", "apply"] as const) : [action]).map(
-      (command) =>
-        `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts ${stack} ${command}`,
-    ),
+    ...(sourcePipeline === undefined
+      ? []
+      : [`export TOFU_PLATFORM_PLAN_PIPELINE=${sourcePipeline}`]),
+    `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts ${stack} ${action}`,
   ];
 }
 
@@ -85,11 +91,20 @@ export const PlatformApplyStackSchema = z.enum([
 
 export type PlatformApplyStack = z.infer<typeof PlatformApplyStackSchema>;
 
+export type PlatformOperation = {
+  readonly stack: PlatformApplyStack;
+  readonly action: "prepare" | "apply-saved";
+  readonly sourcePipeline?: string;
+};
+
 function stackChanged(stack: string, platform = false) {
   return {
     include: [
       ...GLOBAL_SELECTOR_INPUTS,
       "packages/homelab/scripts/tofu/**",
+      ...(platform
+        ? ["packages/homelab/scripts/platform-desired-state.ts"]
+        : []),
       `packages/homelab/src/tofu/${stack}/**`,
       ...(platform
         ? ["packages/homelab/src/tofu/platform-desired-state.schema.json"]
@@ -186,7 +201,7 @@ export function releaseAdmissionStep(images: CiImages): CiStep {
 
 export function tofuApplySteps(
   images: CiImages,
-  platformApplyStack?: PlatformApplyStack,
+  platformOperation?: PlatformOperation,
 ): CiStep[] {
   const standalone: CiStep[] = [
     {
@@ -236,11 +251,14 @@ export function tofuApplySteps(
 
   const platform: CiStep[] = PLATFORM_PLANS.map(({ stack, secrets }) => ({
     key: `tofu-platform-${stack}`,
-    label: `tofu ${stack === platformApplyStack ? "apply" : "plan"} ${stack}`,
+    label: `tofu ${stack === platformOperation?.stack ? platformOperation.action : "plan"} ${stack}`,
     image: images.base,
     commands: stackCommands(
       stack,
-      stack === platformApplyStack ? "plan-apply" : "plan",
+      stack === platformOperation?.stack ? platformOperation.action : "plan",
+      stack === platformOperation?.stack
+        ? platformOperation.sourcePipeline
+        : undefined,
     ),
     dependsOn: ["homelab-release-admission"],
     timeoutMinutes: 60,

@@ -50,6 +50,21 @@ async function consume(): Promise<void> {
   console.log(admission.outcome);
 }
 
+/** Recheck main immediately before a reviewed, manual platform operation. */
+async function requireCurrent(): Promise<void> {
+  const target = defaultBranch();
+  if (branch() !== target) {
+    throw new Error(`reviewed platform operation only supports ${target}`);
+  }
+  const current = await resolveOriginMainCommit(target);
+  if (commitSha().toLowerCase() !== current) {
+    throw new Error(
+      `reviewed platform operation was superseded by origin/${target}`,
+    );
+  }
+  console.log(`reviewed platform operation admitted at ${current}`);
+}
+
 async function main(): Promise<void> {
   const command = requiredArgument(
     Bun.argv,
@@ -62,6 +77,9 @@ async function main(): Promise<void> {
       return;
     case "consume":
       await consume();
+      return;
+    case "require-current":
+      await requireCurrent();
       return;
     default:
       throw new Error(`unknown homelab release admission command: ${command}`);

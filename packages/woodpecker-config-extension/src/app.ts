@@ -8,7 +8,7 @@ import { isWorkEvent, selectSteps } from "#src/pipeline/select.ts";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
 import {
   PlatformApplyStackSchema,
-  type PlatformApplyStack,
+  type PlatformOperation,
 } from "#src/pipeline/lanes/tofu-apply.ts";
 import { completionStep, noWorkStep } from "#src/pipeline/completion.ts";
 import { resolveCiImages, type ImageFetcher } from "#src/images.ts";
@@ -39,20 +39,57 @@ export type AppOptions = {
   readonly compareChangedFiles?: typeof changedFilesSince;
 };
 
-function platformApplyRequest(
+function platformOperationRequest(
   pipeline: Pipeline,
   defaultBranch: string,
 ):
-  | { readonly stack: PlatformApplyStack }
+  | { readonly operation: PlatformOperation }
   | { readonly invalid: true }
   | undefined {
-  const requested = pipeline.variables["TOFU_PLATFORM_APPLY"];
-  if (requested === undefined) return undefined;
+  const prepare = pipeline.variables["TOFU_PLATFORM_PLAN"];
+  const apply = pipeline.variables["TOFU_PLATFORM_APPLY"];
+  const sourcePipeline = pipeline.variables["TOFU_PLATFORM_PLAN_PIPELINE"];
+  if (
+    prepare === undefined &&
+    apply === undefined &&
+    sourcePipeline === undefined
+  ) {
+    return undefined;
+  }
   if (pipeline.event !== "manual" || pipeline.branch !== defaultBranch) {
     return { invalid: true };
   }
-  const parsed = PlatformApplyStackSchema.safeParse(requested);
-  return parsed.success ? { stack: parsed.data } : { invalid: true };
+  if (
+    prepare !== undefined &&
+    apply === undefined &&
+    sourcePipeline === undefined
+  ) {
+    const parsed = PlatformApplyStackSchema.safeParse(prepare);
+    return parsed.success
+      ? { operation: { stack: parsed.data, action: "prepare" } }
+      : { invalid: true };
+  }
+  if (
+    apply !== undefined &&
+    prepare === undefined &&
+    sourcePipeline !== undefined
+  ) {
+    const parsed = PlatformApplyStackSchema.safeParse(apply);
+    if (
+      parsed.success &&
+      /^[1-9]\d*$/u.test(sourcePipeline) &&
+      Number.isSafeInteger(Number(sourcePipeline))
+    ) {
+      return {
+        operation: {
+          stack: parsed.data,
+          action: "apply-saved",
+          sourcePipeline,
+        },
+      };
+    }
+  }
+  return { invalid: true };
 }
 
 export function createApp(options: AppOptions): Hono {
@@ -100,9 +137,12 @@ export function createApp(options: AppOptions): Hono {
       return context.json({ error: "actor is not permitted to run CI" }, 403);
     }
 
-    const platformApply = platformApplyRequest(pipeline, repo.default_branch);
-    if (platformApply !== undefined && "invalid" in platformApply) {
-      return context.json({ error: "invalid platform apply request" }, 400);
+    const platformOperation = platformOperationRequest(
+      pipeline,
+      repo.default_branch,
+    );
+    if (platformOperation !== undefined && "invalid" in platformOperation) {
+      return context.json({ error: "invalid platform operation request" }, 400);
     }
 
     const selectionContext = {
@@ -123,16 +163,16 @@ export function createApp(options: AppOptions): Hono {
       });
     }
 
-    if (platformApply !== undefined && "stack" in platformApply) {
-      const { stack } = platformApply;
+    if (platformOperation !== undefined && "operation" in platformOperation) {
+      const { operation } = platformOperation;
       const steps = buildPipelineSteps({
         images,
         changedBase: undefined,
-        platformApplyStack: stack,
+        platformOperation: operation,
       }).filter(
         (step) =>
           step.key === "homelab-release-admission" ||
-          step.key === `tofu-platform-${stack}`,
+          step.key === `tofu-platform-${operation.stack}`,
       );
       const selected = selectSteps(steps, {
         ...selectionContext,

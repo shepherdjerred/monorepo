@@ -165,12 +165,19 @@ prune restores that one policy. Stage 7 is the single authoritative scoped
 health gate.
 
 After verification, watch the serialized `openai`, `anthropic`, `discord`, and
-`cloudflare-tokens` jobs selected by the changed paths. Each job plans its
-encrypted platform state. After reviewing a plan, trigger a manual build of
-the current main commit with `TOFU_PLATFORM_APPLY` set to exactly one of those
-stack names. The extension schedules only the release-admission and selected
-platform workflows. That job runs a fresh plan immediately before applying;
-it receives only that stack's credentials.
+`cloudflare-tokens` jobs selected by the changed paths. Each job previews its
+encrypted platform state. For a change you intend to apply, trigger a manual
+build of the current main commit with `TOFU_PLATFORM_PLAN` set to exactly one
+of those stack names. The extension schedules only release admission and that
+stack's plan workflow. It saves the plan encrypted and prints its pipeline
+number and SHA-256 digest. Review that manual build's plan output after it
+finishes successfully. Within 24 hours, trigger another manual build of the
+same main commit with `TOFU_PLATFORM_APPLY` set to the stack and
+`TOFU_PLATFORM_PLAN_PIPELINE` set to the reviewed plan's pipeline number. This
+second build applies those saved plan bytes; it cannot calculate a replacement
+plan. It fails if main has moved, the plan has expired, or OpenTofu state has
+changed. Both builds receive only that stack's credentials. After a successful
+apply, the encrypted plan handoff is deleted.
 
 If one fails, stop the rollout at that platform. Inspect its vendor resources,
 encrypted state object, and intended 1Password rotation units. Resume only

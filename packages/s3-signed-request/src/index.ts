@@ -11,7 +11,7 @@ export type SignedS3RequestConfig = {
 };
 
 type ReadRequestInput = {
-  method: "GET" | "HEAD";
+  method: "GET" | "HEAD" | "DELETE";
   key: string;
   signingTime?: Date;
   signal?: AbortSignal;
