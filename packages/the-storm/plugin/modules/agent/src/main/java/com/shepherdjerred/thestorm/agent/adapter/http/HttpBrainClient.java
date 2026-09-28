@@ -9,7 +9,7 @@ import com.shepherdjerred.thestorm.agent.app.Notes;
 import com.shepherdjerred.thestorm.agent.app.TriageCase;
 import com.shepherdjerred.thestorm.agent.app.TriageProposal;
 import com.shepherdjerred.thestorm.agent.domain.ChatSample;
-import com.shepherdjerred.thestorm.essentials.app.ModLogRecord;
+import com.shepherdjerred.thestorm.essentials.app.ModerationHistory;
 import com.shepherdjerred.thestorm.tickets.app.CommentSnapshot;
 import com.shepherdjerred.thestorm.tickets.app.LocationSnapshot;
 import com.shepherdjerred.thestorm.tickets.app.TicketSnapshot;
@@ -265,11 +265,11 @@ public final class HttpBrainClient implements BrainClient, AutoCloseable {
         snapshot.at().toString());
   }
 
-  private static History history(ModLogRecord record) {
+  private static History history(ModerationHistory record) {
     return new History(
         Notes.clip(record.actionId(), MAX_ID),
         Notes.clip(record.actorName(), MAX_ID),
-        record.reason().isBlank() ? "(no reason given)" : Notes.clip(record.reason(), MAX_REASON),
+        Notes.clip(record.reason(), MAX_REASON),
         record.at().toString(),
         record.expiresAt().map(Instant::toString).orElse(null));
   }

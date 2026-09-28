@@ -3,7 +3,7 @@ import { test } from "./fixtures.ts";
 import { serverLogs } from "./harness/server.ts";
 
 describe("The Storm plugin", () => {
-  test("enables on Paper 26.2 after LuckPerms with every module switched off", async ({
+  test("enables on Paper 26.2 after LuckPerms with E2E modules on", async ({
     server,
   }) => {
     const logs = await serverLogs(server);
@@ -12,8 +12,14 @@ describe("The Storm plugin", () => {
     expect(luckPerms).toBeGreaterThanOrEqual(0);
     // paper-plugin.yml requires LuckPerms to load first.
     expect(storm).toBeGreaterThan(luckPerms);
-    // The smoke config disables every module, so the list is empty.
-    expect(logs).toContain("[TheStorm] Enabled modules: []");
+    // These modules power both the mechanics and AI staff integration suites.
+    const enabled = /\[TheStorm\] Enabled modules: \[(.*?)\]/u.exec(logs);
+    expect(enabled?.[1]?.split(", ").toSorted()).toEqual([
+      "agent",
+      "chat",
+      "mechanics",
+      "tickets",
+    ]);
     expect(logs).not.toContain("Error occurred while enabling TheStorm");
   });
 });

@@ -101,6 +101,21 @@ export async function waitForMessage(
   });
 }
 
+/** Collects all rendered chat lines observed during a fixed window. */
+export async function collectMessages(
+  bot: Bot,
+  durationMs: number,
+): Promise<string[]> {
+  const messages: string[] = [];
+  const onMessage = (message: string) => {
+    messages.push(message);
+  };
+  bot.on("messagestr", onMessage);
+  await Bun.sleep(durationMs);
+  bot.off("messagestr", onMessage);
+  return messages;
+}
+
 /** Polls bot-observed state until the predicate holds. */
 export async function waitUntil(
   description: string,

@@ -36,8 +36,7 @@ cannot record a reviewer. `/agent case` and `/agent faq` work from console.
 
 ## agent.yml
 
-The owned file is
-[`server/owned/plugins/TheStorm/agent.yml`](https://github.com/shepherdjerred/monorepo/blob/main/packages/the-storm/server/owned/plugins/TheStorm/agent.yml).
+The owned file is `packages/the-storm/server/owned/plugins/TheStorm/agent.yml`.
 Every key is required; unknown keys stop the module.
 
 | Section      | Keys                                                                                                                         |
@@ -89,5 +88,4 @@ points: re-derive the cost floor from measured spend after the shadow soak.
 ## Service endpoints
 
 The plugin calls the brain at `http://storm-brain.storm-brain.svc.cluster.local:3000`.
-The contract, error table, and metrics live in the
-[storm-brain README](https://github.com/shepherdjerred/monorepo/blob/main/packages/storm-brain/README.md#contract).
+The contract, error table, and metrics live in `packages/storm-brain/README.md`.

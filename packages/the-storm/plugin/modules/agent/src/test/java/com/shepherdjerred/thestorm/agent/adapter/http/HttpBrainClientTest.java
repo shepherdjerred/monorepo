@@ -9,7 +9,7 @@ import com.shepherdjerred.thestorm.agent.app.BrainException;
 import com.shepherdjerred.thestorm.agent.app.ClassifyCase;
 import com.shepherdjerred.thestorm.agent.app.TriageCase;
 import com.shepherdjerred.thestorm.agent.domain.ChatSample;
-import com.shepherdjerred.thestorm.essentials.app.ModLogRecord;
+import com.shepherdjerred.thestorm.essentials.app.ModerationHistory;
 import com.shepherdjerred.thestorm.tickets.app.CommentSnapshot;
 import com.shepherdjerred.thestorm.tickets.app.LocationSnapshot;
 import com.shepherdjerred.thestorm.tickets.app.TicketSnapshot;
@@ -176,7 +176,14 @@ final class HttpBrainClientTest {
                 Optional.empty(),
                 "test"),
             List.of(new CommentSnapshot(9, ALICE, false, "it was stone", NOW)),
-            List.of(new ModLogRecord("mute", "Mod", "spam", NOW, Optional.empty())),
+            List.of(
+                new ModerationHistory(
+                    "ban",
+                    Optional.of(UUID.randomUUID()),
+                    "Mod",
+                    "spam",
+                    NOW,
+                    Optional.empty())),
             false,
             List.of(sample("hello")));
     try (var brain = scripted(exchanges, new Script(200, script))) {
@@ -200,7 +207,7 @@ final class HttpBrainClientTest {
     assertThat(body.get("ticket").get("location").get("world").asString()).isEqualTo("world");
     assertThat(body.get("ticket").get("claimer").isNull()).isTrue();
     assertThat(body.get("comments").size()).isEqualTo(1);
-    assertThat(body.get("reporterHistory").get(0).get("actionId").asString()).isEqualTo("mute");
+    assertThat(body.get("reporterHistory").get(0).get("actionId").asString()).isEqualTo("ban");
     assertThat(body.get("reporterBanned").asBoolean()).isFalse();
   }
 

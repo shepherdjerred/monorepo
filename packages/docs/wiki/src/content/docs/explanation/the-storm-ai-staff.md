@@ -35,10 +35,8 @@ anything that called into the game would fail whenever nobody is online.
 Server-initiated HTTPS is the only shape that survives hibernation, so the
 brain never calls back.
 
-The plugin side lives in
-[`agent.app`](https://github.com/shepherdjerred/monorepo/blob/main/packages/the-storm/plugin/modules/agent/src/main/java/com/shepherdjerred/thestorm/agent/app);
-the service contract is
-[`storm-brain/src/schemas.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/storm-brain/src/schemas.ts).
+The plugin side lives in `packages/the-storm/plugin/modules/agent`; the service
+contract lives in `packages/storm-brain/src/schemas.ts`.
 
 ## Shadow mode is a rollout strategy, not a log level
 

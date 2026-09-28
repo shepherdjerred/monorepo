@@ -1,8 +1,8 @@
 package com.shepherdjerred.thestorm.agent.app;
 
 import com.shepherdjerred.thestorm.agent.domain.AgentDecision;
-import com.shepherdjerred.thestorm.essentials.app.ModLogRecord;
 import com.shepherdjerred.thestorm.essentials.app.ModerationService;
+import com.shepherdjerred.thestorm.essentials.app.ModerationHistory;
 import com.shepherdjerred.thestorm.tickets.app.TicketSnapshot;
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 public final class CaseFlow {
 
   /** The reporter's standing, as the case shows it. */
-  public record Standing(boolean banned, List<ModLogRecord> history) {}
+  public record Standing(boolean banned, List<ModerationHistory> history) {}
 
   /** Everything the reviewer needs on one screen. */
   public record CaseView(

@@ -16,6 +16,12 @@ import java.util.List;
  * @param stop the server is going to sleep
  * @param list the {@code /list} reply: {@code {count}}, {@code {players}}
  * @param listEmpty the {@code /list} reply when nobody is online
+ * @param ticketOpened a newly filed ticket
+ * @param ticketClaimed a claimed ticket
+ * @param ticketResolved a resolved ticket
+ * @param ticketEscalated a ticket needing human review
+ * @param ticketReopened a reopened ticket
+ * @param ticketTriaged a ticket triage result
  */
 public record DiscordMessages(
     String chat,
@@ -26,7 +32,41 @@ public record DiscordMessages(
     String start,
     String stop,
     String list,
-    String listEmpty) {
+    String listEmpty,
+    String ticketOpened,
+    String ticketClaimed,
+    String ticketResolved,
+    String ticketEscalated,
+    String ticketReopened,
+    String ticketTriaged) {
+
+  public DiscordMessages(
+      String chat,
+      String join,
+      String leave,
+      String death,
+      String advancement,
+      String start,
+      String stop,
+      String list,
+      String listEmpty) {
+    this(
+        chat,
+        join,
+        leave,
+        death,
+        advancement,
+        start,
+        stop,
+        list,
+        listEmpty,
+        "Ticket #{id} [{server}/{priority}] {category} from **{reporter}**: {summary}",
+        "Ticket #{id} [{server}] claimed by **{staff}**",
+        "Ticket #{id} [{server}] resolved by **{staff}**",
+        "Ticket #{id} [{server}/{priority}] needs a human: {summary}",
+        "Ticket #{id} [{server}] reopened",
+        "Ticket #{id} [{server}] triaged [{priority}]: {evidence}");
+  }
 
   public DiscordMessages {
     chatTemplate(chat);
@@ -38,6 +78,12 @@ public record DiscordMessages(
     fixed(stop);
     listTemplate(list);
     fixed(listEmpty);
+    ticketOpenedTemplate(ticketOpened);
+    ticketStaffTemplate(ticketClaimed);
+    ticketStaffTemplate(ticketResolved);
+    ticketEscalatedTemplate(ticketEscalated);
+    ticketIdTemplate(ticketReopened);
+    ticketTriagedTemplate(ticketTriaged);
   }
 
   MessageTemplate chatTemplate() {
@@ -68,6 +114,30 @@ public record DiscordMessages(
     return fixed(listEmpty);
   }
 
+  MessageTemplate ticketOpenedTemplate() {
+    return ticketOpenedTemplate(ticketOpened);
+  }
+
+  MessageTemplate ticketClaimedTemplate() {
+    return ticketStaffTemplate(ticketClaimed);
+  }
+
+  MessageTemplate ticketResolvedTemplate() {
+    return ticketStaffTemplate(ticketResolved);
+  }
+
+  MessageTemplate ticketEscalatedTemplate() {
+    return ticketEscalatedTemplate(ticketEscalated);
+  }
+
+  MessageTemplate ticketReopenedTemplate() {
+    return ticketIdTemplate(ticketReopened);
+  }
+
+  MessageTemplate ticketTriagedTemplate() {
+    return ticketTriagedTemplate(ticketTriaged);
+  }
+
   private static MessageTemplate chatTemplate(String source) {
     return new MessageTemplate(source, List.of("player", "message"));
   }
@@ -86,6 +156,27 @@ public record DiscordMessages(
 
   private static MessageTemplate listTemplate(String source) {
     return new MessageTemplate(source, List.of("count", "players"));
+  }
+
+  private static MessageTemplate ticketOpenedTemplate(String source) {
+    return new MessageTemplate(
+        source, List.of("id", "server", "priority", "category", "reporter", "summary"));
+  }
+
+  private static MessageTemplate ticketStaffTemplate(String source) {
+    return new MessageTemplate(source, List.of("id", "server", "staff"));
+  }
+
+  private static MessageTemplate ticketEscalatedTemplate(String source) {
+    return new MessageTemplate(source, List.of("id", "server", "priority", "summary"));
+  }
+
+  private static MessageTemplate ticketIdTemplate(String source) {
+    return new MessageTemplate(source, List.of("id", "server"));
+  }
+
+  private static MessageTemplate ticketTriagedTemplate(String source) {
+    return new MessageTemplate(source, List.of("id", "server", "priority", "evidence"));
   }
 
   private static MessageTemplate fixed(String source) {
