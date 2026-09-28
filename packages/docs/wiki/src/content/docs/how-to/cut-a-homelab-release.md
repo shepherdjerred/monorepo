@@ -43,9 +43,9 @@ failed stage means.
    only `volumes` trusted. Trigger a new PR pipeline and require its
    `ci/woodpecker/pr/ci-complete` status to pass. The first main GitHub OpenTofu
    apply defers the required-check switch until this status exists on a real
-   open PR. Trigger a current-main Woodpecker pipeline after that proof, watch
-   its GitHub OpenTofu workflow, then verify the GitHub ruleset requires the new
-   context.
+   PR head. The proof remains valid after that PR merges. Trigger a current-main
+   Woodpecker pipeline after that proof, watch its GitHub OpenTofu workflow,
+   then verify the GitHub ruleset requires the new context.
 5. Only after the new required check is active and healthy, retire the old
    Buildkite requirement and service through the repository-owned release path.
    Confirm the final ruleset has the declared PR-only admin bypass and does not
