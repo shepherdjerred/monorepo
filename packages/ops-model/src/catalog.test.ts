@@ -108,6 +108,7 @@ describe("ServiceIndex", () => {
       "tasknotes-server",
     );
     expect(index.byAnalyticsSite("resume")?.id).toBe("static-sites");
+    expect(index.byAnalyticsSite("ts-mc-docs")?.id).toBe("static-sites");
     expect(index.byId("Scout")?.id).toBe("scout-for-lol");
   });
 
