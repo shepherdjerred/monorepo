@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { usePermissions } from "#src/hooks/use-permissions.ts";
-import { AddSubscriptionDialog } from "#src/components/subscription/add-subscription-dialog.tsx";
+import { AddSubscriptionDialogFromQuery } from "#src/components/subscription/add-subscription-dialog.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { ConceptCards } from "#src/components/concept-cards.tsx";
 import {
@@ -77,7 +77,6 @@ export function PlayerList() {
       { enabled: guildId !== undefined, staleTime: STALE_TIME_SLOW_LIST },
     ),
   );
-
   if (guildId === undefined) {
     return <p className="text-sm text-scout-danger">Missing guild id</p>;
   }
@@ -124,7 +123,7 @@ export function PlayerList() {
                 setAddOpen(true);
               }}
             >
-              + Track player
+              + Track & subscribe
             </Button>
           )}
         </div>
@@ -161,57 +160,62 @@ export function PlayerList() {
       )}
 
       {playersQuery.data && players.length > 0 && (
-        <div className="rounded-md border border-border">
-          <Table>
-            <caption className="sr-only">Tracked players</caption>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Alias</TableHead>
-                <TableHead>Discord</TableHead>
-                <TableHead>Accounts</TableHead>
-                <TableHead>Subscribed channels</TableHead>
-                <TableHead>Updated</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {players.map((player) => (
-                <TableRow key={player.id}>
-                  <TableCell className="font-medium">
-                    {/* No hover prefetch of getPlayer: that read triggers a
+        <>
+          <p className="mb-2 text-xs text-scout-subtle md:hidden">
+            Swipe or scroll horizontally to see all columns.
+          </p>
+          <div className="rounded-md border border-border">
+            <Table className="min-w-[44rem]">
+              <caption className="sr-only">Tracked players</caption>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Alias</TableHead>
+                  <TableHead>Discord</TableHead>
+                  <TableHead>Accounts</TableHead>
+                  <TableHead>Subscribed channels</TableHead>
+                  <TableHead>Updated</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {players.map((player) => (
+                  <TableRow key={player.id}>
+                    <TableCell className="font-medium">
+                      {/* No hover prefetch of getPlayer: that read triggers a
                         synchronous Riot ID refresh server-side, so hovering a
                         long list would fan out dozens of Riot API calls without
                         the user opening any player. */}
-                    <Link
-                      className="underline"
-                      to={`/g/${guildId}/players/${encodeURIComponent(player.alias)}`}
-                    >
-                      {player.alias}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <DiscordUser
-                      id={player.discordId}
-                      name={player.discordUser}
-                    />
-                  </TableCell>
-                  <TableCell>{player.accountCount}</TableCell>
-                  <TableCell className="text-scout-subtle">
-                    {player.channelIds.length === 0
-                      ? "—"
-                      : player.channelIds
-                          .map((channelId) =>
-                            channelLabel(channelsQuery.data, channelId),
-                          )
-                          .join(", ")}
-                  </TableCell>
-                  <TableCell className="whitespace-nowrap text-scout-subtle">
-                    {formatDate(player.updatedTime)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                      <Link
+                        className="underline"
+                        to={`/g/${guildId}/players/${encodeURIComponent(player.alias)}`}
+                      >
+                        {player.alias}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <DiscordUser
+                        id={player.discordId}
+                        name={player.discordUser}
+                      />
+                    </TableCell>
+                    <TableCell>{player.accountCount}</TableCell>
+                    <TableCell className="text-scout-subtle">
+                      {player.channelIds.length === 0
+                        ? "—"
+                        : player.channelIds
+                            .map((channelId) =>
+                              channelLabel(channelsQuery.data, channelId),
+                            )
+                            .join(", ")}
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-scout-subtle">
+                      {formatDate(player.updatedTime)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
       )}
 
       <LoadMore
@@ -222,9 +226,9 @@ export function PlayerList() {
         }}
       />
 
-      <AddSubscriptionDialog
+      <AddSubscriptionDialogFromQuery
         guildId={guildId}
-        channels={channelsQuery.data ?? []}
+        channelsQuery={channelsQuery}
         open={isAddOpen}
         onOpenChange={setAddOpen}
         onAdded={() => {

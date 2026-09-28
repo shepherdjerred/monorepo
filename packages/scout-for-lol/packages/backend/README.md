@@ -916,6 +916,39 @@ retirement on `scout_durable_notification_intents_retired_total{reason,source}`
 and log it; the ready-backlog family reads `state = 'ready'` only, so a retired
 intent leaves it.
 
+### Hall record breaks move to intents per server
+
+`evaluateHallMatch` announces a guild's record breaks inside its own Hall
+transaction through `announceHallRecordBreak`
+(`src/progression/hall/break-announcement.ts`), on exactly one path per
+(guild, match). The first path to record the announcement keeps it:
+
+- an existing `HallRecordBreakOutbox` row keeps v1's upsert, whatever the flag
+  says;
+- an existing `hall-record-break` intent is left as it is, and no outbox row
+  is written beside it, whatever the flag says; a standing intent whose
+  records differ from this evaluation's throws instead of choosing;
+- with neither, `scout_v2_progression_notifications_enabled` (Flipt, per
+  `server`, off by default in every environment) decides: on mints a
+  `pending` intent with a freshness deadline of creation plus 24 hours, off
+  writes the outbox row.
+
+V2 uses the committed observation to suppress a `silent-backfill` match and
+throws if that observation is absent. Legacy v1 uses its discovery-time silent
+decision, so its fail-open observation dual-write cannot stall progression. If
+that write is absent while the V2 flag is on, the announcement stays on v1's
+outbox; an intent without an observation could not enter V2 fan-out. The
+records are still updated for silent matches. This also stops v1's outbox from
+queueing record breaks for backfilled history.
+
+Progression runs before the V2 match core's post-commit fan-out, and
+`planMatchFanOutV2` starts a notification child for every drivable non-prematch
+intent of the match, so a minted hall intent is driven by the same run with no
+extra wiring. An intent minted while v1 owns post-match discovery has no such
+fan-out and stays `pending` until a `scoutPipelineReconciliationV2Workflow`
+run drives it, so ramp the flag only where V2 owns post-match discovery. To ramp a server, add its rollout in Flipt
+and record the same targeting in `managed-flag-inventory.json`.
+
 ## Beta Customs operations
 
 Scout Customs reuses this process's Discord gateway client, OAuth client

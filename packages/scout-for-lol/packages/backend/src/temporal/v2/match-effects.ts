@@ -517,6 +517,7 @@ export async function applyMatchProgressionV2(input: {
             matchDataSource: context.matchDataSource,
             timeline: undefined,
             trackedPlayers: context.trackedPlayers,
+            delivery: { kind: "temporal-v2" },
           });
         },
       );

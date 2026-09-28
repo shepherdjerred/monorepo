@@ -57,6 +57,7 @@ export const SCOUT_FLAG_KEYS = [
   "scout_operations_console_enabled",
   "scout_v2_postmatch_ownership_enabled",
   "scout_v2_prematch_ownership_enabled",
+  "scout_v2_progression_notifications_enabled",
   "llm-daily-token-budget",
   "llm-hourly-token-budget",
 ] as const;
@@ -95,6 +96,7 @@ export const SCOUT_BOOLEAN_FLAG_KEYS = [
   "scout_operations_console_enabled",
   "scout_v2_postmatch_ownership_enabled",
   "scout_v2_prematch_ownership_enabled",
+  "scout_v2_progression_notifications_enabled",
 ] as const;
 
 export type ScoutBooleanFlagKey = (typeof SCOUT_BOOLEAN_FLAG_KEYS)[number];
