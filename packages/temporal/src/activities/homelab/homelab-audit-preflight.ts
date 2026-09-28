@@ -42,7 +42,7 @@ const REQUIRED_AUDIT_BINARIES = [
   "gh",
   "toolkit",
   "temporal",
-  "bk",
+  "woodpecker-cli",
   "gcx",
 ] as const;
 
