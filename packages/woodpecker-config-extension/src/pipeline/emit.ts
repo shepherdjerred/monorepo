@@ -121,7 +121,9 @@ export function wrapCommands(step: CiStep): string[] {
     ...step.commands,
   ].join("\n");
   const timeout = step.backend === "local" ? MACOS_TIMEOUT : "timeout";
-  const attemptScript = `${timeout} ${seconds.toString()}s bash -euo pipefail -c ${shellQuote(body)}`;
+  const shell = step.shell ?? "bash";
+  const shellOptions = shell === "bash" ? "-euo pipefail" : "-eu";
+  const attemptScript = `${timeout} ${seconds.toString()}s ${shell} ${shellOptions} -c ${shellQuote(body)}`;
 
   if (step.retries === undefined || step.retries <= 1) {
     return [attemptScript];
