@@ -89,6 +89,7 @@ const SYNTHETIC_WORKSPACE_DEPENDENCIES: Readonly<
   Record<string, readonly string[]>
 > = {
   "@scout-for-lol/activity": ["@shepherdjerred/birmel"],
+  "@scout-for-lol/app": ["@shepherdjerred/birmel"],
 };
 
 export type PlaywrightSelection = {

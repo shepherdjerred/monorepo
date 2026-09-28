@@ -87,6 +87,8 @@ type Story = StoryObj<typeof meta>;
 const BASE_ARGS = {
   guildId: GUILD_ID,
   channels: CHANNELS,
+  channelAvailability: { status: "ready" as const },
+  onRetryChannels: noop,
   open: true,
   onOpenChange: noop,
   onAdded: noop,
@@ -106,6 +108,23 @@ export const AddSubscription: Story = {
   render: (args) => (
     <>
       <Caption>Add subscription — opened from the Subscriptions tab.</Caption>
+      <AddSubscriptionDialog {...args} />
+    </>
+  ),
+};
+
+export const ChannelsUnavailable: Story = {
+  args: {
+    ...BASE_ARGS,
+    channels: [],
+    channelAvailability: {
+      status: "error",
+      message: "Discord timed out",
+    },
+  },
+  render: (args) => (
+    <>
+      <Caption>Add subscription — channel lookup failed.</Caption>
       <AddSubscriptionDialog {...args} />
     </>
   ),

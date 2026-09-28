@@ -60,6 +60,7 @@ export function RenamePlayerDialog(props: {
       <form.AppForm>
         <SemanticDialogForm
           formRef={formElement}
+          dialogClassName="box-border max-h-[calc(100dvh-2rem)] w-[calc(100dvw-2rem)] max-w-[34rem] overflow-y-auto overscroll-contain"
           title="Rename player"
           description={<>Rename &quot;{props.currentAlias}&quot;.</>}
           pending={mutation.isPending}

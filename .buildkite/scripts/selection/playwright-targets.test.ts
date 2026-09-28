@@ -116,6 +116,9 @@ describe("Playwright target selection", () => {
         ),
       ),
     ).toEqual(["@scout-for-lol/app"]);
+    expect(additionalPlaywrightInstallFilters(["@scout-for-lol/app"])).toEqual([
+      "@shepherdjerred/birmel",
+    ]);
   });
 
   test("selects Activity when its synthetic Prisma prerequisite changes", async () => {
@@ -127,7 +130,7 @@ describe("Playwright target selection", () => {
           workspaces,
         ),
       ),
-    ).toEqual(["@scout-for-lol/activity"]);
+    ).toEqual(["@scout-for-lol/activity", "@scout-for-lol/app"]);
     expect(
       additionalPlaywrightInstallFilters(["@scout-for-lol/activity"]),
     ).toEqual(["@shepherdjerred/birmel"]);
