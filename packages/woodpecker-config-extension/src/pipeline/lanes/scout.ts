@@ -52,6 +52,7 @@ export function scoutSteps(images: CiImages): CiStep[] {
       commands: [
         // Release when this build pushed a Scout backend image, or when the
         // site sources changed on their own.
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         'scout_candidate="$(bun --no-install scripts/ci/read-ci-handoff.ts image-digests | jq -r \'."shepherdjerred/scout-for-lol/beta" // empty\')"',
         "scout_source_changed=false",
         "if bun --no-install ci/scripts/selectors/ci-changed.ts site-scout; then scout_source_changed=true; fi",
@@ -89,10 +90,10 @@ export function scoutSteps(images: CiImages): CiStep[] {
       image: images.base,
       commands: [
         // Absent state is a real outcome here: this build released nothing.
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         'scout_state="$(bun --no-install scripts/ci/read-optional-ci-handoff.ts scout-release-state)"',
         'if [ -z "$scout_state" ]; then exit 0; fi',
         ". ci/scripts/toolchain.sh",
-        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         ...AWS_ALIASES,
         "printf '%s' \"$GITHUB_PACKAGES_TOKEN\" | docker login ghcr.io -u shepherdjerred --password-stdin",
         'bun --no-install scripts/release/scout-site-release.ts tag-release --state "$scout_state"',

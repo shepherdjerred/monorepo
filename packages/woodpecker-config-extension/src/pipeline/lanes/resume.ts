@@ -27,6 +27,7 @@ export function resumeSteps(images: CiImages): CiStep[] {
         // The TeX Live image does not include Bun; the PDF handoff uses the
         // repo-pinned runtime from mise.
         "MISE_TOOLCHAIN_SCOPE=runtime . ci/scripts/toolchain.sh",
+        "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         // The image ships several TeX Live trees and does not put xelatex on
         // PATH; find it rather than hard-coding a year-stamped directory.
         'export PATH="$(dirname "$(find /usr/local/texlive -name xelatex | head -1)"):$PATH"',

@@ -26,12 +26,16 @@ import {
 /**
  * Stop unless this build still holds the release admission.
  *
+ * Install before reading the handoff: every workflow has fresh node_modules,
+ * and the reader imports a package from the root scripts' production closure.
+ *
  * `superseded` is a clean no-op exit: a newer build will do the work. Any
  * other unexpected value is a hard failure -- silently continuing would apply
  * infrastructure changes without knowing whether this build was entitled to.
  */
 function admissionGate(): string[] {
   return [
+    "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --production",
     'release_admission="$(bun --no-install scripts/ci/homelab-release-admission.ts consume)"',
     'if [ "$release_admission" = "superseded" ]; then exit 0; fi',
     'if [ "$release_admission" != "admitted" ]; then',
@@ -45,7 +49,6 @@ function applyCommands(stack: string): string[] {
   return [
     ...admissionGate(),
     ". ci/scripts/toolchain.sh",
-    "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
     ...(stack === "github"
       ? [
           'ruleset_readiness="$(bun --no-install packages/homelab/scripts/tofu/github-ruleset-ready.ts)"',
@@ -151,6 +154,7 @@ export function releaseAdmissionStep(images: CiImages): CiStep {
     label: "homelab release admission",
     image: images.base,
     commands: [
+      "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
       "bun --no-install scripts/ci/homelab-release-admission.ts admit",
     ],
     timeoutMinutes: 10,

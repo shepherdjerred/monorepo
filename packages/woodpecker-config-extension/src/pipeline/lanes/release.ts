@@ -30,12 +30,16 @@ const RELEASE_GROUP = { limit: 1, group: "homelab-release" } as const;
 /**
  * Stop unless this build still holds the release admission.
  *
+ * Each workflow has its own workspace. Install the root scripts and the lane's
+ * other packages together before the handoff reader imports a workspace link.
+ *
  * `superseded` exits clean because a newer build will do the work; any other
  * verdict is a hard failure, since continuing would mutate infrastructure
  * without knowing whether this build was entitled to.
  */
-function admissionGate(): string[] {
+function admissionGate(installCommand: string): string[] {
   return [
+    installCommand,
     'release_admission="$(bun --no-install scripts/ci/homelab-release-admission.ts consume)"',
     'if [ "$release_admission" = "superseded" ]; then exit 0; fi',
     'if [ "$release_admission" != "admitted" ]; then',
@@ -88,7 +92,9 @@ export function releaseChainSteps(
       image: images.base,
       environment,
       commands: [
-        ...admissionGate(),
+        ...admissionGate(
+          "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
+        ),
         ". ci/scripts/toolchain.sh",
         "bun --no-install ci/scripts/reporting/buildkit-env.ts",
         // The Caddyfile is an input to the in-image smoke test. verify builds
@@ -114,10 +120,11 @@ export function releaseChainSteps(
       image: images.base,
       environment,
       commands: [
-        ...admissionGate(),
+        ...admissionGate(
+          "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --filter '@homelab/cdk8s' --production",
+        ),
         ...releaseRequestedGate(),
         ". ci/scripts/toolchain.sh",
-        "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --filter '@homelab/cdk8s' --production",
         'export ARGOCD_TOKEN="$ARGOCD_AUTH_TOKEN"',
         // Auto-sync is suspended for the whole rollout so ArgoCD cannot
         // reconcile a half-published set of charts.
@@ -157,10 +164,11 @@ export function releaseChainSteps(
       image: images.base,
       environment,
       commands: [
-        ...admissionGate(),
+        ...admissionGate(
+          "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --filter '@homelab/cdk8s' --production",
+        ),
         ...releaseRequestedGate(),
         ". ci/scripts/toolchain.sh",
-        "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --filter '@homelab/cdk8s' --production",
         'export ARGOCD_TOKEN="$ARGOCD_AUTH_TOKEN"',
         "bun --no-install scripts/ci/read-ci-handoff.ts argocd-release-expected > argocd-release-expected.json",
         // release-root owns the exact-revision, lifecycle, immutable-field and
@@ -202,6 +210,7 @@ export function releaseChainSteps(
  */
 function chainedApplyCommands(stack: string): string[] {
   return [
+    "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --production",
     'release_admission="$(bun --no-install scripts/ci/homelab-release-admission.ts consume)"',
     'if [ "$release_admission" = "superseded" ]; then exit 0; fi',
     'if [ "$release_admission" != "admitted" ]; then',
@@ -209,7 +218,6 @@ function chainedApplyCommands(stack: string): string[] {
     "  exit 1",
     "fi",
     ". ci/scripts/toolchain.sh",
-    "ci/scripts/bun-install.sh --frozen-lockfile --filter homelab --production",
     `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
     `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts ${stack} apply`,
   ];
