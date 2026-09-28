@@ -83,7 +83,10 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
   argocd: {
     credentials: [
       { source: "ARGOCD_AUTH_TOKEN", target: "TF_VAR_argocd_auth_token" },
-      { source: "OP_CONNECT_TOKEN", target: "OP_CONNECT_TOKEN" },
+      {
+        source: "OP_SERVICE_ACCOUNT_TOKEN",
+        target: "OP_SERVICE_ACCOUNT_TOKEN",
+      },
     ],
   },
   arr: {
