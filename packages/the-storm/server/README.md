@@ -8,7 +8,8 @@ server identity (seed, difficulty, MOTD) through the chart values in
 `packages/homelab/.../games/minecraft-tsmc.ts`.
 
 It is the `the-storm-server` target in `docker-bake.hcl` (infra group, build
-context `packages/the-storm`). CI builds it when anything under `plugin/` or
+context `packages/the-storm`, plus a narrow managed-flag inventory context).
+CI builds it when anything under `plugin/` or
 `server/` changes, and the version commit-back pins its digest in the version
 catalog (`shepherdjerred/the-storm-server`).
 

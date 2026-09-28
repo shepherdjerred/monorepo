@@ -216,6 +216,7 @@ target "redlib" {
 # repository-owned config bundle. See packages/the-storm/server/README.md.
 target "the-storm-server" {
   context    = "packages/the-storm"
+  contexts   = { managed-flags = "packages/feature-flags/src" }
   dockerfile = "server/Dockerfile"
   target     = "image"
   tags       = imagetags("the-storm-server")
