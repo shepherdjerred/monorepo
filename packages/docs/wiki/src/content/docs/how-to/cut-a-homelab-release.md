@@ -26,12 +26,16 @@ failed stage means.
 2. From a clean checkout of that exact `main` commit, run the bootstrap script
    once with `--dry-run`. It validates the chart inventory and the exact root
    request without changing the cluster.
-3. Supply the existing ArgoCD and ChartMuseum credentials through the
+3. Supply an ArgoCD admin token and the ChartMuseum credentials through the
    configured credential wrapper, then run the same command without
    `--dry-run`. The script suspends root auto-sync, publishes the complete chart
    set at the reserved number plus 1,000,000, and calls `release-root` with an
-   exact revision and stable request ID.
-4. Check the `apps` ArgoCD Application and Woodpecker server, agent, and config
+   exact revision and stable request ID. The old `buildkite` account is removed
+   during this release, so its token cannot complete the child syncs.
+4. Apply the operator-run `argocd` OpenTofu stack to create the `woodpecker`
+   account token in its 1Password item. Confirm the `ci-argocd-credentials`
+   Kubernetes Secret contains the new key and that its token can read `apps`.
+   Check the `apps` ArgoCD Application and Woodpecker server, agent, and config
    extension health. Trigger a PR pipeline and require its
    `ci/woodpecker/pr/ci-complete` status to pass. The first main GitHub OpenTofu
    apply defers the required-check switch until this status exists on a real

@@ -6,7 +6,7 @@ Manages external resources with [OpenTofu](https://opentofu.org/), including inf
 
 ```text
 tofu/
-├── argocd/              # ArgoCD account token for Buildkite, stored in 1Password
+├── argocd/              # ArgoCD account token for Woodpecker, stored in 1Password
 ├── arr/                 # Radarr/Sonarr/Prowlarr config, imported from the live instances
 ├── asuswrt/             # Asus routers & APs (custom provider, local-run only)
 ├── buildkite/           # Buildkite cluster + monorepo pipeline settings

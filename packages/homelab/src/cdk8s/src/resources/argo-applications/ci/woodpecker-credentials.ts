@@ -45,8 +45,9 @@ export const WOODPECKER_SERVER_ITEM_ID = "covttsojandjk7fx62a3dbk7em";
  * `secretKeyRef`, and the reason credentials never enter Woodpecker's own
  * secret store or database.
  *
- * Item IDs are unchanged from the Buildkite stack; only the Secret names lose
- * their `buildkite-` prefix.
+ * Most item IDs are unchanged from the Buildkite stack. The ArgoCD token uses
+ * the OpenTofu-owned Woodpecker account item so removing the Buildkite account
+ * does not invalidate release and infrastructure workflows.
  */
 const CI_CREDENTIAL_ITEMS = [
   { secretName: "ci-github-credentials", itemId: "34gzcrhwdm34lpadyly3rcsu44" },
@@ -64,7 +65,7 @@ const CI_CREDENTIAL_ITEMS = [
     secretName: "ci-chartmuseum-credentials",
     itemId: "cnutkdwa7uka5hk3wx5gimyfom",
   },
-  { secretName: "ci-argocd-credentials", itemId: "xyytntqvtchctebb3ugoiub7u4" },
+  { secretName: "ci-argocd-credentials", itemId: "ga3ma76q6vw2bxeyvkqj4xaucy" },
   {
     secretName: "ci-seaweedfs-credentials",
     itemId: "eyfsbfkxojth6ymr65l47yyfxy",
