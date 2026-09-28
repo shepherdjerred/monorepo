@@ -104,6 +104,10 @@ survive the next sync.
 Private services use a **Tailscale ingress** and are reachable only from the
 tailnet. Public services go through a **Cloudflare Tunnel**.
 
+The Tailscale operator creates kernel-mode proxy pods in its own namespace.
+That namespace explicitly permits privileged pods; the cluster's baseline Pod
+Security default would otherwise reject newly created proxies.
+
 Choosing tailnet-only is the default, and the tailnet can serve as a service's
 authorization boundary.
 
