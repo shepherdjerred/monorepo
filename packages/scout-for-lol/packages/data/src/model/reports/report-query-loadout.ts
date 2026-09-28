@@ -36,7 +36,9 @@ export function reportLoadoutNames(): LoadoutName[] {
         kind: "rune",
         id: rune.id,
         name: rune.name,
-        assetKey: rune.key,
+        assetKey: rune.icon
+          .slice(rune.icon.lastIndexOf("/") + 1)
+          .replace(/\.png$/u, ""),
       })),
     ),
   );

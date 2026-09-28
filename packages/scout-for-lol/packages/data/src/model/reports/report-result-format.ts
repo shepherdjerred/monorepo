@@ -18,11 +18,10 @@ export function formatReportDisplayValue(
   if (typeof value === "string") {
     return column.asset === undefined
       ? value
-      : (reportAssetInfo(column.asset, value)?.name ?? value);
+      : reportAssetInfo(column.asset, value).name;
   }
   if (column.asset !== undefined) {
-    const asset = reportAssetInfo(column.asset, value);
-    if (asset !== undefined) return asset.name;
+    return reportAssetInfo(column.asset, value).name;
   }
   if (column.format === "percent") {
     return `${(value * 100).toLocaleString("en-US", {
