@@ -31,7 +31,7 @@ export function playwrightSteps(
         // A PR compares against its target branch even before main has a
         // successful Woodpecker pipeline to supply a changed-file base.
         'if [ "$CI_PIPELINE_EVENT" = "pull_request" ]; then',
-        '  if git fetch --no-tags --depth=100 origin "$CI_REPO_DEFAULT_BRANCH"; then',
+        '  if git fetch --no-tags --depth=100 origin "$CI_COMMIT_TARGET_BRANCH"; then',
         '    if ! CI_CHANGED_BASE="$(git merge-base HEAD FETCH_HEAD)"; then CI_CHANGED_BASE=""; fi',
         "  else",
         '    CI_CHANGED_BASE=""',
