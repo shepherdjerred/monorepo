@@ -25,7 +25,7 @@ export const LAKE_HOLDS_BUT_SCOUTQL_CANNOT_REACH = [
   "head-to-head — how a champion or player did against a specific other one in the same game (champion vs champion, one player against another)",
   "streaks — runs of consecutive wins or losses, which need games read in order",
   "teammate groups involving untracked players — player_groups only forms groups from players tracked by the selected server(s), even though the match rows contain every participant",
-  "aggregate item or build-path statistics — item frequency and purchase-order questions require expanding item slots or timeline events across games, which this ScoutQL surface cannot do",
+  "final-inventory item-frequency aggregates — the surface cannot unpivot item0 through item6 into one row per item — and ordered build-path aggregates across matches, which require sequencing purchases between games. Purchase-event frequency is queryable from timeline_events",
 ] as const;
 
 /**

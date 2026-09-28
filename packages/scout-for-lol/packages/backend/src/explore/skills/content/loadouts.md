@@ -28,7 +28,7 @@ Use `match_participants` for a player's match-level loadout. Its physical column
 
 Use item slots to inspect what one player finished with. `items` is the combined final inventory label. The spell and rune name columns describe that participant's one spell pair and rune page. A single participant's loadout is not a `player_groups` fact.
 
-ScoutQL can group scalar dimensions such as `keystone`, `spells`, or `item_id` from recorded timeline events. For purchase frequency, filter `timeline_events` to `event_type = ITEM_PURCHASED` and group by `item_id`; state that the result covers only matches whose timelines Scout has. It cannot unpivot the six final-inventory slots into one row per item or aggregate an ordered build path across every match. Do not answer final-inventory frequency or ordered-path questions from those unavailable shapes. Offer a supported purchase-event comparison, a single-value comparison, or a specific game's loadout instead.
+ScoutQL can group `keystone` and `spells` from `match_participants`, and `item_id` from `timeline_events`. For purchase frequency, filter `timeline_events` with `event_type = 'ITEM_PURCHASED'` and group by `item_id`; state that the result covers only matches whose timelines Scout has. It cannot unpivot the six final-inventory slots into one row per item or aggregate an ordered build path across every match. Do not answer final-inventory frequency or ordered-path questions from those unavailable shapes. Offer a supported purchase-event comparison, a single-value comparison, or a specific game's loadout instead.
 
 ## Attaching a loadout card
 

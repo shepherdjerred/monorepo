@@ -87,6 +87,9 @@ describe("skill bodies", () => {
     expect(body).toContain("summoner1_id");
     expect(body).toContain("stat_perk_*");
     expect(body).toContain("For purchase frequency, filter `timeline_events`");
+    expect(body).toContain("event_type = 'ITEM_PURCHASED'");
+    expect(body).toContain("`keystone` and `spells` from `match_participants`");
+    expect(body).toContain("`item_id` from `timeline_events`");
     expect(body).toContain("cannot unpivot the six final-inventory slots");
     expect(body).toContain("exact `(match_id, puuid)` pair");
     expect(body).toContain("acquire_match_timelines");

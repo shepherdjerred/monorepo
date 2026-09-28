@@ -323,7 +323,9 @@ describe("unresolved concepts", () => {
     expect(listed).not.toContain("plays well together");
     expect(listed).toContain("head-to-head");
     expect(listed).toContain("teammate groups involving untracked players");
-    expect(listed).toContain("aggregate item or build-path statistics");
+    expect(listed).toContain("final-inventory item-frequency aggregates");
+    expect(listed).toContain("ordered build-path aggregates across matches");
+    expect(listed).toContain("Purchase-event frequency is queryable");
   });
 
   test("defines the Hall of Fame, which was once read as a player name", () => {

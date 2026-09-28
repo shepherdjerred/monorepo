@@ -269,13 +269,15 @@ describe("the judge prompt", () => {
     // Bans left this list when match_team_bans became a source.
     expect(prompt).not.toContain("match_team_bans");
     // Tables became sources as they shipped; the remaining gaps are query
-    // shapes, untracked teammate members, and item-slot expansion.
+    // shapes, untracked teammate members, item-slot expansion, and ordered
+    // build paths across matches. Purchase-event counts remain queryable.
     expect(prompt).toContain("head-to-head");
     expect(prompt).toContain("streaks");
-    expect(prompt).toContain("aggregate item or build-path statistics");
+    expect(prompt).toContain("final-inventory item-frequency aggregates");
+    expect(prompt).toContain("ordered build-path aggregates across matches");
+    expect(prompt).toContain("timeline_events");
     expect(prompt).toContain("teammate groups involving untracked players");
     expect(prompt).not.toContain("plays well together");
-    expect(prompt).not.toContain("timeline_events");
     expect(prompt).not.toContain("timeline_participant_frames");
     expect(prompt).toContain("overclaimed_absence");
   });
