@@ -193,7 +193,8 @@ one storage path with no size threshold is simpler than reimplementing both.
 Reads fail loudly by design. A defaulted `{}` would let a release step deploy
 nothing and report success.
 
-Each workflow has its own checkout and dependency tree. The
+[Each workflow](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/emit.ts)
+has its own checkout and dependency tree. The
 [handoff](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/ci/ci-handoff.ts)
 and [artifact](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/ci/ci-artifact.ts)
 helpers import an S3 signer declared by the [root scripts
