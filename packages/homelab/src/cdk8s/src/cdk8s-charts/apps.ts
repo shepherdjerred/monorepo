@@ -102,6 +102,17 @@ export async function createAppsChart(app: App) {
     },
   });
 
+  // The Tailscale operator creates privileged kernel-mode proxy pods here.
+  // Without an explicit label, the cluster's baseline default rejects new proxies.
+  new Namespace(chart, "tailscale-namespace", {
+    metadata: {
+      name: "tailscale",
+      labels: {
+        "pod-security.kubernetes.io/enforce": "privileged",
+      },
+    },
+  });
+
   createAppsApp(chart);
   createOpenEBSApp(chart);
   createOnePasswordApp(chart);
