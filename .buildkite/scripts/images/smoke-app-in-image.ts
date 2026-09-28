@@ -104,6 +104,29 @@ const commands: Record<
       PROMETHEUS_URL: "http://127.0.0.1:19090",
     },
   },
+  "storm-brain": {
+    command: [
+      "set -eu",
+      "cd /app/packages/storm-brain",
+      "bun src/index.ts >/tmp/storm-brain-smoke.log 2>&1 &",
+      "pid=$!",
+      "trap 'if kill -0 $pid; then kill $pid; if wait $pid; then :; else cleanup_status=$?; [ $cleanup_status -eq 143 ] || exit $cleanup_status; fi; fi' EXIT",
+      "for _ in $(seq 1 30); do",
+      `  if bun -e 'const app = await fetch("http://127.0.0.1:18794/readyz"); const metrics = await fetch("http://127.0.0.1:18795/metrics"); if (!app.ok || !metrics.ok || !(await metrics.text()).includes("storm_brain_requests_total")) process.exit(1);'; then exit 0; fi`,
+      "  if ! kill -0 $pid; then cat /tmp/storm-brain-smoke.log; exit 1; fi",
+      "  sleep 1",
+      "done",
+      "cat /tmp/storm-brain-smoke.log",
+      "exit 1",
+    ].join("\n"),
+    env: {
+      FEATURE_FLAGS_MODE: "disabled",
+      METRICS_PORT: "18795",
+      OPENAI_API_KEY: "smoke-dummy",
+      STORM_BRAIN_BEARER_TOKEN: "smoke-brain-token-that-is-long-enough",
+      PORT: "18794",
+    },
+  },
   birmel: {
     command: [
       "set -eu",

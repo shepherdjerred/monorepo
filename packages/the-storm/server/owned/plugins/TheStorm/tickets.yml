@@ -1,0 +1,9 @@
+# The tickets module (player reports and the staff queue). Owned by the
+# repository; the plugin never writes it. Every key is required.
+
+# How many tickets /tickets lists.
+pageSize: 10
+
+# Which server these tickets belong to. Rows carry it so shared surfaces
+# never mix servers up.
+serverId: survival

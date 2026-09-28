@@ -112,6 +112,25 @@ final class DiscordRelayTest {
   }
 
   @Test
+  void postsTicketDetailsWithPlayerTextEscaped() {
+    relay.onTicketOpened(
+        new TicketDetails(
+            7,
+            "grief",
+            "urgent",
+            "cool_guy",
+            "@everyone **help**",
+            "staff",
+            "evidence",
+            "survival"));
+
+    assertThat(posts)
+        .containsExactly(
+            "Ticket #7 [survival/urgent] grief from **cool\\_guy**: "
+                + "@\u200Beveryone \\*\\*help\\*\\*");
+  }
+
+  @Test
   void relaysDiscordIntoGlobalOnTheMainThread() {
     relay.onDiscordMessage(new InboundMessage("bob", "hello\nthere **friend**", false, 0));
 

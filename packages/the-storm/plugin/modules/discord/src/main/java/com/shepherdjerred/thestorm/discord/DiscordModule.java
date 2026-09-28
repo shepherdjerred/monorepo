@@ -62,6 +62,7 @@ public final class DiscordModule implements StormModule {
             config,
             bridge,
             new DiscordRelay.Game(chat, context.scheduler(), new PaperOnlinePlayers(server)));
+    context.services().provide(DiscordRelay.class, relay);
     var subscription = chat.subscribe(relay::onChatLine);
     var text = new VanillaPlainText(server.getClass().getClassLoader());
     var commands =

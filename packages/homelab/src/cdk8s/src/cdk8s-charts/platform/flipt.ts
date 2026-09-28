@@ -36,6 +36,8 @@ const CONSUMER_NAMESPACES = [
   // namespace, not `temporal` — it needs its own entry here or its
   // temporal-call-graph-tracing check silently degrades to the default false.
   "buildkite",
+  // storm-brain reads the storm namespace flags (classify/triage gates).
+  "storm-brain",
   "minecraft-tsmc",
 ] as const;
 

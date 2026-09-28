@@ -15,6 +15,7 @@ import { MINING_RESET_LOCK_ANNOTATION } from "@shepherdjerred/homelab/cdk8s/src/
 const NAMESPACE = "minecraft-tsmc";
 const SECRET_NAME = "minecraft-tsmc-discord";
 const RCON_SECRET_NAME = "minecraft-tsmc-brain";
+const BRAIN_SECRET_NAME = "minecraft-tsmc-storm-brain";
 
 /**
  * The Paper version baked into ghcr.io/shepherdjerred/the-storm-server. The
@@ -50,6 +51,13 @@ export function createMinecraftTsmcApp(chart: Chart) {
   new OnePasswordItem(chart, "minecraft-tsmc-brain-1p", {
     spec: { itemPath: vaultItemPath("mpv7cti3fpwrfobgr6ydnemydy") },
     metadata: { name: RCON_SECRET_NAME, namespace: NAMESPACE },
+  });
+
+  // The agent reads the same owner-managed brain bearer token from its own
+  // namespace; Kubernetes secrets cannot cross namespace boundaries.
+  new OnePasswordItem(chart, "minecraft-tsmc-storm-brain-1p", {
+    spec: { itemPath: vaultItemPath("storm-brain") },
+    metadata: { name: BRAIN_SECRET_NAME, namespace: NAMESPACE },
   });
 
   createIngress(chart, "minecraft-tsmc-bluemap-ingress", {
@@ -170,11 +178,23 @@ export function createMinecraftTsmcApp(chart: Chart) {
           secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
         },
       },
+      STORM_BRAIN_BEARER_TOKEN: {
+        valueFrom: {
+          secretKeyRef: {
+            name: BRAIN_SECRET_NAME,
+            key: "STORM_BRAIN_BEARER_TOKEN",
+          },
+        },
+      },
       DISCORD_BOT_TOKEN: {
-        valueFrom: { secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" } },
+        valueFrom: {
+          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_BOT_TOKEN" },
+        },
       },
       DISCORD_CHANNEL_ID: {
-        valueFrom: { secretKeyRef: { name: SECRET_NAME, key: "DISCORD_CHANNEL_ID" } },
+        valueFrom: {
+          secretKeyRef: { name: SECRET_NAME, key: "DISCORD_CHANNEL_ID" },
+        },
       },
       // Interpolated into plugins/DiscordSRV/config.yml by the image's
       // PATCH_DEFINITIONS (server/patches/discordsrv-config.json).

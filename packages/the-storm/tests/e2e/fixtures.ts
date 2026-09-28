@@ -10,6 +10,7 @@ function username(prefix: string): string {
 
 export const test = base
   .extend("server", { scope: "file" }, () => inject("server"))
+  .extend("brain", { scope: "file" }, () => inject("brain"))
   .extend("rcon", async ({ server }, { onCleanup }) => {
     const rcon = await RconClient.connect({
       host: server.host,

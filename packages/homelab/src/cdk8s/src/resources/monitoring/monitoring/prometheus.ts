@@ -27,6 +27,7 @@ import { getAlertDashboardRuleGroups } from "./rules/alert-dashboard.ts";
 import { getFliptRuleGroups } from "./rules/flipt.ts";
 import { getLlmRuleGroups } from "./rules/llm.ts";
 import { getOpsSnapshotRuleGroups } from "./rules/ops-snapshot.ts";
+import { getStormBrainRuleGroups } from "./rules/storm-brain.ts";
 import { createBuildkiteMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkite.ts";
 import { createBuildkitdMonitoring } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/buildkitd.ts";
 import { getAlertingControlRuleGroups } from "./rules/platform/alerting-control.ts";
@@ -370,6 +371,17 @@ export function createPrometheusMonitoring(chart: Chart) {
     },
     spec: {
       groups: getOpsSnapshotRuleGroups(),
+    },
+  });
+
+  new PrometheusRule(chart, "prometheus-storm-brain-rules", {
+    metadata: {
+      name: "prometheus-storm-brain-rules",
+      namespace: "prometheus",
+      labels: { release: "prometheus" },
+    },
+    spec: {
+      groups: getStormBrainRuleGroups(),
     },
   });
 }

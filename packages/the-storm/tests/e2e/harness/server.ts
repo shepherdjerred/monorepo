@@ -53,10 +53,21 @@ export type StartServerOptions = {
   warmCache: boolean;
   /** The built TheStorm.jar under test. */
   stormJar: string;
-  mechanicsE2eJar: string;
-  mechanicsConfig: string;
+  mechanicsE2eJar?: string;
+  mechanicsConfig?: string;
   /** Contents of plugins/TheStorm/config.yml. */
   stormConfig: string;
+  /** Repository-owned plugin config directory. */
+  ownedConfigDir: string;
+  /** Fake brain the staged agent.yml points at. */
+  brain: { baseUrl: string; token: string };
+  sweep: {
+    intervalMinutes: number;
+    redriveAfterMinutes: number;
+    redriveBackoffMinutes: number;
+    slaAfterMinutes: number;
+  };
+  agent: { mode: string; reviewSamplePercent: number };
 };
 
 const PortBindingSchema = z
@@ -77,12 +88,22 @@ const OwnedStormConfigSchema = z
  * The plugin rejects a config that omits a module, so the key set always
  * follows the owned file.
  */
-export function stormSmokeConfig(ownedYaml: string): string {
+export function stormTestConfig(ownedYaml: string, enabled: string[]): string {
   const owned = OwnedStormConfigSchema.parse(Bun.YAML.parse(ownedYaml));
+  const known = new Set(Object.keys(owned.modules));
+  const unknown = enabled.filter((module) => !known.has(module));
+  if (unknown.length > 0) {
+    throw new Error(`Unknown modules: ${unknown.join(", ")}`);
+  }
+  const on = new Set(enabled);
   const modules = Object.keys(owned.modules).map(
-    (module) => `  ${module}: false`,
+    (module) => `  ${module}: ${on.has(module).toString()}`,
   );
   return ["modules:", ...modules, ""].join("\n");
+}
+
+export function stormSmokeConfig(ownedYaml: string): string {
+  return stormTestConfig(ownedYaml, []);
 }
 
 async function download(url: string): Promise<Uint8Array> {
@@ -200,7 +221,10 @@ export async function stagePlugins(
     | "mechanicsE2eJar"
     | "mechanicsConfig"
     | "warmCache"
-  >,
+  > &
+    Partial<
+      Pick<StartServerOptions, "ownedConfigDir" | "brain" | "sweep" | "agent">
+    >,
 ): Promise<string> {
   const downloads = path.join(cacheDir, "plugins");
   const pluginsDir = path.join(stagingDir, "plugins");
@@ -218,18 +242,53 @@ export async function stagePlugins(
     path.join(pluginsDir, "TheStorm.jar"),
     Bun.file(options.stormJar),
   );
+  if (options.ownedConfigDir !== undefined) {
+    await cp(options.ownedConfigDir, path.join(pluginsDir, "TheStorm"), {
+      recursive: true,
+    });
+  }
   await Bun.write(
     path.join(pluginsDir, "TheStorm", "config.yml"),
     options.stormConfig,
   );
-  await Bun.write(
-    path.join(pluginsDir, "TheStormMechanicsE2E.jar"),
-    Bun.file(options.mechanicsE2eJar),
-  );
-  await Bun.write(
-    path.join(pluginsDir, "TheStormMechanicsE2E", "mechanics.yml"),
-    options.mechanicsConfig,
-  );
+  if (
+    options.mechanicsE2eJar !== undefined ||
+    options.mechanicsConfig !== undefined
+  ) {
+    if (
+      options.mechanicsE2eJar === undefined ||
+      options.mechanicsConfig === undefined
+    ) {
+      throw new Error("mechanics E2E jar and config must be provided together");
+    }
+    await Bun.write(
+      path.join(pluginsDir, "TheStormMechanicsE2E.jar"),
+      Bun.file(options.mechanicsE2eJar),
+    );
+    await Bun.write(
+      path.join(pluginsDir, "TheStormMechanicsE2E", "mechanics.yml"),
+      options.mechanicsConfig,
+    );
+  }
+  if (
+    options.brain !== undefined ||
+    options.sweep !== undefined ||
+    options.agent !== undefined
+  ) {
+    if (
+      options.brain === undefined ||
+      options.sweep === undefined ||
+      options.agent === undefined
+    ) {
+      throw new Error(
+        "brain, sweep, and agent overrides must be provided together",
+      );
+    }
+    const stagedAgentYml = path.join(pluginsDir, "TheStorm", "agent.yml");
+    await overlayBrainUrl(stagedAgentYml, options.brain.baseUrl);
+    await overlaySweep(stagedAgentYml, options.sweep);
+    await overlayAgentTopLevel(stagedAgentYml, options.agent);
+  }
   if (options.warmCache) {
     const cachedLibs = path.join(cacheDir, luckPermsLibs);
     await mkdir(cachedLibs, { recursive: true });
@@ -254,7 +313,57 @@ const warmMounts = [
 // Instead they ride in through /plugins and are copied back out after boot.
 const luckPermsLibs = path.join("LuckPerms", "libs");
 
-function serverEnv(rconPassword: string): Record<string, string> {
+async function overlayBrainUrl(
+  stagedAgentYml: string,
+  baseUrl: string,
+): Promise<void> {
+  const content = await Bun.file(stagedAgentYml).text();
+  const overlaid = content.replace(
+    /^ {2}baseUrl: .*$/m,
+    `  baseUrl: ${baseUrl}`,
+  );
+  if (overlaid === content) {
+    throw new Error(`No brain.baseUrl line to overlay in ${stagedAgentYml}`);
+  }
+  await Bun.write(stagedAgentYml, overlaid);
+}
+
+async function overlayAgentTopLevel(
+  stagedAgentYml: string,
+  agent: StartServerOptions["agent"],
+): Promise<void> {
+  const lines = (await Bun.file(stagedAgentYml).text()).split("\n");
+  for (const [key, value] of Object.entries(agent)) {
+    const index = lines.findIndex((line) => line.startsWith(`${key}: `));
+    if (index === -1) {
+      throw new Error(
+        `No top-level ${key} line to overlay in ${stagedAgentYml}`,
+      );
+    }
+    lines[index] = `${key}: ${value.toString()}`;
+  }
+  await Bun.write(stagedAgentYml, lines.join("\n"));
+}
+
+async function overlaySweep(
+  stagedAgentYml: string,
+  sweep: StartServerOptions["sweep"],
+): Promise<void> {
+  const lines = (await Bun.file(stagedAgentYml).text()).split("\n");
+  for (const [key, value] of Object.entries(sweep)) {
+    const index = lines.findIndex((line) => line.startsWith(`  ${key}: `));
+    if (index === -1) {
+      throw new Error(`No sweep.${key} line to overlay in ${stagedAgentYml}`);
+    }
+    lines[index] = `  ${key}: ${value.toString()}`;
+  }
+  await Bun.write(stagedAgentYml, lines.join("\n"));
+}
+
+function serverEnv(
+  rconPassword: string,
+  brainToken: string,
+): Record<string, string> {
   return {
     EULA: "TRUE",
     TYPE: "PAPER",
@@ -263,6 +372,7 @@ function serverEnv(rconPassword: string): Record<string, string> {
     ONLINE_MODE: "FALSE",
     ENABLE_RCON: "true",
     RCON_PASSWORD: rconPassword,
+    STORM_BRAIN_BEARER_TOKEN: brainToken,
     // Keep boot hermetic: do not fetch third-party default configs.
     SKIP_DOWNLOAD_DEFAULTS: "true",
     MEMORY: "1G",
@@ -353,10 +463,9 @@ export async function startServer(
           `${path.join(cacheDir, dir)}:${target}`,
         ])
       : []),
-    ...Object.entries(serverEnv(rconPassword)).flatMap(([key, value]) => [
-      "-e",
-      `${key}=${value}`,
-    ]),
+    ...Object.entries(serverEnv(rconPassword, options.brain.token)).flatMap(
+      ([key, value]) => ["-e", `${key}=${value}`],
+    ),
     serverImage,
   ]);
   const id = containerId.trim();

@@ -9,6 +9,7 @@ import com.shepherdjerred.thestorm.discord.domain.Advancements;
 import com.shepherdjerred.thestorm.discord.domain.DiscordText;
 import com.shepherdjerred.thestorm.discord.domain.InboundFilter;
 import com.shepherdjerred.thestorm.discord.domain.InboundMessage;
+import com.shepherdjerred.thestorm.discord.domain.MessageTemplate;
 import com.shepherdjerred.thestorm.discord.domain.PlayerList;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -130,6 +131,78 @@ public final class DiscordRelay {
   /** Posts that the server woke up. Called once the bot is connected. */
   public void onServerStarted() {
     post(config.messages().start());
+  }
+
+  /** Posts a newly filed ticket. */
+  public void onTicketOpened(TicketDetails ticket) {
+    post(
+        config
+            .messages()
+            .ticketOpenedTemplate()
+            .render(
+                Map.of(
+                    "id", Long.toString(ticket.id()),
+                    "server", ticket.server(),
+                    "priority", ticket.priority(),
+                    "category", ticket.category(),
+                    "reporter", DiscordText.forDiscord(ticket.reporter()),
+                    "summary", DiscordText.forDiscord(ticket.summary()))));
+  }
+
+  /** Posts a claimed ticket. */
+  public void onTicketClaimed(TicketDetails ticket) {
+    postTicketStaff(config.messages().ticketClaimedTemplate(), ticket);
+  }
+
+  /** Posts a resolved ticket. */
+  public void onTicketResolved(TicketDetails ticket) {
+    postTicketStaff(config.messages().ticketResolvedTemplate(), ticket);
+  }
+
+  /** Posts a ticket requiring human review. */
+  public void onTicketEscalated(TicketDetails ticket) {
+    post(
+        config
+            .messages()
+            .ticketEscalatedTemplate()
+            .render(
+                Map.of(
+                    "id", Long.toString(ticket.id()),
+                    "server", ticket.server(),
+                    "priority", ticket.priority(),
+                    "summary", DiscordText.forDiscord(ticket.summary()))));
+  }
+
+  /** Posts a reopened ticket. */
+  public void onTicketReopened(TicketDetails ticket) {
+    post(
+        config
+            .messages()
+            .ticketReopenedTemplate()
+            .render(Map.of("id", Long.toString(ticket.id()), "server", ticket.server())));
+  }
+
+  /** Posts ticket triage evidence. */
+  public void onTicketTriaged(TicketDetails ticket) {
+    post(
+        config
+            .messages()
+            .ticketTriagedTemplate()
+            .render(
+                Map.of(
+                    "id", Long.toString(ticket.id()),
+                    "server", ticket.server(),
+                    "priority", ticket.priority(),
+                    "evidence", DiscordText.forDiscord(ticket.evidence()))));
+  }
+
+  private void postTicketStaff(MessageTemplate template, TicketDetails ticket) {
+    post(
+        template.render(
+            Map.of(
+                "id", Long.toString(ticket.id()),
+                "server", ticket.server(),
+                "staff", DiscordText.forDiscord(ticket.staff()))));
   }
 
   /** The message to post as the server goes to sleep. */

@@ -283,6 +283,14 @@ until the player frees inventory space.
 
 ## Conventions
 
+## AI staff
+
+The `tickets` and `agent` modules provide ticket tracking and proactive chat
+enforcement through the `storm-brain` service (`packages/storm-brain`). Operator
+guidance lives in the repository wiki at `packages/docs/wiki/src/content/docs/`:
+`explanation/the-storm-ai-staff.md`, `how-to/review-ai-staff-decisions.md`, and
+`reference/the-storm-agent.md`.
+
 The economy `Wallets` port supports a stable `KeyedTransfer` for compensating
 payments. It stores the operation key with the ledger row, returns the same
 receipt for an identical retry, and rejects reuse of the key with different

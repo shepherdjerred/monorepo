@@ -45,6 +45,11 @@
       "key": "the-storm-companion",
       "name": "The Storm Companion",
       "description": "Opt-in Minecraft companion pilot feature flags."
+    },
+    {
+      "key": "storm",
+      "name": "Storm",
+      "description": "The Storm Minecraft server feature flags."
     }
   ],
   "flags": [
@@ -1470,6 +1475,30 @@
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []
+    },
+    {
+      "key": "storm-brain-classify-enabled",
+      "owner": "storm",
+      "namespace": "storm",
+      "source": "storm-brain",
+      "purpose": "Enable the Storm brain chat classification flow.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
+      "key": "storm-brain-triage-enabled",
+      "owner": "storm",
+      "namespace": "storm",
+      "source": "storm-brain",
+      "purpose": "Enable the Storm brain ticket triage flow.",
+      "type": "boolean",
+      "default": false,
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
     }
   ],
   "exemptions": [
@@ -1495,11 +1524,7 @@
     },
     {
       "category": "observability",
-      "controls": [
-        "telemetry",
-        "Sentry",
-        "LLM archive"
-      ],
+      "controls": ["telemetry", "Sentry", "LLM archive"],
       "reason": "Observability initialization is boot-scoped and must not disappear behind an unauthenticated runtime toggle."
     },
     {

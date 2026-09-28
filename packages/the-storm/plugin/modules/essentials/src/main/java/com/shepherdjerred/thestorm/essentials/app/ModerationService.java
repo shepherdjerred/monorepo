@@ -104,6 +104,24 @@ public final class ModerationService {
     return log.history(player, limit);
   }
 
+  /** A boundary-safe view of {@code player}'s newest audit entries, newest first. */
+  public CompletableFuture<List<ModerationHistory>> historyView(UUID player, int limit) {
+    return log.history(player, limit)
+        .thenApply(
+            entries ->
+                entries.stream()
+                    .map(
+                        entry ->
+                            new ModerationHistory(
+                                entry.action().id(),
+                                entry.actor().uuid(),
+                                entry.actor().name(),
+                                entry.reason(),
+                                entry.at(),
+                                entry.expiresAt()))
+                    .toList());
+  }
+
   private void apply(AuditEntry entry) {
     standings.compute(
         entry.target(), (id, old) -> (old == null ? Standing.CLEAN : old).apply(entry));

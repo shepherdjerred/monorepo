@@ -97,6 +97,7 @@ describe("ManagedFlagInventorySchema", () => {
       "alert-dashboard",
       "the-storm",
       "the-storm-companion",
+      "storm",
     ]);
     expect(
       materializeManagedNamespaceEnvironment(
