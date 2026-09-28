@@ -47,6 +47,9 @@ export function playwrightSteps(
         "fi",
         'if [ -n "$CI_CHANGED_BASE" ]; then export TURBO_SCM_BASE="$CI_CHANGED_BASE"; fi',
         'export TURBO_CACHE="local:rw,remote:rw"',
+        // Playwright configs use CI=true to enable JUnit reporters and bounded
+        // workers; Woodpecker supplies CI=woodpecker by default.
+        "export CI=true",
         "bun --no-install ci/scripts/selection/run-playwright.ts",
         // The suites build these bundles to test them; the deploy lane then
         // ships exactly what was tested instead of rebuilding.
