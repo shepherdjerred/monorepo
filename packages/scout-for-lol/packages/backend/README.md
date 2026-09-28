@@ -896,7 +896,11 @@ only `pending` and `ready`; `sending` and `unknown-delivery` conflict, so a
 retirement always loses to a send in flight.
 
 The send path discovers it. `beginNotificationSendV2`, for an unattempted
-intent and before any nonce is minted, asks Discord for the target channel
+intent and before any nonce is minted, first checks a Hall intent against its
+guild's installation lifecycle. A removal stamp or an `installedAt` later than
+the intent's creation retires it as `guild-left`, including when the bot was
+reinstalled and the same channel still exists. A missing lifecycle row alone
+is no evidence of removal. The send path then asks Discord for the target channel
 (Unknown Channel is `channel-deleted`; a channel whose guild Scout is confirmed
 not to be in is `guild-left`) and then, for the subscription-backed kinds
 (`postmatch`, `prematch`), whether any subscription in the channel still

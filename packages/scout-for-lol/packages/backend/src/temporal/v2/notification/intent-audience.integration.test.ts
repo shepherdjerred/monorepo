@@ -1,5 +1,9 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import type { NotificationIntentKey } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RiotMatchIdSchema,
+  type NotificationIntentKey,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import { NotificationIntentSchema } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   NotificationAttemptNonceSchema,
   type NotificationAttemptNonce,
@@ -92,6 +96,14 @@ const { deliverNotificationV2 } =
   await import("#src/temporal/v2/notification-delivery.ts");
 const { scoutDurableNotificationIntentsRetired } =
   await import("#src/metrics/durable-pipeline.ts");
+const { audienceRetirementOfV2, defaultAudienceDiscordPort } =
+  await import("#src/temporal/v2/notification/intent-audience.ts");
+const { hallRecordBreakIntentKey } =
+  await import("#src/durable/match/delivery-intents.ts");
+const { hallRecordBreakAnnouncementEnvelope } =
+  await import("#src/temporal/v2/notification/announcement-codecs.ts");
+const { hallBreakRecords } =
+  await import("#src/temporal/v2/notification/hall-record-break.test-fixtures.ts");
 
 afterAll(async () => {
   await prisma.$disconnect();
@@ -153,10 +165,93 @@ beforeEach(async () => {
   await prisma.subscription.deleteMany();
   await prisma.account.deleteMany();
   await prisma.player.deleteMany();
+  await prisma.guildInstall.deleteMany();
   scoutDurableNotificationIntentsRetired.reset();
   stubs.readChannel.mockResolvedValue(liveChannel());
   stubs.isInstalled.mockResolvedValue(true);
   stubs.send.mockResolvedValue({ id: "100000000000000888" });
+});
+
+async function seedHallInstallation(installedAt: string, removedAt?: string) {
+  await prisma.guildInstall.create({
+    data: {
+      serverId: GUILD,
+      serverName: "Hall guild",
+      ownerDiscordId: "100000000000000001",
+      addedByDiscordId: "100000000000000001",
+      memberCount: 10,
+      installedAt: new Date(installedAt),
+      removedAt: removedAt === undefined ? null : new Date(removedAt),
+    },
+  });
+}
+
+describe("Hall audience across guild installations", () => {
+  const matchId = RiotMatchIdSchema.parse("NA1_9301");
+  const mintedAt = "2026-09-12T10:00:00.000Z";
+
+  function hallRecord() {
+    return {
+      matchId,
+      intent: NotificationIntentSchema.parse({
+        key: hallRecordBreakIntentKey(matchId, GUILD),
+        kind: "hall-record-break",
+        origin: { kind: "live" },
+        target: { kind: "channel", channelId: CHANNEL },
+        freshnessDeadline: "2099-01-01T00:00:00.000Z",
+        createdAt: mintedAt,
+        attemptCount: 0,
+        announcement: hallRecordBreakAnnouncementEnvelope({
+          guildId: GUILD,
+          riotMatchId: matchId,
+          records: hallBreakRecords(1),
+        }),
+        state: { kind: "ready" },
+      }),
+    };
+  }
+
+  test("retires a Hall intent while its installation is removed", async () => {
+    await seedHallInstallation(
+      "2026-09-01T00:00:00.000Z",
+      "2026-09-13T00:00:00.000Z",
+    );
+
+    expect(
+      await audienceRetirementOfV2(
+        prisma,
+        hallRecord(),
+        defaultAudienceDiscordPort(),
+      ),
+    ).toBe("guild-left");
+    expect(stubs.readChannel).not.toHaveBeenCalled();
+  });
+
+  test("retires the old Hall intent after the guild is reinstalled", async () => {
+    await seedHallInstallation("2026-09-14T00:00:00.000Z");
+
+    expect(
+      await audienceRetirementOfV2(
+        prisma,
+        hallRecord(),
+        defaultAudienceDiscordPort(),
+      ),
+    ).toBe("guild-left");
+    expect(stubs.readChannel).not.toHaveBeenCalled();
+  });
+
+  test("keeps a Hall intent from the current installation", async () => {
+    await seedHallInstallation("2026-09-01T00:00:00.000Z");
+
+    expect(
+      await audienceRetirementOfV2(
+        prisma,
+        hallRecord(),
+        defaultAudienceDiscordPort(),
+      ),
+    ).toBeUndefined();
+    expect(stubs.isInstalled).toHaveBeenCalledWith(GUILD);
+  });
 });
 
 describe("beginNotificationSendV2 and a deleted audience", () => {
