@@ -26,8 +26,10 @@ per-step grant when needed, and reference it only in the intended workload.
 CI steps use the tokenless service account and explicit `secretKeyRef`
 entries on `container-0`; no `envFrom`, optional refs, or sidecar credentials.
 
-Probe local 1Password access with the exact read or `op vault list`, not
-`op whoami`. The `cf` wrapper uses an environment token; test with
+For the homelab vault, use `scripts/onepassword/with-service-account.sh` to
+run 1Password commands without desktop prompts after the one-time Keychain
+enrollment described in `src/tofu/README.md`. Do not probe with a bare `op`
+command. The `cf` wrapper uses an environment token; test with
 `cf auth whoami` or a read-only call. Do not confuse a 403 with failed login.
 
 DNS and public exposure follow the existing Tailscale and Cloudflare paths.
