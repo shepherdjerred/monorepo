@@ -104,7 +104,8 @@ function siteCommands(): string[] {
   const lines: string[] = [
     "if ! bun --no-install ci/scripts/selectors/ci-changed.ts sites; then exit 0; fi",
     ". ci/scripts/toolchain.sh",
-    "filters=()",
+    // Prebuilt-only deploys still call ci-artifact from the root scripts.
+    "filters=(--filter '@shepherdjerred/root-scripts')",
   ];
 
   for (const { lane, filter } of SOURCE_BUILT_SITES) {
@@ -133,9 +134,7 @@ function siteCommands(): string[] {
   }
 
   lines.push(
-    'if [ "${#filters[@]}" -gt 0 ]; then',
-    '  ci/scripts/bun-install.sh --frozen-lockfile "${filters[@]}"',
-    "fi",
+    'ci/scripts/bun-install.sh --frozen-lockfile "${filters[@]}"',
     ...AWS_ALIASES,
   );
 
