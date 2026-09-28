@@ -89,19 +89,26 @@ export async function collectDiagnostics(input: {
   });
 }
 
+export type TaskStore = {
+  save: (state: TaskState) => Promise<void>;
+};
+
 export async function pauseTask(input: {
   state: TaskState;
   reason: string;
   linear: LinearClient;
-  store: StateStore;
+  store: TaskStore;
 }): Promise<void> {
+  // Mutate first, save after: if the label add fails, local state still
+  // describes runnable work instead of a park that never landed, so the
+  // next run retries the turn rather than resuming stopped work.
+  await input.linear.needsHuman(input.state.issue, input.reason);
   await input.store.save({
     ...input.state,
     phase: "needs_human",
     resumePhase: input.state.resumePhase ?? input.state.phase,
     updatedAt: currentTimestamp(),
   });
-  await input.linear.needsHuman(input.state.issue, input.reason);
   console.error(`${input.state.issue.identifier}: ${input.reason}`);
 }
 
