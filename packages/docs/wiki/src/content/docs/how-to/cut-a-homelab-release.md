@@ -15,13 +15,14 @@ failed stage means.
 ## Bootstrap Woodpecker across the cutover
 
 1. Before merging the cutover PR, inspect the live `main` ruleset. If its old
-   Buildkite required check cannot complete, a repository admin must grant the
-   admin role a **pull-request-only** bypass, review the PR's local verification
-   and chart dry run, and use that bypass to merge this PR. Do not report the
-   retired Buildkite check as passing. Keep the old required check in place
-   during bootstrap. Confirm the merged commit is the current `main`. Reserve
-   a Woodpecker build number by canceling a pipeline before it starts release
-   work; do not reuse a number that published charts.
+   Buildkite required check cannot complete, apply the targeted GitHub OpenTofu
+   ruleset change below with the old context override. Inspect the plan first:
+   it must change only the admin role's bypass to **pull-request-only** and keep
+   `buildkite/monorepo/pr` required. Review the PR's local verification and
+   chart dry run, then use that bypass to merge the PR. Do not report the
+   retired Buildkite check as passing. Confirm the merged commit is the current
+   `main`. Reserve a Woodpecker build number by canceling a pipeline before it
+   starts release work; do not reuse a number that published charts.
 2. From a clean checkout of that exact `main` commit, run the bootstrap script
    once with `--dry-run`. It validates the chart inventory and the exact root
    request without changing the cluster.
@@ -41,6 +42,26 @@ failed stage means.
    Buildkite requirement and service through the repository-owned release path.
    Confirm the final ruleset has the declared PR-only admin bypass and does not
    allow direct-push bypass.
+
+The premerge OpenTofu change uses the existing 1Password-backed backend and
+GitHub token. Run this only from the reviewed cutover branch. Stop if the plan
+changes the required contexts or any resource besides the `main` ruleset.
+The normal GitHub OpenTofu apply later uses the Woodpecker context default.
+
+```bash
+export TF_VAR_github_token='op://v64ocnykdqju4ui6j6pua56xw4/34gzcrhwdm34lpadyly3rcsu44/TOFU_GITHUB_TOKEN'
+op run --env-file packages/homelab/src/tofu/.env -- \
+  tofu -chdir=packages/homelab/src/tofu/github plan -input=false \
+  -target=github_repository_ruleset.monorepo_main \
+  -var=required_ci_status_context=buildkite/monorepo/pr
+op run --env-file packages/homelab/src/tofu/.env -- \
+  tofu -chdir=packages/homelab/src/tofu/github apply -input=false \
+  -target=github_repository_ruleset.monorepo_main \
+  -var=required_ci_status_context=buildkite/monorepo/pr
+unset TF_VAR_github_token
+```
+
+After merging, run the bootstrap script from the exact `main` commit:
 
 ```bash
 bootstrap=packages/homelab/scripts/ci/bootstrap-woodpecker.ts

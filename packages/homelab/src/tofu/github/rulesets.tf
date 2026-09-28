@@ -56,8 +56,10 @@ resource "github_repository_ruleset" "monorepo_main" {
       # the same trap the merge-conflict note above describes.
       #
       # Apply only after this context passes on a real post-bootstrap PR head.
+      # The one-time premerge bypass apply overrides this variable with the old
+      # Buildkite context, leaving the required check unchanged.
       required_check {
-        context = "ci/woodpecker/pr/ci-complete"
+        context = var.required_ci_status_context
       }
     }
   }
