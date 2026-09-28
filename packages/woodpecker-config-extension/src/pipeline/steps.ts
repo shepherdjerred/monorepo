@@ -47,8 +47,8 @@ function verifyCommands(): string[] {
   return [
     ". ci/scripts/toolchain.sh",
     "ci/scripts/bun-install.sh --frozen-lockfile",
-    // The initial main build has no successful base yet. Its coverage ratchet
-    // falls back to origin/main, which Woodpecker's shallow clone omits.
+    // Woodpecker's shallow clone omits the default branch history. Fetch it
+    // for the initial main predecessor and the PR coverage fallback.
     'git fetch --no-tags --depth=100 origin "$CI_REPO_DEFAULT_BRANCH"',
     'git update-ref "refs/remotes/origin/$CI_REPO_DEFAULT_BRANCH" FETCH_HEAD',
     'if [ "$CI_PIPELINE_EVENT" = "pull_request" ]; then',
