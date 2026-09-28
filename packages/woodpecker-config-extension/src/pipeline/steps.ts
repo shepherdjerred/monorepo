@@ -61,10 +61,16 @@ function verifyCommands(): string[] {
     "  fi",
     "  export CI_CHANGED_BASE",
     "fi",
-    // CI_CHANGED_BASE arrives in the environment, resolved before this step
-    // was generated. It is empty when the branch has never gone green, which
-    // correctly makes turbo compare against nothing and build everything.
-    'if [ -n "$CI_CHANGED_BASE" ]; then export TURBO_SCM_BASE="$CI_CHANGED_BASE" TASKNOTES_COVERAGE_BASE="$CI_CHANGED_BASE"; fi',
+    // CI_CHANGED_BASE is empty before the first green main build. Keep the
+    // full Turbo build, but compare coverage with a real predecessor instead
+    // of the just-fetched origin/main, which may already equal HEAD.
+    'if [ -n "$CI_CHANGED_BASE" ]; then',
+    '  export TURBO_SCM_BASE="$CI_CHANGED_BASE" TASKNOTES_COVERAGE_BASE="$CI_CHANGED_BASE"',
+    'elif [ "$CI_PIPELINE_EVENT" = "pull_request" ]; then',
+    '  export TASKNOTES_COVERAGE_BASE="origin/$CI_REPO_DEFAULT_BRANCH"',
+    "else",
+    '  export TASKNOTES_COVERAGE_BASE="$(git rev-parse --verify HEAD^)"',
+    "fi",
     // CI is the cross-machine cache producer and consumer; developer shells
     // stay local-only to avoid large transfers over weak links.
     'export TURBO_CACHE="local:rw,remote:rw"',
