@@ -5,12 +5,76 @@ sidebar:
   order: 8
 ---
 
-The main Buildkite pipeline is the only writer for repository-backed homelab
-releases. You do not run these steps by hand — merging to `main` runs one
-`release-root` command that owns the complete sequence.
+The main CI pipeline normally writes repository-backed homelab releases. The
+first Woodpecker release uses the one-time bootstrap procedure below because
+the new pipeline cannot run until its own cluster resources have been released.
 
 This page is for reading the pipeline while it works, and for knowing what a
 failed stage means.
+
+## Bootstrap Woodpecker across the cutover
+
+1. Before merging the cutover PR, inspect the live `main` ruleset. If its old
+   Buildkite required check cannot complete, apply the targeted GitHub OpenTofu
+   ruleset change below with the old context override. Inspect the plan first:
+   it must change only the admin role's bypass to **pull-request-only** and keep
+   `buildkite/monorepo/pr` required. Review the PR's local verification and
+   chart dry run, then use that bypass to merge the PR. Do not report the
+   retired Buildkite check as passing. Confirm the merged commit is the current
+   `main`. Reserve a Woodpecker build number by canceling a pipeline before it
+   starts release work; do not reuse a number that published charts.
+2. From a clean checkout of that exact `main` commit, run the bootstrap script
+   once with `--dry-run`. It validates the chart inventory and the exact root
+   request without changing the cluster.
+3. Supply the existing ArgoCD and ChartMuseum credentials through the
+   configured credential wrapper, then run the same command without
+   `--dry-run`. The script suspends root auto-sync, publishes the complete chart
+   set at the reserved number plus 1,000,000, and calls `release-root` with an
+   exact revision and stable request ID.
+4. Check the `apps` ArgoCD Application and Woodpecker server, agent, and config
+   extension health. Trigger a PR pipeline and require its
+   `ci/woodpecker/pr/ci-complete` status to pass. The first main GitHub OpenTofu
+   apply defers the required-check switch until this status exists on a real
+   open PR. Trigger a current-main Woodpecker pipeline after that proof, watch
+   its GitHub OpenTofu workflow, then verify the GitHub ruleset requires the new
+   context.
+5. Only after the new required check is active and healthy, retire the old
+   Buildkite requirement and service through the repository-owned release path.
+   Confirm the final ruleset has the declared PR-only admin bypass and does not
+   allow direct-push bypass.
+
+The premerge OpenTofu change uses the existing 1Password-backed backend and
+GitHub token. Run this only from the reviewed cutover branch. Stop if the plan
+changes the required contexts or any resource besides the `main` ruleset.
+The normal GitHub OpenTofu apply later uses the Woodpecker context default.
+
+```bash
+export TF_VAR_github_token='op://v64ocnykdqju4ui6j6pua56xw4/34gzcrhwdm34lpadyly3rcsu44/TOFU_GITHUB_TOKEN'
+op run --env-file packages/homelab/src/tofu/.env -- \
+  tofu -chdir=packages/homelab/src/tofu/github plan -input=false \
+  -target=github_repository_ruleset.monorepo_main \
+  -var=required_ci_status_context=buildkite/monorepo/pr
+op run --env-file packages/homelab/src/tofu/.env -- \
+  tofu -chdir=packages/homelab/src/tofu/github apply -input=false \
+  -target=github_repository_ruleset.monorepo_main \
+  -var=required_ci_status_context=buildkite/monorepo/pr
+unset TF_VAR_github_token
+```
+
+After merging, run the bootstrap script from the exact `main` commit:
+
+```bash
+bootstrap=packages/homelab/scripts/ci/bootstrap-woodpecker.ts
+commit="EXACT_MAIN_SHA"
+number="RESERVED_BUILD_NUMBER"
+bun --no-install "$bootstrap" "$commit" "$number" --dry-run
+bun --no-install "$bootstrap" "$commit" "$number"
+```
+
+The script refuses a dirty checkout, a commit other than current `main`, or a
+missing credential. It leaves the generated release inventory in a temporary
+directory named in its output. If publication or reconciliation fails, inspect
+that inventory and the ArgoCD operation before retrying with the same number.
 
 ## The sequence
 
@@ -177,7 +241,9 @@ full-source operation must report the restored root Application as `Synced` and
 every validated prune candidate as `Pruned`. A fully applied early batch or
 prune wave is not enough.
 
-Buildkite retries reuse the build UUID. `release-root` adopts an operation only
+A CI retry reuses the request id, which is derived from the pipeline number
+rather than generated — a random id would make a retry look like a different
+requester. `release-root` adopts an operation only
 when the UUID and revision match and its selected resources are exactly one
 desired batch, or when it is the unselected final prune. An unrelated active
 operation or an unexpected selection remains a hard failure. The operation must
@@ -198,8 +264,8 @@ Argo's ordinary sync request as well as the identity metadata.
 A release blocked here means the current operation must be inspected before
 retrying. Confirm the operation's request ID, revision, selected resources,
 phase marker, and prune flag in ArgoCD. Do not terminate it based on revision
-alone. Once the observed operation belongs to the same Buildkite build, retry
-the failed Buildkite job; the same command and build UUID adopt only that exact
+alone. Once the observed operation belongs to the same CI pipeline, restart
+the failed workflow; the same command and request id adopt only that exact
 operation and continue the release.
 
 ```bash
@@ -212,7 +278,7 @@ After the exact root operation reports all selected resources applied, the
 release process deliberately terminates its aggregate wait. This leaves an
 ArgoCD terminal message that does not describe release failure.
 
-Use the `homelab-release-result.json` artifact and the Buildkite
+Use the `homelab-release-result.json` handoff object and the CI
 `homelab-release-result` annotation as the receipt:
 
 - `applied-verified` means the request ID, revision, selected resource results,
@@ -241,7 +307,7 @@ sync does not run that client-side check.
 ## Where it lives
 
 The workflow is defined by the
-[main release pipeline](https://github.com/shepherdjerred/monorepo/blob/main/.buildkite/pipeline.yml)
+[main release lane](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/lanes/release.ts)
 and the
 [Argo operator command](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/scripts/argocd/argocd.ts).
 

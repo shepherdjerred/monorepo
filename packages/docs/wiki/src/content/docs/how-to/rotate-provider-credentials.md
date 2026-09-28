@@ -14,7 +14,7 @@ consumer proves the replacement works, then revoke it.
 
 | Provider  | Stack                  | Applied by | Credential in 1Password                   |
 | --------- | ---------------------- | ---------- | ----------------------------------------- |
-| OpenAI    | `openai`               | Buildkite  | `OPENAI_API_KEY` field                    |
+| OpenAI    | `openai`               | Woodpecker | `OPENAI_API_KEY` field                    |
 | Google    | `google`               | Operator   | Per-workload item, written by OpenTofu    |
 | Anthropic | `anthropic-federation` | Operator   | Per-workload ID item, written by OpenTofu |
 
@@ -149,5 +149,5 @@ workload until that copy is updated.
   credential model.
 - [Attribute LLM spend](/how-to/attribute-llm-spend/) — the live and billed
   spend series, and rotating the billing worker's admin keys.
-- [Rotate a Buildkite CI credential](/how-to/rotate-buildkite-credentials/) — the
+- [Rotate a CI credential](/how-to/rotate-ci-credentials/) — the
   release refiner's `OPENAI_API_KEY` grant.

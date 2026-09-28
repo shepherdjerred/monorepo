@@ -77,6 +77,9 @@ logs/
 # Test coverage output
 coverage/
 /.ci-reports/
+# Written by `release-root`, including its dry run; a receipt for one
+# execution, never source.
+/packages/homelab/homelab-release-result.json
 
 # Monarch hardcoded order data (contains personal purchase history)
 packages/monarch/src/lib/costco/costco-orders.json
@@ -130,4 +133,4 @@ packages/streambot/scratch/
 
 # transient bun-publish auth indirection (scripts/release/publish-npm.ts writes + removes it)
 .npmrc
-**/.eslintcache-buildkite
+**/.eslintcache-ci-scripts

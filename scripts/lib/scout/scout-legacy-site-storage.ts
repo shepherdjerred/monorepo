@@ -7,9 +7,8 @@ import {
   isMissingS3Object,
   s3SyncStaticSite,
   staticSiteFilePaths,
-  SEAWEEDFS_AWS_ENV,
-  SEAWEEDFS_ENDPOINT,
 } from "../s3-static-site.ts";
+import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "../seaweedfs.ts";
 import {
   CANONICAL_DIGEST_PATTERN,
   parseLegacyScoutReleaseManifest,

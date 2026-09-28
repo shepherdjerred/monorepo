@@ -78,7 +78,7 @@ describe("packagesForStagedPaths", () => {
       packagesForStagedPaths(
         [
           "scripts/checks/staged-package-quality.ts",
-          ".buildkite/scripts/ci-changed.ts",
+          "ci/scripts/ci-changed.ts",
         ],
         fixtures,
       ),
@@ -88,7 +88,7 @@ describe("packagesForStagedPaths", () => {
   test("maps Buildkite ESLint suppressions and tsconfig onto root-scripts", () => {
     expect(
       packagesForStagedPaths(
-        [".buildkite/eslint-suppressions.json", ".buildkite/tsconfig.json"],
+        ["ci/eslint-suppressions.json", "ci/tsconfig.json"],
         fixtures,
       ),
     ).toEqual(["@shepherdjerred/root-scripts"]);

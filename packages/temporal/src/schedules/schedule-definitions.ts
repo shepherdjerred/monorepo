@@ -243,7 +243,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     memo: "Weekly ZFS pool scrub + autotrim (zfspv-pool-nvme, zfspv-pool-hdd)",
   },
   {
-    id: "buildkite-uv-cache-prune-weekly",
+    id: "ci-uv-cache-prune-weekly",
     workflowType: "runUvCachePruneWorkflow",
     args: [],
     timing: {
@@ -255,10 +255,10 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 30-minute attempts plus exponential backoff and workflow overhead.
     workflowExecutionTimeout: "2 hours",
-    memo: "Weekly Buildkite uv cache prune on the CI node",
+    memo: "Weekly uv cache prune on the CI node",
   },
   {
-    id: "buildkite-trivy-db-refresh",
+    id: "ci-trivy-db-refresh",
     workflowType: "runTrivyDbRefreshWorkflow",
     args: [],
     timing: {
@@ -270,7 +270,21 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 30-minute attempts plus exponential backoff and workflow overhead.
     workflowExecutionTimeout: "2 hours",
-    memo: "Buildkite Trivy vulnerability database refresh every six hours",
+    memo: "Trivy vulnerability database refresh every six hours",
+  },
+  {
+    id: "ci-io-telemetry-daily",
+    workflowType: "runCiIoTelemetry",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "15 7 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Daily CI I/O recording rule and dashboard health check",
   },
   ...SECURITY_SCHEDULES,
   {

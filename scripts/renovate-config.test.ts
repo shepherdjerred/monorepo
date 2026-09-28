@@ -199,7 +199,7 @@ test("drives Playwright upgrades from the official image source only", async () 
   });
 
   const dockerfile = await Bun.file(
-    `${root}/.buildkite/ci-playwright/Dockerfile`,
+    `${root}/ci/ci-playwright/Dockerfile`,
   ).text();
   expect(dockerfile).toContain(
     "# renovate: datasource=docker depName=mcr.microsoft.com/playwright",
@@ -341,11 +341,6 @@ test("updates application Dockerfile tool pins without hardcoded test fixtures",
   expect(pins).toEqual([
     { depName: "uv", currentValue: expect.stringMatching(/^\d/) },
     { depName: "yt-dlp/yt-dlp", currentValue: expect.stringMatching(/^\d/) },
-    {
-      depName: "realm/SwiftLint",
-      currentValue: expect.stringMatching(/^\d/),
-    },
-    { depName: "uv", currentValue: expect.stringMatching(/^\d/) },
   ]);
 
   const ytDlpRule = config.packageRules.find(
@@ -359,65 +354,6 @@ test("updates application Dockerfile tool pins without hardcoded test fixtures",
     groupName: "yt-dlp image binary",
     matchDepNames: ["yt-dlp/yt-dlp"],
     matchFileNames: ["packages/streambot/Dockerfile"],
-  });
-});
-
-test("keeps the SwiftLint version pin synchronized between the ci-image Dockerfile and its toolchain-script fallback", async () => {
-  const config = RenovateConfigSchema.parse(
-    await Bun.file(`${root}/renovate.json`).json(),
-  );
-
-  const dockerfileManager = config.customManagers.find((candidate) =>
-    candidate.managerFilePatterns.includes(".buildkite/ci-image/Dockerfile"),
-  );
-  if (dockerfileManager === undefined) {
-    throw new Error("ci-image Dockerfile ARG Renovate manager is missing");
-  }
-  const dockerfileExpression = dockerfileManager.matchStrings[0];
-  if (dockerfileExpression === undefined) {
-    throw new Error("ci-image Dockerfile ARG matcher is missing");
-  }
-  const dockerfileSource = await Bun.file(
-    `${root}/.buildkite/ci-image/Dockerfile`,
-  ).text();
-  const dockerfilePin = [
-    ...dockerfileSource.matchAll(new RegExp(dockerfileExpression, "gm")),
-  ].find((match) => match.groups?.["depName"] === "realm/SwiftLint");
-  const dockerfileValue = dockerfilePin?.groups?.["currentValue"];
-  if (dockerfileValue === undefined) {
-    throw new Error("ci-image Dockerfile did not yield a realm/SwiftLint pin");
-  }
-
-  const scriptManager = config.customManagers.find((candidate) =>
-    candidate.managerFilePatterns.includes(".buildkite/scripts/toolchain.sh"),
-  );
-  if (scriptManager === undefined) {
-    throw new Error("toolchain.sh SwiftLint Renovate manager is missing");
-  }
-  const scriptExpression = scriptManager.matchStrings[0];
-  if (scriptExpression === undefined) {
-    throw new Error("toolchain.sh SwiftLint matcher is missing");
-  }
-  const scriptSource = await Bun.file(
-    `${root}/.buildkite/scripts/toolchain.sh`,
-  ).text();
-  const scriptMatch = new RegExp(scriptExpression).exec(scriptSource);
-  const scriptValue = scriptMatch?.groups?.["currentValue"];
-  if (scriptValue === undefined) {
-    throw new Error("toolchain.sh did not yield a SwiftLint pin");
-  }
-
-  expect(scriptValue).toBe(dockerfileValue);
-  expect(scriptValue).toBe("0.61.0");
-
-  const swiftlintRule = config.packageRules.find(
-    (candidate) => candidate.groupName === "SwiftLint",
-  );
-  expect(swiftlintRule).toEqual({
-    description:
-      "Keep the SwiftLint version pin synchronized between the ci-image Dockerfile ARG and its toolchain-script fallback",
-    groupName: "SwiftLint",
-    matchDepNames: ["realm/SwiftLint"],
   });
 });
 

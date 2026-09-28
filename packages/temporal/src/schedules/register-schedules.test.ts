@@ -118,10 +118,11 @@ test.each(["beta", "prod"] as const)(
 
 describe("central Workflow schedule routing", () => {
   const definitions = [
-    ["buildkite-bun-cache-gc", "runBunCacheGcWorkflow", "1 hour"],
+    ["ci-bun-cache-gc", "runBunCacheGcWorkflow", "1 hour"],
     ["kometa-daily", "runKometaWorkflow", "2 hours"],
-    ["buildkite-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
-    ["buildkite-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
+    ["ci-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
+    ["ci-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
+    ["ci-io-telemetry-daily", "runCiIoTelemetry", "30 minutes"],
     ["turbo-cache-clean-daily", "runTurboCacheCleanWorkflow", "30 minutes"],
   ] as const;
 
@@ -470,6 +471,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runKometaWorkflow",
   "runUvCachePruneWorkflow",
   "runTrivyDbRefreshWorkflow",
+  "runCiIoTelemetry",
   "runMainVulnScanWorkflow",
   "runLinkRotScanWorkflow",
   "runTurboCacheCleanWorkflow",

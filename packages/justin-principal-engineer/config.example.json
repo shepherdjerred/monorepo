@@ -8,8 +8,8 @@
     "team": "SJ",
     "apiKey": "op://Automation/Linear/credential"
   },
-  "buildkite": {
-    "apiToken": "op://Automation/Buildkite/credential"
+  "woodpecker": {
+    "apiToken": "op://Automation/Woodpecker/credential"
   },
   "pinchtab": {
     "configPath": "/Users/jerred/Library/Application Support/pinchtab/config.json"

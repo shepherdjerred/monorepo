@@ -56,6 +56,7 @@ import type {
 } from "#activities/scout/scout-season-refresh.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab/homelab-audit.ts";
 import { runProtobufWatch as _runProtobufWatch } from "./ci/protobuf-watch.ts";
+import { runCiIoTelemetry as _runCiIoTelemetry } from "./ci/ci-io-telemetry.ts";
 import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
 import { monitorReportFreshness as _monitorReportFreshness } from "./scout/report-freshness.ts";
 import { deliverReportWorkflow as _deliverReportWorkflow } from "./scout/report-delivery.ts";
@@ -63,12 +64,12 @@ import type { ReportDeliveryResult } from "#activities/reports/report-delivery.t
 import type { ReportEnvelopeV1 } from "#shared/reports/report.ts";
 import type { RunHomelabAuditWorkflowInput } from "./homelab/homelab-audit.ts";
 import { agentTaskWorkflow as _agentTaskWorkflow } from "./agent-task.ts";
-import { cancelBuildkiteBuildsWorkflow as _cancelBuildkiteBuildsWorkflow } from "./ci/cancel-buildkite-builds.ts";
+import { cancelCiPipelinesWorkflow as _cancelCiPipelinesWorkflow } from "./ci/cancel-ci-pipelines.ts";
 import { checkPrMergeConflictsWorkflow as _checkPrMergeConflictsWorkflow } from "./ci/check-pr-merge-conflicts.ts";
 import { pollWorkflowFailuresWorkflow as _pollWorkflowFailuresWorkflow } from "./workflow-failure-watch.ts";
 import type { PollWorkflowFailuresResult } from "#activities/maintenance/workflow-failure/workflow-failure-watch.ts";
 import type {
-  CancelBuildkiteBuildsInput,
+  CancelCiPipelinesInput,
   CheckPrMergeConflictsInput,
 } from "#shared/schemas.ts";
 import type { AgentTaskInput } from "#shared/agent/agent-task.ts";
@@ -151,6 +152,10 @@ export async function runKometaWorkflow(): Promise<void> {
 
 export async function runMainVulnScanWorkflow(): Promise<void> {
   return runMainVulnScanWorkflowImplementation();
+}
+
+export async function runCiIoTelemetry(): Promise<void> {
+  return _runCiIoTelemetry();
 }
 
 export async function runLinkRotScanWorkflow(): Promise<void> {
@@ -353,10 +358,10 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   return _agentTaskWorkflow(input);
 }
 
-export async function cancelBuildkiteBuildsWorkflow(
-  input: CancelBuildkiteBuildsInput,
+export async function cancelCiPipelinesWorkflow(
+  input: CancelCiPipelinesInput,
 ): Promise<void> {
-  return _cancelBuildkiteBuildsWorkflow(input);
+  return _cancelCiPipelinesWorkflow(input);
 }
 
 export async function checkPrMergeConflictsWorkflow(

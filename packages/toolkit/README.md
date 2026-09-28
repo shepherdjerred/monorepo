@@ -26,21 +26,21 @@ bun run install:local
 Platform commands delegate to native CLIs. Explicit flags and environment
 values override the monorepo defaults.
 
-| Command     | Native CLI    | Monorepo default                  |
-| ----------- | ------------- | --------------------------------- |
-| `gh`        | `gh`          | `GH_REPO=shepherdjerred/monorepo` |
-| `bk`        | `bk`          | Buildkite organization `sjerred`  |
-| `git-spice` | `git-spice`   | Current checkout                  |
-| `linear`    | `linear`      | `--workspace sjerred`             |
-| `posthog`   | `posthog-cli` | Project `549883`                  |
-| `grafana`   | `gcx`         | Context `homelab`                 |
-| `prom`      | `gcx metrics` | Context `homelab`                 |
-| `loki`      | `gcx logs`    | Context `homelab`                 |
-| `tempo`     | `gcx traces`  | Context `homelab`                 |
-| `temporal`  | `temporal`    | `--profile homelab`               |
-| `argocd`    | `argocd`      | Homelab server and `--grpc-web`   |
-| `cf`        | `cf`          | Native configured context         |
-| `tailscale` | `tailscale`   | Native local daemon               |
+| Command      | Native CLI       | Monorepo default                                     |
+| ------------ | ---------------- | ---------------------------------------------------- |
+| `gh`         | `gh`             | `GH_REPO=shepherdjerred/monorepo`                    |
+| `woodpecker` | `woodpecker-cli` | Woodpecker CI; server and token from the environment |
+| `git-spice`  | `git-spice`      | Current checkout                                     |
+| `linear`     | `linear`         | `--workspace sjerred`                                |
+| `posthog`    | `posthog-cli`    | Project `549883`                                     |
+| `grafana`    | `gcx`            | Context `homelab`                                    |
+| `prom`       | `gcx metrics`    | Context `homelab`                                    |
+| `loki`       | `gcx logs`       | Context `homelab`                                    |
+| `tempo`      | `gcx traces`     | Context `homelab`                                    |
+| `temporal`   | `temporal`       | `--profile homelab`                                  |
+| `argocd`     | `argocd`         | Homelab server and `--grpc-web`                      |
+| `cf`         | `cf`             | Native configured context                            |
+| `tailscale`  | `tailscale`      | Native local daemon                                  |
 
 Everything after the selected platform command is preserved, including
 `--help`, `--version`, and the `--` argument boundary. The child inherits the
@@ -49,7 +49,7 @@ status or signal and returns 127 when the native executable is missing.
 
 ```bash
 toolkit gh pr view
-toolkit bk build list --pipeline monorepo --branch main
+toolkit woodpecker pipeline ls shepherdjerred/monorepo
 toolkit linear issue view SJ-123
 toolkit posthog api search read-data-schema
 toolkit prom query 'up == 0'
@@ -69,12 +69,12 @@ Common plumbing such as `git`, `bun`, `kubectl`, `helm`, `tofu`, `aws`, `op`,
 
 - a local merge-tree against freshly fetched `origin/main` and the exact PR
   head;
-- the Buildkite build for that exact head SHA, including authoritative job
-  state and `toolkit bk job log <id> --agent` investigation commands;
+- the Woodpecker pipeline for that exact head SHA, including authoritative job
+  state and `toolkit woodpecker pipeline log show <repo> <pipeline>` investigation commands;
 - GitHub PR/check/review metadata from `gh`.
 
-GitHub’s Buildkite status can lag or describe a different state. The exact-head
-Buildkite build wins when they disagree. Healthy and pending reports exit 0;
+GitHub’s status can lag or describe a different state. The exact-head
+Woodpecker pipeline wins when they disagree. Healthy and pending reports exit 0;
 unhealthy reports exit 1. JSON retains the top-level `prNumber`, `prUrl`,
 `overallStatus`, `checks`, and `nextSteps` fields.
 

@@ -153,8 +153,7 @@ const SCOUT_WORKBENCH_ROOT = "packages/scout-for-lol/packages/frontend/";
 // per-app, per-environment provider credential. Anthropic is federated in
 // production, so these hold OpenAI and Gemini keys only.
 const PROVIDER_CREDENTIAL_WIRING_PATHS = new Set([
-  ".buildkite/pipeline.yml",
-  ".buildkite/scripts/images/smoke-app-in-image.ts",
+  "ci/scripts/images/smoke-app-in-image.ts",
   // Wires the per-workload Gemini key and Anthropic federation identifiers
   // that the operator-applied OpenTofu stacks write to 1Password.
   "packages/homelab/src/cdk8s/src/misc/llm-provider-credentials.ts",
@@ -183,6 +182,8 @@ const CODEX_AND_RELEASE_CREDENTIAL_PATHS = new Set([
   "packages/temporal/src/activities/scout/scout-season-refresh-codex.ts",
   "packages/temporal/src/schedules/schedule-definitions.ts",
   "scripts/checks/ci/check-ci-env.ts",
+  // The Woodpecker release step grants only the release refiner's project key.
+  "packages/woodpecker-config-extension/src/pipeline/lanes/scout.ts",
   "scripts/release/release.ts",
 ]);
 
@@ -437,7 +438,7 @@ function isActiveRuntimePath(
 ): boolean {
   return (
     filePath === "package.json" ||
-    filePath.startsWith(".buildkite/") ||
+    filePath.startsWith("ci/") ||
     (!filePath.startsWith("packages/docs/") &&
       !filePath.startsWith("packages/dotfiles/dot_agents/skills/") &&
       !filePath.includes("/node_modules/") &&
@@ -467,7 +468,7 @@ async function listArchitectureFiles(): Promise<ArchitectureSourceFile[]> {
       "package.json",
       "packages",
       "scripts",
-      ".buildkite",
+      "ci",
     ],
     { cwd: repositoryRoot, capture: true, secret: true },
   );

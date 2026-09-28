@@ -1,8 +1,8 @@
 import type { ReviewProvider } from "@shepherdjerred/code-review";
 import {
-  checksWithBuildkiteSoftFailure,
+  checksAsEvidence,
   fingerprint,
-  parseBuildkiteBuild,
+  parseCiPipeline,
   parseChecks,
   parsePrList,
   parseReviewPage,
@@ -33,6 +33,9 @@ import type {
 } from "#domain/schemas.ts";
 import { WorktreeManager } from "./worktree.ts";
 import { PrHeadChangedDuringRefreshError } from "#domain/errors.ts";
+
+/** Repository slug the Woodpecker CLI addresses. */
+const MONOREPO = "shepherdjerred/monorepo";
 
 export type CommandFleetEnvironmentOptions = {
   repo: string;
@@ -341,105 +344,82 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     });
   }
 
-  async #buildkiteEvidence(
+  /**
+   * Correlate GitHub's checks with the authoritative Woodpecker pipeline.
+   *
+   * GitHub's check summary can lag or describe a different head, so the
+   * pipeline is fetched and its commit compared before any of its evidence is
+   * trusted for this PR.
+   */
+  async #ciEvidence(
     pr: PrIdentity,
     rawChecks: RawCheck[],
   ): Promise<{
     checks: CheckEvidence[];
-    buildkiteCurrentHead: boolean;
-    buildkiteFailure: ReadinessEvidence["buildkiteFailure"];
+    ciCurrentHead: boolean;
+    ciFailure: ReadinessEvidence["ciFailure"];
   }> {
-    const buildkite = rawChecks.find(
-      (check) => check.link?.includes("buildkite.com/") === true,
+    const checks = checksAsEvidence(rawChecks);
+    const ciCheck = rawChecks.find(
+      (check) => check.link?.includes("/pipeline/") === true,
     );
-    if (buildkite?.link === null || buildkite?.link === undefined) {
-      // No Buildkite build to correlate against: nothing is soft-failed and
-      // there is no current-head Buildkite evidence.
-      return {
-        checks: checksWithBuildkiteSoftFailure(rawChecks, []),
-        buildkiteCurrentHead: false,
-        buildkiteFailure: null,
-      };
+    if (ciCheck?.link === null || ciCheck?.link === undefined) {
+      return { checks, ciCurrentHead: false, ciFailure: null };
     }
-    const url = new URL(buildkite.link);
-    const parts = url.pathname.split("/").filter((part) => part.length > 0);
-    const buildsIndex = parts.indexOf("builds");
-    const organization = parts[0];
-    const pipeline = parts[1];
-    const buildNumber = parts[buildsIndex + 1];
-    if (
-      buildsIndex === -1 ||
-      organization === undefined ||
-      pipeline === undefined ||
-      buildNumber === undefined
-    ) {
-      return {
-        checks: checksWithBuildkiteSoftFailure(rawChecks, []),
-        buildkiteCurrentHead: false,
-        buildkiteFailure: null,
-      };
+
+    const match = /\/pipeline\/(?<number>\d+)/u.exec(
+      new URL(ciCheck.link).pathname,
+    );
+    const pipelineNumber = match?.groups?.["number"];
+    if (pipelineNumber === undefined) {
+      return { checks, ciCurrentHead: false, ciFailure: null };
     }
-    // Fetch the FULL build (every job) so each check's soft-failure status can
-    // be derived from the authoritative per-job `soft_failed` metadata rather
-    // than a check-name heuristic.
+
     const result = await this.runLocalCommand({
-      executable: "bk",
-      args: [
-        "build",
-        "view",
-        buildNumber,
-        "--pipeline",
-        `${organization}/${pipeline}`,
-        "--json",
-        "--no-input",
-      ],
+      executable: "woodpecker-cli",
+      args: ["pipeline", "show", MONOREPO, pipelineNumber, "--output", "json"],
       cwd: this.#checkout,
       timeoutMs: 120_000,
     });
     if (result.exitCode !== 0) {
-      throw new Error(`Buildkite inspection failed: ${result.stderr.trim()}`);
+      throw new Error(`Woodpecker inspection failed: ${result.stderr.trim()}`);
     }
-    const build = parseBuildkiteBuild(result.stdout);
-    const checks = checksWithBuildkiteSoftFailure(rawChecks, build.jobs);
-    if (build.commit !== pr.headSha) {
-      return { checks, buildkiteCurrentHead: false, buildkiteFailure: null };
+
+    const pipeline = parseCiPipeline(result.stdout);
+    if (pipeline.commit !== pr.headSha) {
+      return { checks, ciCurrentHead: false, ciFailure: null };
     }
-    const failedJobs = build.jobs
-      .filter(
-        (job) =>
-          job.soft_failed !== true &&
-          (job.state === "failed" || job.state === "broken"),
+
+    // Earliest failure first: it is the most likely cause, and later ones are
+    // often knock-on effects of it.
+    const failed = pipeline.workflows
+      .filter((workflow) =>
+        ["failure", "error", "killed"].includes(workflow.state.toLowerCase()),
       )
-      .sort((left, right) => {
-        if (left.state !== right.state) {
-          return left.state === "failed" ? -1 : 1;
-        }
-        return (left.started_at ?? "").localeCompare(right.started_at ?? "");
-      });
-    const earliest = failedJobs[0];
+      .sort((left, right) => (left.started ?? 0) - (right.started ?? 0));
+    const earliest = failed[0];
     if (earliest === undefined) {
-      return { checks, buildkiteCurrentHead: true, buildkiteFailure: null };
+      return { checks, ciCurrentHead: true, ciFailure: null };
     }
-    const log = await this.#mustRun("bk", [
-      "job",
-      "log",
-      earliest.id,
-      "--agent",
-      "--format",
-      "markdown",
-      "--max-tokens",
-      "6000",
-      "--no-input",
+
+    const log = await this.#mustRun("woodpecker-cli", [
+      "logs",
+      MONOREPO,
+      pipelineNumber,
+      earliest.name,
     ]);
     return {
       checks,
-      buildkiteCurrentHead: true,
-      buildkiteFailure: {
-        jobId: earliest.id,
+      ciCurrentHead: true,
+      ciFailure: {
+        pipelineNumber: pipeline.number,
         name: earliest.name,
         state: earliest.state,
-        webUrl: earliest.web_url,
-        startedAt: earliest.started_at ?? null,
+        webUrl: ciCheck.link,
+        startedAt:
+          earliest.started === undefined
+            ? null
+            : new Date(earliest.started * 1000).toISOString(),
         log,
       },
     };
@@ -457,18 +437,17 @@ export class CommandFleetEnvironment implements FleetEnvironment {
       this.#reviews(pr),
       this.#conflict(pr),
     );
-    // Resolve each check's soft-failure status against the Buildkite build's
-    // per-job metadata BEFORE computing hard failures, so a soft Semgrep/Trivy
-    // finding is not counted as blocking and a hard scanner failure is not
-    // ignored.
-    const { checks, buildkiteCurrentHead, buildkiteFailure } =
-      await this.#buildkiteEvidence(pr, rawChecks);
+    const { checks, ciCurrentHead, ciFailure } = await this.#ciEvidence(
+      pr,
+      rawChecks,
+    );
+    // No soft-failure exclusion any more: the advisory lanes exit 0 when their
+    // findings are not fatal, so a failed check is a real failure.
     const hardFailures = checks
       .filter(
         (check) =>
-          !check.softFail &&
-          (check.bucket.toLowerCase() === "fail" ||
-            check.state.toLowerCase() === "failure"),
+          check.bucket.toLowerCase() === "fail" ||
+          check.state.toLowerCase() === "failure",
       )
       .map((check) => check.name);
     const blockingReviews = reviews.findings
@@ -478,8 +457,8 @@ export class CommandFleetEnvironment implements FleetEnvironment {
     const evidence: ReadinessEvidence = {
       headSha: pr.headSha,
       checks,
-      buildkiteCurrentHead,
-      buildkiteFailure,
+      ciCurrentHead,
+      ciFailure,
       conflict,
       reviewFindings: reviews.findings,
       hostedReviewComplete: reviews.hostedReviewComplete,

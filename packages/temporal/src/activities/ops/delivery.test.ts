@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import type { BuildkiteBuild } from "@shepherdjerred/ops-clients/buildkite.ts";
+import type { WoodpeckerPipeline } from "@shepherdjerred/ops-clients/woodpecker.ts";
 import type { OpenPullRequest } from "@shepherdjerred/ops-clients/github.ts";
 import { summarizeLinear } from "@shepherdjerred/ops-clients/linear.ts";
 import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
@@ -39,11 +39,14 @@ function pr(overrides: Partial<OpenPullRequest>): OpenPullRequest {
   };
 }
 
-function build(number: number, state: BuildkiteBuild["state"]): BuildkiteBuild {
+function build(
+  number: number,
+  status: WoodpeckerPipeline["status"],
+): WoodpeckerPipeline {
   return {
     number,
-    state,
-    url: `https://buildkite.com/sjerred/monorepo/builds/${String(number)}`,
+    status,
+    url: `https://woodpecker.sjer.red/repos/1/pipeline/${String(number)}`,
     commit: "0123456789abcdef0123456789abcdef01234567",
     message: "commit",
     createdAt: daysAgo(0.1),
@@ -54,7 +57,7 @@ function build(number: number, state: BuildkiteBuild["state"]): BuildkiteBuild {
 describe("ci", () => {
   test("a failed verdict on main is an error; a pass is ok", () => {
     const red = mapCi(
-      { latest: build(11, "running"), verdict: build(10, "failed") },
+      { latest: build(11, "running"), verdict: build(10, "failure") },
       context,
     );
     expect(red.signals[0]).toMatchObject({
@@ -63,7 +66,7 @@ describe("ci", () => {
       attributes: { build: 10, latestBuild: 11, latestState: "running" },
     });
     const green = mapCi(
-      { latest: build(10, "passed"), verdict: build(10, "passed") },
+      { latest: build(10, "success"), verdict: build(10, "success") },
       context,
     );
     expect(green.signals[0]?.severity).toBe("ok");

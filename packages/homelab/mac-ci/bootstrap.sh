@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
-# Provision a fresh macOS host (Mac Mini) as a Buildkite CI agent on the
-# `macos` queue.
+# Provision a fresh macOS host (Mac Mini) as a Woodpecker CI agent running the
+# local backend, which is how the native Swift/Xcode lanes reach real hardware.
 #
 # This is a THIN, idempotent, re-runnable bootstrap. The Mac is treated as a
 # headless CI appliance, deliberately kept SEPARATE from the personal chezmoi
@@ -9,12 +9,14 @@
 # servers. Nothing here touches your personal shell, defaults, or apps.
 #
 # Usage:
-#   BUILDKITE_AGENT_TOKEN="…" ./bootstrap.sh
+#   WOODPECKER_SERVER="…" WOODPECKER_AGENT_SECRET="…" ./bootstrap.sh
 #
-# Get the token from 1Password (item "Buildkite Agent Token") — it's the same
-# per-cluster token the in-cluster agents use, so no new token is needed:
-#   BUILDKITE_AGENT_TOKEN="$(op read 'op://<vault>/Buildkite Agent Token/<field>')" \
-#     ./bootstrap.sh
+# The agent secret is the same shared secret the in-cluster agents use, so no
+# new credential is needed — read it from 1Password rather than typing it:
+#   WOODPECKER_AGENT_SECRET="$(op read 'op://<vault>/<item>/<field>')" \
+#     WOODPECKER_SERVER="woodpecker.sjer.red:443" ./bootstrap.sh
+#
+# WOODPECKER_SERVER is the gRPC endpoint, host:port with no scheme.
 #
 # Tailscale enrollment, FileVault, Xcode installation, signing, and the GUI
 # privacy grants are documented manual steps in README.md. They require either
@@ -25,6 +27,9 @@
 
 set -euo pipefail
 
+# Historical name — an already-provisioned Mac has the saved profile at this
+# exact path and restore-power.sh reads it there. Renaming it for tidiness
+# would strand the only copy of the pre-bootstrap power profile.
 POWER_BACKUP_FILE="/var/db/buildkite-mac-ci-pmset-before"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
@@ -39,10 +44,15 @@ if [[ "$(uname -m)" != "arm64" ]]; then
   exit 1
 fi
 
-if [[ -z "${BUILDKITE_AGENT_TOKEN:-}" ]]; then
-  echo "error: BUILDKITE_AGENT_TOKEN is not set." >&2
-  echo "Fetch it from 1Password (item \"Buildkite Agent Token\") and re-run:" >&2
-  echo "  BUILDKITE_AGENT_TOKEN=\"\$(op read 'op://<vault>/Buildkite Agent Token/<field>')\" ./bootstrap.sh" >&2
+if [[ -z "${WOODPECKER_SERVER:-}" ]]; then
+  echo "error: WOODPECKER_SERVER is not set (gRPC host:port, no scheme)." >&2
+  exit 1
+fi
+
+if [[ -z "${WOODPECKER_AGENT_SECRET:-}" ]]; then
+  echo "error: WOODPECKER_AGENT_SECRET is not set." >&2
+  echo "Read the shared agent secret from 1Password and re-run:" >&2
+  echo "  WOODPECKER_AGENT_SECRET=\"\$(op read 'op://<vault>/<item>/<field>')\" ./bootstrap.sh" >&2
   exit 1
 fi
 
@@ -63,22 +73,33 @@ else
 fi
 
 # --- 2. Packages -----------------------------------------------------------
-# buildkite-agent : the CI agent daemon
 # mise            : installs the repository-pinned Bun and Rust versions
 # xcodes          : installs and selects the repository-pinned Xcode
 # xcodegen        : generates QuotaBar and TaskNotes Xcode projects
 # swiftlint       : strict Swift lint and analyzer checks
+# coreutils       : gtimeout, which bounds every generated step (macOS has no
+#                   timeout of its own)
 # tailscale       : tailnet membership (enrolled manually, see README)
-BUILDKITE_FORMULA="buildkite/buildkite/buildkite-agent@3"
-BUILDKITE_SERVICE="buildkite-agent@3"
-echo "==> Trusting the Buildkite Homebrew tap"
-brew tap buildkite/buildkite
-brew trust --formula "$BUILDKITE_FORMULA"
-
 echo "==> Installing native CI packages"
-brew install "$BUILDKITE_FORMULA" mise xcodes xcodegen swiftlint tailscale
+brew install mise xcodes xcodegen swiftlint coreutils tailscale
 
-AGENT_BUILD_PATH="$HOME/.buildkite-agent/builds"
+# Woodpecker ships no Homebrew formula, so the agent is a released binary.
+# Pinned by version rather than tracking latest: the agent and server speak a
+# versioned gRPC protocol, and a silently-upgraded agent is how a working host
+# stops claiming jobs.
+WOODPECKER_AGENT_VERSION="3.18.1"
+WOODPECKER_AGENT_BIN="$HOME/.local/bin/woodpecker-agent"
+AGENT_BUILD_PATH="$HOME/.woodpecker/builds"
+
+if [[ ! -x "$WOODPECKER_AGENT_BIN" ]]; then
+  echo "==> Installing woodpecker-agent $WOODPECKER_AGENT_VERSION"
+  mkdir -p "$(dirname "$WOODPECKER_AGENT_BIN")"
+  ARCHIVE="$(mktemp -d)/agent.tar.gz"
+  curl -fsSL -o "$ARCHIVE" \
+    "https://github.com/woodpecker-ci/woodpecker/releases/download/v${WOODPECKER_AGENT_VERSION}/woodpecker-agent_darwin_arm64.tar.gz"
+  tar -xzf "$ARCHIVE" -C "$(dirname "$WOODPECKER_AGENT_BIN")" woodpecker-agent
+  chmod 755 "$WOODPECKER_AGENT_BIN"
+fi
 
 echo "==> Installing the repository-pinned Bun and Rust toolchains"
 mise install --cd "$REPO_ROOT" --yes bun rust
@@ -92,39 +113,42 @@ mise exec --cd "$REPO_ROOT" -- rustup target add \
   aarch64-apple-darwin \
   x86_64-apple-darwin
 
-# Buildkite checks jobs out below the configured build path, not below this
+# Jobs are checked out below the configured build path, not below this
 # bootstrap checkout. Trust that path so mise can load the job checkout's
 # repository-pinned tools when the native preflight runs through its shims.
-echo "==> Trusting Buildkite checkout configs"
+echo "==> Trusting CI checkout configs"
 mise settings set trusted_config_paths "$AGENT_BUILD_PATH"
 
 # --- 3. Agent configuration ------------------------------------------------
-# Write the agent config with the macos-queue tag. chmod 600 — it holds the
-# token. `git-clean-flags="-ffxdq"` forces a clean working tree on every build
-# (macOS jobs run natively on a persistent host, so we scrub between builds).
-# `shell` is pinned because the native steps source macos-native-env.sh, which
-# needs bash; Kubernetes steps get the same guarantee from BUILDKITE_SHELL in
-# their pod spec, and this queue has no pod spec to carry it.
-CFG_DIR="$(brew --prefix)/etc/buildkite-agent"
-CFG_FILE="$CFG_DIR/buildkite-agent.cfg"
-mkdir -p "$CFG_DIR"
+# The agent reads its configuration from the environment. chmod 600 — it holds
+# the shared agent secret.
+#
+# WOODPECKER_BACKEND=local is the whole reason this host exists: Swift and
+# Xcode cannot run in a Linux container, so these jobs run directly on the host
+# as the logged-in user. There is no isolation here, which is why the generated
+# macOS lanes carry no credentials and why fork pull requests must never reach
+# this agent.
+#
+# The platform label is what the generated workflows select on; the Linux
+# agents do not carry it.
+CFG_FILE="$HOME/.woodpecker/agent.env"
+mkdir -p "$(dirname "$CFG_FILE")"
 echo "==> Writing $CFG_FILE"
 umask 077
 cat >"$CFG_FILE" <<EOF
 # Managed by packages/homelab/mac-ci/bootstrap.sh — do not hand-edit.
-token="$BUILDKITE_AGENT_TOKEN"
-name="%hostname-%spawn"
-tags="queue=macos,os=darwin,arch=$(uname -m)"
-tags-from-host=false
-build-path="$AGENT_BUILD_PATH"
-git-clean-flags="-ffxdq"
-shell="/bin/bash -e -c"
+WOODPECKER_SERVER=$WOODPECKER_SERVER
+WOODPECKER_AGENT_SECRET=$WOODPECKER_AGENT_SECRET
+WOODPECKER_BACKEND=local
+WOODPECKER_AGENT_LABELS=platform=darwin/$(uname -m)
+WOODPECKER_BACKEND_LOCAL_TEMP_DIR=$AGENT_BUILD_PATH
+WOODPECKER_MAX_WORKFLOWS=1
 EOF
 chmod 600 "$CFG_FILE"
 umask 022
 
 # --- 4. Power management — never sleep -------------------------------------
-# A CI agent that sleeps drops off Buildkite and hangs any job dispatched to it
+# A CI agent that sleeps drops off the server and hangs any job dispatched to it
 # (this is why the Mini kept "falling asleep" and never held a stable agent). A
 # Mac Mini is AC-powered with no battery, so force a permanent always-on
 # profile. `-c` scopes this to the charger (AC Power) profile only — the same
@@ -176,17 +200,56 @@ if [[ "$screen_lock_status" != *"screenLock is off"* ]]; then
 fi
 
 # --- 6. Start the agent as a login service ---------------------------------
-# brew services installs a per-user LaunchAgent (runs on login). FileVault and
+# A per-user LaunchAgent (runs on login) — NOT a LaunchDaemon. FileVault and
 # auto-login are intentionally incompatible here: after a cold boot, a human
-# unlocks the disk and logs in before the agent can reconnect. A LaunchAgent
-# (user context) — not a LaunchDaemon — is required for keychain signing and
-# the Accessibility-approved TaskNotes UI test runner.
-echo "==> Starting buildkite-agent service"
-brew services restart "$BUILDKITE_SERVICE"
+# unlocks the disk and logs in before the agent can reconnect. User context is
+# required for keychain signing and the Accessibility-approved TaskNotes UI
+# test runner; a daemon has neither.
+#
+# The secret reaches the agent through the chmod-600 env file rather than the
+# plist, because a LaunchAgent plist is world-readable.
+LAUNCH_AGENT_LABEL="red.sjer.woodpecker-agent"
+LAUNCH_AGENT_PLIST="$HOME/Library/LaunchAgents/$LAUNCH_AGENT_LABEL.plist"
+AGENT_LOG_DIR="$HOME/.woodpecker/logs"
+mkdir -p "$(dirname "$LAUNCH_AGENT_PLIST")" "$AGENT_LOG_DIR" "$AGENT_BUILD_PATH"
+
+echo "==> Writing $LAUNCH_AGENT_PLIST"
+cat >"$LAUNCH_AGENT_PLIST" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>$LAUNCH_AGENT_LABEL</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-lc</string>
+    <string>set -a; . "$CFG_FILE"; set +a; exec "$WOODPECKER_AGENT_BIN"</string>
+  </array>
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <key>WorkingDirectory</key><string>$AGENT_BUILD_PATH</string>
+  <key>StandardOutPath</key><string>$AGENT_LOG_DIR/agent.log</string>
+  <key>StandardErrorPath</key><string>$AGENT_LOG_DIR/agent.err.log</string>
+</dict>
+</plist>
+EOF
+
+echo "==> Starting $LAUNCH_AGENT_LABEL"
+GUI_TARGET="gui/$(id -u)"
+# Re-runnable: bootstrap fails outright on an already-loaded label, so unload
+# first. Guarded by an explicit lookup rather than a swallowed exit code — a
+# bootout that fails on a service that IS loaded must still stop the script.
+if launchctl print "$GUI_TARGET/$LAUNCH_AGENT_LABEL" >/dev/null; then
+  launchctl bootout "$GUI_TARGET/$LAUNCH_AGENT_LABEL"
+fi
+launchctl bootstrap "$GUI_TARGET" "$LAUNCH_AGENT_PLIST"
+launchctl kickstart -k "$GUI_TARGET/$LAUNCH_AGENT_LABEL"
 
 echo
-echo "==> Done. Agent service configured for the 'macos' queue."
-echo "    Verify it's connected: https://buildkite.com/organizations/sjerred/agents"
+echo "==> Done. Agent registered with $WOODPECKER_SERVER."
+echo "    Verify it's connected: https://woodpecker.sjer.red/admin/agents"
+echo "    Agent log: $AGENT_LOG_DIR/agent.log"
 echo
 echo "    Remaining MANUAL steps (see README.md):"
 echo "      1. Join the tailnet:  sudo tailscaled install-system-daemon && sudo tailscale up"

@@ -21,9 +21,9 @@ without leaking payloads.
 | `posthog.ts`      | HogQL: 24-hour pageviews by `site_key` and host, and the top pages.                                              |
 | `loki.ts`         | Instant LogQL metric queries, including error-line volume per namespace.                                         |
 | `tempo.ts`        | TraceQL search for error and slow traces; flags a full result page as truncated.                                 |
-| `buildkite.ts`    | The newest build and the newest pass/fail verdict of a branch.                                                   |
+| `woodpecker.ts`   | The newest push pipeline and the newest verdict of a branch.                                                     |
 
-Unknown enum values from an upstream (a new Argo health, a Buildkite state,
+Unknown enum values from an upstream (a new Argo health, a Woodpecker status,
 a Linear state type) fail schema validation instead of being guessed.
 
 ```bash

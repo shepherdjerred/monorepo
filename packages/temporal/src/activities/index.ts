@@ -18,7 +18,7 @@ import { scoutSeasonRefreshActivities } from "./scout/scout-season-refresh.ts";
 import { veleroOrphanAuditActivities } from "./homelab/velero-orphan-audit.ts";
 import { veleroR2OrphanAuditActivities } from "./homelab/velero-r2-orphan-audit.ts";
 import { outcomeActivities } from "./outcome.ts";
-import { cancelBuildkiteBuildsActivities } from "./cancel-buildkite-builds.ts";
+import { cancelCiPipelinesActivities } from "./cancel-ci-pipelines.ts";
 import { checkPrMergeConflictsActivities } from "./maintenance/check-pr-merge-conflicts.ts";
 import { llmCatalogRefreshActivities } from "./agent/llm-catalog-refresh.ts";
 import { scoutImageGcActivities } from "./scout/scout-image-gc.ts";
@@ -41,6 +41,7 @@ import { reportDeliveryActivities } from "./reports/report-delivery.ts";
 import { protobufWatchActivities } from "./maintenance/protobuf-watch.ts";
 import { tasknotesCanaryActivities } from "./maintenance/tasknotes-canary.ts";
 import { reportFreshnessActivities } from "./reports/report-freshness.ts";
+import { ciIoObservabilityActivities } from "./maintenance/ci-io-observability.ts";
 import { freshrssActivities } from "./maintenance/freshrss.ts";
 import { scoutBryanBucksActivities } from "./scout/scout-bryan-bucks.ts";
 import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
@@ -75,6 +76,7 @@ export const infraActivities = {
   ...homelabCrdImportsRefreshActivities,
   ...tasknotesCanaryActivities,
   ...golinkClusterActivities,
+  ...ciIoObservabilityActivities,
   ...opsActivities,
 };
 
@@ -83,7 +85,7 @@ export const repoActivities = {
   ...depsSummaryActivities,
   ...depsSummaryLegacyActivities,
   ...golinkSyncActivities,
-  ...cancelBuildkiteBuildsActivities,
+  ...cancelCiPipelinesActivities,
   ...checkPrMergeConflictsActivities,
   ...llmCatalogRefreshActivities,
   ...pokeemeraldDataRefreshActivities,

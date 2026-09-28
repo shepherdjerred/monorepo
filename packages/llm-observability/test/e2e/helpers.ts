@@ -11,10 +11,27 @@ import { trace, context } from "@opentelemetry/api";
 import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
 import { LlmArchiveSpanProcessor } from "#src/archive-span-processor.ts";
 import { type ArchiveConfig } from "#src/archive-uploader.ts";
+import {
+  E2E_MINIO_HOST_VARIABLE,
+  E2E_TEMPO_HOST_VARIABLE,
+} from "./run-core.ts";
 
-export const TEMPO_QUERY_URL = "http://localhost:3200";
-export const TEMPO_OTLP_URL = "http://localhost:4318";
-export const MINIO_ENDPOINT = "http://localhost:9000";
+function requireHost(variable: string): string {
+  const host = Bun.env[variable];
+  if (host === undefined || host === "") {
+    throw new Error(
+      `${variable} is unset: run the e2e suite through run.ts or run-ci.ts`,
+    );
+  }
+  return host;
+}
+
+const TEMPO_HOST = requireHost(E2E_TEMPO_HOST_VARIABLE);
+const MINIO_HOST = requireHost(E2E_MINIO_HOST_VARIABLE);
+
+export const TEMPO_QUERY_URL = `http://${TEMPO_HOST}:3200`;
+export const TEMPO_OTLP_URL = `http://${TEMPO_HOST}:4318`;
+export const MINIO_ENDPOINT = `http://${MINIO_HOST}:9000`;
 
 export const e2eArchiveConfig: ArchiveConfig = {
   bucket: "llm-archive",

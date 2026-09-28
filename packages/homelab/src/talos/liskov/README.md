@@ -131,11 +131,12 @@ committed).
 ## After the soak
 
 Prometheus slab/ARC data supports the 24Gi `systemReserved` value. Kubernetes
-currently reports approximately 91.5Gi of allocatable memory on liskov, and Buildkite
-has a resource-aware Kueue budget of 80Gi memory / 24 CPU / 24 pods, so
-`BUILDKITE_MAX_IN_FLIGHT` remains the count cap while Kueue handles weighted
-admission. Keep watching liskov's available-memory and eviction signals before
-raising either limit.
+currently reports approximately 91.5Gi of allocatable memory on liskov. CI pods
+are admitted by Kueue against the budget in
+`src/cdk8s/src/misc/ci-admission-budget.json` (80Gi memory / 24 CPU), and the
+Woodpecker agent's workflow cap is the count backstop. Keep watching liskov's
+available-memory and eviction signals before raising either limit; see
+[Why CI jobs queue instead of failing](../../../../docs/wiki/src/content/docs/explanation/homelab/ci-admission.md).
 
 **Applied**: reconciled live on 2026-08-29 with an exact Talos 1.13.9 client via
 `apply-config --mode=try`, followed by `--mode=no-reboot` confirmation. Effective

@@ -16,13 +16,13 @@ const ADDITIONAL_OWNERS: readonly {
   prefix: string;
   workspaceDirectory: string;
 }[] = [
-  { prefix: ".buildkite/scripts/", workspaceDirectory: "scripts" },
+  { prefix: "ci/scripts/", workspaceDirectory: "scripts" },
   {
-    prefix: ".buildkite/eslint-suppressions.json",
+    prefix: "ci/eslint-suppressions.json",
     workspaceDirectory: "scripts",
   },
   {
-    prefix: ".buildkite/tsconfig.json",
+    prefix: "ci/tsconfig.json",
     workspaceDirectory: "scripts",
   },
 ];

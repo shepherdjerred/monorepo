@@ -36,7 +36,7 @@ function operationResponse(request: unknown): unknown {
   return {
     operation: {
       info: syncRequest.infos,
-      initiatedBy: { username: "buildkite" },
+      initiatedBy: { username: "woodpecker" },
       sync: {
         prune: syncRequest.prune,
         revision: syncRequest.revision,

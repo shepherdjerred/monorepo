@@ -1,5 +1,4 @@
 tap "artginzburg/tap"
-tap "buildkite/buildkite"
 tap "catppuccin/tap", trusted: true
 tap "cormacrelf/tap"
 tap "dsully/tap"
@@ -168,8 +167,6 @@ brew "yt-dlp"
 brew "zellij"
 # Permanent TouchID support for sudo
 brew "artginzburg/tap/sudo-touchid", trusted: true
-# Work with Buildkite from the command-line
-brew "buildkite/buildkite/bk@3", trusted: true
 # Watcher for macOS 10.14+ light/dark mode changes
 brew "cormacrelf/tap/dark-notify", trusted: true
 # Defaults setting for macOS
