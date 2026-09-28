@@ -124,7 +124,7 @@ export function buildPipelineSteps({
     ...resumeSteps(images),
     ...trmnlSteps(images),
     ...tofuPlanSteps(images),
-    ...playwrightSteps(images),
+    ...playwrightSteps(images, changedBase),
     releaseAdmissionStep(images),
     ...tofuApplySteps(images),
     ...releaseChainSteps(images, sharedEnvironment),
