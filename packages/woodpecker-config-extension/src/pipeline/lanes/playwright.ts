@@ -3,6 +3,10 @@ import { HANDOFF_KEYS } from "#src/pipeline/lanes/tofu.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { BROWSER_TIER } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
+import {
+  TURBO_CACHE_TOKEN,
+  TURBO_REMOTE_CACHE_ENVIRONMENT,
+} from "#src/pipeline/turbo-cache.ts";
 
 /**
  * Browser end-to-end suites.
@@ -24,7 +28,10 @@ export function playwrightSteps(
       key: "playwright-e2e",
       label: "playwright e2e",
       image: images.playwright,
-      environment: { CI_CHANGED_BASE: changedBase ?? "" },
+      environment: {
+        CI_CHANGED_BASE: changedBase ?? "",
+        ...TURBO_REMOTE_CACHE_ENVIRONMENT,
+      },
       commands: [
         // Postgres scope: several suites need a live database.
         "MISE_TOOLCHAIN_SCOPE=postgres . ci/scripts/toolchain.sh",
@@ -55,6 +62,7 @@ export function playwrightSteps(
           key: "GITHUB_DOWNLOAD_TOKEN",
           env: "GITHUB_DOWNLOAD_TOKEN",
         },
+        TURBO_CACHE_TOKEN,
         ...HANDOFF_KEYS,
       ],
       changed: {
