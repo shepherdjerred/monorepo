@@ -19,6 +19,10 @@ if [[ -z "${OP_SERVICE_ACCOUNT_TOKEN:-}" ]]; then
     echo "No homelab 1Password service account token is available in Keychain." >&2
     exit 1
   fi
+  if (( ${#service_token} <= 128 )); then
+    echo "The Keychain token is incomplete; run the Swift enrollment helper." >&2
+    exit 1
+  fi
   export OP_SERVICE_ACCOUNT_TOKEN="$service_token"
   unset service_token
 fi

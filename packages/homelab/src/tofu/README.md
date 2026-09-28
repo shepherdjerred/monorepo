@@ -66,13 +66,14 @@ authentication prompts for each provider or CLI invocation. Use a separate
    Leave vault creation and access to other vaults disabled. Save the token in
    your Personal vault, which service accounts cannot access.
 2. On the operator's Mac, copy the newly issued token into the login Keychain
-   once, using the password prompt from this command. Do not paste it into a
+   once with the enrollment helper. It accepts the full token as hidden terminal
+   input, validates it with service-account authentication, and updates the
+   Keychain entry. The `security add-generic-password -w` password prompt can
+   truncate long tokens, so do not use it here. Do not paste the token into a
    shell argument, environment file, terminal output, or repository file:
 
    ```bash
-   security add-generic-password -a "$(id -un)" \
-     -s monorepo-homelab-1password-service-account \
-     -l "Monorepo homelab 1Password service account" -U -w
+   swift scripts/onepassword/enroll-service-account.swift
    ```
 
 3. Prefix commands that need this vault with the wrapper. It reads the token
