@@ -205,8 +205,12 @@ export function ciHealth(
   }
 
   const ownCiChecks = githubChecks.filter((check) => isOwnCiCheck(check));
+  // Historical Buildkite statuses remain on PR heads after the CI cutover.
   const externalChecks = githubChecks.filter(
-    (check) => !isOwnCiCheck(check) && check.name !== "ci/merge-conflict",
+    (check) =>
+      !isOwnCiCheck(check) &&
+      check.name !== "ci/merge-conflict" &&
+      check.name !== "buildkite/monorepo/pr",
   );
   const externalStatuses = new Set(
     externalChecks.map((check) => statusForGitHubCheck(check)),

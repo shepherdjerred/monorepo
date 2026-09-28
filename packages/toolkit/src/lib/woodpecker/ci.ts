@@ -92,7 +92,7 @@ export async function getWoodpeckerPipelineForCommit(
     .array(WoodpeckerPipelineSummarySchema)
     .parse(
       await getJson(
-        `/api/repos/${String(config.repoId)}/pipelines?perPage=50`,
+        `/api/repos/${String(config.repoId)}/pipelines?event=pull_request&perPage=50`,
         config,
       ),
     );
