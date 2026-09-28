@@ -45,6 +45,12 @@ with the PR target branch. Within that workflow, Turbo runs at most three tasks
 at once and each Vitest process uses at most four workers, matching the pod's
 12-CPU limit.
 
+The verify and Playwright workflows use the private Turbo cache over the
+tailnet, with the `monorepo` team and a Kubernetes Secret for its token. This
+lets independent workflow checkouts reuse unchanged task outputs. Developer
+shells default to local caching because their network connection is less
+predictable.
+
 Woodpecker reports a GitHub status per workflow. A final, clone-free PR
 workflow checks the selected blocking workflows at the same pipeline URL and
 reports the single required `ci/woodpecker/pr/ci-complete` status. This avoids a

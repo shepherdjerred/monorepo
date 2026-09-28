@@ -19,6 +19,10 @@ import { siteSteps } from "#src/pipeline/lanes/sites.ts";
 import { macosSteps } from "#src/pipeline/lanes/macos.ts";
 import { observabilityE2eSteps } from "#src/pipeline/lanes/observability-e2e.ts";
 import { prGateSteps } from "#src/pipeline/lanes/pr-gates.ts";
+import {
+  TURBO_CACHE_TOKEN,
+  TURBO_REMOTE_CACHE_ENVIRONMENT,
+} from "#src/pipeline/turbo-cache.ts";
 
 /**
  * The CI graph, as data.
@@ -102,6 +106,7 @@ export function buildPipelineSteps({
       commands: verifyCommands(),
       environment: {
         ...sharedEnvironment,
+        ...TURBO_REMOTE_CACHE_ENVIRONMENT,
         CI_CHANGED_BASE: verifyBase ?? changedBase ?? "",
       },
       timeoutMinutes: 30,
@@ -112,11 +117,7 @@ export function buildPipelineSteps({
           key: "GITHUB_DOWNLOAD_TOKEN",
           env: "GITHUB_DOWNLOAD_TOKEN",
         },
-        {
-          secret: "ci-turbo-cache-credentials",
-          key: "TURBO_TOKEN",
-          env: "TURBO_TOKEN",
-        },
+        TURBO_CACHE_TOKEN,
         ...HANDOFF_KEYS,
       ],
       volumes: [BUN_CACHE, BUN_CACHE_CONTROL, UV_CACHE],
