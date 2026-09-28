@@ -38,7 +38,9 @@ failed stage means.
    in its 1Password item. Confirm the `ci-argocd-credentials`
    Kubernetes Secret contains the new key and that its token can read `apps`.
    Check the `apps` ArgoCD Application and Woodpecker server, agent, and config
-   extension health. Trigger a PR pipeline and require its
+   extension health. Set the repository's approval allowlist to the deployed
+   extension's trusted actors, while keeping `require_approval=all_events` and
+   only `volumes` trusted. Trigger a new PR pipeline and require its
    `ci/woodpecker/pr/ci-complete` status to pass. The first main GitHub OpenTofu
    apply defers the required-check switch until this status exists on a real
    open PR. Trigger a current-main Woodpecker pipeline after that proof, watch
@@ -83,6 +85,52 @@ The script refuses a dirty checkout, a commit other than current `main`, or a
 missing credential. It leaves the generated release inventory in a temporary
 directory named in its output. If publication or reconciliation fails, inspect
 that inventory and the ArgoCD operation before retrying with the same number.
+
+Woodpecker stores `approval_allowed_users` in its database, so the chart's
+`WOODPECKER_DEFAULT_APPROVAL_MODE=all_events` does not populate the allowlist.
+After confirming the deployed global configuration extension is exclusive,
+update the repository through the [Woodpecker repository
+API](https://woodpecker-ci.org/api). Import `TRUSTED_ACTORS` from the
+[extension source](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/authorization.ts)
+so the two gates admit the same accounts. The token remains in the process
+environment and is never printed:
+
+```bash
+WOODPECKER_API_TOKEN='op://v64ocnykdqju4ui6j6pua56xw4/covttsojandjk7fx62a3dbk7em/WOODPECKER_API_TOKEN' \
+scripts/onepassword/with-service-account.sh op run -- bun -e '
+import { TRUSTED_ACTORS } from "./packages/woodpecker-config-extension/src/authorization.ts";
+const url = "https://woodpecker.sjer.red/api/repos/1";
+const headers = {
+  Authorization: `Bearer ${process.env.WOODPECKER_API_TOKEN}`,
+  "Content-Type": "application/json",
+};
+const read = async () => {
+  const response = await fetch(url, { headers });
+  if (!response.ok) throw Error(`read: ${response.status}`);
+  return response.json();
+};
+const before = await read();
+if (before.full_name !== "shepherdjerred/monorepo" ||
+    before.require_approval !== "all_events" ||
+    !before.trusted?.volumes || before.trusted?.network ||
+    before.trusted?.security) throw Error("unexpected repository security settings");
+if (JSON.stringify(before.approval_allowed_users) !== JSON.stringify(TRUSTED_ACTORS)) {
+  const response = await fetch(url, {
+    method: "PATCH", headers,
+    body: JSON.stringify({ approval_allowed_users: TRUSTED_ACTORS }),
+  });
+  if (!response.ok) throw Error(`update: ${response.status}`);
+}
+const after = await read();
+if (JSON.stringify(after.approval_allowed_users) !== JSON.stringify(TRUSTED_ACTORS) ||
+    after.require_approval !== "all_events") throw Error("approval settings did not persist");
+console.log("trusted CI actors admitted; all-events approval remains enabled");
+'
+```
+
+Start a fresh PR pipeline after this update. Existing blocked pipelines still
+need individual approval and must not be treated as evidence of automatic
+admission.
 
 ## The sequence
 
