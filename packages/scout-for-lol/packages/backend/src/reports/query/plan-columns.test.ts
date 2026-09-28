@@ -1,6 +1,9 @@
 import { describe, expect, test } from "vitest";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
-import { planResultColumns } from "#src/reports/query/plan-columns.ts";
+import {
+  planResultColumns,
+  planResultDimensions,
+} from "#src/reports/query/plan-columns.ts";
 
 describe("plan result asset metadata", () => {
   test("marks an asset grouping and its echoed output", () => {
@@ -28,7 +31,6 @@ describe("plan result asset metadata", () => {
         key: "label",
         label: "Keystone",
         format: "text",
-        asset: "rune",
       },
       {
         key: "keystone",
@@ -37,6 +39,44 @@ describe("plan result asset metadata", () => {
         asset: "rune",
       },
     ]);
+  });
+
+  test("formats asset dimensions in composite labels from typed grouping keys", () => {
+    const plan = {
+      source: "match_participants",
+      outputs: [],
+      groupings: [
+        { kind: "column", column: "item0", name: "item0" },
+        { kind: "column", column: "queue", name: "queue" },
+      ],
+      timeWindow: { kind: "unbounded" },
+      orderBy: [],
+      limit: 10,
+      playerRefs: [],
+      render: { kind: "TABLE" },
+    } satisfies ScoutQlPlan;
+
+    const dimensions = planResultDimensions(plan, "3031 • solo", [
+      3031,
+      "solo",
+    ]);
+    expect(dimensions).toEqual(["Infinity Edge", "solo"]);
+    expect(dimensions.join(" • ")).toBe("Infinity Edge • solo");
+  });
+
+  test("keeps the grand-total label when a plan has no groupings", () => {
+    const plan = {
+      source: "match_participants",
+      outputs: [],
+      groupings: [],
+      timeWindow: { kind: "unbounded" },
+      orderBy: [],
+      limit: 10,
+      playerRefs: [],
+      render: { kind: "TABLE" },
+    } satisfies ScoutQlPlan;
+
+    expect(planResultDimensions(plan, "All", [])).toEqual(["All"]);
   });
 
   test("does not attach assets to aggregate metrics that read an asset id", () => {

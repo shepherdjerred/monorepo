@@ -68,4 +68,20 @@ describe("report result formatting", () => {
       name: "Wukong",
     });
   });
+
+  test("resolves exact asset keys and rejects ambiguous names or unknown ids", () => {
+    expect(reportAssetInfo("spell", "SummonerFlash")).toEqual({
+      canonicalKey: "SummonerFlash",
+      name: "Flash",
+    });
+    expect(() => reportAssetInfo("spell", "Flash")).toThrow(
+      /Ambiguous spell name/u,
+    );
+    expect(() => reportAssetInfo("champion", "Lee Sin")).toThrow(
+      /Ambiguous champion name/u,
+    );
+    expect(() => formatReportDisplayValue(item, 999_999)).toThrow(
+      /Unknown item asset/u,
+    );
+  });
 });
