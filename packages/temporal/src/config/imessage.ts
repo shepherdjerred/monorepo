@@ -48,6 +48,7 @@ function createResolver(onSourceError: () => void) {
           claudeModel: "string",
           codexModel: "string",
         },
+        onUnavailable: onSourceError,
       }),
     },
     hooks: {

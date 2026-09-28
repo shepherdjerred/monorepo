@@ -28,7 +28,7 @@ function parseBlueBubblesMessages(value: unknown) {
   return result.data;
 }
 
-async function highestBlueBubblesRowId(lastRowId: number): Promise<number> {
+async function highestBlueBubblesRowId(lastRowId = 0): Promise<number> {
   // This is one SQLite query, so its max ROWID and the corresponding message
   // are observed atomically. A sequence of range probes can race a new message
   // and accidentally classify it as pre-activation history.
@@ -47,6 +47,15 @@ async function highestBlueBubblesRowId(lastRowId: number): Promise<number> {
     }),
   );
   return messages[0]?.originalROWID ?? lastRowId;
+}
+
+function resetCursor(cursor: BlueBubblesCursor): BlueBubblesCursor {
+  return {
+    startedAt: cursor.startedAt,
+    initialized: false,
+    lastRowId: 0,
+    sourceEpoch: cursor.sourceEpoch + 1,
+  };
 }
 
 async function initialBlueBubblesPage(cursor: BlueBubblesCursor): Promise<{
@@ -115,6 +124,7 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
       startedAt: cursor.startedAt,
       initialized: progress.initialized,
       lastRowId: progress.lastRowId,
+      sourceEpoch: cursor.sourceEpoch,
       ...(progress.initializationHighWaterRowId === undefined
         ? {}
         : {
@@ -130,6 +140,7 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
       startedAt: cursor.startedAt,
       initialized: progress.initialized,
       lastRowId: progress.lastRowId,
+      sourceEpoch: cursor.sourceEpoch,
       ...(progress.initializationHighWaterRowId === undefined
         ? {}
         : {
@@ -151,6 +162,15 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
       ],
     }),
   );
+  if (messages.length === 0) {
+    const currentHighWater = await highestBlueBubblesRowId();
+    if (currentHighWater < cursor.lastRowId) {
+      return BlueBubblesPollResultSchema.parse({
+        ...resetCursor(cursor),
+        commands: [],
+      });
+    }
+  }
   // The API sorts by message time, not ROWID. A full page cannot safely advance a ROWID cursor.
   if (messages.length === BLUEBUBBLES_QUERY_LIMIT)
     throw ApplicationFailure.nonRetryable(
@@ -166,13 +186,18 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
       "BlueBubblesCursorQueryViolated",
     );
   const commands = batch.flatMap((message) => {
-    const command = blueBubblesCommand(message, config.owners);
+    const command = blueBubblesCommand(
+      message,
+      config.owners,
+      cursor.sourceEpoch,
+    );
     return command === undefined ? [] : [command];
   });
   return BlueBubblesPollResultSchema.parse({
     startedAt: cursor.startedAt,
     initialized: true,
     lastRowId: batch.at(-1)?.originalROWID ?? cursor.lastRowId,
+    sourceEpoch: cursor.sourceEpoch,
     commands,
   });
 }

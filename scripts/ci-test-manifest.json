@@ -768,6 +768,7 @@
             "src/shared",
             "src/lib",
             "src/workflows/agent-task.test.ts",
+            "src/config/imessage.test.ts",
             "src/worker-config.test.ts",
             "scripts/check-workflow-tracing-safety.test.ts",
             "scripts/cli-arguments.test.ts"
