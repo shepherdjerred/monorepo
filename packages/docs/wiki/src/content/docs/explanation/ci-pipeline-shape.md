@@ -124,8 +124,11 @@ preserve coverage.
   and Cloudflare token management add a second serialized group: PRs
   validate them without credentials or a backend, while main gives each
   no-retry job only its platform credential and unique state passphrase.
-  Ordinary main builds plan only; an exact-stack `TOFU_PLATFORM_APPLY` request
-  selects one job for an operator-controlled apply.
+  Ordinary main builds preview only and select each stack by its own changed
+  paths. Explicit operator review separates those previews from credential
+  mutations. The reviewed plan travels encrypted between planning and apply,
+  so provider drift cannot silently change the approved operation. The
+  [release guide](/how-to/cut-a-homelab-release/) gives the trigger procedure.
 - **Scout** has three deliberate promotion phases: archive and deploy beta, mint
   the immutable tag, then reconcile the production `versions.ts` pin. They are
   three stages of one release, not three independent Scout test suites.

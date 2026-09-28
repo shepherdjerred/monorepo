@@ -125,16 +125,16 @@ function trivyCommands(): string[] {
 function semgrepCommands(): string[] {
   return [
     'echo "OPTIONAL SECURITY SCAN: findings do not block merge; merge-base, config, and runtime failures do."',
-    // Woodpecker's PR checkout has the source head but may not include the
-    // target branch ref needed to compute Semgrep's finding baseline.
-    "git fetch --no-tags origin main:refs/remotes/origin/main",
-    "set +e",
-    "base=$(git merge-base origin/main HEAD)",
-    "merge_base_status=$?",
-    "set -e",
-    'if [ "$merge_base_status" -ne 0 ]; then',
-    '  echo "semgrep could not resolve the PR merge-base" >&2',
-    "  exit 2",
+    // Woodpecker clones the PR head at depth 1. Fetch both histories deeply
+    // enough for the normal case, then unshallow only for an older PR.
+    'git fetch --no-tags --filter=tree:0 --depth=100 origin "$(git rev-parse HEAD)" main:refs/remotes/origin/main',
+    "if ! base=$(git merge-base origin/main HEAD); then",
+    '  if [ "$(git rev-parse --is-shallow-repository)" != "true" ]; then',
+    '    echo "semgrep could not resolve the PR merge-base" >&2',
+    "    exit 2",
+    "  fi",
+    '  git fetch --no-tags --filter=tree:0 --unshallow origin "$(git rev-parse HEAD)" main:refs/remotes/origin/main',
+    '  base=$(git merge-base origin/main HEAD) || { echo "semgrep could not resolve the PR merge-base" >&2; exit 2; }',
     "fi",
     "set +e",
     'semgrep scan --config .semgrep/p-default.yml --metrics=off --error --baseline-commit "$base" --exclude sandbox --exclude packages/temporal/src/activities/fetcher.ts .',
@@ -155,6 +155,7 @@ export function scannerSteps(images: CiImages): CiStep[] {
       label: "trivy",
       image: images.catalog["aquasec/trivy"],
       commands: trivyCommands(),
+      shell: "sh",
       timeoutMinutes: 20,
       resources: SCANNER_TIER,
       events: ["pull_request"],

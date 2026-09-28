@@ -1,3 +1,4 @@
+import { z } from "zod";
 import type { CiImages } from "#src/images.ts";
 import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
 import { LIGHT_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
@@ -11,14 +12,14 @@ import {
 } from "#src/pipeline/lanes/tofu.ts";
 
 /**
- * Default-branch OpenTofu applies, and the admission token that gates them.
+ * Default-branch OpenTofu work, and the admission token that gates it.
  *
- * Every step here mutates a live external control plane, so each one first
- * asks whether this build is still the one allowed to release. A build that
- * has been superseded by newer commits on the default branch stops rather than
- * applying a revision the repository has already moved past.
+ * Applies mutate live external control planes. Platform credential stacks
+ * only plan on ordinary main builds; targeted manual builds prepare and later
+ * apply one reviewed, encrypted plan. Every step here first asks whether this build
+ * is still the one allowed to release.
  *
- * Only the applies that depend on nothing but admission are here. The
+ * The standalone work that depends on nothing but admission is here. The
  * seaweedfs/tailscale/arr chain waits on helm-push and the cloudflare apply
  * waits on argocd-sync, so those land with the release chain.
  */
@@ -33,11 +34,16 @@ import {
  * other unexpected value is a hard failure -- silently continuing would apply
  * infrastructure changes without knowing whether this build was entitled to.
  */
-function admissionGate(): string[] {
+function admissionGate(recheckCurrent = false): string[] {
   return [
     "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --production",
+    ...(recheckCurrent
+      ? ["bun --no-install scripts/ci/homelab-release-admission.ts admit"]
+      : []),
     'release_admission="$(bun --no-install scripts/ci/homelab-release-admission.ts consume)"',
-    'if [ "$release_admission" = "superseded" ]; then exit 0; fi',
+    recheckCurrent
+      ? 'if [ "$release_admission" = "superseded" ]; then echo "reviewed platform operation was superseded" >&2; exit 1; fi'
+      : 'if [ "$release_admission" = "superseded" ]; then exit 0; fi',
     'if [ "$release_admission" != "admitted" ]; then',
     '  echo "invalid homelab release admission outcome: $release_admission" >&2',
     "  exit 1",
@@ -45,11 +51,15 @@ function admissionGate(): string[] {
   ];
 }
 
-function applyCommands(stack: string): string[] {
+function stackCommands(
+  stack: string,
+  action: "plan" | "apply" | "prepare" | "apply-saved",
+  sourcePipeline?: string,
+): string[] {
   return [
-    ...admissionGate(),
+    ...admissionGate(action === "prepare" || action === "apply-saved"),
     ". ci/scripts/toolchain.sh",
-    ...(stack === "github"
+    ...(stack === "github" && action === "apply"
       ? [
           'ruleset_readiness="$(bun --no-install packages/homelab/scripts/tofu/github-ruleset-ready.ts)"',
           'if [ "$ruleset_readiness" = "deferred" ]; then echo "GitHub ruleset apply deferred until a Woodpecker PR completes"; exit 0; fi',
@@ -57,7 +67,10 @@ function applyCommands(stack: string): string[] {
         ]
       : []),
     `export TF_PLUGIN_CACHE_DIR=${TOFU_PLUGIN_CACHE.path}`,
-    `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts ${stack} apply`,
+    ...(sourcePipeline === undefined
+      ? []
+      : [`export TOFU_PLATFORM_PLAN_PIPELINE=${sourcePipeline}`]),
+    `flock -x ${TOFU_PLUGIN_CACHE.path}/.lock bun --no-install packages/homelab/scripts/tofu/tofu-stack.ts ${stack} ${action}`,
   ];
 }
 
@@ -69,23 +82,45 @@ function applyCommands(stack: string): string[] {
  */
 const STATE_PASSPHRASE_KEY = "TOFU_STATE_ENCRYPTION_PASSPHRASE";
 
-const TOFU_CHANGED = {
-  include: [
-    ...GLOBAL_SELECTOR_INPUTS,
-    "packages/homelab/scripts/tofu/**",
-    "packages/homelab/src/tofu/**",
-  ],
-} as const;
+export const PlatformApplyStackSchema = z.enum([
+  "openai",
+  "anthropic",
+  "discord",
+  "cloudflare-tokens",
+] as const);
+
+export type PlatformApplyStack = z.infer<typeof PlatformApplyStackSchema>;
+
+export type PlatformOperation = {
+  readonly stack: PlatformApplyStack;
+  readonly action: "prepare" | "apply-saved";
+  readonly sourcePipeline?: string;
+};
+
+function stackChanged(stack: string, platform = false) {
+  return {
+    include: [
+      ...GLOBAL_SELECTOR_INPUTS,
+      "packages/homelab/scripts/tofu/**",
+      ...(platform
+        ? ["packages/homelab/scripts/platform-desired-state.ts"]
+        : []),
+      `packages/homelab/src/tofu/${stack}/**`,
+      ...(platform
+        ? ["packages/homelab/src/tofu/platform-desired-state.schema.json"]
+        : []),
+    ],
+  };
+}
 
 /**
  * Platform credential stacks.
  *
- * They share one serialization group because they all write credentials into
- * the same 1Password vault and cluster namespace; running two at once would
- * race on that shared destination rather than on their own providers.
+ * They share one serialization group to bound CI resource use while plans
+ * read their separate live states and provider APIs.
  */
-const PLATFORM_APPLIES: readonly {
-  readonly stack: string;
+const PLATFORM_PLANS: readonly {
+  readonly stack: PlatformApplyStack;
   readonly secrets: readonly SecretGrant[];
 }[] = [
   {
@@ -164,19 +199,22 @@ export function releaseAdmissionStep(images: CiImages): CiStep {
   };
 }
 
-export function tofuApplySteps(images: CiImages): CiStep[] {
+export function tofuApplySteps(
+  images: CiImages,
+  platformOperation?: PlatformOperation,
+): CiStep[] {
   const standalone: CiStep[] = [
     {
       key: "tofu-apply-github",
       label: "tofu apply github",
       image: images.base,
-      commands: applyCommands("github"),
+      commands: stackCommands("github", "apply"),
       dependsOn: ["homelab-release-admission"],
       timeoutMinutes: 60,
       resources: MEDIUM_TIER,
       defaultBranchOnly: true,
       concurrency: { limit: 1, group: "tofu-github" },
-      changed: TOFU_CHANGED,
+      changed: stackChanged("github"),
       secrets: [
         GITHUB_DOWNLOAD,
         ...STATE_BACKEND,
@@ -189,19 +227,13 @@ export function tofuApplySteps(images: CiImages): CiStep[] {
       key: "tofu-posthog",
       label: "tofu apply posthog",
       image: images.base,
-      commands: applyCommands("posthog"),
+      commands: stackCommands("posthog", "apply"),
       dependsOn: ["homelab-release-admission"],
       timeoutMinutes: 60,
       resources: MEDIUM_TIER,
       defaultBranchOnly: true,
       concurrency: { limit: 1, group: "tofu-posthog" },
-      changed: {
-        include: [
-          ...GLOBAL_SELECTOR_INPUTS,
-          "packages/homelab/scripts/tofu/**",
-          "packages/homelab/src/tofu/posthog/**",
-        ],
-      },
+      changed: stackChanged("posthog"),
       secrets: [
         GITHUB_DOWNLOAD,
         ...STATE_BACKEND,
@@ -217,17 +249,23 @@ export function tofuApplySteps(images: CiImages): CiStep[] {
     },
   ];
 
-  const platform: CiStep[] = PLATFORM_APPLIES.map(({ stack, secrets }) => ({
+  const platform: CiStep[] = PLATFORM_PLANS.map(({ stack, secrets }) => ({
     key: `tofu-platform-${stack}`,
-    label: `tofu apply ${stack}`,
+    label: `tofu ${stack === platformOperation?.stack ? platformOperation.action : "plan"} ${stack}`,
     image: images.base,
-    commands: applyCommands(stack),
+    commands: stackCommands(
+      stack,
+      stack === platformOperation?.stack ? platformOperation.action : "plan",
+      stack === platformOperation?.stack
+        ? platformOperation.sourcePipeline
+        : undefined,
+    ),
     dependsOn: ["homelab-release-admission"],
     timeoutMinutes: 60,
     resources: MEDIUM_TIER,
     defaultBranchOnly: true,
     concurrency: { limit: 1, group: "tofu-platform-credentials" },
-    changed: TOFU_CHANGED,
+    changed: stackChanged(stack, true),
     secrets: [GITHUB_DOWNLOAD, ...STATE_BACKEND, ...HANDOFF_KEYS, ...secrets],
     volumes: [TOFU_PLUGIN_CACHE],
   }));

@@ -1,11 +1,15 @@
 import { Hono } from "hono";
 import type { KeyObject } from "node:crypto";
-import { ConfigExtensionRequestSchema } from "#src/schemas.ts";
+import { ConfigExtensionRequestSchema, type Pipeline } from "#src/schemas.ts";
 import { authorizePipeline } from "#src/authorization.ts";
 import { verifySignedRequest } from "#src/signature.ts";
 import { emitWorkflows } from "#src/pipeline/emit.ts";
 import { isWorkEvent, selectSteps } from "#src/pipeline/select.ts";
 import { buildPipelineSteps } from "#src/pipeline/steps.ts";
+import {
+  PlatformApplyStackSchema,
+  type PlatformOperation,
+} from "#src/pipeline/lanes/tofu-apply.ts";
 import { completionStep, noWorkStep } from "#src/pipeline/completion.ts";
 import { resolveCiImages, type ImageFetcher } from "#src/images.ts";
 import { changedFilesSince } from "#src/github-compare.ts";
@@ -34,6 +38,59 @@ export type AppOptions = {
   ) => Promise<string | undefined>;
   readonly compareChangedFiles?: typeof changedFilesSince;
 };
+
+function platformOperationRequest(
+  pipeline: Pipeline,
+  defaultBranch: string,
+):
+  | { readonly operation: PlatformOperation }
+  | { readonly invalid: true }
+  | undefined {
+  const prepare = pipeline.variables["TOFU_PLATFORM_PLAN"];
+  const apply = pipeline.variables["TOFU_PLATFORM_APPLY"];
+  const sourcePipeline = pipeline.variables["TOFU_PLATFORM_PLAN_PIPELINE"];
+  if (
+    prepare === undefined &&
+    apply === undefined &&
+    sourcePipeline === undefined
+  ) {
+    return undefined;
+  }
+  if (pipeline.event !== "manual" || pipeline.branch !== defaultBranch) {
+    return { invalid: true };
+  }
+  if (
+    prepare !== undefined &&
+    apply === undefined &&
+    sourcePipeline === undefined
+  ) {
+    const parsed = PlatformApplyStackSchema.safeParse(prepare);
+    return parsed.success
+      ? { operation: { stack: parsed.data, action: "prepare" } }
+      : { invalid: true };
+  }
+  if (
+    apply !== undefined &&
+    prepare === undefined &&
+    sourcePipeline !== undefined
+  ) {
+    const parsed = PlatformApplyStackSchema.safeParse(apply);
+    if (
+      parsed.success &&
+      /^[1-9]\d*$/u.test(sourcePipeline) &&
+      Number.isSafeInteger(Number(sourcePipeline))
+    ) {
+      return {
+        operation: {
+          stack: parsed.data,
+          action: "apply-saved",
+          sourcePipeline,
+        },
+      };
+    }
+  }
+  return { invalid: true };
+}
 
 export function createApp(options: AppOptions): Hono {
   const app = new Hono();
@@ -80,6 +137,14 @@ export function createApp(options: AppOptions): Hono {
       return context.json({ error: "actor is not permitted to run CI" }, 403);
     }
 
+    const platformOperation = platformOperationRequest(
+      pipeline,
+      repo.default_branch,
+    );
+    if (platformOperation !== undefined && "invalid" in platformOperation) {
+      return context.json({ error: "invalid platform operation request" }, 400);
+    }
+
     const selectionContext = {
       event: pipeline.event,
       branch: pipeline.branch,
@@ -96,6 +161,24 @@ export function createApp(options: AppOptions): Hono {
       return context.json({
         configs: emitWorkflows([noWorkStep(images.base)], identity),
       });
+    }
+
+    if (platformOperation !== undefined && "operation" in platformOperation) {
+      const { operation } = platformOperation;
+      const steps = buildPipelineSteps({
+        images,
+        changedBase: undefined,
+        platformOperation: operation,
+      }).filter(
+        (step) =>
+          step.key === "homelab-release-admission" ||
+          step.key === `tofu-platform-${operation.stack}`,
+      );
+      const selected = selectSteps(steps, {
+        ...selectionContext,
+        changedFiles: [],
+      });
+      return context.json({ configs: emitWorkflows(selected, identity) });
     }
 
     const [changedBase, verifyBase, imageReleaseBase] = await Promise.all([

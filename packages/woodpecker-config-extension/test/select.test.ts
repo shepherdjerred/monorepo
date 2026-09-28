@@ -371,13 +371,13 @@ describe("ported lanes", () => {
     expect(keysFor(["bun.lock"], "main")).not.toContain("trivy");
   });
 
-  test("Semgrep fetches the target branch before resolving its merge base", () => {
+  test("Semgrep fetches PR and target history before resolving its merge base", () => {
     const semgrep = buildPipelineSteps({
       images: IMAGES,
       changedBase: "x",
     }).find((candidate) => candidate.key === "semgrep");
     expect(semgrep?.commands[1]).toBe(
-      "git fetch --no-tags origin main:refs/remotes/origin/main",
+      'git fetch --no-tags --filter=tree:0 --depth=100 origin "$(git rev-parse HEAD)" main:refs/remotes/origin/main',
     );
   });
 
