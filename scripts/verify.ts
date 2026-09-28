@@ -184,6 +184,10 @@ export async function main(
   const forwardedArgs = process.argv
     .slice(2)
     .filter((argument) => argument !== "--");
+  const hasConcurrencyOverride = forwardedArgs.some(
+    (argument) =>
+      argument === "--concurrency" || argument.startsWith("--concurrency="),
+  );
   const affectedFilters = await affectedVerifyFilters(environment);
   const turbo = Bun.spawn(
     [
@@ -197,7 +201,7 @@ export async function main(
       // The CI verify pod has a 12-CPU limit. Several package test tasks each
       // start their own Vitest workers, so Turbo's default parallelism can
       // overwhelm the pod before any individual test reaches its timeout.
-      "--concurrency=3",
+      ...(hasConcurrencyOverride ? [] : ["--concurrency=3"]),
       ...affectedFilters,
       ...forwardedArgs,
     ],

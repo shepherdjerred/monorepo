@@ -56,7 +56,9 @@ export function completionStep(
     key: "ci-complete",
     label: "complete required PR checks",
     image,
-    commands: [`bun -e ${shellQuote(CHECK_STATUSES)}`],
+    // skip_clone leaves Woodpecker's workspace without the repo's .mise.toml.
+    // The CI image keeps that pinned toolchain at /workspace.
+    commands: ["cd /workspace", `bun -e ${shellQuote(CHECK_STATUSES)}`],
     environment: {
       CI_EXPECTED_CONTEXTS: JSON.stringify(
         blocking.map((step) => `ci/woodpecker/pr/${step.key}`),
