@@ -14,7 +14,7 @@ consumer proves the replacement works, then revoke it.
 
 | Provider  | Stack                  | Applied by | Credential in 1Password                   |
 | --------- | ---------------------- | ---------- | ----------------------------------------- |
-| OpenAI    | `openai`               | Woodpecker | `OPENAI_API_KEY` field                    |
+| OpenAI    | `openai`               | Operator   | `OPENAI_API_KEY` field                    |
 | Google    | `google`               | Operator   | Per-workload item, written by OpenTofu    |
 | Anthropic | `anthropic-federation` | Operator   | Per-workload ID item, written by OpenTofu |
 
@@ -29,8 +29,9 @@ command output, or chat.
 1. Add a new `openai_service_accounts` entry for the workload in
    `openai/desired-state.json`, with a new dated name and the same
    `onepassword_targets`. Keep the old entry.
-2. Merge, then apply the stack on a targeted main build with
-   `TOFU_PLATFORM_APPLY=openai`.
+2. Merge, review the Woodpecker plan, then plan and apply the stack from the
+   current main checkout through the 1Password-backed wrapper described in
+   the [OpenTofu README](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/tofu/README.md#unattended-local-1password-access).
 3. Read the new key from the stack's sensitive `openai_service_account_handoffs`
    output and write it to the target field.
 4. Wait for the 1Password Connect operator to refresh the Kubernetes Secret, then

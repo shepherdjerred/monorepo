@@ -124,8 +124,9 @@ preserve coverage.
   and Cloudflare token management add a second serialized group: PRs
   validate them without credentials or a backend, while main gives each
   no-retry job only its platform credential and unique state passphrase.
-  Ordinary main builds plan only; an exact-stack `TOFU_PLATFORM_APPLY` request
-  selects one job for an operator-controlled apply.
+  Main builds plan only and select each stack by its own changed paths. An
+  operator applies a reviewed platform change through the 1Password-backed
+  OpenTofu wrapper from the current main checkout.
 - **Scout** has three deliberate promotion phases: archive and deploy beta, mint
   the immutable tag, then reconcile the production `versions.ts` pin. They are
   three stages of one release, not three independent Scout test suites.
