@@ -2,14 +2,14 @@
   "schema": "pin-candidates-state/v1",
   "pins": {
     "shepherdjerred/alert-dashboard": {
-      "buildNumber": 1002644,
       "version": "2.0.0-1002644",
-      "digest": "sha256:7e0db9ed32f2523e3968fa906c8ba6413092e766a500daf64ff1db5ddb28e97a"
+      "digest": "sha256:7e0db9ed32f2523e3968fa906c8ba6413092e766a500daf64ff1db5ddb28e97a",
+      "buildNumber": 1002644
     },
     "shepherdjerred/birmel": {
-      "buildNumber": 1002644,
-      "version": "2.0.0-1002644",
-      "digest": "sha256:086d25f7a3d41937b8fa07dad2c44d9ca4a04a3fc59a5e753672a70ba6f29433"
+      "buildNumber": 1002665,
+      "version": "2.0.0-1002665",
+      "digest": "sha256:e4593a30ec82ca05e9b7c0f2069461626271fed034602d1691792ae26bd6e5d8"
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-16936",
@@ -17,14 +17,14 @@
       "buildNumber": 16936
     },
     "shepherdjerred/discord-plays-mario-kart": {
-      "buildNumber": 1002644,
       "version": "2.0.0-1002644",
-      "digest": "sha256:8b1651dd8b9d9c158d2d39a8a2ca2a50eed82ef02b6d27f16fe81b1e4eeb751a"
+      "digest": "sha256:8b1651dd8b9d9c158d2d39a8a2ca2a50eed82ef02b6d27f16fe81b1e4eeb751a",
+      "buildNumber": 1002644
     },
     "shepherdjerred/discord-plays-pokemon": {
-      "buildNumber": 1002644,
       "version": "2.0.0-1002644",
-      "digest": "sha256:8f5cb1ceb3f52aff580e759131fe709a38cb585c118edbef5fa1a69fb8da2d98"
+      "digest": "sha256:8f5cb1ceb3f52aff580e759131fe709a38cb585c118edbef5fa1a69fb8da2d98",
+      "buildNumber": 1002644
     },
     "shepherdjerred/obsidian-headless": {
       "version": "2.0.0-16936",
@@ -37,9 +37,9 @@
       "buildNumber": 16936
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 1002644,
-      "version": "2.0.0-1002644",
-      "digest": "sha256:659a71a477880c0e5959c40f8f554b625c6b8ac61f8689ffca67d2dae17638e0"
+      "buildNumber": 1002665,
+      "version": "2.0.0-1002665",
+      "digest": "sha256:7bc148dc46fe2ad7ccfc387a93f50fca76969a7e56b9b1686e28c92c2a85cd22"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -48,24 +48,24 @@
       "gitSha": "c42ee297992a5be0d83541b9c7deda5d4ceb99c7"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
-      "buildNumber": 1002644,
       "version": "2.0.0-1002644",
-      "digest": "sha256:faaf1a029180da3a01f7ad6bb56bd1961e073a7fc4dca096700351f7fb9706de"
+      "digest": "sha256:faaf1a029180da3a01f7ad6bb56bd1961e073a7fc4dca096700351f7fb9706de",
+      "buildNumber": 1002644
     },
     "shepherdjerred/streambot": {
-      "buildNumber": 1002644,
       "version": "2.0.0-1002644",
-      "digest": "sha256:63e7c6dd3442a3e904e07fa6a2f7e2e47734543fe89976f826c40a5369e674bb"
+      "digest": "sha256:63e7c6dd3442a3e904e07fa6a2f7e2e47734543fe89976f826c40a5369e674bb",
+      "buildNumber": 1002644
     },
     "shepherdjerred/tasknotes-server": {
-      "buildNumber": 1002644,
       "version": "2.0.0-1002644",
-      "digest": "sha256:9c312ddf176ff90fdb74bcd5457452f7a7441e3982d8bf1b0cc1d88f2da77674"
+      "digest": "sha256:9c312ddf176ff90fdb74bcd5457452f7a7441e3982d8bf1b0cc1d88f2da77674",
+      "buildNumber": 1002644
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 1002644,
-      "version": "2.0.0-1002644",
-      "digest": "sha256:716cba6e2718805d6f8b76cc4c083449f1960cc61f89f6c27cd31cedc4ac2dd9"
+      "buildNumber": 1002665,
+      "version": "2.0.0-1002665",
+      "digest": "sha256:c144ada6ed6045da09cc4f0e50ad584629afc57fe93404e4f0cc92cd9499aaa0"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-17396",
@@ -79,9 +79,9 @@
       "gitSha": "4bab713a81af0ce1bac2a1657faa1fbac98f868d"
     },
     "shepherdjerred/trmnl-dashboard": {
-      "buildNumber": 1002644,
       "version": "2.0.0-1002644",
-      "digest": "sha256:2323d0c6b8e7a8a33699f78c33a4ceefbfc851314977b106a270ad253b2ce2c6"
+      "digest": "sha256:2323d0c6b8e7a8a33699f78c33a4ceefbfc851314977b106a270ad253b2ce2c6",
+      "buildNumber": 1002644
     }
   }
 }
