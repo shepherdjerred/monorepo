@@ -94,8 +94,9 @@ const SEMGREP_SOURCE_GLOBS = [
 ] as const;
 
 /**
- * Trivy's vulnerability database, cached on a shared claim. Trivy populates
- * the cache on first use and refreshes it when its metadata expires.
+ * Trivy's vulnerability database, supplied by the Temporal maintenance
+ * worker's ci-trivy-db-refresh schedule through a shared claim. PR scans must
+ * stay read-only so they cannot race the single refresh writer.
  */
 const TRIVY_DB = {
   claim: "woodpecker-trivy-db",
@@ -109,7 +110,7 @@ function trivyCommands(): string[] {
   return [
     'echo "OPTIONAL SECURITY SCAN: HIGH/CRITICAL findings do not block merge; scanner failures do."',
     "set +e",
-    `trivy fs --cache-backend memory --cache-dir ${TRIVY_DB.path} --scanners vuln --severity HIGH,CRITICAL --exit-code ${TRIVY_FINDINGS_EXIT.toString()} --skip-dirs node_modules --skip-dirs sandbox .`,
+    `trivy fs --cache-backend memory --cache-dir ${TRIVY_DB.path} --skip-db-update --scanners vuln --severity HIGH,CRITICAL --exit-code ${TRIVY_FINDINGS_EXIT.toString()} --skip-dirs node_modules --skip-dirs sandbox .`,
     "trivy_status=$?",
     "set -e",
     `if [ "$trivy_status" -eq ${TRIVY_FINDINGS_EXIT.toString()} ]; then`,
