@@ -658,6 +658,11 @@
       "reason": "Every caller already invokes the TypeScript implementation"
     },
     {
+      "source": "scripts/onepassword/with-service-account.sh",
+      "disposition": "retain",
+      "reason": "Small credential bootstrap reads the macOS Keychain token and execs the requested command with process-local service-account authentication"
+    },
+    {
       "source": "scripts/shellcheck.sh",
       "disposition": "port",
       "reason": "Repository checks already require Bun",
