@@ -43,7 +43,9 @@ function verifyCommands(): string[] {
     ". ci/scripts/toolchain.sh",
     "ci/scripts/bun-install.sh --frozen-lockfile",
     'if [ "$CI_PIPELINE_EVENT" = "pull_request" ]; then',
-    '  if git fetch --no-tags --depth=100 origin "$CI_COMMIT_TARGET_BRANCH"; then',
+    // Deepen the PR head separately, then fetch its target last so FETCH_HEAD
+    // unambiguously names the target branch for the merge-base calculation.
+    '  if git fetch --no-tags --depth=100 origin "$CI_COMMIT_SHA" && git fetch --no-tags --depth=100 origin "$CI_COMMIT_TARGET_BRANCH"; then',
     '    if ! CI_CHANGED_BASE="$(git merge-base HEAD FETCH_HEAD)"; then CI_CHANGED_BASE=""; fi',
     "  else",
     '    CI_CHANGED_BASE=""',
@@ -53,7 +55,7 @@ function verifyCommands(): string[] {
     // CI_CHANGED_BASE arrives in the environment, resolved before this step
     // was generated. It is empty when the branch has never gone green, which
     // correctly makes turbo compare against nothing and build everything.
-    'if [ -n "$CI_CHANGED_BASE" ]; then export TURBO_SCM_BASE="$CI_CHANGED_BASE"; fi',
+    'if [ -n "$CI_CHANGED_BASE" ]; then export TURBO_SCM_BASE="$CI_CHANGED_BASE" TASKNOTES_COVERAGE_BASE="$CI_CHANGED_BASE"; fi',
     // CI is the cross-machine cache producer and consumer; developer shells
     // stay local-only to avoid large transfers over weak links.
     'export TURBO_CACHE="local:rw,remote:rw"',
