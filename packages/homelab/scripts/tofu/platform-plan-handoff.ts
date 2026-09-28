@@ -10,7 +10,6 @@ import {
 import { z } from "zod";
 import {
   ciHandoffConfigFromEnv,
-  deleteHandoff,
   readRequiredHandoff,
   writeJsonHandoff,
 } from "@shepherdjerred/root-scripts/lib/ci/ci-handoff.ts";
@@ -153,9 +152,15 @@ export async function loadReviewedPlatformPlan(
   );
 }
 
-export async function removeReviewedPlatformPlan(
+export async function consumeReviewedPlatformPlan(
   sourcePipeline: string,
 ): Promise<void> {
   const config = ciHandoffConfigFromEnv();
-  await deleteHandoff(PLAN_KEY, { ...config, pipelineNumber: sourcePipeline });
+  // PUT is already authorized for this handoff identity. Replace the encrypted
+  // bytes with a harmless marker so the plan cannot be loaded a second time.
+  await writeJsonHandoff(
+    PLAN_KEY,
+    { consumed: true },
+    { ...config, pipelineNumber: sourcePipeline },
+  );
 }

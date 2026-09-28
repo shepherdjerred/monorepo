@@ -170,21 +170,3 @@ export async function readRequiredHandoff(
   }
   return response.text();
 }
-
-/** Remove a sensitive handoff after its one approved consumer succeeds. */
-export async function deleteHandoff(
-  key: string,
-  config: CiHandoffConfig = ciHandoffConfigFromEnv(),
-  fetchImpl: HandoffFetch = fetch,
-): Promise<void> {
-  const request = createSignedS3Request(signingConfig(config), {
-    method: "DELETE",
-    key: handoffObjectKey(config.pipelineNumber, key),
-  });
-  const response = await fetchImpl(request);
-  if (!response.ok) {
-    throw new Error(
-      `could not delete CI handoff ${key} (${response.status.toString()})`,
-    );
-  }
-}

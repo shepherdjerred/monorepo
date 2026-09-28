@@ -27,7 +27,7 @@ import {
 import {
   loadReviewedPlatformPlan,
   publishPlatformPlan,
-  removeReviewedPlatformPlan,
+  consumeReviewedPlatformPlan,
 } from "./platform-plan-handoff.ts";
 
 const STACKS_REL = "src/tofu";
@@ -377,7 +377,14 @@ async function reviewedPlatformOperation(input: {
       options,
     );
     console.log(`--- applied reviewed plan: ${stack}`);
-    await removeReviewedPlatformPlan(sourcePipeline);
+    try {
+      await consumeReviewedPlatformPlan(sourcePipeline);
+    } catch (error) {
+      throw new Error(
+        `OpenTofu apply succeeded for ${stack}, but plan ${sourcePipeline} remains unconsumed; inspect live state before any retry`,
+        { cause: error },
+      );
+    }
   } finally {
     await removeTemporaryDirectory(planRoot);
   }

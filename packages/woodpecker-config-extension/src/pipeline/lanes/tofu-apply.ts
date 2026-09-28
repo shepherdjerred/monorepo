@@ -34,11 +34,16 @@ import {
  * other unexpected value is a hard failure -- silently continuing would apply
  * infrastructure changes without knowing whether this build was entitled to.
  */
-function admissionGate(): string[] {
+function admissionGate(recheckCurrent = false): string[] {
   return [
     "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --filter homelab --production",
+    ...(recheckCurrent
+      ? ["bun --no-install scripts/ci/homelab-release-admission.ts admit"]
+      : []),
     'release_admission="$(bun --no-install scripts/ci/homelab-release-admission.ts consume)"',
-    'if [ "$release_admission" = "superseded" ]; then exit 0; fi',
+    recheckCurrent
+      ? 'if [ "$release_admission" = "superseded" ]; then echo "reviewed platform operation was superseded" >&2; exit 1; fi'
+      : 'if [ "$release_admission" = "superseded" ]; then exit 0; fi',
     'if [ "$release_admission" != "admitted" ]; then',
     '  echo "invalid homelab release admission outcome: $release_admission" >&2',
     "  exit 1",
@@ -52,12 +57,7 @@ function stackCommands(
   sourcePipeline?: string,
 ): string[] {
   return [
-    ...admissionGate(),
-    ...(action === "prepare" || action === "apply-saved"
-      ? [
-          "bun --no-install scripts/ci/homelab-release-admission.ts require-current",
-        ]
-      : []),
+    ...admissionGate(action === "prepare" || action === "apply-saved"),
     ". ci/scripts/toolchain.sh",
     ...(stack === "github" && action === "apply"
       ? [

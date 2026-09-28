@@ -177,7 +177,7 @@ same main commit with `TOFU_PLATFORM_APPLY` set to the stack and
 second build applies those saved plan bytes; it cannot calculate a replacement
 plan. It fails if main has moved, the plan has expired, or OpenTofu state has
 changed. Both builds receive only that stack's credentials. After a successful
-apply, the encrypted plan handoff is deleted.
+apply, the encrypted plan is replaced with a consumed marker.
 
 If one fails, stop the rollout at that platform. Inspect its vendor resources,
 encrypted state object, and intended 1Password rotation units. Resume only
