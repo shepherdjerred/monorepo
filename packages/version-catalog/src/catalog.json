@@ -784,7 +784,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1000015@sha256:35aa1475ed18d18af9703a7e444f06117e95795c996648f59a57eecafe83a335",
+      "value": "2.0.0-1000016@sha256:0d4e8c0666da28e93ab228f811f8000eba48d9f9d7aaab6b5e8d2b9f2ebd3cac",
       "notes": [
         "not managed by renovate — bootstrap build, pushed by hand: Woodpecker",
         "needs this service to generate the pipeline that would otherwise build",
