@@ -50,6 +50,12 @@ export type FlagSourceOptions = {
    */
   readonly kinds: Readonly<Record<string, "boolean" | "string" | "number">>;
   readonly attributes?: Readonly<Record<string, string | number | boolean>>;
+  /**
+   * Called when the provider has no authoritative answer. Config resolution
+   * still descends to its declared fallback, while consumers that advance a
+   * durable cursor can pause until the provider recovers.
+   */
+  readonly onUnavailable?: (flag: string) => void;
 };
 
 const FATAL_SOURCE_ERROR_NAME = "ConfigSourceFatalError";
@@ -57,8 +63,10 @@ const FATAL_SOURCE_ERROR_NAME = "ConfigSourceFatalError";
 function valueOrAbsent<T>(
   result: FlagResult<T>,
   flag: string,
+  onUnavailable: ((flag: string) => void) | undefined,
 ): FlagSourceResult | undefined {
   if (isAbsent(result)) {
+    onUnavailable?.(flag);
     return undefined;
   }
   if (result.errorCode !== undefined) {
@@ -115,7 +123,7 @@ export function createFlagConfigSource(
               default: false,
               ...evaluation,
             });
-            return valueOrAbsent(result, names.flag);
+            return valueOrAbsent(result, names.flag, options.onUnavailable);
           }
           case "string": {
             const parsed = ManagedVariantFlagKeySchema.safeParse(names.flag);
@@ -129,7 +137,7 @@ export function createFlagConfigSource(
               default: "",
               ...evaluation,
             });
-            return valueOrAbsent(result, names.flag);
+            return valueOrAbsent(result, names.flag, options.onUnavailable);
           }
           case "number": {
             const parsed = ManagedVariantFlagKeySchema.safeParse(names.flag);
@@ -143,7 +151,7 @@ export function createFlagConfigSource(
               default: 0,
               ...evaluation,
             });
-            return valueOrAbsent(result, names.flag);
+            return valueOrAbsent(result, names.flag, options.onUnavailable);
           }
         }
       } catch (error) {

@@ -34,6 +34,9 @@ export type ImessageCommand = z.infer<typeof ImessageCommandSchema>;
 const BlueBubblesCursorFields = {
   startedAt: z.iso.datetime(),
   lastRowId: z.number().int().nonnegative(),
+  // A rebuilt Messages database restarts ROWID. Persist a generation so its
+  // new commands cannot be ordered against the retired database.
+  sourceEpoch: z.number().int().nonnegative().default(1),
 };
 export const BlueBubblesCursorSchema = z.discriminatedUnion("initialized", [
   z.strictObject({ ...BlueBubblesCursorFields, initialized: z.literal(true) }),

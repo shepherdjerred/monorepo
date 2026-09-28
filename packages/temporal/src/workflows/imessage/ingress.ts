@@ -87,11 +87,13 @@ export async function blueBubblesIngressWorkflow(
           startedAt: batch.startedAt,
           initialized: true,
           lastRowId: batch.lastRowId,
+          sourceEpoch: batch.sourceEpoch,
         }
       : {
           startedAt: batch.startedAt,
           initialized: false,
           lastRowId: batch.lastRowId,
+          sourceEpoch: batch.sourceEpoch,
           ...(batch.initializationHighWaterRowId === undefined
             ? {}
             : {

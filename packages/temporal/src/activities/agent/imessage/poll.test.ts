@@ -11,6 +11,7 @@ const CURSOR = {
   startedAt: "2026-09-17T00:00:00.000Z",
   initialized: true,
   lastRowId: 10,
+  sourceEpoch: 1,
 };
 const message = (row: number) => ({
   originalROWID: row,
@@ -78,6 +79,7 @@ describe("durable BlueBubbles polling", () => {
       startedAt: CURSOR.startedAt,
       initialized: true,
       lastRowId: 75,
+      sourceEpoch: 1,
       commands: [],
     });
     expect(mocks.request).toHaveBeenLastCalledWith("/api/v1/message/query", {
@@ -123,6 +125,7 @@ describe("durable BlueBubbles polling", () => {
       startedAt: first.startedAt,
       initialized: first.initialized,
       lastRowId: first.lastRowId,
+      sourceEpoch: first.sourceEpoch,
       initializationHighWaterRowId: first.initializationHighWaterRowId,
     });
 
@@ -130,6 +133,7 @@ describe("durable BlueBubbles polling", () => {
       startedAt: CURSOR.startedAt,
       initialized: true,
       lastRowId: 1000,
+      sourceEpoch: 1,
       commands: [],
     });
     expect(mocks.request).toHaveBeenLastCalledWith(
@@ -149,6 +153,7 @@ describe("durable BlueBubbles polling", () => {
       startedAt: initialized.startedAt,
       initialized: initialized.initialized,
       lastRowId: initialized.lastRowId,
+      sourceEpoch: initialized.sourceEpoch,
     });
     expect(live).toMatchObject({
       initialized: true,
@@ -225,6 +230,32 @@ describe("durable BlueBubbles polling", () => {
       });
     },
   );
+});
+
+describe("BlueBubbles database reset recovery", () => {
+  test("reinitializes with a new epoch after the Messages database ROWID resets", async () => {
+    mocks.request.mockResolvedValueOnce([]).mockResolvedValueOnce([message(3)]);
+
+    await expect(pollBlueBubblesMessages(CURSOR)).resolves.toEqual({
+      startedAt: CURSOR.startedAt,
+      initialized: false,
+      lastRowId: 0,
+      sourceEpoch: 2,
+      commands: [],
+    });
+    expect(mocks.request).toHaveBeenLastCalledWith("/api/v1/message/query", {
+      with: ["chats", "handle"],
+      limit: 1,
+      sort: "DESC",
+      where: [
+        { statement: "message.ROWID > :cursor", args: { cursor: 0 } },
+        {
+          statement: "message.ROWID = (SELECT MAX(ROWID) FROM message)",
+          args: {},
+        },
+      ],
+    });
+  });
 });
 
 describe("disabled BlueBubbles polling", () => {

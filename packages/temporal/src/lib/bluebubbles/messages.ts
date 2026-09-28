@@ -48,6 +48,7 @@ export function parseImessageAction(text: string): ImessageCommand["action"] {
 export function blueBubblesCommand(
   message: z.infer<typeof BlueBubblesMessageSchema>,
   owners: readonly string[],
+  sourceEpoch = BLUEBUBBLES_SOURCE_EPOCH,
 ): ImessageCommand | undefined {
   if (
     message.isFromMe ||
@@ -68,7 +69,7 @@ export function blueBubblesCommand(
     conversationId: chat.guid,
     submittedAt: new Date(message.dateCreated).toISOString(),
     sourceSequence: message.originalROWID,
-    sourceEpoch: BLUEBUBBLES_SOURCE_EPOCH,
+    sourceEpoch,
     action: parseImessageAction(message.text),
   };
 }
