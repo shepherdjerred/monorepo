@@ -1,4 +1,5 @@
 import {
+  getRuneTreeForRune,
   MatchLoadoutSchema,
   MatchRunePageSchema,
   type MatchLoadout,
@@ -46,6 +47,26 @@ export const MATCH_LOADOUT_LAKE_COLUMNS_SQL =
   "secondary_rune_style_id, secondary_rune_0_id, secondary_rune_1_id, " +
   "stat_perk_offense_id, stat_perk_flex_id, stat_perk_defense_id";
 
+function runeStyleId(
+  style: RawParticipant["perks"]["styles"][number],
+  participantId: number,
+): number {
+  if (style.style !== 0) return style.style;
+
+  // Riot sometimes sends style 0 alongside real rune selections. Infer the
+  // missing tree only when every selected rune identifies the same tree.
+  const trees = style.selections.map(
+    (selection) => getRuneTreeForRune(selection.perk)?.treeId,
+  );
+  const [firstTree] = trees;
+  if (firstTree === undefined || trees.some((tree) => tree !== firstTree)) {
+    throw new Error(
+      `Participant ${participantId.toString()} has a missing ${style.description} rune style with inconsistent selections`,
+    );
+  }
+  return firstTree;
+}
+
 function runePageFromParticipant(
   participant: RawParticipant,
 ): MatchRunePage | null {
@@ -77,9 +98,9 @@ function runePageFromParticipant(
     );
   }
   return MatchRunePageSchema.parse({
-    primaryStyleId: primary.style,
+    primaryStyleId: runeStyleId(primary, participant.participantId),
     primaryRuneIds: primary.selections.map((selection) => selection.perk),
-    secondaryStyleId: secondary.style,
+    secondaryStyleId: runeStyleId(secondary, participant.participantId),
     secondaryRuneIds: secondary.selections.map((selection) => selection.perk),
     statShardIds: participant.perks.statPerks,
   });
