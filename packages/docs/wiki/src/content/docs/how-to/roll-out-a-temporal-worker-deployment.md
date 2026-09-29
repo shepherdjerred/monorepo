@@ -104,15 +104,17 @@ the entire required window. Temporal alerts from other workers remain visible
 in monitoring but do not block these transitions.
 An early, repeated, or out-of-order command fails without changing routing.
 
-## Promote after the soak
+## Promote at 100% traffic
 
-After at least 24 hours at 100%:
+After the candidate reaches 100%, confirm representative live Workflows have
+completed and run:
 
 ```bash
 TEMPORAL_NAMESPACE=prod bun run worker-deployment promote --build-id <candidate-image-git-sha>
 ```
 
-Promotion verifies that the candidate catalog image contains the requested
+Promotion rechecks the two-hour poller, rule-evaluation, and candidate failure
+history. It verifies that the candidate catalog image contains the requested
 Build ID as its baked `GIT_SHA`, copies that exact value into the stable pin,
 makes the candidate current, and removes the ramp. Catalog-first ordering makes
 an interrupted promotion safe to retry. Review and commit both the catalog and

@@ -17,7 +17,6 @@ const ImageEnvironmentSchema = z.array(z.string());
 const REQUIRED_PROMETHEUS_HISTORY_SAMPLES = {
   "30m": 60,
   "2h": 240,
-  "24h": 2880,
 } as const;
 const MAX_RULE_EVALUATION_AGE_SECONDS = 300;
 const AcceptedDeploymentSchema = z.object({
@@ -242,7 +241,7 @@ export async function requireAcceptancePrerequisite(
 }
 
 async function requireHealthyRuleEvaluations(
-  duration: "30m" | "2h" | "24h",
+  duration: "30m" | "2h",
   run: RolloutCommandRunner,
 ): Promise<void> {
   const evaluationProgress = await queryRolloutMetric(
@@ -288,7 +287,7 @@ async function requireHealthyRuleEvaluations(
 }
 
 async function requirePollerHistory(input: {
-  duration: "30m" | "2h" | "24h";
+  duration: "30m" | "2h";
   requiredHistorySamples: number;
   buildId: string;
   taskQueue: string;
@@ -324,7 +323,7 @@ async function requirePollerHistory(input: {
 }
 
 async function requireCandidateWorkflowHealth(
-  duration: "30m" | "2h" | "24h",
+  duration: "30m" | "2h",
   poller: {
     namespace: string;
     deploymentName: string;
@@ -355,7 +354,7 @@ async function requireCandidateWorkflowHealth(
 }
 
 export async function requireHealthyRolloutWindow(
-  duration: "30m" | "2h" | "24h",
+  duration: "30m" | "2h",
   run: RolloutCommandRunner,
   poller?: {
     namespace: string;

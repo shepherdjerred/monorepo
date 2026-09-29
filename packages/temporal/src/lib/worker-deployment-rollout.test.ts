@@ -212,6 +212,8 @@ function fixtureCommandResult(
       throw new Error("fixture set-current-version is missing a build ID");
     }
     fixture.currentBuildId = buildId;
+    delete fixture.rampingBuildId;
+    fixture.rampPercentage = 0;
   }
   return jsonResult({ outcome: "ok" });
 }
@@ -582,11 +584,11 @@ describe("Worker Deployment rollout", () => {
 });
 
 describe("Worker Deployment promotion", () => {
-  test("promotes after a 24-hour soak and advances the stable image pin", async () => {
+  test("promotes at 100% with healthy history and advances the stable image pin", async () => {
     const commands: string[][] = [];
     const rolloutOptions = await options(
       "promote",
-      new Date("2026-08-30T00:01:00Z"),
+      new Date("2026-08-29T00:01:00Z"),
     );
     await Bun.write(
       rolloutOptions.candidateStatePath,
@@ -626,7 +628,7 @@ describe("Worker Deployment promotion", () => {
           command.includes("set-ramping-version") &&
           command.includes("--delete"),
       ),
-    ).toBe(true);
+    ).toBe(false);
     expect(await Bun.file(rolloutOptions.catalogPath).text()).toContain(
       `"value": "2.0.0-2@sha256:${CANDIDATE_DIGEST}"`,
     );

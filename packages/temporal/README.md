@@ -86,7 +86,7 @@ deployment has a rollback target. `advance` checks candidate and stable poller
 history, Prometheus rule-evaluation health, and candidate Build ID Workflow
 failure counters across each ramp window. Alerts from other workers remain
 visible in monitoring but do not block routing.
-`promote` checks the 24-hour history, verifies the candidate pin's baked
+`promote` checks the two-hour health history, verifies the candidate pin's baked
 `GIT_SHA`, and writes the stable pin before changing routing so an interrupted
 command is safe to retry. `rollback` removes the exact active ramp,
 even if a newer build registered. CI retains a Workflow candidate whenever its

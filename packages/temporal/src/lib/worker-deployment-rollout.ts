@@ -407,12 +407,8 @@ async function executePromotion(
   if (status.rampPercentage !== 100) {
     throw new Error("Promote requires a 100% ramp");
   }
-  const now = options.now ?? new Date();
-  if (elapsedMilliseconds(status.lastRampChange, now) < 24 * 60 * 60 * 1000) {
-    throw new Error("Candidate has not completed the 24-hour soak");
-  }
   await requireHealthyRolloutWindow(
-    "24h",
+    "2h",
     run,
     rolloutPoller(options, status.currentBuildId),
   );
@@ -434,6 +430,27 @@ async function executePromotion(
     await Bun.write(options.candidateStatePath, promotedState.contents);
   }
   await setCurrentVersion(options, options.buildId, run);
+  const promotedStatus = await readWorkerDeploymentRolloutStatus(
+    options,
+    run,
+    false,
+    false,
+  );
+  if (promotedStatus.currentBuildId !== options.buildId) {
+    throw new Error("Candidate did not become the current version");
+  }
+  if (
+    promotedStatus.rampingBuildId === undefined &&
+    promotedStatus.rampPercentage === 0
+  ) {
+    return;
+  }
+  if (
+    promotedStatus.rampingBuildId !== options.buildId ||
+    promotedStatus.rampPercentage !== 100
+  ) {
+    throw new Error("Deployment ramp changed during promotion");
+  }
   await removeWorkerDeploymentRampingVersion(options, run);
 }
 export async function executeWorkerDeploymentRollout(
