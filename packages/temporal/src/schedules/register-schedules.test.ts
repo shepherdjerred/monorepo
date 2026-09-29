@@ -338,12 +338,37 @@ test("billed LLM cost reconciles hourly on the shared Workflow queue", () => {
   });
 });
 
-test("billed LLM cost registers paused until its Workflow candidate is promoted", () => {
-  // The stable bundle predates runLlmBilledCostReconciliation, so an unpaused
-  // first run would fail and trip the alerts that gate the rollout itself.
+test("billed LLM cost remains paused until the candidate receives all Workflow traffic", () => {
+  // Stable workers do not register this Workflow, so its schedule must remain
+  // paused until the candidate receives 100% of traffic.
+  const initialPauseNote = findScheduleById(
+    "llm-billed-cost-hourly",
+  )?.initialPauseNote;
+  expect(initialPauseNote).toContain("100% candidate traffic");
+  expect(initialPauseNote).toContain(
+    "stable workers do not register this Workflow",
+  );
+  const schedule = findScheduleById("llm-billed-cost-hourly");
   expect(
-    findScheduleById("llm-billed-cost-hourly")?.initialPauseNote,
-  ).toContain("candidate promotion");
+    buildScheduleState(
+      schedule,
+      {},
+      {
+        paused: true,
+        note: "Awaiting Workflow candidate promotion with runLlmBilledCostReconciliation",
+      },
+    ),
+  ).toEqual({ paused: true, note: initialPauseNote });
+  expect(
+    buildScheduleState(
+      schedule,
+      {},
+      {
+        paused: true,
+        note: "Paused by operator for incident review",
+      },
+    ),
+  ).toEqual({ paused: true, note: "Paused by operator for incident review" });
 });
 
 describe("ops overview schedules", () => {
