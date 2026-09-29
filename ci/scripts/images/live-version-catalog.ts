@@ -21,7 +21,16 @@ export type LiveCatalogExecutor = (
 export async function readLiveVersionCatalogSource(
   executor: LiveCatalogExecutor,
 ): Promise<string> {
-  const fetched = await executor(["git", "fetch", "origin", "main"]);
+  // The image workflow starts from a depth-one clone. This bounded fetch
+  // supplies both the live catalog and the prior image-release ancestry.
+  const fetched = await executor([
+    "git",
+    "fetch",
+    "--no-tags",
+    "--depth=100",
+    "origin",
+    "main",
+  ]);
   if (fetched.exitCode !== 0) {
     throw new TransientError(
       "Unable to refresh origin/main before reading the version catalog",
