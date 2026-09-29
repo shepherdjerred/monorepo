@@ -1,3 +1,5 @@
+import { onlyInternalImagePinsChanged } from "@shepherdjerred/version-catalog/internal-image-pins";
+
 const turboTasks = [
   "build",
   "typecheck",
@@ -94,6 +96,40 @@ const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/feature-flags/managed-flag-inventory.json",
 ] as const;
 
+const IMAGE_PIN_STATE_INPUTS = new Set([
+  "packages/version-catalog/src/catalog.json",
+  "scripts/pin-candidates-state.json",
+]);
+
+const CATALOG_PATH = "packages/version-catalog/src/catalog.json";
+
+async function gitFileAt(ref: string, path: string): Promise<unknown> {
+  const child = Bun.spawn(["git", "show", `${ref}:${path}`], {
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "ignore",
+  });
+  const [exitCode, output] = await Promise.all([
+    child.exited,
+    new Response(child.stdout).text(),
+  ]);
+  if (exitCode !== 0) return undefined;
+  try {
+    return JSON.parse(output) as unknown;
+  } catch {
+    return undefined;
+  }
+}
+
+async function onlyInternalImagePinsChangedAtBase(
+  base: string,
+): Promise<boolean> {
+  return onlyInternalImagePinsChanged(
+    await gitFileAt(base, CATALOG_PATH),
+    await gitFileAt("HEAD", CATALOG_PATH),
+  );
+}
+
 async function validateBaseWithGit(
   command: readonly string[],
 ): Promise<number> {
@@ -166,6 +202,22 @@ export async function affectedVerifyFilters(
       `WARN: could not read changed files from CI base ${base}; running full verification`,
     );
     return [];
+  }
+  if (
+    changedFiles.length > 0 &&
+    changedFiles.every((path) => IMAGE_PIN_STATE_INPUTS.has(path)) &&
+    (await onlyInternalImagePinsChangedAtBase(base))
+  ) {
+    // Only digest values of internal images changed. Check the catalog, its
+    // direct CI and chart consumers, and root invariants; the release lane
+    // renders the resulting charts. Other catalog edits keep the full graph.
+    return [
+      "--filter=//",
+      "--filter=@shepherdjerred/version-catalog",
+      "--filter=@shepherdjerred/root-scripts",
+      "--filter=homelab",
+      "--filter=@homelab/cdk8s",
+    ];
   }
   // The affected package graph and the root namespace are a union. Root checks
   // remain represented, but Turbo executes only the ones whose declared input

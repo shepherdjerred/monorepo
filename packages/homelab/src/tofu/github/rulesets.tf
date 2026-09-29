@@ -55,9 +55,7 @@ resource "github_repository_ruleset" "monorepo_main" {
       # context nothing posts blocks every open PR on a missing check, which is
       # the same trap the merge-conflict note above describes.
       #
-      # Apply only after this context passes on a real post-bootstrap PR head.
-      # The one-time premerge bypass apply overrides this variable with the old
-      # Buildkite context, leaving the required check unchanged.
+      # Applied after this context passed on a real post-bootstrap PR head.
       required_check {
         context = var.required_ci_status_context
       }

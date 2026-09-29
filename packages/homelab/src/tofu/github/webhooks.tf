@@ -36,11 +36,8 @@
 # CI moved to Woodpecker, which registers its own webhook when a repository is
 # activated in its UI -- there is nothing for tofu to declare.
 #
-# `removed` rather than a deletion: this drops the resource from state WITHOUT
-# destroying the live webhook, because a webhook delivering to a still-active
-# Buildkite account is what keeps the old pipeline able to run during the
-# changeover. Delete it in GitHub by hand once the Buildkite subscription is
-# cancelled.
+# `removed` rather than a deletion keeps the old resource address out of
+# OpenTofu state. The legacy GitHub hook was deleted after Woodpecker took over.
 removed {
   from = github_repository_webhook.buildkite
 
@@ -80,9 +77,8 @@ resource "github_repository_webhook" "pr_bot" {
 
   active = true
   # `push` drives the main-branch merge-conflict backfill and `pull_request`
-  # drives the per-PR merge-conflict check + PR-closed Buildkite build
-  # cancellation. (The former `issue_comment` subscription drove the removed
-  # PR babysitter and is no longer needed.)
+  # drives the per-PR merge-conflict check. (The former `issue_comment`
+  # subscription drove the removed PR babysitter and is no longer needed.)
   events = ["pull_request", "push"]
 
   lifecycle {
