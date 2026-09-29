@@ -211,7 +211,7 @@ describe("release graph matches the pipeline it replaces", () => {
     ],
     "tofu-apply-seaweedfs": ["homelab-release-admission", "helm-push"],
     "tofu-apply-cloudflare": ["homelab-release-admission", "argocd-sync"],
-    "version-commit-back": ["images"],
+    "version-commit-back": ["images", "argocd-sync"],
     "ci-base-refresh": ["verify"],
     "ci-playwright-refresh": ["verify"],
   };

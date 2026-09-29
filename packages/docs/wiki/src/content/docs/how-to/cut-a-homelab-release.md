@@ -240,6 +240,20 @@ Never classify prune candidates from `OutOfSync` or `requiresPruning` alone. Tha
 is how you delete a retained application.
 :::
 
+## If a static site deploy gets AccessDenied
+
+Compare the failing bucket with `scripts/release/deploy-site.ts` and the
+`ci-sites` identity in the `seaweedfs-s3-credentials` 1Password item. For a
+new site bucket, add its `Read`, `Write`, `List`, and `Tagging` actions to that
+identity without changing its credential or other bucket grants. Wait for the
+1Password operator to update the `seaweedfs-s3-credentials` Secret in the
+`seaweedfs` namespace.
+
+Use the existing 1Password-backed site credential to probe the new bucket with
+`aws s3api list-objects-v2`. It must succeed for the new bucket and return
+`AccessDenied` for `homelab-tofu-state`. Once both probes pass, retry the
+failed site release.
+
 ## If the image did not rebuild
 
 Application image selection uses the newest `main` commit whose `images` and

@@ -269,10 +269,10 @@ check can see it, so the boundary is proved by probe — each identity must be
 evidence for any change to it. A positive probe alone cannot tell a scoped
 identity from an admin one.
 
-When adding a bucket to `scripts/release/deploy-site.ts`, add its `Read`,
-`Write`, `List`, and `Tagging` actions to the `ci-sites` identity in the
-`seaweedfs-s3-credentials` 1Password item. Then prove the site credential can
-list the new bucket and remains denied `homelab-tofu-state`.
+The site catalog and the `ci-sites` identity must name the same buckets; an
+omitted bucket blocks deployment with `AccessDenied`. See
+[the release guide's site-permission procedure](/how-to/cut-a-homelab-release/#if-a-static-site-deploy-gets-accessdenied)
+when adding a bucket.
 
 Each generated step names the exact secrets and keys it needs, and the agent
 turns those into `secretKeyRef` entries with
