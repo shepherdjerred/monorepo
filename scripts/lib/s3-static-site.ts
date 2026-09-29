@@ -209,6 +209,12 @@ async function directS3ObjectMatchesSource(
   opts: Parameters<typeof firstS3ObjectMismatch>[0],
   path: string,
 ): Promise<boolean> {
+  const region = opts.env["AWS_DEFAULT_REGION"];
+  if (region === undefined || region === "") {
+    throw new Error(
+      "S3 readback requires AWS_DEFAULT_REGION in its environment",
+    );
+  }
   const request = createSignedS3Request(
     {
       accessKeyId: requireEnv("AWS_ACCESS_KEY_ID"),
@@ -216,8 +222,7 @@ async function directS3ObjectMatchesSource(
       sessionToken: Bun.env["AWS_SESSION_TOKEN"],
       endpoint: opts.endpoint,
       bucket: opts.bucket,
-      region:
-        opts.env["AWS_DEFAULT_REGION"] ?? requireEnv("AWS_DEFAULT_REGION"),
+      region,
       forcePathStyle: true,
     },
     { method: "GET", key: path, signal: AbortSignal.timeout(120_000) },
