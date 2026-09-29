@@ -71,7 +71,11 @@ select neither lane.
 
 ### 1. Bootstrap packages and the agent
 
-From a clean checkout on the Mac, run the host provisioner:
+From a clean checkout in the Mac's logged-in GUI Terminal, run the host
+provisioner. Do not launch it over SSH: `launchctl` can place the agent in the
+GUI domain while giving its process the SSH audit session, which cannot see
+the unlocked login keychain needed for TaskNotes signing. The provisioner
+checks for the `Aqua` session before reading the agent secret.
 
 ```bash
 ./packages/homelab/mac-ci/provision-host.sh
@@ -244,6 +248,17 @@ The service must be running, system/disk sleep must remain disabled, and the
 GUI session must satisfy the native preflight. The agent should also appear
 connected at <https://woodpecker.sjer.red/admin/agents>; its log is at
 `~/.woodpecker/logs/agent.log`.
+
+If TaskNotes reports zero signing identities while the GUI Terminal finds one,
+restart the loaded agent **from that Terminal**:
+
+```bash
+launchctl kickstart -k "gui/$(id -u)/red.sjer.woodpecker-agent"
+```
+
+An SSH restart can recreate the same wrong audit session. Check the new
+agent process with `launchctl print pid/<pid>`; its security-context `asid`
+must match the GUI Terminal's `asid`.
 
 ## Native preflight
 

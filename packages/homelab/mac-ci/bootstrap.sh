@@ -44,6 +44,14 @@ if [[ "$(uname -m)" != "arm64" ]]; then
   exit 1
 fi
 
+# launchctl can register a service in gui/<uid> from SSH while giving the
+# process the SSH audit session. That process cannot see the unlocked login
+# keychain even when Terminal in the GUI session can.
+if [[ "$(launchctl managername)" != "Aqua" ]]; then
+  echo "error: run the Mac CI bootstrap from Terminal in the logged-in GUI session, not SSH" >&2
+  exit 1
+fi
+
 if [[ -z "${WOODPECKER_SERVER:-}" ]]; then
   echo "error: WOODPECKER_SERVER is not set (gRPC host:port, no scheme)." >&2
   exit 1
