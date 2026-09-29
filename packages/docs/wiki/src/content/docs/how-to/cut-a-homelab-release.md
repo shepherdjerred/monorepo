@@ -268,7 +268,8 @@ commit still rebuild their affected closures; an unchanged pin-only successor
 does not rebuild and repin the same application forever.
 
 If you expected a rebuild and got none, check whether your commit only moved a
-pin.
+pin. The `images` workflow prints its comparison base, changed paths, target
+reasons, and push outcomes as an image release summary in the Woodpecker log.
 
 If the image push finishes but candidate classification reports that no managed
 pin exists, do not retry the push. The comparison digest and commit-back key
