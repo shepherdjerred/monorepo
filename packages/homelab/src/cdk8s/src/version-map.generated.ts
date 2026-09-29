@@ -82,6 +82,7 @@ export const VersionMapSchema = z
     "semgrep/semgrep": z.string(),
     "woodpeckerci/woodpecker-server": z.string(),
     "woodpeckerci/woodpecker-agent": z.string(),
+    "woodpecker-ci/plugin-git": z.string(),
     "ducktors/turborepo-remote-cache": z.string(),
     kueue: z.string(),
     "tonistiigi/binfmt": z.string(),

@@ -105,9 +105,10 @@ The bootstrap:
 
 - installs `mise`, `xcodes`, XcodeGen, SwiftLint, coreutils, git-lfs, and Tailscale
   with Homebrew,
-  plus the pinned `woodpecker-agent` and `plugin-git` release binaries into `~/.local/bin`
-  (Woodpecker ships no Homebrew formula, and the agent/server gRPC protocol is
-  versioned, so a silently-upgraded agent would stop claiming jobs);
+  plus the catalog-pinned `woodpecker-agent` and `plugin-git` release binaries
+  into `~/.local/bin` (Woodpecker ships no Homebrew formula, and the
+  agent/server gRPC protocol is versioned). The clone plugin is checked against
+  its published SHA-256 on every run;
 - installs the Bun and Rust versions pinned by the root `.mise.toml`;
 - installs the `aarch64-apple-darwin` and `x86_64-apple-darwin` standard
   libraries needed for TaskNotes' universal macOS XCFramework;

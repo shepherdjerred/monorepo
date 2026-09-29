@@ -84,15 +84,41 @@ fi
 echo "==> Installing native CI packages"
 brew install mise xcodes xcodegen swiftlint coreutils git-lfs tailscale
 
+echo "==> Installing the repository-pinned Bun and Rust toolchains"
+mise install --cd "$REPO_ROOT" --yes bun rust
+mise reshim
+
+# The agent must match the in-cluster server protocol. Read the same catalog
+# entries the homelab release uses, with Bun isolated from the many unrelated
+# tools pinned by the monorepo root.
+BUN_VERSION="$(mise current --cd "$REPO_ROOT" bun)"
+catalog_versions="$(mise exec --cd /tmp "bun@$BUN_VERSION" -- bun -e '
+  const catalog = await Bun.file(process.argv[1]).json();
+  const version = (name) => {
+    const entry = catalog.entries.find((candidate) => candidate.name === name);
+    if (entry === undefined || typeof entry.value !== "string") {
+      throw new Error(`Missing version catalog entry: ${name}`);
+    }
+    return entry.value;
+  };
+  const agent = /^v(\d+\.\d+\.\d+)@sha256:[a-f0-9]{64}$/.exec(version("woodpeckerci/woodpecker-agent"));
+  const plugin = version("woodpecker-ci/plugin-git");
+  if (agent === null || !/^\d+\.\d+\.\d+$/.test(plugin)) {
+    throw new Error("Invalid Woodpecker agent or plugin-git catalog version");
+  }
+  console.log(`${agent[1]} ${plugin}`);
+' "$REPO_ROOT/packages/version-catalog/src/catalog.json")"
+read -r WOODPECKER_AGENT_VERSION PLUGIN_GIT_VERSION <<< "$catalog_versions"
+
 # Woodpecker ships no Homebrew formula, so the agent is a released binary.
 # Pinned by version rather than tracking latest: the agent and server speak a
 # versioned gRPC protocol, and a silently-upgraded agent is how a working host
 # stops claiming jobs.
-WOODPECKER_AGENT_VERSION="3.18.1"
 WOODPECKER_AGENT_BIN="$HOME/.local/bin/woodpecker-agent"
 AGENT_BUILD_PATH="$HOME/.woodpecker/builds"
 
-if [[ ! -x "$WOODPECKER_AGENT_BIN" ]]; then
+if [[ ! -x "$WOODPECKER_AGENT_BIN" ||
+  "$("$WOODPECKER_AGENT_BIN" --version)" != "woodpecker-agent version $WOODPECKER_AGENT_VERSION" ]]; then
   echo "==> Installing woodpecker-agent $WOODPECKER_AGENT_VERSION"
   mkdir -p "$(dirname "$WOODPECKER_AGENT_BIN")"
   ARCHIVE="$(mktemp -d)/agent.tar.gz"
@@ -104,10 +130,10 @@ fi
 
 # The local backend executes the clone plugin as a host binary, not a
 # container. Keep the published darwin/arm64 plugin in the agent's PATH.
-PLUGIN_GIT_VERSION="2.10.1"
 PLUGIN_GIT_SHA256="04cd1a2f9b53a4f6706a881a3d42bfdc5c16562962887e46b9922834e38524b7"
 PLUGIN_GIT_BIN="$HOME/.local/bin/plugin-git"
-if [[ ! -x "$PLUGIN_GIT_BIN" ]]; then
+if [[ ! -x "$PLUGIN_GIT_BIN" ]] ||
+  ! echo "$PLUGIN_GIT_SHA256  $PLUGIN_GIT_BIN" | shasum -a 256 -c - >/dev/null 2>&1; then
   echo "==> Installing plugin-git $PLUGIN_GIT_VERSION"
   plugin_download="$(mktemp "$HOME/.local/bin/plugin-git.XXXXXX")"
   curl -fsSL -o "$plugin_download" \
@@ -116,10 +142,6 @@ if [[ ! -x "$PLUGIN_GIT_BIN" ]]; then
   chmod 755 "$plugin_download"
   mv "$plugin_download" "$PLUGIN_GIT_BIN"
 fi
-
-echo "==> Installing the repository-pinned Bun and Rust toolchains"
-mise install --cd "$REPO_ROOT" --yes bun rust
-mise reshim
 
 # TaskNotes packages a universal macOS XCFramework. rustup installs only the
 # host architecture's standard library with a new toolchain, so provision both
