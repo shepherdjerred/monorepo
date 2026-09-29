@@ -1,9 +1,18 @@
 # mac-ci — native macOS Woodpecker agent
 
-This directory provisions the Apple Silicon Woodpecker agent that runs the
-native lanes. It is an active, serial native CI surface for QuotaBar, hkctl,
-and TaskNotes; Linux verification and every Kubernetes-backed lane run on the
-in-cluster agent instead.
+This directory provisions the Apple Silicon Woodpecker agent for QuotaBar,
+hkctl, and TaskNotes. The native lanes are temporarily paused in the generated
+Woodpecker pipeline while the agent is moved into the GUI audit session.
+Linux verification and every Kubernetes-backed lane run on the in-cluster
+agent.
+
+To restore native CI, confirm that the agent process and GUI Terminal have the
+same `asid` as described under Reboot acceptance below, then
+restore `macosSteps()` in
+`packages/woodpecker-config-extension/src/pipeline/steps.ts` and move the six
+native entries back into `COVERAGE` in
+`packages/woodpecker-config-extension/test/release.test.ts`. Until then,
+Woodpecker success does not include native macOS verification.
 
 The agent runs Woodpecker's **local backend**: it executes each step's commands
 directly on the host rather than in a container, which is the only way Swift
