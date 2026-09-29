@@ -714,7 +714,7 @@
       },
       "value": "2.0.0-12197@sha256:9acbf285a1fbe164deea3e2fe0a16a000a442cc0d269e74b2e4850f49e4946db",
       "notes": [
-        "Stable Scout beta Workflow Worker image - promoted after a 24-hour clean soak",
+        "Stable Scout beta Workflow Worker image - promoted after a healthy 100% ramp",
         "not managed by renovate"
       ]
     },
@@ -740,7 +740,7 @@
       },
       "value": "2.0.0-9495@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
       "notes": [
-        "Stable Scout prod Workflow Worker image - promoted after a 24-hour clean soak",
+        "Stable Scout prod Workflow Worker image - promoted after a healthy 100% ramp",
         "not managed by renovate"
       ]
     },
@@ -1580,9 +1580,9 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17262@sha256:9c6d04cdf407c3722d21caa3a7745d8e1638c32fed2cadb8f3e29d60c7bd912e",
+      "value": "2.0.0-1002817@sha256:b3479221851e3ccbbcf1bb2f1c279fdcb48dca602aae8dec1dcec1f32e0ac273",
       "notes": [
-        "Stable central Workflow Worker image - promoted after a 24-hour clean soak",
+        "Stable central Workflow Worker image - promoted after a healthy 100% ramp",
         "not managed by renovate"
       ]
     },

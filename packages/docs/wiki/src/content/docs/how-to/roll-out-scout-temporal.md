@@ -105,7 +105,7 @@ While the beta ramp is active:
 7. Force a report Schedule cron and task-queue mismatch, reconcile it, and
    confirm the desired definition returns while an operator pause is preserved.
 
-## Advance and soak beta
+## Advance and accept beta
 
 Use the rollout command to advance only after its alert and health windows are
 clean:
@@ -120,8 +120,8 @@ TEMPORAL_NAMESPACE=beta bun run worker-deployment advance -- \
   --build-id <candidate-image-git-sha>
 ```
 
-Record the beta image digest, deployed commit, routing state, and soak start
-time. Observe the candidate for at least 24 hours. The soak passes only when:
+Record the beta image digest, deployed commit, and routing state. Observe the
+candidate at 100% traffic. Promote when:
 
 - every fixed and per-report Schedule has the expected ownership and policy;
 - all four Activity queues retain pollers and acceptable schedule-to-start
@@ -134,7 +134,7 @@ time. Observe the candidate for at least 24 hours. The soak passes only when:
 - representative daily and weekly triggers complete with their expected
   Discord and report-lake effects.
 
-Promote only after the command verifies the full observation window:
+The promotion command verifies the two-hour health window again:
 
 ```bash
 TEMPORAL_NAMESPACE=beta bun run worker-deployment promote -- \
