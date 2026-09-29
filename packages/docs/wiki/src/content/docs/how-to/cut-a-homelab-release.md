@@ -245,11 +245,13 @@ is how you delete a retained application.
 Application image selection uses the newest `main` commit whose `images` and
 `version-commit-back` jobs both passed as its comparison base.
 
-A later version-pin commit can cancel the rest of that build without
-invalidating its completed image build, smoke test, and durable pin-handoff
-evidence. Changes after that image-release commit still rebuild their affected
-closures; an unchanged pin-only successor does not rebuild and repin the same
-application forever.
+`version-commit-back` waits for `argocd-sync` before creating a pin commit.
+That ordering keeps its new main pipeline from superseding an exact-revision
+root release halfway through child reconciliation. A separate newer main push
+can still supersede the build; its completed image build, smoke test, and
+durable pin-handoff evidence remain valid. Changes after that image-release
+commit still rebuild their affected closures; an unchanged pin-only successor
+does not rebuild and repin the same application forever.
 
 If you expected a rebuild and got none, check whether your commit only moved a
 pin.

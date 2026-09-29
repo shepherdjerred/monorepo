@@ -75,7 +75,10 @@ export function ciImageSteps(images: CiImages): CiStep[] {
         "ci/scripts/bun-install.sh --frozen-lockfile --filter '@shepherdjerred/root-scripts' --production",
         'bun --no-install scripts/release/update-versions.ts --commit-back --candidates "$(bun --no-install scripts/ci/read-ci-handoff.ts pin-candidates)"',
       ],
-      dependsOn: ["images"],
+      // A pin commit creates a new main pipeline. Wait until this build's
+      // exact-revision release has finished so that commit cannot supersede
+      // release-root halfway through its staged child syncs.
+      dependsOn: ["images", "argocd-sync"],
       timeoutMinutes: 60,
       resources: MEDIUM_TIER,
       defaultBranchOnly: true,

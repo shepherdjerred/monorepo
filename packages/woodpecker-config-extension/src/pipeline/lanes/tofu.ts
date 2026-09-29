@@ -61,7 +61,7 @@ export const STATE_BACKEND: SecretGrant[] = [
 
 /**
  * The identity that writes the live buckets: the published static sites and
- * the release archives. Scoped to exactly those twelve buckets, so it cannot
+ * the release archives. Scoped to those buckets, so it cannot
  * reach the OpenTofu state or the handoff store.
  */
 export const DEPLOY_KEYS: SecretGrant[] = [

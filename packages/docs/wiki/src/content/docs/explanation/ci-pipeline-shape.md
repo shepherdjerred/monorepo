@@ -247,13 +247,13 @@ could rewrite the OpenTofu state and every published site.
 SeaweedFS now has five identities that are genuinely distinct, each scoped in
 the gateway to the buckets its job touches:
 
-| Field                    | Reaches                                                 |
-| ------------------------ | ------------------------------------------------------- |
-| `SEAWEEDFS_HANDOFF_*`    | `ci-handoff` only                                       |
-| `SEAWEEDFS_SITES_*`      | the thirteen published-site and release-archive buckets |
-| `SEAWEEDFS_TOFU_STATE_*` | `homelab-tofu-state` only                               |
-| `SEAWEEDFS_APPLE_SDKS_*` | `apple-sdks`, read-only                                 |
-| `SEAWEEDFS_TOFU_ADMIN_*` | everything — see below                                  |
+| Field                    | Reaches                                    |
+| ------------------------ | ------------------------------------------ |
+| `SEAWEEDFS_HANDOFF_*`    | `ci-handoff` only                          |
+| `SEAWEEDFS_SITES_*`      | published-site and release-archive buckets |
+| `SEAWEEDFS_TOFU_STATE_*` | `homelab-tofu-state` only                  |
+| `SEAWEEDFS_APPLE_SDKS_*` | `apple-sdks`, read-only                    |
+| `SEAWEEDFS_TOFU_ADMIN_*` | everything — see below                     |
 
 `SEAWEEDFS_TOFU_ADMIN_*` is deliberately unscoped: the `seaweedfs` OpenTofu
 stack manages the buckets themselves, and SeaweedFS requires unscoped `Admin`
@@ -268,6 +268,11 @@ check can see it, so the boundary is proved by probe — each identity must be
 **denied** a bucket belonging to another — and that denial is the acceptance
 evidence for any change to it. A positive probe alone cannot tell a scoped
 identity from an admin one.
+
+When adding a bucket to `scripts/release/deploy-site.ts`, add its `Read`,
+`Write`, `List`, and `Tagging` actions to the `ci-sites` identity in the
+`seaweedfs-s3-credentials` 1Password item. Then prove the site credential can
+list the new bucket and remains denied `homelab-tofu-state`.
 
 Each generated step names the exact secrets and keys it needs, and the agent
 turns those into `secretKeyRef` entries with
