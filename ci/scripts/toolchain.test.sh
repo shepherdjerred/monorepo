@@ -96,6 +96,10 @@ if ! rg -Fq 'image: "bash"' "$MACOS_LANES"; then
   echo "macOS lanes must pin bash as the local-backend interpreter for macos-native-env.sh" >&2
   exit 1
 fi
+if ! rg -Fq 'evidence_root="$MACOS_CI_HOST_HOME/.woodpecker/evidence"' "$MACOS_LANES"; then
+  echo "TaskNotes native failure evidence must survive Woodpecker's isolated HOME" >&2
+  exit 1
+fi
 if ! rg -Fq 'WOODPECKER_BACKEND=local' "$MAC_CI_BOOTSTRAP" ||
   ! rg -Fq 'WOODPECKER_AGENT_LABELS=platform=darwin/' "$MAC_CI_BOOTSTRAP" ||
   ! rg -Fq 'PLUGIN_GIT_BIN="$HOME/.local/bin/plugin-git"' "$MAC_CI_BOOTSTRAP"; then
