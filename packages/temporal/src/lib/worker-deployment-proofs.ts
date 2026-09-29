@@ -323,6 +323,37 @@ async function requirePollerHistory(input: {
   }
 }
 
+async function requireCandidateWorkflowHealth(
+  duration: "30m" | "2h" | "24h",
+  poller: {
+    namespace: string;
+    deploymentName: string;
+    buildId: string;
+    taskQueue: string;
+    taskQueues?: readonly string[];
+  },
+  run: RolloutCommandRunner,
+): Promise<void> {
+  for (const taskQueue of poller.taskQueues ?? [poller.taskQueue]) {
+    const selector = `temporal_namespace=${JSON.stringify(poller.namespace)},worker_deployment_name=${JSON.stringify(poller.deploymentName)},worker_build_id=${JSON.stringify(poller.buildId)},task_queue=${JSON.stringify(taskQueue)}`;
+    for (const metric of [
+      "temporal_worker_workflow_task_execution_failed_total",
+      "temporal_worker_workflow_failed_total",
+    ]) {
+      const failures = await queryRolloutMetric(
+        `sum(increase(${metric}{${selector}}[${duration}])) or vector(0)`,
+        `${duration} candidate ${metric} query`,
+        run,
+      );
+      if (failures !== 0) {
+        throw new Error(
+          `Candidate build ${poller.buildId} recorded ${String(failures)} ${metric} failures on ${taskQueue} during the required ${duration} rollout window`,
+        );
+      }
+    }
+  }
+}
+
 export async function requireHealthyRolloutWindow(
   duration: "30m" | "2h" | "24h",
   run: RolloutCommandRunner,
@@ -348,6 +379,7 @@ export async function requireHealthyRolloutWindow(
   }
   await requireHealthyRuleEvaluations(duration, run);
   if (poller !== undefined) {
+    await requireCandidateWorkflowHealth(duration, poller, run);
     const buildIds = [poller.buildId];
     if (
       poller.currentBuildId !== undefined &&

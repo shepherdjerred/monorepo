@@ -98,9 +98,10 @@ TEMPORAL_NAMESPACE=prod bun run worker-deployment advance --build-id <candidate-
 ```
 
 After at least two hours at 50%, run the same command again. It advances to
-100%. Each transition rechecks candidate and stable poller history and
-Prometheus rule-evaluation health over the entire required window. Temporal
-workflow alerts are monitored separately and do not block these transitions.
+100%. Each transition rechecks candidate and stable poller history, Prometheus
+rule-evaluation health, and candidate Build ID Workflow failure counters over
+the entire required window. Temporal alerts from other workers remain visible
+in monitoring but do not block these transitions.
 An early, repeated, or out-of-order command fails without changing routing.
 
 ## Promote after the soak

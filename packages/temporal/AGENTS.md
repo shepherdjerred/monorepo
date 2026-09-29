@@ -50,8 +50,9 @@ bun run lint
 Workflow changes require bundle and retained-history replay appropriate to the
 change. Rollouts use the package's Worker Deployment command and move through
 stable, candidate canary, ramp, healthy poller and Prometheus rule-evaluation
-windows, and promotion. Firing Temporal alerts are monitored separately and do
-not block deployment routing. Inspect a stale lease before removal.
+windows, candidate Build ID Workflow failure checks, and promotion. Alerts
+from other workers do not block deployment routing. Inspect a stale lease
+before removal.
 
 For live work, identify namespace, workflow ID, run ID, task queue, worker
 build, and schedule. A quiet durable timer is healthy; do not cancel it merely

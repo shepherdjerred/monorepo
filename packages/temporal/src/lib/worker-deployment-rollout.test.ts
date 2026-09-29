@@ -38,6 +38,7 @@ type Fixture = {
   workflowPollers?: number;
   alerts?: number;
   historicalAlerts?: number;
+  candidateFailures?: number;
   historicalRuleEvaluationSamples?: number;
   historicalPollerSamples?: number;
   historicalEvaluationProgress?: number;
@@ -134,12 +135,22 @@ function prerequisiteDeploymentDescription(fixture: Fixture): unknown {
   };
 }
 
+function increaseMetricValue(
+  expression: string,
+  fixture: Fixture,
+): number | undefined {
+  return expression.includes(
+    "increase(prometheus_rule_evaluation_failures_total",
+  )
+    ? (fixture.ruleEvaluationFailures ?? 0)
+    : expression.includes("increase(temporal_worker_workflow_")
+      ? (fixture.candidateFailures ?? 0)
+      : undefined;
+}
+
 function metricValue(expression: string, fixture: Fixture): number {
-  if (
-    expression.includes("increase(prometheus_rule_evaluation_failures_total")
-  ) {
-    return fixture.ruleEvaluationFailures ?? 0;
-  }
+  const increased = increaseMetricValue(expression, fixture);
+  if (increased !== undefined) return increased;
   if (expression.includes("time() - max by")) {
     return fixture.evaluationAgeSeconds ?? 1;
   }
@@ -796,6 +807,29 @@ describe("Worker Deployment rollout safety", () => {
     );
     expect(commands.some((command) => command.includes("50"))).toBe(true);
     expect(commands.some((command) => command.includes("ALERTS"))).toBe(false);
+    expect(
+      commands.some((command) =>
+        command.some((argument) =>
+          argument.includes(
+            "temporal_worker_workflow_task_execution_failed_total",
+          ),
+        ),
+      ),
+    ).toBe(true);
+    await expect(
+      executeWorkerDeploymentRollout(
+        await options("advance", new Date("2026-08-29T00:31:00Z")),
+        fixtureRunner(
+          {
+            rampingBuildId: CANDIDATE,
+            rampPercentage: 10,
+            rampChangedTime: "2026-08-29T00:00:00Z",
+            candidateFailures: 1,
+          },
+          [],
+        ),
+      ),
+    ).rejects.toThrow("Candidate build");
   });
 
   test("rejects a ramp without a complete Prometheus history window", async () => {

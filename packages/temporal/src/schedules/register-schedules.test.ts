@@ -348,6 +348,27 @@ test("billed LLM cost remains paused until the candidate receives all Workflow t
   expect(initialPauseNote).toContain(
     "stable workers do not register this Workflow",
   );
+  const schedule = findScheduleById("llm-billed-cost-hourly");
+  expect(
+    buildScheduleState(
+      schedule,
+      {},
+      {
+        paused: true,
+        note: "Awaiting Workflow candidate promotion with runLlmBilledCostReconciliation",
+      },
+    ),
+  ).toEqual({ paused: true, note: initialPauseNote });
+  expect(
+    buildScheduleState(
+      schedule,
+      {},
+      {
+        paused: true,
+        note: "Paused by operator for incident review",
+      },
+    ),
+  ).toEqual({ paused: true, note: "Paused by operator for incident review" });
 });
 
 describe("ops overview schedules", () => {
