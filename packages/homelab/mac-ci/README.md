@@ -263,7 +263,8 @@ connected at <https://woodpecker.sjer.red/admin/agents>; its log is at
 
 For TaskNotes, the preflight prints the discovered certificate fingerprint to
 stdout. `mac:e2e:ci` requires that explicit value and passes it only to the UI
-test runner's code-signing setting.
+test runner's code-signing setting. It searches the login keychain under
+`MACOS_CI_HOST_HOME` explicitly because Woodpecker isolates each job's `HOME`.
 
 ## Operations
 
