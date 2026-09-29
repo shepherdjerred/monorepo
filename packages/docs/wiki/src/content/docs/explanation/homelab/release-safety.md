@@ -375,8 +375,12 @@ evidence.
 
 So a later pin commit cancels the remaining build without invalidating that
 evidence. Changes after the image-release commit still rebuild their affected
-closures, and an unchanged pin-only successor does not rebuild and repin the
-same application forever.
+closures. The catalog's `catalog.json` is deployment state: image publishing
+reads it to compare and write pins, while production Dockerfiles leave it out
+of the application layers. The Temporal operator rollout command reads the
+catalog from its checkout. Image selection therefore ignores changes to that
+JSON file but still selects changes to the catalog parser. A pin
+commit cannot rebuild and repin the same application forever.
 
 ## Related
 
