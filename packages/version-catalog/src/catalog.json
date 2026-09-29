@@ -1554,7 +1554,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1002769@sha256:becf32a8f3cfb66387754bcaa37981a458c743c011197182947529ba8641c495",
+      "value": "2.0.0-1002808@sha256:d43a3c5941ee0226946454f81d8ba8492245a4bab39bed234efc4bff0ba3324f",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1567,7 +1567,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17262@sha256:9c6d04cdf407c3722d21caa3a7745d8e1638c32fed2cadb8f3e29d60c7bd912e",
+      "value": "2.0.0-1002808@sha256:d43a3c5941ee0226946454f81d8ba8492245a4bab39bed234efc4bff0ba3324f",
       "notes": [
         "Candidate central Workflow Worker image - updated by CI pipeline",
         "not managed by renovate"
