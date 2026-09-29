@@ -13,15 +13,12 @@ variable "github_token" {
 }
 
 variable "required_ci_status_context" {
-  description = "Required PR CI context; use the Buildkite context only for the targeted premerge ruleset bypass apply"
+  description = "Required Woodpecker PR CI completion context"
   type        = string
   default     = "ci/woodpecker/pr/ci-complete"
 
   validation {
-    condition = contains([
-      "buildkite/monorepo/pr",
-      "ci/woodpecker/pr/ci-complete",
-    ], var.required_ci_status_context)
-    error_message = "required_ci_status_context must be the Buildkite bootstrap context or the Woodpecker CI completion context."
+    condition     = var.required_ci_status_context == "ci/woodpecker/pr/ci-complete"
+    error_message = "required_ci_status_context must be the Woodpecker CI completion context."
   }
 }

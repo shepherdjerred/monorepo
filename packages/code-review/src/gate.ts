@@ -283,10 +283,9 @@ export const REVIEW_GATE_FAILURE_EXIT_CODE = 1;
 
 /**
  * The gate's exit status when the provider declared it could not review at all
- * (quota exhaustion). The Buildkite step soft-fails on exactly this status, so
- * an out-of-quota provider stops failing the rest of CI, while findings,
- * unresolved threads, timeouts, and every other error still fail hard.
- * `.buildkite/pipeline.yml` and `select-pr-pipeline.ts` pin the same number.
+ * (quota exhaustion). The Woodpecker wrapper treats exactly this status as
+ * advisory; findings, unresolved threads, timeouts, and other errors still
+ * fail the review workflow. `ci/scripts/review-gate.sh` pins the same number.
  */
 export const REVIEW_GATE_BLOCKED_EXIT_CODE = 42;
 

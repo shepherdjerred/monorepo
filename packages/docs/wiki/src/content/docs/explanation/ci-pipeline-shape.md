@@ -45,12 +45,15 @@ with the PR target branch. Within that workflow, Turbo runs at most three tasks
 at once and each Vitest process uses at most four workers, matching the pod's
 12-CPU limit.
 
-For a commit changing only the version catalog and image pin state, `verify`
-checks the catalog package, root scripts, homelab chart consumer, and root
-invariants. Those files describe published deployment images; they do not
-change the source of every package that depends on the catalog. An unknown or
-invalid comparison base still runs the full verification graph. The main
-release renders and reconciles the charts generated from the pins.
+When the only catalog edits change digest values of internal images, `verify`
+checks the catalog package, root scripts, the homelab chart consumer, and root
+invariants. Other catalog edits and an unknown or invalid comparison base run
+the full verification graph. The main release renders and reconciles the charts
+generated from the pins. On a proven pin-only main push, the extension also
+omits unrelated site, package, toolchain-refresh, and OpenTofu workflows. It
+keeps image publication, the guarded chart and ArgoCD release, the pin
+commit-back, and Scout's image-driven release consumers. An uncertain catalog
+comparison selects the full main graph.
 
 The verify and Playwright workflows use the private Turbo cache over the
 tailnet, with the `monorepo` team and a Kubernetes Secret for its token. This
@@ -144,13 +147,14 @@ preserve coverage.
   moves the committed digest. The macOS and Windows cross-compiler build lanes
   are paused; they do not add work to the default pipeline.
 
-## Native Apple checks are a separate execution surface
+## Native Apple checks are paused
 
 Linux `verify` remains the first hard correctness gate, but it cannot exercise
-Xcode, code signing, or macOS UI automation. Changed QuotaBar, hkctl, and
-TaskNotes paths therefore add native phases after `verify`.
+Xcode, code signing, or macOS UI automation. The native Woodpecker lanes for
+QuotaBar, hkctl, and TaskNotes are currently paused while the Mac agent's GUI
+audit session is repaired.
 
-Those phases select the Mac Mini by its `platform=darwin/arm64` agent label and
+When resumed, those phases select the Mac Mini by its `platform=darwin/arm64` agent label and
 serialize in one concurrency group. They run on Woodpecker's **local backend**:
 there is no container and no pod, which is the only way Swift and Xcode run at
 all. That is also why they carry no credentials — with no pod there are no

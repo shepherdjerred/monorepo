@@ -12,7 +12,12 @@ import {
 } from "#src/pipeline/lanes/tofu-apply.ts";
 import { completionStep, noWorkStep } from "#src/pipeline/completion.ts";
 import { resolveCiImages, type ImageFetcher } from "#src/images.ts";
+import type { CiStep } from "#src/pipeline/model.ts";
 import { changedFilesSince } from "#src/github-compare.ts";
+import {
+  internalImagePinSteps,
+  isInternalImagePinChange,
+} from "#src/pipeline/internal-image-pin-change.ts";
 
 export type AppOptions = {
   /** Resolves Woodpecker's signing key; the caller caches it. */
@@ -90,6 +95,34 @@ function platformOperationRequest(
     }
   }
   return { invalid: true };
+}
+
+async function stepsForMainChange({
+  steps,
+  pipeline,
+  defaultBranch,
+  changedFiles,
+  changedBase,
+  imageFetcher,
+}: {
+  steps: CiStep[];
+  pipeline: Pipeline;
+  defaultBranch: string;
+  changedFiles: readonly string[] | undefined;
+  changedBase: string | undefined;
+  imageFetcher: ImageFetcher;
+}): Promise<CiStep[]> {
+  return changedFiles !== undefined &&
+    pipeline.event === "push" &&
+    pipeline.branch === defaultBranch &&
+    (await isInternalImagePinChange(
+      changedFiles,
+      changedBase,
+      pipeline.commit,
+      imageFetcher,
+    ))
+    ? internalImagePinSteps(steps)
+    : steps;
 }
 
 export function createApp(options: AppOptions): Hono {
@@ -201,8 +234,21 @@ export function createApp(options: AppOptions): Hono {
         "could not establish complete main diff; selecting all lanes",
       );
     }
+    const steps = buildPipelineSteps({
+      images,
+      changedBase,
+      verifyBase,
+      imageReleaseBase,
+    });
     const selected = selectSteps(
-      buildPipelineSteps({ images, changedBase, verifyBase, imageReleaseBase }),
+      await stepsForMainChange({
+        steps,
+        pipeline,
+        defaultBranch: repo.default_branch,
+        changedFiles,
+        changedBase,
+        imageFetcher: options.imageFetcher,
+      }),
       { ...selectionContext, changedFiles: changedFiles ?? [] },
     );
 

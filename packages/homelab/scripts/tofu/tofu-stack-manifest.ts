@@ -23,7 +23,6 @@ export type TofuStack =
   | "argocd"
   | "arr"
   | "asuswrt"
-  | "buildkite"
   | "cloudflare"
   | "cloudflare-tokens"
   | "discord"
@@ -111,11 +110,6 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     credentials: [
       { source: "ASUSWRT_USERNAME", target: "TF_VAR_asuswrt_username" },
       { source: "ASUSWRT_PASSWORD", target: "TF_VAR_asuswrt_password" },
-    ],
-  },
-  buildkite: {
-    credentials: [
-      { source: "BUILDKITE_ADMIN_TOKEN", target: "TF_VAR_buildkite_api_token" },
     ],
   },
   cloudflare: {
@@ -238,7 +232,6 @@ const TOFU_STACKS: readonly TofuStack[] = [
   "argocd",
   "arr",
   "asuswrt",
-  "buildkite",
   "cloudflare",
   "cloudflare-tokens",
   "discord",

@@ -38,7 +38,6 @@ const STACKS: readonly TofuStack[] = [
   "argocd",
   "arr",
   "asuswrt",
-  "buildkite",
   "cloudflare",
   "cloudflare-tokens",
   "discord",
@@ -50,7 +49,7 @@ const STACKS: readonly TofuStack[] = [
   "tailscale",
 ];
 
-describe("Buildkite OpenTofu credential contracts", () => {
+describe("OpenTofu credential contracts", () => {
   test.each(STACKS)("%s requests only its declared credentials", (stack) => {
     const requested: string[] = [];
     buildTofuEnvironment(stack, (environmentName) => {
