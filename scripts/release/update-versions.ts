@@ -25,6 +25,7 @@ const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
 const VERSION_CATALOG_FILE_REL = "packages/version-catalog/src/catalog.json";
 const PIN_STATE_FILE_REL = "scripts/pin-candidates-state.json";
 const MAX_LEASE_ATTEMPTS = 3;
+const MAX_MERGE_READINESS_ATTEMPTS = 10;
 
 type GitRunner = (
   args: string[],
@@ -198,6 +199,7 @@ export async function pushWithExactLease(
 
 async function openOrUpdatePullRequest(
   env: Record<string, string>,
+  expectedHead: string,
 ): Promise<void> {
   const prList = await run(
     [
@@ -257,7 +259,69 @@ async function openOrUpdatePullRequest(
   if (prNumber === "") {
     throw new Error("version commit-back PR number is empty");
   }
-  await run(
+  await enableAutoMergeWhenReady(env, prNumber, expectedHead);
+}
+
+async function enableAutoMergeWhenReady(
+  env: Record<string, string>,
+  prNumber: string,
+  expectedHead: string,
+): Promise<void> {
+  // GitHub recalculates mergeability after a force push. Arming auto-merge
+  // before that calculation finishes fails even when the new head is clean.
+  for (let attempt = 1; attempt <= MAX_MERGE_READINESS_ATTEMPTS; attempt++) {
+    if (
+      (await isVersionPinPrMergeable(env, prNumber, expectedHead)) &&
+      (await tryEnableVersionPinAutoMerge(env, prNumber))
+    )
+      return;
+    if (attempt < MAX_MERGE_READINESS_ATTEMPTS) {
+      await Bun.sleep(2000);
+    }
+  }
+  throw new Error(
+    `GitHub did not confirm auto-merge readiness for version pin PR #${prNumber}`,
+  );
+}
+
+async function isVersionPinPrMergeable(
+  env: Record<string, string>,
+  prNumber: string,
+  expectedHead: string,
+): Promise<boolean> {
+  const viewed = await run(
+    [
+      "gh",
+      "pr",
+      "view",
+      "--repo",
+      MONOREPO_REPO,
+      prNumber,
+      "--json",
+      "headRefOid,mergeable",
+      "--jq",
+      '.headRefOid + " " + .mergeable',
+    ],
+    { env, capture: true, echoCapturedStdout: false },
+  );
+  const [head, mergeable] = viewed.stdout.trim().split(" ");
+  if (head !== expectedHead) return false;
+  if (mergeable === "CONFLICTING") {
+    throw new Error(`version pin PR #${prNumber} conflicts with main`);
+  }
+  if (mergeable !== "MERGEABLE" && mergeable !== "UNKNOWN") {
+    throw new Error(
+      `unexpected mergeability for version pin PR #${prNumber}: ${mergeable ?? "missing"}`,
+    );
+  }
+  return mergeable === "MERGEABLE";
+}
+
+async function tryEnableVersionPinAutoMerge(
+  env: Record<string, string>,
+  prNumber: string,
+): Promise<boolean> {
+  const merged = await runAllowExit(
     [
       "gh",
       "pr",
@@ -269,6 +333,11 @@ async function openOrUpdatePullRequest(
       "--squash",
     ],
     { env },
+  );
+  if (merged.exitCode === 0) return true;
+  if (merged.stderr.includes("Pull Request is not mergeable")) return false;
+  throw new Error(
+    `failed to enable auto-merge for version pin PR #${prNumber}: ${merged.stderr}`,
   );
 }
 
@@ -331,7 +400,9 @@ async function commitBack(
         `version pin push lost ${MAX_LEASE_ATTEMPTS.toString()} consecutive leases`,
       );
     }
-    await openOrUpdatePullRequest(env);
+    const headResult = await git(["rev-parse", "HEAD"], { capture: true });
+    const expectedHead = headResult.stdout.trim();
+    await openOrUpdatePullRequest(env, expectedHead);
   } finally {
     await auth.cleanup();
     await rm(cloneDir, { recursive: true, force: true });
