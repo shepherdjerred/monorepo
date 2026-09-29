@@ -366,15 +366,9 @@ describe("coverage of the Buildkite pipeline", () => {
     "scout-beta-release": "scout-beta-release",
     "scout-tag-release": "scout-tag-release",
     "scout-prod-reconcile": "scout-prod-reconcile",
-    "quotabar-macos-pr": "quotabar-macos",
-    "quotabar-macos-main": "quotabar-macos",
-    "hkctl-native-pr": "hkctl-native",
-    "hkctl-native-main": "hkctl-native",
-    "tasknotes-native-pr": "tasknotes-native",
-    "tasknotes-native-main": "tasknotes-native",
   };
 
-  /** Buildkite steps deliberately left with no successor, and why. */
+  /** Buildkite steps absent from the current graph, and why. */
   const RETIRED: Readonly<Record<string, string>> = {
     "build-summary": "produced only the build annotation this migration drops",
     "macos-native-dispatch":
@@ -387,6 +381,18 @@ describe("coverage of the Buildkite pipeline", () => {
     "windows-cross-compiler-pr": "paused by #3211",
     "macos-cross-compiler-pr": "paused by #3211",
     "macos-cross-compiler": "paused by #3211",
+    "quotabar-macos-pr":
+      "temporarily paused until the Mac agent joins the GUI audit session",
+    "quotabar-macos-main":
+      "temporarily paused until the Mac agent joins the GUI audit session",
+    "hkctl-native-pr":
+      "temporarily paused until the Mac agent joins the GUI audit session",
+    "hkctl-native-main":
+      "temporarily paused until the Mac agent joins the GUI audit session",
+    "tasknotes-native-pr":
+      "temporarily paused until the Mac agent joins the GUI audit session",
+    "tasknotes-native-main":
+      "temporarily paused until the Mac agent joins the GUI audit session",
     "tofu-platform-openrouter": "retired with the OpenRouter platform stack",
   };
 

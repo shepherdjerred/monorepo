@@ -17,7 +17,6 @@ import { releaseChainSteps } from "#src/pipeline/lanes/release.ts";
 import { ciImageSteps } from "#src/pipeline/lanes/ci-images.ts";
 import { scoutSteps } from "#src/pipeline/lanes/scout.ts";
 import { siteSteps } from "#src/pipeline/lanes/sites.ts";
-import { macosSteps } from "#src/pipeline/lanes/macos.ts";
 import { observabilityE2eSteps } from "#src/pipeline/lanes/observability-e2e.ts";
 import { prGateSteps } from "#src/pipeline/lanes/pr-gates.ts";
 import {
@@ -148,7 +147,8 @@ export function buildPipelineSteps({
     ...ciImageSteps(images),
     ...scoutSteps(images),
     ...siteSteps(images),
-    ...macosSteps(),
+    // Native lanes are paused until the Mac agent runs in the GUI audit
+    // session. The lane definitions stay in macos.ts for restoration.
     ...observabilityE2eSteps(images),
     ...prGateSteps(images),
   ];
