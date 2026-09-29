@@ -59,7 +59,8 @@ COPY --parents \
   packages/config \
   packages/ops-model \
   packages/ops-clients \
-  packages/version-catalog \
+  packages/version-catalog/package.json \
+  packages/version-catalog/src/index.ts \
   ./
 # Home Assistant is published with a dist-based export. Build it in the
 # artifact stage so the runtime image does not resolve the workspace link to a
@@ -431,7 +432,6 @@ COPY --parents \
   packages/seaweedfs-backup \
   packages/ops-model \
   packages/ops-clients \
-  packages/version-catalog \
   ./
 
 # Built artifacts from the build stage.

@@ -116,6 +116,8 @@ export type SelectorInputs = {
   versionCatalogSource?: string;
 };
 
+const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
+
 function lockfileChangedTargets(
   lockfiles: LockfilePair,
   packages: ReadonlyMap<string, WorkspacePackage>,
@@ -384,11 +386,18 @@ export async function selectImageTargetsWithReasons(
     return allTargetsResult(changedPaths, manifestReason);
   }
 
+  // catalog.json is deployment state. No production Dockerfile copies it:
+  // Toolkit uses the catalog parser, while rollout commands read a checkout.
+  // Treating this file as source for Scout and Temporal creates an endless
+  // image → pin PR → image loop without changing either running application.
+  const imageChangedPaths = changedPaths.filter(
+    (path) => path !== VERSION_CATALOG_PATH,
+  );
   const packages = await loadWorkspaces(repoRoot);
   const reasons = new Map<string, string[]>();
-  addClosureReasons(changedPaths, packages, reasons);
-  addPrefixReasons(changedPaths, reasons);
-  addSharedApplicationReasons(changedPaths, reasons);
+  addClosureReasons(imageChangedPaths, packages, reasons);
+  addPrefixReasons(imageChangedPaths, reasons);
+  addSharedApplicationReasons(imageChangedPaths, reasons);
 
   const unpublishedPinFailure = await unpublishedImagePinInspectionFailure({
     repoRoot,
