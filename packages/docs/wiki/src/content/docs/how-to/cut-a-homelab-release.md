@@ -240,16 +240,32 @@ Never classify prune candidates from `OutOfSync` or `requiresPruning` alone. Tha
 is how you delete a retained application.
 :::
 
+## If a static site deploy gets AccessDenied
+
+Compare the failing bucket with `scripts/release/deploy-site.ts` and the
+`ci-sites` identity in the `seaweedfs-s3-credentials` 1Password item. For a
+new site bucket, add its `Read`, `Write`, `List`, and `Tagging` actions to that
+identity without changing its credential or other bucket grants. Wait for the
+1Password operator to update the `seaweedfs-s3-credentials` Secret in the
+`seaweedfs` namespace.
+
+Use the existing 1Password-backed site credential to probe the new bucket with
+`aws s3api list-objects-v2`. It must succeed for the new bucket and return
+`AccessDenied` for `homelab-tofu-state`. Once both probes pass, retry the
+failed site release.
+
 ## If the image did not rebuild
 
 Application image selection uses the newest `main` commit whose `images` and
 `version-commit-back` jobs both passed as its comparison base.
 
-A later version-pin commit can cancel the rest of that build without
-invalidating its completed image build, smoke test, and durable pin-handoff
-evidence. Changes after that image-release commit still rebuild their affected
-closures; an unchanged pin-only successor does not rebuild and repin the same
-application forever.
+`version-commit-back` waits for `argocd-sync` before creating a pin commit.
+That ordering keeps its new main pipeline from superseding an exact-revision
+root release halfway through child reconciliation. A separate newer main push
+can still supersede the build; its completed image build, smoke test, and
+durable pin-handoff evidence remain valid. Changes after that image-release
+commit still rebuild their affected closures; an unchanged pin-only successor
+does not rebuild and repin the same application forever.
 
 If you expected a rebuild and got none, check whether your commit only moved a
 pin.
