@@ -96,8 +96,13 @@ if ! rg -Fq 'image: "bash"' "$MACOS_LANES"; then
   echo "macOS lanes must pin bash as the local-backend interpreter for macos-native-env.sh" >&2
   exit 1
 fi
+if ! rg -Fq 'evidence_root="$MACOS_CI_HOST_HOME/.woodpecker/evidence"' "$MACOS_LANES"; then
+  echo "TaskNotes native failure evidence must survive Woodpecker's isolated HOME" >&2
+  exit 1
+fi
 if ! rg -Fq 'WOODPECKER_BACKEND=local' "$MAC_CI_BOOTSTRAP" ||
-  ! rg -Fq 'WOODPECKER_AGENT_LABELS=platform=darwin/' "$MAC_CI_BOOTSTRAP"; then
+  ! rg -Fq 'WOODPECKER_AGENT_LABELS=platform=darwin/' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'PLUGIN_GIT_BIN="$HOME/.local/bin/plugin-git"' "$MAC_CI_BOOTSTRAP"; then
   echo "macOS agent must run the local backend and carry the label the native lanes select on" >&2
   exit 1
 fi
@@ -107,7 +112,8 @@ if ! rg -Fq 'AGENT_BUILD_PATH="$HOME/.woodpecker/builds"' "$MAC_CI_BOOTSTRAP" ||
   echo "macOS bootstrap must trust the same checkout root it configures" >&2
   exit 1
 fi
-if ! rg -Fq 'mise exec --cd "$REPO_ROOT" -- rustup target add' "$MAC_CI_BOOTSTRAP" ||
+if ! rg -Fq 'RUST_VERSION="$(mise current --cd "$REPO_ROOT" rust)"' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'mise exec --cd /tmp "rust@$RUST_VERSION" -- rustup target add' "$MAC_CI_BOOTSTRAP" ||
   ! rg -Fq 'aarch64-apple-darwin' "$MAC_CI_BOOTSTRAP" ||
   ! rg -Fq 'x86_64-apple-darwin' "$MAC_CI_BOOTSTRAP"; then
   echo "macOS bootstrap must install both TaskNotes universal Rust targets" >&2
@@ -213,8 +219,15 @@ if BUN_INSTALL_LOCK_MODE=unknown \
   exit 1
 fi
 
-mkdir -p "$TEST_ROOT/home"
-HOME="$TEST_ROOT/home" \
+mkdir -p "$TEST_ROOT/home/.local/share/mise" "$TEST_ROOT/isolated-home"
+cat >"$TEST_ROOT/bin/dscl" <<'EOF'
+#!/usr/bin/env bash
+printf 'NFSHomeDirectory: %s\n' "$CI_TEST_HOST_HOME"
+EOF
+chmod +x "$TEST_ROOT/bin/dscl"
+HOME="$TEST_ROOT/isolated-home" \
+  CI_TEST_HOST_HOME="$TEST_ROOT/home" \
+  CI_TEST_ISOLATED_HOME="$TEST_ROOT/isolated-home" \
   BUN_CACHE_LOCK_FILE="$TEST_ROOT/control/.gc.lock" \
   TURBO_API=http://linux-cache.invalid \
   TURBO_CACHE=remote:rw \
@@ -222,13 +235,22 @@ HOME="$TEST_ROOT/home" \
   TURBO_TEAM=monorepo \
   TURBO_TELEMETRY_DISABLED=1 \
   TURBO_TOKEN=secret \
+  PATH="$TEST_ROOT/bin:$PATH" \
   bash -c '
     set -euo pipefail
     source "$1"
     [[ "$BUN_INSTALL_LOCK_MODE" == "local" ]]
     [[ "$MISE_AUTO_INSTALL" == "0" ]]
     [[ "$MISE_NOT_FOUND_AUTO_INSTALL" == "0" ]]
-    [[ "$BUN_INSTALL_CACHE_DIR" == "$HOME/Library/Caches/Bun/install/cache" ]]
+    [[ "$HOME" == "$CI_TEST_ISOLATED_HOME" ]]
+    [[ "$MACOS_CI_HOST_HOME" == "$CI_TEST_HOST_HOME" ]]
+    [[ "$MISE_CONFIG_DIR" == "$CI_TEST_HOST_HOME/.config/mise" ]]
+    [[ "$MISE_STATE_DIR" == "$CI_TEST_HOST_HOME/.local/state/mise" ]]
+    [[ "$MISE_CACHE_DIR" == "$CI_TEST_HOST_HOME/Library/Caches/mise" ]]
+    [[ "$MISE_DATA_DIR" == "$CI_TEST_HOST_HOME/.local/share/mise" ]]
+    [[ "$RUSTUP_HOME" == "$CI_TEST_HOST_HOME/.rustup" ]]
+    [[ "$CARGO_HOME" == "$CI_TEST_HOST_HOME/.cargo" ]]
+    [[ "$BUN_INSTALL_CACHE_DIR" == "$CI_TEST_HOST_HOME/Library/Caches/Bun/install/cache" ]]
     [[ -z "${BUN_CACHE_LOCK_FILE+x}" ]]
     [[ -z "${TURBO_API+x}" ]]
     [[ -z "${TURBO_CACHE+x}" ]]

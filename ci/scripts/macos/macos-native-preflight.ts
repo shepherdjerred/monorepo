@@ -112,6 +112,18 @@ async function requiredVersion(
   }
 }
 
+function taskNotesLoginKeychain(): string {
+  // Woodpecker isolates HOME for each local job. The account home comes from
+  // macos-native-env.sh, which reads the login user's directory record.
+  const hostHome = Bun.env["MACOS_CI_HOST_HOME"] ?? "";
+  if (!hostHome.startsWith("/")) {
+    throw new Error(
+      "TaskNotes CI requires MACOS_CI_HOST_HOME from macos-native-env.sh",
+    );
+  }
+  return `${hostHome}/Library/Keychains/login.keychain-db`;
+}
+
 async function preflight(suite: NativeSuite): Promise<string | undefined> {
   if (process.platform !== "darwin") {
     throw new Error(
@@ -210,6 +222,7 @@ async function preflight(suite: NativeSuite): Promise<string | undefined> {
         "-v",
         "-p",
         "codesigning",
+        taskNotesLoginKeychain(),
       ]),
     );
     if (identities.length !== 1) {

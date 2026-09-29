@@ -21,10 +21,25 @@ fi
 # to this user rather than inheriting in-cluster paths or credentials. Never let
 # a PR change install a tool onto the persistent agent while preflight is
 # checking whether the operator provisioned the pinned version.
+# Woodpecker gives local jobs an isolated HOME. Read the account's actual home
+# for its provisioned toolchain without replacing that isolated HOME.
+home_record="$(dscl . -read "/Users/$(id -un)" NFSHomeDirectory)"
+MACOS_CI_HOST_HOME="${home_record#NFSHomeDirectory: }"
+if [[ "$MACOS_CI_HOST_HOME" == "$home_record" || ! -d "$MACOS_CI_HOST_HOME/.local/share/mise" ]]; then
+  echo "error: could not locate the provisioned Mac CI toolchain" >&2
+  exit 1
+fi
+export MACOS_CI_HOST_HOME
 export MISE_AUTO_INSTALL=0
 export MISE_NOT_FOUND_AUTO_INSTALL=0
-export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$HOME/.local/share/mise/shims:$PATH"
-export BUN_INSTALL_CACHE_DIR="$HOME/Library/Caches/Bun/install/cache"
+export MISE_CONFIG_DIR="$MACOS_CI_HOST_HOME/.config/mise"
+export MISE_STATE_DIR="$MACOS_CI_HOST_HOME/.local/state/mise"
+export MISE_CACHE_DIR="$MACOS_CI_HOST_HOME/Library/Caches/mise"
+export MISE_DATA_DIR="$MACOS_CI_HOST_HOME/.local/share/mise"
+export RUSTUP_HOME="$MACOS_CI_HOST_HOME/.rustup"
+export CARGO_HOME="$MACOS_CI_HOST_HOME/.cargo"
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:$MISE_DATA_DIR/shims:$PATH"
+export BUN_INSTALL_CACHE_DIR="$MACOS_CI_HOST_HOME/Library/Caches/Bun/install/cache"
 export BUN_INSTALL_LOCK_MODE="local"
 unset BUN_CACHE_LOCK_FILE
 unset TURBO_CACHE

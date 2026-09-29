@@ -103,11 +103,12 @@ is guarded by nothing but the shared agent secret.
 
 The bootstrap:
 
-- installs `mise`, `xcodes`, XcodeGen, SwiftLint, coreutils, and Tailscale
+- installs `mise`, `xcodes`, XcodeGen, SwiftLint, coreutils, git-lfs, and Tailscale
   with Homebrew,
-  plus the pinned `woodpecker-agent` release binary into `~/.local/bin`
-  (Woodpecker ships no Homebrew formula, and the agent/server gRPC protocol is
-  versioned, so a silently-upgraded agent would stop claiming jobs);
+  plus the catalog-pinned `woodpecker-agent` and `plugin-git` release binaries
+  into `~/.local/bin` (Woodpecker ships no Homebrew formula, and the
+  agent/server gRPC protocol is versioned). The clone plugin is checked against
+  its published SHA-256 on every run;
 - installs the Bun and Rust versions pinned by the root `.mise.toml`;
 - installs the `aarch64-apple-darwin` and `x86_64-apple-darwin` standard
   libraries needed for TaskNotes' universal macOS XCFramework;
@@ -124,7 +125,9 @@ The bootstrap:
 
 Re-running it is safe. Native jobs use a per-user Bun cache and explicitly
 remove the Linux-only shared-cache and Turbo variables they inherit from the
-generated workflow.
+generated workflow. Woodpecker gives each local job an isolated `HOME`; the
+native environment locates the login account's provisioned tools and caches
+without replacing that isolated `HOME`.
 
 ### 2. Join the tailnet
 
@@ -260,7 +263,8 @@ connected at <https://woodpecker.sjer.red/admin/agents>; its log is at
 
 For TaskNotes, the preflight prints the discovered certificate fingerprint to
 stdout. `mac:e2e:ci` requires that explicit value and passes it only to the UI
-test runner's code-signing setting.
+test runner's code-signing setting. It searches the login keychain under
+`MACOS_CI_HOST_HOME` explicitly because Woodpecker isolates each job's `HOME`.
 
 ## Operations
 

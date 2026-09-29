@@ -100,7 +100,11 @@ export async function lastCommitWithSuccessfulWorkflows(
   const scanLimit = options.scanLimit ?? 20;
   const listUrl = pipelinesUrl(repoId, options);
   listUrl.searchParams.set("branch", branch);
-  listUrl.searchParams.set("event", "push");
+  // A manual main run can finish these exact workflows even when another lane
+  // fails. Special-purpose manual plans cannot qualify because they never run
+  // the requested workflows. Reuse the published artifacts and verified work
+  // instead of rebuilding them on the next push.
+  listUrl.searchParams.set("event", "push,manual");
   listUrl.searchParams.set("perPage", scanLimit.toString());
 
   const listed = PipelineReferenceListSchema.safeParse(

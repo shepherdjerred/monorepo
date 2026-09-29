@@ -59,7 +59,9 @@ const NATIVE_INFRASTRUCTURE = [
  */
 const XCRESULT_EVIDENCE = [
   "if ! bun --no-install run --cwd packages/tasknotes-macos mac:e2e:ci; then",
-  '  evidence_root="$HOME/.woodpecker/evidence"',
+  // The local backend isolates HOME per job; macos-native-env.sh exports the
+  // persistent account home so bundles survive workspace cleanup.
+  '  evidence_root="$MACOS_CI_HOST_HOME/.woodpecker/evidence"',
   '  mkdir -p "$evidence_root"',
   "  find \"$evidence_root\" -mindepth 1 -maxdepth 1 -type d -name 'tasknotes-*' -mtime +14 -exec rm -rf {} +",
   "  shopt -s nullglob",
