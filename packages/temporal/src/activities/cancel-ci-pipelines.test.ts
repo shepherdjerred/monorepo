@@ -59,7 +59,16 @@ function listBody(
   status = "running",
   branch = "feature/foo",
 ): Response {
-  return Response.json(numbers.map((n) => ({ number: n, status, branch })));
+  return Response.json(
+    numbers.map((n) => ({
+      number: n,
+      status,
+      branch,
+      event: "push",
+      ref: `refs/heads/${branch}`,
+      commit: INPUT.commitSha,
+    })),
+  );
 }
 
 /**
@@ -87,7 +96,26 @@ describe("cancelCiPipelinesForBranchImpl", () => {
       calls.push({ url, method: init?.method ?? "GET" });
       return init?.method === "POST"
         ? Promise.resolve(new Response("{}", { status: 200 }))
-        : Promise.resolve(listBody([101, 102]));
+        : Promise.resolve(
+            Response.json([
+              {
+                number: 101,
+                status: "running",
+                branch: INPUT.branch,
+                event: "push",
+                ref: `refs/heads/${INPUT.branch}`,
+                commit: INPUT.commitSha,
+              },
+              {
+                number: 102,
+                status: "running",
+                branch: "main",
+                event: "pull_request",
+                ref: `refs/pull/${String(INPUT.prNumber)}/merge`,
+                commit: INPUT.commitSha,
+              },
+            ]),
+          );
     };
 
     const result = await cancelCiPipelinesForBranchImpl(INPUT, fetchFn);
@@ -98,7 +126,11 @@ describe("cancelCiPipelinesForBranchImpl", () => {
     if (listCall === undefined) {
       throw new Error("expected a list call");
     }
-    expect(listCall.url).toContain("branch=feature%2Ffoo");
+    expect(listCall.url).toContain("ref=refs%2Fpull%2F42%2Fmerge");
+    expect(listCall.url).toContain("page=1&perPage=100");
+    expect(calls.filter((c) => c.method === "GET")[1]?.url).toContain(
+      "branch=feature%2Ffoo",
+    );
     expect(calls.filter((c) => c.method === "POST").map((c) => c.url)).toEqual([
       `${SERVER}/api/repos/7/pipelines/101/cancel`,
       `${SERVER}/api/repos/7/pipelines/102/cancel`,
