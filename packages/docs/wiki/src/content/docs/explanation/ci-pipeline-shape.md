@@ -45,7 +45,7 @@ with the PR target branch. Within that workflow, Turbo runs at most three tasks
 at once and each Vitest process uses at most four workers, matching the pod's
 12-CPU limit.
 
-When the only catalog edits change digest values of internal images, `verify`
+When the only catalog edits rotate internal image build numbers and digests, `verify`
 checks the catalog package, root scripts, the homelab chart consumer, and root
 invariants. Other catalog edits and an unknown or invalid comparison base run
 the full verification graph. The main release renders and reconciles the charts
