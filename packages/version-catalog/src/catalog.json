@@ -784,7 +784,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1000024@sha256:1644c04d268ad220e4e898786c409262633c85a3d18c918e836ba4572727c17a",
+      "value": "2.0.0-1000025@sha256:745fc10a128a8a614bc85ddf2fe9666d7143f61ea56860ebfe6474fbd9eced67",
       "notes": [
         "not managed by renovate — bootstrap build, pushed by hand: Woodpecker",
         "needs this service to generate the pipeline that would otherwise build",
@@ -977,13 +977,11 @@
       "category": "upstream",
       "artifactType": "source",
       "management": {
-        "managed": true,
-        "datasource": "github-releases",
-        "versioning": "semver"
+        "managed": false
       },
-      "value": "2.10.1",
+      "value": "2.10.1@sha256:04cd1a2f9b53a4f6706a881a3d42bfdc5c16562962887e46b9922834e38524b7",
       "notes": [
-        "macOS local agent binary; bootstrap verifies its pinned SHA-256"
+        "macOS local agent binary; update the release version and darwin-arm64 asset SHA-256 together"
       ]
     },
     {

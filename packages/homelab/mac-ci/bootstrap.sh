@@ -102,13 +102,13 @@ catalog_versions="$(mise exec --cd /tmp "bun@$BUN_VERSION" -- bun -e '
     return entry.value;
   };
   const agent = /^v(\d+\.\d+\.\d+)@sha256:[a-f0-9]{64}$/.exec(version("woodpeckerci/woodpecker-agent"));
-  const plugin = version("woodpecker-ci/plugin-git");
-  if (agent === null || !/^\d+\.\d+\.\d+$/.test(plugin)) {
-    throw new Error("Invalid Woodpecker agent or plugin-git catalog version");
+  const plugin = /^(\d+\.\d+\.\d+)@sha256:([a-f0-9]{64})$/.exec(version("woodpecker-ci/plugin-git"));
+  if (agent === null || plugin === null) {
+    throw new Error("Invalid Woodpecker agent or plugin-git catalog pin");
   }
-  console.log(`${agent[1]} ${plugin}`);
+  console.log(`${agent[1]} ${plugin[1]} ${plugin[2]}`);
 ' "$REPO_ROOT/packages/version-catalog/src/catalog.json")"
-read -r WOODPECKER_AGENT_VERSION PLUGIN_GIT_VERSION <<< "$catalog_versions"
+read -r WOODPECKER_AGENT_VERSION PLUGIN_GIT_VERSION PLUGIN_GIT_SHA256 <<< "$catalog_versions"
 
 # Woodpecker ships no Homebrew formula, so the agent is a released binary.
 # Pinned by version rather than tracking latest: the agent and server speak a
@@ -130,7 +130,6 @@ fi
 
 # The local backend executes the clone plugin as a host binary, not a
 # container. Keep the published darwin/arm64 plugin in the agent's PATH.
-PLUGIN_GIT_SHA256="04cd1a2f9b53a4f6706a881a3d42bfdc5c16562962887e46b9922834e38524b7"
 PLUGIN_GIT_BIN="$HOME/.local/bin/plugin-git"
 if [[ ! -x "$PLUGIN_GIT_BIN" ]] ||
   ! echo "$PLUGIN_GIT_SHA256  $PLUGIN_GIT_BIN" | shasum -a 256 -c - >/dev/null 2>&1; then
