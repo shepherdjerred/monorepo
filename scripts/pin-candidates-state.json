@@ -22,9 +22,9 @@
       "buildNumber": 1002644
     },
     "shepherdjerred/discord-plays-pokemon": {
-      "version": "2.0.0-1002644",
-      "digest": "sha256:8f5cb1ceb3f52aff580e759131fe709a38cb585c118edbef5fa1a69fb8da2d98",
-      "buildNumber": 1002644
+      "buildNumber": 1002844,
+      "version": "2.0.0-1002844",
+      "digest": "sha256:f3d1ec102e93e5e7905d437144df6e97cc7bfb6bd4f69df1921d0c1a9179934e"
     },
     "shepherdjerred/obsidian-headless": {
       "version": "2.0.0-16936",
@@ -37,9 +37,9 @@
       "buildNumber": 16936
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "version": "2.0.0-1002665",
-      "digest": "sha256:7bc148dc46fe2ad7ccfc387a93f50fca76969a7e56b9b1686e28c92c2a85cd22",
-      "buildNumber": 1002665
+      "buildNumber": 1002844,
+      "version": "2.0.0-1002844",
+      "digest": "sha256:1634fe7e57839826d6c6920297c791d44622a3cb24663132c02f6f7623ada74f"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
       "version": "2.0.0-13153",
@@ -63,14 +63,14 @@
       "buildNumber": 1002644
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 1002826,
-      "version": "2.0.0-1002826",
-      "digest": "sha256:34825872a97c73cb1f463011eb8623296db89282f207912a3baca360b16c9beb"
+      "buildNumber": 1002844,
+      "version": "2.0.0-1002844",
+      "digest": "sha256:381e817cfdc8ece21cf1e17e1b4c9f3828f01cb3ee98e576f3c2996d4d231c55"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
-      "buildNumber": 1002826,
       "version": "2.0.0-1002826",
-      "digest": "sha256:34825872a97c73cb1f463011eb8623296db89282f207912a3baca360b16c9beb"
+      "digest": "sha256:34825872a97c73cb1f463011eb8623296db89282f207912a3baca360b16c9beb",
+      "buildNumber": 1002826
     },
     "shepherdjerred/temporal-worker/workflows/stable": {
       "version": "2.0.0-1002817",
@@ -83,9 +83,9 @@
       "buildNumber": 1002644
     },
     "shepherdjerred/woodpecker-config-extension": {
-      "version": "2.0.0-1002792",
-      "digest": "sha256:077506d32a3492cb246f2d1c9103bffa114df2ab6611e1a24ec5d3123eb9878e",
-      "buildNumber": 1002792
+      "buildNumber": 1002844,
+      "version": "2.0.0-1002844",
+      "digest": "sha256:4095f67b105297e60a15e9a4d6138c445d91f7bca7ec06c5efac0bb6aa7f8f31"
     }
   }
 }
