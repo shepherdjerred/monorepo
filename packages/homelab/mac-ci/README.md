@@ -103,9 +103,9 @@ is guarded by nothing but the shared agent secret.
 
 The bootstrap:
 
-- installs `mise`, `xcodes`, XcodeGen, SwiftLint, coreutils, and Tailscale
+- installs `mise`, `xcodes`, XcodeGen, SwiftLint, coreutils, git-lfs, and Tailscale
   with Homebrew,
-  plus the pinned `woodpecker-agent` release binary into `~/.local/bin`
+  plus the pinned `woodpecker-agent` and `plugin-git` release binaries into `~/.local/bin`
   (Woodpecker ships no Homebrew formula, and the agent/server gRPC protocol is
   versioned, so a silently-upgraded agent would stop claiming jobs);
 - installs the Bun and Rust versions pinned by the root `.mise.toml`;

@@ -97,7 +97,8 @@ if ! rg -Fq 'image: "bash"' "$MACOS_LANES"; then
   exit 1
 fi
 if ! rg -Fq 'WOODPECKER_BACKEND=local' "$MAC_CI_BOOTSTRAP" ||
-  ! rg -Fq 'WOODPECKER_AGENT_LABELS=platform=darwin/' "$MAC_CI_BOOTSTRAP"; then
+  ! rg -Fq 'WOODPECKER_AGENT_LABELS=platform=darwin/' "$MAC_CI_BOOTSTRAP" ||
+  ! rg -Fq 'PLUGIN_GIT_BIN="$HOME/.local/bin/plugin-git"' "$MAC_CI_BOOTSTRAP"; then
   echo "macOS agent must run the local backend and carry the label the native lanes select on" >&2
   exit 1
 fi

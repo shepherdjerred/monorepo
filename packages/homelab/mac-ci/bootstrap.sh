@@ -79,9 +79,10 @@ fi
 # swiftlint       : strict Swift lint and analyzer checks
 # coreutils       : gtimeout, which bounds every generated step (macOS has no
 #                   timeout of its own)
+# git-lfs         : Woodpecker's default clone plugin fetches LFS objects
 # tailscale       : tailnet membership (enrolled manually, see README)
 echo "==> Installing native CI packages"
-brew install mise xcodes xcodegen swiftlint coreutils tailscale
+brew install mise xcodes xcodegen swiftlint coreutils git-lfs tailscale
 
 # Woodpecker ships no Homebrew formula, so the agent is a released binary.
 # Pinned by version rather than tracking latest: the agent and server speak a
@@ -99,6 +100,21 @@ if [[ ! -x "$WOODPECKER_AGENT_BIN" ]]; then
     "https://github.com/woodpecker-ci/woodpecker/releases/download/v${WOODPECKER_AGENT_VERSION}/woodpecker-agent_darwin_arm64.tar.gz"
   tar -xzf "$ARCHIVE" -C "$(dirname "$WOODPECKER_AGENT_BIN")" woodpecker-agent
   chmod 755 "$WOODPECKER_AGENT_BIN"
+fi
+
+# The local backend executes the clone plugin as a host binary, not a
+# container. Keep the published darwin/arm64 plugin in the agent's PATH.
+PLUGIN_GIT_VERSION="2.10.1"
+PLUGIN_GIT_SHA256="04cd1a2f9b53a4f6706a881a3d42bfdc5c16562962887e46b9922834e38524b7"
+PLUGIN_GIT_BIN="$HOME/.local/bin/plugin-git"
+if [[ ! -x "$PLUGIN_GIT_BIN" ]]; then
+  echo "==> Installing plugin-git $PLUGIN_GIT_VERSION"
+  plugin_download="$(mktemp "$HOME/.local/bin/plugin-git.XXXXXX")"
+  curl -fsSL -o "$plugin_download" \
+    "https://github.com/woodpecker-ci/plugin-git/releases/download/${PLUGIN_GIT_VERSION}/darwin-arm64_plugin-git"
+  echo "$PLUGIN_GIT_SHA256  $plugin_download" | shasum -a 256 -c -
+  chmod 755 "$plugin_download"
+  mv "$plugin_download" "$PLUGIN_GIT_BIN"
 fi
 
 echo "==> Installing the repository-pinned Bun and Rust toolchains"
@@ -146,6 +162,7 @@ WOODPECKER_BACKEND=local
 WOODPECKER_AGENT_LABELS=platform=darwin/$(uname -m)
 WOODPECKER_BACKEND_LOCAL_TEMP_DIR=$AGENT_BUILD_PATH
 WOODPECKER_MAX_WORKFLOWS=1
+PATH=$HOME/.local/bin:/opt/homebrew/bin:\$PATH
 EOF
 chmod 600 "$CFG_FILE"
 umask 022
