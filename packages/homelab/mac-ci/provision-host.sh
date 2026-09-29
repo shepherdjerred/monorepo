@@ -60,6 +60,14 @@ if [[ "$(uname -s)" != "Darwin" || "$(uname -m)" != "arm64" ]]; then
 fi
 
 if ((RUN_BOOTSTRAP)); then
+  # Fail before asking 1Password for the agent secret. A LaunchAgent started
+  # from SSH inherits the background audit session and cannot use the GUI
+  # login keychain for TaskNotes signing.
+  if [[ "$(launchctl managername)" != "Aqua" ]]; then
+    echo "error: run Mac CI provisioning from Terminal in the logged-in GUI session, not SSH" >&2
+    exit 1
+  fi
+
   # Same shared secret the in-cluster agents use, read straight from 1Password
   # into this process. It is exported for bootstrap.sh and unset on exit; it is
   # never written to disk here, and bootstrap.sh's own chmod-600 env file is the
