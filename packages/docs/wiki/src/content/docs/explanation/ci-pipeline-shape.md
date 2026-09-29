@@ -45,6 +45,13 @@ with the PR target branch. Within that workflow, Turbo runs at most three tasks
 at once and each Vitest process uses at most four workers, matching the pod's
 12-CPU limit.
 
+For a commit changing only the version catalog and image pin state, `verify`
+checks the catalog package, root scripts, homelab chart consumer, and root
+invariants. Those files describe published deployment images; they do not
+change the source of every package that depends on the catalog. An unknown or
+invalid comparison base still runs the full verification graph. The main
+release renders and reconciles the charts generated from the pins.
+
 The verify and Playwright workflows use the private Turbo cache over the
 tailnet, with the `monorepo` team and a Kubernetes Secret for its token. This
 lets independent workflow checkouts reuse unchanged task outputs. Developer

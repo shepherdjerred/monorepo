@@ -94,6 +94,11 @@ const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/feature-flags/managed-flag-inventory.json",
 ] as const;
 
+const IMAGE_PIN_STATE_INPUTS = new Set([
+  "packages/version-catalog/src/catalog.json",
+  "scripts/pin-candidates-state.json",
+]);
+
 async function validateBaseWithGit(
   command: readonly string[],
 ): Promise<number> {
@@ -166,6 +171,21 @@ export async function affectedVerifyFilters(
       `WARN: could not read changed files from CI base ${base}; running full verification`,
     );
     return [];
+  }
+  if (
+    changedFiles.length > 0 &&
+    changedFiles.every((path) => IMAGE_PIN_STATE_INPUTS.has(path))
+  ) {
+    // Image pins are deployment data. Check the catalog, its direct CI and
+    // chart consumers, and root invariants; the release lane renders the
+    // resulting charts. The wider reverse-dependency graph has no source
+    // changes to verify on a pin-only commit.
+    return [
+      "--filter=//",
+      "--filter=@shepherdjerred/version-catalog",
+      "--filter=@shepherdjerred/root-scripts",
+      "--filter=homelab",
+    ];
   }
   // The affected package graph and the root namespace are a union. Root checks
   // remain represented, but Turbo executes only the ones whose declared input
