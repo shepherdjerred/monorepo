@@ -358,7 +358,10 @@ a misleading Dockerfile from hiding what the unauthenticated kubelet and the
 published artifact would expose later.
 
 Application image selection uses the newest `main` commit whose `images` and
-`version-commit-back` jobs both passed as its comparison base.
+`version-commit-back` jobs both passed as its comparison base. The image job
+fetches a bounded window of `main` history before validating that commit,
+because its Woodpecker clone contains only the current commit. If the prior
+release is older than that window, selection rebuilds every image.
 
 The image publisher reads current comparison digests and commit-back keys from
 the structured `packages/version-catalog/src/catalog.json` source of truth.

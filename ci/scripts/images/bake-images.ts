@@ -419,6 +419,29 @@ export async function pushImages(
   await writeText(pushOutcomes, `${JSON.stringify(outcomes)}\n`);
 }
 
+async function fetchImageReleaseHistory(push: boolean): Promise<void> {
+  // Woodpecker's image workflow starts from a depth-one clone. Without
+  // fetching history first, the validated image-release base is invisible and
+  // selectedTargets falls back to every image on every main push. Bound the
+  // fetch so an unusually old release still fails open instead of downloading
+  // the repository's full history.
+  const base = Bun.env["CI_LAST_IMAGE_RELEASE_COMMIT"];
+  if (!push || base === undefined || base === "") return;
+  const history = await execute([
+    "git",
+    "fetch",
+    "--no-tags",
+    "--depth=100",
+    "origin",
+    "main",
+  ]);
+  if (history.exitCode !== 0) {
+    throw new TransientError(
+      "Unable to fetch main history for image selection",
+    );
+  }
+}
+
 async function main(): Promise<void> {
   const options = parseBakeArguments(Bun.argv.slice(2));
   const commit = Bun.env["CI_COMMIT_SHA"];
@@ -431,6 +454,7 @@ async function main(): Promise<void> {
     rm(pushOutcomes, { force: true }),
   ]);
 
+  await fetchImageReleaseHistory(options.push);
   const selection = await selectedTargets(options, commit);
   const bakeTargets = expandTargets(selection.targets);
   // Every push records the live catalog for Helm and the no-target metadata
