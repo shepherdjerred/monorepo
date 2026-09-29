@@ -64,6 +64,18 @@ const commands: Record<
   string,
   { readonly command: string; readonly env: Record<string, string> }
 > = {
+  "woodpecker-config-extension": {
+    command: [
+      "set -eu",
+      "cd /app/packages/woodpecker-config-extension",
+      `bun -e 'const service = (await import("./src/index.ts")).default; const url = new URL("/healthz", process.env.WOODPECKER_URL); const response = await service.fetch(new Request(url.href)); if (response.status !== 200 || (await response.text()) !== "ok") throw new Error("config extension health check failed");'`,
+    ].join("\n"),
+    env: {
+      WOODPECKER_URL: "https://woodpecker.sjer.red",
+      CI_REPO_SLUG: "monorepo",
+      WOODPECKER_API_TOKEN: "smoke-test-token",
+    },
+  },
   "alert-dashboard": {
     command: [
       "set -eu",

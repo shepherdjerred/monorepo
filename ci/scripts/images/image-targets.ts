@@ -40,6 +40,10 @@ export const IMAGE_TARGET_REGISTRY: Readonly<
     owner: "@discord-plays-mario-kart/backend",
     ghcrVisibility: "public",
   },
+  "woodpecker-config-extension": {
+    owner: "@shepherdjerred/woodpecker-config-extension",
+    ghcrVisibility: "public",
+  },
 } as const satisfies Readonly<Record<string, ImageTargetRegistration>>;
 
 export const IMAGE_TARGET_OWNERS: Readonly<Record<string, string>> =
