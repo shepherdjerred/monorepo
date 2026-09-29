@@ -7,9 +7,9 @@
       "buildNumber": 1002644
     },
     "shepherdjerred/birmel": {
-      "buildNumber": 1002769,
-      "version": "2.0.0-1002769",
-      "digest": "sha256:b42045c723d7a86e72bd6754ca51bec15f406f0cc196375c5e6410239e5504fa"
+      "buildNumber": 1002792,
+      "version": "2.0.0-1002792",
+      "digest": "sha256:26b6daaf218b857da5e407962d4fa70e7b8bdb0251b8dbbb22f4cee984845f56"
     },
     "shepherdjerred/caddy-s3proxy": {
       "version": "2.0.0-16936",
@@ -63,9 +63,9 @@
       "buildNumber": 1002644
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 1002769,
       "version": "2.0.0-1002769",
-      "digest": "sha256:becf32a8f3cfb66387754bcaa37981a458c743c011197182947529ba8641c495"
+      "digest": "sha256:becf32a8f3cfb66387754bcaa37981a458c743c011197182947529ba8641c495",
+      "buildNumber": 1002769
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-17396",
@@ -82,6 +82,11 @@
       "version": "2.0.0-1002644",
       "digest": "sha256:2323d0c6b8e7a8a33699f78c33a4ceefbfc851314977b106a270ad253b2ce2c6",
       "buildNumber": 1002644
+    },
+    "shepherdjerred/woodpecker-config-extension": {
+      "buildNumber": 1002792,
+      "version": "2.0.0-1002792",
+      "digest": "sha256:077506d32a3492cb246f2d1c9103bffa114df2ab6611e1a24ec5d3123eb9878e"
     }
   }
 }
