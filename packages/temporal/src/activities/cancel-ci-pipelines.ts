@@ -13,8 +13,14 @@ const PipelineSchema = z.object({
   number: z.number(),
   status: z.string(),
   branch: z.string(),
+  event: z.string().nullish(),
+  ref: z.string().nullish(),
+  commit: z.string().nullish(),
 });
 const PipelineListSchema = z.array(PipelineSchema);
+type Pipeline = z.infer<typeof PipelineSchema>;
+const PAGE_SIZE = 100;
+const MAX_PAGES = 100;
 
 /**
  * Non-terminal Woodpecker statuses — only these can be cancelled.
@@ -45,8 +51,116 @@ function jsonLog(
   );
 }
 
+function matchesClosedPr(
+  pipeline: Pipeline,
+  input: CancelCiPipelinesInput,
+): boolean {
+  if (!ACTIVE_STATUSES.has(pipeline.status)) return false;
+  // Woodpecker reports PR builds under the target branch (often main),
+  // so match the PR ref and exact head. Push builds use the source branch.
+  const prEvent =
+    pipeline.event === "pull_request" ||
+    pipeline.event === "pull_request_metadata";
+  return (
+    (prEvent &&
+      pipeline.ref === `refs/pull/${String(input.prNumber)}/merge` &&
+      pipeline.commit === input.commitSha) ||
+    (pipeline.event === "push" &&
+      pipeline.branch === input.branch &&
+      pipeline.commit === input.commitSha)
+  );
+}
+
+async function listPipelinePage(opts: {
+  base: string;
+  token: string;
+  page: number;
+  filter: { key: "ref" | "branch"; value: string };
+  fetchFn: FetchFn;
+}): Promise<Pipeline[]> {
+  const params = new URLSearchParams({
+    [opts.filter.key]: opts.filter.value,
+    page: String(opts.page),
+    perPage: String(PAGE_SIZE),
+  });
+  let response: Response;
+  try {
+    response = await opts.fetchFn(`${opts.base}?${params.toString()}`, {
+      headers: { Authorization: `Bearer ${opts.token}` },
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch (error) {
+    throw new Error(
+      `Woodpecker list-pipelines request failed: ${errorMessage(error)}`,
+      { cause: error },
+    );
+  }
+  if (response.status === 401 || response.status === 403) {
+    throw new Error(
+      "Woodpecker token is not authorized to list/cancel pipelines",
+    );
+  }
+  if (!response.ok) {
+    throw new Error(
+      `Woodpecker list-pipelines failed with HTTP ${String(response.status)}`,
+    );
+  }
+  return PipelineListSchema.parse(await response.json());
+}
+
+async function listFilteredClosedPrPipelines(opts: {
+  base: string;
+  token: string;
+  input: CancelCiPipelinesInput;
+  filter: { key: "ref" | "branch"; value: string };
+  fetchFn: FetchFn;
+}): Promise<Pipeline[]> {
+  const active: Pipeline[] = [];
+  const seen = new Set<number>();
+  for (let page = 1; page <= MAX_PAGES; page++) {
+    const listed = await listPipelinePage({ ...opts, page });
+    for (const pipeline of listed) {
+      if (seen.has(pipeline.number)) {
+        throw new Error("Woodpecker pipeline pagination did not advance");
+      }
+      seen.add(pipeline.number);
+      if (matchesClosedPr(pipeline, opts.input)) active.push(pipeline);
+    }
+    if (listed.length < PAGE_SIZE) return active;
+  }
+  throw new Error("Woodpecker pipeline list exceeded pagination limit");
+}
+
+async function listActiveClosedPrPipelines(
+  base: string,
+  token: string,
+  input: CancelCiPipelinesInput,
+  fetchFn: FetchFn,
+): Promise<Pipeline[]> {
+  const prRef = `refs/pull/${String(input.prNumber)}/merge`;
+  const prBuilds = await listFilteredClosedPrPipelines({
+    base,
+    token,
+    input,
+    filter: { key: "ref", value: prRef },
+    fetchFn,
+  });
+  const pushBuilds = await listFilteredClosedPrPipelines({
+    base,
+    token,
+    input,
+    filter: { key: "branch", value: input.branch },
+    fetchFn,
+  });
+  const unique = new Map<number, Pipeline>();
+  for (const pipeline of [...prBuilds, ...pushBuilds]) {
+    unique.set(pipeline.number, pipeline);
+  }
+  return [...unique.values()];
+}
+
 /**
- * Cancel in-flight CI for a branch whose pull request has closed.
+ * Cancel in-flight CI for a pull request that has closed.
  *
  * A 4xx on the cancel call means the pipeline reached a terminal status
  * between the list and the cancel, which is a benign skip; a 5xx throws so
@@ -73,43 +187,7 @@ export async function cancelCiPipelinesForBranchImpl(
   }
 
   const base = `${server}/api/repos/${repoId}/pipelines`;
-  const params = new URLSearchParams();
-  params.set("branch", input.branch);
-  params.set("perPage", "100");
-  const listUrl = `${base}?${params.toString()}`;
-
-  let listResp: Response;
-  try {
-    listResp = await fetchFn(listUrl, {
-      headers: { Authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(15_000),
-    });
-  } catch (error) {
-    throw new Error(
-      `Woodpecker list-pipelines request failed: ${errorMessage(error)}`,
-      { cause: error },
-    );
-  }
-
-  if (listResp.status === 401 || listResp.status === 403) {
-    throw new Error(
-      "Woodpecker token is not authorized to list/cancel pipelines",
-    );
-  }
-  if (!listResp.ok) {
-    throw new Error(
-      `Woodpecker list-pipelines failed with HTTP ${String(listResp.status)}`,
-    );
-  }
-
-  const listed = PipelineListSchema.parse(await listResp.json());
-  // Filter on branch again: the query parameter is a server-side convenience,
-  // and cancelling another branch's build because the filter was ignored would
-  // be far worse than listing too much.
-  const active = listed.filter(
-    (pipeline) =>
-      pipeline.branch === input.branch && ACTIVE_STATUSES.has(pipeline.status),
-  );
+  const active = await listActiveClosedPrPipelines(base, token, input, fetchFn);
 
   const cancelled: number[] = [];
   let skipped = 0;

@@ -6,6 +6,8 @@ scheduler: declarative schedules (home automation, reports, maintenance),
 generic report-only Codex SDK agent tasks on an OpenAI project key, including the daily
 homelab audit, deterministic PR-opening refresh jobs, and webhook ingress
 (GitHub merge-conflict check and build cancel, Xcode Cloud, iOS sleep).
+Closed PR cleanup matches Woodpecker pull-request refs or source-branch pushes
+at the exact head commit before cancelling active jobs.
 
 Production runs one image in twelve single-replica Kubernetes Deployments. The
 `control` role owns schedule reconciliation and public HTTP/event surfaces

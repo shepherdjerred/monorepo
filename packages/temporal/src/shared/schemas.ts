@@ -21,10 +21,9 @@ export const SleepAutomationInputSchema = z.object({
 /**
  * Input for `cancelCiPipelinesWorkflow`. Started from the GitHub webhook
  * `closed` action (merge *or* plain close) to stop any still-active CI
- * builds for the PR's branch — finished builds waste CI capacity.
- * Cancellation is keyed on `branch` (CI pipelines carry the branch; the PR
- * filter is less reliable). `commitSha` only feeds the idempotent workflow id,
- * and `merged` is for logging/metrics.
+ * builds for the PR's exact head. Woodpecker reports PR builds under the base
+ * branch, so cancellation matches their PR ref and head commit. Push builds
+ * match the source branch and commit. `merged` is for logging/metrics.
  */
 export const CancelCiPipelinesInputSchema = z.object({
   owner: z.string().min(1),

@@ -74,7 +74,7 @@ export async function startCancelCiPipelines(
 
 /**
  * Handle a `pull_request` `closed` action (merge *or* plain close): start the
- * workflow that cancels any still-active CI pipelines for the head branch.
+ * workflow that cancels any still-active CI pipelines for the exact PR head.
  * We intentionally do NOT skip draft or bot PRs — bot branches (Renovate)
  * churn the most CI, so cancelling them saves the most. Returns a `Response`
  * the Hono handler can return directly.

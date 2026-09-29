@@ -16,7 +16,7 @@ const { cancelCiPipelinesForBranch } =
   });
 
 /**
- * Cancel any still-active Buildkite builds for a closed/merged PR's branch.
+ * Cancel any still-active Woodpecker builds for a closed/merged PR's head.
  * Started by the GitHub webhook on the `closed` action — see
  * src/event-bridge/github-webhook.ts.
  */
