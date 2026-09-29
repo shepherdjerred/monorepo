@@ -4,7 +4,11 @@
  * lockstep deploy scripts share the exact same sync semantics).
  */
 
-import { run } from "./run.ts";
+import { createSignedS3Request } from "@shepherdjerred/s3-signed-request";
+import { requireEnv, run } from "./run.ts";
+
+const DIRECT_READBACK_THRESHOLD = 64;
+const DIRECT_READBACK_CONCURRENCY = 8;
 
 /**
  * Refuse to sync a partial static site that would delete a live entrypoint.
@@ -170,7 +174,7 @@ export async function s3StaticSiteNeedsSync(opts: {
   return result.stdout.trim() !== "";
 }
 
-/** Build the one-pass stage readback used for full release certification. */
+/** Build the selected-object sync used to certify small static sites. */
 export function s3StaticSiteDownloadCommand(opts: {
   bucket: string;
   destination: string;
@@ -191,11 +195,57 @@ export function s3StaticSiteDownloadCommand(opts: {
   ];
 }
 
+async function sha256Stream(
+  stream: ReadableStream<Uint8Array>,
+): Promise<string> {
+  const hasher = new Bun.CryptoHasher("sha256");
+  for await (const chunk of stream) {
+    hasher.update(chunk);
+  }
+  return hasher.digest("hex");
+}
+
+async function directS3ObjectMatchesSource(
+  opts: Parameters<typeof firstS3ObjectMismatch>[0],
+  path: string,
+): Promise<boolean> {
+  const request = createSignedS3Request(
+    {
+      accessKeyId: requireEnv("AWS_ACCESS_KEY_ID"),
+      secretAccessKey: requireEnv("AWS_SECRET_ACCESS_KEY"),
+      sessionToken: Bun.env["AWS_SESSION_TOKEN"],
+      endpoint: opts.endpoint,
+      bucket: opts.bucket,
+      region:
+        opts.env["AWS_DEFAULT_REGION"] ?? requireEnv("AWS_DEFAULT_REGION"),
+      forcePathStyle: true,
+    },
+    { method: "GET", key: path, signal: AbortSignal.timeout(120_000) },
+  );
+  const response = await fetch(request);
+  if (response.status === 404) {
+    await response.body?.cancel();
+    return false;
+  }
+  if (!response.ok || response.body === null) {
+    await response.body?.cancel();
+    throw new Error(
+      `S3 readback failed for s3://${opts.bucket}/${path} (HTTP ${response.status.toString()})`,
+    );
+  }
+  const [expected, served] = await Promise.all([
+    sha256Stream(Bun.file(`${opts.sourceDir}/${path}`).stream()),
+    sha256Stream(response.body),
+  ]);
+  return expected === served;
+}
+
 /**
- * Read a stage bucket back once, then require every source-release object to
- * be byte-identical locally. Deployment markers must not advance when S3's
- * size-and-timestamp comparator skipped a changed object. Downloading the
- * prefix once avoids one process and TLS connection per emitted static asset.
+ * Require every source-release object to have the same SHA-256 digest as its
+ * served counterpart. Deployment markers must not advance when S3's
+ * size-and-timestamp comparator skipped a changed object. Small sites use one
+ * selected-object sync; large sites use bounded direct reads to avoid the AWS
+ * CLI's quadratic include-filter cost and an extra copy on disk.
  */
 export async function firstS3ObjectMismatch(opts: {
   sourceDir: string;
@@ -205,6 +255,31 @@ export async function firstS3ObjectMismatch(opts: {
   endpoint: string;
   env: Record<string, string>;
 }): Promise<string | undefined> {
+  // AWS CLI checks every include rule against every listed object. Large Scout
+  // releases contain thousands of files, so read their exact keys directly
+  // with bounded concurrency instead of building a quadratic sync filter.
+  if (opts.paths.length > DIRECT_READBACK_THRESHOLD) {
+    for (
+      let offset = 0;
+      offset < opts.paths.length;
+      offset += DIRECT_READBACK_CONCURRENCY
+    ) {
+      const paths = opts.paths.slice(
+        offset,
+        offset + DIRECT_READBACK_CONCURRENCY,
+      );
+      const matches = await Promise.all(
+        paths.map(
+          async (path) => await directS3ObjectMatchesSource(opts, path),
+        ),
+      );
+      const mismatch = matches.findIndex((match) => !match);
+      if (mismatch !== -1) {
+        return paths[mismatch];
+      }
+    }
+    return undefined;
+  }
   const servedDir = `${opts.scratchDir}/served`;
   await Bun.$`rm -rf ${servedDir}`.quiet();
   await run(
