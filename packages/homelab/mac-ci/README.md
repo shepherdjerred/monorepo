@@ -124,7 +124,9 @@ The bootstrap:
 
 Re-running it is safe. Native jobs use a per-user Bun cache and explicitly
 remove the Linux-only shared-cache and Turbo variables they inherit from the
-generated workflow.
+generated workflow. Woodpecker gives each local job an isolated `HOME`; the
+native environment locates the login account's provisioned tools and caches
+without replacing that isolated `HOME`.
 
 ### 2. Join the tailnet
 
