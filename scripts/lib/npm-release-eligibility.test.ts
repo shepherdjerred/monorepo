@@ -228,42 +228,55 @@ describe("historical release regressions", () => {
     await fetchNpmPackageTags(process.cwd());
   });
 
-  test("Webring analytics and TypeDoc-only releases are excluded", async () => {
-    const policy = NPM_PACKAGE_POLICIES.find(
-      (candidate) => candidate.name === "webring",
-    );
-    if (policy === undefined) throw new Error("Webring policy is missing");
+  // These historical comparisons read Git trees from fetched tags. The
+  // repository is large and a loaded CI node can take more than Vitest's
+  // default five seconds without changing the release decision.
+  const historicalGitTimeout = 15_000;
 
-    const oneNine = await classifyPackageReleaseRange(
-      process.cwd(),
-      policy,
-      "webring-v1.8.0",
-      "webring-v1.9.0",
-    );
-    const oneTen = await classifyPackageReleaseRange(
-      process.cwd(),
-      policy,
-      "webring-v1.9.0",
-      "webring-v1.10.0",
-    );
-    expect(oneNine.eligible).toBe(false);
-    expect(oneTen.eligible).toBe(false);
-  });
+  test(
+    "Webring analytics and TypeDoc-only releases are excluded",
+    async () => {
+      const policy = NPM_PACKAGE_POLICIES.find(
+        (candidate) => candidate.name === "webring",
+      );
+      if (policy === undefined) throw new Error("Webring policy is missing");
 
-  test("Astro CI and devDependency-only release is excluded", async () => {
-    const policy = NPM_PACKAGE_POLICIES.find(
-      (candidate) => candidate.name === "astro-opengraph-images",
-    );
-    if (policy === undefined) throw new Error("Astro policy is missing");
+      const oneNine = await classifyPackageReleaseRange(
+        process.cwd(),
+        policy,
+        "webring-v1.8.0",
+        "webring-v1.9.0",
+      );
+      const oneTen = await classifyPackageReleaseRange(
+        process.cwd(),
+        policy,
+        "webring-v1.9.0",
+        "webring-v1.10.0",
+      );
+      expect(oneNine.eligible).toBe(false);
+      expect(oneTen.eligible).toBe(false);
+    },
+    historicalGitTimeout,
+  );
 
-    const decision = await classifyPackageReleaseRange(
-      process.cwd(),
-      policy,
-      "astro-opengraph-images-v1.17.4",
-      "astro-opengraph-images-v1.18.0",
-    );
-    expect(decision.eligible).toBe(false);
-  });
+  test(
+    "Astro CI and devDependency-only release is excluded",
+    async () => {
+      const policy = NPM_PACKAGE_POLICIES.find(
+        (candidate) => candidate.name === "astro-opengraph-images",
+      );
+      if (policy === undefined) throw new Error("Astro policy is missing");
+
+      const decision = await classifyPackageReleaseRange(
+        process.cwd(),
+        policy,
+        "astro-opengraph-images-v1.17.4",
+        "astro-opengraph-images-v1.18.0",
+      );
+      expect(decision.eligible).toBe(false);
+    },
+    historicalGitTimeout,
+  );
 
   test("missing release tags fail closed", async () => {
     const policy = NPM_PACKAGE_POLICIES[0];
