@@ -34,8 +34,19 @@ guarantee a dependency-closed set, which the emitter then relies on.
   by the image lane, so baking them into this service would pin every build to
   whatever was current at deploy time.
 
+## Image delivery
+
+The config extension is an application image in `docker-bake.hcl` and
+`ci/scripts/images/image-targets.ts`. A main image release builds and smokes its
+candidate, then `version-commit-back` promotes the digest through the version
+catalog. ArgoCD must reconcile that new pin before Woodpecker generates
+pipelines with changed extension code. The original bootstrap image is not a
+substitute for this release path.
+
 ## Port status
 
-`verify` is ported. The images, tofu, playwright, release, and macOS native
-lanes are not. Until they are, this service generates a strictly smaller graph
-than Buildkite runs and must not be the required status check.
+Woodpecker owns verification, images, OpenTofu, Playwright, and releases. The
+native macOS lane definitions remain in the repository, but are temporarily
+omitted from the generated graph until the Mac agent joins the GUI audit
+session (AI-86). A green Woodpecker build during this pause does not include
+native macOS verification.

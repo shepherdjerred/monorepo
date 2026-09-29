@@ -31,4 +31,11 @@ EXPOSE 3000
 USER 1000:1000
 CMD ["bun", "packages/woodpecker-config-extension/src/index.ts"]
 
+FROM runtime AS smoke
+COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
+COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
+ARG SMOKE_TARGET=woodpecker-config-extension
+ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
+RUN bun /app/ci/scripts/images/smoke-app-in-image.ts
+
 FROM runtime AS image
