@@ -29,7 +29,7 @@ test("returns the live catalog without consulting the version-bump branch", asyn
   };
   await expect(readLiveVersionCatalogSource(executor)).resolves.toBe(CATALOG);
   expect(commands).toEqual([
-    "git fetch origin main",
+    "git fetch --no-tags --depth=100 origin main",
     "git show origin/main:packages/version-catalog/src/catalog.json",
   ]);
 });
