@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { onlyInternalImagePinsChanged } from "@shepherdjerred/version-catalog/internal-image-pins";
 
 const turboTasks = [
   "build",
@@ -102,18 +102,6 @@ const IMAGE_PIN_STATE_INPUTS = new Set([
 ]);
 
 const CATALOG_PATH = "packages/version-catalog/src/catalog.json";
-const PIN_VALUE = /^.+@sha256:[a-f0-9]{64}$/u;
-const CatalogSchema = z.looseObject({
-  entries: z.array(
-    z.looseObject({
-      name: z.string(),
-      value: z.string(),
-      category: z.string(),
-      artifactType: z.string(),
-      management: z.looseObject({ managed: z.boolean() }),
-    }),
-  ),
-});
 
 async function gitFileAt(ref: string, path: string): Promise<unknown> {
   const child = Bun.spawn(["git", "show", `${ref}:${path}`], {
@@ -133,30 +121,12 @@ async function gitFileAt(ref: string, path: string): Promise<unknown> {
   }
 }
 
-async function onlyInternalImagePinsChanged(base: string): Promise<boolean> {
-  const before = CatalogSchema.safeParse(await gitFileAt(base, CATALOG_PATH));
-  const after = CatalogSchema.safeParse(await gitFileAt("HEAD", CATALOG_PATH));
-  if (!before.success || !after.success) return false;
-  const oldEntries = before.data.entries;
-  const newEntries = after.data.entries;
-  if (oldEntries.length !== newEntries.length) {
-    return false;
-  }
-
-  const normalizedEntries = newEntries.map((entry, index) => {
-    const oldEntry = oldEntries[index];
-    if (oldEntry === undefined || entry.value === oldEntry.value) return entry;
-    return entry.category !== "internal-image" ||
-      entry.artifactType !== "image" ||
-      entry.management.managed ||
-      !PIN_VALUE.test(entry.value) ||
-      !PIN_VALUE.test(oldEntry.value)
-      ? entry
-      : { ...entry, value: oldEntry.value };
-  });
-  return (
-    JSON.stringify({ ...after.data, entries: normalizedEntries }) ===
-    JSON.stringify(before.data)
+async function onlyInternalImagePinsChangedAtBase(
+  base: string,
+): Promise<boolean> {
+  return onlyInternalImagePinsChanged(
+    await gitFileAt(base, CATALOG_PATH),
+    await gitFileAt("HEAD", CATALOG_PATH),
   );
 }
 
@@ -236,7 +206,7 @@ export async function affectedVerifyFilters(
   if (
     changedFiles.length > 0 &&
     changedFiles.every((path) => IMAGE_PIN_STATE_INPUTS.has(path)) &&
-    (await onlyInternalImagePinsChanged(base))
+    (await onlyInternalImagePinsChangedAtBase(base))
   ) {
     // Only digest values of internal images changed. Check the catalog, its
     // direct CI and chart consumers, and root invariants; the release lane

@@ -16,6 +16,7 @@ FROM base AS runtime
 COPY --from=prod-deps /app/ /app/
 COPY --parents \
   tsconfig.base.json \
+  packages/version-catalog/src \
   packages/woodpecker-config-extension \
   ./
 

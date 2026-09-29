@@ -1,21 +1,9 @@
 import type { ImageFetcher } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
-import { z } from "zod";
+import { onlyInternalImagePinsChanged } from "@shepherdjerred/version-catalog/internal-image-pins";
 
 const CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 const PIN_PATHS = new Set([CATALOG_PATH, "scripts/pin-candidates-state.json"]);
-const PIN_VALUE = /^.+@sha256:[a-f0-9]{64}$/u;
-const CatalogSchema = z.looseObject({
-  entries: z.array(
-    z.looseObject({
-      name: z.string(),
-      value: z.string(),
-      category: z.string(),
-      artifactType: z.string(),
-      management: z.looseObject({ managed: z.boolean() }),
-    }),
-  ),
-});
 
 /** A missing or unexpected catalog comparison keeps the complete main graph. */
 export async function isInternalImagePinChange(
@@ -42,28 +30,7 @@ export async function isInternalImagePinChange(
         (source) => JSON.parse(source) as unknown,
       ),
     ]);
-    const before = CatalogSchema.safeParse(beforeSource);
-    const after = CatalogSchema.safeParse(afterSource);
-    if (!before.success || !after.success) return false;
-    const oldEntries = before.data.entries;
-    const newEntries = after.data.entries;
-    if (oldEntries.length !== newEntries.length) return false;
-    const normalized = newEntries.map((entry, index) => {
-      const oldEntry = oldEntries[index];
-      if (oldEntry === undefined || entry.value === oldEntry.value)
-        return entry;
-      return entry.category !== "internal-image" ||
-        entry.artifactType !== "image" ||
-        entry.management.managed ||
-        !PIN_VALUE.test(entry.value) ||
-        !PIN_VALUE.test(oldEntry.value)
-        ? entry
-        : { ...entry, value: oldEntry.value };
-    });
-    return (
-      JSON.stringify({ ...after.data, entries: normalized }) ===
-      JSON.stringify(before.data)
-    );
+    return onlyInternalImagePinsChanged(beforeSource, afterSource);
   } catch {
     return false;
   }
