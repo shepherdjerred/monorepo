@@ -17,6 +17,7 @@ export {
 } from "./providers/registry.ts";
 export { greptileProvider } from "./providers/greptile.ts";
 export { codexProvider } from "./providers/codex.ts";
+export { coderabbitProvider } from "./providers/coderabbit.ts";
 export {
   markQodoFindingResolved,
   qodoProvider,
