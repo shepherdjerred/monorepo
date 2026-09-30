@@ -15,13 +15,17 @@ import {
   NotificationIntentKeySchema,
   RiotMatchIdSchema,
 } from "@scout-for-lol/domain/identity/brands.ts";
-import { NotificationAttemptNonceSchema } from "@scout-for-lol/domain/notifications/intent.ts";
+import {
+  NotificationAttemptNonceSchema,
+  NotificationIntentSchema,
+} from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   SCOUT_WORKFLOW_NAMES,
   scoutLakeProjectionV2WorkflowId,
   scoutPipelineReconciliationV2WorkflowId,
 } from "@scout-for-lol/temporal";
 import {
+  DiscordGuildIdSchema,
   OperationsIntentPayloadSchema,
   type OperationsIntentPayload,
 } from "@scout-for-lol/data";
@@ -31,7 +35,11 @@ import {
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
-import { upsertIntent } from "#src/database/durable/intent-repository.ts";
+import {
+  upsertIntent,
+  upsertSubjectIntent,
+} from "#src/database/durable/intent-repository.ts";
+import { duelStatusAnnouncementCodec } from "#src/progression/duels/status-message.ts";
 import { observeMatch } from "#src/database/durable/observation-repository.ts";
 import { platformRouteOf } from "#src/durable/match/match-identity.ts";
 import {
@@ -656,7 +664,68 @@ describe("operations reads", () => {
     // it, which is exactly why it has its own queue.
     expect(queues.stalledNotifications).toEqual([]);
   });
+});
 
+describe("Duel operations reads", () => {
+  test("a Duel unknown delivery is visible and resolvable from its queue row", async () => {
+    const duelId = "00000000-0000-4000-8000-000000000903";
+    const nonce = NotificationAttemptNonceSchema.parse(
+      "duel-run-903:attempt-1",
+    );
+    const record = {
+      duelId,
+      intent: NotificationIntentSchema.parse({
+        key: "duel-status:duel-invited:operations-903",
+        kind: "duel-status",
+        origin: { kind: "live" },
+        target: { kind: "channel", channelId: CHANNEL },
+        freshnessDeadline: instant(60 * 60_000),
+        createdAt: instant(-60_000),
+        attemptCount: 1,
+        announcement: duelStatusAnnouncementCodec.serialize({
+          guildId: DiscordGuildIdSchema.parse("100000000000000903"),
+          payload: { kind: "invited", seriesId: duelId, mentionDiscordIds: [] },
+        }),
+        state: {
+          kind: "unknown-delivery",
+          attemptNonce: nonce,
+          observedAt: instant(-30_000),
+        },
+      }),
+    };
+    expect(await upsertSubjectIntent(db, record)).toEqual({
+      outcome: "applied",
+    });
+
+    const queues = await caller().operations.queues({});
+    expect(queues.unknownDeliveries).toEqual([
+      {
+        intentKey: record.intent.key,
+        duelId,
+        attemptCount: 1,
+        attemptNonce: nonce,
+        state: "unknown-delivery",
+      },
+    ]);
+    const [queued] = queues.unknownDeliveries;
+    if (queued === undefined)
+      throw new Error("Duel unknown delivery was not queued");
+    const intentId = await prepare(
+      OperationsIntentPayloadSchema.parse({
+        kind: "ops_resolve_unknown_delivery",
+        version: 1,
+        intentKey: queued.intentKey,
+        answer: { outcome: "not-delivered", attemptNonce: queued.attemptNonce },
+      }),
+    );
+    expect(await caller().operations.confirm({ intentId })).toMatchObject({
+      kind: "executed",
+      outcome: { kind: "delivery-resolved", intentState: "ready" },
+    });
+  });
+});
+
+describe("operations reads", () => {
   test("the queue view keeps the prematch intents the sweep stopped driving", async () => {
     // The counterpart of the sweep's exclusion. A prematch intent whose match
     // carries an observation announces a game that has already ended, so the
@@ -806,7 +875,9 @@ describe("operations reads", () => {
       [sending.intent.key, "sending"],
     ]);
   });
+});
 
+describe("operations read pagination", () => {
   test("a queue seeded past the cap pages completely through the cursor", async () => {
     // Deadlines are distinct and ascending, so the page order is the read's
     // order and a skipped row would show up as a missing key rather than as a
