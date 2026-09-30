@@ -1065,6 +1065,90 @@ steps:
     agents:
       queue: macos
 
+  # Linux compile of the five TaskNotes Apple static libraries. Swift,
+  # signing, and UI tests stay on the macos queue. The image is the published
+  # macOS 15 SDK toolchain; the digest is pinned because Zig 0.13 in that
+  # image is part of the link contract.
+  - label: ":apple: TaskNotes Apple cross-compile (PR)"
+    key: tasknotes-apple-cross-pr
+    timeout_in_minutes: 45
+    if: build.pull_request.id != null && (build.branch != "release-please--branches--main" || build.source != "webhook" || build.env("RUN_RELEASE_CI") == "true")
+    if_changed:
+      include:
+        - ".buildkite/pipeline.yml"
+        - "scripts/lib/json.ts"
+        - ".buildkite/main-bootstrap.yml"
+        - ".buildkite/scripts/reporting/buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/ci-changed.ts"
+        - ".buildkite/scripts/migration-core.ts"
+        - ".buildkite/scripts/selectors/prepare-ci-changed-base.ts"
+        - ".buildkite/scripts/reporting/read-buildkite-handoff.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline.ts"
+        - ".buildkite/scripts/selectors/select-main-pipeline-selection.ts"
+        - ".buildkite/scripts/upload-pipeline.sh"
+        - ".buildkite/scripts/macos/apple-cross.test.ts"
+        - ".mise.toml"
+        - "packages/tasknotes-core/**"
+    cancel_on_build_failing: true
+    command: packages/tasknotes-core/ci/apple-cross.sh
+    retry: *retry
+    plugins:
+      - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tasknotes-apple-cross-pr
+          checkout:
+            cloneFlags: "--no-tags"
+          podSpecPatch:
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
+            containers:
+              - *checkout_container
+              - name: container-0
+                image: "ghcr.io/shepherdjerred/macos-cross-compiler:15.0@sha256:fb61376ae4288abb57ea477ae55e8b9df280c46bb622d9bb50c4755b6ebbf44f"
+                imagePullPolicy: IfNotPresent
+                securityContext:
+                  allowPrivilegeEscalation: false
+                env:
+                  - *env_buildkite_shell
+                resources:
+                  requests:
+                    { cpu: "2", memory: "4Gi", ephemeral-storage: "8Gi" }
+                  limits:
+                    { cpu: "6", memory: "16Gi", ephemeral-storage: "40Gi" }
+
+  - label: ":apple: TaskNotes Apple cross-compile (main)"
+    key: tasknotes-apple-cross-main
+    timeout_in_minutes: 45
+    if: build.branch == pipeline.default_branch
+    cancel_on_build_failing: true
+    command: packages/tasknotes-core/ci/apple-cross.sh
+    retry: *retry
+    plugins:
+      - kubernetes:
+          metadata:
+            labels:
+              ci.sjer.red/step-key: tasknotes-apple-cross-main
+          checkout:
+            cloneFlags: "--no-tags"
+          podSpecPatch:
+            serviceAccountName: buildkite-job
+            automountServiceAccountToken: false
+            containers:
+              - *checkout_container
+              - name: container-0
+                image: "ghcr.io/shepherdjerred/macos-cross-compiler:15.0@sha256:fb61376ae4288abb57ea477ae55e8b9df280c46bb622d9bb50c4755b6ebbf44f"
+                imagePullPolicy: IfNotPresent
+                securityContext:
+                  allowPrivilegeEscalation: false
+                env:
+                  - *env_buildkite_shell
+                resources:
+                  requests:
+                    { cpu: "2", memory: "4Gi", ephemeral-storage: "8Gi" }
+                  limits:
+                    { cpu: "6", memory: "16Gi", ephemeral-storage: "40Gi" }
+
   - label: ":sqlite: alert ledger integration"
     key: alert-dashboard-sqlite
     timeout_in_minutes: 30
@@ -3886,6 +3970,7 @@ steps:
       - hkctl-native-main
       - quotabar-macos-main
       - tasknotes-native-main
+      - tasknotes-apple-cross-main
       - playwright-e2e-main
       - resume-build-main
       - trmnl-publish

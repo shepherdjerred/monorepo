@@ -69,6 +69,7 @@ const LANE_TO_STEP: Record<string, string | readonly string[] | null> = {
   "hkctl-native": "hkctl-native-pr",
   "quotabar-macos": "quotabar-macos-pr",
   "tasknotes-native": "tasknotes-native-pr",
+  "tasknotes-apple-cross": "tasknotes-apple-cross-pr",
   playwright: "playwright-e2e-pr",
   resume: "resume-build-pr",
   trmnl: "trmnl-validate-pr",

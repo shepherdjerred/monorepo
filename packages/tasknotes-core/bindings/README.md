@@ -42,6 +42,12 @@ UniFFI reads its metadata out of the built library's symbol table, and that
 metadata is host-independent. `build-xcframework` and `verify-swift` need
 `lipo`, `xcodebuild`, and a Swift toolchain, so they are macOS-only.
 
+The static archives those commands package also build on Linux, inside
+`ghcr.io/shepherdjerred/macos-cross-compiler:15.0`, via
+`packages/tasknotes-core/ci/apple-cross.sh`. That script uses the same macOS
+15.0 and iOS 18.0 deployment targets as `xtask`. It stops at the `lipo`d
+archives. Creating the XCFramework still takes `xcodebuild` on the Mac.
+
 ## Build settings on this package
 
 `TaskNotesCore` carries exactly two Swift settings, and both are load-bearing:

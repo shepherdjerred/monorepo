@@ -488,6 +488,16 @@
       ]
     },
     {
+      "source": "packages/tasknotes-core/ci/apple-cross.sh",
+      "disposition": "retain",
+      "reason": "Runs inside the macOS cross-compiler image, which does not provide Bun"
+    },
+    {
+      "source": "packages/tasknotes-core/ci/apple-staticlib-rustc.sh",
+      "disposition": "retain",
+      "reason": "Cargo rustc wrapper executed inside the macOS cross-compiler image, which does not provide Bun"
+    },
+    {
       "source": "packages/tasknotes-core/ci/check-clippy-config.sh",
       "disposition": "retain",
       "reason": "Cargo-specific semantic probe must inspect Clippy configuration warnings in the Rust toolchain lane"

@@ -59,6 +59,7 @@ const STEP_LANE_REQUIREMENTS: Readonly<Record<string, readonly string[]>> = {
   "hkctl-native-main": ["hkctl-native"],
   "quotabar-macos-main": ["quotabar-macos"],
   "tasknotes-native-main": ["tasknotes-native"],
+  "tasknotes-apple-cross-main": ["tasknotes-apple-cross"],
   "homelab-release-admission": [],
   "playwright-e2e-main": ["playwright"],
   "resume-build-main": ["resume"],

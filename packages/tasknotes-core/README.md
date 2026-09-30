@@ -54,8 +54,24 @@ cargo xtask build-xcframework   # build artifacts/TaskNotesCoreFFI.xcframework
 cargo xtask verify-swift        # compile and run Swift against the artifacts
 ```
 
-`generate-bindings` and `check-bindings` need only cargo; the XCFramework
-targets require a macOS host with Xcode.
+`generate-bindings` and `check-bindings` need only cargo. The XCFramework and
+the Swift smoke test need a macOS host with Xcode. The five Apple static
+libraries (macOS arm64 and x86_64, iOS arm64, and both iOS Simulator
+architectures) also compile on Linux inside
+`ghcr.io/shepherdjerred/macos-cross-compiler:15.0`:
+
+```bash
+docker run --platform linux/amd64 --rm \
+  -v "$PWD":/src -w /src \
+  ghcr.io/shepherdjerred/macos-cross-compiler:15.0@sha256:fb61376ae4288abb57ea477ae55e8b9df280c46bb622d9bb50c4755b6ebbf44f \
+  packages/tasknotes-core/ci/apple-cross.sh
+```
+
+Run that from the repository root. It installs the Rust pin from `.mise.toml`
+inside the image, builds `tasknotes-core-ffi` as a static archive for each
+target, and `lipo`s the universal macOS and iOS Simulator slices. It does not
+run `xcodebuild` or produce the XCFramework; the image has no iPhoneOS SDK, so
+the iOS dynamic library is still linked on the Mac.
 
 Lint policy (no `#[allow]`, no unwrap/panic behind the FFI, deny `as` casts,
 deterministic iteration) is encoded in `Cargo.toml` workspace lints,

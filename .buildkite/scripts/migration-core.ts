@@ -292,6 +292,13 @@ const sitePaths = {
 
 export const lanePaths: Readonly<Record<string, readonly string[]>> = {
   ...nativeLanePaths,
+  // Linux static-library compile. Distinct from tasknotes-native, which is
+  // the Mac's Swift, signing, and UI lane.
+  "tasknotes-apple-cross": [
+    ".buildkite/scripts/macos/apple-cross.test.ts",
+    ".mise.toml",
+    "packages/tasknotes-core",
+  ],
   playwright: [
     ...workspacePaths,
     "config/analytics-sites.json",

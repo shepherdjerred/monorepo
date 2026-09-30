@@ -42,6 +42,14 @@ Product paths select their own lane. Changes to the native pipeline,
 toolchain, preflight, or this host configuration select both. Unrelated paths
 select neither lane.
 
+The Rust static libraries behind the TaskNotes XCFramework also compile on
+Linux. `tasknotes-apple-cross` runs
+`packages/tasknotes-core/ci/apple-cross.sh` in
+`ghcr.io/shepherdjerred/macos-cross-compiler:15.0` and checks the macOS, iOS,
+and iOS Simulator archives. Swift, signing, and the UI tests stay on this
+host. The image has no iPhoneOS SDK, so it does not link the iOS dynamic
+library or assemble the XCFramework.
+
 ## First-time setup
 
 ### 1. Bootstrap packages and the agent

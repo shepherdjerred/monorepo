@@ -53,6 +53,7 @@ const PATH_GATED_PR_KEYS = new Set([
   "hkctl-native-pr",
   "quotabar-macos-pr",
   "tasknotes-native-pr",
+  "tasknotes-apple-cross-pr",
   "playwright-e2e-pr",
   "resume-build-pr",
   "trmnl-validate-pr",
