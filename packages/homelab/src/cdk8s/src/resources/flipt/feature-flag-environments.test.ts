@@ -79,7 +79,7 @@ describe("Flipt consumer environments", () => {
       name: "Scout beta",
       environment: "beta",
       namespace: "scout",
-      // Application, gateway and observing activity worker all evaluate the
+      // Application, gateway and activity worker all evaluate the
       // same beta/scout flags from separate pods.
       count: 3,
       createChart: (app: App) => createScoutChart(app, "beta"),
@@ -88,7 +88,7 @@ describe("Flipt consumer environments", () => {
       name: "Scout prod",
       environment: "prod",
       namespace: "scout",
-      // Application, gateway and observing activity worker share prod/scout.
+      // Application, gateway and activity worker share prod/scout.
       count: 3,
       createChart: (app: App) => createScoutChart(app, "prod"),
     },

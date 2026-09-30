@@ -94,7 +94,7 @@ export const SCOUT_ACTIVITY_WORKER_TOPOLOGY: Readonly<
   Record<Stage, ScoutActivityWorkerTopology>
 > = {
   beta: "owning",
-  prod: "observing",
+  prod: "owning",
 };
 
 export function activityWorkerOwnsQueues(
