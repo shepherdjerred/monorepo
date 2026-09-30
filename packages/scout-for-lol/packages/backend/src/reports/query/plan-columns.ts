@@ -39,13 +39,13 @@ function assetForPlanColumn(plan: ScoutQlPlan, column: string) {
   const info = scoutQlSourceCatalog(plan.source)?.columns.get(column);
   if (info?.asset === undefined) return;
 
-  // Most string asset dimensions already contain display names. Prematch
-  // champion is the exception: it carries numeric ids cast to VARCHAR because
-  // that source has no champion name column.
+  // Most string asset dimensions already contain display names. The virtual
+  // champion dimension is the exception: every supported source groups by its
+  // numeric champion_id key, even where the catalog exposes it as VARCHAR.
   const identifierBacked =
     info.type === "integer" ||
     info.type === "bigint" ||
-    (plan.source === "prematch_participants" && column === "champion");
+    (info.virtual && column === "champion");
   if (!identifierBacked) return;
   return info.asset;
 }

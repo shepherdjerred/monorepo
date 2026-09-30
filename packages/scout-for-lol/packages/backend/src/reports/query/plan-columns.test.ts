@@ -69,39 +69,48 @@ describe("plan result asset metadata", () => {
     expect(planResultDimensions(plan, "Flash", ["Flash"])).toEqual(["Flash"]);
   });
 
-  test("formats the prematch champion id carried as text", () => {
-    const plan = {
-      source: "prematch_participants",
-      outputs: [
-        {
-          name: "champion",
-          expr: { kind: "grouping-ref", index: 0 },
-          displayKind: "text",
-          additive: false,
-          evidence: { kind: "sample" },
-        },
-      ],
-      groupings: [{ kind: "column", column: "champion", name: "champion" }],
-      timeWindow: { kind: "unbounded" },
-      orderBy: [],
-      limit: 10,
-      playerRefs: [],
-      render: { kind: "TABLE" },
-    } satisfies ScoutQlPlan;
+  test.each([
+    { source: "match_participants", key: 62 },
+    { source: "prematch_participants", key: "62" },
+    { source: "match_team_bans", key: 62 },
+    { source: "timeline_frames", key: 62 },
+    { source: "timeline_events", key: 62 },
+  ] as const)(
+    "formats champion grouping keys from $source",
+    ({ source, key }) => {
+      const plan = {
+        source,
+        outputs: [
+          {
+            name: "champion",
+            expr: { kind: "grouping-ref", index: 0 },
+            displayKind: "text",
+            additive: false,
+            evidence: { kind: "sample" },
+          },
+        ],
+        groupings: [{ kind: "column", column: "champion", name: "champion" }],
+        timeWindow: { kind: "unbounded" },
+        orderBy: [],
+        limit: 10,
+        playerRefs: [],
+        render: { kind: "TABLE" },
+      } satisfies ScoutQlPlan;
 
-    expect(planResultColumns(plan, ["label", "champion"])).toEqual([
-      { key: "label", label: "Champion", format: "text" },
-      {
-        key: "champion",
-        label: "Champion",
-        format: "text",
-        asset: "champion",
-      },
-    ]);
-    expect(planResultDimensions(plan, "62", ["62"])).toEqual([
-      reportAssetInfo("champion", 62).name,
-    ]);
-  });
+      expect(planResultColumns(plan, ["label", "champion"])).toEqual([
+        { key: "label", label: "Champion", format: "text" },
+        {
+          key: "champion",
+          label: "Champion",
+          format: "text",
+          asset: "champion",
+        },
+      ]);
+      expect(planResultDimensions(plan, String(key), [key])).toEqual([
+        reportAssetInfo("champion", Number(key)).name,
+      ]);
+    },
+  );
 
   test("formats asset dimensions in composite labels from typed grouping keys", () => {
     const plan = {
