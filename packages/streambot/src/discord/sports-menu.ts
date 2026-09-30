@@ -214,7 +214,18 @@ export async function sendSportsMenu(
       components: [],
       allowedMentions: { parse: [] },
     });
-    const content = await play(picked, event);
+    let content: string;
+    try {
+      content = await play(picked, event);
+    } catch (error) {
+      await interaction.editReply({
+        content: "Something went wrong starting that game. Please try again.",
+        embeds: [],
+        components: [],
+        allowedMentions: { parse: [] },
+      });
+      throw error;
+    }
     await interaction.editReply({
       content,
       embeds: [],

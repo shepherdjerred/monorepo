@@ -172,6 +172,25 @@ describe("sports Discord picker", () => {
     expect(filter(pick)).toBe(true);
   });
 
+  it("clears the checking state when playback fails and preserves the error", async () => {
+    const h = menuHarness();
+    const pick = component("sports_pick", "0");
+    h.awaitMessageComponent.mockResolvedValue(pick);
+    const error = new Error("Discord send failed");
+    const play = vi.fn().mockRejectedValue(error);
+
+    await expect(sendSportsMenu(h.interaction, [LIVE], play)).rejects.toBe(
+      error,
+    );
+    expect(pick.deferUpdate).toHaveBeenCalledOnce();
+    expect(h.editReply).toHaveBeenLastCalledWith({
+      content: "Something went wrong starting that game. Please try again.",
+      embeds: [],
+      components: [],
+      allowedMentions: { parse: [] },
+    });
+  });
+
   it("removes expired controls without starting playback", async () => {
     const h = menuHarness();
     const expired = Object.assign(new Error("collector expired"), {
