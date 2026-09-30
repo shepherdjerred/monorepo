@@ -408,6 +408,21 @@
       "reason": "Upstream-derived script embedded in a minimal collector image"
     },
     {
+      "source": "packages/the-storm/server/boot-check.sh",
+      "disposition": "retain",
+      "reason": "Docker boot verification uses the host shell and Docker CLI"
+    },
+    {
+      "source": "packages/the-storm/server/fetch.sh",
+      "disposition": "retain",
+      "reason": "Container image build downloads pinned server artifacts before Bun is available"
+    },
+    {
+      "source": "packages/the-storm/server/storm-entrypoint.sh",
+      "disposition": "retain",
+      "reason": "Container startup runs with shell utilities before the Paper server starts"
+    },
+    {
       "source": "packages/llm-observability/test/e2e/run-ci.sh",
       "disposition": "port",
       "reason": "Package test runtime already includes Bun",

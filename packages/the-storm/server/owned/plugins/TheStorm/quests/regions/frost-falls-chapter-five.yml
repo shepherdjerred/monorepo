@@ -1,0 +1,83 @@
+# The historical Frost Falls name belongs to a present-day memorial shelter,
+# not a claim that its old player-town buildings survived.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-blanket-drive:
+    name: The Blanket Drive
+    giver: lenox
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-hearth-kept
+    text:
+      offer: Edgar kept the hearth through another watch. The register shows we need more wool for travellers who arrive wet and cold.
+      accept: Craft white wool in the main world for the shelter.
+      decline: I will keep the last blanket by the fire.
+      finish: The shelter has a fresh supply of wool for its next guests.
+      summary: Make replacement blankets for the Frost Falls memorial shelter.
+      questions: []
+    start: wool
+    stages:
+      wool:
+        journal: Craft 8 white wool in the main world for Lenox.
+        waiting: Dry wool makes a cold night easier to bear.
+        complete: The wool is ready to take to Lenox.
+        objectives:
+          - craft 8 WHITE_WOOL
+        onComplete: []
+        next: [{ to: hand-in, when: [], label: none }]
+        timeLimit: none
+      hand-in:
+        journal: Bring Lenox the 8 white wool for the shelter.
+        waiting: Bring me the wool and I will stock the shelter.
+        complete: Lenox can make new blankets for the hearth.
+        objectives:
+          - deliver lenox 8 WHITE_WOOL
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-hearth-turn:
+    name: The Hearth Turn
+    giver: edgar
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-blanket-drive
+    text:
+      offer: The blankets are ready. A hearth stays welcoming only when the next watch inherits enough fuel and food.
+      accept: Bring coal, bread and lanterns for the handover.
+      decline: I will tend the fire for one more turn.
+      finish: The next watch has warmth, food and light. The shelter can keep its promise.
+      summary: Hand over a stocked Frost Falls memorial hearth.
+      questions: []
+    start: handover
+    stages:
+      handover:
+        journal: Bring Edgar 32 coal, 16 bread and 4 lanterns.
+        waiting: The next keeper should arrive to a ready fire.
+        complete: Edgar has a full kit for the next hearth watch.
+        objectives:
+          - deliver edgar 32 COAL
+          - deliver edgar 16 BREAD
+          - deliver edgar 4 LANTERN
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

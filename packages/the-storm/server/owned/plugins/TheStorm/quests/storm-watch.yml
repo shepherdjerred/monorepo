@@ -1,0 +1,119 @@
+# Owned by the repository; the plugin never writes it.
+# The Storm Watch: the Guard Captain's quests, ported from 2017's "Ready for
+# Battle" and "Gearing Up", scaled for one player.
+
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  ready-for-battle:
+    name: Ready for Battle
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 60
+    requirements: []
+    text:
+      offer: Us guards are busy protecting spawn all day. Would you be able to help us out a bit? You'll need to bring your own gear.
+      accept: Show me you're properly equipped first.
+      decline: Come back when you've the stomach for it.
+      finish: Thanks for your help. Here's a reward for your troubles. Welcome to the City Guard.
+      summary: The Guard Captain wants help keeping the mobs away from spawn.
+      questions: []
+    start: gear
+    stages:
+      gear:
+        journal: Bring the Guard Captain a set of iron armour, a bow, 32 arrows and an iron sword.
+        waiting: Chestplate, leggings, boots, a bow with arrows and a sword. Then we talk.
+        complete: Alright, looks good.
+        objectives:
+          - deliver guard-captain 1 IRON_CHESTPLATE
+          - deliver guard-captain 1 IRON_LEGGINGS
+          - deliver guard-captain 1 IRON_BOOTS
+          - deliver guard-captain 1 BOW
+          - deliver guard-captain 32 ARROW
+          - deliver guard-captain 1 IRON_SWORD
+        onComplete: []
+        next: [{ to: zombies, when: [], label: none }]
+        timeLimit: none
+      zombies:
+        journal: Kill 30 zombies.
+        waiting: Thirty zombies. Off you go.
+        complete: none
+        objectives:
+          - kill 30 ZOMBIE
+        onComplete: []
+        next: [{ to: skeletons, when: [], label: none }]
+        timeLimit: none
+      skeletons:
+        journal: Kill 20 skeletons and bring back 32 bones as proof.
+        waiting: Bones, or it didn't happen.
+        complete: Proof of your victory, I see!
+        objectives:
+          - kill 20 SKELETON
+          - deliver guard-captain 32 BONE
+        onComplete: []
+        next: [{ to: spiders, when: [], label: none }]
+        timeLimit: none
+      spiders:
+        journal: Kill 16 spiders and bring back 16 spider eyes.
+        waiting: Spiders next. Bring me their eyes.
+        complete: Well done!
+        objectives:
+          - kill 16 SPIDER
+          - deliver guard-captain 16 SPIDER_EYE
+        onComplete: []
+        next: [{ to: cave-spiders, when: [], label: none }]
+        timeLimit: none
+      cave-spiders:
+        journal: Clear out 10 cave spiders, then report to the Guard Captain.
+        waiting: The cave spiders are the worst of them. Report back when they're dealt with.
+        complete: none
+        objectives:
+          - kill 10 CAVE_SPIDER
+          - talk guard-captain
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 1350
+      - points 3
+      - title city-guard
+      - reputation storm-watch 3
+
+  gearing-up:
+    name: Gearing Up
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 20
+    requirements:
+      - completed ready-for-battle
+    text:
+      offer: There's a battle on the horizon which I am not prepared for. Please bring me some reinforcements.
+      accept: Swords and chestplates. Iron will do.
+      decline: Then pray the walls hold.
+      finish: Thank you very much. For your troubles, here's a small reward.
+      summary: The Guard Captain needs weapons and armour for a coming battle.
+      questions: []
+    start: arms
+    stages:
+      arms:
+        journal: Bring the Guard Captain 3 iron swords and 2 iron chestplates.
+        waiting: Swords and chestplates. The battle won't wait.
+        complete: Thank you.
+        objectives:
+          - deliver guard-captain 3 IRON_SWORD
+          - deliver guard-captain 2 IRON_CHESTPLATE
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 300
+      - points 1
+      - reputation storm-watch 1

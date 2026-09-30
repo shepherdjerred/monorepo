@@ -1,0 +1,81 @@
+# The next caravan prepares a route and a load that can be checked on return.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  markers-for-the-cart:
+    name: "Markers for the Cart"
+    giver: marcus
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-next-manifest
+    text:
+      offer: "Martha's manifest is ready. New drivers need route markers they can recognize even when the weather turns."
+      accept: "Craft oak signs for the next caravan route."
+      decline: "The driver will rely on memory for this trip."
+      finish: "The cart can carry replacement markers for the current route."
+      summary: "Make route signs for the next main-world caravan."
+      questions: []
+    start: signs
+    stages:
+      signs:
+        journal: "Craft 12 oak signs in the main world for Marcus."
+        waiting: "A clear marker is useful only if the driver can replace it."
+        complete: "The route signs are ready. Bring them to Marcus."
+        objectives:
+          - craft 12 OAK_SIGN
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Bring Marcus 12 oak signs for the caravan cart."
+        waiting: "The cart needs the finished markers before it leaves."
+        complete: "Marcus has a bundle of route signs."
+        objectives:
+          - deliver marcus 12 OAK_SIGN
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-sealed-load:
+    name: "The Sealed Load"
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed markers-for-the-cart
+    text:
+      offer: "Marcus has route markers. Now I want a simple seal on the sample crate so the next receipt can show it arrived untouched."
+      accept: "Bring honeycomb and paper for the crate seal and receipt."
+      decline: "I will rely on the driver's word for this load."
+      finish: "The sample crate has a seal and a matching page in the market ledger."
+      summary: "Seal the next caravan sample crate against its manifest."
+      questions: []
+    start: seal
+    stages:
+      seal:
+        journal: "Bring Martha 4 honeycomb and 12 paper."
+        waiting: "The seal number should match the market receipt."
+        complete: "The next caravan load is sealed and recorded."
+        objectives:
+          - deliver martha 4 HONEYCOMB
+          - deliver martha 12 PAPER
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

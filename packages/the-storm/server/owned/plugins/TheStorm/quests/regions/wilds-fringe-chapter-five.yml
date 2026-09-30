@@ -1,0 +1,83 @@
+# A patrol can carry camp and marker supplies anywhere in the main world;
+# no old-world Wilds coordinate is assumed.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  campfire-signal:
+    name: Campfire Signal
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-next-patrol
+    text:
+      offer: The next patrol has a map. A small campfire kit gives it a visible place to regroup if the route changes.
+      accept: Craft campfires in the main world for the watch.
+      decline: The patrol will carry torches alone this time.
+      finish: The watch has signal fires ready for its next route.
+      summary: Prepare campfire signals for the Wilds fringe patrol.
+      questions: []
+    start: fires
+    stages:
+      fires:
+        journal: Craft 4 campfires in the main world for the watch.
+        waiting: A signal works only if the patrol knows how to make it.
+        complete: The campfires are ready to take to the captain.
+        objectives:
+          - craft 4 CAMPFIRE
+        onComplete: []
+        next: [{ to: hand-in, when: [], label: none }]
+        timeLimit: none
+      hand-in:
+        journal: Bring the 4 campfires to the guard captain.
+        waiting: The patrol needs the campfires before it leaves.
+        complete: The patrol's campfire kit is ready.
+        objectives:
+          - deliver guard-captain 4 CAMPFIRE
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation storm-watch 1
+
+  the-trail-menders:
+    name: The Trail Menders
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed campfire-signal
+    text:
+      offer: A signal fire helps people return, but worn markers still need repair. The watch should carry spares before it leaves.
+      accept: Bring fences, signs and torches for the repair kit.
+      decline: I will mark damaged signs in the patrol account.
+      finish: The watch can replace a marker without sending someone back to town.
+      summary: Supply repairs for the Wilds fringe route markers.
+      questions: []
+    start: spares
+    stages:
+      spares:
+        journal: Bring Iovita 24 oak fences, 8 oak signs and 24 torches.
+        waiting: The next patrol should repair what it can safely reach.
+        complete: The trail-mending kit is stocked.
+        objectives:
+          - deliver iovita 24 OAK_FENCE
+          - deliver iovita 8 OAK_SIGN
+          - deliver iovita 24 TORCH
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation storm-watch 1

@@ -1,0 +1,92 @@
+# The historic library's water and weather notes become a repeatable public
+# record, with experiments performed anywhere in the permanent main world.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-observers-copy:
+    name: The Observer's Copy
+    giver: walter
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-missing-margin
+    text:
+      offer: Winston left room for failed trials. Now I need a field copy that an observer can carry without disturbing the library record.
+      accept: Craft books for the copy and bring me ink to mark each result.
+      decline: The master copy will remain here.
+      finish: The observer can record a trial outside and return with a clear account.
+      summary: Prepare a field copy of Walter's experiment record.
+      questions: []
+    start: bind
+    stages:
+      bind:
+        journal: Craft 4 books in the main world for the observer's copy.
+        waiting: Fresh pages make it easier to tell this copy from the original.
+        complete: The pages are bound. Walter can number them.
+        objectives:
+          - craft 4 BOOK
+        onComplete: []
+        next: [{ to: number, when: [], label: none }]
+        timeLimit: none
+      number:
+        journal: Bring Walter 4 books and 2 ink sacs.
+        waiting: The field copy needs the same page numbers as the master.
+        complete: The copy is ready for observations.
+        objectives:
+          - deliver walter 4 BOOK
+          - deliver walter 2 INK_SAC
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  water-under-test:
+    name: Water Under Test
+    giver: winston
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-observers-copy
+    text:
+      offer: Walter's water notes need a simple observation that another reader can repeat. We should measure materials, not claim a miracle.
+      accept: Gather ice and glass, then report the result to Walter for the public catalogue.
+      decline: A good test can wait for careful work.
+      finish: Walter entered the materials and result. Anyone can try the same test.
+      summary: Record a repeatable water experiment for the library.
+      questions: []
+    start: materials
+    stages:
+      materials:
+        journal: Bring Winston 12 ice and 8 glass bottles for the water test.
+        waiting: The materials must be counted before the test begins.
+        complete: The observation is ready to record with Walter.
+        objectives:
+          - deliver winston 12 ICE
+          - deliver winston 8 GLASS_BOTTLE
+        onComplete: []
+        next: [{ to: catalogue, when: [], label: none }]
+        timeLimit: none
+      catalogue:
+        journal: Tell Walter what materials were used in the water test.
+        waiting: The catalogue needs a method that another reader can follow.
+        complete: The test has a dated place in the catalogue.
+        objectives:
+          - talk walter
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

@@ -14,6 +14,10 @@ export const IMAGE_TARGET_REGISTRY: Readonly<
     ghcrVisibility: "public",
   },
   birmel: { owner: "@shepherdjerred/birmel", ghcrVisibility: "public" },
+  "storm-brain": {
+    owner: "@shepherdjerred/storm-brain",
+    ghcrVisibility: "public",
+  },
   "tasknotes-server": { owner: "tasknotes-server", ghcrVisibility: "public" },
   "starlight-karma-bot": {
     owner: "starlight-karma-bot",

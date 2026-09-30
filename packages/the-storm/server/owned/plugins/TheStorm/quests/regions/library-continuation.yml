@@ -1,0 +1,93 @@
+# The historical library and sorcery hall inspired these catalogue errands.
+# No shelf, room or coordinate from the old world is required.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  catalogue-of-rain:
+    name: Catalogue of Rain
+    giver: walter
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed unshelved
+    text:
+      offer: The unshelved notes mention storms beside the water experiments. I need a catalogue that keeps observation apart from rumour.
+      accept: Bring books, ink and lapis for clear reference marks. Winston can check my labels.
+      decline: The notes will remain on my desk.
+      finish: Winston checked the labels. The rain observations now have their own entry.
+      summary: Catalogue the library's recovered storm and water notes.
+      questions: []
+    start: entries
+    stages:
+      entries:
+        journal: Bring Walter 4 books, 2 ink sacs and 8 lapis lazuli.
+        waiting: Every observation needs a source and a date.
+        complete: The entries are legible. Winston should check the labels.
+        objectives:
+          - deliver walter 4 BOOK
+          - deliver walter 2 INK_SAC
+          - deliver walter 8 LAPIS_LAZULI
+        onComplete: []
+        next: [{ to: review, when: [], label: none }]
+        timeLimit: none
+      review:
+        journal: Ask Winston to check the recovered notes' catalogue labels.
+        waiting: Winston knows which observations belong together.
+        complete: The notes are filed under rain, water and uncertain claims.
+        objectives:
+          - talk winston
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-missing-margin:
+    name: The Missing Margin
+    giver: winston
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed catalogue-of-rain
+    text:
+      offer: Walter's catalogue has one useful blank margin. A good experiment needs its failures written down too.
+      accept: Gather glass and paper for a second record, then let Walter enter the result.
+      decline: The blank page can wait.
+      finish: Walter has a place for failed trials. Future readers can repeat the work honestly.
+      summary: Add a repeatable experiment record to the library catalogue.
+      questions: []
+    start: apparatus
+    stages:
+      apparatus:
+        journal: Bring Winston 8 glass bottles and 8 paper for a test record.
+        waiting: A result without a method is only a story.
+        complete: The record is ready. Walter can enter the observations.
+        objectives:
+          - deliver winston 8 GLASS_BOTTLE
+          - deliver winston 8 PAPER
+        onComplete: []
+        next: [{ to: archive, when: [], label: none }]
+        timeLimit: none
+      archive:
+        journal: Ask Walter to archive the experiment record.
+        waiting: Leave room for trials that do not work.
+        complete: The catalogue now tells future readers what was tested.
+        objectives:
+          - talk walter
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1

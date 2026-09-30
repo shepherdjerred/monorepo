@@ -68,7 +68,9 @@ import { createTurboCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources
 import { createBuildkitdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/buildkitd.ts";
 import { createAlertDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alert-dashboard.ts";
 import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/media/stash.ts";
+import { createStormBrainApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/storm-brain.ts";
 import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
+import { createMinecraftMiningResetGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/minecraft-mining-reset-guard.ts";
 import { createArgoCdApplicationAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/argocd-application-admission.ts";
 import { createWoodpeckerCiPodGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/ci-pod-guard.ts";
 
@@ -82,6 +84,7 @@ export async function createAppsChart(app: App) {
   createPriorityClasses(chart);
   createArgoCdApplicationAdmissionPolicies(chart);
   createPvcBackupAdmissionPolicies(chart);
+  createMinecraftMiningResetGuard(chart);
   createWoodpeckerCiPodGuard(chart);
 
   new Namespace(chart, `maintenance-namespace`, {
@@ -194,6 +197,7 @@ export async function createAppsChart(app: App) {
   createBuildkitdApp(chart);
   createAlertDashboardApp(chart);
   createStashApp(chart);
+  createStormBrainApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);

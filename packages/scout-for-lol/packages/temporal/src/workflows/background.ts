@@ -3,6 +3,7 @@ import {
   continueAsNew,
   getExternalWorkflowHandle,
   isCancellation,
+  patched,
   setHandler,
   sleep,
   startChild,
@@ -43,7 +44,9 @@ export async function scoutInitialHistoryWorkflow(
 ): Promise<never> {
   let input = ScoutInitialHistoryInputSchema.parse(rawInput);
   let runRequested = input.runOnStart ?? true;
+  let requestSequence = 0;
   setHandler(requestInitialHistoryRunSignal, () => {
+    requestSequence += 1;
     runRequested = true;
   });
   const activities = backgroundActivities(input.stage);
@@ -51,6 +54,7 @@ export async function scoutInitialHistoryWorkflow(
     setWorkflowPhase("**Phase:** waiting for an initial-history request");
     await condition(() => runRequested);
     runRequested = false;
+    const requestSequenceAtStart = requestSequence;
     setWorkflowPhase("**Phase:** fetching the next initial-history page");
     const page = await fetchHistoryPage(
       activities.fetchInitialHistoryPage,
@@ -74,7 +78,9 @@ export async function scoutInitialHistoryWorkflow(
     }
     const next = nextHistoryInput(input, page);
     input = next.input;
-    runRequested = !next.complete;
+    runRequested = patched("scout-initial-history-preserve-pending-request-v1")
+      ? requestSequence !== requestSequenceAtStart || !next.complete
+      : !next.complete;
     if (
       next.input.pagesInCurrentRun >= 100 ||
       workflowInfo().continueAsNewSuggested

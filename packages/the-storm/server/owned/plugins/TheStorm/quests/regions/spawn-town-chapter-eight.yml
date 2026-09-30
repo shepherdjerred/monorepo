@@ -1,0 +1,81 @@
+# The mill and market close their first accountable harvest cycle together.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-season-marker:
+    name: "The Season Marker"
+    giver: braxton
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-harvest-account
+    text:
+      offer: "Martha's account is open. A clock beside the grain measure will tell future clerks when each count was made."
+      accept: "Craft clocks for the mill and market in the main world."
+      decline: "I will date the totals by memory for now."
+      finish: "The harvest account can be checked against a common time as well as a common weight."
+      summary: "Give the Spawn Town mill and market shared time markers."
+      questions: []
+    start: clocks
+    stages:
+      clocks:
+        journal: "Craft 4 clocks in the main world for Braxton."
+        waiting: "A dated count is easier to audit than a remembered one."
+        complete: "The harvest record has time markers."
+        objectives:
+          - craft 4 CLOCK
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1
+
+  the-shared-harvest:
+    name: "The Shared Harvest"
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 50
+    requirements:
+      - completed the-season-marker
+    text:
+      offer: "The weights, dates and account now agree. Let us put the first measured share on the table for the watch and the market together."
+      accept: "Bring wheat and bread for the shared harvest, then tell Braxton the account balances."
+      decline: "We can leave the first share sealed a little longer."
+      finish: "The mill, market and watch share a harvest they can account for."
+      summary: "Close the first measured Spawn Town harvest with a public share."
+      questions: []
+    start: share
+    stages:
+      share:
+        journal: "Bring Martha 24 wheat and 24 bread for the public share."
+        waiting: "The first share should match the account everyone can read."
+        complete: "Martha has the measured harvest share."
+        objectives:
+          - deliver martha 24 WHEAT
+          - deliver martha 24 BREAD
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Tell Braxton the mill and market share is counted."
+        waiting: "Braxton can close the public account once he hears the share is ready."
+        complete: "The mill and market records agree."
+        objectives:
+          - talk braxton
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 650
+      - points 1
+      - reputation townsfolk 1

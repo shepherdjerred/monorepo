@@ -43,6 +43,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
+  await db.matchMvpTallyRefresh.deleteMany();
   await db.matchMvpVote.deleteMany();
   await db.matchMvpContest.deleteMany();
   await db.account.deleteMany();
@@ -164,7 +165,9 @@ describe("Match MVP votes", () => {
     expect(voter?.alias).toBe("alice");
     expect(voter?.rosterIndex).toBe(0);
   });
+});
 
+describe("Match MVP report references", () => {
   test("persists report message refs on the contest, not the ActiveGame TTL", async () => {
     const frozen = roster();
     await db.matchMvpContest.create({
@@ -197,6 +200,52 @@ describe("Match MVP votes", () => {
     ]);
   });
 
+  test("merges concurrent report message refs without losing a channel", async () => {
+    await db.matchMvpContest.create({
+      data: { matchId: MATCH_ID, roster: roster() },
+    });
+    const refs = Array.from({ length: 12 }, (_, index) => ({
+      channelId: `13376231641461556${String(index).padStart(2, "0")}`,
+      messageId: `100000000000000${String(index).padStart(3, "0")}`,
+    }));
+    await Promise.all(
+      refs.map(async ({ channelId, messageId }) => {
+        await recordMatchMvpReportRefs(
+          MATCH_ID,
+          new Map([[channelId, messageId]]),
+          db,
+        );
+      }),
+    );
+    const stored = await listMatchMvpReportRefs(MATCH_ID, db);
+    expect(stored).toHaveLength(refs.length);
+    expect(stored).toEqual(
+      expect.arrayContaining(
+        refs.map(({ channelId, messageId }) => ({
+          channelId: DiscordChannelIdSchema.parse(channelId),
+          messageId,
+        })),
+      ),
+    );
+  });
+
+  test("rejects a corrupt stored report ref map", async () => {
+    await db.matchMvpContest.create({
+      data: {
+        matchId: MATCH_ID,
+        roster: roster(),
+        reportMessageIds: [],
+      },
+    });
+    await expect(
+      recordMatchMvpReportRefs(
+        MATCH_ID,
+        new Map([["1337623164146155594", "100000000000000001"]]),
+        db,
+      ),
+    ).rejects.toThrow();
+  });
+
   test("a vote-button click records the source report message", async () => {
     const frozen = roster();
     await db.matchMvpContest.create({
@@ -224,7 +273,9 @@ describe("Match MVP votes", () => {
       },
     ]);
   });
+});
 
+describe("Match MVP voter eligibility and contest backfill", () => {
   test("a linked Discord who did not play cannot vote", async () => {
     const frozen = roster();
     await createTrackedTestPlayer(db, {

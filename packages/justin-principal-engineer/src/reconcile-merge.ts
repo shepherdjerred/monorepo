@@ -1,4 +1,7 @@
-import { deliveryIsHealthy } from "#src/domain/delivery-health.ts";
+import {
+  deliveryIsHealthy,
+  deliveryIsUnhealthy,
+} from "#src/domain/delivery-health.ts";
 import type { PrHealth, TaskState } from "#src/domain/schemas.ts";
 import type { GitHubClient, PullRequest } from "#src/integrations/github.ts";
 import type { LinearClient } from "#src/integrations/linear.ts";
@@ -11,14 +14,61 @@ type Save = (
   patch?: Partial<TaskState>,
 ) => Promise<TaskState>;
 
+export type WithGitHub = <T>(
+  work: (
+    github: GitHubClient,
+    env: Readonly<Record<string, string>>,
+  ) => Promise<T>,
+) => Promise<T>;
+
+export async function queueUnhealthy(input: {
+  state: TaskState;
+  health: PrHealth;
+  pr: PullRequest;
+  save: Save;
+  withGitHub: WithGitHub;
+}): Promise<boolean> {
+  if (!deliveryIsUnhealthy(input.health)) return false;
+  const diagnostics = await collectDiagnostics({
+    prNumber: input.pr.number,
+    health: input.health,
+    checkout: input.state.checkoutPath,
+    withGitHub: input.withGitHub,
+  });
+  await input.save(input.state, "implementing", {
+    pendingHealth: input.health,
+    pendingDiagnostics: diagnostics.text,
+    pendingCodexFindingKeys: diagnostics.findingKeys,
+    latestHeadSha: input.pr.headRefOid,
+  });
+  return true;
+}
+
+export async function completeNoChangeTurn(input: {
+  state: TaskState;
+  output: NonNullable<TaskState["lastAgentOutput"]>;
+  linear: LinearClient;
+  save: Save;
+  writeInfo: (message: string) => void;
+}): Promise<void> {
+  const completing = await input.save(input.state, "completing", {
+    lastAgentOutput: input.output,
+    pendingFeedback: [],
+    pendingHealth: null,
+    pendingDiagnostics: null,
+    pendingCodexFindingKeys: [],
+  });
+  await completeTask({
+    state: completing,
+    linear: input.linear,
+    save: input.save,
+    writeInfo: input.writeInfo,
+  });
+}
+
 export async function mergeTask(input: {
   state: TaskState;
-  withGitHub: (
-    work: (
-      github: GitHubClient,
-      env: Readonly<Record<string, string>>,
-    ) => Promise<void>,
-  ) => Promise<void>;
+  withGitHub: WithGitHub;
   linear: LinearClient;
   save: Save;
   writeInfo: (message: string) => void;
@@ -60,13 +110,42 @@ export async function mergeTask(input: {
       }
       await github.merge(pr.number, pr.headRefOid);
     }
-    await input.linear.complete(state.issue, pr.url);
-    await input.save(state, "done", {
+    // Persist the completion phase before cleanup: if any step below
+    // fails, the next run retries only completion from "completing"
+    // instead of launching another agent turn against a half-done issue.
+    const completing = await input.save(state, "completing", {
       latestHeadSha: pr.headRefOid,
-      resumePhase: null,
     });
-    input.writeInfo(`${state.issue.identifier}: merged ${pr.url}`);
+    await completeTask({
+      state: completing,
+      linear: input.linear,
+      save: input.save,
+      writeInfo: input.writeInfo,
+    });
   });
+}
+
+export async function completeTask(input: {
+  state: TaskState;
+  linear: LinearClient;
+  save: Save;
+  writeInfo: (message: string) => void;
+}): Promise<void> {
+  const { state } = input;
+  // Only the merge path sets a PR URL; the agent no-change path completes
+  // without one. Either way the terminal Linear state lands inside the
+  // cleanup call, after the labels.
+  if (state.prUrl === null) {
+    await input.linear.completeNoChange(state.issue);
+    await input.save(state, "done", { resumePhase: null });
+    input.writeInfo(
+      `${state.issue.identifier}: no change was needed; issue completed`,
+    );
+    return;
+  }
+  await input.linear.complete(state.issue, state.prUrl);
+  await input.save(state, "done", { resumePhase: null });
+  input.writeInfo(`${state.issue.identifier}: merged ${state.prUrl}`);
 }
 
 export async function collectDiagnostics(input: {

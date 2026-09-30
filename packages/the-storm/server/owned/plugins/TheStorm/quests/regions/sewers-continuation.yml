@@ -1,0 +1,94 @@
+# The rebuilt spawn included a sewer and bank. Braxton's audit leads into a
+# new local investigation using NPCs and materials in the permanent main world.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-mint-mark:
+    name: The Mint Mark
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed braxtons-audit
+    text:
+      offer: Braxton's gold fragments came from the drain, but their stamped edges do not match his bank stock. I need a clean impression.
+      accept: Bring paper, charcoal and copper for a rubbing. Then show the result to Braxton.
+      decline: I will keep the fragments sealed.
+      finish: Braxton recognizes the mark as a storage tally, not a coin. The drain held an old inventory tag.
+      summary: Identify the mark on the fragments recovered from the sewer.
+      questions: []
+    start: rubbing
+    stages:
+      rubbing:
+        journal: Bring Iovita 8 paper, 8 charcoal and 4 copper ingots.
+        waiting: A rubbing will preserve the mark without damaging it.
+        complete: The mark is clear. Braxton should compare it with his records.
+        objectives:
+          - deliver iovita 8 PAPER
+          - deliver iovita 8 CHARCOAL
+          - deliver iovita 4 COPPER_INGOT
+        onComplete: []
+        next: [{ to: compare, when: [], label: none }]
+        timeLimit: none
+      compare:
+        journal: Ask Braxton to identify the stamped sewer fragment.
+        waiting: Braxton has the bank's old inventory sheets.
+        complete: It was a storage tally. Someone lost it near the drain.
+        objectives:
+          - talk braxton
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-sealed-drain:
+    name: The Sealed Drain
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-mint-mark
+    text:
+      offer: The tally explains the metal, but the drain still lets creatures through. We should close the gap before another audit finds bones.
+      accept: Clear the nearby danger and bring me grates and lanterns for the repair.
+      decline: Keep clear of the drain until the patrol returns.
+      finish: The grate is sound and the watch has light. Braxton can close his audit.
+      summary: Secure the sewer drain after identifying the lost tally.
+      questions: []
+    start: patrol
+    stages:
+      patrol:
+        journal: Defeat 6 zombies and 4 spiders in the main world.
+        waiting: The repair crew needs a safe route.
+        complete: The patrol can move in. Bring the repair materials.
+        objectives:
+          - kill 6 ZOMBIE
+          - kill 4 SPIDER
+        onComplete: []
+        next: [{ to: repair, when: [], label: none }]
+        timeLimit: none
+      repair:
+        journal: Bring the Guard Captain 16 iron bars and 4 lanterns.
+        waiting: The new grate needs both steel and light.
+        complete: The opening is closed and marked for the next patrol.
+        objectives:
+          - deliver guard-captain 16 IRON_BARS
+          - deliver guard-captain 4 LANTERN
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation storm-watch 1

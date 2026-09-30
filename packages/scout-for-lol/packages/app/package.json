@@ -8,7 +8,7 @@
     "preview": "vite preview",
     "storybook": "bun x --no-install storybook dev --port 6007 --no-open",
     "build:storybook": "bun x --no-install storybook build",
-    "preview:storybook": "bun x --no-install vite preview --config .storybook/vite.config.ts --outDir storybook-static --host 127.0.0.1 --port 5191 --strictPort",
+    "preview:storybook": "node node_modules/vite/bin/vite.js preview --config .storybook/vite.config.ts --outDir storybook-static --host 127.0.0.1 --port 5191 --strictPort",
     "test:e2e": "bun run scripts/ensure-catalog-built.ts && bun --no-install --bun playwright test",
     "test": "bun --no-install --bun vitest --config ../../../../vitest.config.ts run src",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",

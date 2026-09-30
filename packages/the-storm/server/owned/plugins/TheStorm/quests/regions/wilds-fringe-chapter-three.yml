@@ -1,0 +1,94 @@
+# The Wilds fringe is a main-world patrol story. No objective directs players
+# to an unsurveyed landmark or a separate resource world.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-patrol-cache:
+    name: The Patrol Cache
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed watch-at-dusk
+    text:
+      offer: The dusk patrol has food and light. A small cache of spare gear would help the next watch replace what it uses.
+      accept: Bring a chest, torches and bread. Iovita can record what we take out.
+      decline: The patrol will carry its supplies for now.
+      finish: Iovita has the stock list. The next patrol can account for every supply.
+      summary: Stock and record a patrol cache for the Wilds fringe.
+      questions: []
+    start: cache
+    stages:
+      cache:
+        journal: Bring the Guard Captain a chest, 24 torches and 12 bread.
+        waiting: The cache should hold useful gear, not forgotten clutter.
+        complete: The gear is counted. Iovita can keep the stock list.
+        objectives:
+          - deliver guard-captain 1 CHEST
+          - deliver guard-captain 24 TORCH
+          - deliver guard-captain 12 BREAD
+        onComplete: []
+        next: [{ to: stock-list, when: [], label: none }]
+        timeLimit: none
+      stock-list:
+        journal: Ask Iovita to record the patrol cache supplies.
+        waiting: A watch should replace what it takes.
+        complete: The cache has an inventory for the next patrol.
+        objectives:
+          - talk iovita
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation storm-watch 1
+
+  the-safe-return:
+    name: The Safe Return
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-patrol-cache
+    text:
+      offer: The new marker and cache help people leave town, but I want a return account that tells the next traveller what changed.
+      accept: Clear threats you meet in the main world and bring me a map and paper for a fresh report.
+      decline: The map can wait until someone has walked the route.
+      finish: The return account is filed. The watch can adjust its next patrol.
+      summary: Return from a main-world patrol with a new route account.
+      questions: []
+    start: clear-route
+    stages:
+      clear-route:
+        journal: Defeat 6 zombies and 4 skeletons in the main world.
+        waiting: Keep the path home in mind while you patrol.
+        complete: You have a route account. Put it on paper for Iovita.
+        objectives:
+          - kill 6 ZOMBIE
+          - kill 4 SKELETON
+        onComplete: []
+        next: [{ to: account, when: [], label: none }]
+        timeLimit: none
+      account:
+        journal: Bring Iovita a map and 8 paper for the patrol account.
+        waiting: The next patrol needs a record it can carry.
+        complete: The return route is recorded for the watch.
+        objectives:
+          - deliver iovita 1 MAP
+          - deliver iovita 8 PAPER
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation storm-watch 1

@@ -107,12 +107,30 @@ are marked **You**.
 
 ## Trace a match to an account
 
-Every recorded match card names the Riot account Scout observed for that game.
+Every recorded match card names the Riot account Scout observed for that game
+and shows the participant's summoner spells, keystone, and final item slots.
 Use **Previous** and **Next** to move through twenty matches at a time. The
 selected Last 20 or Last 50 window is also the end of the list.
 
-Open a victory or defeat label to inspect the match. The match page shows both
-complete team scoreboards and highlights the player whose profile you opened.
+Type a champion name above history to search recorded games for that champion.
+The Last 20 or Last 50 limit is applied **after** the champion search. Standard
+5v5 rows show both teams' champion portraits and Riot names, with the full
+roster and timeline on the dedicated match page.
+
+Open a victory or defeat label to inspect the match. For standard 5v5 games
+with one participant assigned to each role, the page pairs both teams by lane
+and shows the blue-minus-red gold, CS, and XP differences at 15 minutes when
+Scout retained that timeline frame. The scoreboards highlight the player whose
+profile you opened and include each participant's spells, final items, and
+full rune page; select the keystone icon to inspect the rune choices. Other
+game formats keep the team scoreboards without lane pairing.
+
+Arena pages group participants by subteam and show ordinal placement,
+partners, and any retained augments. Arena history rows show placement instead
+of a generic victory label. Other rotating modes retain their ordinary
+scoreboards and show augments only where the match data includes them; they do
+not borrow Arena placement or Summoner's Rift lane comparisons.
+
 Use the Riot ID, position, KDA, CS, gold, vision, damage, team-relative shares,
 objectives, and any accessible Scout aliases to interpret each participant.
 
@@ -135,6 +153,40 @@ the historical gap.
 
 Every list and detail includes only data Scout retained. It is not a complete
 Riot match history, and viewing it never starts a manual refresh.
+
+## Explore playing patterns and guild connections
+
+The profile's **Playing patterns** card shows role share, a local-time
+day/hour activity grid, and the current recorded win or loss streak. It compares
+the latest 20 recorded games with the current Riot act when Scout has confirmed
+act dates and games for both groups; otherwise it marks the comparison
+unavailable. These are match observations, not mastery or LP history.
+
+**Community connections** stays within the profile's selected guild. Choose
+30 days, 90 days (the default), or all recorded history, then Standard 5v5,
+Arena, or all queues. Account cards compare main and smurf form under that one
+player. The “main” badge is inferred from the most played all-time recorded
+account, breaking ties by newest match and account ID; it is not an account
+setting. Recently-played-with and rivalry lists group linked smurfs under their
+guild owner and link to the last shared match. Untracked rivals appear only
+after two recorded meetings.
+
+On the Player Profiles hub, **Guild lobby lookup** accepts up to
+ten `Name#Tag` Riot IDs. It matches cached Scout accounts exactly across your
+currently accessible guilds; an unmatched ID is labeled untracked and does not
+trigger a Riot lookup. **Guild community** lets you select one guild and the
+same recorded-history filters. Its People tab shows teammate pairs (at least
+three shared games before ranking them). Team tools show role/champion pool
+coverage, shared-game records for a chosen duo or squad of two to five, and an
+in-house balancer for exactly ten players. The balancer uses recent recorded
+form and observed role share; toggle whether role fit or even strength takes
+priority. Same-team match records do not establish that players queued as a
+premade party.
+
+**Recently detected** lists unexpired game observations for the selected
+guild, with detection time and age. Use Refresh to re-read Scout's stored
+observations. It does not verify the live Spectator state on page load, so a
+recently detected game may already have ended.
 
 ## If access disappears
 

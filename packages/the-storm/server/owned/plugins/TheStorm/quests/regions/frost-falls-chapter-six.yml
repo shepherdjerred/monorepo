@@ -1,0 +1,83 @@
+# The memorial shelter gives each watch a clear store and a visible welcome.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-hearth-store:
+    name: "The Hearth Store"
+    giver: lenox
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-hearth-turn
+    text:
+      offer: "Edgar handed over a stocked hearth. We should give the next keeper a dry place to count fuel and blankets."
+      accept: "Craft chests and barrels for the memorial shelter."
+      decline: "The supplies can stay beside the hearth tonight."
+      finish: "The shelter has a dry store that the next watch can count."
+      summary: "Build storage for the Frost Falls memorial shelter."
+      questions: []
+    start: store
+    stages:
+      store:
+        journal: "Craft 4 chests and 4 barrels in the main world."
+        waiting: "The store should protect supplies from rain and snow."
+        complete: "The storage is ready. Bring it to Lenox."
+        objectives:
+          - craft 4 CHEST
+          - craft 4 BARREL
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Bring Lenox 4 chests and 4 barrels for the hearth store."
+        waiting: "The next watch needs a dry place for its supplies."
+        complete: "Lenox has storage for the next hearth watch."
+        objectives:
+          - deliver lenox 4 CHEST
+          - deliver lenox 4 BARREL
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  a-warm-window:
+    name: "A Warm Window"
+    giver: edgar
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-hearth-store
+    text:
+      offer: "The new store is ready. A bright window will show late travellers that someone still tends the memorial hearth."
+      accept: "Bring glass panes and lanterns for the shelter welcome."
+      decline: "I will leave the door lantern burning alone."
+      finish: "The shelter's warm light can be seen without claiming the old town still stands."
+      summary: "Make a visible welcome at the Frost Falls memorial hearth."
+      questions: []
+    start: window
+    stages:
+      window:
+        journal: "Bring Edgar 16 glass panes and 4 lanterns."
+        waiting: "A late traveller should see the welcome before reaching the door."
+        complete: "The memorial shelter has a bright welcome."
+        objectives:
+          - deliver edgar 16 GLASS_PANE
+          - deliver edgar 4 LANTERN
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

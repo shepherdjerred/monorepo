@@ -35,7 +35,21 @@ tasks.jar { enabled = false }
 
 tasks.assemble { dependsOn(tasks.shadowJar) }
 
-tasks.runServer { minecraftVersion("26.2") }
+val runServerDirectory = rootProject.file("run")
+val prepareRunServerContent =
+    tasks.register<Copy>("prepareRunServerContent") {
+      from(rootProject.file("../server/owned/plugins/TheStorm"))
+      into(runServerDirectory.resolve("plugins/TheStorm"))
+    }
+
+tasks.runServer {
+  minecraftVersion("26.2")
+  runDirectory = runServerDirectory
+  dependsOn(prepareRunServerContent)
+  downloadPlugins {
+    url("https://cdn.modrinth.com/data/Vebnzrzj/versions/b0mk8uS6/LuckPerms-Bukkit-5.5.71.jar")
+  }
+}
 
 val libs = the<VersionCatalogsExtension>().named("libs")
 

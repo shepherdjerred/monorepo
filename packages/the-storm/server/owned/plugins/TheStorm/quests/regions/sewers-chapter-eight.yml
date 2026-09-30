@@ -1,0 +1,82 @@
+# The sewer watch closes an inspection using samples and a shared public record.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-comparison-sample:
+    name: "The Comparison Sample"
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-grate-spares
+    text:
+      offer: "The surface fittings are ready. A second water sample will show whether the repaired grates changed what the patrol finds after rain."
+      accept: "Bring water buckets and bottles for a comparison set."
+      decline: "I will wait for a clearer rain before sampling."
+      finish: "The watch has a before-and-after set it can compare honestly."
+      summary: "Collect a comparison kit for the repaired sewer grates."
+      questions: []
+    start: sample
+    stages:
+      sample:
+        journal: "Bring Iovita 4 water buckets and 12 glass bottles."
+        waiting: "Keep the samples separate so one grate does not hide another."
+        complete: "Iovita has a comparison sample kit."
+        objectives:
+          - deliver iovita 4 WATER_BUCKET
+          - deliver iovita 12 GLASS_BOTTLE
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation storm-watch 1
+
+  the-open-inspection:
+    name: "The Open Inspection"
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 50
+    requirements:
+      - completed the-comparison-sample
+    text:
+      offer: "Iovita can compare the samples. Let us write an inspection the bank, watch and town can all read, then give her the final copy."
+      accept: "Bring paper and ink for the inspection, then report to Iovita."
+      decline: "The report can remain on my desk another day."
+      finish: "The repair history and water comparison are open to the next patrol."
+      summary: "Publish the sewer watch surface-grate inspection."
+      questions: []
+    start: record
+    stages:
+      record:
+        journal: "Bring the Guard Captain 20 paper and 3 ink sacs."
+        waiting: "The report should name each mapped surface grate."
+        complete: "The Guard Captain has a signed inspection record."
+        objectives:
+          - deliver guard-captain 20 PAPER
+          - deliver guard-captain 3 INK_SAC
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Give Iovita the signed inspection result."
+        waiting: "The sample keeper should see the final record."
+        complete: "Iovita has the shared inspection result."
+        objectives:
+          - talk iovita
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 650
+      - points 1
+      - reputation storm-watch 1

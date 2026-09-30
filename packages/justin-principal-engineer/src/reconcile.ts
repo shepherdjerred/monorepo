@@ -156,6 +156,14 @@ export class Reconciler {
           writeInfo,
         });
         return;
+      case "completing":
+        await reconcileMerge.completeTask({
+          state,
+          linear: this.linear,
+          save: this.save.bind(this),
+          writeInfo,
+        });
+        return;
       case "needs_human":
       case "done":
         return;
@@ -202,17 +210,13 @@ export class Reconciler {
         if (output.status !== "no_change") {
           throw new Error(`Agent reported ${output.status} without a change`);
         }
-        await this.linear.completeNoChange(state.issue);
-        await this.save(state, "done", {
-          lastAgentOutput: persistedOutput,
-          pendingFeedback: [],
-          pendingHealth: null,
-          pendingDiagnostics: null,
-          pendingCodexFindingKeys: [],
+        await reconcileMerge.completeNoChangeTurn({
+          state,
+          output: persistedOutput,
+          linear: this.linear,
+          save: this.save.bind(this),
+          writeInfo,
         });
-        writeInfo(
-          `${state.issue.identifier}: no change was needed; issue completed`,
-        );
         return;
       }
       if (state.pendingHealth !== null)
@@ -420,18 +424,26 @@ export class Reconciler {
       if (state.failureCount > 0) {
         await this.save(state, state.phase, { latestHeadSha: pr.headRefOid });
       }
+      if (
+        await reconcileMerge.queueUnhealthy({
+          state,
+          health,
+          pr,
+          save: this.save.bind(this),
+          withGitHub: this.withGitHub.bind(this),
+        })
+      ) {
+        writeInfo(
+          `${state.issue.identifier}: CI failure queued for a fresh turn`,
+        );
+        return { kind: "transition" };
+      }
       return { kind: "health", health, pr };
     });
   }
   private async observeCi(state: TaskState): Promise<void> {
     const observation = await this.observe(state);
     if (observation.kind === "transition") return;
-    if (await this.queueUnhealthy(state, observation.health, observation.pr)) {
-      writeInfo(
-        `${state.issue.identifier}: CI failure queued for a fresh turn`,
-      );
-      return;
-    }
     if (!deliveryHealth.deliveryIsHealthy(observation.health)) {
       writeInfo(`${state.issue.identifier}: CI is still pending`);
       return;
@@ -449,8 +461,6 @@ export class Reconciler {
   private async observeApproval(state: TaskState): Promise<void> {
     const observation = await this.observe(state);
     if (observation.kind === "transition") return;
-    if (await this.queueUnhealthy(state, observation.health, observation.pr))
-      return;
     if (!deliveryHealth.deliveryIsHealthy(observation.health)) {
       await this.save(state, "awaiting_ci", {
         latestHeadSha: observation.pr.headRefOid,
@@ -476,25 +486,5 @@ export class Reconciler {
     writeInfo(
       `${state.issue.identifier}: exact-head approval observed; merge queued`,
     );
-  }
-  private async queueUnhealthy(
-    state: TaskState,
-    health: PrHealth,
-    pr: PullRequest,
-  ): Promise<boolean> {
-    if (!deliveryHealth.deliveryIsUnhealthy(health)) return false;
-    const diagnostics = await reconcileMerge.collectDiagnostics({
-      prNumber: pr.number,
-      health,
-      checkout: state.checkoutPath,
-      withGitHub: this.withGitHub.bind(this),
-    });
-    await this.save(state, "implementing", {
-      pendingHealth: health,
-      pendingDiagnostics: diagnostics.text,
-      pendingCodexFindingKeys: diagnostics.findingKeys,
-      latestHeadSha: pr.headRefOid,
-    });
-    return true;
   }
 }

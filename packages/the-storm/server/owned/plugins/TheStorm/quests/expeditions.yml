@@ -1,0 +1,74 @@
+# Owned by the repository; the plugin never writes it.
+# The South Mines (2017's "MINER"), ported and scaled for one player.
+# Quest content is restricted to the permanent main world.
+
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-south-mines:
+    name: The South Mines
+    giver: alger
+    category: side
+    repeat: once
+    estimatedMinutes: 30
+    requirements: []
+    text:
+      offer: The South Mines have gone quiet and the miners need assistance. Will you help?
+      accept: Head for the South Entrance, then down into the mines. Find Dorran, the foreman.
+      decline: Another time, then. I hope they last.
+      finish: Thank you greatly.
+      summary: The South Mines have gone quiet. Alger wants you to find out why.
+      questions: []
+    start: entrance
+    stages:
+      entrance:
+        journal: Head to the South Entrance.
+        waiting: The South Entrance first. You can't miss it.
+        complete: none
+        objectives:
+          - reach south-entrance
+        onComplete: []
+        next: [{ to: mines, when: [], label: none }]
+        timeLimit: none
+      mines:
+        journal: Go down into the South Mines.
+        waiting: The mines are further south, past the entrance.
+        complete: none
+        objectives:
+          - reach south-mines
+        onComplete: []
+        next: [{ to: foreman, when: [], label: none }]
+        timeLimit: none
+      foreman:
+        journal: Find Dorran, the mine foreman.
+        waiting: none
+        complete: You came! We're cut off down here. Rails, a cart, timber and blasting powder, that's what we need.
+        objectives:
+          - talk dorran
+        onComplete:
+          - message Something stirs in the tunnels behind you.
+          - spawn 3 ZOMBIE south-mines
+        next: [{ to: supplies, when: [], label: none }]
+        timeLimit: none
+      supplies:
+        journal: Bring Dorran 32 rails, a minecart, 16 oak logs and 4 TNT.
+        waiting: Rails, a cart, timber and TNT. Hurry, before more of them come up.
+        complete: Thank you, citizen!
+        objectives:
+          - deliver dorran 32 RAIL
+          - deliver dorran 1 MINECART
+          - deliver dorran 16 OAK_LOG
+          - deliver dorran 4 TNT
+        onComplete:
+          - message The last of them come shambling out of the dark!
+          - spawn 3 ZOMBIE south-mines
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - reputation townsfolk 1

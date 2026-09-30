@@ -152,8 +152,7 @@
         "glitter-boys-ppl",
         "cook",
         "stocks",
-        "wiki",
-        "ts-mc-docs"
+        "wiki"
       ],
       "grafanaDashboards": ["static-site-probes"],
       "deploy": [
@@ -227,6 +226,14 @@
       "namespaces": ["alert-dashboard"],
       "argoApps": ["alert-dashboard"],
       "grafanaDashboards": ["alert-dashboard"]
+    },
+    {
+      "id": "storm-brain",
+      "title": "Storm brain",
+      "kind": "workload",
+      "package": "storm-brain",
+      "namespaces": ["storm-brain"],
+      "argoApps": ["storm-brain"]
     },
     {
       "id": "home",

@@ -501,12 +501,16 @@ test("initial history drains incomplete pages across Continue-As-New and accepts
     pagesProcessed: number;
     pagesInCurrentRun: number;
   }[] = [];
+  let releaseFinalPage!: () => void;
+  const finalPageMayComplete = new Promise<void>((resolve) => {
+    releaseFinalPage = resolve;
+  });
   const workflow = await workflowWorker();
   const activities = await Worker.create({
     connection: environment.nativeConnection,
     taskQueue: "scout-dev-background",
     activities: {
-      fetchInitialHistoryPage: (input: {
+      fetchInitialHistoryPage: async (input: {
         cursor?: string;
         pagesProcessed: number;
         pagesInCurrentRun: number;
@@ -526,6 +530,7 @@ test("initial history drains incomplete pages across Continue-As-New and accepts
             complete: false,
           };
         }
+        if (observed.length === 3) await finalPageMayComplete;
         return { persistedMatches: 2, complete: true };
       },
     },
@@ -548,9 +553,13 @@ test("initial history drains incomplete pages across Continue-As-New and accepts
       ],
     },
   );
-  await expect.poll(() => observed).toHaveLength(3);
-  await handle.signal(requestInitialHistoryRunSignal);
-  await expect.poll(() => observed).toHaveLength(4);
+  await expect.poll(() => observed, { timeout: 10_000 }).toHaveLength(3);
+  try {
+    await handle.signal(requestInitialHistoryRunSignal);
+  } finally {
+    releaseFinalPage();
+  }
+  await expect.poll(() => observed, { timeout: 10_000 }).toHaveLength(4);
   expect(observed).toEqual([
     {
       stage: "dev",

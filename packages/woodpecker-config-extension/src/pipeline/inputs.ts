@@ -13,6 +13,9 @@
 export const GLOBAL_SELECTOR_INPUTS = [
   "packages/woodpecker-config-extension/**",
   ".woodpecker/**",
+  "ci/scripts/migration-core.ts",
+  "ci/scripts/selectors/ci-changed.ts",
+  "ci/scripts/selectors/ensure-ancestor.ts",
   "scripts/lib/json.ts",
   "scripts/ci-test-manifest.json",
 ] as const;

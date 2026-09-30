@@ -1,0 +1,149 @@
+# Owned by the repository; the plugin never writes it.
+# Repeatable daily quests: the 2017 dailies ("Teach a man to fish...", "Fuel
+# to the Fire") and Anna's Daily Login rewards. They become available again at
+# local midnight (quests.yml timezone).
+
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  teach-a-man-to-fish:
+    name: Teach a Man to Fish...
+    giver: bridge-hobo
+    category: daily
+    repeat: daily
+    estimatedMinutes: 10
+    requirements: []
+    text:
+      offer: Hey! Get away from my bridge! I'm trying to catch a fish...
+      accept: "...You want to help? Fine. I don't even have a rod."
+      decline: Then get off my bridge!
+      finish: Thanks... I guess. I found this in the river, you can have it.
+      summary: The Bridge Hobo can't catch a fish to save his life.
+      questions: []
+    start: rod
+    stages:
+      rod:
+        journal: Bring the Bridge Hobo a fishing rod.
+        waiting: A rod. You know, the stick with the string.
+        complete: How hard can this be? Just bring me some fish, okay?
+        objectives:
+          - deliver bridge-hobo 1 FISHING_ROD
+        onComplete: []
+        next: [{ to: fish, when: [], label: none }]
+        timeLimit: none
+      fish:
+        journal: Bring the Bridge Hobo 12 raw cod.
+        waiting: Still no fish. Not a single one.
+        complete: Eww! Why would anyone eat this?
+        objectives:
+          - deliver bridge-hobo 12 COD
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 75
+
+  fuel-to-the-fire:
+    name: Fuel to the Fire
+    giver: edgar
+    category: daily
+    repeat: daily
+    estimatedMinutes: 10
+    requirements: []
+    text:
+      offer: It's so expensive to keep a hearth going through the night! I need you to bring me something to burn.
+      accept: Logs or coal, whatever you've got. Well... both, ideally.
+      decline: I'll just put on another coat, then.
+      finish: I'll know warmth for so long! I know it's not much, but these crystals are the only way I can show my gratitude.
+      summary: Edgar can't afford to keep his hearth burning.
+      questions: []
+    start: fuel
+    stages:
+      fuel:
+        journal: Bring Edgar 32 oak logs and 16 coal.
+        waiting: Anything that burns. Please.
+        complete: Ah, yes. This will be enough to last us for a while. Thank you!
+        objectives:
+          - deliver edgar 32 OAK_LOG
+          - deliver edgar 16 COAL
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 75
+
+  daily-login:
+    name: Daily Login
+    giver: anna
+    category: daily
+    repeat: daily
+    estimatedMinutes: 2
+    requirements: []
+    text:
+      offer: Hello! What can I do for you? If you'd like your daily reward, it's right here.
+      accept: Thanks for logging in today! Here are your rewards!
+      decline: Just wanted to say hi? Well, hi!
+      finish: See you tomorrow!
+      summary: Anna pays a small reward once a day, with a bonus at milestones.
+      questions:
+        - label: What are the login rewards?
+          answer: Once a day you can claim 50 crystals from me. Keep coming back and you'll get a bonus at 3, 7, 10, 14, 17, 21, 24 and 29 claims.
+    start: claim
+    stages:
+      claim:
+        journal: Claim today's reward from Anna.
+        waiting: none
+        complete: none
+        objectives: []
+        onComplete:
+          - add login-claims 1
+        next:
+          - { to: bonus-small, when: ["var login-claims == 3"], label: none }
+          - { to: bonus-small, when: ["var login-claims == 7"], label: none }
+          - { to: bonus-medium, when: ["var login-claims == 10"], label: none }
+          - { to: bonus-medium, when: ["var login-claims == 14"], label: none }
+          - { to: bonus-medium, when: ["var login-claims == 17"], label: none }
+          - { to: bonus-large, when: ["var login-claims == 21"], label: none }
+          - { to: bonus-large, when: ["var login-claims == 24"], label: none }
+          - { to: bonus-large, when: ["var login-claims == 29"], label: none }
+          - { to: complete, when: [], label: none }
+        timeLimit: none
+      bonus-small:
+        journal: A login milestone.
+        waiting: none
+        complete: Thank you for coming back. Here's a little extra.
+        objectives: []
+        onComplete:
+          - message You received a bonus 25 crystals!
+          - crystals 25
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+      bonus-medium:
+        journal: A login milestone.
+        waiting: none
+        complete: Your continued support is appreciated. Here's a little extra.
+        objectives: []
+        onComplete:
+          - message You received a bonus 50 crystals!
+          - crystals 50
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+      bonus-large:
+        journal: A login milestone.
+        waiting: none
+        complete: Thank you for logging in so often! Enjoy the extra crystals.
+        objectives: []
+        onComplete:
+          - message You received a bonus 100 crystals!
+          - crystals 100
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 50

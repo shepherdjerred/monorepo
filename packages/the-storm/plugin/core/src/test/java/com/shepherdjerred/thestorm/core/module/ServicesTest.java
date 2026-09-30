@@ -28,6 +28,17 @@ final class ServicesTest {
   }
 
   @Test
+  void findIsEmptyWhenNothingIsProvided() {
+    var services = new Services();
+    Greeter greeter = () -> "Welcome to The Storm";
+
+    assertThat(services.find(Greeter.class)).isEmpty();
+
+    services.provide(Greeter.class, greeter);
+    assertThat(services.find(Greeter.class)).contains(greeter);
+  }
+
+  @Test
   void secondProviderIsRejected() {
     var services = new Services();
     services.provide(Greeter.class, () -> "a");

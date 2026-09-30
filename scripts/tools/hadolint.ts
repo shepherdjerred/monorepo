@@ -12,7 +12,8 @@ export function isHadolintCandidate(path: string): boolean {
   return (
     basename !== undefined &&
     (basename === "Dockerfile" ||
-      basename.startsWith("Dockerfile.") ||
+      (basename.startsWith("Dockerfile.") &&
+        !basename.endsWith(".dockerignore")) ||
       basename.endsWith(".Dockerfile"))
   );
 }

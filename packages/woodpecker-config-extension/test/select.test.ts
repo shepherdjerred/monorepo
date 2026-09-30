@@ -27,6 +27,30 @@ const CONTEXT = {
   changedFiles: ["packages/scout-for-lol/src/index.ts"],
 };
 
+const IMAGES = {
+  base: "ghcr.io/shepherdjerred/ci-base@sha256:" + "a".repeat(64),
+  playwright: "ghcr.io/shepherdjerred/ci-playwright@sha256:" + "b".repeat(64),
+  catalog: {
+    "aquasec/trivy": "aquasec/trivy:0.72.0",
+    "semgrep/semgrep": "semgrep/semgrep:1.170.0",
+    "texlive/texlive": "texlive/texlive:TL2024-historic",
+    "trmnl/trmnlp": "trmnl/trmnlp:v0.11.0",
+    "grafana/tempo": "grafana/tempo:3.0.3",
+    "mikefarah/yq": "mikefarah/yq:latest",
+    "minio/mc": "minio/mc:RELEASE",
+    "minio/minio": "minio/minio:RELEASE",
+  },
+};
+
+function keysFor(changedFiles: string[], branch = "feature") {
+  return selectSteps(buildPipelineSteps({ images: IMAGES, changedBase: "x" }), {
+    event: branch === "main" ? "push" : "pull_request",
+    branch,
+    defaultBranch: "main",
+    changedFiles,
+  }).map((item) => item.key);
+}
+
 describe("selection", () => {
   test("keeps a step whose changed-path guard matches", () => {
     const selected = selectSteps(
@@ -312,33 +336,6 @@ describe("emission", () => {
  * no admission and no provider credentials.
  */
 describe("ported lanes", () => {
-  const IMAGES = {
-    base: "ghcr.io/shepherdjerred/ci-base@sha256:" + "a".repeat(64),
-    playwright: "ghcr.io/shepherdjerred/ci-playwright@sha256:" + "b".repeat(64),
-    catalog: {
-      "aquasec/trivy": "aquasec/trivy:0.72.0",
-      "semgrep/semgrep": "semgrep/semgrep:1.170.0",
-      "texlive/texlive": "texlive/texlive:TL2024-historic",
-      "trmnl/trmnlp": "trmnl/trmnlp:v0.11.0",
-      "grafana/tempo": "grafana/tempo:3.0.3",
-      "mikefarah/yq": "mikefarah/yq:latest",
-      "minio/mc": "minio/mc:RELEASE",
-      "minio/minio": "minio/minio:RELEASE",
-    },
-  };
-
-  function keysFor(changedFiles: string[], branch = "feature") {
-    return selectSteps(
-      buildPipelineSteps({ images: IMAGES, changedBase: "x" }),
-      {
-        event: branch === "main" ? "push" : "pull_request",
-        branch,
-        defaultBranch: "main",
-        changedFiles,
-      },
-    ).map((s) => s.key);
-  }
-
   test("a lockfile change selects the scanners", () => {
     expect(keysFor(["bun.lock"])).toContain("trivy");
   });
@@ -369,6 +366,48 @@ describe("ported lanes", () => {
 
   test("scanners are pull-request only", () => {
     expect(keysFor(["bun.lock"], "main")).not.toContain("trivy");
+  });
+
+  test("The Storm source and E2E harness select the Paper E2E lane", () => {
+    expect(
+      keysFor(["packages/the-storm/plugin/core/src/main/java/Example.java"]),
+    ).toContain("paper-e2e-pr");
+    expect(keysFor(["packages/the-storm/tests/e2e/boot.test.ts"])).toContain(
+      "paper-e2e-pr",
+    );
+    expect(
+      keysFor(["packages/docs/wiki/src/content/docs/index.md"]),
+    ).not.toContain("paper-e2e-pr");
+  });
+
+  test("Paper E2E uses the pinned Paper image and service-host addressing", () => {
+    const paperStep = buildPipelineSteps({
+      images: IMAGES,
+      changedBase: "x",
+    }).find((candidate) => candidate.key === "paper-e2e-pr");
+    expect(paperStep?.services?.[0]?.image).toMatch(/@sha256:[a-f0-9]{64}$/u);
+    expect(paperStep?.environment?.["STORM_E2E_HOST"]).toBe("paper");
+    expect(paperStep?.environment?.["STORM_E2E_RCON_HOST"]).toBe("paper");
+  });
+
+  test("Paper E2E connects its fake brain through the service network", () => {
+    const paperStep = buildPipelineSteps({
+      images: IMAGES,
+      changedBase: "x",
+    }).find((candidate) => candidate.key === "paper-e2e-pr");
+    expect(paperStep?.environment?.["STORM_E2E_BRAIN_HOST"]).toBe(
+      "storm-brain",
+    );
+    expect(paperStep?.services?.map(({ name }) => name)).toEqual([
+      "paper",
+      "storm-brain",
+    ]);
+    const paperService = paperStep?.services?.find(
+      (service) => service.name === "paper",
+    );
+    expect(paperService?.environment?.["STORM_BRAIN_BEARER_TOKEN"]).toBe(
+      paperStep?.environment?.["STORM_E2E_BRAIN_TOKEN"],
+    );
   });
 
   test("Semgrep fetches PR and target history before resolving its merge base", () => {
@@ -503,4 +542,24 @@ describe("ported lanes", () => {
     expect(joined).toContain('exit "$trivy_status"');
     expect(trivy?.allowFailure).toBeUndefined();
   });
+});
+
+test("a shared checkout selector change still selects Playwright", () => {
+  const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+  for (const path of [
+    "ci/scripts/migration-core.ts",
+    "ci/scripts/selectors/ci-changed.ts",
+    "ci/scripts/selectors/ensure-ancestor.ts",
+  ]) {
+    const selected = selectSteps(steps, {
+      event: "pull_request",
+      branch: "feature",
+      defaultBranch: "main",
+      changedFiles: [path],
+    });
+    expect(
+      selected.map((item) => item.key),
+      path,
+    ).toContain("playwright-e2e");
+  }
 });

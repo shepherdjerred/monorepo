@@ -1,0 +1,113 @@
+package com.shepherdjerred.thestorm.world.domain;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import com.shepherdjerred.thestorm.core.config.StrictYaml;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.junit.jupiter.api.Test;
+
+final class WorldConfigTest {
+
+  @Test
+  void theShippedFileParses() throws Exception {
+    var path = Path.of("../../../server/owned/plugins/TheStorm/world.yml");
+    var yaml = Files.readString(path);
+    var config =
+        StrictYaml.parse(path.toString(), yaml, WorldConfig.class)
+            .fold(
+                ok -> ok,
+                err -> {
+                  throw new AssertionError(err.toString());
+                });
+    assertThat(config.sleepPercentage()).isEqualTo(50);
+    assertThat(config.crier()).isEqualTo(new CrierConfig(false, "world"));
+    assertThat(config.ambient())
+        .isEqualTo(new AmbientConfig(false, "world", -440, 71, -66, 24, 8, "America/Los_Angeles"));
+    assertThat(config.digest()).isEqualTo(new DigestConfig(false, "world", "America/Los_Angeles"));
+    assertThat(config.merchant())
+        .isEqualTo(
+            new MerchantConfig(false, "world", java.util.List.of(), 12, 20, "America/Los_Angeles"));
+    assertThat(config.worlds())
+        .extracting(WorldSpec::name)
+        .containsExactly("wilds", "peaks", "mining");
+    assertThat(config.worlds())
+        .extracting(WorldSpec::preset)
+        .containsExactly("large_biomes", "amplified", "normal");
+    assertThat(SleepFraction.skips(1, 2, config.sleepPercentage())).isTrue();
+  }
+
+  @Test
+  void theCrierCannotBeMovedOutOfTheMainWorld() {
+    assertThatThrownBy(() -> new CrierConfig(true, "mining"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("main world");
+  }
+
+  @Test
+  void ambientBarksRequireMainWorldAndBoundedSpawnArea() {
+    assertThatThrownBy(
+            () -> new AmbientConfig(true, "mining", 0, 64, 0, 24, 8, "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("main world");
+    assertThatThrownBy(
+            () -> new AmbientConfig(true, "world", 0, 64, 0, 0, 8, "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(
+            () -> new AmbientConfig(true, "world", 0, 64, 0, 24, 33, "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> new AmbientConfig(true, "world", 0, 64, 0, 24, 8, "not-a-zone"))
+        .isInstanceOf(java.time.DateTimeException.class);
+  }
+
+  @Test
+  void digestRequiresMainWorldAndCrier() {
+    assertThatThrownBy(() -> new DigestConfig(true, "mining", "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("main world");
+    assertThatThrownBy(() -> new DigestConfig(true, "world", "not-a-zone"))
+        .isInstanceOf(java.time.DateTimeException.class);
+    assertThatThrownBy(
+            () ->
+                new WorldConfig(
+                    50,
+                    java.util.List.of(new WorldSpec("wilds", "normal", true)),
+                    new CrierConfig(false, "world"),
+                    new AmbientConfig(false, "world", -440, 71, -66, 24, 8, "America/Los_Angeles"),
+                    new DigestConfig(true, "world", "America/Los_Angeles"),
+                    new MerchantConfig(
+                        false, "world", java.util.List.of(), 12, 20, "America/Los_Angeles")))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("requires the crier");
+  }
+
+  @Test
+  void merchantRequiresVerifiedMainWorldAnchorBeforeEnablement() {
+    assertThatThrownBy(
+            () ->
+                new MerchantConfig(
+                    true, "world", java.util.List.of(), 12, 20, "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("measured anchor");
+    assertThatThrownBy(
+            () ->
+                new MerchantConfig(
+                    true,
+                    "mining",
+                    java.util.List.of(new MerchantAnchor(10, 80, 10)),
+                    12,
+                    20,
+                    "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("main world");
+    assertThatThrownBy(
+            () ->
+                new MerchantConfig(
+                    false, "world", java.util.List.of(), 3, 20, "America/Los_Angeles"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(
+            () -> new MerchantConfig(false, "world", java.util.List.of(), 12, 20, "not-a-zone"))
+        .isInstanceOf(java.time.DateTimeException.class);
+  }
+}

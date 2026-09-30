@@ -1,0 +1,76 @@
+# The caravan's new trade routine stays within the main world and its shipped
+# NPCs rather than presuming a historical road still exists.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  a-trade-sample:
+    name: A Trade Sample
+    giver: marcus
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-market-receipt
+    text:
+      offer: The receipt proves what arrived. I want a small sample of what the next cart can offer before anyone promises a full load.
+      accept: Bring wool, bread and copper for a sample crate.
+      decline: The next load can wait for a clear order.
+      finish: Martha can show buyers a real sample before Marcus fills the cart.
+      summary: Assemble a sample crate for the next caravan load.
+      questions: []
+    start: crate
+    stages:
+      crate:
+        journal: Bring Marcus 12 white wool, 12 bread and 8 copper ingots.
+        waiting: A small honest sample is better than a large promise.
+        complete: Marcus has a sample crate for the market.
+        objectives:
+          - deliver marcus 12 WHITE_WOOL
+          - deliver marcus 12 BREAD
+          - deliver marcus 8 COPPER_INGOT
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-next-manifest:
+    name: The Next Manifest
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed a-trade-sample
+    text:
+      offer: Marcus's sample looks sound. The next cart needs a manifest before it leaves, so the market knows what to expect.
+      accept: Bring paper, ink and a map for the next shipment.
+      decline: I will leave a blank page for the driver.
+      finish: The manifest matches the sample crate. The next order can be checked on arrival.
+      summary: Write a new caravan manifest from its trade sample.
+      questions: []
+    start: manifest
+    stages:
+      manifest:
+        journal: Bring Martha 12 paper, 2 ink sacs and a map.
+        waiting: A cart should leave with a count and a route.
+        complete: The next caravan has a checked manifest.
+        objectives:
+          - deliver martha 12 PAPER
+          - deliver martha 2 INK_SAC
+          - deliver martha 1 MAP
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1

@@ -2,9 +2,8 @@
   "$schema": "https://turborepo.dev/schema.json",
   "extends": ["//"],
   "tasks": {
-    // Gradle keeps its own build cache in plugin/**/build and ~/.gradle, both
-    // outside turbo's concern; no task declares outputs. Turbo's win is the
-    // cached log/exit replay keyed on source hash. MISE_DATA_DIR and JAVA_HOME
+    // Gradle keeps its own build cache in plugin/**/build and ~/.gradle. Turbo
+    // restores the assembled jar on build cache hits. MISE_DATA_DIR and JAVA_HOME
     // must pass through or strict env mode hides the mise-managed JDK/Gradle.
     //
     // Every task is a separate Gradle process on the same project directory,
@@ -23,10 +22,12 @@
         "plugin/**/*.xml",
         "plugin/**/*.yml",
         "plugin/**/*.sql",
+        "server/owned/plugins/TheStorm/**",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
-      "outputs": [],
+      "outputs": ["plugin/dist/build/libs/TheStorm.jar"],
       "passThroughEnv": [
         "MISE_DATA_DIR",
         "JAVA_HOME",
@@ -46,6 +47,8 @@
         "plugin/**/*.xml",
         "plugin/**/*.yml",
         "plugin/**/*.sql",
+        "server/owned/plugins/TheStorm/**",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -69,6 +72,8 @@
         "plugin/**/*.xml",
         "plugin/**/*.yml",
         "plugin/**/*.sql",
+        "server/owned/plugins/TheStorm/**",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -89,6 +94,13 @@
         "plugin/**/*.toml",
         "plugin/**/*.properties",
         "plugin/config/**",
+        "server/owned/plugins/TheStorm/**",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
+        "tests/**",
+        "vitest.e2e.config.ts",
+        "tsconfig.json",
+        "eslint.config.ts",
+        "package.json",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -111,6 +123,13 @@
         "plugin/**/*.lockfile",
         "plugin/**/*.xml",
         "plugin/**/*.sql",
+        "server/owned/plugins/TheStorm/**",
+        "$TURBO_ROOT$/packages/feature-flags/src/managed-flag-inventory.json",
+        "tests/**",
+        "vitest.e2e.config.ts",
+        "tsconfig.json",
+        "eslint.config.ts",
+        "package.json",
         "!plugin/**/build/**",
         "!plugin/.gradle/**"
       ],
@@ -120,6 +139,19 @@
         "JAVA_HOME",
         "GRADLE_USER_HOME",
         "GRADLE_OPTS"
+      ]
+    },
+    // Real-server e2e against the built TheStorm.jar in a disposable Paper
+    // container (tests/e2e). Uncached: it exercises Docker and live network
+    // pins. STORM_E2E_* selects a CI sidecar server instead of local Docker.
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "passThroughEnv": [
+        "DOCKER_HOST",
+        "DOCKER_CONTEXT",
+        "DOCKER_CONFIG",
+        "STORM_E2E_*"
       ]
     }
   }

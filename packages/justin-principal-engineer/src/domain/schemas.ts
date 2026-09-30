@@ -11,6 +11,7 @@ export const TaskPhaseSchema = z.enum([
   "awaiting_ci",
   "awaiting_approval",
   "merging",
+  "completing",
   "needs_human",
   "done",
 ]);

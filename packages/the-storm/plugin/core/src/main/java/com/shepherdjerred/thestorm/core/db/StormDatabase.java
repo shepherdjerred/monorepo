@@ -4,6 +4,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -53,17 +54,31 @@ public final class StormDatabase implements AutoCloseable {
 
   /** Applies {@code module}'s migrations from {@code db/migration/<module>} on {@code loader}. */
   public void migrate(String module, ClassLoader loader) {
-    Flyway.configure(loader)
-        .dataSource(dataSource)
-        .locations("classpath:db/migration/" + module)
-        .table("flyway_" + module + "_history")
-        // Modules share one database, so a module's first migration always finds other
-        // modules' tables. Baselining an empty history at version 0 lets its V1 still run.
-        .baselineOnMigrate(true)
-        .baselineVersion("0")
-        .failOnMissingLocations(true)
-        .load()
-        .migrate();
+    // Migrations use the same SQLite file as runtime writes. Queue them with writes so an
+    // earlier module's startup write (for example chat's state load) cannot overlap DDL.
+    try {
+      CompletableFuture.runAsync(
+              () ->
+                  Flyway.configure(loader)
+                      .dataSource(dataSource)
+                      .locations("classpath:db/migration/" + module)
+                      .table("flyway_" + module + "_history")
+                      // Modules share one database, so a module's first migration always finds
+                      // other modules' tables. Baselining an empty history at version 0 lets its
+                      // V1 still run.
+                      .baselineOnMigrate(true)
+                      .baselineVersion("0")
+                      .failOnMissingLocations(true)
+                      .load()
+                      .migrate(),
+              writer)
+          .join();
+    } catch (CompletionException error) {
+      if (error.getCause() instanceof RuntimeException cause) {
+        throw cause;
+      }
+      throw error;
+    }
   }
 
   /** Runs {@code work} in a transaction on the writer thread. */

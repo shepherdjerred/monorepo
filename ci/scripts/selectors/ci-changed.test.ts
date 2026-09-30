@@ -6,6 +6,156 @@ import {
   selectorPathsForLane,
 } from "../migration-core.ts";
 import { requestedPlatformTofuApply } from "./tofu-lane-paths.ts";
+import { ensureAncestor } from "./ensure-ancestor.ts";
+
+const HEAD_COMMIT = "a".repeat(40);
+const BASE_COMMIT = "b".repeat(40);
+
+test("accepts a change base already present in the checkout", async () => {
+  const commands: string[][] = [];
+  const valid = await ensureAncestor(
+    BASE_COMMIT,
+    "HEAD",
+    async (command) => {
+      commands.push([...command]);
+      return { exitCode: 0, stdout: "" };
+    },
+    true,
+  );
+  expect(valid).toBe(true);
+  expect(commands).toEqual([
+    ["git", "cat-file", "-e", `${BASE_COMMIT}^{commit}`],
+    ["git", "merge-base", "--is-ancestor", BASE_COMMIT, "HEAD"],
+  ]);
+});
+
+test("does not fetch history for an invalid PR change base", async () => {
+  const commands: string[][] = [];
+  const valid = await ensureAncestor(
+    BASE_COMMIT,
+    "HEAD",
+    async (command) => {
+      commands.push([...command]);
+      return { exitCode: 1, stdout: "" };
+    },
+    false,
+  );
+  expect(valid).toBe(false);
+  expect(commands).toEqual([
+    ["git", "cat-file", "-e", `${BASE_COMMIT}^{commit}`],
+  ]);
+});
+
+test("does not fetch history from a complete checkout", async () => {
+  const commands: string[][] = [];
+  const valid = await ensureAncestor(
+    BASE_COMMIT,
+    "HEAD",
+    async (command) => {
+      commands.push([...command]);
+      return command[1] === "cat-file"
+        ? { exitCode: 1, stdout: "" }
+        : { exitCode: 0, stdout: "false\n" };
+    },
+    true,
+  );
+  expect(valid).toBe(false);
+  expect(commands.at(-1)).toEqual([
+    "git",
+    "rev-parse",
+    "--is-shallow-repository",
+  ]);
+});
+
+test("rejects a shallow checkout without a usable head commit", async () => {
+  const valid = await ensureAncestor(
+    BASE_COMMIT,
+    "HEAD",
+    async (command) => {
+      if (command[1] === "cat-file") return { exitCode: 1, stdout: "" };
+      return command[2] === "--is-shallow-repository"
+        ? { exitCode: 0, stdout: "true\n" }
+        : { exitCode: 0, stdout: "invalid\n" };
+    },
+    true,
+  );
+  expect(valid).toBe(false);
+});
+
+test("deepens only until the base becomes a verified ancestor", async () => {
+  const fetches: string[][] = [];
+  const valid = await ensureAncestor(
+    BASE_COMMIT,
+    "HEAD",
+    async (command) => {
+      if (command[1] === "cat-file" || command[1] === "merge-base") {
+        return { exitCode: fetches.length === 2 ? 0 : 1, stdout: "" };
+      }
+      if (command[2] === "--is-shallow-repository") {
+        return { exitCode: 0, stdout: "true\n" };
+      }
+      if (command[1] === "rev-parse") {
+        return { exitCode: 0, stdout: `${HEAD_COMMIT}\n` };
+      }
+      fetches.push([...command]);
+      return { exitCode: 0, stdout: "" };
+    },
+    true,
+  );
+  expect(valid).toBe(true);
+  expect(fetches.map((command) => command[4])).toEqual([
+    "--deepen=32",
+    "--deepen=128",
+  ]);
+  expect(fetches[0]?.at(-1)).toBe(HEAD_COMMIT);
+});
+
+test("runs conservatively when a bounded history fetch fails", async () => {
+  const commands: string[][] = [];
+  const valid = await ensureAncestor(
+    BASE_COMMIT,
+    "HEAD",
+    async (command) => {
+      commands.push([...command]);
+      if (command[1] === "cat-file") return { exitCode: 1, stdout: "" };
+      if (command[2] === "--is-shallow-repository") {
+        return { exitCode: 0, stdout: "true\n" };
+      }
+      return command[1] === "rev-parse"
+        ? { exitCode: 0, stdout: `${HEAD_COMMIT}\n` }
+        : { exitCode: 1, stdout: "" };
+    },
+    true,
+  );
+  expect(valid).toBe(false);
+  expect(commands.at(-1)?.[4]).toBe("--deepen=32");
+});
+
+test("stops after bounded deepening when the base stays unreachable", async () => {
+  const fetches: string[][] = [];
+  const valid = await ensureAncestor(
+    BASE_COMMIT,
+    "HEAD",
+    async (command) => {
+      if (command[1] === "cat-file") return { exitCode: 1, stdout: "" };
+      if (command[2] === "--is-shallow-repository") {
+        return { exitCode: 0, stdout: "true\n" };
+      }
+      if (command[1] === "rev-parse") {
+        return { exitCode: 0, stdout: `${HEAD_COMMIT}\n` };
+      }
+      fetches.push([...command]);
+      return { exitCode: 0, stdout: "" };
+    },
+    true,
+  );
+  expect(valid).toBe(false);
+  expect(fetches.map((command) => command[4])).toEqual([
+    "--deepen=32",
+    "--deepen=128",
+    "--deepen=512",
+  ]);
+});
 
 test("all expected deployment lanes are modeled", () => {
   expect(Object.keys(lanePaths)).toContain("sites");

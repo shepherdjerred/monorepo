@@ -80,9 +80,14 @@ describe("sports playback selection", () => {
     expect(ambiguous).toBe(false);
   });
 
-  it("does not fetch sports listings for an ordinary playback request", async () => {
+  it.each([
+    "Never Gonna Give You Up",
+    "Game of Thrones",
+    "Match Point",
+    "VS Code tutorial",
+  ])("does not browse sports for the ordinary title %s", async (query) => {
     const selected = await selectSportsForRequest({
-      query: "Never Gonna Give You Up",
+      query,
       source: "auto",
       provider: undefined,
       scope,
@@ -107,35 +112,6 @@ describe("sports playback selection", () => {
     });
     expect(selected).toBeNull();
   });
-
-  it.each(["Game of Thrones", "Match Point", "VS Code tutorial"])(
-    "does not browse sports for the ordinary title %s",
-    async (query) => {
-      const selected = await selectSportsForRequest({
-        query,
-        source: "auto",
-        provider: undefined,
-        scope,
-        enabled: async () => true,
-        signal,
-        catalog: {
-          listToday: async () => {
-            throw new Error("ordinary playback must not browse sports sites");
-          },
-          search: async () => {
-            throw new Error("ordinary playback must not browse sports sites");
-          },
-        },
-        resolve: async () => {
-          throw new Error("ordinary playback must not resolve sports");
-        },
-        onAmbiguous: () => {
-          throw new Error("ordinary playback must not ask about sports");
-        },
-      });
-      expect(selected).toBeNull();
-    },
-  );
 
   it("recognizes a game title without a provider option", async () => {
     const selected = await selectSportsForRequest({

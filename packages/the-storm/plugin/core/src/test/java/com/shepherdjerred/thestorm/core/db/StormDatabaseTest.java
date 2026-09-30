@@ -6,6 +6,7 @@ import static org.jooq.impl.DSL.sum;
 import static org.jooq.impl.DSL.table;
 
 import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
@@ -63,6 +64,43 @@ final class StormDatabaseTest {
 
       assertThat(count.get(5, TimeUnit.SECONDS)).isEqualTo(1);
       assertThat(slowWrite.get(5, TimeUnit.SECONDS)).isEqualTo(1);
+    }
+  }
+
+  @Test
+  void aMigrationWaitsForWritesQueuedByEarlierModules(@TempDir Path directory) throws Exception {
+    try (var database = StormDatabase.open(directory.resolve("test.db"))) {
+      database.migrate("sample", StormDatabaseTest.class.getClassLoader());
+      var writeStarted = new CountDownLatch(1);
+      var releaseWrite = new CountDownLatch(1);
+      var migrationStarted = new CountDownLatch(1);
+      var write =
+          database.write(
+              dsl -> {
+                writeStarted.countDown();
+                awaitQuietly(releaseWrite);
+                return dsl.insertInto(table("ledger"), field("player"), field("amount"))
+                    .values("RiotShielder", 7)
+                    .execute();
+              });
+      assertThat(writeStarted.await(5, TimeUnit.SECONDS)).isTrue();
+
+      var migration =
+          CompletableFuture.runAsync(
+              () -> {
+                migrationStarted.countDown();
+                database.migrate("second", StormDatabaseTest.class.getClassLoader());
+              });
+      try {
+        assertThat(migrationStarted.await(5, TimeUnit.SECONDS)).isTrue();
+        Thread.sleep(50);
+        assertThat(migration).isNotDone();
+      } finally {
+        releaseWrite.countDown();
+      }
+
+      assertThat(write.get(5, TimeUnit.SECONDS)).isEqualTo(1);
+      migration.get(5, TimeUnit.SECONDS);
     }
   }
 

@@ -307,6 +307,12 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             await reconcileCompetitiveProgression(input.stage);
             break;
           }
+          case "mvp-tally-refresh": {
+            const { reconcilePendingMvpTallyRefreshes } =
+              await import("#src/mvp-votes/tally-reconciliation.ts");
+            await reconcilePendingMvpTallyRefreshes();
+            break;
+          }
           case "clash-snapshot": {
             const { runClashSnapshot } =
               await import("#src/league/clash/snapshot.ts");

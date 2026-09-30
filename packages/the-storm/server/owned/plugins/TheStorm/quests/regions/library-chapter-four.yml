@@ -1,0 +1,93 @@
+# Walter and Winston turn the historic library's water notes into a public
+# record. No player must reach the old library rooms or a missing structure.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-open-catalogue:
+    name: The Open Catalogue
+    giver: walter
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed water-under-test
+    text:
+      offer: Winston's water test is dated and repeatable. The next reader needs a copy they can borrow without risking the master pages.
+      accept: Bring lecterns and books. Iovita can check that the instructions make sense to someone outside our study.
+      decline: I will keep the master safe until a copy is ready.
+      finish: Iovita could follow the method. The catalogue is ready for borrowers.
+      summary: Prepare a public copy of the library's water experiment.
+      questions: []
+    start: copies
+    stages:
+      copies:
+        journal: Bring Walter 2 lecterns and 4 books for public copies.
+        waiting: The master notes should remain safe while readers study copies.
+        complete: The copies are ready. Ask Iovita to read the method.
+        objectives:
+          - deliver walter 2 LECTERN
+          - deliver walter 4 BOOK
+        onComplete: []
+        next: [{ to: reader, when: [], label: none }]
+        timeLimit: none
+      reader:
+        journal: Ask Iovita whether the water-test instructions are clear.
+        waiting: A useful experiment can be repeated by a new reader.
+        complete: Iovita can follow the method without Walter's help.
+        objectives:
+          - talk iovita
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  questions-for-tomorrow:
+    name: Questions for Tomorrow
+    giver: winston
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-open-catalogue
+    text:
+      offer: An open catalogue should make room for the next question. Let us leave tools for another reader instead of declaring the work finished.
+      accept: Bring glass bottles, paper and ink. Walter will label a blank observation set.
+      decline: The questions will wait for a curious reader.
+      finish: Walter has left a fresh observation set beside the tested method.
+      summary: Leave the library ready for future water and weather research.
+      questions: []
+    start: blank-set
+    stages:
+      blank-set:
+        journal: Bring Winston 12 glass bottles, 12 paper and 2 ink sacs.
+        waiting: A future experiment needs clean tools and an empty page.
+        complete: The set is ready. Walter can add it to the catalogue.
+        objectives:
+          - deliver winston 12 GLASS_BOTTLE
+          - deliver winston 12 PAPER
+          - deliver winston 2 INK_SAC
+        onComplete: []
+        next: [{ to: label, when: [], label: none }]
+        timeLimit: none
+      label:
+        journal: Ask Walter to label the blank observation set.
+        waiting: Leave the question open for the next reader.
+        complete: The library has tools and room for another discovery.
+        objectives:
+          - talk walter
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1
