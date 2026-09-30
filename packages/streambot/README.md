@@ -62,9 +62,15 @@ The matching slash groups are `/stream playback`, `/stream history`, and
 by typed Flipt flags and default off outside their rollout targets.
 
 Sports listings and live sports playback are a separate, default-off Flipt
-feature. `/stream playback sports` lists the provider entries for today; voice
-can list them on request, and a game title tries StreamEast before TVSportsLive
-unless a provider is named. Future events are informational and are never
+feature. `/stream playback sports` shows today's games in a paginated Discord
+embed with live, unconfirmed, and upcoming status. Its private dropdown queues
+a live or unconfirmed game in your current voice channel, checking availability
+and the sports feature gate again when selected. Browsing does not reserve a
+stream bot, and the picker expires after two minutes. Voice can list games on
+request, and a game title tries StreamEast before TVSportsLive
+unless a provider is named. Listings keep games returned before the request
+deadline even when the other provider times out; a timeout with no games still
+reports an error. Future events are informational and are never
 queued; TVSportsLive posts without a kickoff time are marked unconfirmed and
 validated when selected. Playback uses the stable provider page as the source
 identity and resolves the live HLS input at play time through PinchTab. The

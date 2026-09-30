@@ -51,6 +51,7 @@ import type { DiscoveryService } from "@shepherdjerred/streambot/discovery/disco
 import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
+import { runSportsCommand } from "@shepherdjerred/streambot/discord/commands/sports-command.ts";
 
 const log = logger.child("command-bot");
 /** Subcommands that start (or join) a session in the issuer's current voice channel. */
@@ -76,7 +77,6 @@ const STATELESS_SUBCOMMANDS = new Set([
   "list",
   "search",
   "sources",
-  "sports",
   "help",
   "favorites",
   "favorite-remove",
@@ -472,7 +472,14 @@ export class CommandBot {
     interaction: ChatInputCommandInteraction,
   ): Promise<void> {
     try {
-      await this.route(interaction);
+      if (
+        interaction.options.getSubcommand() === "sports" &&
+        interaction.inGuild()
+      ) {
+        await runSportsCommand(interaction, this.deps);
+      } else {
+        await this.route(interaction);
+      }
     } catch (error) {
       log.error("command handling failed", {
         command: interaction.commandName,
