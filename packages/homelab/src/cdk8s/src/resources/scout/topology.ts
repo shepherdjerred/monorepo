@@ -97,7 +97,7 @@ export const SCOUT_GATEWAY_TOPOLOGY: Readonly<
 export const SCOUT_ACTIVITY_WORKER_TOPOLOGY: Readonly<
   Record<Stage, ScoutActivityWorkerTopology>
 > = {
-  beta: "observing",
+  beta: "owning",
   prod: "absent",
 };
 
