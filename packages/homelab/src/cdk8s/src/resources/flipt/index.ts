@@ -57,6 +57,12 @@ const FLIPT_INIT_RESOURCES = {
   cpu: { request: Cpu.millis(5), limit: Cpu.millis(50) },
   memory: { request: Size.mebibytes(8), limit: Size.mebibytes(32) },
 };
+const FLIPT_SEED_VALIDATION_RESOURCES = {
+  cpu: FLIPT_INIT_RESOURCES.cpu,
+  // The pinned v2.13.0 validator uses about 70MiB RSS for either environment's
+  // current managed catalog. Keep headroom for schema validation and startup.
+  memory: { request: Size.mebibytes(64), limit: Size.mebibytes(128) },
+};
 
 const DATA_PATH = "/var/opt/flipt";
 const REPOSITORY_DATA_PATH = `${DATA_PATH}/repositories`;
@@ -252,7 +258,7 @@ export function createFliptDeployment(chart: Chart) {
       image: `flipt/flipt:${versions["flipt-io/flipt"]}`,
       command: ["/bin/sh", "-c"],
       args: [VALIDATE_SEEDS_SCRIPT],
-      resources: FLIPT_INIT_RESOURCES,
+      resources: FLIPT_SEED_VALIDATION_RESOURCES,
       securityContext: FLIPT_SECURITY_CONTEXT,
       volumeMounts: [
         { path: "/etc/flipt-seed", volume: seedVolume, readOnly: true },
