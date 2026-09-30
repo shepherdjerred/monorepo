@@ -78,6 +78,15 @@ resource "asuswrt_port_forward" "minecraft_bedrock" {
   internal_port = "30003"
 }
 
+resource "asuswrt_port_forward" "minecraft_tsmc_bedrock" {
+  provider      = asuswrt.router
+  name          = "The Storm Bedrock"
+  protocol      = "UDP"
+  external_port = "30004"
+  internal_ip   = "192.168.1.81"
+  internal_port = "30004"
+}
+
 # --- Wireless (wpa_passphrase intentionally omitted: write-only, would churn
 # every plan/apply; manage the PSK out-of-band). ---
 resource "asuswrt_wireless_network" "wl0" {

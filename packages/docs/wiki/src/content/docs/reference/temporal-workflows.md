@@ -136,22 +136,23 @@ Only corpus capture and context-refresh are scheduled.
 
 ## Homelab maintenance
 
-| Workflow                 | Trigger       | Brain         | Output                                   |
-| ------------------------ | ------------- | ------------- | ---------------------------------------- |
-| zfs-maintenance          | Sun 03:00     | deterministic | scrub + autotrim                         |
-| ci-uv-cache-prune-weekly | Sun 03:15     | deterministic | uv cache prune                           |
-| bugsink-housekeeping     | daily 03:00   | deterministic | DB cleanup                               |
-| velero-orphan-audit      | daily 03:30   | deterministic | metrics only                             |
-| velero-r2-orphan-audit   | daily 04:00   | deterministic | metrics only                             |
-| kometa-daily             | daily 04:30   | deterministic | Plex metadata sync                       |
-| ci-bun-cache-gc          | every 5 min   | deterministic | Bun cache GC                             |
-| ci-trivy-db-refresh      | every 6 hours | deterministic | Trivy database refresh                   |
-| dns-audit                | daily 06:00   | deterministic | logs                                     |
-| golink-sync              | daily 05:00   | deterministic | golink reconcile                         |
-| temporal-failure-watch   | every 5 min   | deterministic | durable alert occurrence                 |
-| report-freshness-monitor | every 15 min  | deterministic | metrics + durable alert                  |
-| TaskNotes canary         | Mon 09:00     | deterministic | heartbeat email                          |
-| main-vuln-scan           | Sun 05:00     | deterministic | report email + durable alert on CRITICAL |
+| Workflow                         | Trigger                          | Brain         | Output                                        |
+| -------------------------------- | -------------------------------- | ------------- | --------------------------------------------- |
+| zfs-maintenance                  | Sun 03:00                        | deterministic | scrub + autotrim                              |
+| the-storm-mining-reset-quarterly | quarter day 1, 05:15 PT (paused) | deterministic | stopped-server Velero snapshot + mining reset |
+| ci-uv-cache-prune-weekly         | Sun 03:15                        | deterministic | uv cache prune                                |
+| bugsink-housekeeping             | daily 03:00                      | deterministic | DB cleanup                                    |
+| velero-orphan-audit              | daily 03:30                      | deterministic | metrics only                                  |
+| velero-r2-orphan-audit           | daily 04:00                      | deterministic | metrics only                                  |
+| kometa-daily                     | daily 04:30                      | deterministic | Plex metadata sync                            |
+| ci-bun-cache-gc                  | every 5 min                      | deterministic | Bun cache GC                                  |
+| ci-trivy-db-refresh              | every 6 hours                    | deterministic | Trivy database refresh                        |
+| dns-audit                        | daily 06:00                      | deterministic | logs                                          |
+| golink-sync                      | daily 05:00                      | deterministic | golink reconcile                              |
+| temporal-failure-watch           | every 5 min                      | deterministic | durable alert occurrence                      |
+| report-freshness-monitor         | every 15 min                     | deterministic | metrics + durable alert                       |
+| TaskNotes canary                 | Mon 09:00                        | deterministic | heartbeat email                               |
+| main-vuln-scan                   | Sun 05:00                        | deterministic | report email + durable alert on CRITICAL      |
 
 ## Home automation
 
@@ -196,11 +197,17 @@ send. Models cannot select the status or subject.
 | agent-chat-turn-receipt   | shared chat client         | deterministic                   | retained run-pinned turn outcome |
 | agent-chat-catalog        | client update              | deterministic                   | chat metadata + active bindings  |
 | scheduled-agent-chat-turn | declared Temporal Schedule | deterministic dispatcher        | update to a cataloged chat       |
+| HTTP agent chat           | HTTP POST                  | deterministic dispatcher        | durable pollable turn result     |
+| Discord agent chat        | Discord slash command      | deterministic dispatcher        | durable channel delivery         |
 
 Agent chat Activities run on `agent-task`. Scheduled dispatch waits on its own
 `agent-chat-dispatch` queue inside the repo worker process, so it occupies
-neither the provider queue nor unrelated `repo-automation`. Provider session
-slices are stored in SeaweedFS; the workspace is fresh for each turn.
+neither the provider queue nor unrelated `repo-automation`. HTTP and Discord
+command Activities run on `agent-chat-ingress`; Discord sends use the isolated
+`agent-chat-delivery` queue so long command waits cannot consume their slots.
+Only the control worker accepts the dedicated bot token used by delivery.
+Provider session slices are stored in SeaweedFS; the workspace is fresh for
+each turn.
 Receipt dispatch uses a separate `agent-chat-receipts` queue in the repo process,
 so a scheduled dispatcher waiting for a receipt cannot occupy its executor.
 Every global Activity queue has a schedule-to-close admission bound in addition

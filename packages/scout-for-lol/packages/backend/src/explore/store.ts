@@ -6,6 +6,7 @@ import {
   type ExploreConversation,
   type ExploreMessage,
   type ExploreMatchCard,
+  type ExploreLoadoutCard,
   type ExploreTraceEntry,
   type ExploreTranscript,
   type ReportAiPreviewSummary,
@@ -320,6 +321,7 @@ export async function appendExploreAnswer(
     preview: ReportAiPreviewSummary | null;
     visualization: VisualizationSnapshot | null;
     matchCards?: ExploreMatchCard[] | undefined;
+    loadoutCards?: ExploreLoadoutCard[] | undefined;
     /**
      * The guilds this turn resolved its capabilities from.
      *
@@ -363,6 +365,10 @@ export async function appendExploreAnswer(
         input.matchCards === undefined || input.matchCards.length === 0
           ? null
           : JSON.stringify(input.matchCards),
+      loadoutCards:
+        input.loadoutCards === undefined || input.loadoutCards.length === 0
+          ? null
+          : JSON.stringify(input.loadoutCards),
       trace: JSON.stringify(input.trace),
     },
   });

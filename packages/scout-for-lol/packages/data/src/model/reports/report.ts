@@ -77,6 +77,16 @@ export const ReportDisplayKindSchema = z.enum([
   "timestamp",
 ]);
 
+/** Game asset shown beside a ScoutQL result value or grouping label. */
+export const ReportAssetKindSchema = z.enum([
+  "champion",
+  "item",
+  "rune",
+  "rune_tree",
+  "spell",
+]);
+export type ReportAssetKind = z.infer<typeof ReportAssetKindSchema>;
+
 /**
  * Channel encodings for chart kinds — a deliberately small slice of the
  * grammar-of-graphics (à la Vega-Lite). Each channel references a column the

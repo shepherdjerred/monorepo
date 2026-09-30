@@ -30,6 +30,7 @@ import { createTurboCacheChart } from "./cdk8s-charts/platform/turbo-cache.ts";
 import { createBuildkitdChart } from "./cdk8s-charts/platform/buildkitd.ts";
 import { createAlertDashboardChart } from "./cdk8s-charts/platform/alert-dashboard.ts";
 import { createStashChart } from "./cdk8s-charts/media/stash.ts";
+import { createStormBrainChart } from "./cdk8s-charts/storm-brain.ts";
 import { createServiceProbesChart } from "./resources/monitoring/service-probes-chart.ts";
 import { resetProbeRegistry } from "./misc/probes/probe-registry.ts";
 import { applyApplicationReleasePolicy } from "./application-release-policy.ts";
@@ -84,6 +85,7 @@ export async function setupCharts(app: App): Promise<void> {
   createTurboCacheChart(app);
   createBuildkitdChart(app);
   createStashChart(app);
+  createStormBrainChart(app);
 
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.

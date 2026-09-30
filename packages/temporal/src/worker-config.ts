@@ -2,10 +2,14 @@ import {
   agentActivities,
   agentChatDispatchWorkerActivities,
   agentChatReceiptWorkerActivities,
+  agentChatDeliveryActivities,
+  agentChatIngressActivities,
+  imessageAgentChatActivities,
   glitterContextWorkerActivities,
   glitterCorpusWorkerActivities,
   homeActivities,
   infraActivities,
+  miningResetWorkerActivities,
   repoActivities,
   reportActivities,
   scoutActivities,
@@ -18,6 +22,7 @@ import type { WorkerRole } from "./shared/infra/worker-role.ts";
 
 export type QueueWorkerRole =
   | "agent"
+  | "control"
   | "backup"
   | "billing"
   | "glitter-context"
@@ -51,6 +56,27 @@ export type QueueWorkerDefinition =
 const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
   {
     kind: "activity",
+    role: "control",
+    taskQueue: TASK_QUEUES.AGENT_CHAT_INGRESS,
+    activities: agentChatIngressActivities,
+    maxConcurrentActivityTaskExecutions: 4,
+  },
+  {
+    kind: "activity",
+    role: "control",
+    taskQueue: TASK_QUEUES.AGENT_CHAT_DELIVERY,
+    activities: agentChatDeliveryActivities,
+    maxConcurrentActivityTaskExecutions: 4,
+  },
+  {
+    kind: "activity",
+    role: "control",
+    taskQueue: TASK_QUEUES.AGENT_CHAT_IMESSAGE,
+    activities: imessageAgentChatActivities,
+    maxConcurrentActivityTaskExecutions: 4,
+  },
+  {
+    kind: "activity",
     role: "billing",
     taskQueue: TASK_QUEUES.BILLING,
     activities: billingActivities,
@@ -82,6 +108,13 @@ const ACTIVITY_WORKER_DEFINITIONS: readonly ActivityWorkerDefinition[] = [
     role: "infra",
     taskQueue: TASK_QUEUES.INFRA,
     activities: infraActivities,
+    maxConcurrentActivityTaskExecutions: 1,
+  },
+  {
+    kind: "activity",
+    role: "infra",
+    taskQueue: TASK_QUEUES.MINING_RESET,
+    activities: miningResetWorkerActivities,
     maxConcurrentActivityTaskExecutions: 1,
   },
   {

@@ -115,6 +115,7 @@ registerConsumerProfileFeatureTestLifecycle({
     trpc.setMembership([{ guildId, asAdmin: false }]);
     await testPrisma.currentRankSnapshot.deleteMany();
     await testPrisma.matchRankHistory.deleteMany();
+    await testPrisma.activeGame.deleteMany();
     await testPrisma.account.deleteMany();
     await testPrisma.player.deleteMany();
     await profileFeature.resetLake();
@@ -123,6 +124,48 @@ registerConsumerProfileFeatureTestLifecycle({
     resetFlagOverrides("challenge_runs_enabled");
     await testPrisma.$disconnect();
   },
+});
+
+describe("consumer guild community authorization", () => {
+  test("scopes overview and recent game observations to the selected enabled guild", async () => {
+    enableProfiles(guildId);
+    const visible = await seedPlayer({
+      serverId: guildId,
+      alias: "Guild Player",
+      puuids: [MAIN],
+    });
+    await seedPlayer({
+      serverId: otherGuildId,
+      alias: "Other Player",
+      puuids: [OTHER],
+    });
+    trpc.setMembership([
+      { guildId, asAdmin: false },
+      { guildId: otherGuildId, asAdmin: false },
+    ]);
+    const overview = await trpc
+      .authedCaller()
+      .consumerGuild.overview({ guildId });
+    expect(overview.players).toEqual([
+      { id: visible.id, alias: "Guild Player" },
+    ]);
+    await expect(
+      trpc.authedCaller().consumerGuild.overview({ guildId: otherGuildId }),
+    ).rejects.toThrow("Guild was not found");
+    await testPrisma.activeGame.create({
+      data: {
+        gameId: 123n,
+        trackedPuuids: JSON.stringify([MAIN, OTHER]),
+        detectedAt: new Date(Date.now() - 60_000),
+        expiresAt: new Date(Date.now() + 60_000),
+      },
+    });
+    const live = await trpc.authedCaller().consumerGuild.live({ guildId });
+    expect(live).toHaveLength(1);
+    expect(live[0]?.players).toEqual([
+      { playerId: visible.id, alias: "Guild Player" },
+    ]);
+  });
 });
 
 describe("consumer player challenge runs", () => {
@@ -204,6 +247,37 @@ describe("consumerPlayer.status", () => {
 });
 
 describe("consumerPlayer search and direct lookup", () => {
+  test("lobby lookup matches cached Riot IDs exactly within current guild access", async () => {
+    enableProfiles(guildId);
+    const visible = await seedPlayer({
+      serverId: guildId,
+      alias: "Visible",
+      puuids: [MAIN],
+    });
+    await seedPlayer({
+      serverId: otherGuildId,
+      alias: "Hidden",
+      puuids: [OTHER],
+    });
+    trpc.setMembership([
+      { guildId, asAdmin: false },
+      { guildId: otherGuildId, asAdmin: false },
+    ]);
+    const result = await trpc.authedCaller().consumerPlayer.multisearch({
+      riotIds: "visible riot 0#na1\nHidden Riot 0#NA1\nMissing#NA1",
+    });
+    expect(result.rows[0]?.matches.map((match) => match.playerId)).toEqual([
+      visible.id,
+    ]);
+    expect(result.rows[1]?.matches).toEqual([]);
+    expect(result.rows[2]?.matches).toEqual([]);
+    await expect(
+      trpc
+        .authedCaller()
+        .consumerPlayer.multisearch({ riotIds: "not-a-riot-id" }),
+    ).rejects.toThrow();
+  });
+
   test("searches aliases and Riot IDs only in enabled shared guilds", async () => {
     enableProfiles(guildId);
     const visible = await seedPlayer({

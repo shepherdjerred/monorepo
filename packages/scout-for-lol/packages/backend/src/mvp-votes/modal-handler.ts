@@ -17,7 +17,7 @@ import {
   guildAliasesForRoster,
   isMvpVotesEnabledForGuild,
 } from "#src/mvp-votes/eligibility.ts";
-import { refreshMvpTallyMessages } from "#src/mvp-votes/message-refresh.ts";
+import { reconcileMvpTallyRefresh } from "#src/mvp-votes/tally-reconciliation.ts";
 import { nomineeLabel } from "#src/mvp-votes/tally.ts";
 import {
   loadMatchMvpRoster,
@@ -40,11 +40,11 @@ export type VoteModalInteraction = {
 };
 
 export type VoteModalDependencies = {
-  refreshMessages: typeof refreshMvpTallyMessages;
+  refreshMessages: typeof reconcileMvpTallyRefresh;
 };
 
 const defaultDependencies: VoteModalDependencies = {
-  refreshMessages: refreshMvpTallyMessages,
+  refreshMessages: reconcileMvpTallyRefresh,
 };
 
 export async function handleMvpVoteModal(
@@ -111,7 +111,6 @@ export async function handleMvpVoteModal(
     { serverId, roster },
     prismaClient,
   );
-  await dependencies.refreshMessages({ matchId, serverId }, prismaClient);
   await interaction.editReply({
     content: voteConfirmation({
       category: parsed.category,
@@ -120,4 +119,7 @@ export async function handleMvpVoteModal(
     }),
     allowedMentions: { parse: [] },
   });
+  // The vote and refresh request are already committed. A Discord outage must
+  // not turn a recorded vote into a failed interaction; Temporal will retry.
+  await dependencies.refreshMessages({ matchId, serverId }, prismaClient);
 }

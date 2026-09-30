@@ -1,8 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { MatchScoreboards } from "./match-scoreboard.tsx";
-import { MatchMvpTally } from "./match-mvp-tally.tsx";
+import type { MatchLoadout } from "@scout-for-lol/data";
+import {
+  MatchScoreboards,
+  RolePairedMatchScoreboard,
+  type RoleMatchup,
+} from "./match-scoreboard.tsx";
 import { MatchObjectivesSummary } from "./match-objectives-summary.tsx";
 import { ChampionIcon } from "./champion-icon.tsx";
+import { MatchLoadoutDisplay } from "./match-loadout.tsx";
 import {
   ChampionComparisonTable,
   type ChampionComparisonRow,
@@ -225,6 +230,84 @@ const RED_SIDE: Teams[number] = {
   ],
 };
 
+const SAMPLE_LOADOUT: MatchLoadout = {
+  itemIds: [1055, 3006, 3031, 3094, 3072, 0, 3340],
+  summonerSpellIds: [4, 7],
+  runes: {
+    primaryStyleId: 8000,
+    primaryRuneIds: [8005, 8009, 9103, 8014],
+    secondaryStyleId: 8300,
+    secondaryRuneIds: [8304, 8347],
+    statShardIds: { offense: 5005, flex: 5008, defense: 5002 },
+  },
+};
+
+const ROLE_PAIRED_TEAMS = [BLUE_SIDE, RED_SIDE].map((team) => ({
+  ...team,
+  participants: team.participants.map((participant) => ({
+    ...participant,
+    loadout: SAMPLE_LOADOUT,
+  })),
+}));
+
+const ROLE_MATCHUPS: RoleMatchup[] = [
+  {
+    role: "top",
+    blueParticipantId: 1,
+    redParticipantId: 6,
+    at15: {
+      timestampMs: 900_000,
+      goldDelta: 1250,
+      creepScoreDelta: 18,
+      xpDelta: 640,
+    },
+  },
+  {
+    role: "jungle",
+    blueParticipantId: 2,
+    redParticipantId: 7,
+    at15: {
+      timestampMs: 900_000,
+      goldDelta: -420,
+      creepScoreDelta: -6,
+      xpDelta: -210,
+    },
+  },
+  {
+    role: "middle",
+    blueParticipantId: 3,
+    redParticipantId: 8,
+    at15: {
+      timestampMs: 900_000,
+      goldDelta: 760,
+      creepScoreDelta: 9,
+      xpDelta: 380,
+    },
+  },
+  {
+    role: "adc",
+    blueParticipantId: 4,
+    redParticipantId: 9,
+    at15: {
+      timestampMs: 900_000,
+      goldDelta: 210,
+      creepScoreDelta: -3,
+      xpDelta: 155,
+    },
+  },
+  {
+    role: "support",
+    blueParticipantId: 5,
+    redParticipantId: 10,
+    at15: {
+      timestampMs: 900_000,
+      goldDelta: -110,
+      creepScoreDelta: 2,
+      xpDelta: -85,
+    },
+  },
+];
+
 const COMPARISON_ROWS: ChampionComparisonRow[] = [
   {
     playerId: 42,
@@ -285,6 +368,56 @@ type Story = StoryObj<typeof meta>;
 
 export const Scoreboards: Story = {
   args: { teams: [BLUE_SIDE, RED_SIDE] },
+};
+
+export const RotatingAugments: Story = {
+  args: {
+    teams: [
+      {
+        ...BLUE_SIDE,
+        participants: BLUE_SIDE.participants.map((participant, index) =>
+          index === 0
+            ? {
+                ...participant,
+                augments: [
+                  { id: 4001, name: "Giant Slayer" },
+                  { id: 4002, name: "Jeweled Gauntlet" },
+                ],
+              }
+            : participant,
+        ),
+      },
+    ],
+    showLoadout: true,
+  },
+};
+
+export const RolePaired: Story = {
+  args: { teams: [BLUE_SIDE, RED_SIDE] },
+  render: () => (
+    <RolePairedMatchScoreboard
+      teams={ROLE_PAIRED_TEAMS}
+      matchups={ROLE_MATCHUPS}
+    />
+  ),
+};
+
+export const HistoricalRuneLoadout: Story = {
+  args: { teams: [] },
+  render: () => (
+    <MatchLoadoutDisplay
+      loadout={{
+        ...SAMPLE_LOADOUT,
+        runes: {
+          primaryStyleId: 8000,
+          primaryRuneIds: [8005, 8009, 9103, 8014],
+          secondaryStyleId: 8100,
+          secondaryRuneIds: [8138, 8135],
+          statShardIds: { offense: 5005, flex: 5008, defense: 5002 },
+        },
+      }}
+    />
+  ),
 };
 
 export const SingleTeam: Story = {
@@ -360,44 +493,6 @@ export const ComparisonTableEmpty: Story = {
       empty="No tracked player has played this champion yet."
       onPrevious={noop}
       onNext={noop}
-    />
-  ),
-};
-
-export const CommunityMvpTally: Story = {
-  args: { teams: [] },
-  render: () => (
-    <MatchMvpTally
-      tally={{
-        showGuildNames: false,
-        guilds: [
-          {
-            guildId: "1337623164146155593",
-            guildName: "Scout Test Server",
-            blue: [
-              {
-                displayName: "bald",
-                championName: "Aatrox",
-                voteCount: 3,
-                reasons: [
-                  {
-                    voterName: "Jungle Diff",
-                    justification: "split the map in half",
-                  },
-                ],
-              },
-            ],
-            red: [
-              {
-                displayName: "Player9#NA1",
-                championName: "Jinx",
-                voteCount: 2,
-                reasons: [],
-              },
-            ],
-          },
-        ],
-      }}
     />
   ),
 };

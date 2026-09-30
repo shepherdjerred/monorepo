@@ -3,6 +3,7 @@ import {
   ExploreAnswerSchema,
   ExploreAnswerWireSchema,
 } from "#src/model/reports/explore-answer.ts";
+import { ExploreLoadoutCardRequestsSchema } from "#src/model/reports/explore-loadout-card.ts";
 import {
   ExploreMessageSchema,
   ExploreStreamMessageSchema,
@@ -11,16 +12,16 @@ import {
 } from "#src/model/reports/explore.ts";
 
 describe("ExploreAnswerSchema", () => {
-  test("defaults includeVisualization to false so a missing key does not attach a chart", () => {
-    expect(
-      ExploreAnswerSchema.parse({
-        answer: "Ahri leads.",
-        spokenAnswer: null,
-        queryText: null,
-        caveats: [],
-        followUps: [],
-      }).includeVisualization,
-    ).toBe(false);
+  test("defaults cards and includeVisualization when older callers omit them", () => {
+    const answer = ExploreAnswerSchema.parse({
+      answer: "Ahri leads.",
+      spokenAnswer: null,
+      queryText: null,
+      caveats: [],
+      followUps: [],
+    });
+    expect(answer.includeVisualization).toBe(false);
+    expect(answer.loadoutCards).toEqual([]);
   });
 
   test("the wire schema requires includeVisualization", () => {
@@ -42,11 +43,27 @@ describe("ExploreAnswerSchema", () => {
           queryText: null,
           includeVisualization: true,
           matchCards: [],
+          loadoutCards: [],
           caveats: [],
           followUps: [],
         }),
       ).includeVisualization,
     ).toBe(true);
+  });
+
+  test("requires loadoutCards in strict wire answers", () => {
+    expect(
+      ExploreAnswerWireSchema.safeParse({
+        answer: "Ahri's build is attached.",
+        spokenAnswer: null,
+        title: null,
+        queryText: null,
+        includeVisualization: false,
+        matchCards: [],
+        caveats: [],
+        followUps: [],
+      }).success,
+    ).toBe(false);
   });
 
   test("limits model-selected cards to five with at most one large card", () => {
@@ -84,6 +101,30 @@ describe("ExploreAnswerSchema", () => {
   });
 });
 
+describe("ExploreLoadoutCardRequestsSchema", () => {
+  test("limits cards to three and rejects a duplicate participant pair", () => {
+    const first = {
+      matchId: "NA1_1",
+      puuid: "0192af5b-0c88-7c3a-a17f-858c0a170001",
+      size: "S",
+    };
+    expect(
+      ExploreLoadoutCardRequestsSchema.safeParse([
+        first,
+        { ...first, size: "L" },
+      ]).success,
+    ).toBe(false);
+    expect(
+      ExploreLoadoutCardRequestsSchema.safeParse([
+        first,
+        { ...first, matchId: "NA1_2" },
+        { ...first, matchId: "NA1_3" },
+        { ...first, matchId: "NA1_4" },
+      ]).success,
+    ).toBe(false);
+  });
+});
+
 describe("ExploreTraceEntrySchema", () => {
   test("normalizes a stored legacy trace entry", () => {
     expect(
@@ -115,12 +156,14 @@ describe("parseExploreStreamEvent", () => {
     });
     const {
       matchCards: _matchCards,
+      loadoutCards: _loadoutCards,
       guildIds: _guildIds,
       ...streamMessage
     } = message;
 
     const parsed = ExploreStreamMessageSchema.parse(streamMessage);
     expect(parsed).not.toHaveProperty("matchCards");
+    expect(parsed).not.toHaveProperty("loadoutCards");
     // A tab whose bundle predates a column parses this event strictly, so an
     // extra key means the terminal event never parses and the answer never
     // lands. Every field added to ExploreMessageSchema has to be omitted here.

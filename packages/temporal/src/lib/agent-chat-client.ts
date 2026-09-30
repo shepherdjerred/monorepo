@@ -11,6 +11,7 @@ import {
   AGENT_CHAT_CATALOG_WORKFLOW_ID,
   AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS,
   AgentChatBindingSchema,
+  AgentChatBindingUpdateSchema,
   AgentChatCatalogEntrySchema,
   AgentChatConfigSchema,
   agentChatTurnRequestsMatch,
@@ -19,6 +20,8 @@ import {
   AgentChatWorkflowStateSchema,
   agentChatWorkflowId,
   type AgentChatBinding,
+  type AgentChatBindingUpdate,
+  type AgentChatBindingUpdateInput,
   type AgentChatCatalogEntry,
   type AgentChatCatalogState,
   type AgentChatConfig,
@@ -35,14 +38,28 @@ import {
   type AgentChatReceiptInput,
 } from "#shared/agent/agent-chat-receipt.ts";
 import {
-  bindAgentChatUpdate,
   getAgentChatCatalogEntryQuery,
   getAgentChatStateQuery,
   listAgentChatsQuery,
+  registerAndBindAgentChatUpdate,
   registerAgentChatUpdate,
   resolveAgentChatBindingQuery,
   settleAgentChatTurnUpdate,
 } from "#shared/agent/agent-chat-workflow.ts";
+
+export class AgentChatNotFoundError extends Error {
+  public constructor(chatId: string) {
+    super(`Unknown durable agent chat: ${chatId}`);
+    this.name = "AgentChatNotFoundError";
+  }
+}
+
+export class AgentChatBindingNotFoundError extends Error {
+  public constructor() {
+    super("No active durable agent chat is bound to this ingress conversation");
+    this.name = "AgentChatBindingNotFoundError";
+  }
+}
 
 type AgentChatCatalogWorkflow = (
   state?: AgentChatCatalogState,
@@ -82,7 +99,7 @@ function catalogEntryFromWorkflowState(
   });
 }
 
-export async function registerAgentChat(
+async function catalogEntryForAgentChat(
   client: WorkflowClient,
   rawConfig: AgentChatConfig,
 ): Promise<AgentChatCatalogEntry> {
@@ -102,9 +119,43 @@ export async function registerAgentChat(
       `Agent chat ${config.chatId} is already owned by different immutable configuration`,
     );
   }
-  const entry = catalogEntryFromWorkflowState(state);
+  return catalogEntryFromWorkflowState(state);
+}
+
+export async function registerAgentChat(
+  client: WorkflowClient,
+  rawConfig: AgentChatConfig,
+): Promise<AgentChatCatalogEntry> {
+  const entry = await catalogEntryForAgentChat(client, rawConfig);
   return await client.executeUpdateWithStart(registerAgentChatUpdate, {
     args: [entry],
+    startWorkflowOperation: catalogStart(),
+  });
+}
+
+/**
+ * Creates (or validates) the owner Workflow and atomically records its catalog
+ * entry with the ingress binding. This avoids a durable unbound catalog entry
+ * when a promptless ingress request is interrupted between two updates.
+ */
+export async function registerAndBindAgentChat(
+  client: WorkflowClient,
+  rawConfig: AgentChatConfig,
+  rawBinding: AgentChatBinding,
+  rawUpdate: AgentChatBindingUpdate,
+): Promise<AgentChatCatalogEntry> {
+  const entry = await catalogEntryForAgentChat(client, rawConfig);
+  const binding = AgentChatBindingSchema.parse(rawBinding);
+  const update = AgentChatBindingUpdateSchema.parse({
+    ...rawUpdate,
+    ...(rawUpdate.sourceSequence === undefined ? {} : { orderingVersion: 1 }),
+  });
+  const updateId = createHash("sha256")
+    .update(JSON.stringify({ binding, entry, update }))
+    .digest("hex");
+  return await client.executeUpdateWithStart(registerAndBindAgentChatUpdate, {
+    args: [entry, binding, update],
+    updateId: `agent-chat-register-and-bind/${updateId}`,
     startWorkflowOperation: catalogStart(),
   });
 }
@@ -113,30 +164,36 @@ export async function bindAgentChat(
   client: WorkflowClient,
   rawBinding: AgentChatBinding,
   chatId: string,
-  options: {
-    updatedAt: string;
-    purpose?: "initial" | "restore";
-  },
+  rawUpdate:
+    | string
+    | (Exclude<AgentChatBindingUpdateInput, string> & {
+        purpose?: "initial" | "restore";
+      }),
 ): Promise<AgentChatCatalogEntry> {
   const binding = AgentChatBindingSchema.parse(rawBinding);
-  const purpose = options.purpose ?? "initial";
-  // Restoring an evicted binding must reach the catalog even if a previous
-  // restore used the same input and was subsequently compacted away.
+  const updateInput: Exclude<AgentChatBindingUpdateInput, string> & {
+    purpose?: "initial" | "restore";
+  } = typeof rawUpdate === "string" ? { updatedAt: rawUpdate } : rawUpdate;
+  const { purpose = "initial", ...bindingUpdateInput } = updateInput;
   const restorationAttempt =
     purpose === "restore" ? crypto.randomUUID() : undefined;
+  const update = AgentChatBindingUpdateSchema.parse({
+    ...bindingUpdateInput,
+    ...(bindingUpdateInput.sourceSequence === undefined
+      ? {}
+      : { orderingVersion: 1 }),
+  });
+  const entry = await getAgentChat(client, chatId);
+  if (entry === undefined) {
+    throw new AgentChatNotFoundError(chatId);
+  }
   const updateId = createHash("sha256")
     .update(
-      JSON.stringify({
-        binding,
-        chatId,
-        updatedAt: options.updatedAt,
-        purpose,
-        restorationAttempt,
-      }),
+      JSON.stringify({ binding, chatId, purpose, restorationAttempt, update }),
     )
     .digest("hex");
-  return await client.executeUpdateWithStart(bindAgentChatUpdate, {
-    args: [binding, chatId, options.updatedAt],
+  return await client.executeUpdateWithStart(registerAndBindAgentChatUpdate, {
+    args: [entry, binding, update],
     updateId: `agent-chat-binding/${updateId}`,
     startWorkflowOperation: catalogStart(),
   });
@@ -218,6 +275,10 @@ async function bindTurnSource(input: {
       {
         updatedAt: input.request.submittedAt,
         purpose: input.purpose,
+        sourceSequence: input.request.sourceSequence,
+        ...(input.request.sourceEpoch === undefined
+          ? {}
+          : { sourceEpoch: input.request.sourceEpoch }),
       },
     );
   }
@@ -340,11 +401,10 @@ export async function continueAgentChat(input: {
         : await resolveAgentChatBinding(input.client, request.source)
       : await getAgentChat(input.client, input.chatId);
   if (entry === undefined) {
-    throw new Error(
-      input.chatId === undefined
-        ? "No active durable agent chat is bound to this ingress conversation"
-        : `Unknown durable agent chat: ${input.chatId}`,
-    );
+    if (input.chatId === undefined) {
+      throw new AgentChatBindingNotFoundError();
+    }
+    throw new AgentChatNotFoundError(input.chatId);
   }
   return await runAgentChatTurn({
     client: input.client,

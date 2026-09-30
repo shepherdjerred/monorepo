@@ -35,6 +35,7 @@ type ScoutIntervalSchedule = ScoutSchedule & {
   readonly every: ScoutInterval;
   readonly catchupWindow?: "5 minutes" | "1 hour";
   readonly offset?: "5 minutes";
+  readonly initiallyActive?: true;
 };
 
 type ScoutCronSchedule = ScoutSchedule & {
@@ -65,7 +66,9 @@ function intervalSchedule(
     overlap: ScheduleOverlapPolicy.SKIP,
     catchupWindow: schedule.catchupWindow ?? CATCHUP_RELAXED,
     memo: `Scout ${stage} ${schedule.name}`,
-    initialPauseNote: INITIAL_PAUSE_NOTE,
+    ...(schedule.initiallyActive
+      ? {}
+      : { initialPauseNote: INITIAL_PAUSE_NOTE }),
   };
 }
 
@@ -147,6 +150,16 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       args: [{ stage, kind: "notification-intent-expiry" }],
       every: "5 minutes",
       catchupWindow: CATCHUP_TIGHT,
+    }),
+    intervalSchedule(stage, {
+      name: "mvp-tally-refresh",
+      workflowType: "scoutBackgroundJobWorkflow",
+      args: [{ stage, kind: "mvp-tally-refresh" }],
+      every: "1 minute",
+      catchupWindow: CATCHUP_TIGHT,
+      // MVP voting is already live. This schedule repairs requests lost by a
+      // gateway restart and does not switch ingestion ownership.
+      initiallyActive: true,
     }),
     intervalSchedule(stage, {
       name: "competition-refresh",

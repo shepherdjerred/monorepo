@@ -13,6 +13,7 @@ const infrastructureTargets = [
   "caddy-s3proxy",
   "obsidian-headless",
   "redlib",
+  "the-storm-server",
 ] as const;
 // Keep full-image and fallback builds on the same target universe as the
 // closure selector. A second hand-maintained list previously omitted
@@ -137,6 +138,7 @@ export const globalPaths = [
   // to the emitter can change every selected step.
   "packages/woodpecker-config-extension/src",
   "ci/scripts/selectors/ci-changed.ts",
+  "ci/scripts/selectors/ensure-ancestor.ts",
   "ci/scripts/migration-core.ts",
   "scripts/lib/ci/ci-handoff.ts",
   "scripts/lib/ci/ci-artifact.ts",

@@ -1,8 +1,59 @@
 import { describe, expect, test } from "vitest";
 
-import { snapshotStalenessWarning } from "./check-1password-items.ts";
+import {
+  collectConsumption,
+  snapshotStalenessWarning,
+} from "./check-1password-items.ts";
 
 const NOW = new Date("2026-08-16T00:00:00Z");
+
+describe("collectConsumption", () => {
+  test("includes a nested Helm-managed Minecraft RCON secret", () => {
+    const consumed = new Map<string, Set<string>>();
+    collectConsumption(
+      {
+        spec: {
+          source: {
+            helm: {
+              valuesObject: {
+                minecraftServer: {
+                  rcon: {
+                    enabled: true,
+                    withGeneratedPassword: false,
+                    existingSecret: "minecraft-tsmc-brain",
+                    secretKey: "MINECRAFT_RCON_PASSWORD",
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      consumed,
+    );
+    expect(consumed.get("minecraft-tsmc-brain")).toEqual(
+      new Set(["MINECRAFT_RCON_PASSWORD"]),
+    );
+  });
+
+  test("ignores RCON when the chart generates its own password", () => {
+    const consumed = new Map<string, Set<string>>();
+    collectConsumption(
+      {
+        minecraftServer: {
+          rcon: {
+            enabled: true,
+            withGeneratedPassword: true,
+            existingSecret: "unused",
+            secretKey: "unused",
+          },
+        },
+      },
+      consumed,
+    );
+    expect(consumed.size).toBe(0);
+  });
+});
 
 describe("snapshotStalenessWarning", () => {
   test("stays quiet for a recently refreshed snapshot", () => {

@@ -1,0 +1,90 @@
+# The archived sewer-clearing quest inspires Watch and bank hand-ins in town.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  clearing-the-sewers:
+    name: Clearing the Sewers
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements: []
+    text:
+      offer: The drains beneath town are blocked again. My guards can hold the entrance, but we need someone to clear the creatures and replace the grates.
+      accept: Thin out the zombies and spiders first. Then bring iron bars for the grates.
+      decline: I'll find another volunteer before the water rises.
+      finish: The drains are running. Braxton has asked to inspect what washed out.
+      summary: Help the Watch reopen the drains beneath Spawn Town.
+      questions: []
+    start: creatures
+    stages:
+      creatures:
+        journal: Kill 6 zombies and 4 spiders in the main world so the Watch can work safely.
+        waiting: The drains are still crawling.
+        complete: The Watch can reach the grates. They need new bars.
+        objectives:
+          - kill 6 ZOMBIE
+          - kill 4 SPIDER
+        onComplete: []
+        next: [{ to: grates, when: [], label: none }]
+        timeLimit: none
+      grates:
+        journal: Bring 16 iron bars to the Guard Captain for the sewer grates.
+        waiting: Iron bars, not another sword.
+        complete: The grates are secure. Strange gold flakes were trapped behind them.
+        objectives:
+          - deliver guard-captain 16 IRON_BARS
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 450
+      - points 1
+      - reputation storm-watch 1
+
+  braxtons-audit:
+    name: Braxton's Audit
+    giver: braxton
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed clearing-the-sewers
+    text:
+      offer: The flakes from the drain look like mint scrap, but the town mint has no record of losing any. Help me compare them with the bank's stock.
+      accept: Bring gold nuggets and paper. Iovita will check whether the metal was altered.
+      decline: An unbalanced ledger is an invitation.
+      finish: The gold is real, but the marks are false. Someone is copying the town seal.
+      summary: Trace suspicious gold from the drains to a forged town seal.
+      questions: []
+    start: samples
+    stages:
+      samples:
+        journal: Bring Braxton 24 gold nuggets and 8 paper for the audit.
+        waiting: I need enough samples to compare the marks.
+        complete: The weights match. Iovita can test the finish.
+        objectives:
+          - deliver braxton 24 GOLD_NUGGET
+          - deliver braxton 8 PAPER
+        onComplete: []
+        next: [{ to: assay, when: [], label: none }]
+        timeLimit: none
+      assay:
+        journal: Ask Iovita to test the strange gold finish.
+        waiting: Iovita knows which mixture leaves this stain.
+        complete: The finish is harmless, but the forged seal could empty the bank.
+        objectives:
+          - talk iovita
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 2
+      - reputation townsfolk 1

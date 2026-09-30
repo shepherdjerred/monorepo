@@ -1,0 +1,92 @@
+# Dorran's mapped seam prompts survey and supply work in the main world.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-tremor-ledger:
+    name: The Tremor Ledger
+    giver: dorran
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed a-vein-worth-mapping
+    text:
+      offer: The seam is mapped, but loose stone can ruin a good find. I want a record before anyone sends a cart below.
+      accept: Mine deepslate and bring paper and ink so I can note what the rock tells us.
+      decline: Then no cart goes down until the ledger is ready.
+      finish: The stone is recorded. We can reinforce the route before moving ore.
+      summary: Record the rock around Dorran's newly mapped iron seam.
+      questions: []
+    start: sample
+    stages:
+      sample:
+        journal: Mine 24 deepslate blocks in the main world for Dorran's survey.
+        waiting: Freshly broken stone shows where the seam may shift.
+        complete: The samples show enough. Dorran needs a written record.
+        objectives:
+          - mine 24 DEEPSLATE
+        onComplete: []
+        next: [{ to: ledger, when: [], label: none }]
+        timeLimit: none
+      ledger:
+        journal: Bring Dorran 8 paper and 2 ink sacs for the tremor ledger.
+        waiting: A map is useful only with notes about the ground.
+        complete: The risky stretches are recorded for the crew.
+        objectives:
+          - deliver dorran 8 PAPER
+          - deliver dorran 2 INK_SAC
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1
+
+  rails-below:
+    name: Rails Below
+    giver: dorran
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-tremor-ledger
+    text:
+      offer: The ledger marks firm ground. Now the crew can lay a short supply line without guessing where the stone will hold.
+      accept: Bring rails, timber and lanterns, then tell Marcus a cart route is ready.
+      decline: The crew will shore up the ground while you gather supplies.
+      finish: Marcus has a route and the miners have light for the first cart.
+      summary: Equip a safe mine supply route after Dorran's survey.
+      questions: []
+    start: supply-line
+    stages:
+      supply-line:
+        journal: Bring Dorran 24 rails, 16 oak planks and 8 lanterns.
+        waiting: The rail line must follow the firm ground in the ledger.
+        complete: The crew can build the line. Marcus needs the route notice.
+        objectives:
+          - deliver dorran 24 RAIL
+          - deliver dorran 16 OAK_PLANKS
+          - deliver dorran 8 LANTERN
+        onComplete: []
+        next: [{ to: cart, when: [], label: none }]
+        timeLimit: none
+      cart:
+        journal: Tell Marcus the mine supply route is ready for a cart.
+        waiting: Marcus has the carts, but Dorran sets the safe path.
+        complete: The first cart can travel with a map and a warning.
+        objectives:
+          - talk marcus
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1

@@ -4,6 +4,7 @@ import {
   type DiscordChannelId,
   type ExploreAnswer,
   type ExploreMatchCard,
+  type ExploreLoadoutCard,
   type ExploreMessage,
   type ExploreStreamEvent,
   type ExploreTraceEntry,
@@ -61,6 +62,7 @@ export type ReplayObservation = {
   readonly preview: ReportAiPreviewSummary | null;
   readonly visualization: VisualizationSnapshot | null;
   readonly matchCards: readonly ExploreMatchCard[];
+  readonly loadoutCards: readonly ExploreLoadoutCard[];
   /** Folded through the same helper the product uses, so it diffs against stored traces. */
   readonly trace: readonly ExploreTraceEntry[];
   /** Exactly what the model was given, not a reconstruction of it. */
@@ -195,6 +197,7 @@ export async function runReplayCase(
       preview: result.preview,
       visualization: result.visualization,
       matchCards: result.matchCards,
+      loadoutCards: result.loadoutCards,
       // A tool call with no terminal part means the step never finished;
       // leaving it "running" in a bundle would read as a tool that is still
       // going, hours after the run ended.
@@ -216,6 +219,7 @@ export async function runReplayCase(
       preview: null,
       visualization: null,
       matchCards: [],
+      loadoutCards: [],
       trace: finalizeExploreTrace(trace),
       modelMessages,
       capabilities,

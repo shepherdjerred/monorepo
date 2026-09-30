@@ -805,6 +805,20 @@
       ]
     },
     {
+      "name": "shepherdjerred/storm-brain",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "0.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "notes": [
+        "not managed by renovate — pre-first-publish placeholder. The main image",
+        "release injects the built digest into chart synthesis and version",
+        "commit-back replaces this pin before a later release can use source state."
+      ]
+    },
+    {
       "name": "shepherdjerred/discord-plays-pokemon",
       "category": "internal-image",
       "artifactType": "image",
@@ -1146,6 +1160,32 @@
       ]
     },
     {
+      "name": "viaversion-paper",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": false
+      },
+      "value": "https://cdn.modrinth.com/data/P1OZGk5p/versions/FaishMnD/ViaVersion-5.12.0.jar",
+      "notes": [
+        "Keep paired with ViaBackwards and the Paper protocol pin; update only after",
+        "a controlled Mineflayer-to-Paper compatibility check."
+      ]
+    },
+    {
+      "name": "viabackwards-paper",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": false
+      },
+      "value": "https://cdn.modrinth.com/data/NpvuJQoq/versions/SxGhdsPK/ViaBackwards-5.12.0.jar",
+      "notes": [
+        "Keep paired with ViaVersion and the Paper protocol pin; update only after",
+        "a controlled Mineflayer-to-Paper compatibility check."
+      ]
+    },
+    {
       "name": "mc2discord-forge-1.12.2",
       "category": "upstream",
       "artifactType": "source",
@@ -1483,6 +1523,20 @@
       "notes": [
         "Custom caddy-s3proxy image - Caddy with s3proxy plugin for serving static sites from S3",
         "not managed by renovate"
+      ]
+    },
+    {
+      "name": "shepherdjerred/the-storm-server",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "notes": [
+        "The Storm's Minecraft server image (minecraft-tsmc), built from packages/the-storm/server",
+        "by the infra bake group. not managed by renovate — CI's version commit-back writes the real",
+        "tag@digest after the first image push; the zero digest is the unpublished placeholder."
       ]
     },
     {

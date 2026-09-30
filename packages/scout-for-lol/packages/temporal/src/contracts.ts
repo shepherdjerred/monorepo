@@ -203,6 +203,7 @@ export const ScoutBackgroundJobInputSchema = z.object({
     "legacy-backfill",
     "progression-outbox",
     "progression-reconciliation",
+    "mvp-tally-refresh",
     "clash-snapshot",
   ]),
 });

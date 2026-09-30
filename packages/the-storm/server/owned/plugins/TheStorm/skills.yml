@@ -1,0 +1,4 @@
+# The progression scale is fixed at levels 1–1000. The module is enabled in config.yml
+# when the existing mcMMO plugin is retired.
+leaderboardSize: 10
+acrobaticsCooldownSeconds: 60

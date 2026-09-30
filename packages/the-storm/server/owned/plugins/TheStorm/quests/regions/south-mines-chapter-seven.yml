@@ -1,0 +1,72 @@
+# A third ore cart leads to brake maintenance and a checked ore count.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-cart-brakes:
+    name: "The Cart Brakes"
+    giver: dorran
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-third-cart
+    text:
+      offer: "The third cart carried a measured load. Before another run, the crew needs powered rails for a safe stopping section."
+      accept: "Craft powered rails in the main world for the cart line."
+      decline: "The next cart can wait at the loading point."
+      finish: "The crew has a batch of powered rails for the stopping section."
+      summary: "Prepare a safer stopping section for the South Mines cart."
+      questions: []
+    start: brakes
+    stages:
+      brakes:
+        journal: "Craft 12 powered rails in the main world for Dorran."
+        waiting: "A full cart needs room to stop as well as room to move."
+        complete: "Dorran has powered rails for the next repair."
+        objectives:
+          - craft 12 POWERED_RAIL
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1
+
+  the-ore-account:
+    name: "The Ore Account"
+    giver: marcus
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-cart-brakes
+    text:
+      offer: "The cart can stop safely. Now compare the ore leaving the face with the cart manifest, so a missing load is noticed early."
+      accept: "Bring raw iron and paper for a checked ore account."
+      decline: "I will trust the cart tally for one more run."
+      finish: "The crew can trace a cart load back to the measured ore at the face."
+      summary: "Check the South Mines raw iron against the cart manifest."
+      questions: []
+    start: account
+    stages:
+      account:
+        journal: "Bring Marcus 32 raw iron and 12 paper."
+        waiting: "The ore account should match the cart it belongs to."
+        complete: "The third cart has a checked ore account."
+        objectives:
+          - deliver marcus 32 RAW_IRON
+          - deliver marcus 12 PAPER
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1

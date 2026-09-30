@@ -1,0 +1,81 @@
+# The town turns its measured harvest into a practical watch routine.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-watch-rota:
+    name: "The Watch Rota"
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed bread-for-the-watch
+    text:
+      offer: "Martha has fed the windmill watch. I need a written rota so every shift knows who checks the mill and who carries the grain to market."
+      accept: "Bring paper and ink for the watch roster."
+      decline: "I will call the next shift together myself."
+      finish: "The shifts have names and times. No one has to guess who is on the mill path."
+      summary: "Write a clear rota for the Spawn Town windmill watch."
+      questions: []
+    start: rota
+    stages:
+      rota:
+        journal: "Bring the Guard Captain 12 paper and 2 ink sacs."
+        waiting: "A roster works only when each shift can read it."
+        complete: "The windmill watch has a written rota."
+        objectives:
+          - deliver guard-captain 12 PAPER
+          - deliver guard-captain 2 INK_SAC
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation storm-watch 1
+
+  a-lighted-shift:
+    name: "A Lighted Shift"
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-watch-rota
+    text:
+      offer: "The rota puts guards on the mill path after sunset. They need lights that can survive more than one rainy evening."
+      accept: "Craft lanterns for the watch in the main world."
+      decline: "I will send them with spare torches for now."
+      finish: "Each night shift can carry a lantern from the market store."
+      summary: "Make durable lights for the new windmill watch rota."
+      questions: []
+    start: lights
+    stages:
+      lights:
+        journal: "Craft 8 lanterns in the main world for Martha's watch."
+        waiting: "A dry lantern makes the late shift easier."
+        complete: "The lanterns are ready. Bring them to Martha."
+        objectives:
+          - craft 8 LANTERN
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Bring Martha 8 lanterns for the night watch."
+        waiting: "The late shift needs those lanterns at the market store."
+        complete: "The night watch has eight lanterns ready."
+        objectives:
+          - deliver martha 8 LANTERN
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

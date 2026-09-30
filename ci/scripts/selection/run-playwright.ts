@@ -10,6 +10,7 @@ import {
   selectPlaywrightTargets,
   type PlaywrightSelection,
 } from "./playwright-targets.ts";
+import { ensureAncestor } from "../selectors/ensure-ancestor.ts";
 
 const REPORT_PATH = "playwright-selection-report.json";
 
@@ -25,14 +26,26 @@ async function run(command: readonly string[]): Promise<number> {
   return child.exited;
 }
 
+async function executeGit(
+  command: readonly string[],
+): Promise<{ readonly exitCode: number; readonly stdout: string }> {
+  const child = Bun.spawn([...command], {
+    stdout: "pipe",
+    stderr: "inherit",
+    env: Bun.env,
+  });
+  const stdout = await new Response(child.stdout).text();
+  return { exitCode: await child.exited, stdout };
+}
+
 async function validBase(base: string): Promise<boolean> {
-  for (const command of [
-    ["git", "cat-file", "-e", `${base}^{commit}`],
-    ["git", "merge-base", "--is-ancestor", base, "HEAD"],
-  ]) {
-    if ((await run(command)) !== 0) return false;
-  }
-  return true;
+  return ensureAncestor(
+    base,
+    "HEAD",
+    executeGit,
+    Bun.env["CI_PIPELINE_EVENT"] === "push" ||
+      Bun.env["CI_PIPELINE_EVENT"] === "manual",
+  );
 }
 
 async function changedPaths(base: string): Promise<string[]> {

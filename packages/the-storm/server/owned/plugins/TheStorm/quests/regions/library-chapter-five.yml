@@ -1,0 +1,75 @@
+# The historic library and clock tower inspire dated observations in the
+# current world, without requiring the old building to stand.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-clock-index:
+    name: The Clock Index
+    giver: walter
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed questions-for-tomorrow
+    text:
+      offer: The old library had a clock tower, but our new catalogue needs a simpler way to keep observations in order.
+      accept: Bring clocks and paper so each field page can carry a time.
+      decline: I will keep dating the pages by hand.
+      finish: The observation pages can be sorted by time as well as subject.
+      summary: Add time markers to Walter's open experiment catalogue.
+      questions: []
+    start: index
+    stages:
+      index:
+        journal: Bring Walter 2 clocks and 12 paper for the time index.
+        waiting: The next trial should show when it happened.
+        complete: The library catalogue has a time index.
+        objectives:
+          - deliver walter 2 CLOCK
+          - deliver walter 12 PAPER
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-study-circle:
+    name: The Study Circle
+    giver: winston
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-clock-index
+    text:
+      offer: Walter's indexed notes are easier to read. Let us make enough copies for people to compare their own results.
+      accept: Bring books, ink and glass bottles for a small study circle.
+      decline: The first copy can stay with Walter for now.
+      finish: Readers have copies and tools. The library's work can be tested by more than two people.
+      summary: Prepare shared materials for a public study circle.
+      questions: []
+    start: copies
+    stages:
+      copies:
+        journal: Bring Winston 6 books, 3 ink sacs and 6 glass bottles.
+        waiting: Each reader should be able to compare a note with a trial.
+        complete: The study circle has its own copies and sample tools.
+        objectives:
+          - deliver winston 6 BOOK
+          - deliver winston 3 INK_SAC
+          - deliver winston 6 GLASS_BOTTLE
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

@@ -1,0 +1,92 @@
+# The permanent main-world fringe gives the Watch a boundary patrol before
+# players enter the unclaimable wilds dimension.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  edge-of-the-wilds:
+    name: Edge of the Wilds
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 30
+    requirements: []
+    text:
+      offer: The road out of town needs markers before the weather hides it. Help the Watch prepare the main-world approach to the Wilds.
+      accept: Bring fences and torches. Clear any zombies gathering along the approach.
+      decline: The patrol will keep walking by memory for now.
+      finish: The approach is marked. Even in a storm, the patrol can find its way back.
+      summary: Prepare the main-world road before the unclaimable Wilds.
+      questions: []
+    start: supplies
+    stages:
+      supplies:
+        journal: Bring the Guard Captain 16 oak fences and 16 torches for the road markers.
+        waiting: A clear road begins with a visible one.
+        complete: The markers are ready. The patrol still needs the approach cleared.
+        objectives:
+          - deliver guard-captain 16 OAK_FENCE
+          - deliver guard-captain 16 TORCH
+        onComplete: []
+        next: [{ to: patrol, when: [], label: none }]
+        timeLimit: none
+      patrol:
+        journal: Kill 8 zombies in the main world for the Watch's boundary patrol.
+        waiting: Keep the undead away from the marked road.
+        complete: That should give travellers a safe start.
+        objectives:
+          - kill 8 ZOMBIE
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 400
+      - points 1
+      - reputation storm-watch 1
+
+  rain-on-the-trail:
+    name: Rain on the Trail
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed edge-of-the-wilds
+    text:
+      offer: The Watch's road markers are set, but the rain washes out their maps. I can seal new ones if you bring me the right materials.
+      accept: Bring paper, honeycomb and a compass. Ask the Guard Captain which turn loses the patrol.
+      decline: A wet map tells no one where to go.
+      finish: These maps should survive a storm. The captain knows where to put them.
+      summary: Make weatherproof maps for the main-world Wilds approach.
+      questions: []
+    start: bearing
+    stages:
+      bearing:
+        journal: Ask the Guard Captain where the patrol loses its bearings.
+        waiting: The captain knows the trouble spot.
+        complete: The bend is easy to miss in rain. Iovita can mark it.
+        objectives:
+          - talk guard-captain
+        onComplete: []
+        next: [{ to: maps, when: [], label: none }]
+        timeLimit: none
+      maps:
+        journal: Bring Iovita 12 paper, 4 honeycomb and a compass for weatherproof maps.
+        waiting: Wax seals the paper, and a compass checks the bearing.
+        complete: The maps are ready for the next patrol.
+        objectives:
+          - deliver iovita 12 PAPER
+          - deliver iovita 4 HONEYCOMB
+          - deliver iovita 1 COMPASS
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 450
+      - points 1
+      - reputation storm-watch 1

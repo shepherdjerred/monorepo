@@ -58,7 +58,19 @@ const DeploymentSchema = z.object({
         containers: z.array(
           z.object({
             env: z.array(
-              z.object({ name: z.string(), value: z.string().optional() }),
+              z.object({
+                name: z.string(),
+                value: z.string().optional(),
+                valueFrom: z
+                  .object({
+                    secretKeyRef: z.object({
+                      name: z.string(),
+                      key: z.string(),
+                      optional: z.boolean().optional(),
+                    }),
+                  })
+                  .optional(),
+              }),
             ),
             livenessProbe: HttpProbeSchema,
             name: z.string(),
@@ -471,12 +483,25 @@ describe("Temporal domain worker isolation", () => {
       "GITHUB_WEBHOOK_SECRET",
       "AGENT_TASK_API_TOKEN",
       "SLEEP_WEBHOOK_TOKEN",
+      "AGENT_CHAT_DISCORD_TOKEN",
       "XCODE_CLOUD_WEBHOOK_TOKEN",
+      "BLUEBUBBLES_URL",
+      "BLUEBUBBLES_PASSWORD",
     ]) {
       expect(gatewayEnv).toContain(required);
       expect(homeEnv).not.toContain(required);
       expect(reportsEnv).not.toContain(required);
     }
+    const discordToken = gateway.spec.template.spec.containers[0]?.env.find(
+      (entry) => entry.name === "AGENT_CHAT_DISCORD_TOKEN",
+    );
+    expect(discordToken?.valueFrom?.secretKeyRef).toMatchObject({
+      key: "AGENT_CHAT_DISCORD_TOKEN",
+      optional: true,
+    });
+    expect(gateway.metadata.annotations).toMatchObject({
+      "operator.1password.io/auto-restart": "true",
+    });
     for (const required of ["HA_URL", "HA_TOKEN"]) {
       expect(homeEnv).toContain(required);
       expect(gatewayEnv).not.toContain(required);
@@ -667,6 +692,7 @@ describe("temporal homelab audit tooling access boundaries", () => {
 
     for (const prohibited of [
       "AGENT_TASK_API_TOKEN",
+      "AGENT_CHAT_DISCORD_TOKEN",
       "ARGOCD_AUTH_TOKEN",
       "BUGSINK_TOKEN",
       "WOODPECKER_TOKEN",

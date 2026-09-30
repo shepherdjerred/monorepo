@@ -7,6 +7,7 @@ import {
   fetchPlayerMatchHistory,
   fetchTeamTotalsForMatches,
 } from "#src/reports/duckdb/lake-reads.ts";
+import { fetchHistoryRosters } from "#src/reports/duckdb/community/history-roster.ts";
 
 /**
  * Profile reads run over the raw matches table with no accounts join, so the
@@ -70,6 +71,47 @@ beforeEach(async () => {
 });
 
 describe("fetchPlayerMatchHistory", () => {
+  test("filters champions before the game limit and reads the match roster", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        fact("NA1_ashe_old", at(0)),
+        fact("NA1_ahri", at(60), { championName: "Ahri", championId: 103 }),
+        fact("NA1_ashe_new", at(120)),
+        fact("NA1_ashe_new", at(120), {
+          puuid: SMURF,
+          playerId: 2,
+          teamId: 200,
+          championName: "Jinx",
+          championId: 222,
+        }),
+      ],
+    });
+    const rows = await fetchPlayerMatchHistory({
+      puuids: [MAIN],
+      championSearch: "asH",
+      limit: 1,
+      lakeDir,
+    });
+    expect(rows.map((row) => row.match_id)).toEqual(["NA1_ashe_new"]);
+    const next = await fetchPlayerMatchHistory({
+      puuids: [MAIN],
+      championSearch: "ash",
+      limit: 1,
+      cursor: {
+        gameCreationMs: rows[0]?.game_creation_ms ?? 0,
+        matchId: rows[0]?.match_id ?? "",
+      },
+      lakeDir,
+    });
+    expect(next.map((row) => row.match_id)).toEqual(["NA1_ashe_old"]);
+    const roster = await fetchHistoryRosters({
+      matchIds: ["NA1_ashe_new"],
+      lakeDir,
+    });
+    expect(roster.map((row) => row.champion_name)).toEqual(["Ashe", "Jinx"]);
+  });
+
   test("returns one row per match, newest first", async () => {
     await writeTestLake(lakeDir, {
       serverId,
@@ -91,6 +133,12 @@ describe("fetchPlayerMatchHistory", () => {
       "NA1_2",
       "NA1_1",
     ]);
+    expect(rows[0]).toMatchObject({
+      item0: 1055,
+      item6: 3340,
+      summoner_spell_2_id: 7,
+      primary_rune_0_id: 8005,
+    });
   });
 
   test("aggregates every account of one player into a single history", async () => {

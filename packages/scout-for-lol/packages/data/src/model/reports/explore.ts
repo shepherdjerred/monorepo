@@ -4,6 +4,7 @@ import { VisualizationSnapshotSchema } from "#src/model/reports/temporal-analysi
 import { ReportAiPreviewSummarySchema } from "#src/model/reports/report-ai.ts";
 import { EXPLORE_ANSWER_MAX_LENGTH } from "#src/model/reports/explore-answer.ts";
 import { ExploreMatchCardSchema } from "#src/model/reports/explore-match-card.ts";
+import { ExploreLoadoutCardSchema } from "#src/model/reports/explore-loadout-card.ts";
 
 /**
  * Contracts for the explore surface — a conversation over the whole report
@@ -298,6 +299,7 @@ export const ExploreMessageSchema = z
     preview: ReportAiPreviewSummarySchema.nullable().default(null),
     visualization: VisualizationSnapshotSchema.nullable().default(null),
     matchCards: z.array(ExploreMatchCardSchema).max(5).default([]),
+    loadoutCards: z.array(ExploreLoadoutCardSchema).max(3).default([]),
     /**
      * The guilds this turn's capabilities were resolved from.
      *
@@ -323,6 +325,7 @@ export type ExploreMessage = z.infer<typeof ExploreMessageSchema>;
  */
 export const ExploreStreamMessageSchema = ExploreMessageSchema.omit({
   matchCards: true,
+  loadoutCards: true,
   guildIds: true,
 }).strict();
 export type ExploreStreamMessage = z.infer<typeof ExploreStreamMessageSchema>;

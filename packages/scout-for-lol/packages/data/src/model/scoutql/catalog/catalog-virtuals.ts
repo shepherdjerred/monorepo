@@ -1,5 +1,6 @@
 import {
   ALL_CONTEXTS,
+  assetVirtualColumn,
   virtualColumn,
   type ScoutQlColumnInfo,
 } from "#src/model/scoutql/catalog/catalog-column-types.ts";
@@ -20,10 +21,11 @@ export const MATCH_VIRTUALS: ScoutQlColumnInfo[] = [
     "varchar",
     "Tracked player (alias in guild scope, Riot ID globally). Filter with player('…').",
   ),
-  virtualColumn(
+  assetVirtualColumn(
     "champion",
     "varchar",
     "Champion display dimension (champion_name).",
+    "champion",
   ),
   virtualColumn(
     "patch",
@@ -44,15 +46,36 @@ export const MATCH_VIRTUALS: ScoutQlColumnInfo[] = [
   virtualColumn("map", "integer", "Map dimension (map_id)."),
   // Loadout names, looked up from the bundled Data Dragon snapshot; an id
   // newer than it reads NULL ('unknown').
-  virtualColumn("keystone", "varchar", "Keystone rune name (from perk0)."),
-  virtualColumn(
+  assetVirtualColumn(
+    "keystone",
+    "varchar",
+    "Keystone rune name (from perk0).",
+    "rune",
+  ),
+  assetVirtualColumn(
     "primary_tree",
     "varchar",
     "Primary rune tree name (Precision, Domination, …).",
+    "rune_tree",
   ),
-  virtualColumn("secondary_tree", "varchar", "Secondary rune tree name."),
-  virtualColumn("summoner1", "varchar", "First summoner spell name."),
-  virtualColumn("summoner2", "varchar", "Second summoner spell name."),
+  assetVirtualColumn(
+    "secondary_tree",
+    "varchar",
+    "Secondary rune tree name.",
+    "rune_tree",
+  ),
+  assetVirtualColumn(
+    "summoner1",
+    "varchar",
+    "First summoner spell name.",
+    "spell",
+  ),
+  assetVirtualColumn(
+    "summoner2",
+    "varchar",
+    "Second summoner spell name.",
+    "spell",
+  ),
   virtualColumn(
     "spells",
     "varchar",
@@ -91,10 +114,11 @@ export const PREMATCH_VIRTUALS: ScoutQlColumnInfo[] = [
     "varchar",
     "Tracked player (alias in guild scope, Riot ID globally). Filter with player('…').",
   ),
-  virtualColumn(
+  assetVirtualColumn(
     "champion",
     "varchar",
     "Champion dimension (numeric id shown — prematch rows carry no name).",
+    "champion",
   ),
   virtualColumn("map", "integer", "Map dimension (map_id)."),
 ];
@@ -139,10 +163,11 @@ export const MATCH_TEAM_VIRTUALS: ScoutQlColumnInfo[] = [
 
 /** A ban row reads the same looked-up match facts as a team row, plus a champion name. */
 export const MATCH_TEAM_BAN_VIRTUALS: ScoutQlColumnInfo[] = [
-  virtualColumn(
+  assetVirtualColumn(
     "champion",
     "varchar",
     "Banned champion's name, from Scout's champion registry ('No ban' for an unused slot).",
+    "champion",
   ),
   ...MATCH_TEAM_VIRTUALS.filter((column) => column.name !== "outcome"),
 ];
@@ -166,13 +191,19 @@ export const TIMELINE_EVENT_VIRTUALS: ScoutQlColumnInfo[] = [
     "varchar",
     "The player who acted — got the kill, bought the item, placed the ward. Filter with player('…').",
   ),
-  virtualColumn("champion", "varchar", "Champion the acting player was on."),
+  assetVirtualColumn(
+    "champion",
+    "varchar",
+    "Champion the acting player was on.",
+    "champion",
+  ),
   {
     name: "champion_id",
     type: "integer",
     description:
       "Numeric id of the acting player's champion (compare with champion('Name')).",
     displayKind: "count",
+    asset: "champion",
     virtual: true,
     contexts: { select: false, where: true, groupBy: false },
   },
@@ -244,10 +275,11 @@ export const TIMELINE_FRAME_VIRTUALS: ScoutQlColumnInfo[] = [
     "varchar",
     "Tracked player (alias in guild scope, Riot ID globally). Filter with player('…').",
   ),
-  virtualColumn(
+  assetVirtualColumn(
     "champion",
     "varchar",
     "Champion the player was on (from their participant row).",
+    "champion",
   ),
   // Present so champion('Name'), which expands to champion_id, works here.
   {
@@ -256,6 +288,7 @@ export const TIMELINE_FRAME_VIRTUALS: ScoutQlColumnInfo[] = [
     description:
       "Numeric id of the champion the player was on (compare with champion('Name')).",
     displayKind: "count",
+    asset: "champion",
     virtual: true,
     contexts: { select: false, where: true, groupBy: false },
   },

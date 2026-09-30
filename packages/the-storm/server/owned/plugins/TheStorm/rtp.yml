@@ -1,0 +1,26 @@
+# Random teleport and first-arrival dialog. Owned by the repository; the plugin
+# never writes it. Durations are ISO-8601.
+
+freeFor: P7D
+cooldown: PT15S
+warmup: PT3S
+landingMemory: PT5M
+cost: 25
+batchSize: 24
+minGap: 512
+band: 1500
+borderMargin: 128
+nearBestHundredths: 90
+biomes:
+  - plains
+  - forest
+  - dark_forest
+  - cherry_grove
+  - flower_forest
+  - desert
+  - savanna
+  - jungle
+  - taiga
+  - snowy_plains
+  - badlands
+  - swamp

@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   buildExecutionMetadata,
   executionDomainForTaskQueue,
+  executionDomainForTaskQueues,
   executionDomainForWorkflow,
   parseTemporalBootstrapMetadata,
 } from "./execution-metadata.ts";
@@ -22,6 +23,18 @@ describe("central Temporal execution metadata", () => {
     expect(executionDomainForTaskQueue(TASK_QUEUES.AGENT_CHAT_DISPATCH)).toBe(
       "agent",
     );
+    expect(executionDomainForTaskQueue(TASK_QUEUES.AGENT_CHAT_RECEIPTS)).toBe(
+      "agent",
+    );
+    expect(executionDomainForTaskQueue(TASK_QUEUES.AGENT_CHAT_IMESSAGE)).toBe(
+      "platform",
+    );
+    expect(executionDomainForTaskQueue(TASK_QUEUES.AGENT_CHAT_INGRESS)).toBe(
+      "platform",
+    );
+    expect(executionDomainForTaskQueue(TASK_QUEUES.AGENT_CHAT_DELIVERY)).toBe(
+      "platform",
+    );
     expect(executionDomainForTaskQueue(TASK_QUEUES.GLITTER_CORPUS)).toBe(
       "glitter",
     );
@@ -29,6 +42,18 @@ describe("central Temporal execution metadata", () => {
       "maintenance",
     );
     expect(executionDomainForTaskQueue(TASK_QUEUES.WORKFLOWS)).toBe("platform");
+  });
+
+  test("keeps a multi-queue infra worker in the infra telemetry domain", () => {
+    expect(
+      executionDomainForTaskQueues([
+        TASK_QUEUES.INFRA,
+        TASK_QUEUES.MINING_RESET,
+      ]),
+    ).toBe("infra");
+    expect(
+      executionDomainForTaskQueues([TASK_QUEUES.INFRA, TASK_QUEUES.HOME]),
+    ).toBe("platform");
   });
 
   describe("executionDomainForWorkflow", () => {
@@ -47,6 +72,12 @@ describe("central Temporal execution metadata", () => {
       ).toBe("infra");
       expect(
         executionDomainForWorkflow("agentTaskWorkflow", TASK_QUEUES.WORKFLOWS),
+      ).toBe("agent");
+      expect(
+        executionDomainForWorkflow(
+          "httpAgentChatWorkflow",
+          TASK_QUEUES.WORKFLOWS,
+        ),
       ).toBe("agent");
     });
 

@@ -6,7 +6,10 @@ import type {
   PlanOutputEvidence,
   PlanOutputValue,
 } from "#src/reports/query/plan-rows.ts";
-import { planResultColumnNames } from "#src/reports/query/plan-columns.ts";
+import {
+  planResultColumnNames,
+  planResultDimensions,
+} from "#src/reports/query/plan-columns.ts";
 import {
   planTemporalGrouping,
   type TemporalContext,
@@ -88,9 +91,14 @@ function resultRow(
   entry: PlanComparedRow,
   hasComparison: boolean,
 ): ReportResultRow {
+  const dimensions = planResultDimensions(
+    plan,
+    entry.row.label,
+    entry.row.keys,
+  );
   return {
-    label: entry.row.label,
-    dimensions: entry.row.label.split(" • "),
+    label: dimensions.join(" • "),
+    dimensions,
     keys: entry.row.keys,
     mentionIdentity: mentionIdentity(plan, entry.row),
     values: entry.row.outputs.map((output) =>

@@ -1,0 +1,48 @@
+package com.shepherdjerred.thestorm.world.adapter.paper;
+
+import com.shepherdjerred.thestorm.world.app.ListedWorlds;
+import com.shepherdjerred.thestorm.world.app.WildWorld;
+import com.shepherdjerred.thestorm.world.app.WildWorlds;
+import com.shepherdjerred.thestorm.world.domain.WorldConfig;
+import com.shepherdjerred.thestorm.world.domain.WorldSpec;
+import java.util.ArrayList;
+import org.bukkit.GameRules;
+import org.bukkit.Server;
+import org.bukkit.World;
+
+/** Validates previously provisioned worlds and sets the sleep rule. */
+public final class WorldPaper {
+
+  private WorldPaper() {}
+
+  public static WildWorlds install(Server server, WorldConfig config) {
+    var loaded = new ArrayList<WildWorld>();
+    for (var spec : config.worlds()) {
+      var world = requireLoaded(server, spec);
+      var spawn = world.getSpawnLocation();
+      loaded.add(new WildWorld(world.getName(), spec.rtp(), spawn.getBlockX(), spawn.getBlockZ()));
+    }
+    for (var world : server.getWorlds()) {
+      if (world.getEnvironment() == World.Environment.NORMAL) {
+        world.setGameRule(GameRules.PLAYERS_SLEEPING_PERCENTAGE, config.sleepPercentage());
+      }
+    }
+    return new ListedWorlds(loaded);
+  }
+
+  private static World requireLoaded(Server server, WorldSpec spec) {
+    var world = server.getWorld(spec.name());
+    if (world == null) {
+      throw new IllegalStateException(
+          "world " + spec.name() + " must be provisioned and loaded before TheStorm enables");
+    }
+    validate(world, spec);
+    return world;
+  }
+
+  private static void validate(World world, WorldSpec spec) {
+    if (world.getEnvironment() != World.Environment.NORMAL) {
+      throw new IllegalStateException("loaded world " + spec.name() + " is not a NORMAL world");
+    }
+  }
+}

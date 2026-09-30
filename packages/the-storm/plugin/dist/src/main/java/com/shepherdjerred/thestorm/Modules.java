@@ -1,5 +1,6 @@
 package com.shepherdjerred.thestorm;
 
+import com.shepherdjerred.thestorm.agent.AgentModule;
 import com.shepherdjerred.thestorm.arena.ArenaModule;
 import com.shepherdjerred.thestorm.chat.ChatModule;
 import com.shepherdjerred.thestorm.core.module.StormModule;
@@ -17,6 +18,7 @@ import com.shepherdjerred.thestorm.shards.ShardsModule;
 import com.shepherdjerred.thestorm.shops.ShopsModule;
 import com.shepherdjerred.thestorm.skills.SkillsModule;
 import com.shepherdjerred.thestorm.spells.SpellsModule;
+import com.shepherdjerred.thestorm.tickets.TicketsModule;
 import com.shepherdjerred.thestorm.towns.TownsModule;
 import com.shepherdjerred.thestorm.tracks.TracksModule;
 import com.shepherdjerred.thestorm.world.WorldModule;
@@ -25,7 +27,9 @@ import java.util.List;
 /**
  * Every module, in enable order. A module comes after every module whose ports it requires: tracks
  * needs economy; towns (the Protection provider) needs tracks and chat; essentials, shops,
- * mechanics and spells need Protection.
+ * mechanics and spells need Protection. World loads before qol, which teleports into those worlds.
+ * Discord reads economy and towns; agent needs tickets and chat, and reads essentials moderation
+ * history when that module is on. World loads before qol, which teleports into those worlds.
  */
 final class Modules {
 
@@ -36,10 +40,12 @@ final class Modules {
         new EconomyModule(),
         new MessagesModule(),
         new ChatModule(),
-        new DiscordModule(),
         new TracksModule(),
         new TownsModule(),
+        new DiscordModule(),
         new EssentialsModule(),
+        new TicketsModule(),
+        new AgentModule(),
         new ShopsModule(),
         new ShardsModule(),
         new MechanicsModule(),
@@ -48,9 +54,9 @@ final class Modules {
         new QuestsModule(),
         new ArenaModule(),
         new MobsModule(),
-        new QolModule(),
         new SkillsModule(),
         new SeasonalModule(),
-        new WorldModule());
+        new WorldModule(),
+        new QolModule());
   }
 }

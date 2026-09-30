@@ -2,6 +2,8 @@ package com.shepherdjerred.thestorm.economy.app;
 
 import com.shepherdjerred.thestorm.core.result.Result;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -20,6 +22,15 @@ public interface Wallets {
    */
   CompletableFuture<Result<Receipt, EconomyError>> transfer(
       AccountId from, AccountId to, Crystals amount, String reason);
+
+  /**
+   * Applies a transfer once for a stable operation key. Repeating the same request returns its
+   * original receipt; reusing the key for different transfer details is an internal contract error.
+   */
+  CompletableFuture<Result<Receipt, EconomyError>> transferOnce(KeyedTransfer transfer);
+
+  /** The committed receipt for a keyed transfer, if one exists. */
+  CompletableFuture<Optional<Receipt>> receiptFor(UUID key);
 
   /** The richest player accounts, highest first. */
   CompletableFuture<List<Standing>> top(int limit);

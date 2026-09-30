@@ -1,0 +1,92 @@
+# The second chapter adapts the archived Caravan Conundrums dialogue without
+# reusing cave coordinates from the world that was reset.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  broken-axle:
+    name: Broken Axle
+    giver: marcus
+    category: side
+    repeat: once
+    estimatedMinutes: 30
+    requirements: []
+    text:
+      offer: A supply cart broke its axle before it reached town. The driver is safe, but the cargo will spoil if we leave it there.
+      accept: Bring oak planks, iron ingots and a spare chest. I'll make a sound cart.
+      decline: Then the caravan waits in the rain.
+      finish: The new cart will hold. Ask me later what delayed the driver.
+      summary: Help Marcus rebuild a stranded caravan cart.
+      questions: []
+    start: frame
+    stages:
+      frame:
+        journal: Bring Marcus 16 oak planks, 8 iron ingots and a chest.
+        waiting: Wood for the frame, iron for the axle, and a chest for the cargo.
+        complete: That's the frame. I'll have the driver moving before nightfall.
+        objectives:
+          - deliver marcus 16 OAK_PLANKS
+          - deliver marcus 8 IRON_INGOT
+          - deliver marcus 1 CHEST
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 400
+      - points 1
+      - reputation townsfolk 1
+
+  caravan-conundrums:
+    name: Caravan Conundrums
+    giver: marcus
+    category: side
+    repeat: once
+    estimatedMinutes: 60
+    requirements:
+      - completed broken-axle
+    text:
+      offer: The axle did not fail on its own. Our caravan was followed out of town and robbed. The Watch has a report; Martha saw who took the road.
+      accept: Speak to the Guard Captain and Martha, then follow their lead on the pillagers.
+      decline: The thieves will try another cart.
+      finish: The driver confirms your account. We will change the route before the next caravan leaves.
+      summary: Investigate the old caravan robbery and protect the next shipment.
+      questions: []
+    start: witnesses
+    stages:
+      witnesses:
+        journal: Ask the Guard Captain for the crime report and Martha about the road.
+        waiting: The Watch wrote a report, and the farms overlook the trail.
+        complete: Martha saw armed figures keeping pace with the cart. They looked like pillagers.
+        objectives:
+          - talk guard-captain
+          - talk martha
+        onComplete: []
+        next: [{ to: patrol, when: [], label: none }]
+        timeLimit: none
+      patrol:
+        journal: Defeat 4 pillagers in the main world.
+        waiting: The road is dangerous while they roam.
+        complete: The trail is safer. Tell Marcus what the patrol found.
+        objectives:
+          - kill 4 PILLAGER
+        onComplete: []
+        next: [{ to: report, when: [], label: none }]
+        timeLimit: none
+      report:
+        journal: Tell Marcus what you learned from the Watch, Martha and the patrol.
+        waiting: Marcus needs a route for the next caravan.
+        complete: Marcus has enough evidence to move the route and warn the next driver.
+        objectives:
+          - talk marcus
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 800
+      - points 2
+      - reputation storm-watch 1

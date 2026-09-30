@@ -341,6 +341,27 @@ describe("AI architecture compatibility exceptions", () => {
 });
 
 describe("AI architecture guard exceptions", () => {
+  test("allows the Storm brain deployment to wire its dedicated provider key", () => {
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/homelab/src/cdk8s/src/resources/storm-brain/index.ts",
+          contents:
+            '// dedicated secret\nOPENAI_API_KEY: EnvValue.fromSecretValue(secret)\nkey: "OPENAI_API_KEY",',
+        },
+      ]),
+    ).toEqual([]);
+
+    expect(
+      findAiArchitectureViolations([
+        {
+          path: "packages/homelab/src/cdk8s/src/resources/storm-brain/client.ts",
+          contents: "const key = Bun.env.OPENAI_API_KEY;",
+        },
+      ]).map(({ rule }) => rule),
+    ).toEqual(["provider-api-key"]);
+  });
+
   test("allows native OpenAI Realtime credentials only on named voice surfaces", () => {
     expect(
       findAiArchitectureViolations([

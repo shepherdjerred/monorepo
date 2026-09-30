@@ -26,6 +26,7 @@ import { createTemporalWorkflowWorkers } from "./workflow-worker.ts";
 import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss/freshrss-config.ts";
 import {
   createTemporalWorkerMaintenanceRbac,
+  createTemporalMiningResetRbac,
   createTemporalWorkerIngressReaderRbac,
   createTemporalWorkerServiceAccount,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker-rbac.ts";
@@ -50,6 +51,18 @@ export function createTemporalWorkerDeployment(
     chart,
     "temporal-worker-secret",
     onePasswordItem.name,
+  );
+  const blueBubblesItem = new OnePasswordItem(
+    chart,
+    "temporal-bluebubbles-1p",
+    {
+      spec: { itemPath: vaultItemPath("gnkfumzmerw725fhm7kck3rfuq") },
+    },
+  );
+  const blueBubblesSecret = Secret.fromSecretName(
+    chart,
+    "temporal-bluebubbles-secret",
+    blueBubblesItem.name,
   );
   const starlightBotItem = new OnePasswordItem(
     chart,
@@ -154,6 +167,7 @@ export function createTemporalWorkerDeployment(
 
   createTemporalWorkerIngressReaderRbac(chart, [infraServiceAccount]);
   createTemporalWorkerMaintenanceRbac(chart, [infraServiceAccount]);
+  createTemporalMiningResetRbac(chart, infraServiceAccount);
 
   // Cluster-wide read-only RBAC for deterministic collectors and generic
   // report-only investigations. Only the infra worker receives the separate
@@ -232,6 +246,7 @@ export function createTemporalWorkerDeployment(
     createTemporalIngressWorkers(chart, {
       serverServiceName: props.serverServiceName,
       secret,
+      blueBubblesSecret,
     });
 
   const workflowDeployments = createTemporalWorkflowWorkers(chart, {

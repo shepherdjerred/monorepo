@@ -35,6 +35,9 @@ const CONSUMER_NAMESPACES = [
   // (component: maintenance-worker) but lives in the `woodpecker-ci`
   // namespace, not `temporal` — it needs its own entry here or its
   // temporal-call-graph-tracing check silently degrades to the default false.
+  // storm-brain reads the storm namespace flags (classify/triage gates).
+  "storm-brain",
+  "minecraft-tsmc",
   "woodpecker-ci",
 ] as const;
 

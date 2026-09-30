@@ -1,0 +1,92 @@
+# These caravan jobs continue the current main-world route plan without
+# presuming the exact path or roadside structures survived a world reset.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  a-guarded-delivery:
+    name: A Guarded Delivery
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed an-arrival-notice
+    text:
+      offer: The market can announce a cart, but a posted arrival also tells raiders when to wait. Let us make the next delivery safer.
+      accept: Defeat pillagers you meet in the main world and report back before Marcus dispatches a cart.
+      decline: The next cart will wait for the patrol.
+      finish: Marcus knows the patrol cleared threats. The cart can leave with its route notice.
+      summary: Clear a main-world threat before Marcus's announced delivery.
+      questions: []
+    start: patrol
+    stages:
+      patrol:
+        journal: Defeat 5 pillagers in the main world.
+        waiting: The caravan should not lead raiders back to the market.
+        complete: The patrol is clear. Marcus needs the report.
+        objectives:
+          - kill 5 PILLAGER
+        onComplete: []
+        next: [{ to: dispatch, when: [], label: none }]
+        timeLimit: none
+      dispatch:
+        journal: Tell Marcus the delivery route has been patrolled.
+        waiting: The driver must know when the watch expects the cart.
+        complete: Marcus can dispatch the next load with the guard's report.
+        objectives:
+          - talk marcus
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 650
+      - points 1
+      - reputation storm-watch 1
+
+  the-market-receipt:
+    name: The Market Receipt
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed a-guarded-delivery
+    text:
+      offer: The guarded cart has arrived. A receipt will tell Marcus what reached the market and what should return with him.
+      accept: Bring paper, ink and a chest for the received goods. Braxton can copy the count.
+      decline: I will keep the load together until it is counted.
+      finish: Braxton has a matching receipt. The caravan and market can settle this delivery fairly.
+      summary: Close the caravan journey with a checked market receipt.
+      questions: []
+    start: receipt
+    stages:
+      receipt:
+        journal: Bring Martha 8 paper, 2 ink sacs and a chest.
+        waiting: Count the goods before the cart leaves again.
+        complete: The market has its receipt. Braxton can copy the count.
+        objectives:
+          - deliver martha 8 PAPER
+          - deliver martha 2 INK_SAC
+          - deliver martha 1 CHEST
+        onComplete: []
+        next: [{ to: bank, when: [], label: none }]
+        timeLimit: none
+      bank:
+        journal: Ask Braxton to keep a copy of the caravan receipt.
+        waiting: Both the driver and market need the same count.
+        complete: The caravan delivery is accounted for.
+        objectives:
+          - talk braxton
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1

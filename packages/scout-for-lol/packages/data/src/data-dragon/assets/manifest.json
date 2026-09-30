@@ -19192,6 +19192,15 @@
     },
     {
       "kind": "rune",
+      "canonicalId": "EyeballCollection",
+      "mimeType": "image/png",
+      "width": 64,
+      "height": 64,
+      "relativePath": "img/rune/EyeballCollection.png",
+      "sha256": "2866a9b6e771d9e64e4094c0145ccfcce5b0de8a7e849e2d2ccf7f3a023d6682"
+    },
+    {
+      "kind": "rune",
       "canonicalId": "FirstStrike",
       "mimeType": "image/png",
       "width": 256,

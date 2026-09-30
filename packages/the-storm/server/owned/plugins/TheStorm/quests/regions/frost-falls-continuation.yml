@@ -1,0 +1,94 @@
+# Frost Falls was a historical player town. Its traditions can continue in
+# present-day Spawn Town without asserting that its old buildings survive.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  winter-vigil:
+    name: Winter Vigil
+    giver: edgar
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-last-hearth
+    text:
+      offer: Lenox stocked the hearth, but a shelter needs someone to watch for travellers when the weather turns.
+      accept: Bring lanterns, coal and bread. Lenox can add the watch rota to the Frost Falls record.
+      decline: I will keep the fire myself tonight.
+      finish: The vigil has light, heat and food. Lenox has written down who will tend it.
+      summary: Prepare a winter watch for the traveller's hearth.
+      questions: []
+    start: vigil-kit
+    stages:
+      vigil-kit:
+        journal: Bring Edgar 6 lanterns, 16 coal and 8 bread.
+        waiting: A vigil is easier with a warm fire and something to share.
+        complete: The kit is ready. Ask Lenox to record the watch.
+        objectives:
+          - deliver edgar 6 LANTERN
+          - deliver edgar 16 COAL
+          - deliver edgar 8 BREAD
+        onComplete: []
+        next: [{ to: record, when: [], label: none }]
+        timeLimit: none
+      record:
+        journal: Ask Lenox to record the winter watch rota.
+        waiting: The next traveller should know someone will be there.
+        complete: The vigil is part of the Frost Falls record.
+        objectives:
+          - talk lenox
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-frost-falls-banner:
+    name: The Frost Falls Banner
+    giver: lenox
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed winter-vigil
+    text:
+      offer: The old town had neighbours who knew its name. Let us mark the new hearth with a banner that says its welcome continues here.
+      accept: Bring wool, blue dye and a banner. Edgar will hang it by the shelter.
+      decline: The hearth welcomes travellers with or without a sign.
+      finish: The banner marks a present-day shelter and remembers the people of Frost Falls.
+      summary: Mark the traveller's hearth with a memorial to Frost Falls.
+      questions: []
+    start: banner
+    stages:
+      banner:
+        journal: Bring Lenox 8 white wool, 4 blue dye and a white banner.
+        waiting: Use the colours to make the shelter easy to recognize.
+        complete: The banner is finished. Edgar can hang it by the hearth.
+        objectives:
+          - deliver lenox 8 WHITE_WOOL
+          - deliver lenox 4 BLUE_DYE
+          - deliver lenox 1 WHITE_BANNER
+        onComplete: []
+        next: [{ to: shelter, when: [], label: none }]
+        timeLimit: none
+      shelter:
+        journal: Ask Edgar to hang the banner by the traveller's hearth.
+        waiting: The sign belongs where the welcome is kept.
+        complete: Frost Falls' name has a place at the new hearth.
+        objectives:
+          - talk edgar
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1

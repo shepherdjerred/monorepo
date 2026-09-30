@@ -2,8 +2,12 @@ import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
-import { ITEM_SLOT_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.ts";
+import {
+  ITEM_SLOT_COLUMNS,
+  matchReadColumns,
+} from "@scout-for-lol/data/model/reports/lake-columns.ts";
 import { MATCH_REBUILD_GATED_COLUMNS } from "@scout-for-lol/data/model/reports/match-rebuild-gated-columns.ts";
+import { MATCH_UI_READ_COLUMNS } from "#src/report-lake/loadout.ts";
 import type { LakeFiles } from "#src/reports/duckdb/lake.ts";
 import { guildScope } from "#src/reports/duckdb/scope.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
@@ -66,4 +70,16 @@ describe("a lake built before the inventory slots existed", () => {
     );
     expect(rows.map((row) => number_(row["expr_0"]))).toEqual([3]);
   });
+});
+
+test("match UI reads only its requested rebuilt columns", () => {
+  const ordinary = matchReadColumns([]);
+  const ui = matchReadColumns(MATCH_UI_READ_COLUMNS);
+
+  expect(ordinary).not.toHaveProperty("item0");
+  expect(ordinary).not.toHaveProperty("summoner_spell_1_id");
+  expect(ui).toHaveProperty("item0");
+  expect(ui).toHaveProperty("summoner_spell_1_id");
+  expect(ui).toHaveProperty("augment_1_id");
+  expect(ui).not.toHaveProperty("summoner1_id");
 });

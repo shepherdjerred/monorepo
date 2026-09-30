@@ -200,21 +200,47 @@ export async function recordMatchMvpReportRefs(
   if (messageIds.size === 0) {
     return;
   }
+  const next = ReportMessageIdsSchema.parse(Object.fromEntries(messageIds));
+  // Delivery and vote-button events can record different channels at once.
+  // Merge under PostgreSQL's row lock so neither read/modify/write loses refs.
+  const updated = await prismaClient.$transaction(async (tx) => {
+    const changed = await tx.$executeRaw`
+      UPDATE "MatchMvpContest"
+      SET "reportMessageIds" = COALESCE("reportMessageIds", '{}'::jsonb) || ${JSON.stringify(next)}::jsonb
+      WHERE "matchId" = ${matchId}
+        AND ("reportMessageIds" IS NULL OR jsonb_typeof("reportMessageIds") = 'object')
+        AND NOT (COALESCE("reportMessageIds", '{}'::jsonb) @> ${JSON.stringify(next)}::jsonb)
+    `;
+    if (changed > 0) {
+      // A late delivery target must reopen a completed tally atomically with
+      // the new ref, even if the process dies immediately after this write.
+      await tx.matchMvpTallyRefresh.updateMany({
+        where: { matchId },
+        data: {
+          pending: true,
+          nextAttemptAt: new Date(),
+          requeueGeneration: { increment: 1 },
+          targetProgress: {},
+        },
+      });
+    }
+    return changed;
+  });
+  if (updated > 0) return;
   const existing = await prismaClient.matchMvpContest.findUnique({
     where: { matchId },
     select: { reportMessageIds: true },
   });
-  if (existing === null) {
+  if (existing === null) return;
+  const stored = parseReportMessageIds(existing.reportMessageIds);
+  if (
+    Object.entries(next).every(
+      ([channelId, messageId]) => stored[channelId] === messageId,
+    )
+  ) {
     return;
   }
-  const merged = {
-    ...parseReportMessageIds(existing.reportMessageIds),
-    ...Object.fromEntries(messageIds),
-  };
-  await prismaClient.matchMvpContest.update({
-    where: { matchId },
-    data: { reportMessageIds: merged },
-  });
+  throw new Error(`Match MVP contest ${matchId} report refs were not updated`);
 }
 
 export async function listMatchMvpReportRefs(
@@ -262,35 +288,60 @@ export async function upsertMatchMvpVote(
   const nominee = nomineeAt(roster, input.nomineeIndex);
   const justification =
     input.justification === undefined ? null : input.justification;
-  const row = await prismaClient.matchMvpVote.upsert({
-    where: {
-      matchId_serverId_voterDiscordId_category: {
+  const row = await prismaClient.$transaction(async (tx) => {
+    const stored = await tx.matchMvpVote.upsert({
+      where: {
+        matchId_serverId_voterDiscordId_category: {
+          matchId: input.matchId,
+          serverId: input.serverId,
+          voterDiscordId: input.voterDiscordId,
+          category: input.category,
+        },
+      },
+      create: {
         matchId: input.matchId,
         serverId: input.serverId,
         voterDiscordId: input.voterDiscordId,
         category: input.category,
+        nomineeIndex: input.nomineeIndex,
+        nomineePuuid: nominee.puuid,
+        nomineeTeamId: nominee.teamId,
+        voterPuuid: input.voterPuuid,
+        voterTeamId: input.voterTeamId,
+        justification,
       },
-    },
-    create: {
-      matchId: input.matchId,
-      serverId: input.serverId,
-      voterDiscordId: input.voterDiscordId,
-      category: input.category,
-      nomineeIndex: input.nomineeIndex,
-      nomineePuuid: nominee.puuid,
-      nomineeTeamId: nominee.teamId,
-      voterPuuid: input.voterPuuid,
-      voterTeamId: input.voterTeamId,
-      justification,
-    },
-    update: {
-      nomineeIndex: input.nomineeIndex,
-      nomineePuuid: nominee.puuid,
-      nomineeTeamId: nominee.teamId,
-      voterPuuid: input.voterPuuid,
-      voterTeamId: input.voterTeamId,
-      justification,
-    },
+      update: {
+        nomineeIndex: input.nomineeIndex,
+        nomineePuuid: nominee.puuid,
+        nomineeTeamId: nominee.teamId,
+        voterPuuid: input.voterPuuid,
+        voterTeamId: input.voterTeamId,
+        justification,
+      },
+    });
+    await tx.matchMvpTallyRefresh.upsert({
+      where: {
+        matchId_serverId: {
+          matchId: input.matchId,
+          serverId: input.serverId,
+        },
+      },
+      create: {
+        matchId: input.matchId,
+        serverId: input.serverId,
+        desiredRevision: 1,
+      },
+      update: {
+        desiredRevision: { increment: 1 },
+        targetProgress: {},
+        pending: true,
+        nextAttemptAt: new Date(),
+        requestedAt: new Date(),
+        attemptCount: 0,
+        lastErrorCode: null,
+      },
+    });
+    return stored;
   });
   return parseStoredVote(row);
 }

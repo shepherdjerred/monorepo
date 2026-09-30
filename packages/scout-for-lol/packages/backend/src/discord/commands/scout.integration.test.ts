@@ -99,12 +99,14 @@ const successfulAgent = async (_params: ExploreAgentParams) => ({
     queryText: "SELECT champion, wins FROM match_participants",
     includeVisualization: true,
     matchCards: [],
+    loadoutCards: [],
     caveats: ["Tracked matches only."],
     followUps: [],
   },
   preview: null,
   visualization: scoutTestVisualization,
   matchCards: [],
+  loadoutCards: [],
 });
 
 const interruptedAgent = async (params: ExploreAgentParams) => {

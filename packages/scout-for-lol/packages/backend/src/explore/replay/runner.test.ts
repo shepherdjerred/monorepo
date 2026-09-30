@@ -37,6 +37,7 @@ const ANSWER = ExploreAnswerSchema.parse({
   followUps: [],
   includeVisualization: false,
   matchCards: [],
+  loadoutCards: [],
 });
 
 const RESULT: ExploreAgentResult = {
@@ -44,6 +45,7 @@ const RESULT: ExploreAgentResult = {
   preview: null,
   visualization: null,
   matchCards: [],
+  loadoutCards: [],
 };
 
 const CAPABILITIES: ExploreCapabilitySet = {

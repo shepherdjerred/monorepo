@@ -29,23 +29,38 @@ import {
 } from "#src/mvp-votes/vote.ts";
 
 const logger = createLogger("mvp-vote-refresh");
+const MissingMessageErrorSchema = z.object({ code: z.literal(10_008) });
 const tallyRefreshTails = new Map<string, Promise<unknown>>();
-const DiscordApiErrorSchema = z.object({ code: z.number() });
-const UNKNOWN_MESSAGE_CODE = 10_008;
+const TargetProgressSchema = z.record(
+  z.string(),
+  z.strictObject({ revision: z.number().int(), generation: z.number().int() }),
+);
+type TargetProgress = z.infer<typeof TargetProgressSchema>;
 
-function isSkippableTallyEditError(error: unknown): boolean {
-  const parsed = DiscordApiErrorSchema.safeParse(error);
-  return (
-    (parsed.success && parsed.data.code === UNKNOWN_MESSAGE_CODE) ||
-    isPermissionError(error) ||
-    isMissingChannelError(error)
-  );
-}
+type MvpTallyRefreshInput = {
+  matchId: MatchId;
+  serverId: DiscordGuildId;
+  desiredRevision: number;
+  requeueGeneration: number;
+  leaseToken: string;
+};
 
 function guildIdOfChannel(channel: Channel): DiscordGuildId | undefined {
   const guildId: unknown = "guildId" in channel ? channel.guildId : undefined;
   const parsed = DiscordGuildIdSchema.safeParse(guildId);
   return parsed.success ? parsed.data : undefined;
+}
+
+function belongsToGuild(
+  channel: Channel,
+  channelId: DiscordChannelId,
+  serverId: DiscordGuildId,
+): boolean {
+  const guildId = guildIdOfChannel(channel);
+  if (guildId === undefined) {
+    throw new Error(`MVP tally channel ${channelId} has no known guild`);
+  }
+  return guildId === serverId;
 }
 
 export type MvpTallyMessageEdit = (input: {
@@ -96,6 +111,65 @@ function refKey(ref: {
   return `${ref.channelId}:${ref.messageId}`;
 }
 
+function targetAlreadyApplied(
+  progress: TargetProgress,
+  ref: { channelId: DiscordChannelId; messageId: string },
+  input: MvpTallyRefreshInput,
+): boolean {
+  const entry = progress[refKey(ref)];
+  return (
+    entry?.revision === input.desiredRevision &&
+    entry.generation === input.requeueGeneration
+  );
+}
+
+async function checkpointTarget(
+  ref: { channelId: DiscordChannelId; messageId: string },
+  input: MvpTallyRefreshInput,
+  prismaClient: ExtendedPrismaClient,
+): Promise<void> {
+  const marked = await prismaClient.$executeRaw`
+    UPDATE "MatchMvpTallyRefresh"
+    SET "targetProgress" = "targetProgress" || ${JSON.stringify({
+      [refKey(ref)]: {
+        revision: input.desiredRevision,
+        generation: input.requeueGeneration,
+      },
+    })}::jsonb
+    WHERE "matchId" = ${input.matchId}
+      AND "serverId" = ${input.serverId}
+      AND "leaseToken" = ${input.leaseToken}
+      AND "desiredRevision" = ${input.desiredRevision}
+      AND "requeueGeneration" = ${input.requeueGeneration}
+  `;
+  if (marked === 0) {
+    throw new Error(`MVP tally lease changed while editing ${refKey(ref)}`);
+  }
+}
+
+async function assertCurrentClaim(
+  input: MvpTallyRefreshInput,
+  prismaClient: ExtendedPrismaClient,
+): Promise<void> {
+  const current = await prismaClient.matchMvpTallyRefresh.findUniqueOrThrow({
+    where: {
+      matchId_serverId: { matchId: input.matchId, serverId: input.serverId },
+    },
+    select: {
+      desiredRevision: true,
+      requeueGeneration: true,
+      leaseToken: true,
+    },
+  });
+  if (
+    current.desiredRevision !== input.desiredRevision ||
+    current.requeueGeneration !== input.requeueGeneration ||
+    current.leaseToken !== input.leaseToken
+  ) {
+    throw new Error(`MVP tally claim changed before editing ${input.matchId}`);
+  }
+}
+
 async function deliveredPostmatchRefs(
   matchId: MatchId,
   prismaClient: ExtendedPrismaClient,
@@ -133,97 +207,160 @@ async function deliveredPostmatchRefs(
   return refs;
 }
 
+async function editReportTally(
+  ref: { channelId: DiscordChannelId; messageId: string },
+  context: {
+    input: MvpTallyRefreshInput;
+    votes: Awaited<ReturnType<typeof listMatchMvpVotes>>;
+    roster: NonNullable<Awaited<ReturnType<typeof loadMatchMvpRoster>>>;
+    aliases: Awaited<ReturnType<typeof guildAliasesForRoster>>;
+    prismaClient: ExtendedPrismaClient;
+    editMessage: MvpTallyMessageEdit;
+  },
+): Promise<boolean> {
+  try {
+    const channel = await fetchChannelForDelivery(ref.channelId);
+    if (channel === null) {
+      logger.warn(
+        `MVP tally target ${ref.channelId}/${ref.messageId} no longer has a channel`,
+      );
+      return false;
+    }
+    if (!channel.isTextBased()) {
+      throw new Error(
+        `MVP tally channel ${ref.channelId} is unavailable or not text based`,
+      );
+    }
+    if (!belongsToGuild(channel, ref.channelId, context.input.serverId)) {
+      return false;
+    }
+    const message = await channel.messages.fetch(ref.messageId);
+    const current = message.embeds.map((embed) => embed.toJSON());
+    const existingTally = current.find(
+      (embed) => embed.title === MVP_TALLY_TITLE,
+    );
+    const tally = mvpTallyEmbed({
+      votes: context.votes,
+      roster: context.roster,
+      aliases: context.aliases,
+      footerText:
+        existingTally === undefined ? undefined : tallyFooter(existingTally),
+    });
+    await context.editMessage({
+      channelId: ref.channelId,
+      messageId: ref.messageId,
+      options: {
+        embeds: withReplacedTally(current, tally),
+        allowedMentions: { parse: [] },
+      },
+    });
+    await checkpointTarget(ref, context.input, context.prismaClient);
+    return true;
+  } catch (error) {
+    if (
+      isMissingChannelError(error) ||
+      isPermissionError(error) ||
+      MissingMessageErrorSchema.safeParse(error).success
+    ) {
+      // The persisted refs are match-global. A deleted channel in another
+      // guild or message must not prevent still-live reports from updating.
+      logger.warn(
+        `MVP tally target ${ref.channelId}/${ref.messageId} is unavailable`,
+        error,
+      );
+      return false;
+    }
+    throw error;
+  }
+}
+
 async function refreshOnce(
-  input: { matchId: MatchId; serverId: DiscordGuildId },
+  input: MvpTallyRefreshInput,
   prismaClient: ExtendedPrismaClient,
   editMessage: MvpTallyMessageEdit,
-): Promise<void> {
+): Promise<boolean> {
   const roster = await loadMatchMvpRoster(input.matchId, prismaClient);
   if (roster === undefined) {
     throw new Error(
       `Match MVP contest ${input.matchId} is missing; the public tally cannot be rebuilt`,
     );
   }
-  const [votes, aliases, refs] = await Promise.all([
+  const [votes, aliases, refs, request] = await Promise.all([
     listMatchMvpVotes(input, prismaClient),
     guildAliasesForRoster({ serverId: input.serverId, roster }, prismaClient),
     deliveredPostmatchRefs(input.matchId, prismaClient),
+    prismaClient.matchMvpTallyRefresh.findUniqueOrThrow({
+      where: {
+        matchId_serverId: { matchId: input.matchId, serverId: input.serverId },
+      },
+    }),
   ]);
+  const progress = TargetProgressSchema.parse(request.targetProgress);
   if (refs.length === 0) {
     logger.info(
       `No delivered match reports to update for ${input.matchId} in ${input.serverId}`,
     );
-    return;
+    return false;
   }
   await recordMatchMvpReportRefs(
     input.matchId,
     new Map(refs.map((ref) => [ref.channelId, ref.messageId])),
     prismaClient,
   );
-  let updated = 0;
+  await assertCurrentClaim(input, prismaClient);
+  let handled = 0;
   for (const ref of refs) {
+    if (targetAlreadyApplied(progress, ref, input)) {
+      handled += 1;
+      continue;
+    }
     try {
-      const channel = await fetchChannelForDelivery(ref.channelId);
-      if (channel?.isTextBased() !== true) {
-        logger.warn(
-          `Skipping MVP tally edit for missing channel ${ref.channelId}`,
-        );
-        continue;
+      if (
+        await editReportTally(ref, {
+          input,
+          votes,
+          roster,
+          aliases,
+          prismaClient,
+          editMessage,
+        })
+      ) {
+        handled += 1;
       }
-      if (guildIdOfChannel(channel) !== input.serverId) {
-        continue;
-      }
-      const message = await channel.messages.fetch(ref.messageId);
-      const current = message.embeds.map((embed) => embed.toJSON());
-      const existingTally = current.find(
-        (embed) => embed.title === MVP_TALLY_TITLE,
-      );
-      const tally = mvpTallyEmbed({
-        votes,
-        roster,
-        aliases,
-        footerText:
-          existingTally === undefined ? undefined : tallyFooter(existingTally),
-      });
-      await editMessage({
-        channelId: ref.channelId,
-        messageId: ref.messageId,
-        options: {
-          embeds: withReplacedTally(current, tally),
-          allowedMentions: { parse: [] },
-        },
-      });
-      updated += 1;
     } catch (error) {
-      if (isSkippableTallyEditError(error)) {
-        logger.warn(
-          `Skipping MVP tally edit for missing Discord resource ${ref.channelId}/${ref.messageId}`,
-          error,
-        );
-        continue;
-      }
+      // Checkpointed targets stay done; an edit with an unknown outcome is
+      // retried safely because it replaces the tally embed in place.
+      logger.warn(
+        `MVP tally edit failed for ${ref.channelId}/${ref.messageId}; unfinished targets will retry`,
+        error,
+      );
       throw error;
     }
   }
-  if (updated === 0) {
+  if (handled === 0) {
     logger.info(
       `No delivered match reports in ${input.serverId} to update for ${input.matchId}`,
     );
   }
+  return handled > 0;
 }
 
 export async function refreshMvpTallyMessages(
-  input: { matchId: MatchId; serverId: DiscordGuildId },
+  input: MvpTallyRefreshInput,
   prismaClient: ExtendedPrismaClient = prisma,
   editMessage: MvpTallyMessageEdit = defaultEditMessage,
-): Promise<void> {
+): Promise<boolean> {
   const matchId = MatchIdSchema.parse(input.matchId);
   const serverId = DiscordGuildIdSchema.parse(input.serverId);
-  await enqueuePerKey(
+  return await enqueuePerKey(
     tallyRefreshTails,
     refreshKey(matchId, serverId),
     async () => {
-      await refreshOnce({ matchId, serverId }, prismaClient, editMessage);
+      return await refreshOnce(
+        { ...input, matchId, serverId },
+        prismaClient,
+        editMessage,
+      );
     },
   );
 }

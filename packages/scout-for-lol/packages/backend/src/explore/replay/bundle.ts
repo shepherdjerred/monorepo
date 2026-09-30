@@ -235,6 +235,7 @@ export const ReplayCaseCandidateSchema = z
     rowsScanned: z.number().nullable(),
     toolNames: z.array(z.string()),
     matchCardIds: z.array(z.string()),
+    loadoutCardIds: z.array(z.string()).optional(),
     visualizationKind: z.string().nullable(),
   })
   .loose();

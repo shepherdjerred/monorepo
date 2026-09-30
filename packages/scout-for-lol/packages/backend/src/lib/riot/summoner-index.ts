@@ -11,7 +11,7 @@
 import { LeaguePuuidSchema, RegionSchema } from "@scout-for-lol/data";
 import type { Prisma } from "#generated/prisma/client/index.js";
 import { prisma } from "#src/database/index.ts";
-import { fetchDistinctPrematchIdentities } from "#src/reports/duckdb/lake-reads.ts";
+import { fetchDistinctPrematchIdentities } from "#src/reports/duckdb/prematch-lake-reads.ts";
 import { createLogger } from "#src/logger.ts";
 
 const logger = createLogger("summoner-index");

@@ -1,0 +1,73 @@
+# The sealed load now has a prepared driver and a return ledger.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-drivers-kit:
+    name: "The Driver's Kit"
+    giver: marcus
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-sealed-load
+    text:
+      offer: "Martha sealed the load. The driver needs simple tools to follow the current route and check the cart before the return trip."
+      accept: "Craft compasses and lanterns for the next driver."
+      decline: "I will loan the driver my own compass."
+      finish: "The driver can find the route and inspect the cart at dusk."
+      summary: "Equip the caravan driver for the present route."
+      questions: []
+    start: kit
+    stages:
+      kit:
+        journal: "Craft 4 compasses and 4 lanterns in the main world."
+        waiting: "A good route is only useful when the driver can follow it."
+        complete: "The next caravan driver has a route kit."
+        objectives:
+          - craft 4 COMPASS
+          - craft 4 LANTERN
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1
+
+  the-return-ledger:
+    name: "The Return Ledger"
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-drivers-kit
+    text:
+      offer: "The driver has a kit and a sealed sample. I want a ledger page for what comes back, including a broken seal or a changed count."
+      accept: "Bring paper and ink for the return ledger."
+      decline: "We will rely on the departure manifest alone."
+      finish: "Departure and return can be compared on the same market account."
+      summary: "Prepare a return ledger for the current caravan route."
+      questions: []
+    start: ledger
+    stages:
+      ledger:
+        journal: "Bring Martha 20 paper and 3 ink sacs."
+        waiting: "The return count should never overwrite the departure count."
+        complete: "The caravan has a return ledger ready."
+        objectives:
+          - deliver martha 20 PAPER
+          - deliver martha 3 INK_SAC
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1

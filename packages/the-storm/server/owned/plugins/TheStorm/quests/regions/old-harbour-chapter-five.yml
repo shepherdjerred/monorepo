@@ -1,0 +1,76 @@
+# The new river welcome keeps the lost harbour's fishing custom alive in the
+# main world without locating the former docks.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-river-chart:
+    name: The River Chart
+    giver: stanley
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed a-light-on-the-river
+    text:
+      offer: Oswin's lights help fishers return. A present-day river chart will keep them from mistaking an old harbour story for a current route.
+      accept: Bring a map, compass and paper for the new chart.
+      decline: I will keep giving directions by the bell.
+      finish: The chart marks today's river, while the old harbour remains a memory.
+      summary: Make a current river chart beside the old harbour memorial.
+      questions: []
+    start: chart
+    stages:
+      chart:
+        journal: Bring Stanley a map, compass and 12 paper.
+        waiting: A fisher needs a current route, not a vanished dock.
+        complete: Stanley has a chart for the present-day river.
+        objectives:
+          - deliver stanley 1 MAP
+          - deliver stanley 1 COMPASS
+          - deliver stanley 12 PAPER
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-first-catch-share:
+    name: The First Catch Share
+    giver: oswin
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-river-chart
+    text:
+      offer: The chart helps newcomers find the river. Let their first catch become a shared meal, like the old harbour's spare-net custom.
+      accept: Catch cod in the main world, then bring eight cod and bread for the meal.
+      decline: I will keep the loaner rods ready.
+      finish: The catch and bread are shared. A new fisher now knows the river and its custom.
+      summary: Share a present-day river catch with new fishers.
+      questions: []
+    start: meal
+    stages:
+      meal:
+        journal: Catch 8 cod in the main world, then bring Oswin 8 cod and 8 bread.
+        waiting: The first catch should feed more than one person.
+        complete: Oswin has a meal ready for the new fishers.
+        objectives:
+          - fish 8 COD
+          - deliver oswin 8 COD
+          - deliver oswin 8 BREAD
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

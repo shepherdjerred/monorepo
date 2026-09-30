@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 import type { LinearIssue, TaskState } from "#src/domain/schemas.ts";
 import { fakeLinearRunner } from "#src/integrations/fake-linear.ts";
 import { LinearClient } from "#src/integrations/linear.ts";
-import { pauseTask } from "#src/reconcile-merge.ts";
+import { completeTask, pauseTask } from "#src/reconcile-merge.ts";
 
 function state(): TaskState {
   const issue: LinearIssue = {
@@ -116,5 +116,109 @@ describe("pauseTask", () => {
       add: [],
       remove: ["sj-needs-human-id"],
     });
+  });
+});
+
+function saveStub(saved: TaskState[]) {
+  return (
+    current: TaskState,
+    phase: TaskState["phase"],
+    patch: Partial<TaskState> = {},
+  ): Promise<TaskState> => {
+    const next: TaskState = { ...current, ...patch, phase };
+    saved.push(next);
+    return Promise.resolve(next);
+  };
+}
+
+function commentBodies(calls: string[][]): string[] {
+  return calls
+    .filter(
+      (args) =>
+        args[2] === "issue" && args[3] === "comment" && args[4] === "add",
+    )
+    .map((args) => args[args.indexOf("--body") + 1] ?? "");
+}
+
+function infoCollector(messages: string[]) {
+  return (message: string): void => {
+    messages.push(message);
+  };
+}
+
+describe("completeTask", () => {
+  test("completes the merge path and saves done", async () => {
+    const calls: string[][] = [];
+    const saved: TaskState[] = [];
+    const linear = new LinearClient("SJ", fakeLinearRunner(calls));
+    const messages: string[] = [];
+    await completeTask({
+      state: {
+        ...state(),
+        phase: "completing",
+        prNumber: 7,
+        prUrl: "https://example.com/pr/7",
+      },
+      linear,
+      save: saveStub(saved),
+      writeInfo: (message: string) => {
+        messages.push(message);
+      },
+    });
+    const mutations = calls.filter(
+      (args) => args[2] === "api" && args[3]?.includes("issueUpdate") === true,
+    );
+    expect(mutations).toHaveLength(1);
+    const raw = mutations[0]?.[mutations[0]?.indexOf("--variables-json") + 1];
+    expect(JSON.parse(raw ?? "{}")).toEqual({
+      id: "node-1",
+      add: [],
+      remove: ["sj-codex-id"],
+    });
+    expect(saved.map(({ phase }) => phase)).toEqual(["done"]);
+    expect(saved[0]?.resumePhase).toBeNull();
+    expect(messages).toEqual(["XX-1: merged https://example.com/pr/7"]);
+  });
+
+  test("completes the no-change path without a PR", async () => {
+    const calls: string[][] = [];
+    const saved: TaskState[] = [];
+    const messages: string[] = [];
+    const linear = new LinearClient("SJ", fakeLinearRunner(calls));
+    await completeTask({
+      state: { ...state(), phase: "completing" },
+      linear,
+      save: saveStub(saved),
+      writeInfo: infoCollector(messages),
+    });
+    expect(commentBodies(calls)).toEqual([
+      "No change needed; the requested state was already present.",
+    ]);
+    expect(saved.map(({ phase }) => phase)).toEqual(["done"]);
+    expect(messages).toEqual(["XX-1: no change was needed; issue completed"]);
+  });
+
+  test("a failed cleanup never reaches done", async () => {
+    const saved: TaskState[] = [];
+    const messages: string[] = [];
+    const linear = new LinearClient(
+      "SJ",
+      fakeLinearRunner([], { mutateSuccess: false }),
+    );
+    await expect(
+      completeTask({
+        state: {
+          ...state(),
+          phase: "completing",
+          prNumber: 7,
+          prUrl: "https://example.com/pr/7",
+        },
+        linear,
+        save: saveStub(saved),
+        writeInfo: infoCollector(messages),
+      }),
+    ).rejects.toThrow(/label mutation failed/);
+    expect(saved).toEqual([]);
+    expect(messages).toEqual([]);
   });
 });
