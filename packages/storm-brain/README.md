@@ -36,8 +36,10 @@ even on 502s.
 ## Operations
 
 - 1Password item `storm-brain` (Homelab vault) holds the service auth value
-  and the OpenAI project key; the project key is provisioned manually with
-  a monthly spend limit.
+  and the dedicated OpenAI project key. The `openai` OpenTofu stack provisions
+  the project and service account, restricts the model, and enforces a monthly
+  spend limit. After a reviewed apply, hand the generated key to this item's
+  `OPENAI_API_KEY` field and refresh the vault snapshot before deploying.
 - Homelab chart `storm-brain` (namespace `storm-brain`): Deployment,
   Service, ServiceMonitor, NetworkPolicy. Game traffic comes only from the
   `minecraft-tsmc` namespace.
