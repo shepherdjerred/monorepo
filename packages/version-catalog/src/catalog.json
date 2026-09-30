@@ -666,7 +666,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003424@sha256:1ea3b3efcf282e063500dff092444b309156ebbd9644188edc3c40cb5ee20302",
+      "value": "2.0.0-1003507@sha256:b519334c3f397f44457056a95bda54a57f0e5eff9a8a70ab8540595170e5543c",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -698,7 +698,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003424@sha256:1ea3b3efcf282e063500dff092444b309156ebbd9644188edc3c40cb5ee20302",
+      "value": "2.0.0-1003507@sha256:b519334c3f397f44457056a95bda54a57f0e5eff9a8a70ab8540595170e5543c",
       "notes": [
         "Candidate Scout beta Workflow Worker image - updated by version commit-back",
         "not managed by renovate"
@@ -1603,7 +1603,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003473@sha256:0a8833f8526f342f32a57ae33a566039449aac4372f6666005ac3df79aaf4e46",
+      "value": "2.0.0-1003507@sha256:f6561b454a96028294d43d9c9eb56ae80ae5d189f0696835a7546cef19b091f0",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
