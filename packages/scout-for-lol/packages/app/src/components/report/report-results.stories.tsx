@@ -156,6 +156,37 @@ export const ResultTableWithGameAssets: Story = {
   },
 };
 
+export const ResultTableWithAssetComparisonEdges: Story = {
+  args: {
+    columns: [
+      {
+        key: "champion_id",
+        label: "Champion",
+        format: "integer",
+        asset: "champion",
+      },
+    ],
+    rows: [
+      {
+        label: "Lux",
+        values: [
+          {
+            column: "champion_id",
+            value: 99,
+            comparisonValue: 99,
+            absoluteDelta: 0,
+            percentageDelta: 0,
+          },
+        ],
+      },
+      {
+        label: "No ban",
+        values: [{ column: "champion_id", value: -1 }],
+      },
+    ],
+  },
+};
+
 export const ResultTableEmpty: Story = {
   args: { columns: COLUMNS, rows: [] },
 };

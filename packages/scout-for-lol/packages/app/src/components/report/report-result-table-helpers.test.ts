@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import type { ReportResultColumn } from "@scout-for-lol/data";
 import {
+  formatCell,
   reportRowForFollowUp,
   reportRowSortValue,
   type PreviewRow,
@@ -12,8 +13,31 @@ const championColumn: ReportResultColumn = {
   format: "text",
   asset: "champion",
 };
+const championIdColumn: ReportResultColumn = {
+  key: "champion_id",
+  label: "Champion",
+  format: "integer",
+  asset: "champion",
+};
 
 describe("asset-backed report labels", () => {
+  test("suppresses numeric comparisons for asset-backed identifiers", () => {
+    const row: PreviewRow = {
+      label: "Lux",
+      values: [
+        {
+          column: "champion_id",
+          value: 99,
+          comparisonValue: 99,
+          absoluteDelta: 0,
+          percentageDelta: 0,
+        },
+      ],
+    };
+
+    expect(formatCell(championIdColumn, row, undefined, false)).toBe("Lux");
+  });
+
   test("passes the display name to follow-up prompts", () => {
     const row: PreviewRow = { label: "62", values: [] };
 

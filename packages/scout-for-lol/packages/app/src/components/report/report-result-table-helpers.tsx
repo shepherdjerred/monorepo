@@ -35,6 +35,35 @@ export type PreviewEvidence = {
   }[];
 };
 
+function isIdentifierColumn(column: ReportResultColumn): boolean {
+  return (
+    column.key.endsWith("_id") ||
+    column.key === "id" ||
+    column.key === "key" ||
+    column.key === "slug"
+  );
+}
+
+function comparisonDetails(
+  column: ReportResultColumn,
+  result: PreviewRow["values"][number],
+): string[] {
+  if (isIdentifierColumn(column)) return [];
+
+  const details: string[] = [];
+  if (result.absoluteDelta !== undefined && result.absoluteDelta !== null) {
+    details.push(`Δ ${formatReportDisplayValue(column, result.absoluteDelta)}`);
+  }
+  if (result.percentageDelta !== undefined) {
+    details.push(
+      result.percentageDelta === null
+        ? "Δ% unknown"
+        : `Δ ${(result.percentageDelta * 100).toFixed(1)}%`,
+    );
+  }
+  return details;
+}
+
 export function ReportAssetIcon(props: {
   kind: ReportAssetKind;
   value: string | number;
@@ -75,11 +104,7 @@ export function formatCell(
   if (result?.value === undefined || result.value === null) return "—";
   const details: string[] = [];
   const games = evidenceRow?.games ?? row.games;
-  const isIdentifier =
-    column.key.endsWith("_id") ||
-    column.key === "id" ||
-    column.key === "key" ||
-    column.key === "slug";
+  const isIdentifier = isIdentifierColumn(column);
   if (
     !hasGamesColumn &&
     !isIdentifier &&
@@ -88,16 +113,7 @@ export function formatCell(
   ) {
     details.push(`Based on ${games.toString()} games`);
   }
-  if (result.absoluteDelta !== undefined && result.absoluteDelta !== null) {
-    details.push(`Δ ${formatReportDisplayValue(column, result.absoluteDelta)}`);
-  }
-  if (result.percentageDelta !== undefined) {
-    details.push(
-      result.percentageDelta === null
-        ? "Δ% unknown"
-        : `Δ ${(result.percentageDelta * 100).toFixed(1)}%`,
-    );
-  }
+  details.push(...comparisonDetails(column, result));
   const suffix = details.length === 0 ? "" : ` (${details.join(" · ")})`;
   return `${formatReportDisplayValue(column, result.value)}${suffix}`;
 }
