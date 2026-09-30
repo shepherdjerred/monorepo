@@ -152,8 +152,7 @@
         "glitter-boys-ppl",
         "cook",
         "stocks",
-        "wiki",
-        "ts-mc-docs"
+        "wiki"
       ],
       "grafanaDashboards": ["static-site-probes"],
       "deploy": [
