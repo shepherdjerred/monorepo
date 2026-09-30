@@ -39,14 +39,12 @@ function assetForPlanColumn(plan: ScoutQlPlan, column: string) {
   const info = scoutQlSourceCatalog(plan.source)?.columns.get(column);
   if (info?.asset === undefined) return;
 
-  // Most string asset dimensions already contain display names. The virtual
-  // champion dimension is the exception: every supported source groups by its
-  // numeric champion_id key, even where the catalog exposes it as VARCHAR.
-  const identifierBacked =
-    info.type === "integer" ||
-    info.type === "bigint" ||
-    (info.virtual && column === "champion");
-  if (!identifierBacked) return;
+  // Spell names such as "Flash" are ambiguous asset identities. Other
+  // name-backed assets (runes, trees, and champion names) resolve by name, and
+  // virtual champion groups use champion_id despite their VARCHAR catalog type.
+  const ambiguousSpellName = info.type === "varchar" && info.asset === "spell";
+  const championIdKey = info.virtual && column === "champion";
+  if (ambiguousSpellName && !championIdKey) return;
   return info.asset;
 }
 

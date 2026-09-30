@@ -70,6 +70,42 @@ describe("plan result asset metadata", () => {
   });
 
   test.each([
+    { column: "keystone", asset: "rune", value: "Conqueror" },
+    { column: "primary_tree", asset: "rune_tree", value: "Precision" },
+    { column: "secondary_tree", asset: "rune_tree", value: "Domination" },
+  ] as const)(
+    "preserves resolvable name-backed $asset grouping values",
+    ({ column, asset, value }) => {
+      const plan = {
+        source: "match_participants",
+        outputs: [
+          {
+            name: column,
+            expr: { kind: "grouping-ref", index: 0 },
+            displayKind: "text",
+            additive: false,
+            evidence: { kind: "sample" },
+          },
+        ],
+        groupings: [{ kind: "column", column, name: column }],
+        timeWindow: { kind: "unbounded" },
+        orderBy: [],
+        limit: 10,
+        playerRefs: [],
+        render: { kind: "TABLE" },
+      } satisfies ScoutQlPlan;
+
+      expect(planResultColumns(plan, ["label", column])[1]).toMatchObject({
+        key: column,
+        asset,
+      });
+      expect(planResultDimensions(plan, value, [value])).toEqual([
+        reportAssetInfo(asset, value).name,
+      ]);
+    },
+  );
+
+  test.each([
     { source: "match_participants", key: 62 },
     { source: "prematch_participants", key: "62" },
     { source: "match_team_bans", key: 62 },
