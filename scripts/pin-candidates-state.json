@@ -82,6 +82,11 @@
       "digest": "sha256:b3479221851e3ccbbcf1bb2f1c279fdcb48dca602aae8dec1dcec1f32e0ac273",
       "buildNumber": 1002817
     },
+    "shepherdjerred/the-storm-server": {
+      "version": "2.0.0-1003373",
+      "digest": "sha256:af95c857b8a2e682eb0601b52ba0c2388753f869b9f68ceb3019dbc46d413228",
+      "buildNumber": 1003373
+    },
     "shepherdjerred/trmnl-dashboard": {
       "version": "2.0.0-1003373",
       "digest": "sha256:cf948cff0710df646a19a6ffe8c75d98ef591f0efbaaecd7052b6514a2409d20",
