@@ -70,6 +70,28 @@ describe("renderProgressBar", () => {
   });
 });
 
+describe("live sports player card", () => {
+  test("renders only skip, stop, and volume controls", () => {
+    const current = view().current;
+    if (current === null) throw new Error("fixture has a current item");
+    const payload = render({
+      current: {
+        ...current,
+        source: {
+          kind: "url",
+          url: "https://tvsportslive.fr/example-game/",
+        },
+      },
+    });
+    expect(buttonIds(payload)).toEqual([
+      encodeControlId(ControlAction.Skip),
+      encodeControlId(ControlAction.Stop),
+      encodeControlId(ControlAction.VolumeDown),
+      encodeControlId(ControlAction.VolumeUp),
+    ]);
+  });
+});
+
 describe("player card body", () => {
   test("shows the bar, both timecodes, the chapter, and the meta line", () => {
     const description = render().embed?.description ?? "";

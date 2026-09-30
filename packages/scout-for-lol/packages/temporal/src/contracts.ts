@@ -202,6 +202,7 @@ export const ScoutBackgroundJobInputSchema = z.object({
     "prediction-ingest",
     "legacy-backfill",
     "progression-outbox",
+    "progression-reconciliation",
     "clash-snapshot",
   ]),
 });

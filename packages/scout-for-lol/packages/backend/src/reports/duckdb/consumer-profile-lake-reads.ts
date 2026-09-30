@@ -39,18 +39,24 @@ async function runSource<T>(options: {
   leadingParams?: BoundParam[];
   trailingParams?: BoundParam[];
   schema: z.ZodType<T>;
+  abortSignal?: AbortSignal | undefined;
 }): Promise<T[]> {
-  return await withDuckDBConnection(async (session) => {
-    const rows = await session.run(
-      options.sql,
-      bindParams(session, [
-        ...(options.leadingParams ?? []),
-        ...options.source.params,
-        ...(options.trailingParams ?? []),
-      ]),
-    );
-    return rows.map((row) => options.schema.parse(row));
-  });
+  return await withDuckDBConnection(
+    async (session) => {
+      const rows = await session.run(
+        options.sql,
+        bindParams(session, [
+          ...(options.leadingParams ?? []),
+          ...options.source.params,
+          ...(options.trailingParams ?? []),
+        ]),
+      );
+      return rows.map((row) => options.schema.parse(row));
+    },
+    options.abortSignal === undefined
+      ? {}
+      : { abortSignal: options.abortSignal },
+  );
 }
 
 function queuePredicate(queues: QueueType[] | undefined): {
@@ -224,22 +230,25 @@ export async function fetchFullMatchTeams(options: {
   });
 }
 
-export async function fetchMatchSupport(
-  matchIds: string[],
-): Promise<
+export async function fetchMatchSupport(options: {
+  matchIds: string[];
+  abortSignal?: AbortSignal | undefined;
+  lakeDir?: string | undefined;
+}): Promise<
   readonly { match_id: string; queue_id: number; game_mode: string }[]
 > {
-  if (matchIds.length === 0) return [];
-  const files = await resolveLakeFiles(resolveLakeDir());
+  if (options.matchIds.length === 0) return [];
+  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
   const source = buildMatchesSource(files, {
     sql: "match_id IN (SELECT unnest(?))",
-    params: [listParam(matchIds)],
+    params: [listParam(options.matchIds)],
   });
   if (source === undefined) return [];
   return await runSource({
     source,
     sql: `SELECT DISTINCT match_id, queue_id, game_mode FROM (${source.sql})`,
     schema: MatchSupportRowSchema,
+    abortSignal: options.abortSignal,
   });
 }
 

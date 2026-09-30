@@ -114,6 +114,9 @@ Deleting the definition is not enough. Removing a workflow means **adding its
 schedule ID to `DELETED_SCHEDULE_IDS` in
 [`register-schedules.ts`](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/register-schedules.ts)**,
 which boot then acts on. Until you do, the schedule keeps running on the server.
+A beta-only schedule goes in `DELETED_BETA_SCHEDULE_IDS` instead. Once the
+release has deployed and `toolkit temporal schedule list` no longer shows the
+ID, remove the entry: the list is a migration, not a history.
 
 An orphan detector exports a metric for any server-side schedule that code no
 longer defines, so this drift alerts rather than lingering quietly.

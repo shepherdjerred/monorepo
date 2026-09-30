@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
   parseConflictPaths,
   runCheckPrMergeConflictsImpl,
@@ -69,11 +69,6 @@ const stubPrepareWorkDir = async (): Promise<{
   return { workDir: STUB_WORKDIR, cleanup: noopCleanup };
 };
 
-afterEach(() => {
-  delete Bun.env["MERGE_CONFLICT_CHECK_ENABLED"];
-  delete Bun.env["MERGE_CONFLICT_CHECK_DRY_RUN"];
-});
-
 describe("parseConflictPaths", () => {
   it("extracts unique paths from stage lines", () => {
     const stdout = [
@@ -94,51 +89,6 @@ describe("parseConflictPaths", () => {
     expect(
       parseConflictPaths("71bbcdfea9fefb1e862d2ac1180902ba76c59d7e\n"),
     ).toEqual([]);
-  });
-});
-
-describe("runCheckPrMergeConflictsImpl (kill switch + dry run)", () => {
-  it("no-ops when MERGE_CONFLICT_CHECK_ENABLED=false", async () => {
-    Bun.env["MERGE_CONFLICT_CHECK_ENABLED"] = "false";
-    const { client, statusCalls } = makeClient([]);
-    const tokenCalls: string[] = [];
-    const result = await runCheckPrMergeConflictsImpl(
-      { kind: "all-prs", owner: OWNER, repo: REPO, mainSha: MAIN_SHA },
-      {
-        createInstallationToken: async () => {
-          tokenCalls.push("called");
-          return TOKEN;
-        },
-        createClient: () => client,
-      },
-    );
-    expect(result.skippedKillSwitch).toBe(true);
-    expect(result.prsChecked).toBe(0);
-    expect(statusCalls).toHaveLength(0);
-    // Kill switch hit BEFORE token minting — saves an unnecessary API call.
-    expect(tokenCalls).toHaveLength(0);
-  });
-
-  it("does not post any commit status in dry-run mode", async () => {
-    Bun.env["MERGE_CONFLICT_CHECK_DRY_RUN"] = "true";
-    const { client, statusCalls } = makeClient([pull(1, "a".repeat(40))]);
-    const result = await runCheckPrMergeConflictsImpl(
-      { kind: "all-prs", owner: OWNER, repo: REPO, mainSha: MAIN_SHA },
-      {
-        createInstallationToken: async () => TOKEN,
-        createClient: () => client,
-        prepareWorkDir: stubPrepareWorkDir,
-        runMergeBase: async () => "base-sha",
-        runMergeTree: async () => ({
-          exitCode: 0,
-          stdout: "tree\n",
-          stderr: "",
-        }),
-      },
-    );
-    expect(result.dryRun).toBe(true);
-    expect(result.prsChecked).toBe(1);
-    expect(statusCalls).toHaveLength(0);
   });
 });
 

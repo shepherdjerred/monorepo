@@ -15,6 +15,8 @@
  */
 
 export type VideoGraphSpec = {
+  /** Selected input video stream, including attached pictures in FFmpeg's video index space. */
+  videoStreamIndex?: number;
   /** Output width (concrete positive — GPU scale filters reject the `-2` aspect shorthand). */
   width: number;
   /** Output height (concrete positive). */
@@ -154,7 +156,7 @@ export function buildVaapiVideoGraph(spec: VideoGraphSpec): VideoGraph {
   return {
     kind: "filterComplex",
     graph: [
-      `[0:v]${base}[base]`,
+      `${spec.videoStreamIndex === undefined ? "[0:v]" : `[0:v:${String(spec.videoStreamIndex)}]`}${base}[base]`,
       `${subsBranch}[subs]`,
       "[base][subs]overlay_vaapi=shortest=1[vout]",
     ],

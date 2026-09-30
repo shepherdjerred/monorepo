@@ -15,6 +15,7 @@ import {
   type PlanColumnSource,
 } from "#src/reports/duckdb/column-map.ts";
 import { frag, joinFragments, seq } from "#src/reports/duckdb/sql-fragment.ts";
+import { loadoutLookup } from "#src/reports/duckdb/loadout-sql.ts";
 
 /**
  * Facts for a row with no player — a team or a ban — read with the match
@@ -96,6 +97,8 @@ export type FactsCteInput = {
         readonly lane: boolean;
       }
     | undefined;
+  /** Loadout name columns the plan names (see loadout-sql.ts). */
+  loadoutNames?: ReadonlySet<string> | undefined;
   /** Value columns to project as `m.X AS X` (identity handled separately). */
   projected: string[];
   /** Extra computed items (group-facts virtual columns), already fragments. */
@@ -374,6 +377,12 @@ function rowLookups(input: FactsCteInput): Lookups {
     ctes.push(teamDimensionCte(input.teamDimension));
     joins.push(TEAM_LOOKUP_JOIN);
     items.push(TEAM_LOOKUP_ITEMS);
+  }
+  if (input.loadoutNames !== undefined && input.loadoutNames.size > 0) {
+    const loadout = loadoutLookup(input.loadoutNames);
+    ctes.push(loadout.cte);
+    joins.push(loadout.joins);
+    items.push(...loadout.items);
   }
   if (input.columnSource === "timeline-frame") {
     const participants = input.participantDimension;

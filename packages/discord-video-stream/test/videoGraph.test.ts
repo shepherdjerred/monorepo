@@ -215,6 +215,18 @@ describe("buildVaapiVideoGraph", () => {
     });
   });
 
+  test("subtitle overlay reads the requested video stream", () => {
+    const graph = buildVaapiVideoGraph({
+      width: 1280,
+      height: 720,
+      inputColor: "sdr",
+      videoStreamIndex: 1,
+      subtitle: { path: SUB, startTime: 0 },
+    });
+    if (graph.kind !== "filterComplex") throw new Error("expected overlay");
+    expect(graph.graph[0]).toContain("[0:v:1]");
+  });
+
   test("HDR + subtitles + seek: tonemapped base, setpts sandwich on the canvas branch", () => {
     expect(
       buildVaapiVideoGraph({

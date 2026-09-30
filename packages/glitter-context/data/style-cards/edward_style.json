@@ -1,17 +1,17 @@
 {
   "schemaVersion": 2,
   "coverage": {
-    "source_snapshot_sha256": "4f1a3d22f3cadd5b3252185fbd1c29fff932974e7b190f775e51e08f55e1cd46",
+    "source_snapshot_sha256": "edb731577e3faa0f4ab786bb4e9f8eda404cdec8883581a33cfa990f9738d98d",
     "corpus": {
-      "messages": 9910,
+      "messages": 9934,
       "date_range": {
         "start": "2017-08-26T06:21:29.987000+00:00",
-        "end": "2026-09-20T02:11:21.843000+00:00"
+        "end": "2026-09-25T21:25:08.498000+00:00"
       }
     },
     "evidence": {
-      "safe_messages": 7726,
-      "summarized_messages": 7726,
+      "safe_messages": 7746,
+      "summarized_messages": 7746,
       "chunks": 86,
       "direct_recent_messages": 500,
       "omitted_summarized_messages": 0,
@@ -19,7 +19,7 @@
       "omitted_direct_recent_messages": 0,
       "date_range": {
         "start": "2017-08-26T06:21:29.987000+00:00",
-        "end": "2026-09-20T02:11:21.843000+00:00"
+        "end": "2026-09-25T21:25:08.498000+00:00"
       },
       "strategy": "all-safe-monthly-chunks-plus-latest-500"
     },
@@ -183,90 +183,90 @@
     "For group decisions, move from “what do you guys think?” to clear tradeoffs, a poll, and a deadline."
   ],
   "quotes": [
-    "we do a vote for categories?",
-    "Yeah I think i'll narrow it down to like 25 and let people vote for which categories they want awards for",
+    "Not sure how I would turn it into a poll tho",
     "Just \"list\" all the awards and have people vote on 15 they want to know?",
     "interesting to see what gets voted on",
     "Please like this message if you have submitted a response! I'd like atleast 8 responses before I move forward",
+    "Did you put a suggestion comment? That's a good one",
+    "Bumping for visibility! Put in your votes by tonight to advance to the final round of voting!",
     "HELLO! I have created a event page for all the information needed for the party",
     "There are 16 slots for beds (2 are couches)\nThat means we need at least 7 people who are down to bring sleeping bags. I have three that I can bring for other folk",
+    "Same rules as before:\n\nFirst come first serve for the beds. There's three big beds for couples, 2 bunk beds and 2 sofa beds for individuals",
     "okay sick! I'd love to split the groceries in three cars so it's not a burden to one person",
+    "I'm planning on bringing a karaoke machine and I need someone to bring a screen projector if anyone has one for the presentation",
     "ALSO! Make sure to bring a swimsuit! There's a beach on the property and I'd love for people to jump in for the polar plunge. Bring a towel atleast and some balls",
     "I'll be preparing the awards ceremony, 20 winners and it'll be in the morning after New Years",
-    "need three more gamers",
-    "uploaded 30+ images into the doc",
-    "Woke up this morning and a tree fucked my car up",
-    "MERRY CHRISTMAS GUIYS ❤️",
+    "Each winner gets to choose among these tickets for each category they win",
     "Yes you can come through! We'd love to celebrate the new year with you",
     "Means the check in time is now 3pm",
-    "Yes I got a 30 pack of coke and diet Cokes",
+    "still need 1?",
+    "That right there is the best fucking burger in the universe",
     "I'm here boys. Where's the flex lobby at?",
-    "Just tried co op for the first time. It's pretty good! Played for about two hours with no hiccups",
-    "!play fireflies owl city"
+    "Ayye my guy 🙂 thx for checking it out"
   ],
   "sample_messages": [
-    "we can add that into the total for the airbnb",
-    "Make Fifthy Fire Great Again",
-    "!play outro m83",
-    "wait",
-    "like okay we pick 20 out of 30 awards?",
-    "Not sure how I would turn it into a poll tho",
-    "It'll be good. Bottom 10 will be cut so it works out",
-    "Did you put a suggestion comment? That's a good one",
-    "!play have a baby with me daniel caesar",
-    "Bumping for visibility! Put in your votes by tonight to advance to the final round of voting!",
-    "super neat",
-    "LMAO the facial structure is there",
-    "omfg",
-    "YEAH!",
-    "That's big money right there baby",
-    "NEED 1 MORE",
+    "Yeah I think i'll narrow it down to like 25 and let people vote for which categories they want awards for",
     "It's been a week. Going to close the polls today! Make sure that you participated in the polls!",
-    "Was the waits for the water rides long?",
+    "HELLO! I have created a event page for all the information needed for the party",
+    "There are 16 slots for beds (2 are couches)\nThat means we need at least 7 people who are down to bring sleeping bags. I have three that I can bring for other folk",
     "Same rules as before:\n\nFirst come first serve for the beds. There's three big beds for couples, 2 bunk beds and 2 sofa beds for individuals",
+    "okay sick! I'd love to split the groceries in three cars so it's not a burden to one person",
     "I'm planning on bringing a karaoke machine and I need someone to bring a screen projector if anyone has one for the presentation",
+    "ALSO! Make sure to bring a swimsuit! There's a beach on the property and I'd love for people to jump in for the polar plunge. Bring a towel atleast and some balls",
+    "There's also a hot tub on the property and well as a pool table",
     "Okay bet. So far we have three, we can recruit 8 easy",
-    "Let's gooo Seahawks dub",
-    "That keyboard looks edible",
+    "Here are the awards for End of Year awards!",
     "Each winner gets to choose among these tickets for each category they win",
+    "uploaded 30+ images into the doc",
     "Woke up this morning and a tree fucked my car up",
+    "!play tequila the champs",
+    "Wordle 1644 5/6\n\n⬛⬛⬛⬛⬛\n⬛🟨⬛⬛⬛\n🟩⬛⬛⬛🟨\n🟩⬛🟩🟩🟨\n🟩🟩🟩🟩🟩",
     "roasted to shit",
+    "MERRY CHRISTMAS GUIYS ❤️",
     "!skip",
     "Accept the invite on your phone. It'll have all the information you need",
-    "thx you!",
-    "Link to the presentation for those who want to see the results again"
+    "Means the check in time is now 3pm",
+    "No fireworks! 😞",
+    "Yes I got a 30 pack of coke and diet Cokes",
+    "still need 1?",
+    "What up guys",
+    "Have you tried a paneer burger?",
+    "BURGER HUT 🍔",
+    "Should be a sale on the game too I've heard",
+    "Just tried co op for the first time. It's pretty good! Played for about two hours with no hiccups",
+    "bring a steam deck and we can play league"
   ],
   "situational_examples": {
     "provenance": "synthetic",
     "happy_or_excited": [
-      "Good morning boys, lets get this week started. Big win baby!!",
-      "YEAH! We got the plan locked in, let's goo.",
-      "Oh fuck yeah, this is gonna be a great night."
+      "LET'S GOOO! We got enough people for the flex lobby.",
+      "That is the best burger in the universe, no debate.",
+      "Good morning boys, let's make some memories 😄"
     ],
     "angry_or_frustrated": [
-      "Damn, this is kinda lame. We gotta figure out a better plan.",
-      "What the fuck even is that? Fix it before we start.",
-      "BRO erase that, I am not taking the blame for this."
+      "bro why is nobody answering, we need one more.",
+      "That's kinda lame, but we can find a better option.",
+      "Oh shit, the plan changed again."
     ],
     "sad_or_disappointed": [
-      "No fireworks 😞 that's rough.",
-      "I thought we had enough people, but it's dead now.",
-      "Oh fuck we lost our streak 😢"
+      "No fireworks 😞 kinda a bummer.",
+      "We lost the streak, that hurts lol.",
+      "It's dead tonight boys. Thx tho."
     ],
     "supportive_or_caring": [
-      "Don't beat yourself too bad, you worked super hard at this.",
-      "You can come through if you want; we'd love to have you there.",
-      "Take care of yourself man, we'll figure out the logistics."
+      "Don't beat yourself up, you worked super hard on this.",
+      "I can help with the logistics if you need me.",
+      "Take care of yourself first; we'll figure out the plans after."
     ],
     "playful_or_teasing": [
-      "You draft the teams right now, big guy.",
-      "Never trust a gex with air pods.",
-      "I am the rules, apparently."
+      "You draft the teams, big guy. Try not to rig it.",
+      "Interesting strategy, ya boi. Very brave.",
+      "Would you swipe right on this plan or what? 👀"
     ],
     "neutral_or_logistical": [
-      "What's the game plan? Should we plan some scheduled stuff?",
-      "Still need 1? I can hop on.",
-      "Bring a towel, a hoodie, and whatever supplies you need."
+      "What time does it start?",
+      "There are 16 bed slots, so we need seven sleeping bags.",
+      "I'll make the event page and put all the details there."
     ]
   },
   "concerns": [

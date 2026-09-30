@@ -1,11 +1,16 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
-import type { NotificationIntentKey } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  RiotMatchIdSchema,
+  type NotificationIntentKey,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import { NotificationIntentSchema } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   NotificationAttemptNonceSchema,
   type NotificationAttemptNonce,
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { ScoutIntentAttemptRefV2 } from "@scout-for-lol/temporal/contracts-v2";
 import type * as InstalledGuildsModule from "#src/lib/discord/installed-guilds.ts";
+import type * as ChannelModule from "#src/league/discord/channel.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   testChannelId,
@@ -43,12 +48,23 @@ const { prisma } = testDatabase;
 
 const stubs = vi.hoisted(() => ({
   readChannel: vi.fn(),
+  freshGuildMember: vi.fn(),
   isInstalled: vi.fn(),
+  fetchChannelForDelivery: vi.fn(),
+  isPolicyEnabled: vi.fn(),
   send: vi.fn(),
+}));
+
+vi.mock("#src/configuration/flags.ts", async () => ({
+  ...(await vi.importActual<Record<string, unknown>>(
+    "#src/configuration/flags.ts",
+  )),
+  isPolicyEnabled: stubs.isPolicyEnabled,
 }));
 
 vi.mock("#src/lib/discord/bot-rest.ts", () => ({
   botRest: () => ({ channel: stubs.readChannel }),
+  freshBotMember: stubs.freshGuildMember,
 }));
 vi.mock("#src/lib/discord/installed-guilds.ts", async () => {
   const actual = await vi.importActual<typeof InstalledGuildsModule>(
@@ -63,19 +79,18 @@ vi.mock("#src/temporal/v2/notification/notification-message.ts", () => ({
     Promise.resolve({ content: "a live audience hears about its game" }),
 }));
 vi.mock("#src/discord/utils/channel.ts", () => ({
-  fetchChannelForDelivery: () => Promise.resolve({ guildId: undefined }),
+  fetchChannelForDelivery: stubs.fetchChannelForDelivery,
 }));
 vi.mock("#src/discord/client.ts", () => ({ client: {} }));
-vi.mock("#src/league/discord/channel.ts", async () => {
-  const { channelModuleWithSend } =
-    await import("#src/temporal/v2/notification-delivery.test-fixtures.ts");
-  return await channelModuleWithSend(stubs.send);
-});
+vi.mock("#src/league/discord/channel.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof ChannelModule>()),
+  send: stubs.send,
+}));
 
 // Everything that can reach the production client is imported only after
 // DATABASE_URL points at this suite's database.
 const { prisma: activityPrisma } = await import("#src/database/index.ts");
-const { getIntent } =
+const { getIntent, upsertIntent } =
   await import("#src/database/durable/intent-repository.ts");
 const { oldestReadyNotificationIntentAt } =
   await import("#src/database/durable/pipeline-gaps.ts");
@@ -92,6 +107,14 @@ const { deliverNotificationV2 } =
   await import("#src/temporal/v2/notification-delivery.ts");
 const { scoutDurableNotificationIntentsRetired } =
   await import("#src/metrics/durable-pipeline.ts");
+const { audienceRetirementOfV2, defaultAudienceDiscordPort } =
+  await import("#src/temporal/v2/notification/intent-audience.ts");
+const { hallRecordBreakIntentKey } =
+  await import("#src/durable/match/delivery-intents.ts");
+const { hallRecordBreakAnnouncementEnvelope } =
+  await import("#src/temporal/v2/notification/announcement-codecs.ts");
+const { hallBreakRecords } =
+  await import("#src/temporal/v2/notification/hall-record-break.test-fixtures.ts");
 
 afterAll(async () => {
   await prisma.$disconnect();
@@ -153,10 +176,189 @@ beforeEach(async () => {
   await prisma.subscription.deleteMany();
   await prisma.account.deleteMany();
   await prisma.player.deleteMany();
+  await prisma.guildInstall.deleteMany();
   scoutDurableNotificationIntentsRetired.reset();
   stubs.readChannel.mockResolvedValue(liveChannel());
+  stubs.freshGuildMember.mockResolvedValue({
+    joined_at: "2026-09-01T00:00:00.000Z",
+  });
   stubs.isInstalled.mockResolvedValue(true);
+  stubs.fetchChannelForDelivery.mockResolvedValue({ guildId: GUILD });
+  stubs.isPolicyEnabled.mockResolvedValue(true);
   stubs.send.mockResolvedValue({ id: "100000000000000888" });
+});
+
+async function seedHallInstallation(installedAt: string, removedAt?: string) {
+  await prisma.guildInstall.create({
+    data: {
+      serverId: GUILD,
+      serverName: "Hall guild",
+      ownerDiscordId: "100000000000000001",
+      addedByDiscordId: "100000000000000001",
+      memberCount: 10,
+      installedAt: new Date(installedAt),
+      removedAt: removedAt === undefined ? null : new Date(removedAt),
+    },
+  });
+}
+
+describe("Hall audience across guild installations", () => {
+  const matchId = RiotMatchIdSchema.parse("NA1_9301");
+  const mintedAt = "2026-09-12T10:00:00.000Z";
+
+  function hallRecord() {
+    return {
+      matchId,
+      intent: NotificationIntentSchema.parse({
+        key: hallRecordBreakIntentKey(matchId, GUILD),
+        kind: "hall-record-break",
+        origin: { kind: "live" },
+        target: { kind: "channel", channelId: CHANNEL },
+        freshnessDeadline: "2099-01-01T00:00:00.000Z",
+        createdAt: mintedAt,
+        attemptCount: 0,
+        announcement: hallRecordBreakAnnouncementEnvelope({
+          guildId: GUILD,
+          riotMatchId: matchId,
+          records: hallBreakRecords(1),
+        }),
+        state: { kind: "ready" },
+      }),
+    };
+  }
+
+  async function begunHallAttempt(): Promise<ScoutIntentAttemptRefV2> {
+    await seedHallInstallation("2026-09-01T00:00:00.000Z");
+    const record = hallRecord();
+    expect(await upsertIntent(prisma, record)).toEqual({ outcome: "applied" });
+    const ref = attempt(record.intent.key, NONCE_A);
+    const begun = await beginNotificationSendV2(ref);
+    expect(begun.state).toMatchObject({
+      kind: "sending",
+    });
+    return ref;
+  }
+
+  test("retires a Hall intent while its installation is removed", async () => {
+    await seedHallInstallation(
+      "2026-09-01T00:00:00.000Z",
+      "2026-09-13T00:00:00.000Z",
+    );
+
+    expect(
+      await audienceRetirementOfV2(
+        prisma,
+        hallRecord(),
+        defaultAudienceDiscordPort(),
+      ),
+    ).toBe("guild-left");
+    expect(stubs.readChannel).not.toHaveBeenCalled();
+  });
+
+  test("retires the old Hall intent after the guild is reinstalled", async () => {
+    await seedHallInstallation("2026-09-14T00:00:00.000Z");
+
+    expect(
+      await audienceRetirementOfV2(
+        prisma,
+        hallRecord(),
+        defaultAudienceDiscordPort(),
+      ),
+    ).toBe("guild-left");
+    expect(stubs.readChannel).not.toHaveBeenCalled();
+  });
+
+  test("checks Discord when a stale removal predates a new Hall intent", async () => {
+    await seedHallInstallation(
+      "2026-09-01T00:00:00.000Z",
+      "2026-09-10T00:00:00.000Z",
+    );
+
+    expect(
+      await audienceRetirementOfV2(
+        prisma,
+        hallRecord(),
+        defaultAudienceDiscordPort(),
+      ),
+    ).toBeUndefined();
+    expect(stubs.isInstalled).toHaveBeenCalledWith(GUILD);
+  });
+
+  test("keeps a Hall intent from the current installation", async () => {
+    await seedHallInstallation("2026-09-01T00:00:00.000Z");
+
+    expect(
+      await audienceRetirementOfV2(
+        prisma,
+        hallRecord(),
+        defaultAudienceDiscordPort(),
+      ),
+    ).toBeUndefined();
+    expect(stubs.isInstalled).toHaveBeenCalledWith(GUILD);
+  });
+
+  test("suppresses an old Hall attempt when the guild is reinstalled after beginSend", async () => {
+    const ref = await begunHallAttempt();
+
+    await prisma.guildInstall.update({
+      where: { serverId: GUILD },
+      data: { installedAt: new Date("2026-09-14T00:00:00.000Z") },
+    });
+
+    const delivery = await deliverNotificationV2(ref);
+    expect(delivery).toEqual({ outcome: "suppressed", reason: "guild-left" });
+    expect(stubs.send).not.toHaveBeenCalled();
+    const recorded = await recordNotificationOutcomeV2({ ...ref, delivery });
+    expect(recorded.state).toEqual({
+      kind: "suppressed",
+      reason: "guild-left",
+    });
+  });
+
+  test("suppresses an old Hall attempt when Discord sees a reinstall that GuildInstall missed", async () => {
+    const ref = await begunHallAttempt();
+
+    // The gateway's best-effort reinstall write never landed. Discord's fresh
+    // bot membership carries the new generation independently of that row.
+    stubs.freshGuildMember.mockResolvedValue({
+      joined_at: "2026-09-14T00:00:00.000Z",
+    });
+    const delivery = await deliverNotificationV2(ref);
+    expect(delivery).toEqual({ outcome: "suppressed", reason: "guild-left" });
+    expect(stubs.freshGuildMember).toHaveBeenCalledTimes(1);
+    expect(stubs.send).not.toHaveBeenCalled();
+    const recorded = await recordNotificationOutcomeV2({ ...ref, delivery });
+    expect(recorded.state).toEqual({
+      kind: "suppressed",
+      reason: "guild-left",
+    });
+  });
+
+  test("retries a Hall attempt when Discord cannot confirm its join time", async () => {
+    const ref = await begunHallAttempt();
+
+    stubs.freshGuildMember.mockResolvedValue({ joined_at: null });
+    const delivery = await deliverNotificationV2(ref);
+    expect(delivery).toEqual({
+      outcome: "failed",
+      failure: { classification: "retryable", reason: "service-unavailable" },
+    });
+    expect(stubs.send).not.toHaveBeenCalled();
+    const recorded = await recordNotificationOutcomeV2({ ...ref, delivery });
+    expect(recorded.state).toEqual({ kind: "ready" });
+  });
+
+  test("delivers a Hall attempt from the current Discord membership", async () => {
+    const ref = await begunHallAttempt();
+
+    const delivery = await deliverNotificationV2(ref);
+    expect(delivery).toEqual({
+      outcome: "delivered",
+      messageId: "100000000000000888",
+    });
+    expect(stubs.freshGuildMember).toHaveBeenCalledTimes(1);
+    expect(stubs.send).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("beginNotificationSendV2 and a deleted audience", () => {

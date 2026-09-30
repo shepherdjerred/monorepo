@@ -301,6 +301,12 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             ]);
             break;
           }
+          case "progression-reconciliation": {
+            const { reconcileCompetitiveProgression } =
+              await import("#src/progression/reconcile.ts");
+            await reconcileCompetitiveProgression(input.stage);
+            break;
+          }
           case "clash-snapshot": {
             const { runClashSnapshot } =
               await import("#src/league/clash/snapshot.ts");

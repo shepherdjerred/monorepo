@@ -84,6 +84,37 @@ describe("voice-channel gate", () => {
   });
 });
 
+describe("live sports controls", () => {
+  test("only skip, stop, and volume are actionable on live provider pages", () => {
+    const current = view().current;
+    if (current === null) throw new Error("fixture has a current item");
+    const sportsView = view({
+      current: {
+        ...current,
+        source: {
+          kind: "url",
+          url: "https://v2.streameast.ga/nfl/example-game/",
+        },
+      },
+    });
+    expect(resolve(ControlAction.Pause, { view: sportsView }).kind).toBe(
+      "denied",
+    );
+    expect(resolve(ControlAction.Forward, { view: sportsView }).kind).toBe(
+      "denied",
+    );
+    expect(resolve(ControlAction.Queue, { view: sportsView }).kind).toBe(
+      "denied",
+    );
+    expect(
+      resolve(ControlAction.Skip, { view: sportsView, userId: REQUESTER }).kind,
+    ).toBe("dispatch");
+    expect(resolve(ControlAction.VolumeUp, { view: sportsView }).kind).toBe(
+      "volume",
+    );
+  });
+});
+
 describe("permission tiers", () => {
   test("stop is admin-only", () => {
     expect(resolve(ControlAction.Stop, { userId: ADMIN })).toEqual({

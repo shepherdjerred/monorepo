@@ -53,6 +53,22 @@ The result must name `scout-beta-realtime`, `scout-beta-interactive`,
 `scout-beta-background`, and `scout-beta-lake`. A missing result means that
 Activity Worker is not polling its declared queue; stop the rollout.
 
+## Enable the durable reconciliation schedules
+
+The [two reconciliation Schedules](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/scout-schedule-definitions.ts)
+are created paused on each stage.
+
+1. Keep both paused until the matching Scout Workflow bundle passes replay and
+   the stage has healthy Workflow and background Activity pollers.
+2. Unpause `pipeline-reconciliation-v2` in beta. Confirm it drives a pending
+   intent before enabling new V2 notification kinds. Repeat after production's
+   own rollout checks.
+3. When the Hall and Duel V1 drains are ready to retire, unpause
+   `progression-reconciliation` and observe one successful run. Then deploy the
+   change that removes reconciliation from the
+   [`progression-outbox` Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/temporal/activities.ts).
+   Keep the old outbox Schedule until its rows are drained or dispositioned.
+
 ## Start the beta Workflow Deployment ramp
 
 Configure the private Temporal endpoint for every rollout command in this

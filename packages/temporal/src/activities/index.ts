@@ -1,6 +1,5 @@
 import { fetcherActivities } from "./fetcher.ts";
 import { depsSummaryActivities } from "./maintenance/deps-summary/deps-summary.ts";
-import { depsSummaryLegacyActivities } from "./maintenance/deps-summary/deps-summary-legacy.ts";
 import { dnsAuditActivities } from "./homelab/dns-audit.ts";
 import {
   golinkClusterActivities,
@@ -38,7 +37,6 @@ import { mainVulnScanAlertActivities } from "./maintenance/main-vuln-scan-alerts
 import { linkRotScanActivities } from "./maintenance/link-rot/link-rot-scan.ts";
 import { linkRotScanAlertActivities } from "./maintenance/link-rot/link-rot-scan-alerts.ts";
 import { reportDeliveryActivities } from "./reports/report-delivery.ts";
-import { protobufWatchActivities } from "./maintenance/protobuf-watch.ts";
 import { tasknotesCanaryActivities } from "./maintenance/tasknotes-canary.ts";
 import { reportFreshnessActivities } from "./reports/report-freshness.ts";
 import { ciIoObservabilityActivities } from "./maintenance/ci-io-observability.ts";
@@ -48,6 +46,9 @@ import { fliptFlagInventoryActivities } from "./flipt-flag-inventory.ts";
 import { seaweedFsBackupActivities } from "./homelab/seaweedfs-backup.ts";
 import { llmBilledCostActivities } from "./agent/llm-billed-cost.ts";
 import { opsActivities } from "./ops/ops-activities.ts";
+import { agentChatActivities } from "./agent/chat/run-agent-chat-turn.ts";
+import { agentChatDispatchActivities } from "./agent/chat/dispatch-scheduled-turn.ts";
+import { agentChatReceiptActivities } from "./agent/chat/turn-receipt.ts";
 
 export const homeActivities = {
   ...haActivities,
@@ -83,15 +84,21 @@ export const infraActivities = {
 export const repoActivities = {
   ...fetcherActivities,
   ...depsSummaryActivities,
-  ...depsSummaryLegacyActivities,
   ...golinkSyncActivities,
   ...cancelCiPipelinesActivities,
   ...checkPrMergeConflictsActivities,
   ...llmCatalogRefreshActivities,
   ...pokeemeraldDataRefreshActivities,
-  ...protobufWatchActivities,
   ...freshrssActivities,
   ...fliptFlagInventoryActivities,
+};
+
+export const agentChatDispatchWorkerActivities = {
+  ...agentChatDispatchActivities,
+};
+
+export const agentChatReceiptWorkerActivities = {
+  ...agentChatReceiptActivities,
 };
 
 export const scoutActivities = {
@@ -107,6 +114,7 @@ export const scoutActivities = {
 
 export const agentActivities = {
   ...agentTaskActivities,
+  ...agentChatActivities,
 };
 
 export const glitterCorpusWorkerActivities = {

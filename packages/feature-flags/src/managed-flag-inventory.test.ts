@@ -76,7 +76,28 @@ function scoutPolicyFlag(environment: string, key: string) {
   return flag;
 }
 
+function verifySportsGuildRollout(): void {
+  const sports = managedFlagInventory.flags.find(
+    (flag) => flag.key === "streambot-sports-streaming-enabled",
+  );
+  if (sports === undefined) throw new Error("Streambot sports flag missing");
+  expect(sports.default).toBe(false);
+  expect(sports.rollouts).toHaveLength(2);
+  expect(
+    sports.rollouts.every((rollout) =>
+      rollout.constraints.every(
+        (constraint) => constraint.property === "server",
+      ),
+    ),
+  ).toBe(true);
+}
+
 describe("ManagedFlagInventorySchema", () => {
+  test(
+    "limits Streambot sports rollout to named guilds",
+    verifySportsGuildRollout,
+  );
+
   test("uses Luna in both managed environments", () => {
     expect(exploreModel("beta")).toBe("gpt-5.6-luna");
     expect(exploreModel("prod")).toBe("gpt-5.6-luna");
