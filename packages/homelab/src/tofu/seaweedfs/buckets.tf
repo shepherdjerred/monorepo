@@ -48,17 +48,7 @@ resource "aws_s3_bucket" "cook" {
   bucket = "cook"
 }
 
-# macos-cross.sjer.red — the macos-cross-compiler marketing site.
-resource "aws_s3_bucket" "macos_cross" {
-  # Keep this resource through the cutover apply so the provider can purge
-  # the retired site's non-empty bucket before the follow-up removes it.
-  bucket        = "macos-cross"
-  force_destroy = true
-}
-
-# cross-compilers.sjer.red — the macOS + Windows cross-compiler marketing
-# site. Replaces the macos-cross bucket, which is removed once the new domain
-# is verified live.
+# cross-compilers.sjer.red — the macOS + Windows cross-compiler marketing site.
 resource "aws_s3_bucket" "cross_compilers" {
   bucket = "cross-compilers"
 }
@@ -167,7 +157,6 @@ locals {
     "scout-frontend-beta" = ["app/assets/", "_astro/"]
     "sjer-red"            = ["_astro/"]
     "cook"                = ["_astro/"]
-    "macos-cross"         = ["_astro/"]
     "cross-compilers"     = ["_astro/"]
     "stocks-sjer-red"     = ["_astro/"]
     "wiki-sjer-red"       = ["_astro/"]
@@ -193,7 +182,6 @@ resource "terraform_data" "static_site_asset_lifecycle" {
     aws_s3_bucket.scout_frontend_beta,
     aws_s3_bucket.sjer_red,
     aws_s3_bucket.cook,
-    aws_s3_bucket.macos_cross,
     aws_s3_bucket.cross_compilers,
     aws_s3_bucket.stocks_sjer_red,
     aws_s3_bucket.wiki_sjer_red,
