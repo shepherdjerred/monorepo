@@ -6,6 +6,7 @@ import { setupGitAuth } from "../lib/github-auth.ts";
 import {
   mergePinCandidates,
   mergePinStates,
+  mergeVersionCatalogSources,
   parsePinCandidates,
   parsePinCandidatesState,
   parseVersionCatalogSource,
@@ -113,6 +114,7 @@ async function prepareAttempt(
   validateCandidateKeys(batch, mainVersions);
 
   let aggregate = mainState;
+  let catalogSource = mainSource;
   if (remoteSha !== null) {
     const pendingRef = `origin/${VERSION_BUMP_BRANCH}`;
     const pendingSource = await readBranchFile(
@@ -131,13 +133,22 @@ async function prepareAttempt(
       { capture: true },
     );
     const mergeBase = mergeBaseResult.stdout.trim();
-    const baseVersions = parseVersionCatalogSource(
-      await readBranchFile(git, mergeBase, VERSION_CATALOG_FILE_REL),
+    const baseSource = await readBranchFile(
+      git,
+      mergeBase,
+      VERSION_CATALOG_FILE_REL,
     );
+    const baseVersions = parseVersionCatalogSource(baseSource);
     const baseState = parsePinCandidatesState(
       await readBranchFile(git, mergeBase, PIN_STATE_FILE_REL),
     );
     validateStateAgainstVersions(baseState, baseVersions);
+    catalogSource = mergeVersionCatalogSources(
+      mainSource,
+      pendingSource,
+      baseSource,
+    );
+    const mergedVersions = parseVersionCatalogSource(catalogSource);
     // Preserve pins changed only on the generated branch. For keys unchanged
     // there, keep main's changes and deletions so a reset can't be undone by a
     // stale full-state snapshot.
@@ -148,7 +159,7 @@ async function prepareAttempt(
     );
     const { state: activePendingState, retiredKeys } = retainCurrentImagePins(
       mergedPendingState,
-      mainVersions,
+      mergedVersions,
     );
     if (retiredKeys.length > 0) {
       console.log(
@@ -156,14 +167,18 @@ async function prepareAttempt(
       );
     }
     aggregate = activePendingState;
-    validateStateAgainstVersions(aggregate, mainVersions);
+    catalogSource = await rewriteVersionCatalogSource(catalogSource, aggregate);
+    validateStateAgainstVersions(
+      aggregate,
+      parseVersionCatalogSource(catalogSource),
+    );
   }
   aggregate = mergePinCandidates(aggregate, batch);
 
   await resetVersionBumpBranch(git);
   await Bun.write(
     `${cloneDir}/${VERSION_CATALOG_FILE_REL}`,
-    await rewriteVersionCatalogSource(mainSource, aggregate),
+    await rewriteVersionCatalogSource(catalogSource, aggregate),
   );
   await Bun.write(
     `${cloneDir}/${PIN_STATE_FILE_REL}`,

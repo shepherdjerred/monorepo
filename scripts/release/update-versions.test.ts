@@ -11,6 +11,7 @@ import {
 import {
   mergePinCandidates,
   mergePinStates,
+  mergeVersionCatalogSources,
   parsePinCandidates,
   parsePinCandidatesState,
   parseVersionCatalogSource,
@@ -258,6 +259,58 @@ describe("version catalog integrity", () => {
     expect(value).toBeGreaterThan(management);
     validateStateAgainstVersions(state, parseVersionCatalogSource(rewritten));
     expect(serializePinCandidatesState(state).endsWith("\n")).toBe(true);
+  });
+
+  test("merges pending catalog changes without restoring main retirements", async () => {
+    const mainOnly = "shepherdjerred/main-only";
+    const pendingOnly = "shepherdjerred/pending-only";
+    const retiredOnMain = "shepherdjerred/retired-on-main";
+    const retiredOnPending = "shepherdjerred/retired-on-pending";
+    const baseSource = catalogSource([
+      { name: KEY, value: `base@${A}` },
+      { name: mainOnly, value: `base@${A}` },
+      { name: retiredOnMain, value: `base@${A}` },
+      { name: retiredOnPending, value: `base@${A}` },
+    ]);
+    const mainSource = catalogSource([
+      { name: KEY, value: `main@${A}` },
+      { name: mainOnly, value: `main@${B}` },
+      { name: retiredOnPending, value: `base@${A}` },
+    ]);
+    const pendingSource = catalogSource([
+      { name: KEY, value: `pending@${B}` },
+      { name: mainOnly, value: `base@${A}` },
+      { name: retiredOnMain, value: `base@${A}` },
+      { name: pendingOnly, value: `pending@${B}` },
+    ]);
+
+    const mergedSource = mergeVersionCatalogSources(
+      mainSource,
+      pendingSource,
+      baseSource,
+    );
+    const mergedVersions = parseVersionCatalogSource(mergedSource);
+
+    expect(mergedVersions.get(KEY)).toBe(`main@${A}`);
+    expect(mergedVersions.get(mainOnly)).toBe(`main@${B}`);
+    expect(mergedVersions.get(pendingOnly)).toBe(`pending@${B}`);
+    expect(mergedVersions.has(retiredOnMain)).toBe(false);
+    expect(mergedVersions.has(retiredOnPending)).toBe(false);
+
+    const state = mergePinCandidates(
+      parsePinCandidatesState('{"schema":"pin-candidates-state/v1","pins":{}}'),
+      batch(18_031, "v18031", B, pendingOnly),
+    );
+    const rewrittenSource = await rewriteVersionCatalogSource(
+      mergedSource,
+      state,
+    );
+    validateStateAgainstVersions(
+      state,
+      parseVersionCatalogSource(rewrittenSource),
+    );
+    expect(rewrittenSource).toContain(`"name": "${pendingOnly}"`);
+    expect(rewrittenSource).toContain(`"value": "v18031@${B}"`);
   });
 
   test("leaves Scout beta notes untouched when rewriting the pin", async () => {

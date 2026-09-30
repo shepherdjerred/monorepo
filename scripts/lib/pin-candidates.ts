@@ -4,6 +4,7 @@ import {
   parseVersionCatalogText,
   serializeVersionCatalog,
   type VersionCatalog,
+  type VersionCatalogEntry,
 } from "@shepherdjerred/version-catalog";
 
 const DigestSchema = z
@@ -79,6 +80,54 @@ export function serializePinCandidatesState(state: PinCandidatesState): string {
 export function parseVersionCatalogSource(source: string): Map<string, string> {
   const catalog = parseVersionCatalogText(source);
   return new Map(catalog.entries.map((entry) => [entry.name, entry.value]));
+}
+
+function sameVersionCatalogEntry(
+  left: VersionCatalogEntry | undefined,
+  right: VersionCatalogEntry | undefined,
+): boolean {
+  return left === undefined || right === undefined
+    ? left === right
+    : JSON.stringify(left) === JSON.stringify(right);
+}
+
+/**
+ * Apply pending catalog changes on top of main using their merge base.
+ * Main wins concurrent catalog edits, including retirements; generated pin
+ * state is merged separately and rewrites the selected image values later.
+ */
+export function mergeVersionCatalogSources(
+  mainSource: string,
+  pendingSource: string,
+  baseSource: string,
+): string {
+  const main = parseVersionCatalogText(mainSource);
+  const pending = parseVersionCatalogText(pendingSource);
+  const base = parseVersionCatalogText(baseSource);
+  const mainEntries = new Map(main.entries.map((entry) => [entry.name, entry]));
+  const pendingEntries = new Map(
+    pending.entries.map((entry) => [entry.name, entry]),
+  );
+  const baseEntries = new Map(base.entries.map((entry) => [entry.name, entry]));
+  const names = new Set([
+    ...main.entries.map((entry) => entry.name),
+    ...pending.entries.map((entry) => entry.name),
+  ]);
+  const entries: VersionCatalogEntry[] = [];
+
+  for (const name of names) {
+    const mainEntry = mainEntries.get(name);
+    const pendingEntry = pendingEntries.get(name);
+    const baseEntry = baseEntries.get(name);
+    const mergedEntry = sameVersionCatalogEntry(pendingEntry, baseEntry)
+      ? mainEntry
+      : sameVersionCatalogEntry(mainEntry, baseEntry)
+        ? pendingEntry
+        : mainEntry;
+    if (mergedEntry !== undefined) entries.push(mergedEntry);
+  }
+
+  return serializeVersionCatalog({ ...main, entries });
 }
 
 function imageKeys(versions: Map<string, string>): Set<string> {
