@@ -1,0 +1,54 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  current?: "macos" | "windows";
+}
+
+const { current } = Astro.props;
+const repoUrl = "https://github.com/shepherdjerred/monorepo";
+
+const linkClass = (active: boolean) =>
+  active
+    ? "text-stone-900 dark:text-white font-medium"
+    : "text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white";
+---
+
+<header class="border-b border-stone-200 dark:border-stone-800">
+  <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+    <a
+      href="/"
+      class="flex min-w-0 items-center gap-2 font-mono text-sm font-semibold text-stone-900 dark:text-white"
+    >
+      <img src="/favicon.svg" alt="" width="24" height="24" class="shrink-0" />
+      <span class="truncate">cross-compilers</span>
+    </a>
+    <nav aria-label="Primary" class="flex items-center gap-5 text-sm">
+      <a
+        href="/macos"
+        aria-current={current === "macos" ? "page" : undefined}
+        class={linkClass(current === "macos")}
+      >
+        macOS
+      </a>
+      <a
+        href="/windows"
+        aria-current={current === "windows" ? "page" : undefined}
+        class={linkClass(current === "windows")}
+      >
+        Windows
+      </a>
+      <a
+        href={repoUrl}
+        class="inline-flex items-center gap-1.5 text-stone-600 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white"
+      >
+        <Icon
+          name="heroicons:code-bracket"
+          class="h-4 w-4"
+          aria-hidden="true"
+        />
+        GitHub
+      </a>
+    </nav>
+  </div>
+</header>

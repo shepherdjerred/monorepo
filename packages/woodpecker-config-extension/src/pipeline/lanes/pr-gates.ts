@@ -29,7 +29,7 @@ const DRY_RUN_SITES = [
   "webring",
   "cooklang-rich-preview",
   "stocks-sjer-red",
-  "macos-cross-site",
+  "cross-compilers-site",
   "wiki",
   "better-skill-capped",
   "glitter",
