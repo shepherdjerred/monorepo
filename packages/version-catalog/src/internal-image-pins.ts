@@ -1,8 +1,11 @@
 import { VersionCatalogSchema } from "./index.ts";
 
-const PIN_VALUE = /^.+@sha256:[a-f0-9]{64}$/u;
+// Internal image values are a release version, CI build number, and digest.
+// The repository identity is the catalog entry name, which the full-object
+// comparison below requires to remain unchanged.
+const PIN_VALUE = /^(\d+\.\d+\.\d+)-\d+@sha256:[a-f0-9]{64}$/u;
 
-/** Prove that every catalog delta is an unmanaged internal image digest. */
+/** Prove that every catalog delta is an unmanaged internal image pin. */
 export function onlyInternalImagePinsChanged(
   beforeRaw: unknown,
   afterRaw: unknown,
@@ -18,14 +21,18 @@ export function onlyInternalImagePinsChanged(
   const normalized = newEntries.map((entry, index) => {
     const oldEntry = oldEntries[index];
     if (oldEntry === undefined || entry.value === oldEntry.value) return entry;
-    return entry.category !== "internal-image" ||
+    const nextPin = PIN_VALUE.exec(entry.value);
+    const oldPin = PIN_VALUE.exec(oldEntry.value);
+    if (
+      entry.category !== "internal-image" ||
       entry.artifactType !== "image" ||
-      entry.management.managed ||
-      !PIN_VALUE.test(entry.value) ||
-      !PIN_VALUE.test(oldEntry.value) ||
-      entry.value.slice(0, -64) !== oldEntry.value.slice(0, -64)
-      ? entry
-      : { ...entry, value: oldEntry.value };
+      entry.management.managed
+    )
+      return entry;
+    if (nextPin === null || oldPin === null) return entry;
+    return nextPin[1] === oldPin[1]
+      ? { ...entry, value: oldEntry.value }
+      : entry;
   });
   return (
     JSON.stringify({ ...after.data, entries: normalized }) ===

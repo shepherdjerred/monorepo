@@ -45,12 +45,15 @@ with the PR target branch. Within that workflow, Turbo runs at most three tasks
 at once and each Vitest process uses at most four workers, matching the pod's
 12-CPU limit.
 
-When the only catalog edits change digest values of internal images, `verify`
+When the [catalog comparator](https://github.com/shepherdjerred/monorepo/blob/main/packages/version-catalog/src/internal-image-pins.ts)
+finds only internal image build number and digest changes,
+[`verify`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/verify.ts)
 checks the catalog package, root scripts, the homelab chart consumer, and root
 invariants. Other catalog edits and an unknown or invalid comparison base run
 the full verification graph. The main release renders and reconciles the charts
-generated from the pins. On a proven pin-only main push, the extension also
-omits unrelated site, package, toolchain-refresh, and OpenTofu workflows. It
+generated from the pins. On a proven pin-only main push, the
+[extension selector](https://github.com/shepherdjerred/monorepo/blob/main/packages/woodpecker-config-extension/src/pipeline/internal-image-pin-change.ts)
+also omits unrelated site, package, toolchain-refresh, and OpenTofu workflows. It
 keeps image publication, the guarded chart and ArgoCD release, the pin
 commit-back, and Scout's image-driven release consumers. An uncertain catalog
 comparison selects the full main graph.
