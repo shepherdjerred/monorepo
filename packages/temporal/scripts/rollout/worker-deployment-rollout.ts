@@ -12,7 +12,7 @@ import {
   requiredParsedArgument,
 } from "#scripts/cli-arguments.ts";
 
-const ACTIONS = new Set([
+const ActionSchema = z.enum([
   "inspect",
   "status",
   "start",
@@ -54,23 +54,13 @@ const runCommand: RolloutCommandRunner = async (command) => {
 };
 
 function actionFrom(args: string[]): WorkerDeploymentRolloutOptions["action"] {
-  const action = args[0];
-  if (action === undefined || !ACTIONS.has(action)) {
+  const action = ActionSchema.safeParse(args[0]);
+  if (!action.success) {
     throw new Error(
       "Usage: bun run worker-deployment <inspect|status|start|advance|promote|rollback> --build-id <image-git-sha>",
     );
   }
-  if (
-    action !== "inspect" &&
-    action !== "status" &&
-    action !== "start" &&
-    action !== "advance" &&
-    action !== "promote" &&
-    action !== "rollback"
-  ) {
-    throw new Error(`Unsupported action ${action}`);
-  }
-  return action;
+  return action.data;
 }
 
 async function main(): Promise<void> {

@@ -101,10 +101,10 @@ const EXCLUDED_FILES = [
   // toward — the ban is on putting `x-access-token` in URLs, not in askpass.
   "packages/temporal/src/activities/data-dragon/data-dragon.ts",
   // Same pattern: GIT_ASKPASS script for the agent-task workdir clone
-  // (lib/pr-review-workdir.ts — legacy name; now used by agent-task). The
+  // (lib/agent-workdir.ts). The
   // literal "x-access-token" is the username GitHub's HTTPS clone expects
   // when the password is a PAT; not a token-in-URL.
-  "packages/temporal/src/lib/pr-review-workdir.ts",
+  "packages/temporal/src/lib/agent-workdir.ts",
   // Same GIT_ASKPASS pattern as data-dragon.ts — emits "x-access-token" as the
   // git username for the bare blobless clone the ci/merge-conflict checker uses
   // to fetch refs/heads/main + refs/pull/*/head before running merge-tree.

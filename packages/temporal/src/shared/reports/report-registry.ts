@@ -80,13 +80,6 @@ export const REPORT_SCHEDULE_REGISTRY: readonly ReportScheduleRegistration[] = [
     receiptRequiredAfter: REPORT_RECEIPT_ACTIVATION,
   },
   {
-    scheduleId: "protobufjs-v8-watch-weekly",
-    reportType: "protobufjs-v8-watch",
-    cadenceHours: 168,
-    graceHours: defaultReportGraceHours(168),
-    receiptRequiredAfter: REPORT_RECEIPT_ACTIVATION,
-  },
-  {
     scheduleId: "main-vuln-scan-weekly",
     reportType: "main-vuln-scan",
     cadenceHours: 168,

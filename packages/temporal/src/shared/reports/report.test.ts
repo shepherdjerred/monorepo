@@ -184,27 +184,6 @@ const SUBJECT_CASES = [
     expected: "Vulnerability scan failed",
   },
   {
-    reportType: "protobufjs-v8-watch",
-    title: "Temporal protobufjs v8 compatibility",
-    execution: "complete",
-    verdict: "pending",
-    expected: "Temporal still uses protobufjs v7",
-  },
-  {
-    reportType: "protobufjs-v8-watch",
-    title: "Temporal protobufjs v8 compatibility",
-    execution: "complete",
-    verdict: "attention",
-    expected: "Temporal can move to protobufjs v8",
-  },
-  {
-    reportType: "protobufjs-v8-watch",
-    title: "Temporal protobufjs v8 compatibility",
-    execution: "failed",
-    verdict: "inconclusive",
-    expected: "protobufjs compatibility check failed",
-  },
-  {
     reportType: "scout-data-dragon",
     title: "Scout Data Dragon version-check",
     execution: "complete",
@@ -324,7 +303,7 @@ describe("ReportEnvelopeV1", () => {
         }),
       ).toBe(subjectCase.expected);
     }
-    expect(TAILORED_REPORT_TYPES).toHaveLength(11);
+    expect(TAILORED_REPORT_TYPES).toHaveLength(10);
     expect(TAILORED_REPORT_TYPES.every(hasTailoredReportPresentation)).toBe(
       true,
     );
@@ -349,13 +328,6 @@ describe("ReportEnvelopeV1", () => {
         verdict: "pending",
       }).statusLabel,
     ).toBe("Check incomplete");
-    expect(
-      presentReport({
-        ...validReport(),
-        reportType: "protobufjs-v8-watch",
-        verdict: "pending",
-      }).statusLabel,
-    ).toBe("No action needed");
     expect(
       presentReport({
         ...validReport(),

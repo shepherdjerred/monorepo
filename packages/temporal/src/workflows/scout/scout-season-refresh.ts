@@ -1,4 +1,4 @@
-import { patched, proxyActivities } from "@temporalio/workflow";
+import { proxyActivities } from "@temporalio/workflow";
 import type {
   ScoutSeasonRefreshActivities,
   ScoutSeasonRefreshInput,
@@ -265,14 +265,10 @@ export async function runScoutSeasonRefreshWorkflow(
   const startedAt = new Date().toISOString();
   try {
     const result = await runScoutSeasonRefresh(input);
-    if (patched("scout-season-report-envelope-v1")) {
-      await deliverActivityReport(scoutSeasonReport(startedAt, result));
-    }
+    await deliverActivityReport(scoutSeasonReport(startedAt, result));
     return result;
   } catch (error) {
-    if (patched("scout-season-report-envelope-v1")) {
-      await deliverActivityReport(failureReport(startedAt, error));
-    }
+    await deliverActivityReport(failureReport(startedAt, error));
     throw error;
   }
 }

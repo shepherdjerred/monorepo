@@ -9,7 +9,6 @@ import type { TasknotesCanaryResult } from "#activities/maintenance/tasknotes-ca
 import type { ActivityReportInput } from "#activities/reports/report-delivery.ts";
 import { ReportEnvelopeV1Schema } from "#shared/reports/report.ts";
 import { dataDragonReport } from "./scout/data-dragon.ts";
-import { protobufWatchReport } from "./ci/protobuf-watch.ts";
 import { scoutQueueWindowsReport } from "./scout/scout-queue-windows.ts";
 import { scoutSeasonReport } from "./scout/scout-season-refresh.ts";
 import { tasknotesReport } from "./tasknotes-canary.ts";
@@ -101,33 +100,6 @@ describe("deterministic report outcome matrices", () => {
     expect(
       validate(tasknotesReport(STARTED_AT, tasknotesResult(70, 100))),
     ).toMatchObject({ execution: "complete", verdict: "attention" });
-  });
-
-  test("protobuf watch reports stable and migration-ready states", () => {
-    const stable = protobufWatchReport(STARTED_AT, {
-      observedAt: OBSERVED_AT,
-      packageVersion: "1.18.1",
-      protobufjsRange: "7.5.8",
-      supportsV8: false,
-      sourceUrl: "https://registry.npmjs.org/@temporalio/proto/latest",
-      evidenceJson: "{}",
-    });
-    const ready = protobufWatchReport(STARTED_AT, {
-      observedAt: OBSERVED_AT,
-      packageVersion: "2.0.0",
-      protobufjsRange: "^8.0.0",
-      supportsV8: true,
-      sourceUrl: "https://registry.npmjs.org/@temporalio/proto/latest",
-      evidenceJson: "{}",
-    });
-    expect(validate(stable)).toMatchObject({
-      execution: "complete",
-      verdict: "pending",
-    });
-    expect(validate(ready)).toMatchObject({
-      execution: "complete",
-      verdict: "attention",
-    });
   });
 });
 

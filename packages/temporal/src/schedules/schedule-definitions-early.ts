@@ -127,24 +127,6 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     memo: "Weekly dependency summary email",
   },
   {
-    id: "protobufjs-v8-watch-weekly",
-    workflowType: "runProtobufWatch",
-    args: [],
-    timing: {
-      kind: "cron",
-      expression: "0 9 * * 1",
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    // Worst case: three 1m collection attempts, three 2m primary-delivery
-    // attempts, then three 2m failure-delivery attempts, plus retry delays and
-    // workflow-task overhead. Keep ten minutes of headroom over the 15m
-    // start-to-close total so the failure heartbeat can still be accepted.
-    workflowExecutionTimeout: "25 minutes",
-    memo: "Weekly typed npm metadata check for Temporal protobufjs v8 compatibility",
-  },
-  {
     id: "tasknotes-skipped-files-canary",
     workflowType: "runTasknotesCanary",
     args: [],

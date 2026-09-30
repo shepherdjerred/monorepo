@@ -58,13 +58,6 @@ const PREVIEWS = [
     headline: "No HIGH or CRITICAL vulnerabilities were found.",
   },
   {
-    reportType: "protobufjs-v8-watch",
-    title: "Temporal protobufjs v8 compatibility",
-    execution: "complete",
-    verdict: "attention",
-    headline: "The current Temporal release accepts protobufjs v8.",
-  },
-  {
     reportType: "scout-data-dragon",
     title: "Scout Data Dragon weekly refresh",
     execution: "complete",
