@@ -132,9 +132,11 @@ describe("Scout runtime role assignment", () => {
     );
   });
 
-  test("prod splits its gateway and observes the activity handoff", () => {
+  test("prod splits its gateway and isolates application activities", () => {
     const backend = roleDeployment("prod", "scout-prod-scout-backend");
-    expect(envValue(backend, "SCOUT_RUNTIME_ROLE")).toBe("application");
+    expect(envValue(backend, "SCOUT_RUNTIME_ROLE")).toBe(
+      "application-isolated",
+    );
 
     const prod = scoutResources("prod");
     for (const [name, role] of [

@@ -36,10 +36,9 @@ import { escapePrometheusTemplate } from "./shared.ts";
  * ## Why none of these name a role
  *
  * Every gauge here is produced by whichever role owns the database sweeps —
- * `combined` in prod, `application` in beta — and the rules deliberately do not
+ * `application-isolated` in both stages — and the rules deliberately do not
  * say which. They ask whether the answer exists and what it says, so they need
- * no edit when a stage's sweep owner changes and cannot be made wrong by the
- * deferred `activity-worker` role never being deployed.
+ * no edit when a stage's sweep owner changes.
  *
  * ## If you come here to add a stalled-notification alert
  *
