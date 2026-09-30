@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import {
   ChannelIdSchema,
   GuildIdSchema,
@@ -149,6 +150,76 @@ describe("sports playback selection", () => {
         },
       }),
     ).rejects.toThrow("not enabled");
+  });
+
+  it("reports a provider outage for a pasted sports page instead of a raw error", async () => {
+    const request = selectDirectRequestUrl({
+      query: "https://v2.streameast.ga/nfl/bears-vs-packers/",
+      spoken: false,
+      source: "auto",
+      scope,
+      enabled: async () => true,
+      signal,
+      resolve: async () => {
+        throw new Error("browser unavailable");
+      },
+    });
+    await expect(request).rejects.toBeInstanceOf(PlaybackCommandBoundaryError);
+    await expect(request).rejects.toThrow(
+      "I couldn't start the streameast stream right now. Please try again later.",
+    );
+  });
+
+  it("rejects an explicit sports provider when the flag is off", async () => {
+    for (const provider of ["auto", "streameast"] as const) {
+      await expect(
+        selectSportsForRequest({
+          query: "Bears vs Packers",
+          source: "auto",
+          provider,
+          scope,
+          enabled: async () => false,
+          signal,
+          catalog: {
+            listToday: async () => {
+              throw new Error("must not browse sports sites");
+            },
+            search: async () => {
+              throw new Error("must not browse sports sites");
+            },
+          },
+          resolve: async () => {
+            throw new Error("must not resolve");
+          },
+          onAmbiguous: () => {
+            throw new Error("must not ask about sports");
+          },
+        }),
+      ).rejects.toThrow("Sports streams are not enabled here.");
+    }
+  });
+
+  it("does not fall through to ordinary discovery for an unmatched explicit provider", async () => {
+    await expect(
+      selectSportsForRequest({
+        query: "Bears vs Packers",
+        source: "auto",
+        provider: "streameast",
+        scope,
+        enabled: async () => true,
+        signal,
+        catalog: {
+          listToday: async () => [],
+          search: async () => ({ kind: "not-found" }),
+        },
+        resolve: async () => {
+          throw new Error("must not resolve");
+        },
+        onAmbiguous: () => {
+          throw new Error("must not ask about sports");
+        },
+      }),
+    ).rejects.toThrow("couldn't find a sports stream matching");
   });
 
   it("keeps ordinary public URLs on the existing generic source path", async () => {

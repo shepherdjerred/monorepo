@@ -60,10 +60,20 @@ export async function selectDirectRequestUrl(input: {
     );
   }
   const source: Source = { kind: "url", url: event.pageUrl, mode: "video" };
+  let preResolved: ResolvedSource;
+  try {
+    preResolved = await input.resolve(source, input.signal);
+  } catch (error) {
+    input.signal.throwIfAborted();
+    throw new PlaybackCommandBoundaryError(
+      `I couldn't start the ${event.provider} stream right now. Please try again later.`,
+      { cause: error },
+    );
+  }
   return {
     source,
     sports: true,
-    preResolved: await input.resolve(source, input.signal),
+    preResolved,
   };
 }
 
@@ -168,18 +178,39 @@ export async function selectSportsForRequest(input: {
   ) => Promise<ResolvedSource>;
   readonly onAmbiguous: () => void;
 }): Promise<SportsPlaybackSelection | null> {
+  const explicitProvider = input.provider !== undefined;
+  if (!explicitProvider && !hasSportsCue(input.query, input.utterance)) {
+    return null;
+  }
+  if (input.source !== "auto") {
+    if (explicitProvider) {
+      throw new PlaybackCommandBoundaryError(
+        "A sports provider requires the auto source.",
+      );
+    }
+    return null;
+  }
   if (
-    (input.provider === undefined &&
-      !hasSportsCue(input.query, input.utterance)) ||
     input.scope === null ||
-    input.source !== "auto" ||
-    input.catalog === undefined ||
     input.enabled === undefined ||
     !(await input.enabled(input.scope))
   ) {
+    if (explicitProvider) {
+      throw new PlaybackCommandBoundaryError(
+        "Sports streams are not enabled here.",
+      );
+    }
     return null;
   }
-  return await selectSportsPlayback({
+  if (input.catalog === undefined) {
+    if (explicitProvider) {
+      throw new PlaybackCommandBoundaryError(
+        "Sports listings are temporarily unavailable. Please try again later.",
+      );
+    }
+    return null;
+  }
+  const selected = await selectSportsPlayback({
     query: input.query,
     provider: input.provider ?? "auto",
     signal: input.signal,
@@ -187,4 +218,10 @@ export async function selectSportsForRequest(input: {
     resolve: input.resolve,
     onAmbiguous: input.onAmbiguous,
   });
+  if (selected === null && explicitProvider) {
+    throw new PlaybackCommandBoundaryError(
+      `I couldn't find a sports stream matching ${input.query}.`,
+    );
+  }
+  return selected;
 }
