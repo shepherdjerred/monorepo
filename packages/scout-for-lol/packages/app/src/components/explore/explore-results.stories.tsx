@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   ExploreMatchCardSchema,
+  ExploreLoadoutCardSchema,
   ExploreTraceEntrySchema,
   ReportAiPreviewSummarySchema,
   type ExploreMatchCard,
+  type ExploreLoadoutCard,
   type ExploreTraceEntry,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
@@ -15,8 +17,10 @@ import {
 } from "#src/lib/storybook/story-fixtures.ts";
 import { SingleRowResult } from "./explore-result.tsx";
 import { ExploreMatchCards } from "./explore-match-cards.tsx";
+import { ExploreLoadoutCards } from "./explore-loadout-cards.tsx";
 import { ExploreVisualResult } from "./explore-visual-result.tsx";
 import { ExploreToolTrace } from "./explore-tool-trace.tsx";
+import { MarkdownAnswer } from "#src/components/scoutql/markdown-answer.tsx";
 
 /**
  * What an answered turn attaches to its prose: the result as figures, as a
@@ -165,6 +169,85 @@ function matchCard(size: "S" | "M" | "L", matchId: string): ExploreMatchCard {
   });
 }
 
+function loadoutCard(size: "S" | "L"): ExploreLoadoutCard {
+  return ExploreLoadoutCardSchema.parse({
+    size,
+    matchId: "NA1_5635906026",
+    participantId: 1,
+    championId: 103,
+    championName: "Ahri",
+    gameDurationSeconds: 1728,
+    finalItems: [
+      { slot: 0, itemId: 6655, name: "Luden's Companion" },
+      { slot: 1, itemId: 3020, name: "Sorcerer's Shoes" },
+      { slot: 2, itemId: 3089, name: "Rabadon's Deathcap" },
+      { slot: 3, itemId: 3135, name: "Void Staff" },
+      { slot: 4, itemId: 3165, name: "Morellonomicon" },
+      { slot: 5, itemId: null, name: null },
+      { slot: 6, itemId: 3363, name: "Farsight Alteration" },
+    ],
+    spells: [
+      { slot: 1, spellId: "SummonerFlash", name: "Flash" },
+      { slot: 2, spellId: "SummonerDot", name: "Ignite" },
+    ],
+    runePage: {
+      primaryTree: {
+        id: 8100,
+        assetKey: "7200_Domination",
+        name: "Domination",
+      },
+      keystone: { id: 8112, assetKey: "Electrocute", name: "Electrocute" },
+      primaryRunes: [
+        { id: 8126, assetKey: "CheapShot", name: "Cheap Shot" },
+        {
+          id: 8139,
+          assetKey: "GreenTerror_TasteOfBlood",
+          name: "Taste of Blood",
+        },
+        { id: 8106, assetKey: "UltimateHunter", name: "Ultimate Hunter" },
+      ],
+      secondaryTree: { id: 8200, assetKey: "7202_Sorcery", name: "Sorcery" },
+      secondaryRunes: [
+        { id: 8224, assetKey: "Axiom_Arcanist", name: "Axiom Arcanist" },
+        { id: 8236, assetKey: "GatheringStorm", name: "Gathering Storm" },
+      ],
+      shards: [
+        { slot: "offense", id: 5008 },
+        { slot: "flex", id: 5008 },
+        { slot: "defense", id: 5011 },
+      ],
+    },
+    buildPathRecorded: true,
+    buildPathTruncated: false,
+    buildPath: [
+      { minute: 1, itemId: 2003, name: "Health Potion", kind: "purchase" },
+      { minute: 4, itemId: 1056, name: "Doran's Ring", kind: "sold" },
+      { minute: 8, itemId: 6655, name: "Luden's Companion", kind: "purchase" },
+      { minute: 12, itemId: 3020, name: "Sorcerer's Shoes", kind: "purchase" },
+    ],
+    skillOrder: [
+      { level: 1, skill: "Q" },
+      { level: 2, skill: "W" },
+      { level: 3, skill: "E" },
+      { level: 4, skill: "Q" },
+      { level: 5, skill: "Q" },
+      { level: 6, skill: "R" },
+      { level: 7, skill: "Q" },
+      { level: 8, skill: "W" },
+      { level: 9, skill: "Q" },
+      { level: 10, skill: "W" },
+      { level: 11, skill: "R" },
+      { level: 12, skill: "W" },
+      { level: 13, skill: "W" },
+      { level: 14, skill: "E" },
+      { level: 15, skill: "E" },
+      { level: 16, skill: "R" },
+      { level: 17, skill: "E" },
+      { level: 18, skill: "E" },
+    ],
+  });
+}
+
 const TRACE: ExploreTraceEntry[] = [
   ExploreTraceEntrySchema.parse({
     toolCallId: "call-reference-1",
@@ -256,6 +339,45 @@ export const MatchCards: Story = {
         matchCard("L", "NA1_5635906026"),
       ]}
     />
+  ),
+};
+
+export const LoadoutCards: Story = {
+  args: { preview: null, visualization: null },
+  render: () => (
+    <div className="mx-auto max-w-3xl space-y-3">
+      <ExploreLoadoutCards cards={[loadoutCard("S"), loadoutCard("L")]} />
+    </div>
+  ),
+};
+
+export const UnknownBuildPathItem: Story = {
+  args: { preview: null, visualization: null },
+  render: () => (
+    <div className="mx-auto max-w-3xl space-y-3">
+      <ExploreLoadoutCards
+        cards={[
+          {
+            ...loadoutCard("L"),
+            buildPath: [
+              { minute: 4, itemId: 999_999, name: null, kind: "purchase" },
+            ],
+          },
+        ]}
+      />
+    </div>
+  ),
+};
+
+export const LoadoutAnswer: Story = {
+  args: { preview: null, visualization: null },
+  render: () => (
+    <div className="mx-auto max-w-3xl space-y-3">
+      <MarkdownAnswer>
+        {`In this Ranked game, Ahri finished with Luden's Companion and Sorcerer's Shoes. The match timeline also shows the purchase order and skill levels.`}
+      </MarkdownAnswer>
+      <ExploreLoadoutCards cards={[loadoutCard("L")]} />
+    </div>
   ),
 };
 

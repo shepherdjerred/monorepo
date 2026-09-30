@@ -85,6 +85,7 @@ function toStreamMessage(message: ExploreMessage) {
   // answer never lands there.
   const {
     matchCards: _matchCards,
+    loadoutCards: _loadoutCards,
     guildIds: _guildIds,
     ...streamMessage
   } = message;
@@ -218,6 +219,7 @@ export async function runPersistedExploreTurn(
       preview: result.preview,
       visualization: result.visualization,
       matchCards: result.matchCards,
+      loadoutCards: result.loadoutCards,
       trace: finalizeExploreTrace(trace),
       expectedCurrentLeafId: input.started.expectedCurrentLeafId,
     });

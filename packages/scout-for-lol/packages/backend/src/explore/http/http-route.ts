@@ -211,14 +211,24 @@ async function handleSharedTranscript(
       updatedAt: shared.conversation.updatedAt,
     },
   };
+  const cardsVersion = url.searchParams.get("cards");
   const payload =
-    url.searchParams.get("cards") === "1"
+    cardsVersion === "2"
       ? compatibleShared
       : {
           ...compatibleShared,
-          messages: compatibleShared.messages.map(
-            ({ matchCards: _, ...message }) => message,
-          ),
+          messages: compatibleShared.messages.map((message) => {
+            if (cardsVersion === "1") {
+              const { loadoutCards: _loadoutCards, ...legacyMessage } = message;
+              return legacyMessage;
+            }
+            const {
+              matchCards: _matchCards,
+              loadoutCards: _loadoutCards,
+              ...messageWithoutCards
+            } = message;
+            return messageWithoutCards;
+          }),
         };
   return Response.json(payload, {
     status: 200,

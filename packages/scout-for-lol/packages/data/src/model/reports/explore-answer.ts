@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { ReportQueryTextSchema } from "#src/model/reports/report.ts";
 import { ExploreMatchCardRequestsSchema } from "#src/model/reports/explore-match-card.ts";
+import { ExploreLoadoutCardRequestsSchema } from "#src/model/reports/explore-loadout-card.ts";
 
 export const EXPLORE_ANSWER_MAX_LENGTH = 4000;
 export const EXPLORE_SPOKEN_ANSWER_MAX_LENGTH = 500;
@@ -69,6 +70,8 @@ export const ExploreAnswerSchema = z
       .default(false),
     /** Source-backed match artifacts the model wants beside this answer. */
     matchCards: ExploreMatchCardRequestsSchema.default([]),
+    /** Participant-specific build and rune artifacts to show with this answer. */
+    loadoutCards: ExploreLoadoutCardRequestsSchema.default([]),
     /**
      * Limits a reader needs to judge the answer — small samples, a corpus
      * that only covers matches Scout ingested, a metric that means something
@@ -116,6 +119,7 @@ export const ExploreAnswerWireSchema = z
       .boolean()
       .describe(INCLUDE_VISUALIZATION_DESCRIPTION),
     matchCards: ExploreMatchCardRequestsSchema,
+    loadoutCards: ExploreLoadoutCardRequestsSchema,
     caveats: z.array(z.string().trim().min(1).max(300)).max(5),
     followUps: z.array(ExploreFollowUpSchema).max(3),
   })

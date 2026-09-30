@@ -8,6 +8,7 @@ import {
   modelSupportsParameter,
   type ExploreAnswer,
   type ExploreMatchCard,
+  type ExploreLoadoutCard,
   type ReportAiPreviewSummary,
   type VisualizationSnapshot,
 } from "@scout-for-lol/data";
@@ -27,6 +28,7 @@ import { resolveBucksCapability } from "#src/explore/tools/bucks-tools.ts";
 import { resolveMvpVotesCapability } from "#src/explore/tools/mvp-votes-tools.ts";
 import { riotHistoryExploreEnabled } from "#src/explore/tools/riot-history-tools.ts";
 import { hydrateExploreMatchCards } from "#src/explore-match/match-view.ts";
+import { hydrateExploreLoadoutCards } from "#src/explore-match/loadout-view.ts";
 import { clashExploreEnabled } from "#src/league/clash/access.ts";
 import { resolveHallCapability } from "#src/explore/tools/hall-tools.ts";
 import { getLlmRuntime } from "#src/league/review/ai-clients.ts";
@@ -46,6 +48,7 @@ export type ExploreAgentResult = {
   visualization: VisualizationSnapshot | null;
   /** Frozen, source-backed artifacts requested by the model. */
   matchCards: ExploreMatchCard[];
+  loadoutCards: ExploreLoadoutCard[];
 };
 
 export async function streamExploreAgent(
@@ -75,6 +78,7 @@ async function streamExploreAgentInternal(
     lastVisualization: null,
     lastMatchIds: new Set(),
     lastQueryMatchIds: new Set(),
+    lastQueryLoadoutPairs: new Set(),
     loadedSkills: new Set(),
   };
 
@@ -174,6 +178,13 @@ async function streamExploreAgentInternal(
           eligibleMatchIds: state.lastMatchIds,
         })
       : [];
+  const loadoutCards =
+    params.surface === "web" || params.surface === "voice"
+      ? await hydrateExploreLoadoutCards({
+          requests: answer.loadoutCards,
+          eligiblePairs: state.lastQueryLoadoutPairs,
+        })
+      : [];
 
   // Streaming depends on the model emitting `answer` early enough for the
   // partial snapshots to carry it. If that ever stops holding — a reordered
@@ -199,6 +210,7 @@ async function streamExploreAgentInternal(
     preview: answer.includeVisualization ? state.lastPreview : null,
     visualization: answer.includeVisualization ? state.lastVisualization : null,
     matchCards,
+    loadoutCards,
   };
 }
 
@@ -212,6 +224,16 @@ type MatchCardReplayContext = {
     teams: readonly { teamId: number; win: boolean; kills: number }[];
   };
 };
+
+type LoadoutCardReplayContext = Pick<
+  ExploreLoadoutCard,
+  | "matchId"
+  | "size"
+  | "championName"
+  | "finalItems"
+  | "runePage"
+  | "buildPathRecorded"
+>;
 
 /** Preserve the visible card order so follow-ups can refer to “the first card”. */
 export function matchCardReplayContext(
@@ -228,6 +250,22 @@ export function matchCardReplayContext(
     return `Card ${String(index + 1)} (${card.size}): ${card.match.matchId}; ${teams}.`;
   });
   return `\n\n[Match cards shown in order]\n${entries.join("\n")}`;
+}
+
+export function loadoutCardReplayContext(
+  cards: readonly LoadoutCardReplayContext[],
+): string {
+  if (cards.length === 0) return "";
+  const entries = cards.map((card, index) => {
+    const items = card.finalItems.flatMap((item) =>
+      item.itemId === null
+        ? []
+        : [item.name ?? `Unknown item ID ${item.itemId.toString()}`],
+    );
+    const keystone = card.runePage.keystone?.name ?? "unknown keystone";
+    return `Card ${String(index + 1)} (${card.size}): ${card.matchId}; ${card.championName}; final build ${items.join(", ") || "empty"}; ${keystone}; ${card.buildPathRecorded ? "build path recorded" : "build path not recorded"}.`;
+  });
+  return `\n\n[Loadout cards shown in order]\n${entries.join("\n")}`;
 }
 
 /**
@@ -253,8 +291,8 @@ export function buildMessages(
           role: "assistant",
           content:
             message.queryText === null
-              ? `${message.content}${matchCardReplayContext(message.matchCards)}`
-              : `${message.content}\n\n[ScoutQL used]\n${message.queryText}${matchCardReplayContext(message.matchCards)}`,
+              ? `${message.content}${matchCardReplayContext(message.matchCards)}${loadoutCardReplayContext(message.loadoutCards)}`
+              : `${message.content}\n\n[ScoutQL used]\n${message.queryText}${matchCardReplayContext(message.matchCards)}${loadoutCardReplayContext(message.loadoutCards)}`,
         }
       : { role: "user", content: message.content },
   );
