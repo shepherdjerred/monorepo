@@ -120,15 +120,29 @@ const TeamKeySchema = z.object({ key: z.string() });
 
 function recordingRunner(
   recorded: string[][],
-  teams: Record<string, { id: string; name: string }[]> = defaultTeams(),
-  states: Record<
-    string,
-    { name: string; type: string; position: number }[]
-  > = defaultStates(),
-  mutateSuccess = true,
+  options: {
+    teams?: Record<string, { id: string; name: string }[]>;
+    states?: Record<string, { name: string; type: string; position: number }[]>;
+    mutateSuccess?: boolean;
+    refreshNodes?: LinearIssue[];
+  } = {},
 ): CommandRunner {
+  const {
+    teams = defaultTeams(),
+    states = defaultStates(),
+    mutateSuccess = true,
+    refreshNodes = [],
+  } = options;
   return async (args) => {
     recorded.push([...args]);
+    if (args[2] === "issue" && args[3] === "query") {
+      return {
+        exitCode: 0,
+        stdout: JSON.stringify({ nodes: refreshNodes }),
+        stderr: "",
+        timedOut: false,
+      };
+    }
     if (args[2] === "api" && args[3]?.includes("teams(") === true) {
       const variables = TeamKeySchema.parse(
         JSON.parse(args[args.indexOf("--variables-json") + 1] ?? "{}"),
@@ -292,7 +306,7 @@ describe("Linear label mutations", () => {
     };
     const client = new LinearClient(
       "SJ",
-      recordingRunner(recorded, defaultTeams(), states),
+      recordingRunner(recorded, { teams: defaultTeams(), states }),
     );
     await client.claim(
       issue({ identifier: "XX-1", teamKey: "XX", labels: ["agent:codex"] }),
@@ -307,7 +321,7 @@ describe("Linear label mutations", () => {
     const recorded: string[][] = [];
     const client = new LinearClient(
       "SJ",
-      recordingRunner(recorded, defaultTeams(), defaultStates(), false),
+      recordingRunner(recorded, { mutateSuccess: false }),
     );
     await expect(
       client.needsHuman(
@@ -325,5 +339,52 @@ describe("Linear label mutations", () => {
         issue({ identifier: "XX-1", teamKey: null, labels: ["agent:codex"] }),
       ),
     ).rejects.toThrow(/has no team/);
+  });
+
+  test("legacy snapshots refetch the team instead of wedging", async () => {
+    const recorded: string[][] = [];
+    const refreshed = issue({
+      identifier: "XX-1",
+      teamKey: "AI",
+      labels: ["agent:codex", "agent:ready"],
+    });
+    const client = new LinearClient(
+      "SJ",
+      recordingRunner(recorded, { refreshNodes: [refreshed] }),
+    );
+    await client.claim(
+      issue({
+        identifier: "XX-1",
+        teamKey: null,
+        labels: ["agent:codex", "agent:ready"],
+      }),
+    );
+    const query = recorded.find(
+      (args) => args[2] === "issue" && args[3] === "query",
+    );
+    expect(query).toEqual(
+      expect.arrayContaining(["--all-teams", "--search", "XX-1"]),
+    );
+    expect(apiVariables(recorded)).toEqual({
+      id: "XX-1",
+      add: [],
+      remove: ["ai-ready-id"],
+    });
+  });
+
+  test("requeue removes the park label by ID", async () => {
+    const recorded: string[][] = [];
+    const client = new LinearClient("SJ", recordingRunner(recorded));
+    await client.requeue(
+      issue({
+        identifier: "SJ-1",
+        labels: ["agent:codex", "agent:needs-human"],
+      }),
+    );
+    expect(apiVariables(recorded)).toEqual({
+      id: "SJ-1",
+      add: [],
+      remove: ["sj-needs-human-id"],
+    });
   });
 });

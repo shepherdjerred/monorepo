@@ -108,4 +108,31 @@ describe("pauseTask", () => {
     ).rejects.toThrow(/label mutation failed/);
     expect(saved).toEqual([]);
   });
+
+  test("rolls the label back when the save fails", async () => {
+    const calls: string[][] = [];
+    const linear = new LinearClient("SJ", async (args) => {
+      calls.push([...args]);
+      return runner(true)(args);
+    });
+    await expect(
+      pauseTask({
+        state: state(),
+        reason: "reason",
+        linear,
+        store: {
+          save: (): Promise<void> => Promise.reject(new Error("disk is full")),
+        },
+      }),
+    ).rejects.toThrow(/disk is full/);
+    const mutations = calls.filter(
+      (args) => args[2] === "api" && args[3]?.includes("issueUpdate") === true,
+    );
+    expect(mutations).toHaveLength(2);
+    const variables = mutations.map((call) =>
+      JSON.parse(call[call.indexOf("--variables-json") + 1] ?? "{}"),
+    );
+    expect(variables[0]).toEqual({ id: "node-1", add: ["nh-id"], remove: [] });
+    expect(variables[1]).toEqual({ id: "node-1", add: [], remove: ["nh-id"] });
+  });
 });

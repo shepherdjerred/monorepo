@@ -102,13 +102,32 @@ export async function pauseTask(input: {
   // Mutate first, save after: if the label add fails, local state still
   // describes runnable work instead of a park that never landed, so the
   // next run retries the turn rather than resuming stopped work.
-  await input.linear.needsHuman(input.state.issue, input.reason);
-  await input.store.save({
+  const parked = {
     ...input.state,
     phase: "needs_human",
     resumePhase: input.state.resumePhase ?? input.state.phase,
     updatedAt: currentTimestamp(),
-  });
+  } as const;
+  try {
+    await input.linear.needsHuman(input.state.issue, input.reason);
+    await input.store.save({ ...parked });
+  } catch (error) {
+    // The label may have landed without the save: roll it back so the
+    // next run retries the turn instead of running parked work. Best
+    // effort — the original error still throws so the failure is recorded.
+    try {
+      await input.linear.requeue(input.state.issue);
+    } catch (rollbackError) {
+      const detail =
+        rollbackError instanceof Error
+          ? rollbackError.message
+          : String(rollbackError);
+      console.error(
+        `${input.state.issue.identifier}: park rollback failed: ${detail}`,
+      );
+    }
+    throw error;
+  }
   console.error(`${input.state.issue.identifier}: ${input.reason}`);
 }
 

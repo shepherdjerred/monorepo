@@ -172,11 +172,33 @@ export class LinearClient {
 
   private readonly labelIdsCache = new Map<string, Map<string, string>>();
 
-  private issueTeam(issue: LinearIssue): string {
+  public async refreshIssue(identifier: string): Promise<LinearIssue | null> {
+    const output = await this.command([
+      "issue",
+      "query",
+      "--all-teams",
+      "--search",
+      identifier,
+      "--limit",
+      "10",
+      "--json",
+    ]);
+    return (
+      QuerySchema.parse(JSON.parse(output)).nodes.find(
+        (issue) => issue.identifier === identifier,
+      ) ?? null
+    );
+  }
+
+  private async resolveTeam(issue: LinearIssue): Promise<string> {
     // No configured-team fallback: issue snapshots without a team predate
     // team tracking, and mutating them with another team's IDs fails or
-    // worse. Requeue refreshes the snapshot with the team attached.
-    const team = issue.team?.key;
+    // worse. Active tasks bypass the queue query, so refetch legacy
+    // snapshots instead of wedging the slot on a throw.
+    const snapshot = issue.team?.key;
+    if (snapshot !== undefined) return snapshot;
+    const refreshed = await this.refreshIssue(issue.identifier);
+    const team = refreshed?.team?.key;
     if (team === undefined) {
       throw new Error(
         `${issue.identifier} has no team; remove agent:needs-human to requeue it with a fresh snapshot`,
@@ -291,7 +313,7 @@ export class LinearClient {
     preferred: string,
   ): Promise<void> {
     const name = await this.workflowState(
-      this.issueTeam(issue),
+      await this.resolveTeam(issue),
       type,
       preferred,
     );
@@ -313,7 +335,7 @@ export class LinearClient {
     const present = labels(issue);
     await this.mutateLabels({
       nodeId: issue.id,
-      team: this.issueTeam(issue),
+      team: await this.resolveTeam(issue),
       add: [],
       remove: present.has(LABEL_READY) ? [LABEL_READY] : [],
     });
@@ -355,7 +377,7 @@ export class LinearClient {
 
   public async needsHuman(issue: LinearIssue, reason: string): Promise<void> {
     if (!labels(issue).has(LABEL_NEEDS_HUMAN)) {
-      const team = this.issueTeam(issue);
+      const team = await this.resolveTeam(issue);
       await this.ensureLabels(team, [LABEL_NEEDS_HUMAN]);
       await this.mutateLabels({
         nodeId: issue.id,
@@ -367,11 +389,23 @@ export class LinearClient {
     await this.comment(issue.identifier, `Human input needed: ${reason}`);
   }
 
+  public async requeue(issue: LinearIssue): Promise<void> {
+    // Compensates a park whose post-label work failed: removing the label
+    // returns the issue to the runnable queue so the next run retries the
+    // turn instead of running parked work.
+    await this.mutateLabels({
+      nodeId: issue.id,
+      team: await this.resolveTeam(issue),
+      add: [],
+      remove: [LABEL_NEEDS_HUMAN],
+    });
+  }
+
   public async complete(issue: LinearIssue, prUrl: string): Promise<void> {
     await this.setState(issue, "completed", "Done");
     await this.mutateLabels({
       nodeId: issue.id,
-      team: this.issueTeam(issue),
+      team: await this.resolveTeam(issue),
       add: [],
       remove: this.removableLabels(issue),
     });
@@ -382,7 +416,7 @@ export class LinearClient {
     await this.setState(issue, "completed", "Done");
     await this.mutateLabels({
       nodeId: issue.id,
-      team: this.issueTeam(issue),
+      team: await this.resolveTeam(issue),
       add: [],
       remove: this.removableLabels(issue),
     });
