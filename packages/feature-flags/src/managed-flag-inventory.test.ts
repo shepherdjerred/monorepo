@@ -305,6 +305,19 @@ describe("Managed flag inventory validation", () => {
     ).toBe(false);
   });
 
+  test("rejects empty variant keys before Flipt seed validation", () => {
+    const value = inventory();
+    const flag = value.flags[0];
+    if (flag === undefined) throw new Error("test inventory is empty");
+    flag.default = "";
+    expect(ManagedFlagInventorySchema.safeParse(value).success).toBe(false);
+    expect(
+      ManagedFlagInventorySchema.safeParse(
+        inventory([{ ...fullOverride, default: "" }]),
+      ).success,
+    ).toBe(false);
+  });
+
   test("generated flag keys match managed-flag-inventory.json", async () => {
     const { generateFlagTypesSource } =
       await import("../scripts/generate-flag-types.ts");

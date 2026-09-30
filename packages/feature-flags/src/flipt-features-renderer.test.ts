@@ -102,6 +102,18 @@ describe("renderFliptFeatures", () => {
     }
   });
 
+  test("renders an accepted nonempty key for the empty iMessage owner list", () => {
+    for (const environment of ["beta", "prod"]) {
+      const flag = parseRendered(environment, "temporal").flags.find(
+        (candidate) =>
+          candidate["key"] === "temporal-agent-chat-imessage-owners",
+      );
+      expect(flag?.["variants"]).toEqual([
+        { default: true, key: "[]", name: "[]", attachment: {} },
+      ]);
+    }
+  });
+
   test("renders intended Scout defaults and declarative segment enums", () => {
     const rendered = parseRendered("beta", "scout");
     expect(rendered.flags).toContainEqual(

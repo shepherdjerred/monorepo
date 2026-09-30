@@ -1545,7 +1545,7 @@
       "source": "temporal-agent-chat",
       "purpose": "Select exact comma-separated sender handles permitted to use durable iMessage chats.",
       "type": "variant",
-      "default": "",
+      "default": "[]",
       "rollouts": [],
       "rules": [],
       "thresholdRollouts": []

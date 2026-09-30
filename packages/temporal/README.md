@@ -131,7 +131,9 @@ The control worker starts `blueBubblesIngressWorkflow` when both
 `BLUEBUBBLES_URL` and `BLUEBUBBLES_PASSWORD` bootstrap credentials are present.
 Missing both leaves the connector inactive; a partial pair fails startup.
 Behavior uses the typed `temporal-agent-chat-imessage-*` flags, not environment
-variables. Production defaults off with an empty sender allowlist.
+variables. Production defaults off with an empty sender allowlist. The managed
+Flipt seed represents that empty list as the nonempty variant key `[]`, which
+the typed config parser resolves to no permitted senders.
 
 The durable cursor excludes historical messages. Disabled or unowned polling
 advances the ROWID watermark, so activation does not backfill the disabled period.
