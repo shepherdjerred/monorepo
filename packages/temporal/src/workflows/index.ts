@@ -199,15 +199,12 @@ export async function runBunCacheGcWorkflow(): Promise<void> {
 export async function runUvCachePruneWorkflow(): Promise<void> {
   return runUvCachePruneWorkflowImplementation();
 }
-
 export async function runTrivyDbRefreshWorkflow(): Promise<void> {
   return runTrivyDbRefreshWorkflowImplementation();
 }
-
 export async function runTurboCacheCleanWorkflow(): Promise<void> {
   return runTurboCacheCleanWorkflowImplementation();
 }
-
 export async function runFreshRssSyncWorkflow(): Promise<void> {
   return _runFreshRssSyncWorkflow();
 }
