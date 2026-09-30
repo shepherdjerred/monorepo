@@ -3,12 +3,15 @@ import { z } from "zod";
 
 import type { LinearIssue } from "#src/domain/schemas.ts";
 import {
+  defaultTeams,
+  fakeLinearRunner,
+} from "#src/integrations/fake-linear.ts";
+import {
   isEligibleIssue,
   LinearClient,
   providerForIssue,
   selectIssue,
 } from "#src/integrations/linear.ts";
-import type { CommandRunner } from "#src/runtime/process.ts";
 
 function issue(input: {
   identifier: string;
@@ -86,118 +89,6 @@ describe("Linear queue selection", () => {
   });
 });
 
-function defaultTeams(): Record<string, { id: string; name: string }[]> {
-  return {
-    SJ: [
-      { id: "sj-codex-id", name: "agent:codex" },
-      { id: "sj-needs-human-id", name: "agent:needs-human" },
-      { id: "sj-ready-id", name: "agent:ready" },
-    ],
-    AI: [
-      { id: "ai-codex-id", name: "agent:codex" },
-      { id: "ai-ready-id", name: "agent:ready" },
-    ],
-  };
-}
-
-function defaultStates(): Record<
-  string,
-  { name: string; type: string; position: number }[]
-> {
-  return {
-    SJ: [
-      { name: "In Progress", type: "started", position: 2 },
-      { name: "Done", type: "completed", position: 3 },
-    ],
-    AI: [
-      { name: "In Progress", type: "started", position: 2 },
-      { name: "Done", type: "completed", position: 3 },
-    ],
-  };
-}
-
-const TeamKeySchema = z.object({ key: z.string() });
-
-function recordingRunner(
-  recorded: string[][],
-  options: {
-    teams?: Record<string, { id: string; name: string }[]>;
-    states?: Record<string, { name: string; type: string; position: number }[]>;
-    mutateSuccess?: boolean;
-    refreshNodes?: LinearIssue[];
-  } = {},
-): CommandRunner {
-  const {
-    teams = defaultTeams(),
-    states = defaultStates(),
-    mutateSuccess = true,
-    refreshNodes = [],
-  } = options;
-  return async (args) => {
-    recorded.push([...args]);
-    if (args[2] === "issue" && args[3] === "query") {
-      return {
-        exitCode: 0,
-        stdout: JSON.stringify({ nodes: refreshNodes }),
-        stderr: "",
-        timedOut: false,
-      };
-    }
-    if (args[2] === "api" && args[3]?.includes("teams(") === true) {
-      const variables = TeamKeySchema.parse(
-        JSON.parse(args[args.indexOf("--variables-json") + 1] ?? "{}"),
-      );
-      return {
-        exitCode: 0,
-        stdout: JSON.stringify({
-          data: {
-            teams: {
-              nodes: [{ states: { nodes: states[variables.key] ?? [] } }],
-            },
-          },
-        }),
-        stderr: "",
-        timedOut: false,
-      };
-    }
-    if (args[2] === "label" && args[3] === "create") {
-      const team = args[args.indexOf("--team") + 1] ?? "SJ";
-      const name = args[args.indexOf("--name") + 1] ?? "";
-      const created = {
-        id: `${team.toLowerCase()}-${name.replace(/^agent:/, "")}-id`,
-        name,
-      };
-      teams[team] = [...(teams[team] ?? []), created];
-      return {
-        exitCode: 0,
-        stdout: JSON.stringify(created),
-        stderr: "",
-        timedOut: false,
-      };
-    }
-    if (args[2] === "label") {
-      const team = args[args.indexOf("--team") + 1] ?? "SJ";
-      return {
-        exitCode: 0,
-        stdout: JSON.stringify({ nodes: teams[team] ?? [] }),
-        stderr: "",
-        timedOut: false,
-      };
-    }
-    if (args[2] === "api") {
-      return {
-        exitCode: 0,
-        stdout: JSON.stringify({
-          data: { issueUpdate: { success: mutateSuccess } },
-        }),
-        stderr: "",
-        timedOut: false,
-      };
-    }
-    return { exitCode: 0, stdout: "", stderr: "", timedOut: false };
-  };
-}
-
 const ApiVariablesSchema = z.object({
   id: z.string(),
   add: z.array(z.string()),
@@ -220,7 +111,7 @@ function apiVariables(recorded: string[][]): {
 describe("Linear label mutations", () => {
   test("needsHuman adds the home-team label by ID", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", recordingRunner(recorded));
+    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
     await client.needsHuman(
       issue({ identifier: "AI-3", labels: ["agent:codex"] }),
       "reason",
@@ -239,7 +130,7 @@ describe("Linear label mutations", () => {
 
   test("needsHuman provisions the team label on first park", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", recordingRunner(recorded));
+    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
     await client.needsHuman(
       issue({
         identifier: "AI-3",
@@ -263,7 +154,7 @@ describe("Linear label mutations", () => {
 
   test("claim removes legacy ready by ID and keeps the provider", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", recordingRunner(recorded));
+    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
     await client.claim(
       issue({ identifier: "AI-3", labels: ["agent:codex", "agent:ready"] }),
     );
@@ -277,7 +168,7 @@ describe("Linear label mutations", () => {
 
   test("complete strips the provider label by ID", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", recordingRunner(recorded));
+    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
     await client.complete(
       issue({ identifier: "AI-3", labels: ["agent:codex"] }),
       "https://example.com/pr/1",
@@ -291,7 +182,7 @@ describe("Linear label mutations", () => {
 
   test("claim resolves the preferred started state by type", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", recordingRunner(recorded));
+    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
     await client.claim(issue({ identifier: "SJ-9", labels: ["agent:codex"] }));
     const update = recorded.find(
       (args) => args[2] === "issue" && args[3] === "update",
@@ -306,7 +197,7 @@ describe("Linear label mutations", () => {
     };
     const client = new LinearClient(
       "SJ",
-      recordingRunner(recorded, { teams: defaultTeams(), states }),
+      fakeLinearRunner(recorded, { teams: defaultTeams(), states }),
     );
     await client.claim(
       issue({ identifier: "XX-1", teamKey: "XX", labels: ["agent:codex"] }),
@@ -321,7 +212,7 @@ describe("Linear label mutations", () => {
     const recorded: string[][] = [];
     const client = new LinearClient(
       "SJ",
-      recordingRunner(recorded, { mutateSuccess: false }),
+      fakeLinearRunner(recorded, { mutateSuccess: false }),
     );
     await expect(
       client.needsHuman(
@@ -333,7 +224,7 @@ describe("Linear label mutations", () => {
 
   test("mutations reject issues without a team", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", recordingRunner(recorded));
+    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
     await expect(
       client.claim(
         issue({ identifier: "XX-1", teamKey: null, labels: ["agent:codex"] }),
@@ -350,7 +241,7 @@ describe("Linear label mutations", () => {
     });
     const client = new LinearClient(
       "SJ",
-      recordingRunner(recorded, { refreshNodes: [refreshed] }),
+      fakeLinearRunner(recorded, { refreshNodes: [refreshed] }),
     );
     await client.claim(
       issue({
@@ -374,7 +265,7 @@ describe("Linear label mutations", () => {
 
   test("requeue removes the park label by ID", async () => {
     const recorded: string[][] = [];
-    const client = new LinearClient("SJ", recordingRunner(recorded));
+    const client = new LinearClient("SJ", fakeLinearRunner(recorded));
     await client.requeue(
       issue({
         identifier: "SJ-1",

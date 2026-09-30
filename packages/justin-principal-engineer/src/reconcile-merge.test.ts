@@ -1,35 +1,9 @@
 import { describe, expect, test } from "vitest";
 
 import type { LinearIssue, TaskState } from "#src/domain/schemas.ts";
+import { fakeLinearRunner } from "#src/integrations/fake-linear.ts";
 import { LinearClient } from "#src/integrations/linear.ts";
 import { pauseTask } from "#src/reconcile-merge.ts";
-import type { CommandRunner } from "#src/runtime/process.ts";
-
-function runner(mutateSuccess: boolean): CommandRunner {
-  return async (args) => {
-    if (args[2] === "label") {
-      return {
-        exitCode: 0,
-        stdout: JSON.stringify({
-          nodes: [{ id: "nh-id", name: "agent:needs-human" }],
-        }),
-        stderr: "",
-        timedOut: false,
-      };
-    }
-    if (args[2] === "api") {
-      return {
-        exitCode: 0,
-        stdout: JSON.stringify({
-          data: { issueUpdate: { success: mutateSuccess } },
-        }),
-        stderr: "",
-        timedOut: false,
-      };
-    }
-    return { exitCode: 0, stdout: "", stderr: "", timedOut: false };
-  };
-}
 
 function state(): TaskState {
   const issue: LinearIssue = {
@@ -73,7 +47,7 @@ function state(): TaskState {
 describe("pauseTask", () => {
   test("saves needs_human after the label lands", async () => {
     const saved: TaskState[] = [];
-    const linear = new LinearClient("SJ", runner(true));
+    const linear = new LinearClient("SJ", fakeLinearRunner());
     await pauseTask({
       state: state(),
       reason: "reason",
@@ -92,7 +66,10 @@ describe("pauseTask", () => {
 
   test("leaves runnable state when the label mutation fails", async () => {
     const saved: TaskState[] = [];
-    const linear = new LinearClient("SJ", runner(false));
+    const linear = new LinearClient(
+      "SJ",
+      fakeLinearRunner([], { mutateSuccess: false }),
+    );
     await expect(
       pauseTask({
         state: state(),
@@ -111,10 +88,7 @@ describe("pauseTask", () => {
 
   test("rolls the label back when the save fails", async () => {
     const calls: string[][] = [];
-    const linear = new LinearClient("SJ", async (args) => {
-      calls.push([...args]);
-      return runner(true)(args);
-    });
+    const linear = new LinearClient("SJ", fakeLinearRunner(calls));
     await expect(
       pauseTask({
         state: state(),
@@ -132,7 +106,15 @@ describe("pauseTask", () => {
     const variables = mutations.map((call) =>
       JSON.parse(call[call.indexOf("--variables-json") + 1] ?? "{}"),
     );
-    expect(variables[0]).toEqual({ id: "node-1", add: ["nh-id"], remove: [] });
-    expect(variables[1]).toEqual({ id: "node-1", add: [], remove: ["nh-id"] });
+    expect(variables[0]).toEqual({
+      id: "node-1",
+      add: ["sj-needs-human-id"],
+      remove: [],
+    });
+    expect(variables[1]).toEqual({
+      id: "node-1",
+      add: [],
+      remove: ["sj-needs-human-id"],
+    });
   });
 });
