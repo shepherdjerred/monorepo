@@ -131,14 +131,14 @@ describe("Hey Scout voice deployment boundary", () => {
    * pointing at the wrong pod. Naming both expectations explicitly means a
    * change to a stage's topology has to come here and be looked at.
    */
-  test("voice follows the beta gateway while prod stays combined", () => {
+  test("both stages place the shard on their gateway", () => {
     expect(gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY.beta)).toBe(true);
     expect(voiceWorkloadName("beta")).toBe("scout-beta-scout-gateway");
     expect(voiceEgressPolicyName("beta")).toBe("scout-gateway-netpol");
 
-    expect(gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY.prod)).toBe(false);
-    expect(voiceWorkloadName("prod")).toBe("scout-prod-scout-backend");
-    expect(voiceEgressPolicyName("prod")).toBe("scout-egress-netpol");
+    expect(gatewayTopologyRunsRole(SCOUT_GATEWAY_TOPOLOGY.prod)).toBe(true);
+    expect(voiceWorkloadName("prod")).toBe("scout-prod-scout-gateway");
+    expect(voiceEgressPolicyName("prod")).toBe("scout-gateway-netpol");
   });
 
   test("beta carries the credential and bootstrap surface only", () => {

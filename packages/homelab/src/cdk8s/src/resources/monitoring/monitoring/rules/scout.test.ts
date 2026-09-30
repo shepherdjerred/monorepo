@@ -186,16 +186,13 @@ describe("Scout bot-health alert rules", () => {
     // series, so naming it here would make the absent() guard fire
     // continuously against a healthy stage.
     //
-    // Prometheus updates before Scout, so beta accepts its previous combined
-    // owner until the split gateway is scrapeable. Prod remains combined.
+    // Prometheus updates before Scout, so each stage accepts its previous
+    // combined owner until its split gateway is scrapeable.
     expect(expression).toContain(
       String.raw`environment=\"beta\",role=~\"combined|gateway\"`,
     );
     expect(expression).toContain(
-      String.raw`environment=\"prod\",role=\"combined\"`,
-    );
-    expect(expression).not.toContain(
-      String.raw`environment=\"prod\",role=\"gateway\"`,
+      String.raw`environment=\"prod\",role=~\"combined|gateway\"`,
     );
     // The activity worker has no Discord shard, even while observing.
     expect(expression).not.toContain("activity-worker");

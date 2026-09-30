@@ -132,27 +132,32 @@ describe("Scout runtime role assignment", () => {
     );
   });
 
-  /**
-   * The rollback floor. Prod must keep running the combined role, and an unset
-   * SCOUT_RUNTIME_ROLE is what `parseScoutRuntimeRole` resolves to `combined` —
-   * so the absence asserted here is the behaviour, not an omission.
-   */
-  test("prod stays combined and renders no split-role workload", () => {
+  test("prod splits its gateway and observes the activity handoff", () => {
     const backend = roleDeployment("prod", "scout-prod-scout-backend");
-    expect(envValue(backend, "SCOUT_RUNTIME_ROLE")).toBeUndefined();
+    expect(envValue(backend, "SCOUT_RUNTIME_ROLE")).toBe("application");
 
     const prod = scoutResources("prod");
-    expect(
-      prod.filter(
-        (resource) =>
-          resource.kind === "Deployment" &&
-          (resource.metadata.name.includes("gateway") ||
-            resource.metadata.name.includes("activity-worker")),
-      ),
-    ).toEqual([]);
+    for (const [name, role] of [
+      ["scout-gateway", "gateway"],
+      ["scout-activity-worker", "activity-worker"],
+    ] as const) {
+      expect(
+        envValue(
+          roleDeployment("prod", `scout-prod-${name}`),
+          "SCOUT_RUNTIME_ROLE",
+        ),
+      ).toBe(role);
+      expect(
+        prod.some(
+          (resource) =>
+            resource.kind === "Deployment" &&
+            resource.metadata.name === `scout-prod-${name}`,
+        ),
+      ).toBe(true);
+    }
   });
 
-  test("the activity worker is present only in beta", () => {
+  test("the activity worker is present in both stages", () => {
     for (const stage of ["beta", "prod"] as const) {
       expect(
         scoutResources(stage).some(
@@ -160,16 +165,16 @@ describe("Scout runtime role assignment", () => {
             resource.kind === "Deployment" &&
             resource.metadata.name.includes("activity-worker"),
         ),
-      ).toBe(stage === "beta");
+      ).toBe(true);
     }
   });
 });
 
 describe("Scout split-topology opt-in", () => {
-  test("beta runs the split and prod never ran it", () => {
+  test("both stages run a split gateway", () => {
     expect(SCOUT_GATEWAY_TOPOLOGY).toEqual({
       beta: "split",
-      prod: "absent",
+      prod: "split",
     });
   });
 });
@@ -495,13 +500,15 @@ describe("Scout gateway network boundary", () => {
 
     expect([...admitted].toSorted()).toEqual([
       "scout-beta/app=scout-activity-worker",
-      // The application role (and, on an unsplit stage, the combined pod):
-      // embedded workers plus the competition activity dispatcher.
+      // The application role retains Workflow and interactive pollers, and
+      // observes realtime, background, and competition queues in prod.
       "scout-beta/app=scout-backend",
       // The split gateway starts Workflows for Discord commands.
       "scout-beta/app=scout-gateway",
       "scout-beta/worker-family=scout-beta-workflows",
+      "scout-prod/app=scout-activity-worker",
       "scout-prod/app=scout-backend",
+      "scout-prod/app=scout-gateway",
       "scout-prod/worker-family=scout-prod-workflows",
     ]);
   });
