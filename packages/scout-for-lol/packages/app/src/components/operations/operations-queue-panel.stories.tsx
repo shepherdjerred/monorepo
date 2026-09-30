@@ -19,6 +19,13 @@ const data: OperationsQueuesData = {
       freshnessDeadline: "2026-09-14T12:30:00.000Z",
       attemptCount: 0,
     },
+    {
+      intentKey: "dare-status:dare-902:recipient-1",
+      dareId: 902,
+      state: "ready",
+      freshnessDeadline: "2026-09-14T12:30:00.000Z",
+      attemptCount: 0,
+    },
   ],
   unknownDeliveries: [
     {
@@ -27,6 +34,13 @@ const data: OperationsQueuesData = {
       state: "unknown-delivery",
       attemptCount: 1,
       attemptNonce: "duel-run-903:attempt-1",
+    },
+    {
+      intentKey: "dare-status:dare-902:recipient-2",
+      dareId: 902,
+      state: "unknown-delivery",
+      attemptCount: 1,
+      attemptNonce: "dare-run-902:attempt-1",
     },
   ],
   unprojectedMatches: [],
@@ -42,13 +56,13 @@ const data: OperationsQueuesData = {
   },
 };
 
-const duelQueues = operationsQueues(data, NOW).filter(
+const subjectQueues = operationsQueues(data, NOW).filter(
   (queue) =>
     queue.id === "stalled-notifications" || queue.id === "unknown-deliveries",
 );
-const [firstQueue] = duelQueues;
+const [firstQueue] = subjectQueues;
 if (firstQueue === undefined) {
-  throw new Error("Duel notification queue fixture is empty");
+  throw new Error("Notification queue fixture is empty");
 }
 
 function noop(): void {
@@ -56,7 +70,7 @@ function noop(): void {
 }
 
 const meta = {
-  title: "Operations/DuelNotificationQueues",
+  title: "Operations/NotificationQueues",
   component: OperationsQueuePanel,
   tags: ["autodocs"],
   args: {
@@ -73,10 +87,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const DuelSubjects: Story = {
+export const DuelAndDareSubjects: Story = {
   render: () => (
     <div className="space-y-6">
-      {duelQueues.map((queue) => (
+      {subjectQueues.map((queue) => (
         <OperationsQueuePanel
           key={queue.id}
           queue={queue}

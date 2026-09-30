@@ -310,6 +310,25 @@ describe("MatchProcessingReceipt constraints", () => {
   });
 });
 
+function subjectColumnsForKind(kind: string): Record<string, string> {
+  if (kind === "duel-status") {
+    return {
+      subjectKind: "'duel'",
+      subjectId: "'00000000-0000-0000-0000-000000000001'",
+      riotMatchId: "NULL",
+    };
+  }
+  if (kind === "dare-status") {
+    return {
+      subjectKind: "'dare'",
+      subjectId: "'1'",
+      riotMatchId: "NULL",
+      targetKind: "'dm'",
+    };
+  }
+  return {};
+}
+
 describe("MatchNotificationIntent constraints", () => {
   const valid: Record<string, string> = {
     intentKey: "'intent-1'",
@@ -341,13 +360,7 @@ describe("MatchNotificationIntent constraints", () => {
           ...valid,
           intentKey: `'kind-${kind}'`,
           kind: `'${kind}'`,
-          ...(kind === "duel-status"
-            ? {
-                subjectKind: "'duel'",
-                subjectId: "'00000000-0000-0000-0000-000000000001'",
-                riotMatchId: "NULL",
-              }
-            : {}),
+          ...subjectColumnsForKind(kind),
         }),
       );
     },

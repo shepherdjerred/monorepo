@@ -716,8 +716,9 @@ load-bearing for anyone extending it.
 
 The row's `subjectKind` and `subjectId` name the event being announced.
 Existing match intents use `match` and the Riot match id; `riotMatchId` remains
-indexed for match fan-out. Duel status uses `duel` and the series id, with no
-Riot match id. The schema reserves `dare` for its later notification producer. During
+indexed for match fan-out. Duel status uses `duel` and the series id, while
+Dare lifecycle and progress DMs use `dare` and the numeric Dare id. Neither
+has a Riot match id. During
 the schema rollout, a match row with a NULL `subjectId` is read from its
 required `riotMatchId` because older application pods still write that shape.
 New writers populate both match columns, and the database rejects a mismatch.
@@ -738,10 +739,20 @@ guild, series, and mention list in a versioned announcement and verifies the
 series and target channel before sending. It does not create a match render
 receipt for a Duel subject.
 
+Dare lifecycle and progress transitions mint one `dare-status` intent and
+Workflow start request per frozen recipient in the same transaction. The
+versioned announcement keeps the event category, summary, and guild used by
+the legacy DM. Delivery checks the current guild flag and recipient preference
+before sending through the audited DM path with mentions suppressed. The
+intent expires thirty days after the event, and an ambiguous DM failure stays
+`unknown-delivery` for operator resolution. The legacy Dare event/delivery
+tables continue draining pre-cutover rows; a standing legacy event owns its
+deduplication key and prevents V2 from announcing the same event again.
+
 ### An intent says what it announces and where it came from
 
 Every intent carries a `kind` (`postmatch` | `prematch` | `settlement` |
-`dare-summary` | `hall-record-break` | `duel-status`) and an `origin`
+`dare-summary` | `dare-status` | `hall-record-break` | `duel-status`) and an `origin`
 (`live`, or `recovery` naming the batch that minted it). Both are fixed at
 mint, mirrored into columns, and versioned in the payload envelope
 (`notificationIntentCodec` version 3; a version-1 payload derives its kind from

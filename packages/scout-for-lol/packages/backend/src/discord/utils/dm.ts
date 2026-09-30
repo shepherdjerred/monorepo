@@ -135,6 +135,8 @@ export type SendDmOptions = {
   budget?: DmBudget;
   /** Keep rendered mentions informational instead of notifying other users. */
   suppressMentions?: boolean;
+  /** Called synchronously immediately before a Discord DM request may leave. */
+  onSendAttempt?: () => void;
   /**
    * Rich embeds to send alongside (or instead of) plain content. `message`
    * stays the audit-log rendering — the ledger is text — and is sent as the
@@ -342,7 +344,8 @@ async function evaluateBudget(
  * Send a DM to a Discord user and record the attempt in the audit log.
  *
  * @returns the outcome: `"sent"`, `"dm_disabled"` (recipient blocks DMs), or
- *   `"failed"` (any other error). Never throws.
+ *   `"failed"` (a Discord lookup or send error). Audit and budget storage
+ *   failures can still throw.
  */
 export async function sendDM(options: SendDmOptions): Promise<DmStatus> {
   // Budgeted sends run one at a time so the budget read and the audit write
@@ -359,6 +362,7 @@ async function deliverToUser(
   message: string,
 ): Promise<void> {
   if (options.embeds !== undefined) {
+    options.onSendAttempt?.();
     await user.send({
       ...(options.contentWithEmbeds === undefined
         ? {}
@@ -370,6 +374,7 @@ async function deliverToUser(
     });
     return;
   }
+  options.onSendAttempt?.();
   await user.send(
     options.suppressMentions === true
       ? { content: message, allowedMentions: { parse: [] } }

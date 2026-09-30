@@ -33,7 +33,11 @@ export type OperationsQueuesData = {
     readonly state: string;
     readonly freshnessDeadline: string;
     readonly attemptCount: number;
-  } & ({ readonly matchId: string } | { readonly duelId: string }))[];
+  } & (
+    | { readonly matchId: string }
+    | { readonly duelId: string }
+    | { readonly dareId: number }
+  ))[];
   readonly unknownDeliveries: readonly ({
     readonly intentKey: string;
     readonly attemptCount: number;
@@ -45,7 +49,11 @@ export type OperationsQueuesData = {
      */
     readonly attemptNonce: string;
     readonly state: string;
-  } & ({ readonly matchId: string } | { readonly duelId: string }))[];
+  } & (
+    | { readonly matchId: string }
+    | { readonly duelId: string }
+    | { readonly dareId: number }
+  ))[];
   readonly unprojectedMatches: readonly string[];
   readonly liveRecoveryBatches: readonly string[];
   readonly unacceptedWorkflowStarts: readonly {
@@ -163,7 +171,13 @@ function projectQueues(
                 id: record.matchId,
                 inspectMatchId: record.matchId,
               }
-            : { label: "Duel", id: record.duelId, inspectMatchId: null };
+            : "duelId" in record
+              ? { label: "Duel", id: record.duelId, inspectMatchId: null }
+              : {
+                  label: "Dare",
+                  id: record.dareId.toString(),
+                  inspectMatchId: null,
+                };
         const { blocked, drafts } = notificationActions({
           intentKey: record.intentKey,
           state: record.state,
@@ -199,7 +213,9 @@ function projectQueues(
         facts: [
           "matchId" in record
             ? { label: "Match", value: record.matchId }
-            : { label: "Duel", value: record.duelId },
+            : "duelId" in record
+              ? { label: "Duel", value: record.duelId }
+              : { label: "Dare", value: record.dareId.toString() },
           { label: "Attempts", value: record.attemptCount.toString() },
           { label: "State", value: record.state },
           { label: "Attempt", value: record.attemptNonce },

@@ -6,6 +6,8 @@ import {
 } from "@scout-for-lol/data";
 import { deliverPendingDareNotifications } from "#src/betting/dares/presentation/notify/dare-notification-delivery.ts";
 import { enqueueDareNotificationInTransaction } from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+import { dareStatusAnnouncementCodec } from "#src/betting/dares/presentation/notify/dare-status-message.ts";
+import { notificationIntentRowToRecord } from "#src/database/durable/intent-row.ts";
 import {
   getBucksNotificationPreferences,
   updateBucksNotificationPreferences,
@@ -18,6 +20,7 @@ const { prisma: db } = createTestDatabase("dare-notification-outbox");
 const SERVER = DiscordGuildIdSchema.parse("1337623164146155593");
 const CHALLENGER = bucksTestDiscordId(61);
 const TARGET = bucksTestDiscordId(62);
+const LATE_TARGET = bucksTestDiscordId(63);
 const NOW = new Date("2026-09-03T00:00:00.000Z");
 
 async function seedDare(): Promise<number> {
@@ -52,7 +55,10 @@ async function seedDare(): Promise<number> {
   return dare.id;
 }
 
-async function enqueue(dareId: number): Promise<void> {
+async function enqueue(
+  dareId: number,
+  summary = "One win remains.",
+): Promise<void> {
   await db.$transaction(async (tx) => {
     await enqueueDareNotificationInTransaction(tx, {
       dareId,
@@ -60,10 +66,35 @@ async function enqueue(dareId: number): Promise<void> {
       category: "progress",
       kind: "advanced",
       matchId: "NA1_NOTIFICATION",
-      summary: "One win remains.",
+      summary,
       deduplicationKey: `test:${dareId.toString()}:advance`,
       occurredAt: NOW,
     });
+  });
+}
+
+/** Pre-cutover rows remain owned by the legacy drain. */
+async function seedLegacy(dareId: number): Promise<void> {
+  const event = await db.bucksDareNotificationEvent.create({
+    data: {
+      dareId,
+      revision: 1,
+      category: "progress",
+      kind: "advanced",
+      matchId: "NA1_NOTIFICATION",
+      payload: JSON.stringify({
+        serverId: SERVER,
+        summary: "One win remains.",
+      }),
+      deduplicationKey: `test:${dareId.toString()}:advance`,
+      occurredAt: NOW,
+    },
+  });
+  await db.bucksDareNotificationDelivery.createMany({
+    data: [CHALLENGER, TARGET].map((discordId) => ({
+      eventId: event.id,
+      discordId,
+    })),
   });
 }
 
@@ -84,19 +115,67 @@ describe("Dare notification outbox", () => {
     const dareId = await seedDare();
     await enqueue(dareId);
     await enqueue(dareId);
-
-    const event = await db.bucksDareNotificationEvent.findMany({
-      include: { deliveries: { orderBy: { discordId: "asc" } } },
+    await db.bucksDareV2Target.create({
+      data: {
+        dareId,
+        targetKey: "late-target",
+        discordId: LATE_TARGET,
+        playerId: PlayerIdSchema.parse(3),
+        alias: "late target",
+        accounts: "[]",
+      },
     });
-    expect(event).toHaveLength(1);
-    expect(event[0]?.deliveries.map((row) => row.discordId)).toEqual(
+    await enqueue(dareId, "Progress changed after the first event.");
+
+    const intents = await db.matchNotificationIntent.findMany({
+      where: { subjectKind: "dare", subjectId: dareId.toString() },
+      orderBy: { targetId: "asc" },
+    });
+    expect(intents).toHaveLength(2);
+    expect(intents.map((row) => row.targetId)).toEqual(
       [CHALLENGER, TARGET].toSorted(),
     );
+    expect(
+      intents.every(
+        (row) => row.kind === "dare-status" && row.targetKind === "dm",
+      ),
+    ).toBe(true);
+    expect(await db.bucksDareNotificationEvent.count()).toBe(0);
+    const first = notificationIntentRowToRecord(intents[0]);
+    if (!("dareId" in first) || first.intent.announcement === undefined) {
+      throw new Error("Expected a Dare status announcement");
+    }
+    expect(
+      dareStatusAnnouncementCodec.parse(first.intent.announcement),
+    ).toMatchObject({
+      dareId,
+      guildId: SERVER,
+      category: "progress",
+      kind: "advanced",
+      summary: "One win remains.",
+    });
+    expect(
+      await db.scoutWorkflowStart.count({
+        where: { requestSource: "dare-status:advanced" },
+      }),
+    ).toBe(2);
+  });
+
+  test("keeps a pre-cutover event as the sole owner", async () => {
+    const dareId = await seedDare();
+    await seedLegacy(dareId);
+    await enqueue(dareId);
+    expect(
+      await db.matchNotificationIntent.count({
+        where: { subjectKind: "dare", subjectId: dareId.toString() },
+      }),
+    ).toBe(0);
+    expect(await db.bucksDareNotificationDelivery.count()).toBe(2);
   });
 
   test("checks the current preference and records suppression", async () => {
     const dareId = await seedDare();
-    await enqueue(dareId);
+    await seedLegacy(dareId);
     await updateBucksNotificationPreferences(
       {
         serverId: SERVER,
@@ -129,7 +208,7 @@ describe("Dare notification outbox", () => {
 
   test("leaves transient failures retryable without affecting recipients", async () => {
     const dareId = await seedDare();
-    await enqueue(dareId);
+    await seedLegacy(dareId);
     const sendDm = vi
       .fn()
       .mockResolvedValueOnce("failed")
@@ -160,7 +239,7 @@ describe("Dare notification outbox", () => {
 
   test("isolates recipients but propagates unexpected delivery failures", async () => {
     const dareId = await seedDare();
-    await enqueue(dareId);
+    await seedLegacy(dareId);
     const getPreferences = vi
       .fn()
       .mockRejectedValueOnce(new Error("preference store unavailable"))

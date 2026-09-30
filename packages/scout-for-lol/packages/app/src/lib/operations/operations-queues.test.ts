@@ -76,50 +76,59 @@ function notificationRow(state: string, freshnessDeadline: string) {
 }
 
 describe("projecting the reads", () => {
-  test("shows Duel subjects without a Riot match inspector link", () => {
-    const duelId = "00000000-0000-4000-8000-000000000903";
-    const queues = operationsQueues(
-      {
-        ...QUEUES,
-        stalledNotifications: [
-          {
-            intentKey: "duel-stalled",
-            duelId,
-            state: "ready",
-            freshnessDeadline: FUTURE,
-            attemptCount: 0,
-          },
-        ],
-        unknownDeliveries: [
-          {
-            intentKey: "duel-unknown",
-            duelId,
-            attemptCount: 1,
-            attemptNonce: "duel-attempt-1",
-            state: "unknown-delivery",
-          },
-        ],
-      },
-      NOW,
-    );
-    const stalled = queues.find(
-      (queue) => queue.id === "stalled-notifications",
-    );
-    const unknown = queues.find((queue) => queue.id === "unknown-deliveries");
-    expect(stalled?.rows[0]?.facts[0]).toEqual({
+  test.each([
+    { label: "Dare", value: "902", subject: { dareId: 902 } },
+    {
       label: "Duel",
-      value: duelId,
-    });
-    expect(stalled?.rows[0]?.inspectMatchId).toBeNull();
-    expect(unknown?.rows[0]?.facts[0]).toEqual({
-      label: "Duel",
-      value: duelId,
-    });
-    expect(unknown?.rows[0]?.inspectMatchId).toBeNull();
-    expect(unknown?.rows[0]?.drafts[0]?.kind).toBe(
-      "ops_resolve_unknown_delivery",
-    );
-  });
+      value: "00000000-0000-4000-8000-000000000903",
+      subject: { duelId: "00000000-0000-4000-8000-000000000903" },
+    },
+  ])(
+    "shows $label subjects without a Riot match inspector link",
+    ({ label, value, subject }) => {
+      const queues = operationsQueues(
+        {
+          ...QUEUES,
+          stalledNotifications: [
+            {
+              intentKey: "subject-stalled",
+              ...subject,
+              state: "ready",
+              freshnessDeadline: FUTURE,
+              attemptCount: 0,
+            },
+          ],
+          unknownDeliveries: [
+            {
+              intentKey: "subject-unknown",
+              ...subject,
+              attemptCount: 1,
+              attemptNonce: "subject-attempt-1",
+              state: "unknown-delivery",
+            },
+          ],
+        },
+        NOW,
+      );
+      const stalled = queues.find(
+        (queue) => queue.id === "stalled-notifications",
+      );
+      const unknown = queues.find((queue) => queue.id === "unknown-deliveries");
+      expect(stalled?.rows[0]?.facts[0]).toEqual({
+        label,
+        value,
+      });
+      expect(stalled?.rows[0]?.inspectMatchId).toBeNull();
+      expect(unknown?.rows[0]?.facts[0]).toEqual({
+        label,
+        value,
+      });
+      expect(unknown?.rows[0]?.inspectMatchId).toBeNull();
+      expect(unknown?.rows[0]?.drafts[0]?.kind).toBe(
+        "ops_resolve_unknown_delivery",
+      );
+    },
+  );
 
   test("draws all six queues, in a stable order, each naming its API page", () => {
     const queues = operationsQueues(QUEUES, NOW);

@@ -52,6 +52,7 @@ export const NotificationIntentKindSchema = z.enum([
   "dare-summary",
   "hall-record-break",
   "duel-status",
+  "dare-status",
 ]);
 
 /** The kinds whose message is built from an `announcement` payload. */
@@ -61,6 +62,7 @@ export const ANNOUNCEMENT_INTENT_KINDS: ReadonlySet<NotificationIntentKind> =
     "dare-summary",
     "hall-record-break",
     "duel-status",
+    "dare-status",
   ]);
 
 /**

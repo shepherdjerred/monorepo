@@ -22,6 +22,7 @@ import {
 } from "#src/database/durable/intent-repository.ts";
 import { listReceipts } from "#src/database/durable/receipt-repository.ts";
 import { duelStatusAnnouncementCodec } from "#src/progression/duels/status-message.ts";
+import { dareStatusAnnouncementCodec } from "#src/betting/dares/presentation/notify/dare-status-message.ts";
 
 /**
  * The render Activity against real receipts and claims, with the world it
@@ -166,7 +167,48 @@ beforeEach(() => {
   world.renderDelayMs = 0;
 });
 
+async function expectStatusWithoutMatchRender(
+  intentKey: NotificationIntentKey,
+): Promise<void> {
+  expect(
+    await renderNotificationArtifactV2({ stage: STAGE, intentKey }),
+  ).toEqual({ outcome: "rendered" });
+  expect(world.renders).toBe(0);
+  expect(world.puts).toHaveLength(0);
+  expect(await prisma.matchProcessingReceipt.count()).toBe(0);
+}
+
 describe("render receipts are keyed by kind", () => {
+  test("a Dare status has no match render receipt or object", async () => {
+    const intentKey = NotificationIntentKeySchema.parse(
+      "dare-status:test:recipient:200000000000000902",
+    );
+    expect(
+      await upsertSubjectIntent(prisma, {
+        dareId: 902,
+        intent: NotificationIntentSchema.parse({
+          key: intentKey,
+          kind: "dare-status",
+          origin: { kind: "live" },
+          target: { kind: "dm", accountId: "200000000000000902" },
+          freshnessDeadline: "2099-01-01T00:00:00.000Z",
+          createdAt: "2026-09-30T00:00:00.000Z",
+          attemptCount: 0,
+          announcement: dareStatusAnnouncementCodec.serialize({
+            dareId: 902,
+            revision: 1,
+            guildId: DiscordGuildIdSchema.parse("100000000000000902"),
+            category: "progress",
+            kind: "advanced",
+            summary: "One win remains.",
+          }),
+          state: { kind: "pending" },
+        }),
+      }),
+    ).toEqual({ outcome: "applied" });
+    await expectStatusWithoutMatchRender(intentKey);
+  });
+
   test("a Duel status has no match render receipt or object", async () => {
     const duelId = crypto.randomUUID();
     const intentKey = NotificationIntentKeySchema.parse(
@@ -195,12 +237,7 @@ describe("render receipts are keyed by kind", () => {
         }),
       }),
     ).toEqual({ outcome: "applied" });
-    expect(
-      await renderNotificationArtifactV2({ stage: STAGE, intentKey }),
-    ).toEqual({ outcome: "rendered" });
-    expect(world.renders).toBe(0);
-    expect(world.puts).toHaveLength(0);
-    expect(await prisma.matchProcessingReceipt.count()).toBe(0);
+    await expectStatusWithoutMatchRender(intentKey);
   });
   test("a standing prematch receipt does not satisfy a postmatch render", async () => {
     const matchId = nextMatch();
