@@ -65,11 +65,16 @@ target without guessing its guild from the match-global report reference map.
 When every known target for the voting guild is permanently unavailable, the
 request closes with `report-target-unavailable`; an uncertain edit still
 retries. A newly recorded report reference reopens a closed request.
+The migration recovers older target ownership from prior edit checkpoints and
+unambiguous subscription channel mappings. It closes pre-upgrade requests
+whose stored refs have no provable guild target with
+`legacy-target-ownership-unknown` for operator review. A later observed owned
+target reopens the request even when its report ref was already stored.
 
 Operators can inspect `"MatchMvpTallyRefresh"` for `pending = true` rows and
 `lastErrorCode` values `awaiting-report`, `discord-target-unavailable`,
 `discord-edit-unknown`, `report-unavailable`, or
-`report-target-unavailable`. Compare `desiredRevision`
+`report-target-unavailable`, or `legacy-target-ownership-unknown`. Compare `desiredRevision`
 with `appliedRevision` before
 closing an incident; a recorded vote alone does not prove the Discord tally
 was edited.

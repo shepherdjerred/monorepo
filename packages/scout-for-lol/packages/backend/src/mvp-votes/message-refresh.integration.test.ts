@@ -84,6 +84,29 @@ beforeEach(async () => {
 });
 
 describe("MVP terminal report targets", () => {
+  test("reopens a retired legacy request when its existing ref gains guild ownership", async () => {
+    await db.matchMvpReportTarget.deleteMany({ where: { matchId } });
+    await db.matchMvpTallyRefresh.update({
+      where,
+      data: {
+        pending: false,
+        lastErrorCode: "legacy-target-ownership-unknown",
+      },
+    });
+    await recordMatchMvpOwnedReportRef(
+      {
+        matchId,
+        serverId,
+        channelId: firstChannel,
+        messageId: "400000000000000001",
+      },
+      db,
+    );
+    await expect(
+      db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+    ).resolves.toMatchObject({ pending: true, requeueGeneration: 1 });
+  });
+
   test("closes when every owned report channel is gone", async () => {
     stubs.fetchChannelForDelivery.mockResolvedValue(null);
     await reconcileMvpTallyRefresh(key, db, async (input, client) =>
