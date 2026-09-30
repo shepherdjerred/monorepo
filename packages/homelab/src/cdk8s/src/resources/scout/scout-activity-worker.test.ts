@@ -86,10 +86,10 @@ function runtimeRole(
 }
 
 describe("Scout activity worker topology", () => {
-  test("beta assigns activity ownership to the worker while prod remains absent", () => {
+  test("beta assigns activity ownership while prod observes the handoff", () => {
     expect(SCOUT_ACTIVITY_WORKER_TOPOLOGY).toEqual({
       beta: "owning",
-      prod: "absent",
+      prod: "observing",
     });
   });
 

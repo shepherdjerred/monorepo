@@ -66,7 +66,10 @@ path for each change.
    `scout-storage-claim` PV and its `ZFSVolume.spec.shared` field using the
    **Share a ZFS volume between pods** how-to. It must be `yes` before the
    worker pod starts. The worker and application both mount the claim
-   read-write on the same node with the same SELinux level.
+   read-write on the same node with the same SELinux level. Before the first
+   production split, confirm the accepted image digest has already reached the
+   healthy combined backend in its own release; do not couple the image change
+   to the topology handoff.
 2. If the worker is `absent`, set its topology to `observing` in a release.
    If it is already `observing`, verify that state before proceeding. This
    runs one activity-worker pod while the application keeps polling

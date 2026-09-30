@@ -88,7 +88,8 @@ describe("Flipt consumer environments", () => {
       name: "Scout prod",
       environment: "prod",
       namespace: "scout",
-      count: 1,
+      // Application, gateway and observing activity worker share prod/scout.
+      count: 3,
       createChart: (app: App) => createScoutChart(app, "prod"),
     },
     {

@@ -86,11 +86,7 @@ export const SCOUT_GATEWAY_TOPOLOGY: Readonly<
   Record<Stage, ScoutGatewayTopology>
 > = {
   beta: "split",
-  // Prod has never run the split and so has nothing to retire. It is `absent`
-  // rather than `retiring` on purpose: rendering a zero-replica gateway here
-  // would add a Deployment, Service, ServiceMonitor and NetworkPolicy to
-  // production that have never existed there.
-  prod: "absent",
+  prod: "split",
 };
 
 /** Activation is stage-scoped and requires a separate, reviewed release. */
@@ -98,7 +94,7 @@ export const SCOUT_ACTIVITY_WORKER_TOPOLOGY: Readonly<
   Record<Stage, ScoutActivityWorkerTopology>
 > = {
   beta: "owning",
-  prod: "absent",
+  prod: "observing",
 };
 
 export function activityWorkerOwnsQueues(
