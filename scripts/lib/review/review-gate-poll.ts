@@ -343,16 +343,24 @@ export async function verifyPassBeforeAccepting(input: {
       });
       return byProvider;
     });
-  let pushedAt: string | null | undefined;
+  let pushedAt: string | null = null;
   const resolve =
     input.resolveCompletion ??
     (async (provider: ReviewProvider) => {
-      pushedAt ??= await fetchHeadPushedAt({
-        repo,
-        sha: head,
-        prNumber: number,
-        token,
-      });
+      // Check-run completion never consumes the push timestamp, and the
+      // normal observation path already skips this dependency for it: an
+      // unavailable Activity endpoint must not fail a completed check-run.
+      if (
+        provider.completion.kind === "review-at-head" ||
+        provider.completion.kind === "issue-comment"
+      ) {
+        pushedAt ??= await fetchHeadPushedAt({
+          repo,
+          sha: head,
+          prNumber: number,
+          token,
+        });
+      }
       return resolveReviewState({
         provider,
         repo,

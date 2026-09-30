@@ -36,6 +36,7 @@ describe("attributeRaisedInReview", () => {
         authorLogin: "qodo-code-review",
         body: null,
         commitOid: "abc123",
+        state: "COMMENTED",
       },
       {
         id: "finding-review",
@@ -43,6 +44,7 @@ describe("attributeRaisedInReview", () => {
         authorLogin: "qodo-code-review",
         body: "finding body",
         commitOid: "abc123",
+        state: "COMMENTED",
       },
     ];
 
@@ -94,6 +96,7 @@ describe("attributeRaisedInReview", () => {
         authorLogin: "coderabbitai[bot]",
         body: "**Actionable comments posted: 4**",
         commitOid: "abc123",
+        state: null,
       },
       {
         id: "review-2",
@@ -101,6 +104,7 @@ describe("attributeRaisedInReview", () => {
         authorLogin: "shepherdjerred",
         body: null,
         commitOid: null,
+        state: null,
       },
     ]);
   });
@@ -133,6 +137,7 @@ describe("appendReviewBodyFindings", () => {
       authorLogin: "coderabbitai[bot]",
       body: BODY,
       commitOid: "abc123",
+      state: "COMMENTED",
       ...overrides,
     };
   }
@@ -192,6 +197,29 @@ describe("appendReviewBodyFindings", () => {
     expect(
       entries.find((entry) => entry.review?.id === "r2")?.thread.isOutdated,
     ).toBe(false);
+  });
+
+  test("a dismissed newer review supersedes nothing", () => {
+    // Completion ignores dismissed reviews, so a dismissed re-review must
+    // neither retire the still-live finding nor contribute its own copy:
+    // otherwise the dismissal would silently drop a P0 a clean sibling
+    // could then pass over.
+    const entries = appended([
+      review({
+        id: "r1",
+        submittedAt: "2026-05-24T19:03:46Z",
+        commitOid: "abc123",
+      }),
+      review({
+        id: "r2",
+        submittedAt: "2026-05-24T20:03:46Z",
+        commitOid: "def456",
+        state: "DISMISSED",
+      }),
+    ]);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.review?.id).toBe("r1");
+    expect(entries[0]?.thread.isOutdated).toBe(false);
   });
 
   test("stays current when a timestamp is unknown", () => {

@@ -30,8 +30,16 @@ export function appendReviewBodyFindings(
 ): void {
   const parseBodies = provider.parseReviewBodyFindings;
   if (parseBodies === null) return;
+  // Dismissed reviews are out: completion ignores them, so a dismissed
+  // re-review must neither contribute findings nor supersede the still-live
+  // ones — otherwise a dismissal would silently retire a P0 a clean sibling
+  // could then pass over.
   const snapshots = providerReviews
-    .filter((review) => isProviderAuthor(provider, review.authorLogin))
+    .filter(
+      (review) =>
+        isProviderAuthor(provider, review.authorLogin) &&
+        review.state !== "DISMISSED",
+    )
     .map((review) => ({
       id: review.id,
       submittedAt: review.submittedAt,
@@ -121,6 +129,14 @@ export type ProviderReview = {
   authorLogin: string | null;
   body: string | null;
   commitOid: string | null;
+  /**
+   * The GitHub review state (APPROVED, CHANGES_REQUESTED, COMMENTED,
+   * DISMISSED, PENDING); null when the listing did not fetch it. Dismissed
+   * reviews are excluded from body findings: completion ignores them, so a
+   * dismissed re-review must neither contribute findings nor supersede the
+   * still-live ones.
+   */
+  state: string | null;
 };
 
 export const REVIEW_REVIEWS_QUERY = `
@@ -132,6 +148,7 @@ query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
         nodes {
           id
           submittedAt
+          state
           body
           commit { oid }
           author { login }
@@ -175,6 +192,7 @@ export function parseReviewPage(payload: unknown): {
         authorLogin: author === null ? null : stringField(author, "login"),
         body: stringField(review, "body"),
         commitOid: commit === null ? null : stringField(commit, "oid"),
+        state: stringField(review, "state"),
       },
     ];
   });
