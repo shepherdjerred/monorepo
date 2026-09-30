@@ -27,6 +27,7 @@ export function appendReviewBodyFindings(
   parsed: ParsedReviewThread[],
   providerReviews: readonly ProviderReview[],
   provider: ReviewProvider,
+  head: string | null,
 ): void {
   const parseBodies = provider.parseReviewBodyFindings;
   if (parseBodies === null) return;
@@ -46,25 +47,34 @@ export function appendReviewBodyFindings(
       body: review.body,
       commitOid: review.commitOid,
     }));
+  // Only the latest review OF THE HEAD supersedes: SHAs carry no order, so a
+  // delayed review of another commit — submitted after the head review yet
+  // reading older code — never retires the head verdict, and it cannot
+  // resurrect a P0 the head review already cleared. With no orderable head
+  // review the provider has not spoken for this head, so everything stays
+  // current and the gate waits rather than passes over an unreviewed head.
+  // The latest review that read the head is its verdict. A timestamp tie
+  // establishes no order, so a tied head leaves no verdict and everything
+  // stays current.
+  let verdictId: string | null = null;
+  let verdictAt: string | null = null;
+  for (const snapshot of snapshots) {
+    if (
+      head === null ||
+      snapshot.commitOid !== head ||
+      snapshot.submittedAt === null
+    ) {
+      continue;
+    }
+    if (verdictAt !== null && snapshot.submittedAt <= verdictAt) {
+      if (snapshot.submittedAt === verdictAt) verdictId = null;
+      continue;
+    }
+    verdictId = snapshot.id;
+    verdictAt = snapshot.submittedAt;
+  }
   for (const finding of parseBodies(snapshots)) {
-    // A body finding stays current until a strictly newer review by the same
-    // provider supersedes it. A head change alone never retires it: unlike
-    // an addressable thread, nothing marks a body finding resolved, so
-    // retiring on every push would let an unrelated commit silently drop a
-    // P0 the provider has not re-reviewed — and a clean sibling provider
-    // could then pass the OR gate over an unreviewed Critical. When the
-    // provider does re-review, the older copy goes outdated; a repeated
-    // finding stays live through its newer copy. An unknown timestamp stays
-    // current: the least-understood finding still blocks.
-    const submittedAt = finding.reviewSubmittedAt;
-    const superseded = snapshots.some(
-      (snapshot) =>
-        snapshot.id !== finding.reviewId &&
-        snapshot.submittedAt !== null &&
-        submittedAt !== null &&
-        snapshot.submittedAt > submittedAt,
-    );
-    if (superseded) {
+    if (verdictId !== null && finding.reviewId !== verdictId) {
       finding.thread.isOutdated = true;
     }
     parsed.push({

@@ -127,14 +127,21 @@ function assembledBodyFinding(extraNodes: unknown[] = []) {
 }
 
 describe("assembleProviderThreads", () => {
-  test("keeps body findings current until a newer review supersedes them", () => {
-    // No successor review: the finding is current even though the PR has
-    // since advanced past the reviewed commit.
+  test("only the latest review of the head supersedes body findings", () => {
+    // No review of the live head: the finding is current even though the PR
+    // has since advanced past the reviewed commit.
     expect(assembledBodyFinding()?.isOutdated).toBe(false);
-    // A newer review that drops the finding supersedes it.
+    // A delayed review of another commit supersedes nothing.
     expect(
       assembledBodyFinding([
         reviewNode("R2", "2026-09-27T06:00:00Z", "other789", null),
+      ])?.isOutdated,
+    ).toBe(false);
+    // A newer review that read the live head and dropped the finding
+    // supersedes it.
+    expect(
+      assembledBodyFinding([
+        reviewNode("R2", "2026-09-27T06:00:00Z", LIVE_HEAD, null),
       ])?.isOutdated,
     ).toBe(true);
   });

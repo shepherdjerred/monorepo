@@ -105,7 +105,12 @@ export function assembleProviderThreads(input: {
   // outside-diff sections) contribute body findings before attribution, so a
   // body finding shares its review's ordinal — and merges with its thread
   // copy — instead of drifting into a review position of its own.
-  appendReviewBodyFindings(parsed, providerReviews, input.provider);
+  appendReviewBodyFindings(
+    parsed,
+    providerReviews,
+    input.provider,
+    input.headRefOid,
+  );
   // Attribution needs every page: a thread's ordinal is its review's position
   // among all of this provider's reviews, including clean reviews that opened
   // no thread and therefore do not appear in `parsed`.
