@@ -74,7 +74,7 @@ beforeAll(async () => {
       game(3, {
         win: true,
         items: [1036, 999_999],
-        loadout: { summoner1_id: 14, summoner2_id: 999_999 },
+        scoutQlLoadout: { summoner1_id: 14, summoner2_id: 999_999 },
       }),
     ],
   });
