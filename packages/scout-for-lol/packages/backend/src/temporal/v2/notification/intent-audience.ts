@@ -11,6 +11,8 @@ import { botRest } from "#src/lib/discord/bot-rest.ts";
 import type { DiscordChannel } from "#src/lib/discord/bot-rest-schemas.ts";
 import { isScoutInstalledInGuild } from "#src/lib/discord/installed-guilds.ts";
 import { createLogger } from "#src/logger.ts";
+import { MalformedAnnouncementIntentError } from "#src/temporal/v2/notification/announcement-codecs.ts";
+import { hallRecordBreakGuildV2 } from "#src/temporal/v2/notification/hall-record-break-notification.ts";
 
 const logger = createLogger("scout-v2-intent-audience");
 
@@ -101,6 +103,35 @@ async function discordRetirementOf(
   return installed.answered && !installed.answer ? "guild-left" : undefined;
 }
 
+/** A removed installation cannot receive a Hall break minted for its predecessor. */
+export async function hallInstallationRetirementOfV2(
+  db: Db,
+  record: MatchNotificationIntentRecord,
+): Promise<"guild-left" | undefined> {
+  if (record.intent.kind !== "hall-record-break") return undefined;
+  let guildId;
+  try {
+    guildId = hallRecordBreakGuildV2(record);
+  } catch (error) {
+    // Invalid Hall content belongs to the later content boundary.
+    if (error instanceof MalformedAnnouncementIntentError) return undefined;
+    throw error;
+  }
+  const installation = await db.guildInstall.findUnique({
+    where: { serverId: guildId },
+    select: { installedAt: true, removedAt: true },
+  });
+  // Legacy installations may have no lifecycle row. Absence is not evidence
+  // of removal; Discord's current audience check still applies below.
+  if (installation === null) return undefined;
+  const mintedAt = new Date(record.intent.createdAt).getTime();
+  return (installation.removedAt !== null &&
+    installation.removedAt.getTime() > mintedAt) ||
+    installation.installedAt.getTime() > mintedAt
+    ? "guild-left"
+    : undefined;
+}
+
 /** The reason this intent's audience is gone, or `undefined` if it stands. */
 export async function audienceRetirementOfV2(
   db: Db,
@@ -111,7 +142,8 @@ export async function audienceRetirementOfV2(
   // A DM's audience is one account, and no producer of these kinds mints one
   // yet; there is nothing here to ask.
   return target.kind === "channel"
-    ? ((await discordRetirementOf(target.channelId, discord)) ??
+    ? ((await hallInstallationRetirementOfV2(db, record)) ??
+        (await discordRetirementOf(target.channelId, discord)) ??
         (await subscriptionRetirementOf(db, record)))
     : undefined;
 }

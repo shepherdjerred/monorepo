@@ -896,17 +896,30 @@ only `pending` and `ready`; `sending` and `unknown-delivery` conflict, so a
 retirement always loses to a send in flight.
 
 The send path discovers it. `beginNotificationSendV2`, for an unattempted
-intent and before any nonce is minted, asks Discord for the target channel
+intent and before any nonce is minted, first checks a Hall intent against its
+guild's installation lifecycle. A removal stamp or an `installedAt` later than
+the intent's creation retires it as `guild-left`, including when the bot was
+reinstalled and the same channel still exists. A missing lifecycle row alone
+is no evidence of removal. The send path then asks Discord for the target channel
 (Unknown Channel is `channel-deleted`; a channel whose guild Scout is confirmed
 not to be in is `guild-left`) and then, for the subscription-backed kinds
 (`postmatch`, `prematch`), whether any subscription in the channel still
 follows a tracked account in the match — or, before the match has tracked
-accounts, any subscription at all (`subscription-deleted`). An unreachable or
-refusing Discord is no evidence, and the send goes ahead. A guild removal
+accounts, any subscription at all (`subscription-deleted`). In this audience
+check an unreachable or refusing Discord is no evidence, and the send proceeds
+to its final guard. A guild removal
 usually arrives as `subscription-deleted`, because the removal cleanup deletes
 the guild's subscriptions and Discord then refuses the channel read. The
 retired intent answers the Workflow with its `suppressed` state, which it
 already treats as the end of the run, so no Workflow command changed.
+
+A Hall attempt has one more check immediately before the Discord send. The
+delivery Activity rereads the lifecycle row and fetches Scout's own guild
+membership without the REST member cache. Discord's `joined_at` must be no
+later than the intent's creation; a later join suppresses the old installation's
+announcement even if the gateway's best-effort lifecycle write failed. If the
+join time cannot be confirmed, the Activity returns a retryable pre-send
+failure. No Discord message is sent on that attempt.
 
 The `notification-intent-expiry` job also retires, from the database alone,
 the fresh `pending`/`ready` subscription-backed intents whose subscriptions are

@@ -169,6 +169,17 @@ export const NotificationPolicySuppressionReasonSchema =
     "recipient-preference",
   ]);
 
+/** A refusal established after an attempt began, before Discord was called. */
+export type NotificationUnsentSuppressionReason = z.infer<
+  typeof NotificationUnsentSuppressionReasonSchema
+>;
+export const NotificationUnsentSuppressionReasonSchema =
+  NotificationSuppressionReasonSchema.extract([
+    "feature-disabled",
+    "recipient-preference",
+    "guild-left",
+  ]);
+
 export type NotificationRetryableFailureReason = z.infer<
   typeof NotificationRetryableFailureReasonSchema
 >;
