@@ -48,6 +48,7 @@ const { prisma } = testDatabase;
 
 const stubs = vi.hoisted(() => ({
   readChannel: vi.fn(),
+  freshGuildMember: vi.fn(),
   isInstalled: vi.fn(),
   fetchChannelForDelivery: vi.fn(),
   isPolicyEnabled: vi.fn(),
@@ -63,6 +64,7 @@ vi.mock("#src/configuration/flags.ts", async () => ({
 
 vi.mock("#src/lib/discord/bot-rest.ts", () => ({
   botRest: () => ({ channel: stubs.readChannel }),
+  freshBotMember: stubs.freshGuildMember,
 }));
 vi.mock("#src/lib/discord/installed-guilds.ts", async () => {
   const actual = await vi.importActual<typeof InstalledGuildsModule>(
@@ -177,6 +179,9 @@ beforeEach(async () => {
   await prisma.guildInstall.deleteMany();
   scoutDurableNotificationIntentsRetired.reset();
   stubs.readChannel.mockResolvedValue(liveChannel());
+  stubs.freshGuildMember.mockResolvedValue({
+    joined_at: "2026-09-01T00:00:00.000Z",
+  });
   stubs.isInstalled.mockResolvedValue(true);
   stubs.fetchChannelForDelivery.mockResolvedValue({ guildId: GUILD });
   stubs.isPolicyEnabled.mockResolvedValue(true);
@@ -220,6 +225,18 @@ describe("Hall audience across guild installations", () => {
         state: { kind: "ready" },
       }),
     };
+  }
+
+  async function begunHallAttempt(): Promise<ScoutIntentAttemptRefV2> {
+    await seedHallInstallation("2026-09-01T00:00:00.000Z");
+    const record = hallRecord();
+    expect(await upsertIntent(prisma, record)).toEqual({ outcome: "applied" });
+    const ref = attempt(record.intent.key, NONCE_A);
+    const begun = await beginNotificationSendV2(ref);
+    expect(begun.state).toMatchObject({
+      kind: "sending",
+    });
+    return ref;
   }
 
   test("retires a Hall intent while its installation is removed", async () => {
@@ -281,13 +298,7 @@ describe("Hall audience across guild installations", () => {
   });
 
   test("suppresses an old Hall attempt when the guild is reinstalled after beginSend", async () => {
-    await seedHallInstallation("2026-09-01T00:00:00.000Z");
-    const record = hallRecord();
-    expect(await upsertIntent(prisma, record)).toEqual({ outcome: "applied" });
-    const ref = attempt(record.intent.key, NONCE_A);
-
-    const begun = await beginNotificationSendV2(ref);
-    expect(begun.state).toMatchObject({ kind: "sending" });
+    const ref = await begunHallAttempt();
 
     await prisma.guildInstall.update({
       where: { serverId: GUILD },
@@ -302,6 +313,51 @@ describe("Hall audience across guild installations", () => {
       kind: "suppressed",
       reason: "guild-left",
     });
+  });
+
+  test("suppresses an old Hall attempt when Discord sees a reinstall that GuildInstall missed", async () => {
+    const ref = await begunHallAttempt();
+
+    // The gateway's best-effort reinstall write never landed. Discord's fresh
+    // bot membership carries the new generation independently of that row.
+    stubs.freshGuildMember.mockResolvedValue({
+      joined_at: "2026-09-14T00:00:00.000Z",
+    });
+    const delivery = await deliverNotificationV2(ref);
+    expect(delivery).toEqual({ outcome: "suppressed", reason: "guild-left" });
+    expect(stubs.freshGuildMember).toHaveBeenCalledTimes(1);
+    expect(stubs.send).not.toHaveBeenCalled();
+    const recorded = await recordNotificationOutcomeV2({ ...ref, delivery });
+    expect(recorded.state).toEqual({
+      kind: "suppressed",
+      reason: "guild-left",
+    });
+  });
+
+  test("retries a Hall attempt when Discord cannot confirm its join time", async () => {
+    const ref = await begunHallAttempt();
+
+    stubs.freshGuildMember.mockResolvedValue({ joined_at: null });
+    const delivery = await deliverNotificationV2(ref);
+    expect(delivery).toEqual({
+      outcome: "failed",
+      failure: { classification: "retryable", reason: "service-unavailable" },
+    });
+    expect(stubs.send).not.toHaveBeenCalled();
+    const recorded = await recordNotificationOutcomeV2({ ...ref, delivery });
+    expect(recorded.state).toEqual({ kind: "ready" });
+  });
+
+  test("delivers a Hall attempt from the current Discord membership", async () => {
+    const ref = await begunHallAttempt();
+
+    const delivery = await deliverNotificationV2(ref);
+    expect(delivery).toEqual({
+      outcome: "delivered",
+      messageId: "100000000000000888",
+    });
+    expect(stubs.freshGuildMember).toHaveBeenCalledTimes(1);
+    expect(stubs.send).toHaveBeenCalledTimes(1);
   });
 });
 

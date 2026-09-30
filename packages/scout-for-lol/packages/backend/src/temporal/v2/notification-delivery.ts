@@ -30,6 +30,7 @@ import {
   send,
 } from "#src/league/discord/channel.ts";
 import { deliveryAttemptNonce } from "#src/durable/match/delivery-intents.ts";
+import { freshBotMember } from "#src/lib/discord/bot-rest.ts";
 import { prisma } from "#src/database/index.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { ArchivedObjectUnusableError } from "#src/report-store/s3-raw-source.ts";
@@ -332,9 +333,27 @@ async function hallPreSendSuppression(
   const reason = await hallRecordBreakSuppressionV2(record);
   if (reason !== undefined) return reason;
   assertHallRecordBreakTargetGuildV2(record, guildId);
+  const currentGuildId = DiscordGuildIdSchema.parse(guildId);
   // The guild can be reinstalled after beginSend checked its audience. This
   // is the last read before Discord receives the old installation's message.
-  return await hallInstallationRetirementOfV2(prisma, record);
+  const retired = await hallInstallationRetirementOfV2(prisma, record);
+  if (retired !== undefined) return retired;
+  // GuildInstall is written by the gateway on a best-effort path. Its prior
+  // generation can survive a failed reinstall write, so ask Discord for the
+  // bot's CURRENT membership without the ordinary member cache. Its joined_at
+  // is independent of that row and advances across removal and reinstallation.
+  // A missing timestamp or failed read cannot establish that this is still the
+  // installation which minted the intent: the pre-send catch retries it.
+  const member = await freshBotMember(currentGuildId);
+  if (member === null) return "guild-left";
+  if (member.joined_at === null || member.joined_at === undefined) {
+    throw new Error(
+      `Discord did not report Scout's join time in guild ${currentGuildId}`,
+    );
+  }
+  return Date.parse(member.joined_at) > Date.parse(record.intent.createdAt)
+    ? "guild-left"
+    : undefined;
 }
 
 async function prepareNotificationSend(
