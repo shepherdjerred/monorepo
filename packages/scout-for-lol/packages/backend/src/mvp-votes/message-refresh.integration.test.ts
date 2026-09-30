@@ -11,6 +11,7 @@ import { freezeMvpTestRoster } from "#src/testing/mvp-votes-fixtures.ts";
 import { refreshMvpTallyMessages } from "#src/mvp-votes/message-refresh.ts";
 import { reconcileMvpTallyRefresh } from "#src/mvp-votes/tally-reconciliation.ts";
 import {
+  recordMatchMvpOwnedReportRef,
   recordMatchMvpReportRefs,
   upsertMatchMvpVote,
 } from "#src/mvp-votes/vote.ts";
@@ -27,6 +28,11 @@ const firstChannel = DiscordChannelIdSchema.parse("300000000000000001");
 const secondChannel = DiscordChannelIdSchema.parse("300000000000000002");
 const key = { matchId, serverId };
 const where = { matchId_serverId: key };
+const skipEdit = () => Promise.resolve();
+const refreshWithoutEdit = (
+  input: Parameters<typeof refreshMvpTallyMessages>[0],
+  client: Parameters<typeof refreshMvpTallyMessages>[1],
+) => refreshMvpTallyMessages(input, client, skipEdit);
 
 afterAll(async () => {
   await db.$disconnect();
@@ -40,17 +46,28 @@ beforeEach(async () => {
     messages: { fetch: async () => ({ embeds: [] }) },
   }));
   await db.matchMvpTallyRefresh.deleteMany();
+  await db.matchMvpReportTarget.deleteMany();
   await db.matchMvpVote.deleteMany();
   await db.matchMvpContest.deleteMany();
   await db.matchMvpContest.create({
     data: { matchId, roster: freezeMvpTestRoster(matchId) },
   });
-  await recordMatchMvpReportRefs(
-    matchId,
-    new Map([
-      [firstChannel, "400000000000000001"],
-      [secondChannel, "400000000000000002"],
-    ]),
+  await recordMatchMvpOwnedReportRef(
+    {
+      matchId,
+      serverId,
+      channelId: firstChannel,
+      messageId: "400000000000000001",
+    },
+    db,
+  );
+  await recordMatchMvpOwnedReportRef(
+    {
+      matchId,
+      serverId,
+      channelId: secondChannel,
+      messageId: "400000000000000002",
+    },
     db,
   );
   await upsertMatchMvpVote(
@@ -66,7 +83,146 @@ beforeEach(async () => {
   );
 });
 
+describe("MVP terminal report targets", () => {
+  test("closes when every owned report channel is gone", async () => {
+    stubs.fetchChannelForDelivery.mockResolvedValue(null);
+    await reconcileMvpTallyRefresh(key, db, async (input, client) =>
+      refreshMvpTallyMessages(input, client),
+    );
+    const row = await db.matchMvpTallyRefresh.findUniqueOrThrow({ where });
+    expect(row).toMatchObject({
+      pending: false,
+      appliedRevision: 0,
+      lastErrorCode: "report-target-unavailable",
+    });
+    expect(row.targetProgress).toEqual({
+      [`${firstChannel}:400000000000000001`]: {
+        revision: 1,
+        generation: 0,
+        outcome: "unavailable",
+      },
+      [`${secondChannel}:400000000000000002`]: {
+        revision: 1,
+        generation: 0,
+        outcome: "unavailable",
+      },
+    });
+  });
+
+  test("a later report target reopens a request closed for unavailable targets", async () => {
+    stubs.fetchChannelForDelivery.mockResolvedValue(null);
+    await reconcileMvpTallyRefresh(key, db, refreshWithoutEdit);
+    const newChannel = DiscordChannelIdSchema.parse("300000000000000003");
+    await recordMatchMvpOwnedReportRef(
+      {
+        matchId,
+        serverId,
+        channelId: newChannel,
+        messageId: "400000000000000003",
+      },
+      db,
+    );
+    await expect(
+      db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+    ).resolves.toMatchObject({ pending: true, requeueGeneration: 1 });
+    stubs.fetchChannelForDelivery.mockImplementation(
+      async (channelId: string) =>
+        channelId === newChannel
+          ? {
+              guildId: serverId,
+              isTextBased: () => true,
+              messages: { fetch: async () => ({ embeds: [] }) },
+            }
+          : null,
+    );
+    await reconcileMvpTallyRefresh(key, db, refreshWithoutEdit);
+    await expect(
+      db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+    ).resolves.toMatchObject({
+      pending: false,
+      appliedRevision: 1,
+      lastErrorCode: null,
+    });
+  });
+
+  test("closes when Discord denies access to every owned report", async () => {
+    stubs.fetchChannelForDelivery.mockRejectedValue(
+      Object.assign(new Error("Missing Access"), { code: 50_001 }),
+    );
+    await reconcileMvpTallyRefresh(key, db, async (input, client) =>
+      refreshMvpTallyMessages(input, client),
+    );
+    await expect(
+      db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+    ).resolves.toMatchObject({
+      pending: false,
+      appliedRevision: 0,
+      lastErrorCode: "report-target-unavailable",
+    });
+  });
+
+  test("does not retire a guild for unavailable reports owned elsewhere", async () => {
+    await db.matchMvpReportTarget.deleteMany({ where: { matchId, serverId } });
+    await recordMatchMvpOwnedReportRef(
+      {
+        matchId,
+        serverId: DiscordGuildIdSchema.parse("1337623164146155594"),
+        channelId: firstChannel,
+        messageId: "400000000000000001",
+      },
+      db,
+    );
+    stubs.fetchChannelForDelivery.mockResolvedValue(null);
+    await reconcileMvpTallyRefresh(key, db, async (input, client) =>
+      refreshMvpTallyMessages(input, client),
+    );
+    await expect(
+      db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+    ).resolves.toMatchObject({
+      pending: true,
+      lastErrorCode: "awaiting-report",
+    });
+  });
+});
+
 describe("MVP message refresh", () => {
+  test("does not restore an older owned message over a newer report in the same channel", async () => {
+    const latestMessageId = "400000000000000099";
+    await recordMatchMvpOwnedReportRef(
+      {
+        matchId,
+        serverId,
+        channelId: firstChannel,
+        messageId: latestMessageId,
+      },
+      db,
+    );
+    stubs.fetchChannelForDelivery.mockImplementation(async () => ({
+      guildId: serverId,
+      isTextBased: () => true,
+      messages: {
+        fetch: async (messageId: string) => {
+          if (messageId === "400000000000000001") {
+            throw Object.assign(new Error("Unknown Message"), { code: 10_008 });
+          }
+          return { embeds: [] };
+        },
+      },
+    }));
+
+    await reconcileMvpTallyRefresh(key, db, refreshWithoutEdit);
+
+    const contest = await db.matchMvpContest.findUniqueOrThrow({
+      where: { matchId },
+    });
+    expect(contest.reportMessageIds).toMatchObject({
+      [firstChannel]: latestMessageId,
+    });
+    await expect(
+      db.matchMvpTallyRefresh.findUniqueOrThrow({ where }),
+    ).resolves.toMatchObject({ pending: false, appliedRevision: 1 });
+  });
+
   test.each([
     "missing response",
     "unknown channel error",

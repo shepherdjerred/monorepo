@@ -262,6 +262,51 @@ export async function listMatchMvpReportRefs(
   );
 }
 
+/** Keep guild ownership even when Discord can no longer resolve the channel. */
+export async function rememberMatchMvpReportTarget(
+  input: MatchMvpReportRef & {
+    matchId: MatchId;
+    serverId: DiscordGuildId;
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  await prismaClient.matchMvpReportTarget.createMany({
+    data: [input],
+    skipDuplicates: true,
+  });
+  const standing = await prismaClient.matchMvpReportTarget.findUnique({
+    where: {
+      matchId_channelId_messageId: {
+        matchId: input.matchId,
+        channelId: input.channelId,
+        messageId: input.messageId,
+      },
+    },
+    select: { serverId: true },
+  });
+  if (standing?.serverId !== input.serverId) {
+    throw new Error(
+      `MVP report target ${input.channelId} for ${input.matchId} has conflicting guild ownership`,
+    );
+  }
+}
+
+/** A vote button supplies the report's guild before a later REST lookup can fail. */
+export async function recordMatchMvpOwnedReportRef(
+  input: MatchMvpReportRef & {
+    matchId: MatchId;
+    serverId: DiscordGuildId;
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  await rememberMatchMvpReportTarget(input, prismaClient);
+  await recordMatchMvpReportRefs(
+    input.matchId,
+    new Map([[input.channelId, input.messageId]]),
+    prismaClient,
+  );
+}
+
 export async function upsertMatchMvpVote(
   input: {
     matchId: MatchId;
