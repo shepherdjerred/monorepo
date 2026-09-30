@@ -12,6 +12,8 @@ import {
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
 import { ConsumerGuildAvatar } from "#src/components/consumer-guild-avatar.tsx";
+import { ConsumerLobbySearch } from "#src/components/player/consumer-lobby-search.tsx";
+import { ConsumerGuildCommunity } from "#src/components/player/consumer-guild-community.tsx";
 import { PageSectionHeading } from "#src/components/chrome/page-section-heading.tsx";
 import { useDebouncedValue } from "#src/hooks/use-debounced-value.ts";
 import { track } from "#src/lib/analytics.ts";
@@ -191,6 +193,10 @@ export function ConsumerPlayerSearch() {
                 void searchQuery.refetch();
               }}
             />
+
+            <ConsumerLobbySearch />
+
+            <ConsumerGuildCommunity />
 
             <PlayerHome
               home={Loaded.strict(

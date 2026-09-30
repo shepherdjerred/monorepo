@@ -6,7 +6,15 @@ import {
   type MatchRunePage,
   type RawParticipant,
 } from "@scout-for-lol/data";
+import { ITEM_SLOT_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.ts";
+import { MATCH_REBUILD_GATED_COLUMNS } from "@scout-for-lol/data/model/reports/match-rebuild-gated-columns.ts";
 import { z } from "zod";
+
+/** UI reads name their rebuilt fields without also selecting newer ScoutQL columns. */
+export const MATCH_UI_READ_COLUMNS = [
+  ...ITEM_SLOT_COLUMNS,
+  ...MATCH_REBUILD_GATED_COLUMNS,
+] as const;
 
 const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
 

@@ -52,7 +52,7 @@ import {
   validateQuery,
   type ToolTracker,
 } from "#src/reports/ai/scoutql-tools.ts";
-import { fetchMatchSupport } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+import { fetchMatchSupport } from "#src/reports/duckdb/community/match-support.ts";
 import { resolvePlayerIdentities } from "#src/reports/identity.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 

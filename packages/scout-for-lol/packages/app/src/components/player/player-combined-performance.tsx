@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 import type { Loaded } from "@shepherdjerred/loaded";
+import { Input } from "@scout-for-lol/design-system/components/input";
 import { Section } from "#src/components/player/player-detail-sections.tsx";
 import { PlayerProfileFilterBar } from "#src/components/player/player-profile-filter-bar.tsx";
 import { ChampionPoolTable } from "#src/components/player/champion-pool-table.tsx";
@@ -30,6 +31,8 @@ export function CombinedPerformance(props: {
   entries: ComponentProps<typeof RecordedMatchHistory>["entries"];
   nextCursor: HistoryCursor | null;
   historyPage: number;
+  championSearch?: string;
+  onChampionSearchChange?: (value: string) => void;
   playerId: number;
   profileSearch: string;
   onRetryHistory: () => void;
@@ -77,6 +80,26 @@ export function CombinedPerformance(props: {
                 profileSearch={props.profileSearch}
               />
             </Section>
+          )}
+          {props.onChampionSearchChange !== undefined && (
+            <label
+              className="block space-y-1 text-sm"
+              htmlFor="champion-history-search"
+            >
+              <span>Search recorded matches by champion</span>
+              <Input
+                id="champion-history-search"
+                value={props.championSearch ?? ""}
+                onChange={(event) =>
+                  props.onChampionSearchChange?.(event.target.value)
+                }
+                placeholder="Champion name"
+                maxLength={40}
+              />
+              <span className="block text-xs text-scout-subtle">
+                The game limit applies after champion search.
+              </span>
+            </label>
           )}
           <RecordedMatchHistory
             history={props.history}

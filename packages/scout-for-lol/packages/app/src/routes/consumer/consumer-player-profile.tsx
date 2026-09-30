@@ -16,6 +16,8 @@ import { ConsumerGuildAvatar } from "#src/components/consumer-guild-avatar.tsx";
 import { ConsumerPlayerChallengeRuns } from "#src/components/challenge/player-challenge-runs.tsx";
 import { CombinedPerformance } from "#src/components/player/player-combined-performance.tsx";
 import { PlayerRankHistoryPanel } from "#src/components/player/player-rank-history.tsx";
+import { PlayerBehavior } from "#src/components/player/player-behavior.tsx";
+import { ConsumerPlayerCommunity } from "#src/components/player/consumer-player-community.tsx";
 import { RankValue } from "#src/components/player/player-profile-sections.tsx";
 import type { HistoryCursor } from "#src/components/player/recorded-match-history.tsx";
 import { track } from "#src/lib/analytics.ts";
@@ -97,10 +99,11 @@ function masteryPoints(points: number): string {
 }
 
 export function ConsumerPlayerProfile() {
+  const { playerId } = useConsumerPlayerParams();
   const { filters, setFilters } = usePlayerProfileUrlState();
   return (
     <ConsumerPlayerProfileContent
-      key={filterKey(filters)}
+      key={`${playerId.toString()}:${filterKey(filters)}`}
       filters={filters}
       onFiltersChange={(nextFilters, kind) => {
         setFilters(nextFilters);
@@ -137,6 +140,7 @@ function ConsumerPlayerProfileContent(props: {
     (HistoryCursor | undefined)[]
   >([undefined]);
   const [historyPage, setHistoryPage] = useState(0);
+  const [championSearch, setChampionSearch] = useState("");
   const currentHistoryCursor = historyCursors[historyPage];
   const filterInput = profileFilterInput(props.filters);
   const trackedOutcome = useRef<string | null>(null);
@@ -183,6 +187,7 @@ function ConsumerPlayerProfileContent(props: {
         playerId,
         limit: 20,
         ...filterInput,
+        championSearch,
         ...(currentHistoryCursor === undefined
           ? {}
           : { cursor: currentHistoryCursor }),
@@ -393,6 +398,9 @@ function ConsumerPlayerProfileContent(props: {
           void rankHistoryQuery.refetch();
         }}
       />
+      <PlayerBehavior behavior={summary.behavior} />
+
+      <ConsumerPlayerCommunity guildId={summary.guild.id} playerId={playerId} />
 
       <CombinedPerformance
         filters={props.filters}
@@ -407,6 +415,12 @@ function ConsumerPlayerProfileContent(props: {
         entries={entries}
         nextCursor={nextCursor}
         historyPage={historyPage}
+        championSearch={championSearch}
+        onChampionSearchChange={(value) => {
+          setChampionSearch(value);
+          setHistoryCursors([undefined]);
+          setHistoryPage(0);
+        }}
         playerId={playerId}
         profileSearch={profileSearch}
         onRetryHistory={() => {

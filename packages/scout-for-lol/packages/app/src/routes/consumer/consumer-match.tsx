@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { Link, useSearchParams } from "react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@scout-for-lol/design-system/components/badge";
+import { ArenaSubteams } from "#src/components/match/match-arena-subteams.tsx";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import {
   Card,
@@ -11,7 +12,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@scout-for-lol/design-system/components/card";
-import { MatchScoreboards } from "#src/components/match/match-scoreboard.tsx";
+import {
+  MatchScoreboards,
+  RolePairedMatchScoreboard,
+} from "#src/components/match/match-scoreboard.tsx";
 import { MatchMvpTally } from "#src/components/match/match-mvp-tally.tsx";
 import { MatchTimeline } from "#src/components/match/match-timeline.tsx";
 import { track } from "#src/lib/analytics.ts";
@@ -130,7 +134,16 @@ export function ConsumerMatch() {
             only from your currently accessible guilds.
           </p>
         </div>
-        <MatchScoreboards teams={match.teams} />
+        {match.arenaSubteams !== null && match.arenaSubteams.length > 0 ? (
+          <ArenaSubteams subteams={match.arenaSubteams} />
+        ) : match.roleMatchups === null ? (
+          <MatchScoreboards teams={match.teams} showLoadout />
+        ) : (
+          <RolePairedMatchScoreboard
+            teams={match.teams}
+            matchups={match.roleMatchups}
+          />
+        )}
       </section>
 
       {tallyValue.status === "done" && tallyValue.data !== null && (

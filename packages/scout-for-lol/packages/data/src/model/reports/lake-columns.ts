@@ -402,7 +402,7 @@ export const MATCH_READ_COLUMNS: Record<string, DuckDbColumnType> =
     ),
   );
 
-/** MATCH_READ_COLUMNS plus the loadout columns a read names. */
+/** MATCH_READ_COLUMNS plus explicitly named loadout or UI rebuild columns. */
 export function matchReadColumns(
   loadout: readonly string[],
 ): Record<string, DuckDbColumnType> {
@@ -410,8 +410,8 @@ export function matchReadColumns(
   return Object.fromEntries(
     Object.entries(MATCH_LAKE_COLUMNS).filter(
       ([name]) =>
-        !UI_REBUILD_GATED_COLUMNS.has(name) &&
-        (!LOADOUT.has(name) || selected.has(name)),
+        (!UI_REBUILD_GATED_COLUMNS.has(name) && !LOADOUT.has(name)) ||
+        selected.has(name),
     ),
   );
 }

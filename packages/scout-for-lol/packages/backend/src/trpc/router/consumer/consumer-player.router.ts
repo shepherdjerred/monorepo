@@ -44,6 +44,28 @@ const SearchInput = z.object({
   query: z.string().trim().min(1).max(100),
 });
 
+const LobbyInput = z.object({
+  riotIds: z.string().trim().min(1).max(1000),
+});
+
+function lobbyRiotIds(value: string): string[] {
+  const ids = value
+    .split(/[\r\n,]+/)
+    .map((id) => id.trim())
+    .filter(Boolean);
+  if (
+    ids.length === 0 ||
+    ids.length > 10 ||
+    ids.some((id) => !/^[^#]{1,32}#[^#]{1,8}$/.test(id))
+  ) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Enter 1–10 Riot IDs, one Name#Tag per line.",
+    });
+  }
+  return ids;
+}
+
 const RankedPlayerRowsSchema = z.array(
   z.object({
     id: PlayerIdSchema,
@@ -337,6 +359,43 @@ export const consumerPlayerRouter = router({
       };
     }),
 
+  multisearch: protectedProcedure
+    .input(LobbyInput)
+    .query(async ({ ctx, input }) => {
+      const guilds = await assertConsumerPlayerScope(ctx.user);
+      const ids = lobbyRiotIds(input.riotIds);
+      const players = await prisma.player.findMany({
+        where: { serverId: { in: guilds.map((guild) => guild.id) } },
+        select: {
+          id: true,
+          alias: true,
+          serverId: true,
+          accounts: {
+            select: { riotGameName: true, riotTagLine: true, region: true },
+          },
+        },
+      });
+      return {
+        rows: ids.map((id) => ({
+          riotId: id,
+          matches: players.flatMap((player) =>
+            player.accounts
+              .filter(
+                (account) =>
+                  `${account.riotGameName ?? ""}#${account.riotTagLine ?? ""}`.toLowerCase() ===
+                  id.toLowerCase(),
+              )
+              .map((account) => ({
+                playerId: player.id,
+                alias: player.alias,
+                guild: guildProfileDisplay(guilds, player.serverId),
+                region: account.region,
+              })),
+          ),
+        })),
+      };
+    }),
+
   profileSummary: protectedProcedure
     .input(ConsumerPlayerInput.extend(FilterInput.shape))
     .query(async ({ ctx, input }) => {
@@ -366,6 +425,7 @@ export const consumerPlayerRouter = router({
       ConsumerPlayerInput.extend(FilterInput.shape).extend({
         limit: z.number().int().min(1).max(50).default(20),
         cursor: MatchHistoryCursorSchema.optional(),
+        championSearch: z.string().trim().max(40).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -377,6 +437,9 @@ export const consumerPlayerRouter = router({
         games: input.games,
         ...(input.cursor === undefined ? {} : { cursor: input.cursor }),
         ...(input.queues === undefined ? {} : { queues: input.queues }),
+        ...(input.championSearch === undefined
+          ? {}
+          : { championSearch: input.championSearch }),
       });
     }),
 });

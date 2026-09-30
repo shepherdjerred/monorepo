@@ -11,11 +11,12 @@ import type {
 import {
   fetchChampionComparisons,
   fetchFullMatch,
-  fetchMatchSupport,
   fetchTimelineCoverage,
   fetchTimelineEventPage,
   fetchTimelineFramePage,
+  fetchTimelineFramesAtIndex,
 } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+import { fetchMatchSupport } from "#src/reports/duckdb/community/match-support.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
 
@@ -139,7 +140,7 @@ const coverage: TimelineCoverageLakeRow = {
   event_count: 3,
   participant_count: 2,
   first_frame_timestamp_ms: 60_000,
-  last_frame_timestamp_ms: 120_000,
+  last_frame_timestamp_ms: 900_023,
 };
 
 beforeAll(async () => {
@@ -205,8 +206,8 @@ beforeAll(async () => {
     ],
     timelineFrames: [
       frame({
-        index: 1,
-        timestamp: 120_000,
+        index: 15,
+        timestamp: 900_023,
         participantId: 2,
         puuid: playerTwo,
       }),
@@ -248,6 +249,12 @@ describe("consumer profile lake reads", () => {
   test("returns the complete stored scoreboard", async () => {
     const rows = await fetchFullMatch({ matchId, lakeDir });
     expect(rows.map((row) => row.champion_name)).toEqual(["Ashe", "Garen"]);
+    expect(rows[0]).toMatchObject({
+      item0: 1055,
+      item6: 3340,
+      summoner_spell_1_id: 4,
+      primary_rune_0_id: 8005,
+    });
   });
 
   test("aborts the post-query match support read when its caller stops", async () => {
@@ -308,6 +315,18 @@ describe("consumer profile lake reads", () => {
       lakeDir,
     });
     expect(laterFrames.map((row) => row.participant_id)).toEqual([2]);
+  });
+
+  test("selects the minute-15 frame despite Riot timestamp jitter", async () => {
+    expect(
+      await fetchTimelineFramesAtIndex({
+        matchId,
+        frameIndex: 15,
+        lakeDir,
+      }),
+    ).toEqual([
+      expect.objectContaining({ participant_id: 2, minions_killed: 10 }),
+    ]);
   });
 
   test("returns null when Scout never retained timeline coverage", async () => {

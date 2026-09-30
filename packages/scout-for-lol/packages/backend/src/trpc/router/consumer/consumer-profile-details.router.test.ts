@@ -6,6 +6,12 @@ import {
   type DiscordGuildId,
   type LeaguePuuid,
 } from "@scout-for-lol/data";
+import type {
+  LakeMatchParticipantRow,
+  LakeTimelineCoverage,
+  LaneDeltaFrame,
+} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+import { buildRoleMatchups } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 import {
   configureConsumerProfileFeatureTest,
   registerConsumerProfileFeatureTestLifecycle,
@@ -70,6 +76,10 @@ function fact(options: {
   championId?: number;
   championName?: string;
   teamId?: number;
+  queue?: string;
+  queueId?: number;
+  gameMode?: string;
+  playerSubteamId?: number;
   index?: number;
 }) {
   return {
@@ -77,7 +87,12 @@ function fact(options: {
     playerAlias: options.alias,
     puuid: options.puuid,
     matchId: options.matchId,
-    queue: "solo",
+    queue: options.queue ?? "solo",
+    ...(options.queueId === undefined ? {} : { queueId: options.queueId }),
+    ...(options.gameMode === undefined ? {} : { gameMode: options.gameMode }),
+    ...(options.playerSubteamId === undefined
+      ? {}
+      : { playerSubteamId: options.playerSubteamId }),
     win: options.win,
     surrendered: false,
     kills: options.win ? 8 : 2,
@@ -301,6 +316,12 @@ describe("consumerMatch", () => {
         }),
       ]),
     );
+    expect(detail.match.roleMatchups).toBeNull();
+    expect(detail.match.teams[0]?.participants[0]?.loadout).toMatchObject({
+      itemIds: [1055, 3006, 3031, 3094, 3072, 0, 3340],
+      summonerSpellIds: [4, 7],
+      runes: { primaryStyleId: 8000, primaryRuneIds: [8005, 8009, 9103, 8014] },
+    });
     expect(detail.timeline.coverage).toBeNull();
     expect(JSON.stringify(detail)).not.toContain(actor);
   });
@@ -334,5 +355,222 @@ describe("consumerMatch", () => {
         matchId: "NA1_not_yours",
       }),
     ).rejects.toThrow("Match was not found");
+  });
+
+  test("rejects an Arena match with missing participant subteams", async () => {
+    const puuid = testPuuid("arena-no-subteam");
+    const launch = await player({ guildId: guildOne, alias: "Arena", puuid });
+    await writeTestLake(lakeDir, {
+      serverId: guildOne,
+      matchFacts: [
+        fact({
+          playerId: launch.id,
+          alias: launch.alias,
+          puuid,
+          matchId: "NA1_arena_no_subteam",
+          win: false,
+          queue: "arena",
+          queueId: 1700,
+          gameMode: "CHERRY",
+        }),
+      ],
+    });
+    await expect(
+      trpc.authedCaller().consumerMatch.detail({
+        playerId: launch.id,
+        matchId: "NA1_arena_no_subteam",
+      }),
+    ).rejects.toThrow("missing a participant subteam ID");
+  });
+});
+
+const testLoadoutColumns = {
+  item0: 1055,
+  item1: 3006,
+  item2: 3031,
+  item3: 3094,
+  item4: 3072,
+  item5: 0,
+  item6: 3340,
+  summoner_spell_1_id: 4,
+  summoner_spell_2_id: 7,
+  primary_rune_style_id: 8000,
+  primary_rune_0_id: 8005,
+  primary_rune_1_id: 8009,
+  primary_rune_2_id: 9103,
+  primary_rune_3_id: 8014,
+  secondary_rune_style_id: 8300,
+  secondary_rune_0_id: 8304,
+  secondary_rune_1_id: 8347,
+  stat_perk_offense_id: 5005,
+  stat_perk_flex_id: 5008,
+  stat_perk_defense_id: 5002,
+};
+
+function matchupParticipant(options: {
+  participantId: number;
+  teamId: number;
+  position: string;
+}): LakeMatchParticipantRow {
+  return {
+    match_id: "NA1_role_pairing",
+    game_creation_ms: created.getTime(),
+    game_duration_seconds: 1800,
+    queue: "solo",
+    queue_id: 420,
+    game_mode: "CLASSIC",
+    game_type: "MATCHED_GAME",
+    game_version: "16.18.1",
+    map_id: 11,
+    puuid: testPuuid(`role-${options.participantId.toString()}`),
+    participant_id: options.participantId,
+    team_id: options.teamId,
+    player_subteam_id: null,
+    placement: null,
+    subteam_placement: null,
+    augment_1_id: null,
+    augment_2_id: null,
+    augment_3_id: null,
+    augment_4_id: null,
+    augment_5_id: null,
+    augment_6_id: null,
+    riot_id_game_name: `Player ${options.participantId.toString()}`,
+    riot_id_tagline: "NA1",
+    champion_id: 22,
+    champion_name: "Ashe",
+    team_position: options.position,
+    win: options.teamId === 100,
+    kills: 5,
+    deaths: 2,
+    assists: 7,
+    creep_score: 150,
+    gold_earned: 10_000,
+    vision_score: 20,
+    total_damage_dealt_to_champions: 15_000,
+    turret_kills: 1,
+    inhibitor_kills: 0,
+    baron_kills: 0,
+    dragon_kills: 0,
+    ...testLoadoutColumns,
+  };
+}
+
+function matchupFrame(
+  participantId: number,
+  totalGold: number,
+  creepScore: number,
+  xp: number,
+): LaneDeltaFrame {
+  return {
+    participant_id: participantId,
+    total_gold: totalGold,
+    minions_killed: creepScore,
+    jungle_minions_killed: 0,
+    xp,
+  };
+}
+
+const completeAt15Coverage: LakeTimelineCoverage = {
+  coverage_state: "complete",
+  data_version: "2",
+  frame_interval_ms: 60_000,
+  frame_count: 16,
+  event_count: 0,
+  participant_count: 10,
+  first_frame_timestamp_ms: 0,
+  last_frame_timestamp_ms: 900_000,
+};
+
+describe("role-paired match scoreboards", () => {
+  const positions = ["TOP", "JUNGLE", "MIDDLE", "BOTTOM", "UTILITY"];
+  const rows = positions.flatMap((position, index) => [
+    matchupParticipant({
+      participantId: index + 1,
+      teamId: 100,
+      position,
+    }),
+    matchupParticipant({
+      participantId: index + 6,
+      teamId: 200,
+      position,
+    }),
+  ]);
+  const frames = positions.flatMap((_, index) => [
+    matchupFrame(index + 1, 5500, 120, 6500),
+    matchupFrame(index + 6, 5000, 110, 6200),
+  ]);
+
+  test("pairs every standard role and computes blue-minus-red 15-minute deltas", () => {
+    const matchups = buildRoleMatchups({
+      rows,
+      coverage: completeAt15Coverage,
+      frames,
+    });
+    expect(matchups).toHaveLength(5);
+    expect(matchups?.[0]).toEqual({
+      role: "top",
+      blueParticipantId: 1,
+      redParticipantId: 6,
+      at15: {
+        timestampMs: 900_000,
+        goldDelta: 500,
+        creepScoreDelta: 10,
+        xpDelta: 300,
+      },
+    });
+  });
+
+  test("falls back when the match is not strictly role-pairable", () => {
+    expect(
+      buildRoleMatchups({
+        rows: rows.slice(0, -1),
+        coverage: completeAt15Coverage,
+        frames,
+      }),
+    ).toBeNull();
+  });
+
+  test("keeps rotating and non-Rift 5v5 games on the ordinary scoreboard", () => {
+    for (const context of [
+      { queue_id: 900 },
+      { game_mode: "URF" },
+      { map_id: 30 },
+    ]) {
+      expect(
+        buildRoleMatchups({
+          rows: rows.map((row) => ({ ...row, ...context })),
+          coverage: completeAt15Coverage,
+          frames,
+        }),
+      ).toBeNull();
+    }
+  });
+
+  test("pairs custom CLASSIC games on Summoner's Rift", () => {
+    for (const context of [
+      { queue: "custom", queue_id: 0, game_type: "MATCHED_GAME" },
+      { queue: null, queue_id: 3110, game_type: "CUSTOM_GAME" },
+    ]) {
+      const matchups = buildRoleMatchups({
+        rows: rows.map((row) => ({
+          ...row,
+          ...context,
+        })),
+        coverage: null,
+        frames: [],
+      });
+      expect(matchups).toHaveLength(5);
+      expect(matchups?.every((matchup) => matchup.at15 === null)).toBe(true);
+    }
+  });
+
+  test("fails when complete coverage omits a required 15-minute frame", () => {
+    expect(() =>
+      buildRoleMatchups({
+        rows,
+        coverage: completeAt15Coverage,
+        frames: frames.slice(0, -1),
+      }),
+    ).toThrow(/missing a 15-minute lane frame/);
   });
 });
