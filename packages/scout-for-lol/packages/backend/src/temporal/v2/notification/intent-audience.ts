@@ -124,9 +124,10 @@ async function hallInstallationRetirementOf(
   // Legacy installations may have no lifecycle row. Absence is not evidence
   // of removal; Discord's current audience check still applies below.
   if (installation === null) return undefined;
-  return installation.removedAt !== null ||
-    installation.installedAt.getTime() >
-      new Date(record.intent.createdAt).getTime()
+  const mintedAt = new Date(record.intent.createdAt).getTime();
+  return (installation.removedAt !== null &&
+    installation.removedAt.getTime() > mintedAt) ||
+    installation.installedAt.getTime() > mintedAt
     ? "guild-left"
     : undefined;
 }

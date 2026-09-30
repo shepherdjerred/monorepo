@@ -240,6 +240,22 @@ describe("Hall audience across guild installations", () => {
     expect(stubs.readChannel).not.toHaveBeenCalled();
   });
 
+  test("checks Discord when a stale removal predates a new Hall intent", async () => {
+    await seedHallInstallation(
+      "2026-09-01T00:00:00.000Z",
+      "2026-09-10T00:00:00.000Z",
+    );
+
+    expect(
+      await audienceRetirementOfV2(
+        prisma,
+        hallRecord(),
+        defaultAudienceDiscordPort(),
+      ),
+    ).toBeUndefined();
+    expect(stubs.isInstalled).toHaveBeenCalledWith(GUILD);
+  });
+
   test("keeps a Hall intent from the current installation", async () => {
     await seedHallInstallation("2026-09-01T00:00:00.000Z");
 
