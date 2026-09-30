@@ -254,22 +254,27 @@ describe("Scout beta workflow candidate", () => {
     expect(serialized).not.toContain('"port":5432');
     expect(serialized).not.toContain('"port":443');
   });
-  test("does not boot the pre-entrypoint candidate pin", () => {
+  test("boots only the capable beta Workflow tracks", () => {
     expect(
       scoutWorkflowWorkerImageIsCapable(`2.0.0-12197@sha256:${"a".repeat(64)}`),
     ).toBe(false);
     expect(scoutWorkflowWorkerImageIsCapable(CAPABLE_STABLE_IMAGE)).toBe(true);
-    expect(
-      allScoutTemporalResources().some(
+    const workflowDeployments = allScoutTemporalResources()
+      .filter(
         (resource) =>
           resource.kind === "Deployment" &&
           resource.metadata.name.includes("scout-workflow-worker"),
-      ),
-    ).toBe(false);
+      )
+      .map((resource) => resource.metadata.name);
+    expect(workflowDeployments).toEqual([
+      "scout-beta-scout-workflow-worker-stable",
+      "scout-beta-scout-workflow-worker-candidate",
+    ]);
   });
   test("requires a stable capable build before creating the candidate", () => {
     const onlyCandidateApp = new App();
     createScoutChart(onlyCandidateApp, "beta", {
+      stable: `2.0.0-12197@sha256:${"a".repeat(64)}`,
       candidate: CAPABLE_CANDIDATE_IMAGE,
     });
     expect(

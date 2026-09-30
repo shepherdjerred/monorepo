@@ -42,10 +42,10 @@
       "digest": "sha256:1ea3b3efcf282e063500dff092444b309156ebbd9644188edc3c40cb5ee20302"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
-      "version": "2.0.0-13153",
-      "digest": "sha256:146077c0658715f5f15493d33e58923a1dd31ff65a97976b12359c39ffabb1d7",
-      "buildNumber": 13153,
-      "gitSha": "c42ee297992a5be0d83541b9c7deda5d4ceb99c7"
+      "version": "2.0.0-1003424",
+      "digest": "sha256:1ea3b3efcf282e063500dff092444b309156ebbd9644188edc3c40cb5ee20302",
+      "buildNumber": 1003424,
+      "gitSha": "cd4a12e206c3667fe53477ee73088b72e57fa2c6"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-1003373",
