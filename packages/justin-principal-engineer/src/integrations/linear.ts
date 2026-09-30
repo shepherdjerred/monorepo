@@ -402,24 +402,29 @@ export class LinearClient {
   }
 
   public async complete(issue: LinearIssue, prUrl: string): Promise<void> {
-    await this.setState(issue, "completed", "Done");
+    // Labels first: a failed cleanup must never leave the issue completed
+    // while local state is still active, or every later turn runs against
+    // an already-completed issue. The terminal state lands last.
     await this.mutateLabels({
       nodeId: issue.id,
       team: await this.resolveTeam(issue),
       add: [],
       remove: this.removableLabels(issue),
     });
+    await this.setState(issue, "completed", "Done");
     await this.comment(issue.identifier, `Merged: ${prUrl}`);
   }
 
   public async completeNoChange(issue: LinearIssue): Promise<void> {
-    await this.setState(issue, "completed", "Done");
+    // Labels first, for the same reason as complete: keep the issue
+    // non-terminal until cleanup succeeds so a failure stays retryable.
     await this.mutateLabels({
       nodeId: issue.id,
       team: await this.resolveTeam(issue),
       add: [],
       remove: this.removableLabels(issue),
     });
+    await this.setState(issue, "completed", "Done");
     await this.comment(
       issue.identifier,
       "No change needed; the requested state was already present.",

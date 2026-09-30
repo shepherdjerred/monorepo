@@ -180,6 +180,23 @@ describe("Linear label mutations", () => {
     });
   });
 
+  test("complete keeps the issue non-terminal when cleanup fails", async () => {
+    const recorded: string[][] = [];
+    const client = new LinearClient(
+      "SJ",
+      fakeLinearRunner(recorded, { mutateSuccess: false }),
+    );
+    await expect(
+      client.complete(
+        issue({ identifier: "AI-3", labels: ["agent:codex"] }),
+        "https://example.com/pr/1",
+      ),
+    ).rejects.toThrow(/label mutation failed/);
+    expect(
+      recorded.filter((args) => args[2] === "issue" && args[3] === "update"),
+    ).toEqual([]);
+  });
+
   test("claim resolves the preferred started state by type", async () => {
     const recorded: string[][] = [];
     const client = new LinearClient("SJ", fakeLinearRunner(recorded));
