@@ -97,6 +97,12 @@ export type ResolvedSource = {
    * for local files and for sources whose extractor set no headers.
    */
   readonly ffmpegInputHeaders?: Readonly<Record<string, string>>;
+  /** Provider-specific input demuxer options, never inferred from arbitrary user URLs. */
+  readonly ffmpegInputOptions?: readonly string[];
+  /** Single video rendition to use when an HLS master advertises multiple tracks. */
+  readonly ffmpegVideoStreamIndex?: number;
+  /** Audio rendition selected by ffprobe for a multi-track live source. */
+  readonly ffmpegAudioStreamIndex?: number;
   /**
    * Second ffmpeg input, carrying audio only. Set when yt-dlp satisfied the video selector with a
    * `+` merge — the normal case on YouTube, where muxed formats have all but disappeared — and

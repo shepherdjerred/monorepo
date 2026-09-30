@@ -71,6 +71,7 @@ export type VoiceCommandPort = {
   readonly listChapters: () => string | Promise<string>;
   readonly getQueue: () => string | Promise<string>;
   readonly getNowPlaying: () => string | Promise<string>;
+  readonly listSports?: (signal: AbortSignal) => string | Promise<string>;
   /** Optional rollout gate for newly added assistant-v2 controls. */
   readonly isAssistantV2Enabled?: () => Promise<boolean>;
   /** Monotonic version incremented when the current turn asks for a numbered selection. */
@@ -86,8 +87,10 @@ export function bindPlaybackVoiceCommandPort(
   return {
     play: async (input, signal) => {
       const spokenCommand = observed.spokenCommand();
+      const { provider, ...playInput } = input;
       const result = await service.play({
-        ...input,
+        ...playInput,
+        ...(provider === undefined ? {} : { provider }),
         userId,
         signal,
         spoken: true,
@@ -140,6 +143,7 @@ export function bindPlaybackVoiceCommandPort(
     listChapters: () => service.listChapters(),
     getQueue: () => service.getQueue(),
     getNowPlaying: () => service.getNowPlaying(),
+    listSports: (signal) => service.listSports(userId, signal),
     isAssistantV2Enabled: () => service.isAssistantV2Enabled(userId),
     clarificationVersion: () => service.clarificationVersion(),
   };
@@ -243,7 +247,7 @@ export function createStreambotVoiceTools(
     tool({
       name: "play",
       description:
-        "Play or queue a media title from the local library or YouTube search.",
+        "Play or queue a media title. For a sports game, set provider to auto unless the speaker names StreamEast or TVSportsLive; omit provider for ordinary music or video.",
       parameters: voiceToolSchemas.play,
       execute: (input) =>
         invoke("play", true, input, () =>
@@ -412,5 +416,24 @@ export function createStreambotVoiceTools(
       execute: (input) =>
         invoke("get_now_playing", false, input, () => commands.getNowPlaying()),
     }),
+    ...(commands.listSports === undefined
+      ? []
+      : [
+          tool({
+            name: "list_sports",
+            description:
+              "List live and later-today sports streams from the supported providers. This does not start playback.",
+            parameters: voiceToolSchemas.listSports,
+            execute: (input) =>
+              invoke(
+                "list_sports",
+                false,
+                input,
+                () =>
+                  commands.listSports?.(transactionSignal) ??
+                  "Sports listings are not available.",
+              ),
+          }),
+        ]),
   ];
 }

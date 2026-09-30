@@ -18,6 +18,12 @@ const log = logger.child("probe");
 /** Hard cap so probing a slow/remote input can never wedge the resolve step. */
 const PROBE_TIMEOUT_MS = 15_000;
 
+export function redactProbeError(message: string, input: string): string {
+  return message
+    .replaceAll(input, "[redacted media URL]")
+    .replaceAll(/https?:\/\/[^\s"'<>]+/g, "[redacted URL]");
+}
+
 const StreamSchema = z.object({
   codec_type: z.string().optional(),
   /**
@@ -42,11 +48,15 @@ const FfprobeOutputSchema = z.object({
 
 export type MediaInfo = {
   videoCodec: string;
+  /** Zero-based index among video streams, for sources with multiple renditions. */
+  videoStreamIndex?: number;
   width: number | undefined;
   height: number | undefined;
   pixelFormat: string | undefined;
   hdr: boolean;
   audioCodec: string;
+  /** Zero-based index among audio streams, for sources with multiple renditions. */
+  audioStreamIndex?: number;
   audioChannels: number | undefined;
   durationSeconds: number | undefined;
 };
@@ -71,20 +81,39 @@ export function parseFfprobeOutput(json: unknown): MediaInfo | null {
   if (!parsed.success) {
     return null;
   }
-  const video = parsed.data.streams.find(
-    (s) => s.codec_type === "video" && s.disposition?.attached_pic !== 1,
+  const videoStreams = parsed.data.streams.filter(
+    (stream) => stream.codec_type === "video",
   );
-  const audio = parsed.data.streams.find((s) => s.codec_type === "audio");
+  const videos = videoStreams.filter(
+    (stream) => stream.disposition?.attached_pic !== 1,
+  );
+  const audios = parsed.data.streams.filter(
+    (stream) => stream.codec_type === "audio",
+  );
+  const videoStreamIndex = videos.findIndex(
+    (stream) => (stream.width ?? 0) > 0 && (stream.height ?? 0) > 0,
+  );
+  const audioStreamIndex = audios.findIndex(
+    (stream) => (stream.channels ?? 0) > 0,
+  );
+  const selectedVideoIndex = Math.max(0, videoStreamIndex);
+  const selectedAudioIndex = Math.max(0, audioStreamIndex);
+  const video = videos[selectedVideoIndex];
+  const audio = audios[selectedAudioIndex];
   const rawDuration = parsed.data.format?.duration;
   const durationSeconds =
     rawDuration === undefined ? undefined : Number(rawDuration);
   return {
     videoCodec: video?.codec_name ?? "unknown",
+    ...(video === undefined
+      ? {}
+      : { videoStreamIndex: videoStreams.indexOf(video) }),
     width: video?.width,
     height: video?.height,
     pixelFormat: video?.pix_fmt,
     hdr: isHdrTransfer(video?.color_transfer),
     audioCodec: audio?.codec_name ?? "unknown",
+    ...(audio === undefined ? {} : { audioStreamIndex: selectedAudioIndex }),
     audioChannels: audio?.channels,
     durationSeconds:
       durationSeconds !== undefined && Number.isFinite(durationSeconds)
@@ -107,7 +136,10 @@ export async function probeMedia(
   config: Config,
   input: string,
   signal?: AbortSignal,
-  headers?: Readonly<Record<string, string>>,
+  options?: {
+    readonly headers?: Readonly<Record<string, string>> | undefined;
+    readonly inputOptions?: readonly string[] | undefined;
+  },
 ): Promise<MediaInfo | null> {
   const timeout = AbortSignal.timeout(PROBE_TIMEOUT_MS);
   const abort =
@@ -122,7 +154,8 @@ export async function probeMedia(
         "json",
         "-show_streams",
         "-show_format",
-        ...httpHeaderInputOptions(headers),
+        ...(options?.inputOptions ?? []),
+        ...httpHeaderInputOptions(options?.headers),
         input,
       ],
       abort,
@@ -130,12 +163,17 @@ export async function probeMedia(
     // Drain stdout AND stderr concurrently. If stderr were only read on failure, a chatty ffprobe
     // could fill the (~64 KB) pipe buffer and block before closing stdout, hanging the stdout read.
     if (exitCode !== 0) {
-      log.warn("ffprobe exited non-zero", { exitCode, stderr: stderr.trim() });
+      log.warn("ffprobe exited non-zero", {
+        exitCode,
+        stderr: redactProbeError(stderr.trim(), input),
+      });
       return null;
     }
     return parseFfprobeOutput(JSON.parse(stdout));
   } catch (error) {
-    log.warn("ffprobe failed", { error: getErrorMessage(error) });
+    log.warn("ffprobe failed", {
+      error: redactProbeError(getErrorMessage(error), input),
+    });
     return null;
   }
 }

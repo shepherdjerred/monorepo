@@ -55,7 +55,7 @@ export function helpText(voiceEnabled: boolean): string {
     "• Personal queues: `favorite-add`, `favorite-remove`, `save-queue`, `saved-queues`, `load-queue`, `delete-queue`",
     "",
     "**Discovery**",
-    "• `/stream list` · `search` · `sources` · `chapters` · `chapter` · `subtitles`",
+    "• `/stream list` · `search` · `sources` · `/stream playback sports` · `chapters` · `chapter` · `subtitles`",
     "",
     "**Player card** — pause, restart, seek, skip, volume, shuffle, queue, subtitles, stop, loop, and chapters are available as controls.",
     "",
