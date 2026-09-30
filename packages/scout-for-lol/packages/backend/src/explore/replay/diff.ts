@@ -62,6 +62,7 @@ export const ReplayDiffSchema = z
     caveats: SetDiffSchema(),
     followUps: SetDiffSchema(),
     matchCards: SetDiffSchema(),
+    loadoutCards: SetDiffSchema().default({ added: [], removed: [] }),
     visualizationChanged: z.boolean(),
   })
   .loose();
@@ -82,6 +83,7 @@ export type ReplaySide = {
   /** Tool names in call order, duplicates kept. */
   readonly toolNames: readonly string[];
   readonly matchCardIds: readonly string[];
+  readonly loadoutCardIds?: readonly string[] | undefined;
   readonly visualizationKind: string | null;
 };
 
@@ -139,6 +141,7 @@ export type ReplayDiff = {
   readonly caveats: SetDiff;
   readonly followUps: SetDiff;
   readonly matchCards: SetDiff;
+  readonly loadoutCards: SetDiff;
   readonly visualizationChanged: boolean;
 };
 
@@ -301,6 +304,10 @@ export function diffReplayCase(input: {
     caveats: setDiff(baseline.caveats, candidate.caveats),
     followUps: setDiff(baseline.followUps, candidate.followUps),
     matchCards: setDiff(baseline.matchCardIds, candidate.matchCardIds),
+    loadoutCards: setDiff(
+      baseline.loadoutCardIds ?? [],
+      candidate.loadoutCardIds ?? [],
+    ),
     visualizationChanged:
       baseline.visualizationKind !== candidate.visualizationKind,
   };

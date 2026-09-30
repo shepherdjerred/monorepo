@@ -28,6 +28,7 @@ export async function replaceExploreAnswer(
       preview: null,
       visualization: null,
       matchCards: null,
+      loadoutCards: null,
       trace: JSON.stringify(input.trace),
     },
   });

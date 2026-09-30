@@ -74,6 +74,7 @@ async function savedAnswer(answerText = "Ahri wins most often.") {
       queryText: "SELECT secret_query FROM match_participants",
       includeVisualization: true,
       matchCards: [],
+      loadoutCards: [],
       caveats: ["Tracked matches only."],
       followUps: [],
     },

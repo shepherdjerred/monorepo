@@ -49,7 +49,10 @@ export function tableToCsv(
   for (const row of rows) {
     const cells = columns.map((column) => {
       if (column.key === "label") {
-        return escapeCsvField(row.label, true);
+        return escapeCsvField(
+          formatReportDisplayValue(column, row.label),
+          true,
+        );
       }
       const entry = row.values.find((val) => val.column === column.key);
       return entry?.value == null

@@ -1,11 +1,14 @@
 import { match } from "ts-pattern";
 import {
+  formatReportDisplayValue,
   UNGROUPED_LABEL_COLUMN_LABEL,
   type ReportDisplayKind,
   type ReportResultColumn,
   type ReportValueFormat,
 } from "@scout-for-lol/data";
+import { scoutQlSourceCatalog } from "@scout-for-lol/data/model/scoutql/catalog/catalog-columns.ts";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
+import type { LakeScalar } from "#src/reports/duckdb/row-schema.ts";
 
 /**
  * Result-column metadata for a ScoutQL v2 plan.
@@ -82,12 +85,59 @@ export function planResultColumns(
   plan: ScoutQlPlan,
   columns: string[],
 ): ReportResultColumn[] {
-  return columns.map((column) => ({
-    key: column,
-    label:
+  const catalog = scoutQlSourceCatalog(plan.source);
+  const groupingAsset = (index: number) => {
+    const grouping = plan.groupings[index];
+    return grouping?.kind === "column"
+      ? catalog?.columns.get(grouping.column)?.asset
+      : undefined;
+  };
+
+  return columns.map((column) => {
+    const output = plan.outputs.find((candidate) => candidate.name === column);
+    const asset =
       column === LABEL_COLUMN
-        ? planLabelColumnLabel(plan)
-        : columnLabel(column),
-    format: displayKindFormat(planDisplayKind(plan, column)),
-  }));
+        ? undefined
+        : output === undefined
+          ? catalog?.columns.get(column)?.asset
+          : output.expr.kind === "grouping-ref"
+            ? groupingAsset(output.expr.index)
+            : undefined;
+    return {
+      key: column,
+      label:
+        column === LABEL_COLUMN
+          ? planLabelColumnLabel(plan)
+          : columnLabel(column),
+      format: displayKindFormat(planDisplayKind(plan, column)),
+      ...(asset === undefined ? {} : { asset }),
+    };
+  });
+}
+
+/** Render each asset grouping from its typed key before charts consume labels. */
+export function planResultDimensions(
+  plan: ScoutQlPlan,
+  label: string,
+  keys: LakeScalar[],
+): string[] {
+  if (plan.groupings.length === 0) return label.split(" • ");
+  const catalog = scoutQlSourceCatalog(plan.source);
+  const rendered = label.split(" • ");
+  return plan.groupings.map((grouping, index) => {
+    const key = keys[index];
+    const asset =
+      grouping.kind === "column"
+        ? catalog?.columns.get(grouping.column)?.asset
+        : undefined;
+    return asset === undefined ||
+      key === undefined ||
+      key === null ||
+      typeof key === "boolean"
+      ? (rendered[index] ?? "")
+      : formatReportDisplayValue(
+          { key: grouping.name, label: grouping.name, format: "text", asset },
+          key,
+        );
+  });
 }

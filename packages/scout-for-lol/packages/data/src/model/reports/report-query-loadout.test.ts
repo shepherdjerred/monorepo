@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { getGameAsset } from "#src/browser-assets.ts";
 import { reportLoadoutNames } from "#src/model/reports/report-query-loadout.ts";
 
 function nameOf(kind: string, id: number): string | undefined {
@@ -22,5 +23,19 @@ describe("report loadout names", () => {
       (entry) => `${entry.kind}:${entry.id.toString()}`,
     );
     expect(new Set(keys).size).toBe(keys.length);
+  });
+
+  test("rune keys match the generated browser asset filenames", () => {
+    const runeNames = reportLoadoutNames().filter(
+      (entry) => entry.kind === "rune",
+    );
+    for (const entry of runeNames) {
+      expect(() => getGameAsset("rune", entry.assetKey)).not.toThrow();
+    }
+
+    const lethalTempo = runeNames.find((entry) => entry.id === 8008);
+    const aftershock = runeNames.find((entry) => entry.id === 8439);
+    expect(lethalTempo?.assetKey).toBe("LethalTempoTemp");
+    expect(aftershock?.assetKey).toBe("VeteranAftershock");
   });
 });

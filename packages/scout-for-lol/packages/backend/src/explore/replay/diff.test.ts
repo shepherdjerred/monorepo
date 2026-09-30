@@ -231,6 +231,15 @@ describe("diffReplayCase rows and extras", () => {
     expect(result.matchCards.removed).toEqual(["m1"]);
   });
 
+  test("diffs loadout cards by match and participant", () => {
+    const result = diff(
+      { loadoutCardIds: ["NA1_1:1", "NA1_2:3"] },
+      { loadoutCardIds: ["NA1_1:1", "NA1_2:4"] },
+    );
+    expect(result.loadoutCards.removed).toEqual(["NA1_2:3"]);
+    expect(result.loadoutCards.added).toEqual(["NA1_2:4"]);
+  });
+
   test("notices a visualization appearing", () => {
     expect(diff({}, { visualizationKind: "bar" }).visualizationChanged).toBe(
       true,

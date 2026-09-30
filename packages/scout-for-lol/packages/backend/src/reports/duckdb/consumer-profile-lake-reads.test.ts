@@ -16,6 +16,7 @@ import {
   fetchTimelineFramePage,
   fetchTimelineFramesAtIndex,
 } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+import { fetchMatchLoadoutRows } from "#src/reports/duckdb/consumer-match-loadout-lake-reads.ts";
 import { fetchMatchSupport } from "#src/reports/duckdb/community/match-support.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
@@ -161,6 +162,17 @@ beforeAll(async () => {
       assists: 6,
       championId: 22,
       championName: "Ashe",
+      ...(index === 0
+        ? {
+            items: [1056, 3006, 3047, 6653, 3157, 3364, 3340],
+            scoutQlLoadout: {
+              summoner1_id: 12,
+              summoner2_id: 4,
+              perk0: 8112,
+              stat_perk_flex: 5002,
+            },
+          }
+        : {}),
       gameCreationAt: new Date(created.getTime() - index * 60_000),
     })),
     untrackedMatchFacts: [
@@ -268,6 +280,23 @@ describe("consumer profile lake reads", () => {
         abortSignal: controller.signal,
       }),
     ).rejects.toMatchObject({ name: "AbortError" });
+  });
+
+  test("reads the seven final items, spells, and rune selections for a match", async () => {
+    const rows = await fetchMatchLoadoutRows({ matchId, lakeDir });
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({
+      puuid: playerOne,
+      participant_id: 1,
+      champion_name: "Ashe",
+      item0: 1056,
+      item5: 3364,
+      item6: 3340,
+      summoner1_id: 12,
+      summoner2_id: 4,
+      perk0: 8112,
+      stat_perk_flex: 5002,
+    });
   });
 
   test("keeps chronological event and frame pages, filters, and unknown event fields", async () => {

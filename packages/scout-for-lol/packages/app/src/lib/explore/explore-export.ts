@@ -71,7 +71,11 @@ function previewTable(
       column.label.toLowerCase() === "game count",
   );
   const rows = preview.rows.map((row) => [
-    escapeCell(row.label),
+    escapeCell(
+      labelColumn === undefined
+        ? row.label
+        : formatReportDisplayValue(labelColumn, row.label),
+    ),
     ...metricColumns.map((column) => {
       const value = row.values.find(
         (entry) => entry.column === column.key,

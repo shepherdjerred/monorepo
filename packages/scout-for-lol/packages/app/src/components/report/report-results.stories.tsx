@@ -119,6 +119,74 @@ export const ResultTableInteractive: Story = {
   args: { columns: COLUMNS, rows: ROWS, interactive: true, rowsReturned: 3 },
 };
 
+export const ResultTableWithGameAssets: Story = {
+  args: {
+    columns: [
+      {
+        key: "label",
+        label: "Champion",
+        format: "text",
+        asset: "champion",
+      },
+      { key: "item0", label: "Item", format: "text", asset: "item" },
+      {
+        key: "summoner1_id",
+        label: "Summoner spell",
+        format: "text",
+        asset: "spell",
+      },
+    ],
+    rows: [
+      {
+        label: "62",
+        values: [
+          { column: "item0", value: 3031 },
+          { column: "summoner1_id", value: 4 },
+        ],
+      },
+      {
+        label: "64",
+        values: [
+          { column: "item0", value: 6655 },
+          { column: "summoner1_id", value: 14 },
+        ],
+      },
+    ],
+    interactive: true,
+  },
+};
+
+export const ResultTableWithAssetComparisonEdges: Story = {
+  args: {
+    columns: [
+      {
+        key: "champion_id",
+        label: "Champion",
+        format: "integer",
+        asset: "champion",
+      },
+    ],
+    rows: [
+      {
+        label: "Lux",
+        values: [
+          {
+            column: "champion_id",
+            value: 99,
+            comparisonValue: 99,
+            absoluteDelta: 0,
+            percentageDelta: 0,
+          },
+        ],
+      },
+      {
+        label: "No ban",
+        values: [{ column: "champion_id", value: -1 }],
+      },
+    ],
+  },
+};
+
 export const ResultTableEmpty: Story = {
   args: { columns: COLUMNS, rows: [] },
 };

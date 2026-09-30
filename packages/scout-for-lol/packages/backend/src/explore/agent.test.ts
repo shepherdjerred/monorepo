@@ -1,5 +1,9 @@
 import { describe, expect, test } from "vitest";
-import { matchCardReplayContext } from "#src/explore/agent.ts";
+import { testExploreLoadoutCard } from "#src/explore/loadout-card-test-fixture.ts";
+import {
+  loadoutCardReplayContext,
+  matchCardReplayContext,
+} from "#src/explore/agent.ts";
 
 describe("matchCardReplayContext", () => {
   test("preserves card order, match IDs, and team results for follow-ups", () => {
@@ -33,5 +37,16 @@ describe("matchCardReplayContext", () => {
 
   test("adds no replay context when the assistant showed no cards", () => {
     expect(matchCardReplayContext([])).toBe("");
+  });
+});
+
+describe("loadoutCardReplayContext", () => {
+  test("keeps unknown item IDs in the conversation replay", () => {
+    const card = testExploreLoadoutCard("L");
+    card.finalItems[0] = { slot: 0, itemId: 999_999, name: null };
+
+    expect(loadoutCardReplayContext([card])).toContain(
+      "final build Unknown item ID 999999",
+    );
   });
 });

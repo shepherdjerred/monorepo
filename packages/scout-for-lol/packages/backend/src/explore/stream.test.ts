@@ -80,6 +80,7 @@ describe("explore stream mapping", () => {
         queryText: null,
         includeVisualization: false,
         matchCards: [],
+        loadoutCards: [],
         caveats: [],
         followUps: [],
       }),

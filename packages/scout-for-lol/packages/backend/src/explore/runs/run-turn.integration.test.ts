@@ -62,12 +62,14 @@ const successfulAgent = async (params: ExploreAgentParams) => {
       queryText: "SELECT champion, wins FROM match_participants",
       includeVisualization: false,
       matchCards: [],
+      loadoutCards: [],
       caveats: ["Tracked matches only."],
       followUps: [],
     },
     preview: null,
     visualization: null,
     matchCards: [],
+    loadoutCards: [],
   };
 };
 
@@ -91,12 +93,14 @@ const bucksOnlyAgent = async (params: ExploreAgentParams) => {
       queryText: null,
       includeVisualization: false,
       matchCards: [],
+      loadoutCards: [],
       caveats: [],
       followUps: [],
     },
     preview: null,
     visualization: null,
     matchCards: [],
+    loadoutCards: [],
   };
 };
 
