@@ -35,6 +35,21 @@ export function planResultColumnNames(plan: ScoutQlPlan): string[] {
   return [LABEL_COLUMN, ...planOutputNames(plan)];
 }
 
+function assetForPlanColumn(plan: ScoutQlPlan, column: string) {
+  const info = scoutQlSourceCatalog(plan.source)?.columns.get(column);
+  if (info?.asset === undefined) return;
+
+  // Most string asset dimensions already contain display names. Prematch
+  // champion is the exception: it carries numeric ids cast to VARCHAR because
+  // that source has no champion name column.
+  const identifierBacked =
+    info.type === "integer" ||
+    info.type === "bigint" ||
+    (plan.source === "prematch_participants" && column === "champion");
+  if (!identifierBacked) return;
+  return info.asset;
+}
+
 export function planDisplayKind(
   plan: ScoutQlPlan,
   column: string,
@@ -85,20 +100,11 @@ export function planResultColumns(
   plan: ScoutQlPlan,
   columns: string[],
 ): ReportResultColumn[] {
-  const catalog = scoutQlSourceCatalog(plan.source);
-  const assetFor = (column: string) => {
-    const info = catalog?.columns.get(column);
-    // Name-backed virtual dimensions already contain display values. They do
-    // not carry enough identity to safely resolve an icon (spell names such
-    // as "Flash" can refer to multiple assets), so only identifier-backed
-    // columns receive asset formatting metadata.
-    return info?.type === "integer" || info?.type === "bigint"
-      ? info.asset
-      : undefined;
-  };
   const groupingAsset = (index: number) => {
     const grouping = plan.groupings[index];
-    return grouping?.kind === "column" ? assetFor(grouping.column) : undefined;
+    return grouping?.kind === "column"
+      ? assetForPlanColumn(plan, grouping.column)
+      : undefined;
   };
 
   return columns.map((column) => {
@@ -107,7 +113,7 @@ export function planResultColumns(
       column === LABEL_COLUMN
         ? undefined
         : output === undefined
-          ? assetFor(column)
+          ? assetForPlanColumn(plan, column)
           : output.expr.kind === "grouping-ref"
             ? groupingAsset(output.expr.index)
             : undefined;
@@ -130,17 +136,12 @@ export function planResultDimensions(
   keys: LakeScalar[],
 ): string[] {
   if (plan.groupings.length === 0) return label.split(" • ");
-  const catalog = scoutQlSourceCatalog(plan.source);
   const rendered = label.split(" • ");
   return plan.groupings.map((grouping, index) => {
     const key = keys[index];
-    const info =
-      grouping.kind === "column"
-        ? catalog?.columns.get(grouping.column)
-        : undefined;
     const asset =
-      info?.type === "integer" || info?.type === "bigint"
-        ? info.asset
+      grouping.kind === "column"
+        ? assetForPlanColumn(plan, grouping.column)
         : undefined;
     return asset === undefined ||
       key === undefined ||

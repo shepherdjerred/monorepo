@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { ScoutQlPlan } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
+import { reportAssetInfo } from "@scout-for-lol/data/model/reports/report-assets.ts";
 import {
   planResultColumns,
   planResultDimensions,
@@ -66,6 +67,40 @@ describe("plan result asset metadata", () => {
       { key: "summoner1", label: "Summoner1", format: "text" },
     ]);
     expect(planResultDimensions(plan, "Flash", ["Flash"])).toEqual(["Flash"]);
+  });
+
+  test("formats the prematch champion id carried as text", () => {
+    const plan = {
+      source: "prematch_participants",
+      outputs: [
+        {
+          name: "champion",
+          expr: { kind: "grouping-ref", index: 0 },
+          displayKind: "text",
+          additive: false,
+          evidence: { kind: "sample" },
+        },
+      ],
+      groupings: [{ kind: "column", column: "champion", name: "champion" }],
+      timeWindow: { kind: "unbounded" },
+      orderBy: [],
+      limit: 10,
+      playerRefs: [],
+      render: { kind: "TABLE" },
+    } satisfies ScoutQlPlan;
+
+    expect(planResultColumns(plan, ["label", "champion"])).toEqual([
+      { key: "label", label: "Champion", format: "text" },
+      {
+        key: "champion",
+        label: "Champion",
+        format: "text",
+        asset: "champion",
+      },
+    ]);
+    expect(planResultDimensions(plan, "62", ["62"])).toEqual([
+      reportAssetInfo("champion", 62).name,
+    ]);
   });
 
   test("formats asset dimensions in composite labels from typed grouping keys", () => {
