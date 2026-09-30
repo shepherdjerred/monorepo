@@ -16,6 +16,31 @@ export type TemporalBootstrapMetadata = {
   readonly releaseCommit: string;
 };
 
+const EXECUTION_DOMAINS_BY_TASK_QUEUE: Readonly<
+  Record<TaskQueue, ExecutionDomain>
+> = {
+  [TASK_QUEUES.WORKFLOWS]: "platform",
+  [TASK_QUEUES.HOME]: "home",
+  [TASK_QUEUES.REPORTS]: "reports",
+  [TASK_QUEUES.INFRA]: "infra",
+  [TASK_QUEUES.MINING_RESET]: "infra",
+  [TASK_QUEUES.REPO_AUTOMATION]: "repo",
+  [TASK_QUEUES.SCOUT]: "scout",
+  [TASK_QUEUES.MAINTENANCE]: "maintenance",
+  [TASK_QUEUES.BACKUP]: "platform",
+  [TASK_QUEUES.BILLING]: "platform",
+  [TASK_QUEUES.AGENT_CHAT_DISPATCH]: "agent",
+  [TASK_QUEUES.AGENT_CHAT_RECEIPTS]: "agent",
+  [TASK_QUEUES.AGENT_CHAT_INGRESS]: "platform",
+  [TASK_QUEUES.AGENT_CHAT_DELIVERY]: "platform",
+  [TASK_QUEUES.AGENT_CHAT_IMESSAGE]: "platform",
+  [TASK_QUEUES.SCOUT_BETA]: "scout",
+  [TASK_QUEUES.SCOUT_PROD]: "scout",
+  [TASK_QUEUES.AGENT_TASK]: "agent",
+  [TASK_QUEUES.GLITTER_CORPUS]: "glitter",
+  [TASK_QUEUES.GLITTER_CONTEXT]: "glitter",
+};
+
 export function parseTemporalBootstrapMetadata(
   environment: string | undefined,
   releaseCommit: string | undefined,
@@ -31,38 +56,7 @@ export function parseTemporalBootstrapMetadata(
 export function executionDomainForTaskQueue(
   taskQueue: TaskQueue,
 ): ExecutionDomain {
-  switch (taskQueue) {
-    case TASK_QUEUES.HOME:
-      return "home";
-    case TASK_QUEUES.REPORTS:
-      return "reports";
-    case TASK_QUEUES.INFRA:
-    case TASK_QUEUES.MINING_RESET:
-      return "infra";
-    case TASK_QUEUES.REPO_AUTOMATION:
-      return "repo";
-    case TASK_QUEUES.SCOUT:
-    case TASK_QUEUES.SCOUT_BETA:
-    case TASK_QUEUES.SCOUT_PROD:
-      return "scout";
-    case TASK_QUEUES.AGENT_TASK:
-    case TASK_QUEUES.AGENT_CHAT_DISPATCH:
-    case TASK_QUEUES.AGENT_CHAT_RECEIPTS:
-      return "agent";
-    case TASK_QUEUES.GLITTER_CORPUS:
-    case TASK_QUEUES.GLITTER_CONTEXT:
-      return "glitter";
-    case TASK_QUEUES.MAINTENANCE:
-      return "maintenance";
-    case TASK_QUEUES.BACKUP:
-    case TASK_QUEUES.BILLING:
-    case TASK_QUEUES.AGENT_CHAT_INGRESS:
-    case TASK_QUEUES.AGENT_CHAT_DELIVERY:
-    case TASK_QUEUES.AGENT_CHAT_IMESSAGE:
-      return "platform";
-    case TASK_QUEUES.WORKFLOWS:
-      return "platform";
-  }
+  return EXECUTION_DOMAINS_BY_TASK_QUEUE[taskQueue];
 }
 
 /** A role can poll several queues while still representing one telemetry domain. */
