@@ -105,6 +105,18 @@ describe("ExploreLoadoutCards", () => {
     expect(markup).toContain("ID 999999");
   });
 
+  test("labels unknown item IDs in the build path", () => {
+    const unknownPathItem = ExploreLoadoutCardSchema.parse({
+      ...card(),
+      buildPath: [{ minute: 4, itemId: 999_999, name: null, kind: "purchase" }],
+    });
+    const markup = renderToStaticMarkup(
+      <ExploreLoadoutCards cards={[unknownPathItem]} />,
+    );
+    expect(markup).toContain("Unknown item ID 999999");
+    expect(markup).toContain("ID 999999");
+  });
+
   test("explains when an older card omits the build path truncation field", () => {
     const olderCard: Record<string, unknown> = { ...card() };
     delete olderCard["buildPathTruncated"];

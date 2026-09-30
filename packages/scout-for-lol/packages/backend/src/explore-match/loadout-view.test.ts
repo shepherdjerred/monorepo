@@ -1,11 +1,13 @@
 import { describe, expect, test } from "vitest";
 import {
   ExploreLoadoutCardRequestSchema,
+  ReportAiModelPreviewSummarySchema,
   ReportAiPreviewSummarySchema,
 } from "@scout-for-lol/data";
 import {
   buildExploreLoadoutCard,
   buildPathFromEvents,
+  loadoutPairsForSurface,
   loadoutPairsInPreview,
   skillOrderFromEvents,
 } from "#src/explore-match/loadout-view.ts";
@@ -66,6 +68,33 @@ function event(input: {
 }
 
 describe("Explore loadout card eligibility", () => {
+  test("uses model-visible rows and disables cards on Discord", () => {
+    const preview = ReportAiModelPreviewSummarySchema.parse({
+      columns: [
+        { key: "label", label: "Label", format: "text" },
+        { key: "match_id", label: "Match Id", format: "text" },
+        { key: "puuid", label: "Puuid", format: "text" },
+      ],
+      rows: Array.from({ length: 11 }, (_, index) => ({
+        label: `NA1_${(index + 1).toString()}`,
+        values: [
+          { column: "match_id", value: `NA1_${(index + 1).toString()}` },
+          { column: "puuid", value: PUUID },
+        ],
+      })),
+      rowsReturned: 11,
+      rowsScanned: 11,
+      renderKind: "TABLE",
+    });
+
+    expect(
+      loadoutPairsForSurface("web", preview, "match_participants"),
+    ).toContain(JSON.stringify(["NA1_11", PUUID]));
+    expect(
+      loadoutPairsForSurface("discord", preview, "match_participants"),
+    ).toEqual(new Set());
+  });
+
   test("accepts only exact match and PUUID pairs from participant rows", () => {
     const preview = ReportAiPreviewSummarySchema.parse({
       columns: [

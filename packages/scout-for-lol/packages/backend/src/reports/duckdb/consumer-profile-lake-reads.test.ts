@@ -164,7 +164,7 @@ beforeAll(async () => {
       ...(index === 0
         ? {
             items: [1056, 3006, 3047, 6653, 3157, 3364, 3340],
-            loadout: {
+            scoutQlLoadout: {
               summoner1_id: 12,
               summoner2_id: 4,
               perk0: 8112,

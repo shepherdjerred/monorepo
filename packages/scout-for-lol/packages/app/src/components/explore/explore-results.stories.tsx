@@ -351,6 +351,24 @@ export const LoadoutCards: Story = {
   ),
 };
 
+export const UnknownBuildPathItem: Story = {
+  args: { preview: null, visualization: null },
+  render: () => (
+    <div className="mx-auto max-w-3xl space-y-3">
+      <ExploreLoadoutCards
+        cards={[
+          {
+            ...loadoutCard("L"),
+            buildPath: [
+              { minute: 4, itemId: 999_999, name: null, kind: "purchase" },
+            ],
+          },
+        ]}
+      />
+    </div>
+  ),
+};
+
 export const LoadoutAnswer: Story = {
   args: { preview: null, visualization: null },
   render: () => (

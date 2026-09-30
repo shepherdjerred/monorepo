@@ -258,7 +258,9 @@ export function loadoutCardReplayContext(
   if (cards.length === 0) return "";
   const entries = cards.map((card, index) => {
     const items = card.finalItems.flatMap((item) =>
-      item.name === null ? [] : [item.name],
+      item.itemId === null
+        ? []
+        : [item.name ?? `Unknown item ID ${item.itemId.toString()}`],
     );
     const keystone = card.runePage.keystone?.name ?? "unknown keystone";
     return `Card ${String(index + 1)} (${card.size}): ${card.matchId}; ${card.championName}; final build ${items.join(", ") || "empty"}; ${keystone}; ${card.buildPathRecorded ? "build path recorded" : "build path not recorded"}.`;

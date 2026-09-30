@@ -40,7 +40,7 @@ import {
   isExploreMatchSnapshotSupported,
   matchIdsInPreview,
 } from "#src/explore-match/match-view.ts";
-import { loadoutPairsInPreview } from "#src/explore-match/loadout-view.ts";
+import { loadoutPairsForSurface } from "#src/explore-match/loadout-view.ts";
 import { scoutExploreToolCallsTotal } from "#src/metrics/explore.ts";
 import {
   reportQueryModelPreviewSummary,
@@ -305,7 +305,11 @@ export function createExploreTools(options: ExploreToolsOptions) {
         state.lastPreview = preview;
         state.lastVisualization = result.visualization ?? null;
         state.lastQueryMatchIds = matchIdsInPreview(preview, source);
-        state.lastQueryLoadoutPairs = loadoutPairsInPreview(preview, source);
+        state.lastQueryLoadoutPairs = loadoutPairsForSurface(
+          params.surface,
+          modelPreview,
+          source,
+        );
         const cardSupportRows =
           params.surface === "web" || params.surface === "voice"
             ? await fetchMatchSupport({

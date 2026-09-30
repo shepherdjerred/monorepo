@@ -9,9 +9,11 @@ import {
   summoner,
   type ExploreLoadoutCard,
   type ExploreLoadoutCardRequest,
+  type ReportAiModelPreviewSummary,
   type ReportAiPreviewSummary,
 } from "@scout-for-lol/data";
 import type { ScoutQlSource } from "@scout-for-lol/data/model/scoutql/parse/plan.ts";
+import type { ExploreSurface } from "#src/explore/surface.ts";
 import {
   fetchTimelineCoverage,
   fetchTimelineEventPage,
@@ -38,7 +40,7 @@ export function exploreLoadoutPairKey(pair: ExploreLoadoutPair): string {
 
 /** The model may request a card only for an exact participant row it queried. */
 export function loadoutPairsInPreview(
-  preview: ReportAiPreviewSummary | null,
+  preview: ReportAiPreviewSummary | ReportAiModelPreviewSummary | null,
   source: ScoutQlSource | null,
 ): Set<string> {
   if (preview === null || source !== "match_participants") return new Set();
@@ -65,6 +67,17 @@ export function loadoutPairsInPreview(
     }
   }
   return pairs;
+}
+
+/** Only web and voice turns can attach these cards to their answer. */
+export function loadoutPairsForSurface(
+  surface: ExploreSurface,
+  preview: ReportAiPreviewSummary | ReportAiModelPreviewSummary | null,
+  source: ScoutQlSource | null,
+): Set<string> {
+  return surface === "discord"
+    ? new Set()
+    : loadoutPairsInPreview(preview, source);
 }
 
 export function assertEligibleExploreLoadoutCardRequests(input: {

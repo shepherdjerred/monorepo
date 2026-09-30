@@ -259,11 +259,20 @@ function BuildPath(props: { card: ExploreLoadoutCard }) {
                   className="flex items-center gap-1"
                   title={`${event.kind === "sold" ? "Sold" : "Bought"} ${event.name ?? `item ${event.itemId.toString()}`} at ${minute.toString()} minutes`}
                 >
-                  <ItemImage
-                    itemId={event.itemId}
-                    name={event.name ?? `Item ${event.itemId.toString()}`}
-                    className={`size-7 rounded border border-scout-border ${event.kind === "sold" ? "opacity-50" : ""}`}
-                  />
+                  {event.name === null ? (
+                    <span
+                      className={`size-7 flex items-center justify-center rounded border border-amber-500/60 bg-scout-surface px-0.5 text-center text-[8px] leading-tight text-scout-ink ${event.kind === "sold" ? "opacity-50" : ""}`}
+                      aria-label={`Unknown item ID ${event.itemId.toString()}`}
+                    >
+                      ID {event.itemId.toString()}
+                    </span>
+                  ) : (
+                    <ItemImage
+                      itemId={event.itemId}
+                      name={event.name}
+                      className={`size-7 rounded border border-scout-border ${event.kind === "sold" ? "opacity-50" : ""}`}
+                    />
+                  )}
                   {event.kind === "sold" && (
                     <Badge variant="secondary" className="h-4 px-1 text-[9px]">
                       Sold
