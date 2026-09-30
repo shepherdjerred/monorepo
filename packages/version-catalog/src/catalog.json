@@ -680,9 +680,9 @@
         "versioning": "semver",
         "packageName": "shepherdjerred/scout-for-lol"
       },
-      "value": "2.0.0-17343@sha256:797fc49df459bb0d91933a80b9443fa3651478a7623befb18194ced43e347d8b",
+      "value": "2.0.0-1003424@sha256:1ea3b3efcf282e063500dff092444b309156ebbd9644188edc3c40cb5ee20302",
       "notes": [
-        "Prod promotion = merging the Renovate PR for this pin. Each 2.0.0-<n>",
+        "Prod promotion = merging a reviewed PR for this pin (normally Renovate). Each 2.0.0-<n>",
         "tag is minted by the scout-tag-release CI step only after site version",
         "<n> is archived, pointing at the backend digest beta serves it against —",
         "so every tag Renovate can offer is a complete backend+site pair. The",
