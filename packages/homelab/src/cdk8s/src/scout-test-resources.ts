@@ -60,7 +60,12 @@ export function scoutResourcesWithGatewayTopology(
   topology: ScoutGatewayTopology,
 ): ScoutTestResource[] {
   const app = new App();
-  createScoutChart(app, stage, undefined, { gateway: topology });
+  // Exercise gateway rollback independently of the standing worker decision;
+  // an observing worker requires a split gateway in the real chart.
+  createScoutChart(app, stage, undefined, {
+    gateway: topology,
+    activityWorker: "absent",
+  });
   return resourcesFor(app);
 }
 

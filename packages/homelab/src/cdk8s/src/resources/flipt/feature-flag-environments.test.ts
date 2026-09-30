@@ -79,10 +79,9 @@ describe("Flipt consumer environments", () => {
       name: "Scout beta",
       environment: "beta",
       namespace: "scout",
-      // Two consumers since the runtime-role split: the application role and
-      // the gateway role are separate pods evaluating the same flags, so both
-      // must resolve to the same beta/scout environment.
-      count: 2,
+      // Application, gateway and observing activity worker all evaluate the
+      // same beta/scout flags from separate pods.
+      count: 3,
       createChart: (app: App) => createScoutChart(app, "beta"),
     },
     {

@@ -86,9 +86,9 @@ function runtimeRole(
 }
 
 describe("Scout activity worker topology", () => {
-  test("activation is absent in both standing stages", () => {
+  test("beta observes the worker while prod remains absent", () => {
     expect(SCOUT_ACTIVITY_WORKER_TOPOLOGY).toEqual({
-      beta: "absent",
+      beta: "observing",
       prod: "absent",
     });
   });

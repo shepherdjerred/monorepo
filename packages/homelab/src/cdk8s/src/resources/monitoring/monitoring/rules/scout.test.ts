@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { getScoutRuleGroups } from "./scout.ts";
+import { scoutGatewayAlertRoleMatcher } from "./scout-alert-constants.ts";
 
 describe("Scout Temporal alert rules", () => {
   const temporal = getScoutRuleGroups().find(
@@ -162,6 +163,16 @@ describe("Scout bot-health alert rules", () => {
     expect(JSON.stringify(rule.expr)).toContain("discord_connection_status");
   });
 
+  test("keeps both gateway owners visible through retirement", () => {
+    expect(scoutGatewayAlertRoleMatcher("split")).toBe(
+      'role=~"combined|gateway"',
+    );
+    expect(scoutGatewayAlertRoleMatcher("retiring")).toBe(
+      'role=~"combined|gateway"',
+    );
+    expect(scoutGatewayAlertRoleMatcher("absent")).toBe('role="combined"');
+  });
+
   test("scopes the Discord gauge to each stage's gateway-owning role", () => {
     const rule = botHealth?.rules?.find(
       (candidate) => candidate.alert === "ScoutDiscordDisconnected",
@@ -175,26 +186,26 @@ describe("Scout bot-health alert rules", () => {
     // series, so naming it here would make the absent() guard fire
     // continuously against a healthy stage.
     //
-    // Beta is retiring its split: the backend is `combined` again and the
-    // gateway Deployment is scaled to zero, so beta names `combined` in the
-    // same revision that hands the shard back. Prod never ran the split.
-    for (const stage of ["beta", "prod"]) {
-      expect(expression).toContain(
-        String.raw`environment=\"${stage}\",role=\"combined\"`,
-      );
-      // Naming a role with no running pod is exactly the continuous page above.
-      expect(expression).not.toContain(
-        String.raw`environment=\"${stage}\",role=\"gateway\"`,
-      );
-    }
-    // The deferred role still owns no pod in either stage.
+    // Prometheus updates before Scout, so beta accepts its previous combined
+    // owner until the split gateway is scrapeable. Prod remains combined.
+    expect(expression).toContain(
+      String.raw`environment=\"beta\",role=~\"combined|gateway\"`,
+    );
+    expect(expression).toContain(
+      String.raw`environment=\"prod\",role=\"combined\"`,
+    );
+    expect(expression).not.toContain(
+      String.raw`environment=\"prod\",role=\"gateway\"`,
+    );
+    // The activity worker has no Discord shard, even while observing.
     expect(expression).not.toContain("activity-worker");
     // Every read of the gauge must be scoped, not just the first.
     const gaugeReads = expression.split("discord_connection_status").length - 1;
-    const scopedReads = expression.split(String.raw`role=\"`).length - 1;
+    const scopedReads = expression.split("role=").length - 1;
     expect(scopedReads).toBe(gaugeReads);
-    // Scoping to one role per stage means the rule goes quiet when that stage
-    // has no gateway-owning pod, which is the outage it exists to catch.
+    // A connected owner keeps the alert clear even if the other role reports
+    // zero during the handoff; losing both roles still trips absent().
+    expect(expression).toContain("max by (environment)");
     expect(expression).toContain("absent(");
   });
 

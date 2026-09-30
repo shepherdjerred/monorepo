@@ -152,22 +152,23 @@ describe("Scout runtime role assignment", () => {
     ).toEqual([]);
   });
 
-  /** Activation is a stage-scoped decision after the storage preflight. */
-  test("no activity-worker Deployment is rendered in either stage", () => {
+  test("the activity worker is present only in beta", () => {
     for (const stage of ["beta", "prod"] as const) {
       expect(
-        scoutResources(stage).some((resource) =>
-          resource.metadata.name.includes("activity-worker"),
+        scoutResources(stage).some(
+          (resource) =>
+            resource.kind === "Deployment" &&
+            resource.metadata.name.includes("activity-worker"),
         ),
-      ).toBe(false);
+      ).toBe(stage === "beta");
     }
   });
 });
 
 describe("Scout split-topology opt-in", () => {
-  test("beta is retiring the split and prod never ran it", () => {
+  test("beta runs the split and prod never ran it", () => {
     expect(SCOUT_GATEWAY_TOPOLOGY).toEqual({
-      beta: "retiring",
+      beta: "split",
       prod: "absent",
     });
   });
@@ -388,7 +389,7 @@ describe("Scout gateway network boundary", () => {
     );
   });
 
-  test("Temporal admits the prod gateway when prod is split", () => {
+  test("Temporal admits split and retiring gateways until their pods exit", () => {
     const rules = scoutGatewayClientIngress({
       beta: "retiring",
       prod: "split",
@@ -397,11 +398,20 @@ describe("Scout gateway network boundary", () => {
     expect(rules[0]?.from).toEqual([
       {
         namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "scout-beta" },
+        },
+        podSelector: { matchLabels: { app: "scout-gateway" } },
+      },
+      {
+        namespaceSelector: {
           matchLabels: { "kubernetes.io/metadata.name": "scout-prod" },
         },
         podSelector: { matchLabels: { app: "scout-gateway" } },
       },
     ]);
+    expect(
+      scoutGatewayClientIngress({ beta: "absent", prod: "absent" }),
+    ).toEqual([]);
   });
 
   /**
@@ -466,9 +476,12 @@ describe("Scout gateway network boundary", () => {
     }
 
     expect([...admitted].toSorted()).toEqual([
+      "scout-beta/app=scout-activity-worker",
       // The application role (and, on an unsplit stage, the combined pod):
       // embedded workers plus the competition activity dispatcher.
       "scout-beta/app=scout-backend",
+      // The split gateway starts Workflows for Discord commands.
+      "scout-beta/app=scout-gateway",
       "scout-beta/worker-family=scout-beta-workflows",
       "scout-prod/app=scout-backend",
       "scout-prod/worker-family=scout-prod-workflows",
