@@ -367,6 +367,16 @@ describe("ported lanes", () => {
     );
   });
 
+  test("a shared checkout selector change still selects Playwright", () => {
+    for (const path of [
+      "ci/scripts/migration-core.ts",
+      "ci/scripts/selectors/ci-changed.ts",
+      "ci/scripts/selectors/ensure-ancestor.ts",
+    ]) {
+      expect(keysFor([path]), path).toContain("playwright-e2e");
+    }
+  });
+
   test("scanners are pull-request only", () => {
     expect(keysFor(["bun.lock"], "main")).not.toContain("trivy");
   });

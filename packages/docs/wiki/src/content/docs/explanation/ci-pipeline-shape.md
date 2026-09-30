@@ -47,8 +47,9 @@ at once and each Vitest process uses at most four workers, matching the pod's
 
 The extension passes the last green main base to every workflow. Selectors
 inside the site, package publishing, CI image refresh, and Scout workflows use
-it to skip unchanged targets. They deepen Woodpecker's shallow checkout when
-the base is missing. Without a valid base they run conservatively, so
+it to skip unchanged targets. They
+[deepen Woodpecker's shallow checkout](https://github.com/shepherdjerred/monorepo/blob/72f8413286f6412f2dab21e08444fcfda541218a/ci/scripts/selectors/ensure-ancestor.ts)
+when the base is missing. Without a valid base they run conservatively, so
 the base must travel with each workflow rather than only with `verify` and the
 release chain.
 
