@@ -175,6 +175,24 @@ describe("Scout split-topology opt-in", () => {
 });
 
 describe("Scout gateway report-lake sharing", () => {
+  test("only prod expands its lake claim for the schema-change rebuild", () => {
+    for (const [stage, storage] of [
+      ["beta", "48Gi"],
+      ["prod", "128Gi"],
+    ] as const) {
+      const claim = findResource(
+        scoutResources(stage),
+        "PersistentVolumeClaim",
+        "scout-storage-claim",
+      );
+      expect(claim.spec).toEqual(
+        expect.objectContaining({
+          resources: { requests: { storage } },
+        }),
+      );
+    }
+  });
+
   /**
    * ReadWriteOnce is a per-node constraint, so the two pods sharing the claim
    * must be required — not merely preferred — onto one node.

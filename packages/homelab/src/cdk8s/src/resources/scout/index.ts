@@ -204,11 +204,12 @@ export function createScoutDeployment(
   };
 
   const localPathVolume = new ZfsNvmeVolume(chart, "scout-storage-claim", {
-    // 48Gi: the retained legacy /data/db.sqlite is about 12Gi and a full
-    // report-lake rebuild writes a new snapshot beside the retained builds
-    // before garbage collection. 24Gi cannot provide that working headroom;
-    // shrink only after the legacy file is deleted post-soak.
-    storage: Size.gibibytes(48),
+    // A full report-lake rebuild writes large timeline NDJSON intermediates
+    // and Parquet output beside retained builds before garbage collection.
+    // The 48Gi prod claim filled during its first schema-change rebuild;
+    // reserve enough space there without expanding the independently sized
+    // beta claim.
+    storage: Size.gibibytes(stage === "prod" ? 128 : 48),
   });
   const dataVolumeMount = {
     path: "/data",
