@@ -53,6 +53,10 @@ export function reportAssetInfo(
     return toInfo(entry);
   };
 
+  if (kind === "champion" && (value === -1 || value === "-1")) {
+    return { canonicalKey: null, name: "No ban" };
+  }
+
   if (kind === "champion") {
     const id = asNumericId(value);
     const text = String(value).toLocaleLowerCase("en-US");

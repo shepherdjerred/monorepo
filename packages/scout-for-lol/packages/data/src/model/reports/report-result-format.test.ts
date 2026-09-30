@@ -42,6 +42,12 @@ describe("report result formatting", () => {
     format: "text",
     asset: "spell",
   };
+  const champion: ReportResultColumn = {
+    key: "champion_id",
+    label: "Champion",
+    format: "integer",
+    asset: "champion",
+  };
 
   test("formats rates, counts, and ratios semantically", () => {
     expect(formatReportDisplayValue(games, 1276)).toBe("1,276");
@@ -67,6 +73,14 @@ describe("report result formatting", () => {
       canonicalKey: "MonkeyKing",
       name: "Wukong",
     });
+  });
+
+  test("formats the unused-ban sentinel without an icon", () => {
+    expect(reportAssetInfo("champion", -1)).toEqual({
+      canonicalKey: null,
+      name: "No ban",
+    });
+    expect(formatReportDisplayValue(champion, -1)).toBe("No ban");
   });
 
   test("resolves exact asset keys and rejects ambiguous names or unknown ids", () => {
