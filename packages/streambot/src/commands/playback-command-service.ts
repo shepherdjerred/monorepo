@@ -240,7 +240,11 @@ export class PlaybackCommandService extends PlaybackControls {
       source,
       requesterId: input.userId,
       ...(requestId === undefined ? {} : { requestId }),
-      ...(preResolved === undefined ? {} : { preResolved }),
+      // A queued sports item can wait past the lifetime of its signed HLS URL.
+      // Keep the stable watch page and resolve it again when playback starts.
+      ...(preResolved === undefined || (sports && input.placement !== "now")
+        ? {}
+        : { preResolved }),
     });
     const label =
       selected.candidate?.title ?? preResolved?.title ?? sourceLabel(source);

@@ -87,8 +87,6 @@ async function observePlayback(): Promise<void> {
   console.info(
     "sports e2e VIEWING",
     JSON.stringify({
-      guildId,
-      channelId,
       observeSeconds: environment.E2E_OBSERVE_SECONDS,
     }),
   );
@@ -140,9 +138,6 @@ async function main(): Promise<void> {
         console.info(
           "sports e2e PASS",
           JSON.stringify({
-            guildId,
-            channelId,
-            streamerUserId: streamer.userId(),
             videoFrames,
             audioFrames,
           }),
