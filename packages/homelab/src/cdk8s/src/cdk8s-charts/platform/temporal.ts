@@ -70,19 +70,21 @@ function scoutBackendIngress(): NetworkPolicyIngressRule {
  * so a blocked client here is every slash command failing to dispatch rather
  * than a worker going idle.
  *
- * Admit each stage that actually runs a separate gateway pod.
+ * Keep a retiring gateway admitted until Scout has scaled its pod down.
+ * Temporal syncs before the Scout leaf, so a split-to-retiring release must
+ * retain this ingress while the old gateway can still handle commands.
  */
 export function scoutGatewayClientIngress(
   topology: Readonly<Record<Stage, ScoutGatewayTopology>>,
 ): NetworkPolicyIngressRule[] {
-  const splitStages = SCOUT_STAGES.filter(
-    (stage) => topology[stage] === "split",
+  const renderedStages = SCOUT_STAGES.filter(
+    (stage) => topology[stage] !== "absent",
   );
-  return splitStages.length === 0
+  return renderedStages.length === 0
     ? []
     : [
         {
-          from: splitStages.map((stage) => ({
+          from: renderedStages.map((stage) => ({
             namespaceSelector: {
               matchLabels: { "kubernetes.io/metadata.name": `scout-${stage}` },
             },

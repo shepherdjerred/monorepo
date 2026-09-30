@@ -57,24 +57,27 @@ Activity Worker is not polling its declared queue; stop the rollout.
 
 The activity-worker split is a separate, stage-scoped rollout. Its source
 switches are `SCOUT_GATEWAY_TOPOLOGY` and `SCOUT_ACTIVITY_WORKER_TOPOLOGY` in
-`packages/homelab/src/cdk8s/src/resources/scout/topology.ts`. The standing
-worker state is `absent`; changing it does not happen as a side effect of an
-image bump. Use the normal PR, exact-head CI, image publish, and `release-root`
-path for each transition.
+[Scout topology](https://github.com/shepherdjerred/monorepo/blob/main/packages/homelab/src/cdk8s/src/resources/scout/topology.ts).
+Read the configured stage values first and start at the first unverified
+transition. Use the normal PR, exact-head CI, image publish, and `release-root`
+path for each change.
 
 1. Confirm the stage runs `split` gateway topology. Read the bound
    `scout-storage-claim` PV and its `ZFSVolume.spec.shared` field using the
    **Share a ZFS volume between pods** how-to. It must be `yes` before the
    worker pod starts. The worker and application both mount the claim
    read-write on the same node with the same SELinux level.
-2. Set the worker topology to `observing`. This deploys one activity-worker
-   pod after the application is healthy; the application keeps polling
+2. If the worker is `absent`, set its topology to `observing` in a release.
+   If it is already `observing`, verify that state before proceeding. This
+   runs one activity-worker pod while the application keeps polling
    `realtime`, `background`, and competition activities. Confirm the worker
    Deployment is ready, its `/healthz` and `/metrics` expose the expected role
    and queue classes, and the queue canary above completes. Watch for
    schedule-to-start delays, duplicate-effect claims, report delivery, and
    report-lake generation or staging errors. Keep this overlap bounded to the
-   observation release.
+   observation release. If the gateway also moves from `combined` to `split`,
+   confirm Discord stays connected during the switch and the gateway alone is
+   connected afterward.
 3. In a second release, set the topology to `owning`. The application becomes
    `application-isolated`, removing those three activity owners; the worker
    remains on the same image digest and continues polling. Confirm exactly one
