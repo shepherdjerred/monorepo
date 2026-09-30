@@ -9,7 +9,7 @@ import {
   thirdPartyPlugins,
   type PluginPin,
 } from "./pins.ts";
-import { RconClient } from "./rcon.ts";
+import { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
 
 const ownerLabel = "the-storm.e2e";
 const pidLabel = "the-storm.e2e.pid";
@@ -100,10 +100,6 @@ export function stormTestConfig(ownedYaml: string, enabled: string[]): string {
     (module) => `  ${module}: ${on.has(module).toString()}`,
   );
   return ["modules:", ...modules, ""].join("\n");
-}
-
-export function stormSmokeConfig(ownedYaml: string): string {
-  return stormTestConfig(ownedYaml, []);
 }
 
 async function download(url: string): Promise<Uint8Array> {
@@ -398,7 +394,8 @@ async function bootContainer(
   await waitForLog(id, /Done \(\d+\.\d+s\)! For help/u, deadline);
   const game = await publishedPort(id, 25_565);
   const rcon = await publishedPort(id, 25_575);
-  // The Done line proves the game port; prove RCON answers too.
+  // The Done line proves the game port; prove RCON accepts and executes a
+  // command too before handing the server to the E2E suite.
   const client = await RconClient.connect({
     host: rcon.host,
     port: rcon.port,
@@ -498,6 +495,11 @@ export async function startServer(
     });
     return { info, stop };
   } catch (error) {
+    const { stdout, stderr } = await docker(["logs", id]);
+    await Bun.write(
+      path.join(cacheDir, "latest-server.log"),
+      `${stdout}\n${stderr}`,
+    );
     await stop();
     throw error;
   }

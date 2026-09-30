@@ -393,6 +393,26 @@ describe("ported lanes", () => {
     expect(paperStep?.environment?.["STORM_E2E_RCON_HOST"]).toBe("paper");
   });
 
+  test("Paper E2E connects its fake brain through the service network", () => {
+    const paperStep = buildPipelineSteps({
+      images: IMAGES,
+      changedBase: "x",
+    }).find((candidate) => candidate.key === "paper-e2e-pr");
+    expect(paperStep?.environment?.["STORM_E2E_BRAIN_HOST"]).toBe(
+      "storm-brain",
+    );
+    expect(paperStep?.services?.map(({ name }) => name)).toEqual([
+      "paper",
+      "storm-brain",
+    ]);
+    const paperService = paperStep?.services?.find(
+      (service) => service.name === "paper",
+    );
+    expect(paperService?.environment?.["STORM_BRAIN_BEARER_TOKEN"]).toBe(
+      paperStep?.environment?.["STORM_E2E_BRAIN_TOKEN"],
+    );
+  });
+
   test("Semgrep fetches PR and target history before resolving its merge base", () => {
     const semgrep = buildPipelineSteps({
       images: IMAGES,

@@ -5,7 +5,7 @@ import type { Bot } from "mineflayer";
 import { connectBot, disconnectBot, waitForMessage } from "./harness/bot.ts";
 import { waitForDecision } from "./harness/decisions.ts";
 import { startFakeBrain, type FakeBrain } from "./harness/fake-brain.ts";
-import { RconClient } from "./harness/rcon.ts";
+import { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
 import {
   startServer,
   stormTestConfig,

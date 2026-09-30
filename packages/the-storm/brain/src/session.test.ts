@@ -94,6 +94,23 @@ async function settle(): Promise<void> {
   for (let step = 0; step < 20; step++) await Promise.resolve();
 }
 
+async function startWithPendingFirstRoster() {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date("2026-09-27T01:30:00Z"));
+  const client = new FakeClient();
+  const rcon = new FakeRcon();
+  let answer!: (value: string) => void;
+  rcon.command.mockImplementationOnce(
+    () =>
+      new Promise<string>((resolve) => {
+        answer = resolve;
+      }),
+  );
+  const session = start(client, rcon);
+  await settle();
+  return { client, rcon, session, answer };
+}
+
 afterEach(() => vi.useRealTimers());
 
 describe("companion session", () => {
@@ -157,26 +174,14 @@ describe("companion session", () => {
   });
 
   it("rechecks RCON when its first roster misses a replacement human", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-09-27T01:30:00Z"));
-    const client = new FakeClient();
-    const rcon = new FakeRcon();
-    let firstAnswer!: (value: string) => void;
-    rcon.command
-      .mockImplementationOnce(
-        () =>
-          new Promise<string>((resolve) => {
-            firstAnswer = resolve;
-          }),
-      )
-      .mockResolvedValueOnce(
-        "There are 2 of a max of 20 players online: Pilot, Sam",
-      );
-    const session = start(client, rcon);
-    await settle();
+    const { answer, client, rcon, session } =
+      await startWithPendingFirstRoster();
+    rcon.command.mockResolvedValueOnce(
+      "There are 2 of a max of 20 players online: Pilot, Sam",
+    );
     client.left("Alex");
     client.joined("Sam");
-    firstAnswer("There are 2 of a max of 20 players online: Pilot, Alex");
+    answer("There are 2 of a max of 20 players online: Pilot, Alex");
     await settle();
     expect(rcon.command).toHaveBeenCalledTimes(2);
     expect(await Promise.race([session, Promise.resolve("pending")])).toBe(
@@ -187,27 +192,16 @@ describe("companion session", () => {
   });
 
   it("reconciles a join that arrives after the refreshed RCON snapshot", async () => {
-    vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-09-27T01:30:00Z"));
-    const client = new FakeClient();
-    const rcon = new FakeRcon();
-    let firstAnswer!: (value: string) => void;
+    const { answer, client, rcon, session } =
+      await startWithPendingFirstRoster();
     rcon.command
-      .mockImplementationOnce(
-        () =>
-          new Promise<string>((resolve) => {
-            firstAnswer = resolve;
-          }),
-      )
       .mockResolvedValueOnce("There are 1 of a max of 20 players online: Pilot")
       .mockResolvedValueOnce(
         "There are 2 of a max of 20 players online: Pilot, Sam",
       );
-    const session = start(client, rcon);
-    await settle();
     client.left("Alex");
     client.joined("Sam");
-    firstAnswer("There are 2 of a max of 20 players online: Pilot, Alex");
+    answer("There are 2 of a max of 20 players online: Pilot, Alex");
     await settle();
 
     expect(rcon.command).toHaveBeenCalledTimes(3);

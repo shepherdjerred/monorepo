@@ -98,8 +98,9 @@ export async function setBrainMode(
   port: number,
   mode: FakeBrainMode,
 ): Promise<void> {
+  const host = Bun.env["STORM_E2E_BRAIN_HOST"] ?? "127.0.0.1";
   const response = await fetch(
-    `http://127.0.0.1:${port.toString()}/v1/__control`,
+    `http://${host}:${port.toString()}/v1/__control`,
     {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -161,4 +162,23 @@ export function startFakeBrain(token: string, port = 0): FakeBrain {
     throw new Error("fake brain did not bind a port");
   }
   return { port: server.port, stop: async () => server.stop() };
+}
+
+if (import.meta.main) {
+  const env = z
+    .object({
+      STORM_E2E_BRAIN_TOKEN: z.string().min(1),
+      STORM_E2E_BRAIN_PORT: z.coerce.number().int().positive(),
+    })
+    .parse(Bun.env);
+  const brain = startFakeBrain(
+    env.STORM_E2E_BRAIN_TOKEN,
+    env.STORM_E2E_BRAIN_PORT,
+  );
+  console.warn(`Fake brain listening on port ${brain.port.toString()}`);
+  await new Promise<void>((resolve) => {
+    process.once("SIGINT", resolve);
+    process.once("SIGTERM", resolve);
+  });
+  await brain.stop();
 }

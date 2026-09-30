@@ -17,9 +17,14 @@ describe("The Storm plugin", () => {
     expect(enabled?.[1]?.split(", ").toSorted()).toEqual([
       "agent",
       "chat",
-      "mechanics",
+      "economy",
       "tickets",
+      "towns",
+      "tracks",
     ]);
+    expect(logs).toContain(
+      "[TheStormMechanicsE2E] Enabled real-Paper mechanics E2E harness",
+    );
     expect(logs).not.toContain("Error occurred while enabling TheStorm");
   });
 });

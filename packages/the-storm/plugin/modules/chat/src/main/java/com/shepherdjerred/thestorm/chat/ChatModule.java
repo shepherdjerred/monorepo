@@ -41,6 +41,7 @@ public final class ChatModule implements StormModule {
             context.database(), error -> logger.error("Saving chat state failed", error));
     var extensions = new ChatExtensions();
     var service = new ChatService(config, store, context.time(), extensions);
+    context.services().provide(ChatService.class, service);
     var server = context.plugin().getServer();
     var output = new PaperChatOutput(server, service);
     var hub =

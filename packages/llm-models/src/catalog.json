@@ -25,6 +25,11 @@
     },
     "status": "current",
     "routes": {
+      "native": {
+        "provider": "openai",
+        "modelId": "gpt-6-luna",
+        "endpoint": "language"
+      },
       "codexSdk": {
         "modelId": "gpt-6-luna"
       }

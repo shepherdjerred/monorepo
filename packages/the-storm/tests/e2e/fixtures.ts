@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { inject, test as base } from "vitest";
 import { connectBot, disconnectBot, waitUntil } from "./harness/bot.ts";
-import { RconClient } from "./harness/rcon.ts";
+import { RconClient } from "@shepherdjerred/the-storm-brain/rcon";
 
 /** Unique per test so player data (inventory, op, position) never leaks between tests. */
 function username(prefix: string): string {

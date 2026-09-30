@@ -17,6 +17,10 @@ describe("The Storm mechanics on Paper", () => {
     bot,
     rcon,
   }) => {
+    const planks = bot.registry.itemsByName["oak_planks"];
+    if (planks === undefined) {
+      throw new Error("minecraft-data has no oak planks item");
+    }
     await rcon.command(`tp ${bot.username} 0 -53 1`);
     await waitUntil(
       "bridge keeper sign to load",
@@ -43,15 +47,44 @@ describe("The Storm mechanics on Paper", () => {
     );
     await rcon.command(`tp ${bot.username} 0 -53 1`);
     await bot.dig(keeper!);
+    let keeperBroken = false;
+    for (let attempt = 0; attempt < 40; attempt++) {
+      keeperBroken =
+        (await rcon.command("execute if block 0 -55 0 minecraft:air")) ===
+        "Test passed";
+      if (keeperBroken) {
+        break;
+      }
+      await Bun.sleep(50);
+    }
+    expect(keeperBroken).toBe(true);
     await waitUntil(
       "keeper sign to break",
       () => material(bot, new Vec3(0, -55, 0)) === "air",
     );
-    const droppedStock = await rcon.command(
-      'data get entity @e[type=minecraft:item,nbt={Item:{id:"minecraft:oak_planks"}},sort=nearest,limit=1] Item',
-    );
-    expect(droppedStock).toContain('"minecraft:oak_planks"');
-    expect(droppedStock).toContain("count: 3");
+    let delivered = false;
+    let droppedStock = "";
+    for (let attempt = 0; attempt < 40; attempt++) {
+      const inventoryCount = bot.inventory.count(planks.id, null);
+      if (inventoryCount === 3) {
+        delivered = true;
+        break;
+      }
+      droppedStock = await rcon.command(
+        'execute positioned 0 -55 0 run data get entity @e[type=minecraft:item,nbt={Item:{id:"minecraft:oak_planks"}},distance=..6,sort=nearest,limit=1] Item',
+      );
+      delivered =
+        droppedStock.includes('"minecraft:oak_planks"') &&
+        droppedStock.includes("count: 3");
+      if (delivered) {
+        break;
+      }
+      await Bun.sleep(50);
+    }
+    expect(
+      delivered,
+      `expected 3 planks in bot inventory or dropped nearby: ${droppedStock}`,
+    ).toBe(true);
   });
 
   test("super-push moves the vanilla piston load the configured extra distance", async ({

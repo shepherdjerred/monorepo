@@ -19,6 +19,9 @@ final class AgentConfigTest {
   /** The file the server runs with, relative to this module's directory. */
   static final Path SHIPPED = Path.of("../../../server/owned/plugins/TheStorm/agent.yml");
 
+  private static final String BRAIN_BASE_URL =
+      "http://storm-brain-service.storm-brain.svc.cluster.local:3000";
+
   private static Result<AgentConfig, List<Problem>> parse(String yaml) {
     return StrictYaml.parse("agent.yml", yaml, AgentConfig.class);
   }
@@ -48,8 +51,7 @@ final class AgentConfigTest {
     assertThat(config.classifyThreshold()).isEqualTo(0.8);
     assertThat(config.triageThreshold()).isEqualTo(0.7);
     assertThat(config.resolveThreshold()).isEqualTo(0.95);
-    assertThat(config.brain().baseUrl())
-        .isEqualTo("http://storm-brain.storm-brain.svc.cluster.local:3000");
+    assertThat(config.brain().baseUrl()).isEqualTo(BRAIN_BASE_URL);
     assertThat(config.brain().bearerTokenEnv()).isEqualTo("STORM_BRAIN_BEARER_TOKEN");
     assertThat(config.brain().timeoutMs()).isEqualTo(65_000);
     assertThat(config.sweep().intervalMinutes()).isEqualTo(15);
@@ -149,9 +151,7 @@ final class AgentConfigTest {
   void rejectsABadBrainUrl() throws Exception {
     var yaml =
         Files.readString(SHIPPED)
-            .replace(
-                "baseUrl: http://storm-brain.storm-brain.svc.cluster.local:3000",
-                "baseUrl: storm-brain:3000");
+            .replace("baseUrl: " + BRAIN_BASE_URL, "baseUrl: storm-brain:3000");
 
     assertThat(problems(parse(yaml))).contains("must be an http(s) URL");
   }

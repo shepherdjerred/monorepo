@@ -123,6 +123,12 @@ describe("selectImageTargets", () => {
     }
   });
 
+  test("rebuilds infra when the managed flag inventory changes", async () => {
+    expect(
+      await select(["packages/feature-flags/src/managed-flag-inventory.json"]),
+    ).toContain("infra");
+  });
+
   test("leaves images alone for The Storm files outside the image context", async () => {
     for (const path of [
       "packages/the-storm/README.md",

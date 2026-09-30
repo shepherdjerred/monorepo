@@ -268,11 +268,15 @@
         "e2e/**/*.ts"
       ]
     },
-    // Vitest configs and global setup reached only through the test:e2e
-    // script, whose `bun --no-install --bun vitest ... --config` form knip
-    // cannot parse.
+    // Vitest configs and global setup are reached through test:e2e; the
+    // Woodpecker lane invokes prepare-sidecar.ts as a script. Knip cannot
+    // infer either command-line entry from imports.
     "packages/the-storm": {
-      "entry": ["vitest.e2e.config.ts", "tests/e2e/global-setup.ts"]
+      "entry": [
+        "vitest.e2e.config.ts",
+        "tests/e2e/global-setup.ts",
+        "tests/e2e/prepare-sidecar.ts"
+      ]
     },
     "packages/temporal": {
       "entry": ["src/**/*.test.ts", "scripts/**/*.ts"],

@@ -1,6 +1,6 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
-import { MEDIUM_TIER } from "#src/pipeline/tiers.ts";
+import { MEDIUM_TIER, SERVICE_TIER } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 import { GITHUB_DOWNLOAD } from "#src/pipeline/lanes/tofu.ts";
 
@@ -11,9 +11,12 @@ const PAPER_WORKSPACE =
 const PLUGIN_DIR = `${PAPER_WORKSPACE}/plugins`;
 const DATA_DIR = `${PAPER_WORKSPACE}/data`;
 const RCON_PASSWORD = "storm-e2e-ci-rcon-password";
+const BRAIN_HOST = "storm-brain";
+const BRAIN_PORT = "18081";
+const BRAIN_TOKEN = "storm-e2e-ci-brain-token";
 
 const PAPER_SERVICE_TIER = {
-  cpuRequest: "2",
+  cpuRequest: "1",
   cpuLimit: "4",
   memoryRequest: "4Gi",
   memoryLimit: "8Gi",
@@ -44,6 +47,9 @@ export function stormE2eSteps(images: CiImages): CiStep[] {
         STORM_E2E_LOG_FILE: `${DATA_DIR}/logs/latest.log`,
         STORM_E2E_PLUGIN_DIR: PLUGIN_DIR,
         STORM_E2E_DATA_DIR: DATA_DIR,
+        STORM_E2E_BRAIN_HOST: BRAIN_HOST,
+        STORM_E2E_BRAIN_PORT: BRAIN_PORT,
+        STORM_E2E_BRAIN_TOKEN: BRAIN_TOKEN,
       },
       timeoutMinutes: 45,
       resources: MEDIUM_TIER,
@@ -53,7 +59,7 @@ export function stormE2eSteps(images: CiImages): CiStep[] {
           name: "paper",
           image: PAPER_SERVER_IMAGE,
           commands: [
-            `until test -f ${PLUGIN_DIR}/.ready; do sleep 1; done; exec /start`,
+            `mkdir -p ${DATA_DIR}/logs; rm -rf /data/logs; ln -s ${DATA_DIR}/logs /data/logs; until test -f ${PLUGIN_DIR}/.ready; do sleep 1; done; exec /start`,
           ],
           environment: {
             EULA: "TRUE",
@@ -73,8 +79,21 @@ export function stormE2eSteps(images: CiImages): CiStep[] {
             VIEW_DISTANCE: "4",
             SIMULATION_DISTANCE: "4",
             ENABLE_AUTOPAUSE: "false",
+            STORM_BRAIN_BEARER_TOKEN: BRAIN_TOKEN,
           },
           resources: PAPER_SERVICE_TIER,
+        },
+        {
+          name: BRAIN_HOST,
+          image: images.base,
+          commands: [
+            `until test -f ${PAPER_WORKSPACE}/brain.start; do sleep 1; done; cd /woodpecker/src/github.com/shepherdjerred/monorepo; exec bun --no-install packages/the-storm/tests/e2e/harness/fake-brain.ts`,
+          ],
+          environment: {
+            STORM_E2E_BRAIN_PORT: BRAIN_PORT,
+            STORM_E2E_BRAIN_TOKEN: BRAIN_TOKEN,
+          },
+          resources: SERVICE_TIER,
         },
       ],
       changed: {

@@ -964,12 +964,8 @@
       ],
       "excludedSuites": [
         {
-          "path": "tests/e2e/plugin.e2e.test.ts",
-          "reason": "Real-server E2E; boots a disposable Paper 26.2 server with TheStorm.jar in Docker (or the paper-e2e-pr sidecar) and drives it with mineflayer bots over the network. Runs only via test:e2e; full reporting is test-only and does not stand up game servers."
-        },
-        {
-          "path": "tests/e2e/server.e2e.test.ts",
-          "reason": "Real-server E2E; boots a disposable Paper 26.2 server with TheStorm.jar in Docker (or the paper-e2e-pr sidecar) and drives it with mineflayer bots over the network. Runs only via test:e2e; full reporting is test-only and does not stand up game servers."
+          "path": "tests/e2e",
+          "reason": "Real-server E2E runs through test:e2e in the dedicated paper-e2e-pr Woodpecker lane, with Paper as a service and Mineflayer clients. The full reporting task does not start the game server."
         }
       ]
     },

@@ -117,10 +117,7 @@ describe("multi-player flows", () => {
         secondBot.players[bot.username]?.entity !== undefined,
     );
 
-    const heard = waitForMessage(
-      secondBot,
-      new RegExp(`<${bot.username}> storm incoming`, "u"),
-    );
+    const heard = waitForMessage(secondBot, /storm incoming/u);
     bot.chat("storm incoming");
     await heard;
 

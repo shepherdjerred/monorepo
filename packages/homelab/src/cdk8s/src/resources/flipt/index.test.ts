@@ -249,6 +249,8 @@ describe("Flipt chart", () => {
             "temporal",
             "alert-dashboard",
             "storm",
+            "the-storm",
+            "the-storm-companion",
           ].map((namespace) => `${environment}.${namespace}.yaml`),
         )
         .toSorted(),

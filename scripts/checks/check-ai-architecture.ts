@@ -154,6 +154,9 @@ const SCOUT_WORKBENCH_ROOT = "packages/scout-for-lol/packages/frontend/";
 // production, so these hold OpenAI and Gemini keys only.
 const PROVIDER_CREDENTIAL_WIRING_PATHS = new Set([
   "ci/scripts/images/smoke-app-in-image.ts",
+  // The Storm brain has one manually provisioned OpenAI key in its dedicated
+  // 1Password item; this is deployment wiring, not application inference.
+  "packages/homelab/src/cdk8s/src/resources/storm-brain/index.ts",
   // Wires the per-workload Gemini key and Anthropic federation identifiers
   // that the operator-applied OpenTofu stacks write to 1Password.
   "packages/homelab/src/cdk8s/src/misc/llm-provider-credentials.ts",

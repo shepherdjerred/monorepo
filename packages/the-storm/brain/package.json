@@ -3,6 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./rcon": {
+      "types": "./src/rcon.ts",
+      "import": "./src/rcon.ts"
+    }
+  },
   "scripts": {
     "build": "bun build src/cli.ts --target=bun --outdir=dist --external=mineflayer",
     "typecheck": "PATH=node_modules/@typescript/native/bin:$PATH tsc --noEmit",

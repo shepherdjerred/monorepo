@@ -16,6 +16,8 @@ FROM gradle:9.7.1-jdk25-corretto@sha256:b65cce4c0be158a0ddb99e431d329d40c02f99c5
 WORKDIR /src
 COPY plugin/ plugin/
 # The world module verifies its managed rollout key during compilation.
+# `managed-flags` is a BuildKit named context supplied by docker-bake.hcl.
+# hadolint ignore=DL3022
 COPY --from=managed-flags managed-flag-inventory.json /feature-flags/src/managed-flag-inventory.json
 RUN --mount=type=cache,id=the-storm-gradle,target=/home/gradle/.gradle/caches \
   gradle -p plugin :dist:shadowJar --no-daemon --console=plain

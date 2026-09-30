@@ -107,6 +107,8 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
       // server/ (Dockerfile, pinned jar manifest, config bundle).
       "packages/the-storm/plugin/",
       "packages/the-storm/server/",
+      // The Dockerfile also reads this named context during plugin compilation.
+      "packages/feature-flags/src/managed-flag-inventory.json",
     ],
   };
 

@@ -16,6 +16,7 @@
   },
   "devDependencies": {
     "@shepherdjerred/eslint-config": "workspace:*",
+    "@shepherdjerred/the-storm-brain": "workspace:*",
     "@types/bun": "1.4.2",
     "@typescript/native": "npm:typescript@7.0.2",
     "eslint": "^10.7.0",

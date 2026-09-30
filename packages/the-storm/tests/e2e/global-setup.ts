@@ -4,6 +4,7 @@ import type { TestProject } from "vitest/node";
 import { z } from "zod";
 import { startFakeBrain } from "./harness/fake-brain.ts";
 import {
+  serverLogs,
   startServer,
   stormTestConfig,
   type ServerInfo,
@@ -51,21 +52,15 @@ const ExternalServerSchema = z.object({
   STORM_E2E_RCON_PORT: z.coerce.number().int().positive(),
   STORM_E2E_RCON_PASSWORD: z.string().min(16),
   STORM_E2E_LOG_FILE: z.string().min(1),
+  STORM_E2E_BRAIN_HOST: z.string().min(1),
+  STORM_E2E_BRAIN_PORT: z.coerce.number().int().positive(),
+  STORM_E2E_BRAIN_TOKEN: z.string().min(1),
 });
 
 export default async function setup(project: TestProject) {
   // The agent refuses to start without its token, so both local and sidecar
   // runs use the same strict fake brain contract.
   const external = Bun.env["STORM_E2E_HOST"] !== undefined;
-  const brainToken = external
-    ? (Bun.env["STORM_E2E_BRAIN_TOKEN"] ?? "e2e-fake-brain")
-    : randomBytes(24).toString("hex");
-  const brain = startFakeBrain(
-    brainToken,
-    external ? Number(Bun.env["STORM_E2E_BRAIN_PORT"] ?? 18_081) : 0,
-  );
-  const brainBaseUrl = `http://${external ? "127.0.0.1" : "host.docker.internal"}:${brain.port.toString()}`;
-
   if (external) {
     const env = ExternalServerSchema.parse(Bun.env);
     project.provide("server", {
@@ -76,9 +71,12 @@ export default async function setup(project: TestProject) {
       rconPassword: env.STORM_E2E_RCON_PASSWORD,
       logFile: env.STORM_E2E_LOG_FILE,
     });
-    project.provide("brain", { port: brain.port });
-    return brain.stop;
+    project.provide("brain", { port: env.STORM_E2E_BRAIN_PORT });
+    return;
   }
+  const brainToken = randomBytes(24).toString("hex");
+  const brain = startFakeBrain(brainToken);
+  const brainBaseUrl = `http://host.docker.internal:${brain.port.toString()}`;
   if (!(await Bun.file(stormJar).exists())) {
     await brain.stop();
     throw new Error(
@@ -91,9 +89,13 @@ export default async function setup(project: TestProject) {
     bootTimeoutMs: 180_000,
     warmCache: Bun.env["STORM_E2E_COLD"] !== "1",
     stormJar,
+    // Mechanics runs once through its test plugin, which owns the Paper world
+    // fixture; enabling the production module would register duplicate listeners.
     stormConfig: stormTestConfig(await Bun.file(ownedConfig).text(), [
-      "mechanics",
+      "economy",
       "chat",
+      "tracks",
+      "towns",
       "tickets",
       "agent",
     ]),
@@ -117,7 +119,17 @@ export default async function setup(project: TestProject) {
   project.provide("server", server.info);
   project.provide("brain", { port: brain.port });
   return async () => {
-    await server.stop();
-    await brain.stop();
+    try {
+      // Preserve the complete server output before removing the disposable
+      // container. This is the only useful evidence for boot and disconnect
+      // failures in local E2E runs.
+      await Bun.write(
+        path.join(packageRoot, ".cache", "e2e", "latest-server.log"),
+        await serverLogs(server.info),
+      );
+    } finally {
+      await server.stop();
+      await brain.stop();
+    }
   };
 }
