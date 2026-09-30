@@ -118,10 +118,11 @@ test.each(["beta", "prod"] as const)(
 
 describe("central Workflow schedule routing", () => {
   const definitions = [
-    ["buildkite-bun-cache-gc", "runBunCacheGcWorkflow", "1 hour"],
+    ["ci-bun-cache-gc", "runBunCacheGcWorkflow", "1 hour"],
     ["kometa-daily", "runKometaWorkflow", "2 hours"],
-    ["buildkite-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
-    ["buildkite-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
+    ["ci-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
+    ["ci-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
+    ["ci-io-telemetry-daily", "runCiIoTelemetry", "30 minutes"],
     ["turbo-cache-clean-daily", "runTurboCacheCleanWorkflow", "30 minutes"],
   ] as const;
 
@@ -326,15 +327,48 @@ test("Flipt inventory drift starts on the shared Workflow queue", () => {
   });
 });
 
-test("OpenAI complimentary usage reconciles hourly on the shared Workflow queue", () => {
-  expect(findScheduleById("openai-complimentary-usage-hourly")).toMatchObject({
-    workflowType: "runOpenAiComplimentaryUsageReconciliation",
+test("billed LLM cost reconciles hourly on the shared Workflow queue", () => {
+  expect(findScheduleById("llm-billed-cost-hourly")).toMatchObject({
+    workflowType: "runLlmBilledCostReconciliation",
     args: [],
     timing: { kind: "cron", expression: "17 * * * *", timezone: "UTC" },
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "10 minutes",
   });
+});
+
+test("billed LLM cost remains paused until the candidate receives all Workflow traffic", () => {
+  // Stable workers do not register this Workflow, so its schedule must remain
+  // paused until the candidate receives 100% of traffic.
+  const initialPauseNote = findScheduleById(
+    "llm-billed-cost-hourly",
+  )?.initialPauseNote;
+  expect(initialPauseNote).toContain("100% candidate traffic");
+  expect(initialPauseNote).toContain(
+    "stable workers do not register this Workflow",
+  );
+  const schedule = findScheduleById("llm-billed-cost-hourly");
+  expect(
+    buildScheduleState(
+      schedule,
+      {},
+      {
+        paused: true,
+        note: "Awaiting Workflow candidate promotion with runLlmBilledCostReconciliation",
+      },
+    ),
+  ).toEqual({ paused: true, note: initialPauseNote });
+  expect(
+    buildScheduleState(
+      schedule,
+      {},
+      {
+        paused: true,
+        note: "Paused by operator for incident review",
+      },
+    ),
+  ).toEqual({ paused: true, note: "Paused by operator for incident review" });
 });
 
 describe("ops overview schedules", () => {
@@ -448,7 +482,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "fetchSkillCappedManifest",
   "runFreshRssSyncWorkflow",
   "runFliptFlagInventory",
-  "runOpenAiComplimentaryUsageReconciliation",
+  "runLlmBilledCostReconciliation",
   // Fans out one bounded collector Activity per source in parallel, then one
   // publish Activity. No workflow-level sleeps; Activity timeouts and retry
   // budgets fit inside the five-minute execution timeout.
@@ -462,6 +496,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runKometaWorkflow",
   "runUvCachePruneWorkflow",
   "runTrivyDbRefreshWorkflow",
+  "runCiIoTelemetry",
   "runMainVulnScanWorkflow",
   "runLinkRotScanWorkflow",
   "runTurboCacheCleanWorkflow",
@@ -676,6 +711,7 @@ test("terminates running executions of retired workflow types", async () => {
 
   expect(queries).toEqual([
     'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runOpenAiComplimentaryUsageReconciliation" AND ExecutionStatus = "Running"',
     'WorkflowType = "runScoutWeeklyParlayWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runScoutWeeklyParlayCatchupWorkflow" AND ExecutionStatus = "Running"',
     'WorkflowType = "runCiIoImpact" AND ExecutionStatus = "Running"',
@@ -736,6 +772,7 @@ test("terminates a retired workflow in the namespace it actually ran in", async 
   );
   expect(prodQueries).toEqual([
     'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runOpenAiComplimentaryUsageReconciliation" AND ExecutionStatus = "Running"',
     'WorkflowType = "runCiIoImpact" AND ExecutionStatus = "Running"',
   ]);
 });
@@ -1025,6 +1062,27 @@ describe("orphan schedule detection", () => {
         deletedIds,
       }),
     ).toBe(false);
+  });
+
+  test("undeclared durable-chat schedules are production drift", () => {
+    expect(
+      isOrphanSchedule({
+        scheduleId: "agent-chat-morning-review",
+        memo: undefined,
+        namespace: "prod",
+        declaredIds,
+        deletedIds,
+      }),
+    ).toBe(true);
+    expect(
+      isOrphanSchedule({
+        scheduleId: "morning-review",
+        memo: { chatId: "morning-review" },
+        namespace: "prod",
+        declaredIds,
+        deletedIds,
+      }),
+    ).toBe(true);
   });
 
   test("a declared agent-task schedule removed from SCHEDULES is still flagged", () => {

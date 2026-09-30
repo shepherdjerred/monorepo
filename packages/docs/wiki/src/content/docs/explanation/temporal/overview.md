@@ -139,10 +139,10 @@ remain available. Activity Workers are not part of that ramp, so changing
 Workflow routing does not duplicate effects or move Activity credentials into
 the deterministic process.
 
-The stable pin is deliberately slower than the live routing state. It changes
-only after a full-day clean soak, making the last accepted Workflow bundle
-available throughout the ramp and keeping rollback a removal of the candidate
-route rather than an emergency image rebuild.
+The stable pin changes after the candidate reaches 100% traffic and the
+promotion health checks pass. The last accepted Workflow bundle remains
+available throughout the ramp, so rollback removes the candidate route without
+an emergency image rebuild.
 
 ## Batteries in the image
 
@@ -186,6 +186,7 @@ deployment and runtime acceptance window.
 
 - [Workflow families](/explanation/temporal/workflow-families/) — what actually runs
 - [Event-driven surfaces](/explanation/temporal/event-surfaces/)
+- [Durable agent chats](/explanation/temporal/durable-agent-chats/)
 - [Temporal workflow inventory](/reference/temporal-workflows/)
 - [Temporal PostgreSQL's TLS identity](/explanation/temporal/postgresql-tls-identity/)
 - [Upgrade the Temporal server](/how-to/upgrade-temporal-server/)

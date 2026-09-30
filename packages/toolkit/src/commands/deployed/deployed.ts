@@ -11,12 +11,12 @@ import {
   isAncestor,
   changedPackages,
   latestCommitForPackage,
-  showVersionsAt,
+  showCatalogAt,
   commitThatWroteDigest,
   isBumpSubject,
   type CommitMeta,
 } from "#lib/deployed/git.ts";
-import { parseVersionsFile } from "#lib/deployed/versions-file.ts";
+import { parseCatalogPins } from "#lib/deployed/catalog-pins.ts";
 import {
   resolveServiceSelector,
   servicesForPackages,
@@ -168,7 +168,7 @@ async function runGitTrace(
   commitSha: string,
 ): Promise<GitTraceResult> {
   const pins: Map<string, Pin> =
-    pinsText == null ? new Map<string, Pin>() : parseVersionsFile(pinsText);
+    pinsText == null ? new Map<string, Pin>() : parseCatalogPins(pinsText);
   const pin = pins.get(variant.versionKey) ?? null;
   if (pin == null) {
     return {
@@ -178,7 +178,7 @@ async function runGitTrace(
       commitInImage: false,
     };
   }
-  const writingCommit = await commitThatWroteDigest(pin.digest);
+  const writingCommit = await commitThatWroteDigest(pin.digest, "origin/main");
   if (writingCommit == null) {
     return {
       pin,
@@ -218,7 +218,7 @@ function gitDetail(
   const { pin, writingCommit, writingIsBump } = git;
   if (pin == null) {
     return [
-      `No pin for \`${variant.versionKey}\` in versions.ts — not a tracked k8s deployable.`,
+      `No pin for \`${variant.versionKey}\` in the version catalog — not a tracked k8s deployable.`,
     ];
   }
   const bsha = writingCommit?.sha.slice(0, 9) ?? "?";
@@ -346,7 +346,7 @@ export async function deployedCommand(
   const root = await repoRoot();
   if (root == null) {
     console.error(
-      "Error: `toolkit deployed` must run inside the monorepo (versions.ts not found).",
+      "Error: `toolkit deployed` must run inside the monorepo (version catalog not found).",
     );
     process.exit(1);
   }
@@ -361,9 +361,9 @@ export async function deployedCommand(
 
   const { mode, commit, targets, notes } = selection;
   const merged = await isAncestor(commit.sha, "origin/main");
-  const pinsText = await showVersionsAt("origin/main");
+  const pinsText = await showCatalogAt("origin/main");
   if (pinsText == null) {
-    notes.push("Could not read versions.ts on origin/main.");
+    notes.push("Could not read the version catalog on origin/main.");
   }
 
   // Cluster + gh probes (once).

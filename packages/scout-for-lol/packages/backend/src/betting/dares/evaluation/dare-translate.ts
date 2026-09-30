@@ -3,10 +3,10 @@ import type { z } from "zod";
 import {
   StructuredOutputUsageError,
   generateValidatedObject,
-  type AggregateOpenRouterUsage,
+  type AggregateLlmUsage,
   type GenerateValidatedObjectInput,
   type GenerateValidatedObjectResult,
-  type OpenRouterRuntime,
+  type LlmRuntime,
 } from "@shepherdjerred/llm-runtime";
 import { withLlmSubjectSpan } from "@shepherdjerred/llm-observability/subject";
 import type { DiscordAccountId, DiscordGuildId } from "@scout-for-lol/data";
@@ -32,7 +32,7 @@ import {
   type DareShortlistEntry,
 } from "#src/betting/dares/dare-shortlist.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
-import { getOpenRouterRuntime } from "#src/league/review/ai-clients.ts";
+import { getLlmRuntime } from "#src/league/review/ai-clients.ts";
 import {
   assertWithinBudget,
   recordTokenUsage,
@@ -45,7 +45,7 @@ const logger = createLogger("betting-dare-translate");
 /**
  * The one place the dare feature talks to a model.
  *
- * Plumbing mirrors `parlay-generate.ts`: OpenRouter runtime, budget assert,
+ * Plumbing mirrors `parlay-generate.ts`: shared LLM runtime, budget assert,
  * `generateValidatedObject` under an `AbortSignal.timeout` deadline, usage
  * charged even for failed structured output, all inside a guild-attributed
  * LLM subject span. The difference is the boundary shape: a human is waiting
@@ -57,7 +57,7 @@ const logger = createLogger("betting-dare-translate");
 export type DareTranslationRecord = {
   promptVersion: string;
   model: string;
-  usage: AggregateOpenRouterUsage;
+  usage: AggregateLlmUsage;
   shortlistKeys: readonly string[];
   rawOutput: DareModelTranslation;
 };
@@ -83,7 +83,7 @@ export type DareTranslationResult =
 
 /** The `generateValidatedObject`-shaped boundary tests mock (zero network). */
 export type DareGenerateBoundary = <SCHEMA extends z.ZodType>(
-  runtime: OpenRouterRuntime,
+  runtime: LlmRuntime,
   input: GenerateValidatedObjectInput<SCHEMA>,
 ) => Promise<GenerateValidatedObjectResult<SCHEMA>>;
 
@@ -92,7 +92,7 @@ export type TranslateDareDeps = {
     serverId: DiscordGuildId,
     challengerDiscordId: DiscordAccountId,
   ) => Promise<readonly DareShortlistEntry[]>;
-  getRuntime: () => OpenRouterRuntime | undefined;
+  getRuntime: () => LlmRuntime | undefined;
   assertBudget: () => void;
   recordUsage: (
     model: string,
@@ -108,7 +108,7 @@ export function defaultTranslateDareDeps(
   return {
     loadShortlist: (serverId, challengerDiscordId) =>
       buildDareShortlist(serverId, challengerDiscordId, prismaClient),
-    getRuntime: getOpenRouterRuntime,
+    getRuntime: getLlmRuntime,
     assertBudget: assertWithinBudget,
     recordUsage: (model, tokens) => {
       recordTokenUsage(tokens.input, tokens.output, model);
@@ -176,7 +176,7 @@ async function translateDareInternal(
     }
     const runtime = deps.getRuntime();
     if (runtime === undefined) {
-      throw new Error("OPENROUTER_API_KEY is required for dare translation");
+      throw new Error("OpenAI credentials are required for dare translation");
     }
     const model = deps.model();
     const schema = dareTranslationSchemaFor(shortlist);

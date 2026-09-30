@@ -236,8 +236,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends postgresql post
 # excludes .buildkite, so stage it here (never in the pushed image stage).
 # Depend on voice-smoke so an explicit `--target smoke` build proves both.
 COPY --from=voice-smoke /tmp/voice-model-smoke-passed /tmp/voice-model-smoke-passed
-COPY .buildkite/scripts/images/smoke-app-in-image.ts /app/.buildkite/scripts/images/smoke-app-in-image.ts
-COPY .buildkite/scripts/images/smoke-app-configs.ts /app/.buildkite/scripts/images/smoke-app-configs.ts
+COPY ci/scripts/images/smoke-app-in-image.ts /app/ci/scripts/images/smoke-app-in-image.ts
+COPY ci/scripts/images/smoke-app-configs.ts /app/ci/scripts/images/smoke-app-configs.ts
 ARG SMOKE_TARGET=scout-for-lol
 ENV CI_IMAGE_SMOKE_TARGET=${SMOKE_TARGET}
 # Smoke runs as the non-root deploy uid (1000, the app deployment convention),
@@ -249,7 +249,7 @@ ENV HOME=/tmp
 # This stage needs only its local Unix-socket Postgres. An isolated network
 # namespace prevents its fixed HTTP health port from colliding with another
 # concurrent Scout smoke on the shared remote BuildKit workers.
-RUN --network=none bun /app/.buildkite/scripts/images/smoke-app-in-image.ts
+RUN --network=none bun /app/ci/scripts/images/smoke-app-in-image.ts
 
 FROM runtime AS image
 # Corpus evaluation is deliberately NOT a build dependency: it is a multi-hour

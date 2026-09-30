@@ -273,7 +273,34 @@ export async function planPrematchFanOutV2(input: {
   const matchId = RiotMatchIdSchema.parse(input.riotMatchId);
   const intents = await listIntentsForMatch(prisma, { matchId });
   return ScoutFanOutV2ResultSchema.parse({
-    notificationIntentKeys: drivablePrematchIntentKeys(matchId, intents),
+    notificationIntentKeys: drivablePrematchIntentKeys(
+      matchId,
+      withoutStaleUnsentIntents(intents, new Date()),
+    ),
     lakeProjection: false,
   });
+}
+
+/**
+ * Drop the intents no send could still honour.
+ *
+ * A prematch intent's freshness deadline is the game's own tracked lifetime,
+ * and the domain's `beginSend` refuses any attempt that starts after it. A
+ * `pending` or `ready` intent past that deadline therefore has nothing left a
+ * notification run could do but refuse three times, so starting one is pure
+ * cost — and on a capture replaced hours later it would be a child per
+ * channel for a game long over. A `sending` intent is kept whatever its
+ * deadline: its run has an unobserved attempt to record, and only a child can
+ * record it.
+ */
+export function withoutStaleUnsentIntents(
+  records: readonly MatchNotificationIntentRecord[],
+  now: Date,
+): MatchNotificationIntentRecord[] {
+  return records.filter(
+    (record) =>
+      (record.intent.state.kind !== "pending" &&
+        record.intent.state.kind !== "ready") ||
+      new Date(record.intent.freshnessDeadline).getTime() > now.getTime(),
+  );
 }

@@ -582,7 +582,7 @@ export function getTemporalRuleGroups(): PrometheusRuleSpecGroups[] {
     {
       // The GitHub webhook server survives the PR-bot removal: it is the
       // ingress for the merge-conflict check (push + pull_request) and the
-      // PR-closed Buildkite build cancellation. A spike in signature
+      // PR-closed Woodpecker build cancellation. A spike in signature
       // rejections means the webhook secret is wrong or someone is probing
       // the public URL with bad payloads.
       name: "github-webhook",

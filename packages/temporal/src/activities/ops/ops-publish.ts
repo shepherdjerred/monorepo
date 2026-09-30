@@ -89,10 +89,33 @@ export function dedupeChanges(
   });
 }
 
+/** Failure reason for a source the running workflow build does not collect. */
+export const SOURCE_NOT_COLLECTED = "not collected by this workflow build";
+
 /**
- * Turn per-source outcomes into a validated ingest payload. Every source
- * must report exactly once; a missing or doubled source is a broken
- * workflow contract, not a data problem.
+ * Every declared source this workflow build did not report, as failures.
+ *
+ * Activities deploy with every release, but the workflow code is pinned to
+ * the current Worker Deployment version. A newly declared source is
+ * therefore absent until that version advances; it is reported as a failed
+ * source (the section renders `unknown` and alerts) rather than blocking
+ * every snapshot.
+ */
+function uncollectedSources(
+  outcomes: readonly OpsCollectorOutcome[],
+): OpsCollectorOutcome[] {
+  const reported = new Set(outcomes.map((outcome) => outcome.source));
+  return SOURCE_IDS.filter((source) => !reported.has(source)).map((source) => ({
+    source,
+    ok: false,
+    error: SOURCE_NOT_COLLECTED,
+  }));
+}
+
+/**
+ * Turn per-source outcomes into a validated ingest payload. A doubled source
+ * is a broken workflow contract and throws; an unreported one becomes a
+ * failed source (see `uncollectedSources`).
  */
 export function buildOpsIngest(input: {
   outcomes: readonly OpsCollectorOutcome[];
@@ -101,18 +124,21 @@ export function buildOpsIngest(input: {
   secrets: readonly (string | undefined)[];
 }): OpsIngest {
   const reported = input.outcomes.map((outcome) => outcome.source);
-  const expected = [...SOURCE_IDS].toSorted();
-  if (reported.toSorted().join(",") !== expected.join(",")) {
+  const duplicated = reported.filter(
+    (source, index) => reported.indexOf(source) !== index,
+  );
+  if (duplicated.length > 0) {
     throw new Error(
-      `Ops snapshot outcomes must cover each source once; got ${reported.join(", ")}`,
+      `Ops snapshot outcomes must report each source once; duplicated ${[...new Set(duplicated)].join(", ")}`,
     );
   }
+  const outcomes = [...input.outcomes, ...uncollectedSources(input.outcomes)];
   const observedAt = input.now.toISOString();
   const statuses: SourceStatus[] = [];
   const signals: SignalInput[] = [];
   const metrics: SectionMetric[] = [];
   const changes: ChangeEventInput[] = [];
-  for (const outcome of input.outcomes) {
+  for (const outcome of outcomes) {
     if (outcome.ok) {
       statuses.push({
         ...outcome.result.status,

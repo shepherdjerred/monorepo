@@ -1,0 +1,24 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the hall record-break message > is v1's embed for the same records, with mentions disabled 1`] = `
+[
+  {
+    "color": 16104002,
+    "description": "Match NA1\\_9301 set new guild records.
+[Open the Hall of Fame](https://scout-for-lol.com/app/halls/100000000000000001)",
+    "fields": [
+      {
+        "inline": false,
+        "name": "Ranked Summoner's Rift · Most kills",
+        "value": "12,345 — Alice \\*the\\* Great",
+      },
+      {
+        "inline": false,
+        "name": "Ranked Summoner's Rift · Most assists",
+        "value": "12,346 — Alice \\*the\\* Great, Bob\\_",
+      },
+    ],
+    "title": "🏛️ Guild Hall of Fame record broken!",
+  },
+]
+`;

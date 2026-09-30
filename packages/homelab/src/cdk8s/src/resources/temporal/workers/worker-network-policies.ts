@@ -164,17 +164,6 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
     },
   });
 
-  new KubeNetworkPolicy(chart, "temporal-billing-alertmanager-netpol", {
-    metadata: { name: "temporal-billing-alertmanager-netpol" },
-    spec: {
-      podSelector: { matchLabels: { component: "billing-worker" } },
-      policyTypes: ["Egress"],
-      egress: [
-        { ports: [{ port: IntOrString.fromNumber(9093), protocol: "TCP" }] },
-      ],
-    },
-  });
-
   new KubeNetworkPolicy(chart, "temporal-gateway-ingress-netpol", {
     metadata: { name: "temporal-gateway-ingress-netpol" },
     spec: {
@@ -250,7 +239,7 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
 
   // Kubernetes API, Prometheus, and the alert/ops dashboard for the audit
   // collectors; Alertmanager and Loki for the ops-snapshot collector. Linear,
-  // PostHog, GitHub, Buildkite, and Bugsink ride the shared 443 rule.
+  // PostHog, GitHub, Woodpecker, and Bugsink ride the shared 443 rule.
   new KubeNetworkPolicy(chart, "temporal-infra-api-netpol", {
     metadata: { name: "temporal-infra-api-netpol" },
     spec: {
@@ -279,6 +268,16 @@ export function createTemporalWorkerNetworkPolicies(chart: Chart): void {
             },
           ],
           ports: [{ port: IntOrString.fromNumber(3100), protocol: "TCP" }],
+        },
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: { "kubernetes.io/metadata.name": "tempo" },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(3200), protocol: "TCP" }],
         },
       ],
     },

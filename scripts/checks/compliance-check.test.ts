@@ -238,8 +238,17 @@ test("checks representative nested workspaces declared by the root", async () =>
   try {
     await writeRootManifest(root, nestedDirectories);
     for (const directory of nestedDirectories) {
+      const scripts: Record<string, string> = {
+        ...compliantScripts,
+        typecheck: "tsc --noEmit",
+      };
+      // Mirror the real package: its build exemption only stays valid while
+      // the script is absent, and a used exemption is not reported as stale.
+      if (directory === "packages/discord-plays-pokemon/packages/backend") {
+        delete scripts["build"];
+      }
       await writeWorkspacePackage(root, directory, {
-        scripts: { ...compliantScripts, typecheck: "tsc --noEmit" },
+        scripts,
         devDependencies: {
           typescript: "^6.0.3",
         },

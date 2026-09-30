@@ -15,11 +15,6 @@ const checks: Check[] = [
     message:
       "Root workspace contains '!packages/...'. All packages must be integrated.",
   },
-  {
-    file: "scripts/checks/compliance-check.ts",
-    pattern: /\bcase\s+"\$PKG"\s+in|continue\s*;;/,
-    message: "Compliance check contains package exemption branching.",
-  },
 ];
 
 async function main(): Promise<void> {

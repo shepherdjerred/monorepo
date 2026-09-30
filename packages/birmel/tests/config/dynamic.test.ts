@@ -10,7 +10,7 @@ const DISABLED = { FEATURE_FLAGS_MODE: "disabled" } as const;
 const VALID_ENVIRONMENT = {
   DISCORD_TOKEN: "token",
   DISCORD_CLIENT_ID: "1".repeat(18),
-  OPENROUTER_API_KEY: "key",
+  OPENAI_API_KEY: "key",
 };
 
 afterEach(async () => {
@@ -34,10 +34,10 @@ describe("Birmel dynamic config", () => {
     });
 
     expect(config.persona.enabled).toBe(false);
-    expect(config.openRouter.model).toBe("test-model");
+    expect(config.llm.model).toBe("test-model");
     expect(config.agent.maxSteps).toBe(4);
     expect(config.imageGeneration.enabled).toBe(true);
-    expect(config.openRouter.imageModel).toBe("test-image-model");
+    expect(config.llm.imageModel).toBe("test-image-model");
     expect(config.discord.token).toBe("token");
   });
 
@@ -53,7 +53,7 @@ describe("Birmel dynamic config", () => {
     });
 
     expect(config.persona.enabled).toBe(false);
-    expect(config.openRouter.model).toBe("gpt-5.6-sol");
+    expect(config.llm.model).toBe("gpt-5.6-sol");
   });
 
   test("keeps the seed when a flag has the wrong type", async () => {

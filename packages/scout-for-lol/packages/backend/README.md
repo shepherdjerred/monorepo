@@ -57,7 +57,7 @@ records the reason and increments the row's requeue count:
 ```bash
 bun run temporal:requeue-work -- \
   --work-id parlay:<match-id> \
-  --reason "OpenRouter capacity restored and this match was reviewed"
+  --reason "Provider capacity restored and this match was reviewed"
 ```
 
 `db:generate` must run after schema changes and before typecheck/test; from the
@@ -420,19 +420,38 @@ redriven. Betting pools are unique per match and guild, so a second open is a
 no-op. Neither pipeline therefore announces a game twice or opens its markets
 twice across a flip.
 
-Before ramping, know what V2 prematch does not yet do:
+### V2 prematch delivery and markets
 
-- `scoutPrematchGameV2Workflow` mints notification intents but starts no
-  notification children (SJ-205). Only the pipeline reconciliation sweep
-  drives them, and no Schedule starts that sweep. With the flag on and nothing
-  driving intents, game-start announcements are not sent.
-- The V2 prematch send opens no Bryan Bucks markets. This matters in beta
-  only, because production hard-disables betting.
+Behind the `scout-v2-prematch-delivery` patch, `scoutPrematchGameV2Workflow`
+does what v1's `sendPrematchNotification` does, after its capture and plan:
+
+1. `openPrematchMarketsV2` (`src/temporal/v2/prematch/prematch-markets.ts`)
+   runs v1's one-of-two Bucks decision behind the V2 effect fence, with a
+   `prematch-markets` receipt. A standard Classic lobby gets the participation
+   point (`awardClassicPrematchForGame`, once per match and guild by its
+   `BucksMatchEarning` marker). Any other bettable game gets one pool per
+   Bucks-enabled guild it is announced in (`openBettingPoolsStrict`, once per
+   match and guild by `BucksMatchPool`'s unique key). A failure is retried,
+   stays visible in the history, and the game is still announced without a
+   market.
+2. One `scoutNotificationV2Workflow` child per drivable prematch intent, with
+   the post-match path's reuse policy. The plan leaves out delivered and
+   `unknown-delivery` intents and any unsent intent past its freshness
+   deadline.
+3. Each child builds its message with its guild's buttons when that guild
+   holds an open pool. After delivery, `afterNotificationDeliveredV2` runs
+   `prematch-follow-up.ts`: it appends the message to the pool's refs with a
+   compare-and-set, refreshes the pool's messages, enqueues the parlay once
+   per match and counts the guild's core output. A failed ref write is
+   retried, because the ref is the settlement announcement's only destination.
+
+V2 does not decorate prematch messages with feature tips, and it decides the
+Clash chrome once from the tracked players rather than per guild.
 
 The ramp procedure:
 
-1. Confirm that something delivers V2 prematch intents in the stage: the
-   SJ-205 start loop, or a scheduled `scoutPipelineReconciliationV2Workflow`.
+1. Confirm the running Scout worker image includes the
+   `scout-v2-prematch-delivery` patch.
 2. Switch `scout_v2_prematch_ownership_enabled` on for `beta` in Flipt. It
    takes effect on the next 30-second pass. Commit a matching `beta`
    `default: true` override in `managed-flag-inventory.json`, or the inventory
@@ -660,7 +679,7 @@ load-bearing for anyone extending it.
 ### An intent says what it announces and where it came from
 
 Every intent carries a `kind` (`postmatch` | `prematch` | `settlement` |
-`dare-summary`) and an `origin`
+`dare-summary` | `hall-record-break`) and an `origin`
 (`live`, or `recovery` naming the batch that minted it). Both are fixed at
 mint, mirrored into columns, and versioned in the payload envelope
 (`notificationIntentCodec` version 2; a version-1 payload derives its kind from
@@ -669,10 +688,11 @@ prefix). The kind selects the renderer and the message builder: a `prematch`
 intent is rendered from the archived spectator snapshot and delivered as v1's
 game-start message, and nothing on that arm reads a MatchV5 payload — so a
 prematch intent re-driven after its game ended can never deliver a post-match
-report. The V2 prematch send carries no Bryan Bucks markets or buttons; v1
-opens pools during its send and records message references afterwards, and
-buttons on a message nothing recorded would be a market the bot could not
-later close. That is an explicit gap, not a silent one.
+report. A prematch message carries its guild's Bryan Bucks buttons and
+live-market line exactly when that guild holds an open pool for the match,
+and the post-delivery follow-up records the message on the pool so the close
+sweep and the settlement announcement can find it (see
+[V2 prematch delivery and markets](#v2-prematch-delivery-and-markets)).
 
 ### The announcement kinds carry their message on the intent
 
@@ -693,6 +713,31 @@ one plain send when the reply itself is refused; a delivered Dare result is
 followed by v1's best-effort callout refresh. Both kinds refuse a DM target as
 terminal: v1's private settlement receipts are a separate, budgeted fan-out
 that is not ported, and is an explicit gap.
+
+A `hall-record-break` intent is one guild's Hall of Fame announcement for one
+match, keyed `hall-record-break:<riotMatchId>:<guildId>` — by guild, not
+channel, so a Hall channel change never mints a second one. Its envelope is
+`{guildId, riotMatchId, records}`, the records being exactly the array v1's
+`HallRecordBreakOutbox` stores, and the arm
+(`notification/hall-record-break-notification.ts`) sends v1's own
+`hallBreakEmbed` for them. An envelope whose every record id was since
+retired, or that does not parse, is terminal `content-unavailable` rather than
+an empty embed. The per-server `hall_of_fame_enabled` policy is re-read before
+delivery by `notification/kind-policy.ts`, in `markNotificationReadyV2` and
+again in `beginNotificationSendV2` (after the recovery gate, before the
+audience check): a guild that turned the Hall off gets the intent suppressed
+`feature-disabled` through the domain's `suppress`, and no attempt is minted.
+The delivery Activity checks the flag again immediately before the Discord
+request. If it changed after the attempt began, the Activity confirms that no
+request left and `confirmUnsentSuppression` records the same terminal reason
+against that attempt's nonce. Channel lookup stays with audience retirement
+before the attempt; the delivery Activity also verifies that Discord resolved
+the target in the envelope's guild and parks a mismatch as terminal
+`content-unavailable` without sending.
+The delivery counter increments only when the durable `delivered` transition
+applies, so retrying its Activity does not count a second send. The best-effort
+post-delivery follow-up captures `hall_record_broken` with a stable event ID
+derived from the intent key, so retrying that Activity keeps one event identity.
 
 ### Delivery sends exactly what the render attested, and establishes nothing
 
@@ -839,6 +884,70 @@ A v1 stale-path adoption that later proves a send for an intent the sweep
 already expired records `conflict` on `intent-delivered`, which is the adoption
 path's existing rule that a terminal state contradicting a proven send is worth
 seeing rather than overwriting.
+
+### Intents whose audience was deleted are retired, not re-targeted
+
+An intent names one audience, and when that audience is deleted before
+delivery the intent is retired into `suppressed` with a
+`NotificationRetirementReason` — `subscription-deleted`, `channel-deleted` or
+`guild-left` — through the domain's `retireOrphaned`. It is never re-targeted:
+nothing re-derives a channel or subscription for it. `retireOrphaned` moves
+only `pending` and `ready`; `sending` and `unknown-delivery` conflict, so a
+retirement always loses to a send in flight.
+
+The send path discovers it. `beginNotificationSendV2`, for an unattempted
+intent and before any nonce is minted, asks Discord for the target channel
+(Unknown Channel is `channel-deleted`; a channel whose guild Scout is confirmed
+not to be in is `guild-left`) and then, for the subscription-backed kinds
+(`postmatch`, `prematch`), whether any subscription in the channel still
+follows a tracked account in the match — or, before the match has tracked
+accounts, any subscription at all (`subscription-deleted`). An unreachable or
+refusing Discord is no evidence, and the send goes ahead. A guild removal
+usually arrives as `subscription-deleted`, because the removal cleanup deletes
+the guild's subscriptions and Discord then refuses the channel read. The
+retired intent answers the Workflow with its `suppressed` state, which it
+already treats as the end of the run, so no Workflow command changed.
+
+The `notification-intent-expiry` job also retires, from the database alone,
+the fresh `pending`/`ready` subscription-backed intents whose subscriptions are
+gone (`durable/match/intent-retirement.ts`), after expiry and at the same
+instant, so the two never select one row. Both paths count each applied
+retirement on `scout_durable_notification_intents_retired_total{reason,source}`
+and log it; the ready-backlog family reads `state = 'ready'` only, so a retired
+intent leaves it.
+
+### Hall record breaks move to intents per server
+
+`evaluateHallMatch` announces a guild's record breaks inside its own Hall
+transaction through `announceHallRecordBreak`
+(`src/progression/hall/break-announcement.ts`), on exactly one path per
+(guild, match). The first path to record the announcement keeps it:
+
+- an existing `HallRecordBreakOutbox` row keeps v1's upsert, whatever the flag
+  says;
+- an existing `hall-record-break` intent is left as it is, and no outbox row
+  is written beside it, whatever the flag says; a standing intent whose
+  records differ from this evaluation's throws instead of choosing;
+- with neither, `scout_v2_progression_notifications_enabled` (Flipt, per
+  `server`, off by default in every environment) decides: on mints a
+  `pending` intent with a freshness deadline of creation plus 24 hours, off
+  writes the outbox row.
+
+V2 uses the committed observation to suppress a `silent-backfill` match and
+throws if that observation is absent. Legacy v1 uses its discovery-time silent
+decision, so its fail-open observation dual-write cannot stall progression. If
+that write is absent while the V2 flag is on, the announcement stays on v1's
+outbox; an intent without an observation could not enter V2 fan-out. The
+records are still updated for silent matches. This also stops v1's outbox from
+queueing record breaks for backfilled history.
+
+Progression runs before the V2 match core's post-commit fan-out, and
+`planMatchFanOutV2` starts a notification child for every drivable non-prematch
+intent of the match, so a minted hall intent is driven by the same run with no
+extra wiring. An intent minted while v1 owns post-match discovery has no such
+fan-out and stays `pending` until a `scoutPipelineReconciliationV2Workflow`
+run drives it, so ramp the flag only where V2 owns post-match discovery. To ramp a server, add its rollout in Flipt
+and record the same targeting in `managed-flag-inventory.json`.
 
 ## Beta Customs operations
 

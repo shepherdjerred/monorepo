@@ -28,6 +28,43 @@ export function grafanaExploreUrl(input: {
   return `${GRAFANA_URL}/explore?schemaVersion=1&orgId=1&panes=${encodeURIComponent(JSON.stringify(panes))}`;
 }
 
+/** A Grafana Explore deep link for one TraceQL search. */
+function tempoExploreUrl(traceql: string, from = "now-1h"): string {
+  const panes = {
+    ops: {
+      datasource: "tempo",
+      queries: [
+        {
+          refId: "A",
+          datasource: { type: "tempo", uid: "tempo" },
+          queryType: "traceql",
+          query: traceql,
+        },
+      ],
+      range: { from, to: "now" },
+    },
+  };
+  return `${GRAFANA_URL}/explore?schemaVersion=1&orgId=1&panes=${encodeURIComponent(JSON.stringify(panes))}`;
+}
+
+/**
+ * Traces of one root service in Grafana Explore, narrowed by an extra TraceQL
+ * condition such as `status = error` or `duration > 5s`.
+ */
+export function tracesLink(
+  serviceName: string,
+  condition: string,
+  label: string,
+): Link {
+  return {
+    kind: "traces",
+    label,
+    url: tempoExploreUrl(
+      `{ resource.service.name = ${JSON.stringify(serviceName)} && ${condition} }`,
+    ),
+  };
+}
+
 /** Recent logs of one namespace (optionally one pod) in Grafana Explore. */
 export function logsLink(namespace: string, pod?: string): Link {
   const selector =

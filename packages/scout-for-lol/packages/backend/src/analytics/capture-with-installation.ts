@@ -5,6 +5,7 @@ import {
   getProductAnalytics,
   type ProductAnalytics,
   type ProductAnalyticsEvent,
+  type ProductAnalyticsEventOptions,
 } from "#src/analytics/product-analytics.ts";
 import { findAnalyticsGuildInstallation } from "#src/analytics/guild-installation.ts";
 
@@ -18,7 +19,12 @@ const logger = createLogger("guild-installation-analytics");
  * names the event in the skip/failure logs.
  */
 export async function captureWithGuildInstallation(
-  input: { guildId: string; what: string; event: ProductAnalyticsEvent },
+  input: {
+    guildId: string;
+    what: string;
+    event: ProductAnalyticsEvent;
+    eventOptions?: ProductAnalyticsEventOptions;
+  },
   options?: {
     db?: ExtendedPrismaClient;
     analytics?: ProductAnalytics;
@@ -34,7 +40,7 @@ export async function captureWithGuildInstallation(
       );
       return;
     }
-    analytics.capture(install, input.event);
+    analytics.capture(install, input.event, input.eventOptions);
   } catch (error) {
     logger.error(
       `Failed to capture ${input.what} analytics`,

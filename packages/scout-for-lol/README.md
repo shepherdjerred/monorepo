@@ -150,9 +150,9 @@ packages/
   unused-code (knip) and duplication (jscpd baseline ratchet) gates run at the
   monorepo root (`bun run knip`, `bun run jscpd`)
 - Type-safe with strict TypeScript; linting via ESLint + Prettier
-- CI runs on Buildkite for every PR and on merge to main (verification,
-  Playwright e2e, image build + smoke); lefthook git hooks run staged-file
-  checks locally
+- CI runs on Woodpecker for PRs and merges to main (verification, selected
+  image builds, and release lanes); lefthook git hooks run staged-file checks
+  locally
 
 **Environment:**
 The bot requires API tokens for Discord and Riot Games. In test mode (`NODE_ENV=test`), placeholder values are used automatically—no real tokens needed for development.

@@ -3,6 +3,7 @@
 import path from "node:path";
 import { z } from "zod";
 import { TestManifestSchema, type TestStep } from "../ci/ci-reporting.ts";
+import { unrunTestFiles } from "../ci/test-manifest-coverage.ts";
 
 const repositoryRoot = path.resolve(import.meta.dir, "..", "..");
 const sourceExtensions = /\.[cm]?[jt]sx?$/u;
@@ -142,7 +143,7 @@ async function main(): Promise<void> {
     if (file.startsWith("sandbox/")) continue;
     const active =
       file.startsWith("scripts/") ||
-      file.startsWith(".buildkite/") ||
+      file.startsWith("ci/") ||
       [...activeRoots].some((root) => file.startsWith(`${root}/`));
     if (!active) continue;
     const violation = sourceViolation(file, await Bun.file(file).text());
@@ -165,13 +166,22 @@ async function main(): Promise<void> {
       ...manifestStepViolations(workspace.package, workspace.steps),
     );
   }
+  const existingFiles: string[] = [];
+  for (const file of trackedFiles) {
+    if (await Bun.file(file).exists()) existingFiles.push(file);
+  }
+  violations.push(
+    ...unrunTestFiles(manifest, existingFiles, rootManifest.workspaces),
+  );
 
   if (violations.length > 0) {
     throw new Error(
       `Test standardization violations:\n${violations.join("\n")}`,
     );
   }
-  console.log("Vitest and Playwright Bun runtime standards passed.");
+  console.log(
+    "Vitest and Playwright Bun runtime standards passed; the CI manifest runs every test file.",
+  );
 }
 
 if (import.meta.main) await main();

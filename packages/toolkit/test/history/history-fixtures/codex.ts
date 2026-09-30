@@ -222,6 +222,17 @@ export async function writeCodexRolloutFormatFixtures(
       payload: { turn_id: "turn-1", model: "gpt-5.6-terra" },
     },
     {
+      // Rate-limit-only update: Codex emits token_count with `info: null`.
+      timestamp: "2026-08-11T00:00:01.500Z",
+      ordinal: 1,
+      type: "event_msg",
+      payload: {
+        type: "token_count",
+        info: null,
+        rate_limits: { primary: { used_percent: 12, window_minutes: 300 } },
+      },
+    },
+    {
       timestamp: "2026-08-11T00:00:02.000Z",
       ordinal: 2,
       type: "event_msg",

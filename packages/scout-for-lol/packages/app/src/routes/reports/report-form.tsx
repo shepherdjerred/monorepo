@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useSelector } from "@tanstack/react-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -6,9 +6,19 @@ import { ReportIdSchema } from "@scout-for-lol/data";
 import { useTRPC } from "#src/lib/query/trpc.ts";
 import { analyticsMeta } from "#src/lib/analytics.ts";
 import { Button } from "@scout-for-lol/design-system/components/button";
+import { channelAvailabilityForQuery } from "#src/components/channel-select-support.tsx";
+import {
+  editRecordNeedsLoad,
+  EditRecordQueryState,
+  EditRecordRefreshWarning,
+  invalidEditRecordRoute,
+  recordFormTitle,
+  recordSubmitLabel,
+} from "#src/components/edit-record-query-state.tsx";
 import { ReportQueryPreview } from "#src/components/report/report-query-preview.tsx";
 import {
   buildReportPayload,
+  EMPTY_REPORT_STATE,
   reportFormOptions,
   ReportFormFields,
 } from "#src/components/report/report-form-fields.tsx";
@@ -35,6 +45,12 @@ function previewTitle(title: string): string {
   return title === "" ? "Preview" : title;
 }
 
+function ReportCreateTools(props: { show: boolean; children: ReactNode }) {
+  return props.show ? (
+    <div className="grid gap-4 lg:grid-cols-2">{props.children}</div>
+  ) : null;
+}
+
 export function ReportForm() {
   const { guildId, reportId: idParam } = useParams();
   const trpc = useTRPC();
@@ -48,7 +64,7 @@ export function ReportForm() {
   const reportId =
     idResult?.success === true ? idResult.data : ReportIdSchema.parse(1);
 
-  const [prefilled, setPrefilled] = useState(false);
+  const [hydratedReportId, setHydratedReportId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const formElement = useRef<HTMLFormElement>(null);
   const allowNavigation = useRef(false);
@@ -67,6 +83,20 @@ export function ReportForm() {
   );
 
   const existing = existingQuery.data?.report;
+  const formDefaults = useMemo(
+    () =>
+      existing === undefined
+        ? EMPTY_REPORT_STATE
+        : {
+            title: existing.title,
+            description: existing.description ?? "",
+            channelId: existing.channelId,
+            queryText: existing.queryText,
+            cronExpression: existing.cronExpression,
+            scheduleTimezone: existing.scheduleTimezone,
+          },
+    [existing],
+  );
 
   const createMutation = useMutation(
     trpc.report.create.mutationOptions({
@@ -104,6 +134,7 @@ export function ReportForm() {
 
   const form = useScoutForm({
     ...reportFormOptions,
+    defaultValues: formDefaults,
     validationLogic: submitThenChangeValidation,
     validators: { onDynamic: ReportFormValueSchema },
     onSubmit: ({ value }) => {
@@ -134,117 +165,145 @@ export function ReportForm() {
   const state = useSelector(form.store, (store) => store.values);
   const isDirty = useSelector(form.store, (store) => store.isDirty);
   const pending = createMutation.isPending || updateMutation.isPending;
+  const channelAvailability = channelAvailabilityForQuery(channelsQuery);
+  const canSubmit =
+    channelsQuery.data?.some((channel) => channel.id === state.channelId) ===
+    true;
   const blocker = useUnsavedForm(isDirty && !allowNavigation.current, pending);
 
   useEffect(() => {
-    if (existing === undefined || prefilled) return;
-    form.reset({
-      title: existing.title,
-      description: existing.description ?? "",
-      channelId: existing.channelId,
-      queryText: existing.queryText,
-      cronExpression: existing.cronExpression,
-      scheduleTimezone: existing.scheduleTimezone,
-    });
-    setPrefilled(true);
-  }, [existing, form, prefilled]);
+    if (existing?.id !== reportId) return;
+    setHydratedReportId(reportId);
+  }, [existing, reportId]);
 
-  if (guildId === undefined || (isEdit && !idResult.success)) {
-    return <p className="text-sm text-scout-danger">Invalid report route.</p>;
-  }
+  const invalidRoute = invalidEditRecordRoute(
+    guildId,
+    isEdit,
+    idResult?.success === true,
+  );
+  const isEditWaitingForData = editRecordNeedsLoad(
+    isEdit,
+    existing?.id,
+    reportId,
+    hydratedReportId,
+  );
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold tracking-tight">
-          {isEdit ? "Edit report" : "New report"}
-        </h2>
-        <Button asChild variant="outline" size="sm">
-          <Link to={`/g/${guildId}/reports`}>Back</Link>
-        </Button>
-      </div>
-
-      {!isEdit && (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <ReportCommonPresets
-            onUsePreset={(preset) => {
-              form.setFieldValue("title", preset.title);
-              form.setFieldValue("description", preset.description);
-              form.setFieldValue("queryText", preset.query);
-            }}
-          />
-          <ReportAiEditor
-            guildId={guildId}
-            state={state}
-            onApplyDraft={(draft) => {
-              form.setFieldValue("title", draft.title);
-              form.setFieldValue("description", draft.description);
-              form.setFieldValue("queryText", draft.queryText);
-            }}
-          />
-        </div>
-      )}
-
-      <form.AppForm>
-        <form
-          ref={formElement}
-          onSubmit={(event) => {
-            handleFormSubmit(event, () => form.handleSubmit());
+    <form.AppForm>
+      {invalidRoute ? (
+        <p className="text-sm text-scout-danger">Invalid report route.</p>
+      ) : isEditWaitingForData ? (
+        <EditRecordQueryState
+          recordName="report"
+          listHref={`/g/${safeGuildId}/reports`}
+          error={existingQuery.error}
+          onRetry={() => {
+            void existingQuery.refetch();
           }}
-          onReset={(event) => {
-            handleFormReset(event, () => {
-              form.reset();
-            });
-          }}
-          aria-busy={pending}
-          className="grid gap-6 lg:grid-cols-2"
-        >
-          <div className="space-y-4">
-            <fieldset disabled={pending} className="m-0 border-0 p-0">
-              <ReportFormFields
-                form={form}
-                channels={channelsQuery.data}
-                queryHelpHref={`/g/${guildId}/reports/help`}
-              />
-            </fieldset>
-
-            <ServerFormError error={error} />
-            <FormPendingStatus pending={pending}>
-              Saving report…
-            </FormPendingStatus>
-
-            <FormActions>
-              <Button asChild variant="outline" type="button">
-                <Link to={`/g/${guildId}/reports`}>Cancel</Link>
-              </Button>
-              <Button type="reset" variant="ghost" disabled={pending}>
-                Reset
-              </Button>
-              <Button type="submit" disabled={pending}>
-                {pending ? "Saving…" : isEdit ? "Save changes" : "Create"}
-              </Button>
-            </FormActions>
+        />
+      ) : (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold tracking-tight">
+              {recordFormTitle("report", isEdit)}
+            </h2>
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/g/${safeGuildId}/reports`}>Back</Link>
+            </Button>
           </div>
 
-          <ReportQueryPreview
-            guildId={guildId}
-            queryText={state.queryText}
-            title={previewTitle(state.title)}
-            sourceCompetitionId={existing?.sourceCompetitionId ?? null}
+          <EditRecordRefreshWarning
+            recordName="report"
+            error={existingQuery.error}
+            hasSavedRecord={existing !== undefined}
+            onRetry={() => {
+              void existingQuery.refetch();
+            }}
           />
-        </form>
-      </form.AppForm>
-      <ReportDataExplorer
-        guildId={guildId}
-        onInsertIdentifier={(identifier) => {
-          form.setFieldValue("queryText", (current) =>
-            current.trim().length === 0
-              ? identifier
-              : `${current} ${identifier}`,
-          );
-        }}
-      />
-      <UnsavedFormDialog blocker={blocker} />
-    </div>
+
+          <ReportCreateTools show={idParam === undefined}>
+            <ReportCommonPresets
+              onUsePreset={(preset) => {
+                form.setFieldValue("title", preset.title);
+                form.setFieldValue("description", preset.description);
+                form.setFieldValue("queryText", preset.query);
+              }}
+            />
+            <ReportAiEditor
+              guildId={safeGuildId}
+              state={state}
+              onApplyDraft={(draft) => {
+                form.setFieldValue("title", draft.title);
+                form.setFieldValue("description", draft.description);
+                form.setFieldValue("queryText", draft.queryText);
+              }}
+            />
+          </ReportCreateTools>
+
+          <form
+            ref={formElement}
+            onSubmit={(event) => {
+              handleFormSubmit(event, () => form.handleSubmit());
+            }}
+            onReset={(event) => {
+              handleFormReset(event, () => {
+                form.reset();
+              });
+            }}
+            aria-busy={pending}
+            className="grid gap-6 lg:grid-cols-2"
+          >
+            <div className="space-y-4">
+              <fieldset disabled={pending} className="m-0 border-0 p-0">
+                <ReportFormFields
+                  form={form}
+                  channels={channelsQuery.data}
+                  channelAvailability={channelAvailability}
+                  onRetryChannels={() => {
+                    void channelsQuery.refetch();
+                  }}
+                  queryHelpHref={`/g/${safeGuildId}/reports/help`}
+                />
+              </fieldset>
+
+              <ServerFormError error={error} />
+              <FormPendingStatus pending={pending}>
+                Saving report…
+              </FormPendingStatus>
+
+              <FormActions>
+                <Button asChild variant="outline" type="button">
+                  <Link to={`/g/${safeGuildId}/reports`}>Cancel</Link>
+                </Button>
+                <Button type="reset" variant="ghost" disabled={pending}>
+                  Reset
+                </Button>
+                <Button type="submit" disabled={pending || !canSubmit}>
+                  {recordSubmitLabel(pending, isEdit)}
+                </Button>
+              </FormActions>
+            </div>
+
+            <ReportQueryPreview
+              guildId={safeGuildId}
+              queryText={state.queryText}
+              title={previewTitle(state.title)}
+              sourceCompetitionId={existing?.sourceCompetitionId ?? null}
+            />
+          </form>
+          <ReportDataExplorer
+            guildId={safeGuildId}
+            onInsertIdentifier={(identifier) => {
+              form.setFieldValue("queryText", (current) =>
+                current.trim().length === 0
+                  ? identifier
+                  : `${current} ${identifier}`,
+              );
+            }}
+          />
+          <UnsavedFormDialog blocker={blocker} />
+        </div>
+      )}
+    </form.AppForm>
   );
 }

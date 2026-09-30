@@ -50,6 +50,8 @@ hold only scoped invariants that agents must keep in context.
 | [cooklang-rich-preview](cooklang-rich-preview/) | Marketing site for the Cooklang Rich Preview Obsidian plugin |
 | [glitter](glitter/)                             | Glitter Boys friend-group site                               |
 | [macos-cross-site](macos-cross-site/)           | Marketing site for the macos-cross-compiler Docker image     |
+| [ts-mc](ts-mc/)                                 | The Storm Minecraft server portal (Astro)                    |
+| [ts-mc-docs](ts-mc-docs/)                       | The Storm player documentation (Starlight)                   |
 
 ## Libraries
 
@@ -74,6 +76,7 @@ hold only scoped invariants that agents must keep in context.
 | ----------------------------------------------- | ------------------------------------------------------------ |
 | [better-skill-capped](better-skill-capped/)     | Web client rebuilding Skill Capped's catalog UI              |
 | [cooklang-for-obsidian](cooklang-for-obsidian/) | Obsidian plugin rendering `.cook` recipes with rich previews |
+| [the-storm](the-storm/)                         | Paper plugin for The Storm (ts-mc.net) Minecraft server      |
 
 ## Infrastructure & tooling
 

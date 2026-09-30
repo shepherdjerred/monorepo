@@ -99,6 +99,25 @@ const wikiCsp = [
   "frame-ancestors 'none'",
 ].join("; ");
 
+/**
+ * CSP for the Storm docs site. Same shape as `wikiCsp`: Starlight's Pagefind
+ * search loads a same-origin WASM module in a web worker, and the only
+ * third party is PostHog through the managed proxy host.
+ */
+const tsMcDocsCsp = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://j.sjer.red",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://j.sjer.red",
+  "worker-src 'self' blob:",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
 const scoutDocsProbes = [
   {
     endpoint: "scoutql-sources",
@@ -225,6 +244,18 @@ export const staticSites: StaticSiteConfig[] = [
   // window where the old CNAME reaches a tunnel with no route.
   { hostname: "clauderon.com", bucket: "clauderon" },
   { hostname: "ts-mc.net", bucket: "ts-mc" },
+  {
+    hostname: "docs.ts-mc.net",
+    bucket: "ts-mc-docs",
+    probes: [
+      {
+        endpoint: "sitemap",
+        path: "/sitemap-index.xml",
+        module: "http_2xx",
+      },
+    ],
+    responseHeaders: { "Content-Security-Policy": tsMcDocsCsp },
+  },
   { hostname: "ppl.glitter-boys.com", bucket: "glitter-boys-ppl" },
   { hostname: "cook.sjer.red", bucket: "cook" },
   { hostname: "macos-cross.sjer.red", bucket: "macos-cross" },

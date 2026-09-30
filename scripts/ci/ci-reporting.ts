@@ -2,7 +2,9 @@ import XMLBuilder from "fast-xml-builder";
 import { XMLParser } from "fast-xml-parser";
 import { SyntaxValidator } from "fast-xml-validator";
 import path from "node:path";
+import { minimatch } from "minimatch";
 import { z } from "zod";
+import { vitestSelection } from "./test-manifest-coverage.ts";
 
 const StepSchema = z.discriminatedUnion("runner", [
   z
@@ -35,6 +37,13 @@ const StepSchema = z.discriminatedUnion("runner", [
       name: z.string().min(1).optional(),
       args: z.array(z.string()).min(1),
       coverageConfig: z.string().min(1).optional(),
+    })
+    .strict(),
+  z
+    .object({
+      runner: z.literal("gradle"),
+      name: z.string().min(1).optional(),
+      args: z.array(z.string()).min(1),
     })
     .strict(),
   z
@@ -176,6 +185,7 @@ export function coverageArtifactFilename(step: TestStep): string | undefined {
         ? undefined
         : "coverage.cobertura.xml";
     case "cargo":
+    case "gradle":
     case "command":
       return undefined;
   }
@@ -207,10 +217,19 @@ function stepTargetPaths(step: TestStep): readonly string[] {
     case "go":
     case "cargo":
     case "dotnet":
+    case "gradle":
       return step.args;
     case "command":
       return step.command;
   }
+}
+
+function pathsOverlap(left: string, right: string): boolean {
+  return (
+    left === right ||
+    left.startsWith(`${right}/`) ||
+    right.startsWith(`${left}/`)
+  );
 }
 
 // Assert that every suite a workspace lists as deliberately excluded from full
@@ -222,16 +241,39 @@ export function assertExcludedSuitesAreUncovered(manifest: TestManifest): void {
     if (workspace.excludedSuites === undefined) {
       continue;
     }
-    const targetPaths = workspace.steps.flatMap((step) => [
-      ...stepTargetPaths(step),
-    ]);
     for (const excluded of workspace.excludedSuites) {
-      const runByStep = targetPaths.some(
-        (target) =>
-          target === excluded.path ||
-          target.startsWith(`${excluded.path}/`) ||
-          excluded.path.startsWith(`${target}/`),
-      );
+      const runByStep = workspace.steps.some((step) => {
+        if (step.runner !== "vitest") {
+          return stepTargetPaths(step).some(
+            (target) =>
+              target === excluded.path ||
+              target.startsWith(`${excluded.path}/`) ||
+              excluded.path.startsWith(`${target}/`),
+          );
+        }
+
+        const { filters, excludes, directories } = vitestSelection(step);
+        const selectedByDirectory =
+          directories.length === 0 ||
+          directories.some((directory) =>
+            pathsOverlap(directory, excluded.path),
+          );
+        const selectedByFilter =
+          filters.length === 0 ||
+          filters.some(
+            (filter) =>
+              pathsOverlap(filter, excluded.path) ||
+              filter.includes(excluded.path) ||
+              excluded.path.includes(filter),
+          );
+        const excludedByOption = excludes.some(
+          (pattern) =>
+            pattern === excluded.path ||
+            pattern.startsWith(`${excluded.path}/`) ||
+            minimatch(excluded.path, pattern),
+        );
+        return selectedByDirectory && selectedByFilter && !excludedByOption;
+      });
       if (runByStep) {
         throw new Error(
           `${workspace.package} lists ${excluded.path} as an excluded suite but a reporting step already runs it`,

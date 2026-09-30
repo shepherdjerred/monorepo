@@ -23,6 +23,10 @@ import { match } from "ts-pattern";
 import { ZfsNvmeVolume } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/zfs-nvme-volume.ts";
 import { llmArchiveEnvVars } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-archive-env.ts";
 import {
+  addAnthropicFederation,
+  geminiApiKeyEnv,
+} from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
+import {
   applyZfsVolumeSelinuxRelabeling,
   zfsVolumeSelinuxLevels,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/selinux.ts";
@@ -334,14 +338,24 @@ export function createScoutDeployment(
     ),
     LLM_HOURLY_TOKEN_BUDGET: EnvValue.fromValue("2000000"),
     LLM_DAILY_TOKEN_BUDGET: EnvValue.fromValue("20000000"),
-    OPENROUTER_API_KEY: EnvValue.fromSecretValue({
+    // Text inference from this stage's own OpenAI project. Voice has separate
+    // names (VOICE_OPENAI_API_KEY*) and a separate project, so the two cannot
+    // shadow each other.
+    OPENAI_API_KEY: EnvValue.fromSecretValue({
       secret: Secret.fromSecretName(
         chart,
-        "openrouter-api-key-secret",
+        "openai-api-key-secret",
         onePasswordItem.name,
       ),
-      key: "OPENROUTER_API_KEY",
+      key: "OPENAI_API_KEY",
     }),
+    // Gemini image generation runs only on beta; production has no Gemini
+    // project and must not carry a key it never uses.
+    ...(stage === "beta"
+      ? {
+          GEMINI_API_KEY: geminiApiKeyEnv(chart, "scout-beta"),
+        }
+      : {}),
   };
 
   // Beta keeps its operator-managed Explore preview allowlist. Production
@@ -377,7 +391,7 @@ export function createScoutDeployment(
   const voiceEnvVariables: Record<string, EnvValue> =
     stage === "beta"
       ? {
-          OPENAI_API_KEY_FILE: EnvValue.fromValue(
+          VOICE_OPENAI_API_KEY_FILE: EnvValue.fromValue(
             "/run/secrets/scout-openai/OPENAI_API_KEY",
           ),
           VOICE_ASSETS_DIR: EnvValue.fromValue("/opt/scout/voice"),
@@ -429,6 +443,7 @@ export function createScoutDeployment(
 
   applyZfsVolumeSelinuxRelabeling(deployment, selinuxLevel);
 
+  addAnthropicFederation(deployment, { workload: `scout-${stage}` });
   setRevisionHistoryLimit(deployment);
 
   // Create Service to expose metrics port

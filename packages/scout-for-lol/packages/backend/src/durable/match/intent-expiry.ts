@@ -7,6 +7,10 @@ import {
   listOverdueIntentKeys,
   transitionIntent,
 } from "#src/database/durable/intent-repository.ts";
+import {
+  retireOrphanedNotificationIntents,
+  type NotificationIntentRetirementCounts,
+} from "#src/durable/match/intent-retirement.ts";
 import { createLogger } from "#src/logger.ts";
 
 /**
@@ -83,16 +87,35 @@ export async function expireOverdueNotificationIntents(
   return counts;
 }
 
-/** The scheduled entry point: the process database and the wall clock. */
-export async function runNotificationIntentExpiry(): Promise<NotificationIntentExpiryCounts> {
+/**
+ * The scheduled entry point: the process database and the wall clock.
+ *
+ * Expiry first, then retirement, at one instant. Retirement selects only
+ * intents whose deadline has not passed, so running it second means the two
+ * never contend for a row: anything overdue has just been expired, and
+ * everything retirement sees is still sendable if its audience stands.
+ */
+export async function runNotificationIntentExpiry(): Promise<{
+  expiry: NotificationIntentExpiryCounts;
+  retirement: NotificationIntentRetirementCounts;
+}> {
   const { prisma } = await import("#src/database/index.ts");
-  const counts = await expireOverdueNotificationIntents(prisma, {
-    now: new Date(),
+  const now = new Date();
+  const expiry = await expireOverdueNotificationIntents(prisma, {
+    now,
     limit: NOTIFICATION_INTENT_EXPIRY_BATCH,
   });
   logger.info(
-    `Notification intent expiry: expired ${counts.expired.toString()} of ${counts.selected.toString()} overdue intent(s)`,
-    counts,
+    `Notification intent expiry: expired ${expiry.expired.toString()} of ${expiry.selected.toString()} overdue intent(s)`,
+    expiry,
   );
-  return counts;
+  const retirement = await retireOrphanedNotificationIntents(prisma, {
+    now,
+    limit: NOTIFICATION_INTENT_EXPIRY_BATCH,
+  });
+  logger.info(
+    `Notification intent retirement: retired ${retirement.retired.toString()} of ${retirement.selected.toString()} drivable intent(s) whose subscriptions are gone`,
+    retirement,
+  );
+  return { expiry, retirement };
 }

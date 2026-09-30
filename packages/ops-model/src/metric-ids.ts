@@ -40,6 +40,8 @@ export const METRIC_IDS = {
   backupsStale: "maintenance.backups.stale",
 
   logErrors1h: "logs.errors_1h",
+  traceErrors1h: "traces.errors_1h",
+  slowTraces1h: "traces.slow_1h",
 } as const;
 
 export type MetricId = (typeof METRIC_IDS)[keyof typeof METRIC_IDS];

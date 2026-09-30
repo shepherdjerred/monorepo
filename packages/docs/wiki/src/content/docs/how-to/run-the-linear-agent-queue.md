@@ -33,7 +33,7 @@ Create the four team labels once:
 toolkit linear label create --team SJ --name agent:ready --color '#5E6AD2' \
   --description 'Ready for the local coding queue'
 toolkit linear label create --team SJ --name agent:codex --color '#059669' \
-  --description 'Use Codex SDK through OpenRouter'
+  --description 'Use the Codex SDK'
 toolkit linear label create --team SJ --name agent:needs-human --color '#DC2626' \
   --description 'Parked until Jerred requeues it'
 ```
@@ -52,7 +52,7 @@ cp packages/justin-principal-engineer/config.example.json \
 ```
 
 Edit only the `op://` references and any local path that differs. The Linear
-and Buildkite API key references are consumed by `op run` each time launchd
+and Woodpecker token references are consumed by `op run` each time launchd
 invokes the reconciler; the secrets are never written into the plist. Set
 `pinchtab.configPath` to the local PinchTab config path so visual captures can
 reach the configured browser. The example pins

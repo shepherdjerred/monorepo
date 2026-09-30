@@ -267,8 +267,8 @@ final class ModelTests: XCTestCase {
     await waitUntil { await provider.fetchCount == 1 }
 
     model.updatePollingInterval(0.2)
-    try? await Task.sleep(for: .milliseconds(100))
     model.stopPolling()
+    await waitUntil { model.overallStatus == .healthy }
 
     XCTAssertEqual(model.overallStatus, .healthy)
     let fetchCount = await provider.fetchCount

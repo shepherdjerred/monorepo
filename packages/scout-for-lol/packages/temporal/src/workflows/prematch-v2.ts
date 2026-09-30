@@ -1,8 +1,9 @@
-import { startChild } from "@temporalio/workflow";
+import { isCancellation, log, patched, startChild } from "@temporalio/workflow";
 import {
   ApplicationFailure,
   WorkflowExecutionAlreadyStartedError,
 } from "@temporalio/common";
+import type { RiotMatchId } from "@scout-for-lol/domain/identity/brands.ts";
 import type { ScoutStage } from "#src/contracts.ts";
 import type { ScoutPrematchGameRef } from "#src/contracts-v2.ts";
 import {
@@ -22,6 +23,7 @@ import {
 import { setWorkflowPhase } from "#src/workflow-ui-interceptor.ts";
 import { realtimeV2Activities } from "./activity-options.ts";
 import { planMatchFanOutChildrenV2 } from "./match-fan-out-v2.ts";
+import { startMatchFanOutChildrenV2 } from "./match-v2.ts";
 
 /**
  * Prematch discovery, V2.
@@ -174,20 +176,66 @@ export async function scoutPrematchGameV2Workflow(
   // claim a snapshot exists.
   const observedSomething =
     archive.artifacts.length > 0 || plan.notificationIntentKeys.length > 0;
+
+  // Gated, because both are INSERTED commands. A history recorded before
+  // this change completed straight after `planPrematchFanOutV2`; replaying it
+  // against an unconditional markets Activity or child start would be
+  // nondeterminism. The old branch starts nothing and opens nothing, which is
+  // exactly what that generation did. Retire with `deprecatePatch` once no
+  // execution predating it can still replay.
+  let notifications = 0;
+  if (patched(SCOUT_V2_PREMATCH_DELIVERY_PATCH)) {
+    if (observedSomething) {
+      await openPrematchMarkets(activities, {
+        stage: input.stage,
+        riotMatchId,
+      });
+    }
+    const started = await startMatchFanOutChildrenV2(input.stage, children);
+    notifications = started.notifications;
+  }
   setWorkflowPhase(
-    `**Phase:** planned ${String(children.length)} notification children, started 0`,
+    `**Phase:** planned ${String(children.length)} notification children, started ${String(notifications)}`,
   );
 
   return scoutPrematchGameV2ResultCodec.serialize({
     status: observedSomething ? "completed" : "no-op",
     riotMatchId,
     receiptKinds: archive.artifacts.map((artifact) => artifact.receipt.kind),
-    // Zero by fact, not by allowlist: this workflow plans notification
-    // children and starts none — the prematch start loop is the seam SJ-205
-    // tracks, and the reconciliation sweep drives these intents meanwhile.
-    // Counting startable-but-unstarted children here would claim a durable
-    // effect that never happened, which is the one thing a result envelope
-    // must never do.
-    childrenStarted: { notifications: 0 },
+    // Counted from the starts that took, never from the plan: an ID already
+    // in use means some execution is already driving that intent.
+    childrenStarted: { notifications },
   });
+}
+
+/**
+ * The patch that gives the per-game core its markets and its notification
+ * children. Recorded histories name this id; never rename it.
+ */
+export const SCOUT_V2_PREMATCH_DELIVERY_PATCH = "scout-v2-prematch-delivery";
+
+/**
+ * Open this game's Bryan Bucks markets before any announcement is sent.
+ *
+ * Before, because v1 renders the buttons into the message it sends and the V2
+ * message is built from the pool rows this writes. A failure here does NOT
+ * stop the announcement: it has had its Activity retries, it stays visible in
+ * this history as a failed Activity, and the game is announced without a
+ * market — v1's promise that a betting bug never takes the loading screen
+ * down with it. A cancellation is still the caller's decision.
+ */
+async function openPrematchMarkets(
+  activities: ReturnType<typeof realtimeV2Activities>,
+  ref: { stage: ScoutStage; riotMatchId: RiotMatchId },
+): Promise<void> {
+  setWorkflowPhase("**Phase:** opening the Bryan Bucks markets");
+  try {
+    await activities.openPrematchMarketsV2(ref);
+  } catch (error) {
+    if (isCancellation(error)) throw error;
+    log.error("Prematch markets failed; announcing without a market", {
+      riotMatchId: ref.riotMatchId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 }

@@ -21,5 +21,5 @@ This is the native Windows 11 x64 client over the shared Rust core.
   headroom. Test race-only guards directly.
 - Every parity claim needs a passed UIA, server, persistence, or Markdown
   assertion ID.
-- Do not activate the prepared Buildkite lane until its tracked interactive
+- Do not activate the prepared CI lane until its tracked interactive
   worker requirement is complete.

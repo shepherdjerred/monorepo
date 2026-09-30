@@ -21,11 +21,11 @@ export async function getReportAiEditStatus(params: {
     server: params.guildId,
     user: params.userId,
   });
-  const hasRequiredProviderKey = configuration.openRouterApiKey !== undefined;
+  const hasRequiredProviderKey = configuration.inferenceConfigured;
   const disabledReason = featureEnabled
     ? hasRequiredProviderKey
       ? null
-      : "OPENROUTER_API_KEY is not configured."
+      : "No OpenAI credentials are configured."
     : "AI report editing is not enabled for this server.";
   const quota = getReportAiQuotaStatus(params, Date.now(), { exempt });
 

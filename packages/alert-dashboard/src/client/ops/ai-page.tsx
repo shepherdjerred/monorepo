@@ -2,7 +2,11 @@ import { findMetric, findSection } from "@shepherdjerred/ops-model/assemble.ts";
 import { METRIC_IDS } from "@shepherdjerred/ops-model/metric-ids.ts";
 import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
 import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
-import type { Section, Signal } from "@shepherdjerred/ops-model/snapshot.ts";
+import type {
+  Section,
+  Signal,
+  SnapshotResponse,
+} from "@shepherdjerred/ops-model/snapshot.ts";
 import { Temporal } from "@js-temporal/polyfill";
 import { z } from "zod";
 
@@ -18,7 +22,6 @@ import { SeriesChart } from "#client/charts/series-chart.tsx";
 import { formatInstant } from "#client/time.ts";
 import { useRange } from "#client/charts/use-range.ts";
 import { formatValue } from "#shared/ops-format";
-import type { SnapshotResponse } from "#shared/ops-schema";
 
 /**
  * Attributes the collector attaches to `quota-window` signals. `windowId` is
@@ -144,8 +147,8 @@ function SpendPanel({
       </div>
       <p className="panel-summary">
         Projected month end {formatValue(projected, "usd")}
-        {overBudget ? ", over budget" : ", within budget"}. Cluster-billed LLM
-        spend for the UTC month; subscriptions are fixed.
+        {overBudget ? ", over budget" : ", within budget"}. Cluster LLM spend
+        for the UTC month, priced from the catalog; subscriptions are fixed.
       </p>
     </section>
   );
@@ -213,7 +216,7 @@ function AiBody({
         <SeriesChart preset="ai-tokens-by-tool" range={range} />
         <SeriesChart preset="cluster-llm-cost" range={range} />
         <SeriesChart preset="ai-quota" range={range} />
-        <SeriesChart preset="openai-project-cost" range={range} />
+        <SeriesChart preset="provider-billed-cost" range={range} />
       </div>
     </>
   );

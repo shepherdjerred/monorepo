@@ -10,18 +10,22 @@ export const DIRECT_PROVIDER_CREDENTIAL_KEYS = [
   "GOOGLE_GENERATIVE_AI_API_KEY",
   "GROQ_API_KEY",
   "OPENAI_API_KEY",
-  "OPENROUTER_API_KEY",
   "XAI_API_KEY",
 ] as const;
 
+// Keep the retired gateway key isolated from supported provider configuration,
+// but deny it until post-acceptance revocation reaches worker environments.
+const RETIRED_PROVIDER_CREDENTIAL_KEYS = ["OPENROUTER_API_KEY"] as const;
+
 export const PROVIDER_CREDENTIAL_KEYS = {
   claude: "CLAUDE_CODE_OAUTH_TOKEN",
-  codex: "OPENROUTER_API_KEY",
+  codex: "OPENAI_API_KEY",
 } as const satisfies Record<AgentTaskProvider, string>;
 
 // Every inference credential the worker can hold, direct or subscription.
 export const PROVIDER_CREDENTIAL_ENV_VARS = [
   ...DIRECT_PROVIDER_CREDENTIAL_KEYS,
+  ...RETIRED_PROVIDER_CREDENTIAL_KEYS,
   "CLAUDE_CODE_OAUTH_TOKEN",
 ] as const;
 

@@ -18,11 +18,8 @@
  */
 
 import { run, requireEnv, optionalEnv } from "../lib/run.ts";
-import {
-  s3SyncStaticSite,
-  SEAWEEDFS_ENDPOINT,
-  SEAWEEDFS_AWS_ENV,
-} from "../lib/s3-static-site.ts";
+import { s3SyncStaticSite } from "../lib/s3-static-site.ts";
+import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "../lib/seaweedfs.ts";
 
 // ---------------------------------------------------------------------------
 // Static site deploy catalog (translated verbatim from DEPLOY_SITES)
@@ -198,6 +195,28 @@ const DEPLOY_SITES: readonly DeploySite[] = [
     distDir: "packages/glitter/dist",
     target: "s3",
     immutablePrefixes: [],
+  },
+  {
+    bucket: "ts-mc",
+    name: "ts-mc",
+    url: "https://ts-mc.net",
+    buildDir: "packages/ts-mc",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/ts-mc/dist",
+    target: "s3",
+    // Astro's hashed output dir.
+    immutablePrefixes: ["_astro/"],
+  },
+  {
+    bucket: "ts-mc-docs",
+    name: "ts-mc-docs",
+    url: "https://docs.ts-mc.net",
+    buildDir: "packages/ts-mc-docs",
+    buildCmd: "bun --no-install run astro build",
+    distDir: "packages/ts-mc-docs/dist",
+    target: "s3",
+    // Astro's hashed output dir.
+    immutablePrefixes: ["_astro/"],
   },
 ];
 

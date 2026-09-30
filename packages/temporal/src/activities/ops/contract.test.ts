@@ -17,6 +17,7 @@ import { mapGitHub } from "./github.ts";
 import { mapKubernetes } from "./kubernetes.ts";
 import { mapLinear } from "./linear.ts";
 import { mapLogs } from "./logs.ts";
+import { mapTraces } from "./traces.ts";
 import { mapMaintenance } from "./maintenance.ts";
 import { buildOpsIngest, type OpsCollectorOutcome } from "./ops-publish.ts";
 import type { OpsCollection } from "./ops-types.ts";
@@ -143,8 +144,8 @@ const COLLECTIONS: Record<SourceId, OpsCollection> = {
       latest: undefined,
       verdict: {
         number: 5,
-        state: "failed",
-        url: "https://buildkite.com/sjerred/monorepo/builds/5",
+        status: "failure",
+        url: "https://woodpecker.sjer.red/repos/1/pipeline/5",
         commit: SHA,
         message: "broken",
         createdAt: ago(1),
@@ -250,6 +251,33 @@ const COLLECTIONS: Record<SourceId, OpsCollection> = {
     context,
   ),
   logs: mapLogs([{ namespace: "temporal", lines: 40 }], context),
+  traces: mapTraces(
+    {
+      traces: [
+        {
+          traceId: "t-error",
+          rootServiceName: "birmel",
+          rootTraceName: "job.aggregate-activity",
+          startedAt: new Date(ago(10)),
+          durationMs: 1200,
+        },
+      ],
+      truncated: false,
+    },
+    {
+      traces: [
+        {
+          traceId: "t-slow",
+          rootServiceName: "openrouter",
+          rootTraceName: "LLM Generation",
+          startedAt: new Date(ago(5)),
+          durationMs: 9000,
+        },
+      ],
+      truncated: true,
+    },
+    context,
+  ),
   maintenance: mapMaintenance({
     certificates: [sample(86_400, { namespace: "postal", name: "smtp" })],
     probeCertificates: [sample(5 * 86_400, { instance: "https://sjer.red" })],
@@ -262,8 +290,8 @@ const COLLECTIONS: Record<SourceId, OpsCollection> = {
   }),
   ai: mapAi(
     {
-      billedMtd: [sample(200)],
-      openAiToday: [sample(1.5)],
+      clusterMtd: [sample(200)],
+      billedToday: [sample(1.5)],
       macCostMtd: [sample(12, { source: "codex" })],
       macTokens24h: [sample(1000)],
       clusterTokens24h: [sample(500)],

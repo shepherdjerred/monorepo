@@ -89,9 +89,9 @@ export function createTemporalOperationsWorkers(
         "/var/run/secrets/kubernetes.io/serviceaccount/ca.crt",
       ),
       DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
-      OPENROUTER_API_KEY: EnvValue.fromSecretValue({
+      OPENAI_API_KEY: EnvValue.fromSecretValue({
         secret: props.secret,
-        key: "OPENROUTER_API_KEY",
+        key: "OPENAI_API_KEY",
       }),
       ...llmArchiveEnvVars(),
       ...s3Env(props.secret),
@@ -131,13 +131,13 @@ export function createTemporalOperationsWorkers(
         secret: props.billingSecret,
         key: "OPENAI_ADMIN_KEY",
       }),
-      OPENAI_OPENROUTER_PROJECT_ID: EnvValue.fromSecretValue({
+      // Read-only cost reports for every Anthropic workspace. Alerting on the
+      // result lives in Prometheus, so this worker no longer posts to
+      // Alertmanager itself.
+      ANTHROPIC_ADMIN_API_KEY: EnvValue.fromSecretValue({
         secret: props.billingSecret,
-        key: "OPENAI_OPENROUTER_PROJECT_ID",
+        key: "ANTHROPIC_ADMIN_API_KEY",
       }),
-      ALERTMANAGER_URL: EnvValue.fromValue(
-        "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
-      ),
     },
   });
 
@@ -158,21 +158,25 @@ export function createTemporalOperationsWorkers(
       ...s3Env(props.secret),
       ...githubEnv(props.secret),
       ...llmArchiveEnvVars(),
-      OPENROUTER_API_KEY: EnvValue.fromSecretValue({
+      OPENAI_API_KEY: EnvValue.fromSecretValue({
         secret: props.secret,
-        key: "OPENROUTER_API_KEY",
+        key: "OPENAI_API_KEY",
       }),
       S3_BUCKET_NAME: EnvValue.fromSecretValue({
         secret: props.secret,
         key: "S3_BUCKET_NAME",
       }),
       S3_KEY: EnvValue.fromValue("data/manifest.json"),
-      BUILDKITE_API_TOKEN: EnvValue.fromSecretValue({
+      WOODPECKER_TOKEN: EnvValue.fromSecretValue({
         secret: props.secret,
-        key: "BUILDKITE_API_TOKEN",
+        key: "WOODPECKER_TOKEN",
       }),
-      BUILDKITE_ORGANIZATION_SLUG: EnvValue.fromValue("sjerred"),
-      BUILDKITE_PIPELINE_SLUG: EnvValue.fromValue("monorepo"),
+      WOODPECKER_REPO_ID: EnvValue.fromSecretValue({
+        secret: props.secret,
+        key: "WOODPECKER_REPO_ID",
+      }),
+      // HTTP origin, not the agent gRPC endpoint WOODPECKER_SERVER names.
+      WOODPECKER_URL: EnvValue.fromValue("https://woodpecker.sjer.red"),
       ALERTMANAGER_URL: EnvValue.fromValue(
         "http://prometheus-kube-prometheus-alertmanager.prometheus:9093",
       ),
@@ -221,9 +225,9 @@ export function createTemporalOperationsWorkers(
       ...s3Env(props.secret),
       ...githubEnv(props.secret),
       DISABLE_AUTOUPDATER: EnvValue.fromValue("1"),
-      OPENROUTER_API_KEY: EnvValue.fromSecretValue({
+      OPENAI_API_KEY: EnvValue.fromSecretValue({
         secret: props.secret,
-        key: "OPENROUTER_API_KEY",
+        key: "OPENAI_API_KEY",
       }),
       SCOUT_BRYAN_BUCKS_CONTROL_URL: EnvValue.fromValue(
         "http://scout-service-beta.scout-beta.svc.cluster.local:3000/api/internal/bryan-bucks/analytics-sync",

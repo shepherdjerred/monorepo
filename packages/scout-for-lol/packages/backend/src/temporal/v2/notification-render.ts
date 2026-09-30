@@ -274,6 +274,7 @@ async function renderByKind(
       return await renderPrematchArtifact(riotMatchId, fence);
     case "settlement":
     case "dare-summary":
+    case "hall-record-break":
       return { artifact: "none", riotMatchId, reason: "text-only" };
   }
 }

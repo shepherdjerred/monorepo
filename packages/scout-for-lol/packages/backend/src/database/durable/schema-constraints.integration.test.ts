@@ -1,5 +1,6 @@
 import { afterAll, describe, expect, test } from "vitest";
 import { z } from "zod";
+import { NotificationIntentKindSchema } from "@scout-for-lol/domain/notifications/intent.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 
 /**
@@ -328,6 +329,22 @@ describe("MatchNotificationIntent constraints", () => {
   test("accepts a valid row", async () => {
     await prisma.$executeRawUnsafe(insertSql("MatchNotificationIntent", valid));
   });
+
+  // The kind CHECK mirrors the domain's closed enum in both directions: the
+  // "unknown kind" row below proves it rejects, this proves it admits every
+  // kind the domain can mint, so widening one without the other fails here.
+  test.each(NotificationIntentKindSchema.options)(
+    "accepts the %s kind",
+    async (kind) => {
+      await prisma.$executeRawUnsafe(
+        insertSql("MatchNotificationIntent", {
+          ...valid,
+          intentKey: `'kind-${kind}'`,
+          kind: `'${kind}'`,
+        }),
+      );
+    },
+  );
 
   test.each([
     [

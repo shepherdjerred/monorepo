@@ -1,3 +1,5 @@
+import { onlyInternalImagePinsChanged } from "@shepherdjerred/version-catalog/internal-image-pins";
+
 const turboTasks = [
   "build",
   "typecheck",
@@ -11,6 +13,7 @@ const turboTasks = [
   "check-floating-deps",
   "check-patched-deps",
   "check-ci-env",
+  "check-ci-admission-budget",
   "check-worker-image-pins",
   "check-script-migrations",
   "check-test-standardization",
@@ -35,6 +38,7 @@ const turboTasks = [
   "line-endings-packages",
   "line-endings-root",
   "react-version-sync",
+  "toolchain-version-sync",
   "large-files-scout",
   "large-files-homelab",
   "large-files-packages",
@@ -73,12 +77,15 @@ const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/discord-plays-mario-kart/wasm-src/upstream.json",
   "packages/discord-plays-mario-kart/Dockerfile",
   "packages/homelab/images/redlib/Dockerfile",
-  ".buildkite/ci-playwright/Dockerfile",
+  "ci/ci-playwright/Dockerfile",
   "packages/windows-cross-compiler/",
+  "packages/macos-cross-compiler/",
+  ".mise.toml",
+  "global.json",
   "docker-bake.hcl",
-  ".buildkite/application-image-smoke.Dockerfile",
+  "ci/application-image-smoke.Dockerfile",
   "packages/scout-for-lol/packages/backend/Dockerfile",
-  "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite-bun-cache-gc.sh",
+  "packages/homelab/src/cdk8s/src/resources/woodpecker/bun-cache-gc.sh",
   "packages/homelab/mac-ci/bootstrap.sh",
   "packages/homelab/mac-ci/provision-host.sh",
   "packages/feature-flags/src/managed-flag-inventory.ts",
@@ -88,6 +95,40 @@ const ROOT_SCRIPTS_EXTERNAL_INPUTS = [
   "packages/feature-flags/src/flipt-boolean-rollouts.ts",
   "packages/feature-flags/managed-flag-inventory.json",
 ] as const;
+
+const IMAGE_PIN_STATE_INPUTS = new Set([
+  "packages/version-catalog/src/catalog.json",
+  "scripts/pin-candidates-state.json",
+]);
+
+const CATALOG_PATH = "packages/version-catalog/src/catalog.json";
+
+async function gitFileAt(ref: string, path: string): Promise<unknown> {
+  const child = Bun.spawn(["git", "show", `${ref}:${path}`], {
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "ignore",
+  });
+  const [exitCode, output] = await Promise.all([
+    child.exited,
+    new Response(child.stdout).text(),
+  ]);
+  if (exitCode !== 0) return undefined;
+  try {
+    return JSON.parse(output) as unknown;
+  } catch {
+    return undefined;
+  }
+}
+
+async function onlyInternalImagePinsChangedAtBase(
+  base: string,
+): Promise<boolean> {
+  return onlyInternalImagePinsChanged(
+    await gitFileAt(base, CATALOG_PATH),
+    await gitFileAt("HEAD", CATALOG_PATH),
+  );
+}
 
 async function validateBaseWithGit(
   command: readonly string[],
@@ -123,8 +164,8 @@ async function readChangedFilesWithGit(
 function rootScriptsInputsChanged(changedFiles: readonly string[]): boolean {
   return changedFiles.some(
     (path) =>
-      path === ".buildkite" ||
-      path.startsWith(".buildkite/") ||
+      path === "ci" ||
+      path.startsWith("ci/") ||
       path === "renovate.json" ||
       path === "package.json" ||
       path.endsWith("/package.json") ||
@@ -162,6 +203,22 @@ export async function affectedVerifyFilters(
     );
     return [];
   }
+  if (
+    changedFiles.length > 0 &&
+    changedFiles.every((path) => IMAGE_PIN_STATE_INPUTS.has(path)) &&
+    (await onlyInternalImagePinsChangedAtBase(base))
+  ) {
+    // Only digest values of internal images changed. Check the catalog, its
+    // direct CI and chart consumers, and root invariants; the release lane
+    // renders the resulting charts. Other catalog edits keep the full graph.
+    return [
+      "--filter=//",
+      "--filter=@shepherdjerred/version-catalog",
+      "--filter=@shepherdjerred/root-scripts",
+      "--filter=homelab",
+      "--filter=@homelab/cdk8s",
+    ];
+  }
   // The affected package graph and the root namespace are a union. Root checks
   // remain represented, but Turbo executes only the ones whose declared input
   // hashes changed. Package tasks cover changed workspaces plus reverse
@@ -179,6 +236,10 @@ export async function main(
   const forwardedArgs = process.argv
     .slice(2)
     .filter((argument) => argument !== "--");
+  const hasConcurrencyOverride = forwardedArgs.some(
+    (argument) =>
+      argument === "--concurrency" || argument.startsWith("--concurrency="),
+  );
   const affectedFilters = await affectedVerifyFilters(environment);
   const turbo = Bun.spawn(
     [
@@ -189,6 +250,10 @@ export async function main(
       "run",
       ...turboTasks,
       "--continue",
+      // The CI verify pod has a 12-CPU limit. Several package test tasks each
+      // start their own Vitest workers, so Turbo's default parallelism can
+      // overwhelm the pod before any individual test reaches its timeout.
+      ...(hasConcurrencyOverride ? [] : ["--concurrency=3"]),
       ...affectedFilters,
       ...forwardedArgs,
     ],

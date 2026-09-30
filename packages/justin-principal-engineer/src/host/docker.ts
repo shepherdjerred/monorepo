@@ -24,7 +24,7 @@ export function dockerWorkspaceMounts(checkout: string): string[] {
 async function dockerImage(config: Config): Promise<string> {
   if (config.docker.image !== undefined) return config.docker.image;
   const digestText = await Bun.file(
-    path.join(config.repository.stableCheckout, ".buildkite/ci-image/DIGEST"),
+    path.join(config.repository.stableCheckout, "ci/ci-image/DIGEST"),
   ).text();
   const digest = digestText.trim();
   if (!/^sha256:[0-9a-f]{64}$/.test(digest)) {
@@ -223,9 +223,9 @@ export class DockerAgentRunner {
     );
 
     const credential = {
-      name: "OPENROUTER_API_KEY",
+      name: "OPENAI_API_KEY",
       value: await readOpReference(
-        this.config.agents.codex.openRouterApiKey,
+        this.config.agents.codex.openAiApiKey,
         this.run,
       ),
       model: this.config.agents.codex.model,

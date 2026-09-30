@@ -72,7 +72,7 @@ function maintenanceIngressAllowed(
     const fromMaintenanceWorker = (entry.from ?? []).some((source) => {
       return (
         source.namespaceSelector?.matchLabels["kubernetes.io/metadata.name"] ===
-          "buildkite" &&
+          "woodpecker-ci" &&
         source.podSelector?.matchLabels?.["app"] ===
           "temporal-maintenance-worker"
       );

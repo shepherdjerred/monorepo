@@ -20,6 +20,7 @@ import { createGickupChart } from "./cdk8s-charts/gickup.ts";
 import { createGrafanaDbChart } from "./cdk8s-charts/platform/grafana-db.ts";
 import { createS3StaticSitesChart } from "./cdk8s-charts/s3-static-sites.ts";
 import { createBugsinkChart } from "./cdk8s-charts/platform/bugsink.ts";
+import { createWoodpeckerChart } from "./cdk8s-charts/platform/woodpecker.ts";
 import { createPhoenixChart } from "./cdk8s-charts/platform/phoenix.ts";
 import { createTasknotesChart } from "./cdk8s-charts/tasknotes.ts";
 import { createRelayChart } from "./cdk8s-charts/relay.ts";
@@ -29,7 +30,6 @@ import { createTurboCacheChart } from "./cdk8s-charts/platform/turbo-cache.ts";
 import { createBuildkitdChart } from "./cdk8s-charts/platform/buildkitd.ts";
 import { createAlertDashboardChart } from "./cdk8s-charts/platform/alert-dashboard.ts";
 import { createStashChart } from "./cdk8s-charts/media/stash.ts";
-import { createOpenRouterBroadcastIngestChart } from "./cdk8s-charts/openrouter-broadcast-ingest.ts";
 import { createServiceProbesChart } from "./resources/monitoring/service-probes-chart.ts";
 import { resetProbeRegistry } from "./misc/probes/probe-registry.ts";
 import { applyApplicationReleasePolicy } from "./application-release-policy.ts";
@@ -74,6 +74,7 @@ export async function setupCharts(app: App): Promise<void> {
   await createGickupChart(app);
   createGrafanaDbChart(app);
   createBugsinkChart(app);
+  createWoodpeckerChart(app);
   createPhoenixChart(app);
   createTasknotesChart(app);
   createAlertDashboardChart(app);
@@ -83,7 +84,6 @@ export async function setupCharts(app: App): Promise<void> {
   createTurboCacheChart(app);
   createBuildkitdChart(app);
   createStashChart(app);
-  createOpenRouterBroadcastIngestChart(app);
 
   // Must run last: reads the probe registry populated by every
   // TailscaleIngress/createIngress/createCloudflareTunnelBinding call above.

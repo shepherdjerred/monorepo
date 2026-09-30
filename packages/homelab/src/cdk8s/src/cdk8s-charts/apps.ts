@@ -26,7 +26,7 @@ import { Namespace } from "cdk8s-plus-31";
 import { createStorageClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/storage/storage-classes.ts";
 import { createPriorityClasses } from "@shepherdjerred/homelab/cdk8s/src/misc/priority-classes.ts";
 import { createOpenEBSApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/openebs.ts";
-import { createBuildkiteApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/buildkite.ts";
+import { createWoodpeckerApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker.ts";
 import { createVeleroApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/velero.ts";
 import { createPostgresOperatorApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/platform/postgres-operator.ts";
 import { createSeaweedfsApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/storage/seaweedfs.ts";
@@ -68,9 +68,9 @@ import { createTurboCacheApp } from "@shepherdjerred/homelab/cdk8s/src/resources
 import { createBuildkitdApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/buildkitd.ts";
 import { createAlertDashboardApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/observability/alert-dashboard.ts";
 import { createStashApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/media/stash.ts";
-import { createOpenRouterBroadcastIngestApp } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/apps/openrouter-broadcast-ingest.ts";
 import { createPvcBackupAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/pvc-backup-admission.ts";
 import { createArgoCdApplicationAdmissionPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/argocd-application-admission.ts";
+import { createWoodpeckerCiPodGuard } from "@shepherdjerred/homelab/cdk8s/src/resources/woodpecker/ci-pod-guard.ts";
 
 export async function createAppsChart(app: App) {
   const chart = new Chart(app, "apps", {
@@ -82,6 +82,7 @@ export async function createAppsChart(app: App) {
   createPriorityClasses(chart);
   createArgoCdApplicationAdmissionPolicies(chart);
   createPvcBackupAdmissionPolicies(chart);
+  createWoodpeckerCiPodGuard(chart);
 
   new Namespace(chart, `maintenance-namespace`, {
     metadata: {
@@ -95,6 +96,17 @@ export async function createAppsChart(app: App) {
   new Namespace(chart, "prometheus-namespace", {
     metadata: {
       name: "prometheus",
+      labels: {
+        "pod-security.kubernetes.io/enforce": "privileged",
+      },
+    },
+  });
+
+  // The Tailscale operator creates privileged kernel-mode proxy pods here.
+  // Without an explicit label, the cluster's baseline default rejects new proxies.
+  new Namespace(chart, "tailscale-namespace", {
+    metadata: {
+      name: "tailscale",
       labels: {
         "pod-security.kubernetes.io/enforce": "privileged",
       },
@@ -125,7 +137,7 @@ export async function createAppsChart(app: App) {
   createPyroscopeApp(chart);
   createAlloyApp(chart);
   createAlloyGatewayApp(chart);
-  createBuildkiteApp(chart);
+  createWoodpeckerApp(chart);
   createKueueApp(chart);
   createKueueConfig(chart);
   // Enforces Intel stock package power limits (PL1 125 W / PL2 253 W). ASUS
@@ -182,7 +194,6 @@ export async function createAppsChart(app: App) {
   createBuildkitdApp(chart);
   createAlertDashboardApp(chart);
   createStashApp(chart);
-  createOpenRouterBroadcastIngestApp(chart);
 
   // ArgoCD AppProject
   createProject(chart);

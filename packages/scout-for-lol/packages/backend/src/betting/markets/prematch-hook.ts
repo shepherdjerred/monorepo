@@ -113,20 +113,47 @@ export async function prepareBucksPrematch(
     prismaClient,
   );
 
-  const roster = buildRosterForButtons(input.gameInfo, trackedAliasByPuuid);
-  const rows =
-    bettingGuildIds.size === 0 ? [] : buildBettingRows({ matchId, roster });
-
-  // `closesAt` is deliberately omitted here: `recordPrematchOutputs` refreshes
-  // from the persisted pool within a second of delivery, and that refresh has
-  // the authoritative close time. Recomputing it here would duplicate
-  // `computeClosesAt` on the hot path to save one edit.
-  const anchor = bettingAnchor(roster);
-  const footer = bucksPrematchSummary({
-    poolState: "open",
-    positions: [],
-    framing: anchor === undefined ? undefined : subjectFraming(anchor),
+  const furniture = bucksPrematchFurniture({
+    matchId,
+    gameInfo: input.gameInfo,
+    trackedAliasByPuuid,
   });
+  return {
+    bettingGuildIds,
+    rows: bettingGuildIds.size === 0 ? [] : furniture.rows,
+    footer: furniture.footer,
+    matchId,
+  };
+}
 
-  return { bettingGuildIds, rows, footer, matchId };
+/**
+ * The buttons and the live-market line one open pool puts on its prematch
+ * message.
+ *
+ * A pure function of the game, shared by v1's inline send and the V2 prematch
+ * message builder so the two paths cannot drift in what a bettor sees.
+ *
+ * `closesAt` is deliberately omitted here: the post-delivery refresh rewrites
+ * the line from the persisted pool within seconds of delivery, and that
+ * refresh has the authoritative close time. Recomputing it here would
+ * duplicate `computeClosesAt` on the hot path to save one edit.
+ */
+export function bucksPrematchFurniture(input: {
+  matchId: string;
+  gameInfo: RawCurrentGameInfo;
+  trackedAliasByPuuid: ReadonlyMap<string, string>;
+}): Pick<BucksPrematchAttachment, "rows" | "footer"> {
+  const roster = buildRosterForButtons(
+    input.gameInfo,
+    input.trackedAliasByPuuid,
+  );
+  const anchor = bettingAnchor(roster);
+  return {
+    rows: buildBettingRows({ matchId: input.matchId, roster }),
+    footer: bucksPrematchSummary({
+      poolState: "open",
+      positions: [],
+      framing: anchor === undefined ? undefined : subjectFraming(anchor),
+    }),
+  };
 }

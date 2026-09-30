@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import type { BugsinkIssue } from "@shepherdjerred/ops-clients/bugsink.ts";
 import type { PrometheusSample } from "@shepherdjerred/ops-clients/prometheus.ts";
 import { ServiceIndex } from "@shepherdjerred/ops-model/catalog.ts";
+import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
 import {
   mapAi,
   monthProgress,
@@ -234,8 +235,8 @@ describe("logs", () => {
 
 function ai(overrides: Partial<AiSamples>): AiSamples {
   return {
-    billedMtd: [],
-    openAiToday: [],
+    clusterMtd: [],
+    billedToday: [],
     macCostMtd: [],
     macTokens24h: [],
     clusterTokens24h: [],
@@ -261,10 +262,11 @@ describe("ai", () => {
   });
 
   test("projects month-end spend and warns before the budget is spent", () => {
-    // $120 by the 24th projects to about $153 against $150.
+    // 80% of the budget spent by the 24th projects past the budget at month end.
+    const spent = OPS_POLICY.monthlyApiBudgetUsd * 0.8;
     const result = mapAi(
       ai({
-        billedMtd: [sample(120)],
+        clusterMtd: [sample(spent)],
         macCostMtd: [sample(310.5, { source: "claude-code" })],
         macTokens24h: [sample(1000)],
         quotas: [
@@ -286,7 +288,7 @@ describe("ai", () => {
     const metrics = Object.fromEntries(
       result.metrics.map((m) => [m.id, [m.value, m.severity]]),
     );
-    expect(metrics["ai.cost.month_to_date_usd"]).toEqual([120, "ok"]);
+    expect(metrics["ai.cost.month_to_date_usd"]).toEqual([spent, "ok"]);
     expect(metrics["ai.cost.projected_month_usd"]?.[1]).toBe("warning");
     expect(metrics["ai.tokens_24h"]).toEqual([1000, "ok"]);
     expect(metrics["ai.quota.max_used_ratio"]).toEqual([0.85, "warning"]);

@@ -313,19 +313,14 @@ function collectTypeScriptToolchainErrors(
 
 const exemptions = new Set(
   `
-packages/glitter:build
-packages/glitter:test
 packages/glitter:lint
 packages/glitter:typecheck
 packages/resume:test
 packages/resume:lint
 packages/resume:typecheck
-packages/leetcode:test
-packages/birmel:build
 packages/streambot:build
 packages/monarch:build
 packages/llm-observability:build
-packages/discord-stream-lifecycle:build
 packages/discord-plays-core:build
 packages/trmnl-dashboard:build
 packages/tasks-for-obsidian:build
@@ -336,7 +331,6 @@ packages/tasknotes-fixtures:test
 packages/tasknotes-fixtures:lint
 packages/tasknotes-fixtures:typecheck
 packages/tasknotes-macos:build
-packages/tasknotes-macos:test
 packages/tasknotes-macos:typecheck
 packages/windows-cross-compiler:build
 packages/code-review:build
@@ -348,15 +342,8 @@ packages/discord-video-stream:lint
 packages/discord-plays-mario-kart/packages/common:test
 packages/discord-plays-pokemon/packages/common:test
 packages/discord-plays-pokemon/packages/frontend:test
-packages/scout-for-lol/packages/app:test
 packages/scout-for-lol/packages/data:build
-packages/scout-for-lol/packages/frontend:test
 packages/scout-for-lol/packages/report:build
-packages/scout-for-lol:build
-packages/scout-for-lol:test
-packages/scout-for-lol:lint
-packages/scout-for-lol:typecheck
-packages/home-assistant:build
 packages/hkctl:build
 packages/hkctl:test
 packages/hkctl:typecheck
@@ -365,15 +352,13 @@ packages/macos-cross-compiler:test
 packages/macos-cross-compiler:lint
 packages/macos-cross-compiler:typecheck
 packages/sjer.red:test
+packages/ts-mc:test
+packages/ts-mc-docs:test
 packages/release-tools:build
 packages/release-tools:lint
 packages/release-tools:typecheck
 packages/temporal:build
 packages/temporal-observability:build
-packages/homelab:build
-packages/homelab:test
-packages/homelab:lint
-packages/homelab:typecheck
 packages/discord-plays-pokemon/packages/backend:build
 packages/discord-plays-mario-kart/packages/backend:build
 packages/macos-ai-subscription-tracker:build
@@ -463,18 +448,30 @@ export async function findComplianceErrors(root: string): Promise<string[]> {
     );
   }
 
+  const usedExemptions = new Set<string>();
   for (const [directory, packageJson] of packages) {
     errors.push(...collectTypeScriptToolchainErrors(directory, packageJson));
     if (directory === "scripts") continue;
     for (const script of requiredScripts) {
       const key = `${directory}:${script}`;
       const command = packageJson.scripts?.[script];
-      if (command === undefined) {
-        if (!exemptions.has(key))
-          errors.push(`${directory} missing ${script} script`);
-      } else if (isNoopScript(command) && !exemptions.has(key)) {
+      const missingOrNoop = command === undefined || isNoopScript(command);
+      if (!missingOrNoop) continue;
+      if (exemptions.has(key)) {
+        usedExemptions.add(key);
+      } else if (command === undefined) {
+        errors.push(`${directory} missing ${script} script`);
+      } else {
         errors.push(`${directory} has no-op stub ${script} script: ${command}`);
       }
+    }
+  }
+  // An exemption whose script now exists and does real work is stale; failing
+  // on it keeps the list from silently outliving the gaps it once covered.
+  for (const key of exemptions) {
+    const directory = key.slice(0, key.lastIndexOf(":"));
+    if (packages.has(directory) && !usedExemptions.has(key)) {
+      errors.push(`stale compliance exemption ${key}: remove it from the list`);
     }
   }
   return errors;

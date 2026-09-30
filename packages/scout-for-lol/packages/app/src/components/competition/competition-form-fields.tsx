@@ -7,6 +7,10 @@ import {
   visibilityToString,
 } from "@scout-for-lol/data";
 import {
+  ChannelSelectControl,
+  type ChannelAvailability,
+} from "#src/components/channel-select-support.tsx";
+import {
   Field,
   FieldDescription,
   FieldError,
@@ -62,11 +66,14 @@ const dateFormatter = new Intl.DateTimeFormat(undefined, {
 type CompetitionFormFieldsProps = {
   locked: boolean;
   channels: { id: string; name: string }[] | undefined;
+  channelAvailability?: ChannelAvailability;
+  onRetryChannels?: () => void;
 };
 
 const DEFAULT_PROPS: CompetitionFormFieldsProps = {
   locked: false,
   channels: undefined,
+  channelAvailability: { status: "ready" },
 };
 
 export const CompetitionFormFields = withScoutForm({
@@ -115,15 +122,16 @@ export const CompetitionFormFields = withScoutForm({
           </form.AppField>
           <form.AppField name="channelId">
             {(field) => (
-              <field.NativeSelectField
+              <ChannelSelectControl
                 id="competition-channel"
                 label="Announcement channel"
-                placeholder="Pick a channel"
-                options={(props.channels ?? []).map((channel) => ({
-                  value: channel.id,
-                  label: `#${channel.name}`,
-                }))}
-                required
+                value={field.state.value}
+                channels={props.channels ?? []}
+                availability={props.channelAvailability}
+                onRetry={props.onRetryChannels}
+                renderSelect={(selectProps) => (
+                  <field.NativeSelectField {...selectProps} />
+                )}
               />
             )}
           </form.AppField>

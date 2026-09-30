@@ -8,7 +8,7 @@ stores it. The web UI, the TRMNL screen, the email digest, and
 | Module                         | What it owns                                                                                                                                             |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `severity.ts`                  | The `ok < info < unknown < warning < error` scale and its rollup helpers.                                                                                |
-| `snapshot.ts`                  | Zod schemas for `Signal`, `Metric`, `Section`, `SourceStatus`, `Snapshot`, `ChangeEvent`, and `OpsIngest`.                                               |
+| `snapshot.ts`                  | Zod schemas for `Signal`, `Metric`, `Section`, `SourceStatus`, `Snapshot`, the public `SnapshotResponse`, `ChangeEvent`, and `OpsIngest`.                |
 | `assemble.ts`                  | `assembleSnapshot` (section rollup: a failed source makes its section `unknown`), `applyFreshness` (a stale snapshot is never green), and query helpers. |
 | `policy.ts`                    | `OPS_POLICY` thresholds and budgets shared by the collector and renderers.                                                                               |
 | `metric-ids.ts`                | Headline metric ids that producers emit and renderers read.                                                                                              |

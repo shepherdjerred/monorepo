@@ -42,12 +42,12 @@ const REQUIRED_AUDIT_BINARIES = [
   "gh",
   "toolkit",
   "temporal",
-  "bk",
+  "woodpecker-cli",
   "gcx",
 ] as const;
 
 const REQUIRED_ENV_GROUPS: readonly RequiredEnvGroup[] = [
-  { label: "OPENROUTER_API_KEY", names: ["OPENROUTER_API_KEY"] },
+  { label: "OPENAI_API_KEY", names: ["OPENAI_API_KEY"] },
   { label: "ALERT_DASHBOARD_URL", names: ["ALERT_DASHBOARD_URL"] },
   { label: "BUGSINK_URL", names: ["BUGSINK_URL"] },
   { label: "BUGSINK_TOKEN", names: ["BUGSINK_TOKEN"] },
@@ -56,7 +56,9 @@ const REQUIRED_ENV_GROUPS: readonly RequiredEnvGroup[] = [
   { label: "ARGOCD_SERVER", names: ["ARGOCD_SERVER"] },
   { label: "ARGOCD_AUTH_TOKEN", names: ["ARGOCD_AUTH_TOKEN"] },
   { label: "CLOUDFLARE_API_TOKEN", names: ["CLOUDFLARE_API_TOKEN"] },
-  { label: "BUILDKITE_API_TOKEN", names: ["BUILDKITE_API_TOKEN"] },
+  { label: "WOODPECKER_TOKEN", names: ["WOODPECKER_TOKEN"] },
+  { label: "WOODPECKER_URL", names: ["WOODPECKER_URL"] },
+  { label: "WOODPECKER_REPO_ID", names: ["WOODPECKER_REPO_ID"] },
   { label: "TEMPORAL_ADDRESS", names: ["TEMPORAL_ADDRESS"] },
   { label: "GITHUB_APP_ID", names: ["GITHUB_APP_ID"] },
   {
@@ -94,12 +96,7 @@ async function runCommandCheck(
     stdin: "ignore",
     stdout: "pipe",
     stderr: "pipe",
-    env: {
-      ...Bun.env,
-      BUILDKITE_ORGANIZATION_SLUG:
-        Bun.env["BUILDKITE_ORGANIZATION_SLUG"] ?? "sjerred",
-      BUILDKITE_PIPELINE_SLUG: Bun.env["BUILDKITE_PIPELINE_SLUG"] ?? "monorepo",
-    },
+    env: { ...Bun.env },
   });
 
   const timeout = setTimeout(() => {
@@ -199,16 +196,16 @@ async function collectRemoteWarnings(): Promise<string[]> {
 
   const checks: readonly CommandCheck[] = [
     {
-      name: "Buildkite",
+      // Woodpecker's CLI addresses repositories by numeric id, not by a
+      // pipeline slug; WOODPECKER_URL and WOODPECKER_TOKEN come from the
+      // environment the required-variable list above already enforces.
+      name: "CI",
       args: [
         "toolkit",
-        "bk",
-        "build",
-        "list",
-        "--pipeline",
-        Bun.env["BUILDKITE_PIPELINE_SLUG"] ?? "monorepo",
-        "--branch",
-        "main",
+        "woodpecker",
+        "pipeline",
+        "ls",
+        Bun.env["WOODPECKER_REPO_ID"] ?? "",
         "--limit",
         "1",
       ],

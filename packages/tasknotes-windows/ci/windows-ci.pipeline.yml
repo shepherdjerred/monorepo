@@ -1,0 +1,87 @@
+# Prepared only. Nothing generates or runs this file: the pipeline graph comes
+# from the configuration extension in packages/woodpecker-config-extension, and
+# no lane there emits these steps. Activation is blocked by Linear issue SJ-134
+# on a real unlocked Windows desktop session.
+#
+# Kept in Woodpecker's own shape rather than as prose so the contract it
+# encodes — the verify command, the six visual profiles, and the artifact
+# globs quality-check.ts asserts — stays mechanically checkable.
+#
+# `backend_options` is absent on purpose: these steps need a logged-in Windows
+# desktop, so they would run on an agent using the local backend, exactly as
+# the macOS lanes do.
+steps:
+  - name: tasknotes-windows-verify
+    image: pwsh
+    commands:
+      - mise install
+      - bun install --frozen-lockfile
+      - bunx turbo run generate
+      - bun run windows:verify
+
+# Agent labels, not a queue name: Woodpecker matches these against the labels
+# the Windows agent declares.
+labels:
+  platform: windows/amd64
+  session: unlocked
+
+# One Windows desktop, one session — the profiles reconfigure OS-level display
+# and theme state, so they cannot overlap.
+concurrency:
+  limit: 1
+  group: tasknotes-windows-interactive
+
+
+# Artifacts have no successor: Woodpecker has no artifact store, and the CI
+# handoff bucket in scripts/lib/ci/ci-artifact.ts is what a real activation
+# would upload these through. Listed so the paths stay pinned:
+#   packages/tasknotes-windows/artifacts/test-results/**/*.junit.xml
+#   packages/tasknotes-windows/artifacts/test-results/**/*.trx
+#   packages/tasknotes-windows/artifacts/test-results/**/coverage.cobertura.xml
+#   packages/tasknotes-windows/artifacts/e2e/**/*
+#   packages/tasknotes-windows/artifacts/visual-matrix/**/*
+#   packages/tasknotes-windows/AppPackages/**/*
+---
+# Each profile needs a real unlocked desktop session whose OS state matches its
+# label. These are not simulated; visual-profile.ts verifies OS state.
+steps:
+  - name: visual-100-light
+    image: pwsh
+    environment:
+      TASKNOTES_VISUAL_PROFILE: 100-light
+    commands: [bun run windows:visual-profile]
+  - name: visual-100-dark
+    image: pwsh
+    environment:
+      TASKNOTES_VISUAL_PROFILE: 100-dark
+    commands: [bun run windows:visual-profile]
+  - name: visual-100-high-contrast
+    image: pwsh
+    environment:
+      TASKNOTES_VISUAL_PROFILE: 100-high-contrast
+    commands: [bun run windows:visual-profile]
+  - name: visual-200-light
+    image: pwsh
+    environment:
+      TASKNOTES_VISUAL_PROFILE: 200-light
+    commands: [bun run windows:visual-profile]
+  - name: visual-200-dark
+    image: pwsh
+    environment:
+      TASKNOTES_VISUAL_PROFILE: 200-dark
+    commands: [bun run windows:visual-profile]
+  - name: visual-200-high-contrast
+    image: pwsh
+    environment:
+      TASKNOTES_VISUAL_PROFILE: 200-high-contrast
+    commands: [bun run windows:visual-profile]
+
+labels:
+  platform: windows/amd64
+  session: unlocked
+
+concurrency:
+  limit: 1
+  group: tasknotes-windows-interactive
+
+depends_on: [tasknotes-windows-verify]

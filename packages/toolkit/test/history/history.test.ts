@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { chmod, mkdir, mkdtemp, rm } from "node:fs/promises";
 import os from "node:os";
+import { Database } from "bun:sqlite";
 import path from "node:path";
 import { HistoryIndex } from "#lib/history/index.ts";
 import { parseSince } from "#lib/history/query/query.ts";
@@ -353,6 +354,8 @@ describe("history source adapters", () => {
           documents: [],
           fingerprint: String(index),
           error: null,
+          complete: true,
+          sourceIds: [],
         };
       },
       read: async () => ({
@@ -976,6 +979,33 @@ function recordFromDocument(
   };
 }
 
+describe("history index schema", () => {
+  test("rebuilds a v3 index that is missing the usage table", async () => {
+    const runtimePaths = defaultHistoryRuntimePaths(
+      path.join(fixtureRoot, "stale-v3-home"),
+    );
+    await mkdir(path.dirname(runtimePaths.indexDb), { recursive: true });
+    const stale = new Database(runtimePaths.indexDb, { create: true });
+    stale.run(
+      "CREATE TABLE documents (id INTEGER PRIMARY KEY); PRAGMA user_version = 3;",
+    );
+    stale.close();
+
+    await expect(HistoryIndex.open(runtimePaths, true)).rejects.toThrow(
+      /without the current tables/,
+    );
+
+    const index = await HistoryIndex.open(runtimePaths);
+    index.close();
+    const rebuilt = new Database(runtimePaths.indexDb, { readonly: true });
+    const tables = rebuilt
+      .query("SELECT name FROM sqlite_master WHERE type = 'table'")
+      .all();
+    rebuilt.close();
+    expect(tables).toContainEqual({ name: "usage_events" });
+  });
+});
+
 describe("history index", () => {
   test("searches, updates, deletes, and filters indexed work", async () => {
     const runtimePaths = defaultHistoryRuntimePaths(
@@ -1006,7 +1036,12 @@ describe("history index", () => {
     ).toHaveLength(0);
 
     await index.ingest([
-      { ...first, fingerprint: `${first.fingerprint}:changed`, documents: [] },
+      {
+        ...first,
+        fingerprint: `${first.fingerprint}:changed`,
+        documents: [],
+        sourceIds: [],
+      },
     ]);
     expect(
       index.search("database", { since: null, source: "claude" }),
@@ -1083,6 +1118,8 @@ describe("history index", () => {
         documents: [pricedDocument, unpricedDocument],
         fingerprint: "usage-fixture",
         error: null,
+        complete: true,
+        sourceIds: [pricedDocument.sourceId, unpricedDocument.sourceId],
       },
     ]);
 
@@ -1153,6 +1190,8 @@ describe("history index", () => {
         documents: [longLivedDocument],
         fingerprint: "usage-window-fixture",
         error: null,
+        complete: true,
+        sourceIds: [longLivedDocument.sourceId],
       },
     ]);
 

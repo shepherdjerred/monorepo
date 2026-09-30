@@ -19,14 +19,13 @@ export const SleepAutomationInputSchema = z.object({
 });
 
 /**
- * Input for `cancelBuildkiteBuildsWorkflow`. Started from the GitHub webhook
- * `closed` action (merge *or* plain close) to stop any still-active Buildkite
- * builds for the PR's branch — finished builds waste CI capacity.
- * Cancellation is keyed on `branch` (Buildkite builds carry the branch; the PR
- * filter is less reliable). `commitSha` only feeds the idempotent workflow id,
- * and `merged` is for logging/metrics.
+ * Input for `cancelCiPipelinesWorkflow`. Started from the GitHub webhook
+ * `closed` action (merge *or* plain close) to stop any still-active CI
+ * builds for the PR's exact head. Woodpecker reports PR builds under the base
+ * branch, so cancellation matches their PR ref and head commit. Push builds
+ * match the source branch and commit. `merged` is for logging/metrics.
  */
-export const CancelBuildkiteBuildsInputSchema = z.object({
+export const CancelCiPipelinesInputSchema = z.object({
   owner: z.string().min(1),
   repo: z.string().min(1),
   prNumber: z.number().int().positive(),
@@ -74,8 +73,8 @@ export type DnsAuditInput = z.infer<typeof DnsAuditInputSchema>;
 export type GolinkSyncInput = z.infer<typeof GolinkSyncInputSchema>;
 export type VacuumInput = z.infer<typeof VacuumInputSchema>;
 export type SleepAutomationInput = z.infer<typeof SleepAutomationInputSchema>;
-export type CancelBuildkiteBuildsInput = z.infer<
-  typeof CancelBuildkiteBuildsInputSchema
+export type CancelCiPipelinesInput = z.infer<
+  typeof CancelCiPipelinesInputSchema
 >;
 export type CheckPrMergeConflictsInput = z.infer<
   typeof CheckPrMergeConflictsInputSchema

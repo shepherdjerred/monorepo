@@ -1,13 +1,13 @@
 /**
  * Types for the `toolkit deployed` command — tracing a commit through the
- * homelab deployment pipeline (git → version bump → versions.ts → ArgoCD → pod).
+ * homelab deployment pipeline (git → version bump → version catalog → ArgoCD → pod).
  */
 
 /** A single deployable variant of a service (e.g. scout beta vs prod). */
 export type Variant = {
   /** Variant label: "default" for single-variant services, else "beta"/"prod". */
   name: string;
-  /** Key in versions.ts, e.g. "shepherdjerred/scout-for-lol/beta". */
+  /** Key in the version catalog, e.g. "shepherdjerred/scout-for-lol/beta". */
   versionKey: string;
   /** ArgoCD application that deploys this variant, e.g. "scout-beta". */
   argoApp: string;
@@ -22,7 +22,7 @@ export type Service = {
   variants: Variant[];
 };
 
-/** A pinned image reference parsed out of versions.ts. */
+/** A pinned image reference parsed out of the version catalog. */
 export type Pin = {
   versionKey: string;
   /** Build number portion of the "2.0.0-<build>" tag. */
@@ -55,7 +55,7 @@ export type Verdict =
 /** Result of the git-only trace layer for one variant. */
 export type GitTrace = {
   pin: Pin | null;
-  /** Commit that wrote the current pinned digest into versions.ts. */
+  /** Commit that wrote the current pinned digest into the version catalog. */
   writingCommit: { sha: string; subject: string } | null;
   /** True when that writing commit is a "bump image versions" commit. */
   writingCommitIsBump: boolean;

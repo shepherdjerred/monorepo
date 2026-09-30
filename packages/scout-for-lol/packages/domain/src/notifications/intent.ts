@@ -19,6 +19,8 @@ import {
  * the same inputs always produce the same outputs. The delivery invariants:
  *
  * - `delivered`, `suppressed`, `expired`, and `permission-denied` are terminal.
+ *   An intent whose audience was deleted is retired into `suppressed` with a
+ *   {@link NotificationRetirementReason}; it is never re-targeted.
  * - `unknown-delivery` is left ONLY via `operatorResolveUnknown` — a send whose
  *   outcome is unobserved must never be retried automatically, because the
  *   retry may double-deliver.
@@ -30,11 +32,13 @@ import {
  * rendered from the archived spectator snapshot; a `postmatch` intent reports
  * a finished game from its MatchV5 payload; a `settlement` intent tells one
  * guild channel how its Bryan Bucks pool and parlay settled; a `dare-summary`
- * intent tells a channel how one Dare resolved. The kind is a property of the
+ * intent tells a channel how one Dare resolved; a `hall-record-break` intent
+ * tells one guild's Hall of Fame channel which records a match broke. The
+ * kind is a property of the
  * decision to notify, fixed at mint, so a consumer never has to infer it from
  * the key or from whatever payload happens to be available when it runs.
  *
- * The two announcement kinds carry their presentation inputs on the intent
+ * The three announcement kinds carry their presentation inputs on the intent
  * (see `announcement` below); the two report kinds carry nothing, because
  * everything they deliver is derived from the match's own durable artifacts.
  */
@@ -46,11 +50,16 @@ export const NotificationIntentKindSchema = z.enum([
   "prematch",
   "settlement",
   "dare-summary",
+  "hall-record-break",
 ]);
 
 /** The kinds whose message is built from an `announcement` payload. */
 export const ANNOUNCEMENT_INTENT_KINDS: ReadonlySet<NotificationIntentKind> =
-  new Set<NotificationIntentKind>(["settlement", "dare-summary"]);
+  new Set<NotificationIntentKind>([
+    "settlement",
+    "dare-summary",
+    "hall-record-break",
+  ]);
 
 /**
  * Where the decision to notify came from.
@@ -104,6 +113,34 @@ export const NotificationAttemptNonceSchema = z
   .min(1)
   .brand<"NotificationAttemptNonce">();
 
+/**
+ * Why an intent's audience no longer exists, which retires it.
+ *
+ * An intent is a decision to tell one audience one thing, and the audience is
+ * part of the decision: a channel reached through a subscription, in a guild
+ * Scout is installed in. When that audience is deleted before delivery, the
+ * intent can never be sent correctly — delivering it to whatever the channel
+ * id resolves to now, or re-deriving a target from the subscription that
+ * replaced it, would be reconstructing an identity the decision never named.
+ * So the intent is retired (`retireOrphaned`), and the reason says which part
+ * of the audience went:
+ *
+ * - `subscription-deleted`: no subscription in the target channel still
+ *   follows anyone in the match — unsubscribed, the tracked account removed,
+ *   or the guild's data cleaned up.
+ * - `channel-deleted`: Discord answered Unknown Channel for the target.
+ * - `guild-left`: Discord answered that Scout is no longer in the target
+ *   channel's guild.
+ */
+export type NotificationRetirementReason = z.infer<
+  typeof NotificationRetirementReasonSchema
+>;
+export const NotificationRetirementReasonSchema = z.enum([
+  "subscription-deleted",
+  "channel-deleted",
+  "guild-left",
+]);
+
 export type NotificationSuppressionReason = z.infer<
   typeof NotificationSuppressionReasonSchema
 >;
@@ -111,7 +148,26 @@ export const NotificationSuppressionReasonSchema = z.enum([
   "stale",
   "feature-disabled",
   "recipient-preference",
+  ...NotificationRetirementReasonSchema.options,
 ]);
+
+/**
+ * The suppressions a delivery POLICY decides, as opposed to the clock.
+ *
+ * `stale` is deliberately absent: it is a fact about the freshness deadline and
+ * has its own guarded transition (`suppressStale`) that re-checks the instant.
+ * These two are decisions somebody made about whether the notification should
+ * go out at all — a feature turned off for the recipient's server, or the
+ * recipient's own opt-out — and nothing about the intent's age can refute them.
+ */
+export type NotificationPolicySuppressionReason = z.infer<
+  typeof NotificationPolicySuppressionReasonSchema
+>;
+export const NotificationPolicySuppressionReasonSchema =
+  NotificationSuppressionReasonSchema.extract([
+    "feature-disabled",
+    "recipient-preference",
+  ]);
 
 export type NotificationRetryableFailureReason = z.infer<
   typeof NotificationRetryableFailureReasonSchema
@@ -250,6 +306,6 @@ export const NotificationIntentSchema = z
       (intent.announcement !== undefined),
     {
       message:
-        "an announcement payload is carried by exactly the settlement and dare-summary kinds",
+        "an announcement payload is carried by exactly the settlement, dare-summary and hall-record-break kinds",
     },
   );

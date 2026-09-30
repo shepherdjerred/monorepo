@@ -175,20 +175,18 @@ describe("Scout bot-health alert rules", () => {
     // series, so naming it here would make the absent() guard fire
     // continuously against a healthy stage.
     //
-    // Beta now names `gateway` because the scout-gateway Deployment ships in
-    // this same revision — the flip and the pod land together, so neither is
-    // briefly true alone. Prod stays `combined` until its own split gate.
-    expect(expression).toContain(
-      String.raw`environment=\"beta\",role=\"gateway\"`,
-    );
-    expect(expression).toContain(
-      String.raw`environment=\"prod\",role=\"combined\"`,
-    );
-    // Prod must NOT have moved with beta: the stages split independently, and
-    // naming a role prod does not run is exactly the continuous page above.
-    expect(expression).not.toContain(
-      String.raw`environment=\"prod\",role=\"gateway\"`,
-    );
+    // Beta is retiring its split: the backend is `combined` again and the
+    // gateway Deployment is scaled to zero, so beta names `combined` in the
+    // same revision that hands the shard back. Prod never ran the split.
+    for (const stage of ["beta", "prod"]) {
+      expect(expression).toContain(
+        String.raw`environment=\"${stage}\",role=\"combined\"`,
+      );
+      // Naming a role with no running pod is exactly the continuous page above.
+      expect(expression).not.toContain(
+        String.raw`environment=\"${stage}\",role=\"gateway\"`,
+      );
+    }
     // The deferred role still owns no pod in either stage.
     expect(expression).not.toContain("activity-worker");
     // Every read of the gauge must be scoped, not just the first.

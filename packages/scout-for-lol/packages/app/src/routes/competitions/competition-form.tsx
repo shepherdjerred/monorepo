@@ -1,5 +1,5 @@
 import { Loaded } from "@shepherdjerred/loaded";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "@tanstack/react-form";
 import { Link, useNavigate, useParams } from "react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -11,6 +11,14 @@ import {
 } from "@scout-for-lol/data";
 import { Button } from "@scout-for-lol/design-system/components/button";
 import { FormActions } from "@scout-for-lol/design-system/components/forms/field";
+import { channelAvailabilityForQuery } from "#src/components/channel-select-support.tsx";
+import {
+  editRecordNeedsLoad,
+  EditRecordQueryState,
+  EditRecordRefreshWarning,
+  invalidEditRecordRoute,
+  recordSubmitLabel,
+} from "#src/components/edit-record-query-state.tsx";
 import { CompetitionBuilderV2 } from "#src/components/competition/competition-builder-v2.tsx";
 import {
   CompetitionFormFields,
@@ -56,7 +64,9 @@ export function CompetitionForm() {
   const competitionId =
     idResult?.success === true ? idResult.data : CompetitionIdSchema.parse(1);
 
-  const [prefilled, setPrefilled] = useState(false);
+  const [hydratedCompetitionId, setHydratedCompetitionId] = useState<
+    number | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
 
   const channelsQuery = useQuery(
@@ -72,6 +82,11 @@ export function CompetitionForm() {
     ),
   );
   const existing = existingQuery.data;
+  const formDefaults = useMemo(
+    () =>
+      existing === undefined ? EMPTY_STATE : existingToFormState(existing),
+    [existing],
+  );
   const isDraft = !isEdit || existing?.status === "DRAFT";
 
   const createMutation = useMutation(
@@ -112,7 +127,7 @@ export function CompetitionForm() {
   const pending = createMutation.isPending || editMutation.isPending;
   const form = useScoutForm({
     ...competitionFormOptions,
-    defaultValues: EMPTY_STATE,
+    defaultValues: formDefaults,
     validationLogic: submitThenChangeValidation,
     validators: { onDynamic: CompetitionFormValueSchema },
     onSubmit: ({ value }) => {
@@ -155,19 +170,29 @@ export function CompetitionForm() {
     },
   });
   const isDirty = useSelector(form.store, (state) => state.isDirty);
+  const state = useSelector(form.store, (formState) => formState.values);
+  const channelAvailability = channelAvailabilityForQuery(channelsQuery);
+  const canSubmit =
+    channelsQuery.data?.some((channel) => channel.id === state.channelId) ===
+    true;
   const blocker = useUnsavedForm(isDirty && !allowNavigation.current, pending);
 
   useEffect(() => {
-    if (existing === undefined || prefilled) return;
-    form.reset(existingToFormState(existing));
-    setPrefilled(true);
-  }, [existing, form, prefilled]);
+    if (existing?.id !== competitionId) return;
+    setHydratedCompetitionId(competitionId);
+  }, [existing, competitionId]);
 
-  if (guildId === undefined || (isEdit && !idResult.success)) {
-    return (
-      <p className="text-sm text-scout-danger">Invalid competition route.</p>
-    );
-  }
+  const invalidRoute = invalidEditRecordRoute(
+    guildId,
+    isEdit,
+    idResult?.success === true,
+  );
+  const isEditWaitingForData = editRecordNeedsLoad(
+    isEdit,
+    existing?.id,
+    competitionId,
+    hydratedCompetitionId,
+  );
 
   function handleUsePreset(example: CompetitionExample) {
     const previous = form.state.values;
@@ -192,81 +217,105 @@ export function CompetitionForm() {
 
   const legacyForm = (
     <>
-      <form.AppForm>
-        <form
-          ref={formElement}
-          className="space-y-5"
-          aria-busy={pending}
-          onSubmit={(event) => {
-            handleFormSubmit(event, () => form.handleSubmit());
+      <form
+        ref={formElement}
+        className="space-y-5"
+        aria-busy={pending}
+        onSubmit={(event) => {
+          handleFormSubmit(event, () => form.handleSubmit());
+        }}
+        onReset={(event) => {
+          handleFormReset(event, () => {
+            form.reset();
+          });
+          setError(null);
+        }}
+      >
+        <fieldset disabled={pending} className="m-0 space-y-4 border-0 p-0">
+          <CompetitionFormFields
+            form={form}
+            locked={isEdit && !isDraft}
+            channels={channelsQuery.data}
+            channelAvailability={channelAvailability}
+            onRetryChannels={() => {
+              void channelsQuery.refetch();
+            }}
+          />
+        </fieldset>
+        <EditRecordRefreshWarning
+          recordName="competition"
+          error={existingQuery.error}
+          hasSavedRecord={existing !== undefined}
+          onRetry={() => {
+            void existingQuery.refetch();
           }}
-          onReset={(event) => {
-            handleFormReset(event, () => {
-              form.reset();
-            });
-            setError(null);
-          }}
-        >
-          <fieldset disabled={pending} className="m-0 space-y-4 border-0 p-0">
-            <CompetitionFormFields
-              form={form}
-              locked={isEdit && !isDraft}
-              channels={channelsQuery.data}
-            />
-          </fieldset>
-          <ServerFormError error={error} />
-          <FormActions>
-            <Button asChild variant="outline">
-              <Link to={`/g/${guildId}/competitions`}>Cancel</Link>
-            </Button>
-            <Button type="reset" variant="ghost" disabled={pending}>
-              Reset
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Saving…" : isEdit ? "Save changes" : "Create"}
-            </Button>
-          </FormActions>
-          <FormPendingStatus pending={pending}>
-            Saving competition…
-          </FormPendingStatus>
-        </form>
-      </form.AppForm>
+        />
+        <ServerFormError error={error} />
+        <FormActions>
+          <Button asChild variant="outline">
+            <Link to={`/g/${safeGuildId}/competitions`}>Cancel</Link>
+          </Button>
+          <Button type="reset" variant="ghost" disabled={pending}>
+            Reset
+          </Button>
+          <Button type="submit" disabled={pending || !canSubmit}>
+            {recordSubmitLabel(pending, isEdit)}
+          </Button>
+        </FormActions>
+        <FormPendingStatus pending={pending}>
+          Saving competition…
+        </FormPendingStatus>
+      </form>
       <UnsavedFormDialog blocker={blocker} />
     </>
   );
 
-  if (!isEdit) {
-    return (
-      <CompetitionCreatePage
-        guildId={guildId}
-        channels={Loaded.fromQuery(channelsQuery, ["listChannels"])}
-        onUsePreset={handleUsePreset}
-        onCreated={(createdId) => {
-          allowNavigation.current = true;
-          void queryClient.invalidateQueries({
-            queryKey: trpc.competition.list.pathKey(),
-          });
-          void navigate(
-            `/g/${safeGuildId}/competitions/${createdId.toString()}`,
-          );
-        }}
-        legacyForm={legacyForm}
-      />
-    );
-  }
-
   return (
-    <div className="max-w-2xl space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold tracking-tight">
-          Edit competition
-        </h2>
-        <Button asChild variant="outline" size="sm">
-          <Link to={`/g/${guildId}/competitions`}>Back</Link>
-        </Button>
-      </div>
-      {legacyForm}
-    </div>
+    <form.AppForm>
+      {invalidRoute ? (
+        <p className="text-sm text-scout-danger">Invalid competition route.</p>
+      ) : isEditWaitingForData ? (
+        <EditRecordQueryState
+          recordName="competition"
+          listHref={`/g/${safeGuildId}/competitions`}
+          error={existingQuery.error}
+          onRetry={() => {
+            void existingQuery.refetch();
+          }}
+        />
+      ) : isEdit ? (
+        <div className="max-w-2xl space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold tracking-tight">
+              Edit competition
+            </h2>
+            <Button asChild variant="outline" size="sm">
+              <Link to={`/g/${safeGuildId}/competitions`}>Back</Link>
+            </Button>
+          </div>
+          {legacyForm}
+        </div>
+      ) : (
+        <CompetitionCreatePage
+          guildId={safeGuildId}
+          channels={Loaded.fromQuery(channelsQuery, ["listChannels"])}
+          onRetryDependencies={() => {
+            void channelsQuery.refetch();
+          }}
+          onUsePreset={handleUsePreset}
+          onCreated={(createdId) => {
+            allowNavigation.current = true;
+            void queryClient.invalidateQueries({
+              queryKey: trpc.competition.list.pathKey(),
+            });
+            void navigate(
+              `/g/${safeGuildId}/competitions/${createdId.toString()}`,
+            );
+          }}
+          legacyForm={legacyForm}
+        />
+      )}
+    </form.AppForm>
   );
 }
 
@@ -279,6 +328,7 @@ function CompetitionCreatePage(props: {
    * dependency was still loading reported "Loading builder…" indefinitely.
    */
   channels: Loaded<{ id: string; name: string }[]>;
+  onRetryDependencies: () => void;
   onUsePreset: (example: CompetitionExample) => void;
   onCreated: (competitionId: number) => void;
   legacyForm: React.ReactNode;
@@ -293,14 +343,35 @@ function CompetitionCreatePage(props: {
     builder: Loaded.fromQuery(builderQuery, ["builderCapabilities"]),
     channels: props.channels,
   });
+  const retryDependencies = () => {
+    props.onRetryDependencies();
+    void builderQuery.refetch();
+  };
   if (page.status === "loading") {
     return <p className="text-sm text-scout-subtle">Loading builder…</p>;
   }
   if (page.status === "error") {
     return (
-      <p className="text-sm text-scout-danger">
-        {Loaded.messageOf(page.errors[0].error)}
-      </p>
+      <div role="alert" className="space-y-2 text-sm text-scout-danger">
+        <p>{Loaded.messageOf(page.errors[0].error)}</p>
+        <Button type="button" variant="outline" onClick={retryDependencies}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
+  if (page.data.channels.length === 0) {
+    return (
+      <div role="status" className="space-y-2 text-sm text-scout-subtle">
+        <p>
+          Scout can&apos;t post to any channels in this server. Check its
+          channel permissions, then retry.
+        </p>
+        <Button type="button" variant="outline" onClick={retryDependencies}>
+          Retry
+        </Button>
+      </div>
     );
   }
 

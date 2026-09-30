@@ -1,18 +1,18 @@
-import { modelIdForOpenRouterRoute } from "@shepherdjerred/llm-models";
+import {
+  modelIdForNativeRoute,
+  type Provider,
+} from "@shepherdjerred/llm-models";
 import { z } from "zod";
-import type { AttributedResponseObservation } from "./attributed-fetch.ts";
-import { parseOpenRouterMetadata } from "./metadata.ts";
 import type {
-  OpenRouterRuntimeLogger,
-  OpenRouterRuntimeLogRecord,
+  LlmCallMetadata,
+  LlmRuntimeLogger,
+  LlmRuntimeLogRecord,
 } from "./types.ts";
 
 const TelemetryErrorSchema = z.object({ error: z.unknown() }).loose();
 const ErrorNameSchema = z.object({ name: z.string() }).loose();
 
-export const defaultOpenRouterRuntimeLogger: OpenRouterRuntimeLogger = (
-  record,
-) => {
+export const defaultLlmRuntimeLogger: LlmRuntimeLogger = (record) => {
   const line = JSON.stringify({
     timestamp: new Date().toISOString(),
     ...record,
@@ -21,61 +21,74 @@ export const defaultOpenRouterRuntimeLogger: OpenRouterRuntimeLogger = (
   else globalThis.console.info(line);
 };
 
-function stableModelId(modelId: string | undefined): string {
-  return modelId === undefined
-    ? "unknown"
-    : (modelIdForOpenRouterRoute(modelId) ?? modelId);
+/**
+ * Map an AI SDK provider name onto the catalog's provider enum.
+ *
+ * The SDK reports a qualified transport name — `anthropic.messages`,
+ * `openai.chat`, `google.generative-ai` — while the catalog, metric labels, and
+ * pricing all key on the bare vendor.
+ */
+export function normalizeProvider(
+  sdkProvider: string | undefined,
+): Provider | "unknown" {
+  if (sdkProvider?.startsWith("openai") === true) return "openai";
+  if (sdkProvider?.startsWith("anthropic") === true) return "anthropic";
+  return sdkProvider?.startsWith("google") === true ? "google" : "unknown";
 }
 
-export function logOpenRouterResponse(input: {
-  logger: OpenRouterRuntimeLogger;
-  observation: AttributedResponseObservation;
+/**
+ * Resolve a provider's own model id back to the repository's stable catalog id,
+ * falling back to the raw id when the route is unknown or ambiguous. An
+ * unresolved id is recoverable; a confidently wrong one corrupts attribution.
+ */
+export function stableModelId(
+  provider: Provider | "unknown",
+  routeModelId: string | undefined,
+): string {
+  if (routeModelId === undefined) return "unknown";
+  return provider === "unknown"
+    ? routeModelId
+    : (modelIdForNativeRoute(provider, routeModelId) ?? routeModelId);
+}
+
+export function logLlmResponse(input: {
+  logger: LlmRuntimeLogger;
   service: string;
+  workload: string;
+  metadata: LlmCallMetadata;
+  traceId: string | undefined;
+  durationMs: number | undefined;
 }): void {
-  const metadata = parseOpenRouterMetadata({
-    requestedModel: stableModelId(input.observation.requestedModel),
-    responseBody: input.observation.responseBody,
-  });
-  const outcome =
-    input.observation.responseStatus !== undefined &&
-    input.observation.responseStatus >= 200 &&
-    input.observation.responseStatus < 400
-      ? "success"
-      : "error";
+  const { metadata } = input;
   input.logger({
-    level: outcome === "success" ? "info" : "error",
-    event: "llm.openrouter.response",
-    message: "OpenRouter gateway response",
+    level: "info",
+    event: "llm.provider.response",
+    message: "LLM provider response",
     service: input.service,
-    workload: input.observation.workload,
+    workload: input.workload,
+    provider: metadata.provider,
     model: metadata.requestedModel,
     resolvedModel: metadata.resolvedModel,
-    upstreamProvider: metadata.upstreamProvider,
-    isByok: metadata.isByok,
-    generationId: metadata.generationId,
-    route: metadata.route,
-    region: metadata.region,
-    fallbackAttempts: metadata.fallbackAttempts,
+    responseId: metadata.responseId,
+    serviceTier: metadata.serviceTier,
     inputTokens: metadata.tokens.input,
     outputTokens: metadata.tokens.output,
     cachedInputTokens: metadata.tokens.cachedInput,
     cacheWriteTokens: metadata.tokens.cacheWrite,
     reasoningTokens: metadata.tokens.reasoning,
     totalTokens: metadata.tokens.total,
-    actualCostUsd: metadata.actualCostUsd,
     catalogCostUsd: metadata.catalogCostUsd,
-    upstreamCostUsd: metadata.upstreamCostUsd,
-    traceId: input.observation.traceId,
-    outcome,
-    responseStatus: input.observation.responseStatus,
-    durationMs: input.observation.durationMs,
+    traceId: input.traceId,
+    outcome: "success",
+    durationMs: input.durationMs,
   });
 }
 
-export function logOpenRouterCallFailure(input: {
-  logger: OpenRouterRuntimeLogger;
+export function logLlmCallFailure(input: {
+  logger: LlmRuntimeLogger;
   service: string;
   workload: string;
+  provider: Provider | "unknown";
   model: string;
   traceId: string | undefined;
   durationMs: number | undefined;
@@ -86,14 +99,14 @@ export function logOpenRouterCallFailure(input: {
     ? telemetryError.data.error
     : input.error;
   const parsedError = ErrorNameSchema.safeParse(error);
-  const record: OpenRouterRuntimeLogRecord = {
+  const record: LlmRuntimeLogRecord = {
     level: "error",
-    event: "llm.openrouter.call_failed",
-    message: "OpenRouter call failed",
+    event: "llm.provider.call_failed",
+    message: "LLM provider call failed",
     service: input.service,
     workload: input.workload,
-    model: stableModelId(input.model),
-    fallbackAttempts: 0,
+    provider: input.provider,
+    model: input.model,
     inputTokens: 0,
     outputTokens: 0,
     cachedInputTokens: 0,

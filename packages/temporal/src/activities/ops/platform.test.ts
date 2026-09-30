@@ -70,8 +70,8 @@ describe("alerts", () => {
     expect(
       result.signals.map((s) => [s.id, s.severity, s.needsMe, s.service]),
     ).toEqual([
-      ["alerts:fp-BirmelDown", "error", true, "birmel"],
-      ["alerts:fp-DiskFilling", "warning", false, undefined],
+      ["alerts:BirmelDown:birmel", "error", true, "birmel"],
+      ["alerts:DiskFilling:-", "warning", false, undefined],
     ]);
     expect(result.metrics.map((m) => [m.id, m.value])).toEqual([
       ["alerts.firing", 2],
@@ -82,6 +82,73 @@ describe("alerts", () => {
     for (const signal of result.signals) {
       expect(() => SignalSchema.parse(signal)).not.toThrow();
     }
+  });
+
+  test("groups repeated alerts by name and namespace", () => {
+    const result = mapAlerts(
+      [
+        alert(
+          {
+            alertname: "WorkflowFailed",
+            severity: "warning",
+            namespace: "temporal",
+          },
+          10,
+        ),
+        alert(
+          {
+            alertname: "WorkflowFailed",
+            severity: "critical",
+            namespace: "temporal",
+          },
+          90,
+        ),
+        alert(
+          {
+            alertname: "WorkflowFailed",
+            severity: "warning",
+            namespace: "temporal",
+          },
+          5,
+        ),
+        alert(
+          {
+            alertname: "WorkflowFailed",
+            severity: "warning",
+            namespace: "birmel",
+          },
+          5,
+        ),
+      ],
+      [],
+      context,
+    );
+    expect(
+      result.signals.map((s) => [
+        s.id,
+        s.severity,
+        s.needsMe,
+        s.attributes?.["count"],
+        s.title,
+      ]),
+    ).toEqual([
+      [
+        "alerts:WorkflowFailed:temporal",
+        "error",
+        true,
+        3,
+        "WorkflowFailed summary (×3)",
+      ],
+      [
+        "alerts:WorkflowFailed:birmel",
+        "warning",
+        false,
+        1,
+        "WorkflowFailed summary",
+      ],
+    ]);
+    expect(result.signals[0]?.since).toBe(minutesAgo(90));
+    expect(result.metrics.find((m) => m.id === "alerts.firing")?.value).toBe(4);
   });
 });
 

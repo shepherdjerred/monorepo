@@ -44,7 +44,11 @@ export const SECTION_DEFINITIONS: readonly SectionDefinition[] = [
   { id: "product", title: "Sites & product", sources: ["probes", "posthog"] },
   { id: "ai", title: "AI usage & spend", sources: ["ai"] },
   { id: "maintenance", title: "Maintenance", sources: ["maintenance"] },
-  { id: "observability", title: "Logs & traces", sources: ["logs"] },
+  {
+    id: "observability",
+    title: "Logs & traces",
+    sources: ["logs", "traces"],
+  },
 ];
 
 export function sectionDefinition(id: SectionId): SectionDefinition {

@@ -8,7 +8,7 @@ import { captureWithGuildInstallation } from "#src/analytics/capture-with-instal
  * bounded count of broken record cells.
  */
 export async function captureHallRecordBroken(
-  input: { guildId: string; records: number },
+  input: { guildId: string; records: number; eventId?: string },
   options?: {
     db?: ExtendedPrismaClient;
     analytics?: ProductAnalytics;
@@ -22,6 +22,9 @@ export async function captureHallRecordBroken(
         event: "hall_record_broken",
         properties: { records: input.records },
       },
+      ...(input.eventId === undefined
+        ? {}
+        : { eventOptions: { uuid: input.eventId } }),
     },
     options,
   );

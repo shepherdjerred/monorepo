@@ -1,177 +1,39 @@
 import type {
   EmbeddingModelCallEndEvent,
   EmbeddingModelCallStartEvent,
+  ImageModel,
+  ImageModelMiddleware,
   LanguageModelCallEndEvent,
   LanguageModelCallStartEvent,
   Telemetry,
 } from "ai";
 import {
   costForTextUsage,
-  modelIdForOpenRouterRoute,
+  getPricing,
+  type Provider,
 } from "@shepherdjerred/llm-models";
 import {
   commonLlmMetrics,
   type CommonLlmMetrics,
 } from "@shepherdjerred/llm-observability/metrics";
 import { Counter, type Registry } from "prom-client";
-import { parseOpenRouterMetadata } from "./metadata.ts";
-import { logOpenRouterCallFailure } from "./logging.ts";
-import type { OpenRouterRuntimeLogger } from "./types.ts";
+import {
+  countProviderExecutedWebSearchRequests,
+  parseNativeUsage,
+} from "./usage.ts";
+import {
+  logLlmCallFailure,
+  logLlmResponse,
+  normalizeProvider,
+  stableModelId,
+} from "./logging.ts";
+import type { LlmCallMetadata, LlmRuntimeLogger } from "./types.ts";
 
 type RuntimeMetrics = CommonLlmMetrics & {
-  routerAttempts: Counter<
-    "service" | "workload" | "model" | "upstream_provider" | "outcome"
-  >;
-  metadataMissing: Counter<"service" | "workload" | "model">;
-  byokRequests: Counter<
-    "service" | "workload" | "model" | "upstream_provider" | "byok"
-  >;
   structuredAttempts: Counter<"service" | "workload" | "model" | "outcome">;
 };
 
 const metricsByRegister = new WeakMap<Registry, RuntimeMetrics>();
-
-function stableModelId(modelId: string): string {
-  return modelIdForOpenRouterRoute(modelId) ?? modelId;
-}
-
-function recordByokResponse(
-  metrics: RuntimeMetrics,
-  input: {
-    readonly service: string;
-    readonly workload: string;
-    readonly model: string;
-    readonly upstreamProvider: string | undefined;
-    readonly isByok: boolean | undefined;
-  },
-): void {
-  metrics.byokRequests.inc({
-    service: input.service,
-    workload: input.workload,
-    model: input.model,
-    upstream_provider: input.upstreamProvider ?? "unknown",
-    byok: input.isByok === undefined ? "unknown" : String(input.isByok),
-  });
-}
-
-function recordLanguageRouterMetadata(
-  metrics: RuntimeMetrics,
-  input: {
-    readonly successful: boolean;
-    readonly endpoint: "language" | "embedding" | "image" | "unknown";
-    readonly service: string;
-    readonly workload: string;
-    readonly model: string;
-    readonly metadata: ReturnType<typeof parseOpenRouterMetadata>;
-  },
-): void {
-  if (!input.successful || input.endpoint !== "language") return;
-  if (!input.metadata.routerMetadataPresent) {
-    metrics.metadataMissing.inc({
-      service: input.service,
-      workload: input.workload,
-      model: input.model,
-    });
-    return;
-  }
-  recordByokResponse(metrics, {
-    service: input.service,
-    workload: input.workload,
-    model: input.model,
-    upstreamProvider: input.metadata.upstreamProvider,
-    isByok: input.metadata.isByok,
-  });
-}
-
-export function recordRouterResponse(
-  metrics: RuntimeMetrics | undefined,
-  input: {
-    service: string;
-    workload: string;
-    requestedModel: string | undefined;
-    responseBody: unknown;
-    responseStatus: number | undefined;
-    durationMs: number;
-    endpoint: "language" | "embedding" | "image" | "unknown";
-  },
-): void {
-  const model = stableModelId(input.requestedModel ?? "unknown");
-  const metadata = parseOpenRouterMetadata({
-    requestedModel: model,
-    responseBody: input.responseBody,
-  });
-  if (metrics === undefined) return;
-  const successful =
-    input.responseStatus !== undefined &&
-    input.responseStatus >= 200 &&
-    input.responseStatus < 400;
-  // OpenRouter currently emits router metadata only on completion routes, not
-  // embeddings or images. Do not turn unsupported endpoints into false alerts.
-  recordLanguageRouterMetadata(metrics, {
-    successful,
-    endpoint: input.endpoint,
-    service: input.service,
-    workload: input.workload,
-    model,
-    metadata,
-  });
-  for (const attempt of metadata.attempts) {
-    metrics.routerAttempts.inc({
-      service: input.service,
-      workload: input.workload,
-      model,
-      upstream_provider: attempt.provider,
-      outcome:
-        attempt.status >= 200 && attempt.status < 300 ? "success" : "error",
-    });
-  }
-  const labels = {
-    service: input.service,
-    workload: input.workload,
-    provider: "openrouter",
-    model,
-  };
-  if (successful && metadata.actualCostUsd !== undefined) {
-    metrics.cost.inc({ ...labels, type: "actual" }, metadata.actualCostUsd);
-  }
-  if (successful && metadata.upstreamCostUsd !== undefined) {
-    metrics.cost.inc({ ...labels, type: "upstream" }, metadata.upstreamCostUsd);
-  }
-  // Everything below is the *common* LLM request instrumentation, and for
-  // language and embedding calls `OpenRouterMetricsTelemetry` already records
-  // it from the AI SDK's own call-end events (`onLanguageModelCallEnd`,
-  // `onEmbedEnd`). Recording it here as well would double every
-  // `llm_requests_total`, `llm_request_duration_seconds`, and
-  // `llm_tokens_total` for the two most common endpoints. Image generation has
-  // no AI SDK telemetry event, so this fetch observer is its only source — that
-  // is what this branch exists for, not an oversight. Router attempts, missing
-  // metadata, and actual/upstream cost above are OpenRouter-specific and are
-  // recorded for every endpoint.
-  if (input.endpoint !== "image") return;
-  metrics.requests.inc({
-    ...labels,
-    outcome: successful ? "success" : "error",
-  });
-  metrics.duration.observe(labels, input.durationMs / 1000);
-  if (!successful) return;
-  metrics.tokens.inc({ ...labels, type: "input" }, metadata.tokens.input);
-  metrics.tokens.inc({ ...labels, type: "output" }, metadata.tokens.output);
-  metrics.tokens.inc(
-    { ...labels, type: "cached_input" },
-    metadata.tokens.cachedInput,
-  );
-  metrics.tokens.inc(
-    { ...labels, type: "cache_write" },
-    metadata.tokens.cacheWrite,
-  );
-  metrics.tokens.inc(
-    { ...labels, type: "reasoning" },
-    metadata.tokens.reasoning,
-  );
-  if (metadata.catalogCostUsd !== undefined) {
-    metrics.cost.inc({ ...labels, type: "catalog" }, metadata.catalogCostUsd);
-  }
-}
 
 export function runtimeMetrics(
   register: Registry | undefined,
@@ -182,30 +44,6 @@ export function runtimeMetrics(
 
   const metrics: RuntimeMetrics = {
     ...commonLlmMetrics(register),
-    routerAttempts: new Counter({
-      name: "llm_router_attempts_total",
-      help: "OpenRouter upstream routing attempts.",
-      labelNames: [
-        "service",
-        "workload",
-        "model",
-        "upstream_provider",
-        "outcome",
-      ],
-      registers: [register],
-    }),
-    metadataMissing: new Counter({
-      name: "llm_openrouter_metadata_missing_total",
-      help: "Successful OpenRouter calls without router metadata.",
-      labelNames: ["service", "workload", "model"],
-      registers: [register],
-    }),
-    byokRequests: new Counter({
-      name: "llm_openrouter_byok_requests_total",
-      help: "Successful OpenRouter language calls by BYOK status.",
-      labelNames: ["service", "workload", "model", "upstream_provider", "byok"],
-      registers: [register],
-    }),
     structuredAttempts: new Counter({
       name: "llm_structured_output_attempts_total",
       help: "Structured output semantic attempts by outcome.",
@@ -217,15 +55,24 @@ export function runtimeMetrics(
   return metrics;
 }
 
-export class OpenRouterMetricsTelemetry implements Telemetry {
+/**
+ * Records metrics and the correlated success/failure log for one logical call.
+ *
+ * This is now the single source for both. Under the gateway, metrics came from
+ * the telemetry integration while logging came from a fetch wrapper that read
+ * the raw response body, and the two could disagree. Providers report
+ * everything we need through the SDK's own usage, so one observer covers it.
+ */
+export class LlmMetricsTelemetry implements Telemetry {
   readonly #metrics: RuntimeMetrics | undefined;
   readonly #service: string;
   readonly #workload: string;
-  readonly #logger: OpenRouterRuntimeLogger;
+  readonly #logger: LlmRuntimeLogger;
   readonly #traceId: string | undefined;
   readonly #embedStartedAt = new Map<string, number>();
   #startedAt: number | undefined;
   #model: string | undefined;
+  #provider: Provider | "unknown" = "unknown";
   #languageModelCallSucceeded = false;
   #operation: "language" | "embedding" | undefined;
 
@@ -233,7 +80,7 @@ export class OpenRouterMetricsTelemetry implements Telemetry {
     metrics: RuntimeMetrics | undefined;
     service: string;
     workload: string;
-    logger: OpenRouterRuntimeLogger;
+    logger: LlmRuntimeLogger;
     traceId: string | undefined;
   }) {
     this.#metrics = options.metrics;
@@ -244,7 +91,7 @@ export class OpenRouterMetricsTelemetry implements Telemetry {
   }
 
   onLanguageModelCallStart(event: LanguageModelCallStartEvent): void {
-    this.rememberModel(event.modelId);
+    this.remember(event.provider, event.modelId);
     this.#startedAt = performance.now();
     this.#languageModelCallSucceeded = false;
     this.#operation = "language";
@@ -252,20 +99,36 @@ export class OpenRouterMetricsTelemetry implements Telemetry {
 
   onLanguageModelCallEnd(event: LanguageModelCallEndEvent): void {
     this.#languageModelCallSucceeded = true;
-    this.rememberModel(event.modelId);
-    const metrics = this.#metrics;
-    if (metrics === undefined) return;
-    const metadata = parseOpenRouterMetadata({
-      requestedModel: stableModelId(event.modelId),
+    this.remember(event.provider, event.modelId);
+
+    const provider = normalizeProvider(event.provider);
+    const metadata = parseNativeUsage({
+      requestedModel: stableModelId(provider, event.modelId),
+      provider,
       responseId: event.responseId,
       resolvedModel: event.modelId,
       usage: event.usage,
-      providerMetadata: event.providerMetadata,
+      ...(provider === "openai" && {
+        providerExecutedWebSearchRequests:
+          countProviderExecutedWebSearchRequests(event.content),
+      }),
     });
+
+    logLlmResponse({
+      logger: this.#logger,
+      service: this.#service,
+      workload: this.#workload,
+      metadata,
+      traceId: this.#traceId,
+      durationMs: event.performance.responseTimeMs,
+    });
+
+    const metrics = this.#metrics;
+    if (metrics === undefined) return;
     const labels = {
       service: this.#service,
       workload: this.#workload,
-      provider: "openrouter",
+      provider,
       model: metadata.requestedModel,
     };
     metrics.requests.inc({ ...labels, outcome: "success" });
@@ -290,37 +153,65 @@ export class OpenRouterMetricsTelemetry implements Telemetry {
   }
 
   onEmbedStart(event: EmbeddingModelCallStartEvent): void {
-    this.rememberModel(event.modelId);
+    this.remember(event.provider, event.modelId);
     this.#startedAt ??= performance.now();
     this.#embedStartedAt.set(event.embedCallId, performance.now());
     this.#operation = "embedding";
   }
 
   onEmbedEnd(event: EmbeddingModelCallEndEvent): void {
-    this.rememberModel(event.modelId);
-    const metrics = this.#metrics;
-    if (metrics === undefined) return;
-    const model = stableModelId(event.modelId);
+    this.remember(event.provider, event.modelId);
+    const provider = normalizeProvider(event.provider);
+    if (provider === "unknown") {
+      throw new Error(
+        `Unsupported embedding model provider: ${event.provider}`,
+      );
+    }
+    const model = stableModelId(provider, event.modelId);
     const labels = {
       service: this.#service,
       workload: this.#workload,
-      provider: "openrouter",
+      provider,
       model,
     };
-    metrics.requests.inc({
-      ...labels,
-      outcome: "success",
-    });
     const startedAt = this.#embedStartedAt.get(event.embedCallId);
     this.#embedStartedAt.delete(event.embedCallId);
-    if (startedAt !== undefined) {
-      metrics.duration.observe(labels, (performance.now() - startedAt) / 1000);
-    }
-    metrics.tokens.inc({ ...labels, type: "input" }, event.usage.tokens);
+    const durationMs =
+      startedAt === undefined ? undefined : performance.now() - startedAt;
     const catalogCostUsd = costForTextUsage(model, {
       inputTokens: event.usage.tokens,
       outputTokens: 0,
     });
+
+    logLlmResponse({
+      logger: this.#logger,
+      service: this.#service,
+      workload: this.#workload,
+      metadata: {
+        requestedModel: model,
+        resolvedModel: model,
+        provider,
+        tokens: {
+          input: event.usage.tokens,
+          output: 0,
+          cachedInput: 0,
+          cacheWrite: 0,
+          reasoning: 0,
+          total: event.usage.tokens,
+        },
+        ...(catalogCostUsd === undefined ? {} : { catalogCostUsd }),
+      },
+      traceId: this.#traceId,
+      durationMs,
+    });
+
+    const metrics = this.#metrics;
+    if (metrics === undefined) return;
+    metrics.requests.inc({ ...labels, outcome: "success" });
+    if (durationMs !== undefined) {
+      metrics.duration.observe(labels, durationMs / 1000);
+    }
+    metrics.tokens.inc({ ...labels, type: "input" }, event.usage.tokens);
     if (catalogCostUsd !== undefined) {
       metrics.cost.inc({ ...labels, type: "catalog" }, catalogCostUsd);
     }
@@ -333,14 +224,15 @@ export class OpenRouterMetricsTelemetry implements Telemetry {
     this.#metrics?.requests.inc({
       service: this.#service,
       workload: this.#workload,
-      provider: "openrouter",
+      provider: this.#provider,
       model: this.#model ?? "unknown",
       outcome: "error",
     });
-    logOpenRouterCallFailure({
+    logLlmCallFailure({
       logger: this.#logger,
       service: this.#service,
       workload: this.#workload,
+      provider: this.#provider,
       model: this.#model ?? "unknown",
       traceId: this.#traceId,
       durationMs:
@@ -351,11 +243,184 @@ export class OpenRouterMetricsTelemetry implements Telemetry {
     });
   }
 
-  private rememberModel(routeModelId: string): void {
-    const model = stableModelId(routeModelId);
+  private remember(sdkProvider: string, routeModelId: string): void {
+    const provider = normalizeProvider(sdkProvider);
+    if (this.#provider === "unknown") this.#provider = provider;
+    const model = stableModelId(provider, routeModelId);
     if (this.#model === undefined) this.#model = model;
     else if (this.#model !== model) this.#model = "multiple";
   }
+}
+
+/**
+ * Images do not use the AI SDK Telemetry integration, so they need their own
+ * model middleware. It records provider outcomes and catalog-priced images at
+ * the provider boundary, where the generated image count and resolved model
+ * are available.
+ */
+export function imageMetricsMiddleware(options: {
+  metrics: CommonLlmMetrics | undefined;
+  service: string;
+  workload: string;
+  modelId: string;
+  logger: LlmRuntimeLogger;
+  traceId: string | undefined;
+}): ImageModelMiddleware {
+  return {
+    specificationVersion: "v4",
+    wrapGenerate: async ({ doGenerate, model }) => {
+      const startedAt = performance.now();
+      const provider = normalizeProvider(model.provider);
+      if (provider === "unknown") {
+        throw new Error(`Unsupported image model provider: ${model.provider}`);
+      }
+      const modelId = options.modelId;
+      const labels = {
+        service: options.service,
+        workload: options.workload,
+        provider,
+        model: modelId,
+      };
+
+      let result: GeneratedImageResult;
+      try {
+        result = await doGenerate();
+      } catch (error: unknown) {
+        recordImageFailure({
+          options,
+          labels,
+          provider,
+          modelId,
+          durationMs: performance.now() - startedAt,
+          error,
+        });
+        throw error;
+      }
+
+      recordImageSuccess({
+        options,
+        labels,
+        provider,
+        modelId,
+        result,
+        durationMs: performance.now() - startedAt,
+      });
+      return result;
+    },
+  };
+}
+
+type GeneratedImageResult = Awaited<
+  ReturnType<Extract<ImageModel, { specificationVersion: "v4" }>["doGenerate"]>
+>;
+
+function recordImageSuccess(input: {
+  options: Parameters<typeof imageMetricsMiddleware>[0];
+  labels: {
+    service: string;
+    workload: string;
+    provider: Provider;
+    model: string;
+  };
+  provider: Provider;
+  modelId: string;
+  result: GeneratedImageResult;
+  durationMs: number;
+}): void {
+  const inputTokens = input.result.usage?.inputTokens ?? 0;
+  const outputTokens = input.result.usage?.outputTokens ?? 0;
+  const totalTokens =
+    input.result.usage?.totalTokens ?? inputTokens + outputTokens;
+  const pricing = getPricing(input.modelId);
+  const catalogCostUsd =
+    pricing?.modality === "image"
+      ? pricing.perImage * input.result.images.length +
+        (pricing.inputPerMillionTokens * inputTokens) / 1_000_000
+      : undefined;
+
+  input.options.metrics?.requests.inc({ ...input.labels, outcome: "success" });
+  input.options.metrics?.duration.observe(
+    input.labels,
+    input.durationMs / 1000,
+  );
+  recordImageTokenMetrics(
+    input.options.metrics,
+    input.labels,
+    input.result.usage,
+  );
+  if (catalogCostUsd !== undefined && input.result.images.length > 0) {
+    input.options.metrics?.cost.inc(
+      { ...input.labels, type: "catalog" },
+      catalogCostUsd,
+    );
+  }
+
+  const metadata: LlmCallMetadata = {
+    requestedModel: input.modelId,
+    resolvedModel: stableModelId(input.provider, input.result.response.modelId),
+    provider: input.provider,
+    tokens: {
+      input: inputTokens,
+      output: outputTokens,
+      cachedInput: 0,
+      cacheWrite: 0,
+      reasoning: 0,
+      total: totalTokens,
+    },
+    ...(catalogCostUsd === undefined ? {} : { catalogCostUsd }),
+  };
+  logLlmResponse({
+    logger: input.options.logger,
+    service: input.options.service,
+    workload: input.options.workload,
+    metadata,
+    traceId: input.options.traceId,
+    durationMs: input.durationMs,
+  });
+}
+
+function recordImageTokenMetrics(
+  metrics: CommonLlmMetrics | undefined,
+  labels: {
+    service: string;
+    workload: string;
+    provider: Provider;
+    model: string;
+  },
+  usage: GeneratedImageResult["usage"],
+): void {
+  if (usage?.inputTokens !== undefined) {
+    metrics?.tokens.inc({ ...labels, type: "input" }, usage.inputTokens);
+  }
+  if (usage?.outputTokens !== undefined) {
+    metrics?.tokens.inc({ ...labels, type: "output" }, usage.outputTokens);
+  }
+}
+
+function recordImageFailure(input: {
+  options: Parameters<typeof imageMetricsMiddleware>[0];
+  labels: {
+    service: string;
+    workload: string;
+    provider: Provider;
+    model: string;
+  };
+  provider: Provider;
+  modelId: string;
+  durationMs: number;
+  error: unknown;
+}): void {
+  input.options.metrics?.requests.inc({ ...input.labels, outcome: "error" });
+  logLlmCallFailure({
+    logger: input.options.logger,
+    service: input.options.service,
+    workload: input.options.workload,
+    provider: input.provider,
+    model: input.modelId,
+    traceId: input.options.traceId,
+    durationMs: input.durationMs,
+    error: input.error,
+  });
 }
 
 export type RuntimeMetricsHandle = RuntimeMetrics;

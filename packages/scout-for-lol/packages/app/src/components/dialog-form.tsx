@@ -75,15 +75,16 @@ export function SemanticDialogForm(props: {
   onSubmit: () => Promise<void>;
   onCancel: () => void;
   children: ReactNode;
+  dialogClassName?: string;
   fieldsetClassName?: string;
   submitDisabled?: boolean;
   submitVariant?: ButtonProps["variant"];
 }) {
   return (
-    <DialogContent>
+    <DialogContent className={props.dialogClassName}>
       <form
         ref={props.formRef}
-        className="space-y-4"
+        className="min-w-0 space-y-4"
         aria-busy={props.pending}
         onSubmit={(event) => {
           handleFormSubmit(event, props.onSubmit);

@@ -41,8 +41,12 @@ export const DiscordConfigSchema = z.object({
   clientId: DiscordIdSchema,
 });
 
-export const OpenRouterConfigSchema = z.object({
-  apiKey: z.string().min(1, "OPENROUTER_API_KEY is required"),
+/**
+ * Model selection only. Provider credentials are not configuration: the LLM
+ * runtime reads them from the environment itself, so this schema no longer
+ * gates boot on a key — which is what made the old gateway variable fatal.
+ */
+export const LlmConfigSchema = z.object({
   model: z.string().trim().min(1).default("gpt-5.6-sol"),
   classifierModel: z.string().trim().min(1).default("gpt-5.4-nano"),
   memoryModel: z.string().trim().min(1).default("gpt-5.4-nano"),
@@ -125,7 +129,7 @@ export const PersonaConfigSchema = z.object({
  * After the bot has been directly engaged in a channel (an @mention or wake
  * word), it stays "engaged" for `engagementWindowMs`. While engaged, each
  * subsequent allowed-user message is run through a cheap GPT-nano classifier
- * (`openRouter.classifierModel`) to decide whether to respond — enabling natural
+ * (`llm.classifierModel`) to decide whether to respond — enabling natural
  * follow-up without re-pinging. Transcript bounds control how much recent
  * channel history is fed to the classifier and the main agent.
  */
@@ -201,7 +205,7 @@ export const ImageGenerationConfigSchema = z.object({
 
 export const ConfigSchema = z.object({
   discord: DiscordConfigSchema,
-  openRouter: OpenRouterConfigSchema,
+  llm: LlmConfigSchema,
   imageGeneration: ImageGenerationConfigSchema,
   agent: AgentConfigSchema,
   authority: AuthorityConfigSchema,
@@ -222,7 +226,7 @@ export const ConfigSchema = z.object({
 
 export type Config = z.infer<typeof ConfigSchema>;
 export type DiscordConfig = z.infer<typeof DiscordConfigSchema>;
-export type OpenRouterConfig = z.infer<typeof OpenRouterConfigSchema>;
+export type LlmConfig = z.infer<typeof LlmConfigSchema>;
 export type ImageGenerationConfig = z.infer<typeof ImageGenerationConfigSchema>;
 export type AgentConfig = z.infer<typeof AgentConfigSchema>;
 export type AuthorityConfig = z.infer<typeof AuthorityConfigSchema>;

@@ -10,7 +10,7 @@ function resources() {
   return synthesizeTemporalResources(".test-synth-temporal-billing-worker");
 }
 
-describe("Temporal OpenAI billing boundary", () => {
+describe("Temporal LLM billing boundary", () => {
   test("projects the dedicated admin credential only into the billing worker", () => {
     const synthesized = resources();
     const { pod, container } = findTemporalWorkerContainer(
@@ -19,11 +19,10 @@ describe("Temporal OpenAI billing boundary", () => {
     );
     expect(pod.metadata.labels["component"]).toBe("billing-worker");
     expect(container.env.map((entry) => entry.name).sort()).toEqual([
-      "ALERTMANAGER_URL",
+      "ANTHROPIC_ADMIN_API_KEY",
       "ENVIRONMENT",
       "FEATURE_FLAGS_MODE",
       "OPENAI_ADMIN_KEY",
-      "OPENAI_OPENROUTER_PROJECT_ID",
       "OTLP_ENDPOINT",
       "TELEMETRY_ENABLED",
       "TELEMETRY_SERVICE_NAME",
@@ -61,7 +60,7 @@ describe("Temporal OpenAI billing boundary", () => {
     ).toMatch(/\/items\/openai-usage-monitor$/u);
   });
 
-  test("allows only metrics, DNS, Temporal, tracing, HTTPS, and Alertmanager", () => {
+  test("allows only metrics, DNS, Temporal, tracing, and HTTPS", () => {
     const synthesized = resources();
     const base = findTemporalResource(
       synthesized,
@@ -72,12 +71,12 @@ describe("Temporal OpenAI billing boundary", () => {
     for (const port of [53, 443, 4318, 7233, 9464, 9465]) {
       expect(baseJson).toContain(String(port));
     }
-    const alertmanager = findTemporalResource(
-      synthesized,
-      "NetworkPolicy",
-      "temporal-billing-alertmanager-netpol",
-    );
-    expect(JSON.stringify(alertmanager.spec)).toContain("9093");
+    expect(
+      synthesized.some(
+        (resource) =>
+          resource.metadata?.name === "temporal-billing-alertmanager-netpol",
+      ),
+    ).toBe(false);
     const flipt = findTemporalResource(
       synthesized,
       "NetworkPolicy",

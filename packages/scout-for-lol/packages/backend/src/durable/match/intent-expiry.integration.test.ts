@@ -20,6 +20,7 @@ import {
   upsertIntent,
 } from "#src/database/durable/intent-repository.ts";
 import { expireOverdueNotificationIntents } from "#src/durable/match/intent-expiry.ts";
+import { raceFirstIntentUpdate } from "#src/durable/match/intent-retirement.test-fixtures.ts";
 
 const { prisma } = createTestDatabase("durable-intent-expiry");
 
@@ -223,45 +224,28 @@ describe("expireOverdueNotificationIntents", () => {
 
   test("a beginSend that commits between the read and the write wins", async () => {
     const key = await seed("raced-ready", "ready", PAST_DEADLINE);
-    let raced = false;
     // Interpose on the guarded write only: the sweep has already read the row
     // as `ready`, and a sender whose start preceded the deadline commits its
     // attempt first. The guard must miss and the re-read must answer
     // `send-in-flight` instead of overwriting the attempt.
-    const racingDb = new Proxy(prisma, {
-      get(target, property, receiver) {
-        const value: unknown = Reflect.get(target, property, receiver);
-        if (property !== "matchNotificationIntent") return value;
-        const delegate = target.matchNotificationIntent;
-        return new Proxy(delegate, {
-          get(inner, innerProperty, innerReceiver) {
-            if (innerProperty !== "updateMany" || raced) {
-              return Reflect.get(inner, innerProperty, innerReceiver);
-            }
-            return async (args: Parameters<typeof delegate.updateMany>[0]) => {
-              raced = true;
-              const begun = await transitionIntent(prisma, {
-                intentKey: key,
-                transition: (stored) =>
-                  beginSend(stored, {
-                    attemptNonce: NONCE,
-                    startedAt: STARTED_BEFORE_DEADLINE,
-                  }),
-              });
-              expect(begun.outcome).toBe("applied");
-              return await delegate.updateMany(args);
-            };
-          },
-        });
-      },
+    const racing = raceFirstIntentUpdate(prisma, async () => {
+      const begun = await transitionIntent(prisma, {
+        intentKey: key,
+        transition: (stored) =>
+          beginSend(stored, {
+            attemptNonce: NONCE,
+            startedAt: STARTED_BEFORE_DEADLINE,
+          }),
+      });
+      expect(begun.outcome).toBe("applied");
     });
 
-    const counts = await expireOverdueNotificationIntents(racingDb, {
+    const counts = await expireOverdueNotificationIntents(racing.db, {
       now: NOW,
       limit: 50,
     });
 
-    expect(raced).toBe(true);
+    expect(racing.raced()).toBe(true);
     expect(counts).toEqual({
       selected: 1,
       expired: 0,

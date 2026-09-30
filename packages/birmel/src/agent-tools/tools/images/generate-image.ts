@@ -61,7 +61,7 @@ export const generateImageTool = createTool({
       }
 
       const runtime = getLlmRuntime();
-      const imageModel = config.openRouter.imageModel;
+      const imageModel = config.llm.imageModel;
       const requestContext = getRequestContext();
 
       if (
@@ -111,10 +111,11 @@ export const generateImageTool = createTool({
 
       const { headers } = runtime.callOptions({
         workload: "birmel.agent.image-generation",
+        model: imageModel,
       });
 
       const result = await generateImage({
-        model: runtime.imageModel(imageModel),
+        model: runtime.imageModel(imageModel, "birmel.agent.image-generation"),
         prompt: input.prompt,
         ...(input.aspectRatio == null
           ? {}

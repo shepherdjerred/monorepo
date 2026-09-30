@@ -109,5 +109,6 @@ every sample under `samples/` and check the output with `test/selftest-*.sh`:
 docker buildx build -f packages/windows-cross-compiler/Dockerfile --target selftest-winui .
 ```
 
-CI builds the self-tests on pull requests and publishes both images from
-`main`, then opens a pull request that updates `images/*/DIGEST`.
+Compiler image self-tests and image refreshes are paused in CI. The Dockerfile
+targets above remain available for local validation, and existing
+`images/*/DIGEST` pins remain unchanged until an explicit image release.

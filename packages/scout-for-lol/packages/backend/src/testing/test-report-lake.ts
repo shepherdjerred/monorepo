@@ -5,6 +5,7 @@ import {
   ACCOUNT_LAKE_COLUMNS,
   computeKda,
   type AccountLakeRow,
+  type MatchLoadout,
   type MatchLakeRow,
   type MatchTeamBanLakeRow,
   type MatchTeamLakeRow,
@@ -33,6 +34,11 @@ import {
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { resolveLakeFiles, type LakeFiles } from "#src/reports/duckdb/lake.ts";
+import { matchLoadoutLakeFields } from "#src/report-lake/loadout.ts";
+import {
+  augmentFields,
+  itemSlots,
+} from "#src/testing/report-lake/match-fields.ts";
 
 /**
  * Test helper: build a minimal report lake from simplified fact inputs.
@@ -55,6 +61,9 @@ export type TestLakeMatchFact = {
   matchId: string;
   puuid: string;
   queue: string | null;
+  queueId?: number;
+  gameMode?: string;
+  mapId?: number;
   win: boolean;
   surrendered: boolean;
   kills: number;
@@ -72,9 +81,13 @@ export type TestLakeMatchFact = {
   firstBaron?: boolean;
   /** Arena subteam (1-8); leave unset for non-Arena queues. */
   playerSubteamId?: number;
+  placement?: number;
+  subteamPlacement?: number;
+  augmentIds?: readonly (number | null)[];
   championId?: number;
   championName?: string;
   teamPosition?: string | undefined;
+  loadout?: MatchLoadout;
   /**
    * The Riot ID recorded on this match row.
    *
@@ -85,6 +98,8 @@ export type TestLakeMatchFact = {
    */
   riotIdGameName?: string;
   riotIdTagline?: string;
+  /** Final inventory by slot (0-6); missing slots are empty. */
+  items?: number[];
   gameCreationAt: Date;
 };
 
@@ -110,6 +125,17 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
   const created = fact.gameCreationAt.getTime();
   const gameDurationSeconds = fact.gameDurationSeconds ?? 1800;
   const timePlayedSeconds = fact.timePlayedSeconds ?? gameDurationSeconds;
+  const loadout = fact.loadout ?? {
+    itemIds: [1055, 3006, 3031, 3094, 3072, 0, 3340],
+    summonerSpellIds: [4, 7],
+    runes: {
+      primaryStyleId: 8000,
+      primaryRuneIds: [8005, 8009, 9103, 8014],
+      secondaryStyleId: 8300,
+      secondaryRuneIds: [8304, 8347],
+      statShardIds: { offense: 5005, flex: 5008, defense: 5002 },
+    },
+  };
   return {
     match_id: fact.matchId,
     game_id: fact.matchId.replaceAll(/\D/g, "") || "0",
@@ -119,13 +145,13 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     game_start_at: lakeTimestamp(created),
     game_end_at: lakeTimestamp(created + gameDurationSeconds * 1000),
     game_duration_seconds: gameDurationSeconds,
-    queue_id: 420,
+    queue_id: fact.queueId ?? 420,
     queue: fact.queue,
-    game_mode: "CLASSIC",
+    game_mode: fact.gameMode ?? "CLASSIC",
     game_type: "MATCHED_GAME",
     game_version: "16.1.1",
     end_of_game_result: "GameComplete",
-    map_id: 11,
+    map_id: fact.mapId ?? 11,
     puuid: fact.puuid,
     participant_id: fact.playerId,
     team_id: fact.teamId ?? 100,
@@ -138,6 +164,7 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     individual_position: "BOTTOM",
     lane: null,
     role: null,
+    ...matchLoadoutLakeFields(loadout),
     win: fact.win,
     surrendered: fact.surrendered,
     early_surrendered: false,
@@ -199,9 +226,11 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     inhibitor_kills: 0,
     baron_kills: 0,
     dragon_kills: 0,
-    placement: null,
-    subteam_placement: null,
+    placement: fact.placement ?? null,
+    subteam_placement: fact.subteamPlacement ?? null,
     player_subteam_id: fact.playerSubteamId ?? null,
+    ...itemSlots(fact.items ?? loadout.itemIds),
+    ...augmentFields(fact.augmentIds),
   };
 }
 

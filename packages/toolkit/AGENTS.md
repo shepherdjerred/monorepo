@@ -16,8 +16,8 @@ reference.
 
 ## Repository workflows
 
-- `pr health` compares local merge-tree, exact-head Buildkite, and GitHub
-  metadata. Exact-head Buildkite wins over lagging status summaries.
+- `pr health` compares local merge-tree, the exact-head Woodpecker pipeline,
+  and GitHub metadata. The exact-head pipeline wins over lagging summaries.
 - `deployed` keeps merge, image publication, catalog pin, ArgoCD state, running
   digest, and reachability as distinct evidence.
 - `screenshot` owns the registered package/port and fails when the port is

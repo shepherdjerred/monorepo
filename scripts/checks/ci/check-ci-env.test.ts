@@ -126,16 +126,16 @@ describe("structuralParens", () => {
 });
 
 describe("scriptPathsInCommand", () => {
-  test("finds root, buildkite, and package script invocations", () => {
+  test("finds root, ci, and package script invocations", () => {
     const paths = scriptPathsInCommand(
       [
         "bun --no-install scripts/release/release.ts --dry-run",
-        "bun --no-install .buildkite/scripts/selectors/ci-changed.ts images",
+        "bun --no-install ci/scripts/selectors/ci-changed.ts images",
         "bun --no-install packages/homelab/scripts/argocd/argocd.ts release-root apps",
       ].join("\n"),
     );
     expect(paths).toEqual([
-      ".buildkite/scripts/selectors/ci-changed.ts",
+      "ci/scripts/selectors/ci-changed.ts",
       "packages/homelab/scripts/argocd/argocd.ts",
       "scripts/release/release.ts",
     ]);
@@ -155,8 +155,8 @@ describe("scriptPathsInCommand", () => {
       scriptPathsInCommand("bun scripts/checks/ci/check-ci-env.ts"),
     ).toEqual(["scripts/checks/ci/check-ci-env.ts"]);
     expect(
-      scriptPathsInCommand("bun .buildkite/scripts/validation/validate.ts"),
-    ).toEqual([".buildkite/scripts/validation/validate.ts"]);
+      scriptPathsInCommand("bun ci/scripts/validation/validate.ts"),
+    ).toEqual(["ci/scripts/validation/validate.ts"]);
   });
 
   test("still finds an entry point directly in its scripts root", () => {
@@ -266,12 +266,12 @@ describe("collectErrors", () => {
     const errors = collectErrors({
       steps: [step],
       requiredFor: () =>
-        required({ OPENROUTER_API_KEY: "scripts/release/release.ts:63" }),
+        required({ OPENAI_API_KEY: "scripts/release/release.ts:63" }),
     });
     expect(errors).toHaveLength(1);
     expect(errors[0]).toContain("release-please");
     expect(errors[0]).toContain("scripts/release/release.ts");
-    expect(errors[0]).toContain("OPENROUTER_API_KEY");
+    expect(errors[0]).toContain("OPENAI_API_KEY");
     expect(errors[0]).toContain("scripts/release/release.ts:63");
   });
 
@@ -352,13 +352,24 @@ describe("collectErrors", () => {
     expect(errors[0]).toContain("BLANK");
   });
 
-  test("ignores names the Buildkite agent injects", () => {
+  test("ignores names the CI agent injects", () => {
+    const errors = collectErrors({
+      steps: [step],
+      requiredFor: () =>
+        required({ CI_COMMIT_SHA: "scripts/release/release.ts:5" }),
+    });
+    expect(errors).toEqual([]);
+  });
+
+  // Nothing injects these any more, so a script still reading one is reading
+  // a variable no step provides.
+  test("reports a leftover Buildkite variable as unprovided", () => {
     const errors = collectErrors({
       steps: [step],
       requiredFor: () =>
         required({ BUILDKITE_COMMIT: "scripts/release/release.ts:5" }),
     });
-    expect(errors).toEqual([]);
+    expect(errors.join("\n")).toContain("BUILDKITE_COMMIT");
   });
 
   test("reports a requireEnv whose argument is not a literal", () => {

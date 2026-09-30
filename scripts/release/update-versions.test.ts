@@ -5,18 +5,18 @@ import path from "node:path";
 import { hermeticGitEnv } from "../lib/test-git.ts";
 
 import {
-  generatedBuildNumberFromSubject,
   pushWithExactLease,
   resetVersionBumpBranch,
 } from "./update-versions.ts";
 import {
-  fillMissingPinState,
+  findSupersededPendingPinKeys,
   mergePinCandidates,
   mergePinStates,
+  mergeVersionCatalogSources,
   parsePinCandidates,
   parsePinCandidatesState,
   parseVersionCatalogSource,
-  reconstructGeneratedBranchPinState,
+  retainCurrentImagePins,
   rewriteVersionCatalogSource,
   serializePinCandidatesState,
   validateStateAgainstVersions,
@@ -26,8 +26,6 @@ const A =
   "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 const B =
   "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-const C =
-  "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc";
 const KEY = "shepherdjerred/example";
 
 function catalogSource(
@@ -192,10 +190,57 @@ describe("key-wise monotonic arbitration", () => {
   test("merges pending keys independently", () => {
     const left = mergePinCandidates(empty, batch(10, "v10", A, "left"));
     const right = mergePinCandidates(empty, batch(11, "v11", B, "right"));
-    expect(Object.keys(mergePinStates(left, right).pins).sort()).toEqual([
-      "left",
-      "right",
+    expect(Object.keys(mergePinStates(left, right, empty).pins).sort()).toEqual(
+      ["left", "right"],
+    );
+  });
+
+  test("does not restore a stale pending pin deleted from main", () => {
+    const oldPin = mergePinCandidates(empty, batch(17_396, "v17396", A));
+    expect(mergePinStates(empty, oldPin, oldPin)).toEqual(empty);
+  });
+
+  test("preserves a pending pin added after the merge base", () => {
+    const pending = mergePinCandidates(empty, batch(18_031, "v18031", B));
+    expect(mergePinStates(empty, pending, empty)).toEqual(pending);
+  });
+
+  test("does not restore a squash-merged pin that main later reset", () => {
+    const base = mergePinCandidates(empty, batch(17_395, "v17395", A));
+    const pending = mergePinCandidates(base, batch(17_396, "v17396", B));
+    const main = base;
+    const superseded = findSupersededPendingPinKeys(main, pending, base, [
+      pending,
     ]);
+
+    expect(superseded).toEqual(new Set([KEY]));
+    expect(mergePinStates(main, pending, base, superseded)).toEqual(main);
+  });
+
+  test("keeps the newer pin when main and pending both advance a key", () => {
+    const base = mergePinCandidates(empty, batch(10, "v10", A));
+    const main = mergePinCandidates(base, batch(11, "v11", B));
+    const pending = mergePinCandidates(base, batch(12, "v12", A));
+    expect(mergePinStates(main, pending, base)).toEqual(pending);
+  });
+
+  test("drops retired pins from an older pending branch", () => {
+    const pending = mergePinCandidates(
+      mergePinCandidates(empty, batch(12, "v12", B)),
+      batch(11, "v11", A, "shepherdjerred/retired"),
+    );
+    const { state, retiredKeys } = retainCurrentImagePins(
+      pending,
+      new Map([[KEY, `v12@${B}`]]),
+    );
+
+    expect(Object.keys(state.pins)).toEqual([KEY]);
+    expect(state.pins[KEY]).toEqual({
+      buildNumber: 12,
+      version: "v12",
+      digest: B,
+    });
+    expect(retiredKeys).toEqual(["shepherdjerred/retired"]);
   });
 });
 
@@ -227,6 +272,73 @@ describe("version catalog integrity", () => {
     expect(value).toBeGreaterThan(management);
     validateStateAgainstVersions(state, parseVersionCatalogSource(rewritten));
     expect(serializePinCandidatesState(state).endsWith("\n")).toBe(true);
+  });
+
+  test("merges pending catalog changes without restoring main retirements", async () => {
+    const mainOnly = "shepherdjerred/main-only";
+    const pendingOnly = "shepherdjerred/pending-only";
+    const retiredOnMain = "shepherdjerred/retired-on-main";
+    const retiredOnPending = "shepherdjerred/retired-on-pending";
+    const baseSource = catalogSource([
+      { name: KEY, value: `base@${A}` },
+      { name: mainOnly, value: `base@${A}` },
+      { name: retiredOnMain, value: `base@${A}` },
+      { name: retiredOnPending, value: `base@${A}` },
+    ]);
+    const mainSource = catalogSource([
+      { name: KEY, value: `main@${A}` },
+      { name: mainOnly, value: `main@${B}` },
+      { name: retiredOnPending, value: `base@${A}` },
+    ]);
+    const pendingSource = catalogSource([
+      { name: KEY, value: `pending@${B}` },
+      { name: mainOnly, value: `base@${A}` },
+      { name: retiredOnMain, value: `base@${A}` },
+      { name: pendingOnly, value: `pending@${B}` },
+    ]);
+
+    const mergedSource = mergeVersionCatalogSources(
+      mainSource,
+      pendingSource,
+      baseSource,
+    );
+    const mergedVersions = parseVersionCatalogSource(mergedSource);
+
+    expect(mergedVersions.get(KEY)).toBe(`main@${A}`);
+    expect(mergedVersions.get(mainOnly)).toBe(`main@${B}`);
+    expect(mergedVersions.get(pendingOnly)).toBe(`pending@${B}`);
+    expect(mergedVersions.has(retiredOnMain)).toBe(false);
+    expect(mergedVersions.has(retiredOnPending)).toBe(false);
+
+    const state = mergePinCandidates(
+      parsePinCandidatesState('{"schema":"pin-candidates-state/v1","pins":{}}'),
+      batch(18_031, "v18031", B, pendingOnly),
+    );
+    const rewrittenSource = await rewriteVersionCatalogSource(
+      mergedSource,
+      state,
+    );
+    validateStateAgainstVersions(
+      state,
+      parseVersionCatalogSource(rewrittenSource),
+    );
+    expect(rewrittenSource).toContain(`"name": "${pendingOnly}"`);
+    expect(rewrittenSource).toContain(`"value": "v18031@${B}"`);
+  });
+
+  test("does not restore a squash-merged catalog pin that main later reset", () => {
+    const baseSource = catalogSource([{ name: KEY, value: `v17395@${A}` }]);
+    const mainSource = catalogSource([{ name: KEY, value: `v17395@${A}` }]);
+    const pendingSource = catalogSource([{ name: KEY, value: `v17396@${B}` }]);
+
+    const merged = mergeVersionCatalogSources(
+      mainSource,
+      pendingSource,
+      baseSource,
+      new Set([KEY]),
+    );
+
+    expect(parseVersionCatalogSource(merged).get(KEY)).toBe(`v17395@${A}`);
   });
 
   test("leaves Scout beta notes untouched when rewriting the pin", async () => {
@@ -286,88 +398,6 @@ describe("version catalog integrity", () => {
         ]),
       ),
     ).toThrow("unique");
-  });
-
-  test("reconstructs only image changes from a legacy generated branch", () => {
-    const base = parseVersionCatalogSource(
-      catalogSource([
-        { name: KEY, value: `v1@${A}` },
-        { name: "unchanged", value: `v1@${A}` },
-      ]),
-    );
-    const pending = parseVersionCatalogSource(
-      catalogSource([
-        { name: KEY, value: `v2@${B}` },
-        { name: "unchanged", value: `v1@${A}` },
-      ]),
-    );
-
-    expect(reconstructGeneratedBranchPinState(base, pending, 42).pins).toEqual({
-      [KEY]: { buildNumber: 42, version: "v2", digest: B },
-    });
-  });
-
-  test("rejects non-image changes in a legacy generated branch", () => {
-    const base = parseVersionCatalogSource(
-      catalogSource([{ name: "chart", value: "1.0.0" }]),
-    );
-    const pending = parseVersionCatalogSource(
-      catalogSource([{ name: "chart", value: "2.0.0" }]),
-    );
-
-    expect(() => reconstructGeneratedBranchPinState(base, pending, 42)).toThrow(
-      "generated bump changed non-image version chart",
-    );
-  });
-
-  test("recovers branch changes when a persisted state file is empty", () => {
-    const base = parseVersionCatalogSource(
-      catalogSource([{ name: KEY, value: `v1@${A}` }]),
-    );
-    const pending = parseVersionCatalogSource(
-      catalogSource([{ name: KEY, value: `v2@${B}` }]),
-    );
-    const persisted = parsePinCandidatesState(
-      '{"schema":"pin-candidates-state/v1","pins":{}}',
-    );
-    const reconstructed = reconstructGeneratedBranchPinState(base, pending, 42);
-    const combined = fillMissingPinState(persisted, reconstructed);
-
-    validateStateAgainstVersions(combined, pending);
-    expect(combined.pins[KEY]).toEqual({
-      buildNumber: 42,
-      version: "v2",
-      digest: B,
-    });
-  });
-
-  test("preserves persisted per-key build numbers during reconstruction", () => {
-    const persisted = parsePinCandidatesState(
-      `{"schema":"pin-candidates-state/v1","pins":{"${KEY}":{"buildNumber":100,"version":"v2","digest":"${B}"}}}`,
-    );
-    const reconstructed = parsePinCandidatesState(
-      `{"schema":"pin-candidates-state/v1","pins":{"${KEY}":{"buildNumber":110,"version":"v2","digest":"${B}"},"missing":{"buildNumber":110,"version":"v3","digest":"${C}"}}}`,
-    );
-
-    expect(fillMissingPinState(persisted, reconstructed).pins).toEqual({
-      [KEY]: { buildNumber: 100, version: "v2", digest: B },
-      missing: { buildNumber: 110, version: "v3", digest: C },
-    });
-  });
-});
-
-describe("legacy generated branch metadata", () => {
-  test.each([
-    "chore: update image pins from build 6922\n",
-    "chore: bump image versions to 2.0.0-6922",
-  ])("parses the generated commit subject: %s", (subject) => {
-    expect(generatedBuildNumberFromSubject(subject)).toBe(6922);
-  });
-
-  test("rejects an ambiguous commit subject", () => {
-    expect(() =>
-      generatedBuildNumberFromSubject("chore: update images"),
-    ).toThrow("unexpected subject");
   });
 });
 

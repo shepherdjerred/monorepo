@@ -41,12 +41,38 @@ tooling, a documented command that does not work, verification you cannot
 perform, or manual work you have now repeated. File the issue; do not rewrite
 repository guidance to route around the friction.
 
-Search first, and comment on a match rather than filing a near-duplicate:
+All agents share one Linear identity, so votes are session-attributed `+1`
+comments, not reactions or labels. Search first, upvote a match, and file a new
+issue only when there is no match:
 
 ```bash
 toolkit linear issue query --team AI --search "<keywords>" \
-  --all-states --include-archived --json
+  --search-comments --all-states --include-archived --json
+toolkit linear issue view <ID>  # confirm the same root cause, then read comments
 ```
+
+On a match, check `toolkit linear issue comment list <ID> --json` for your own
+session ID first, then post one vote per session:
+
+```bash
+toolkit linear issue comment add <ID> --body-file <path>
+```
+
+Vote body, first line exactly `+1 hit again`:
+
+```md
++1 hit again
+
+- Session: <shareable session link or ID, else `unknown`>
+- Harness: <e.g. claude-code, muse-code, codex, cursor, unknown>
+- Model: <model ID as reported by the harness, else `unknown`>
+- Work: <one sentence: what task the friction blocked>
+- Diff: <`same as reported`, or how your symptom/output differs>
+```
+
+Use ambient harness values when exposed; never invent IDs, and keep tokens and
+credential-bearing output out of the comment. Issue frequency is 1 (the report)
+plus the number of `+1 hit again` comments.
 
 Then file one issue per distinct problem:
 

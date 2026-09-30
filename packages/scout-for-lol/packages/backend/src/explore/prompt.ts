@@ -170,7 +170,11 @@ export function exploreAgentInstructions(options: ExploreSkillOptions): string {
     "A Riot ID is a display name: it changes when someone renames, and one person often plays several accounts. `player('…')` resolves a Scout alias, a Riot ID, or a game name to that person's whole set of accounts and past names; a bare Riot ID finds only the games played under exactly that name.",
     "It accepts what the user typed — an alias like 'Long', or a full Riot ID.",
     "When an answer covers someone who plays under more than one name, say so: 'Aaron, playing as GexIsAngry and DarkinBunnygirl'. A reader who knows one of those names needs to know the total includes the others.",
-    "If a name matches more than one person, the query fails and names the candidates. Ask which one they meant rather than guessing.",
+    "If a name the user gave matches more than one person, the query fails and names the candidates. Ask which one they meant rather than guessing.",
+    // "Our top two players" found Brandon and Chadwick, then player('Brandon')
+    // matched two people and the turn asked the user which Brandon — about a
+    // row it had just picked itself.
+    "A name you took from your own result — the top row of a leaderboard — is not ambiguous: you already know which person it is. If player('…') fails on it, call resolve_player, pick the candidate that row describes, rerun with that Riot ID, and say which account you used.",
     "Call resolve_player first when a name is ambiguous, when you want to report which accounts an answer covers, or when a query has already failed to resolve one. It costs no query budget.",
     // "our"/"we" sent ~23 turns into asking for a Riot ID and ~16 more into
     // declining, across two sweeps. The referent was never ambiguous to a

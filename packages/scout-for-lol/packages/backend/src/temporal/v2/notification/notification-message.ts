@@ -1,6 +1,7 @@
 import type { MessageCreateOptions } from "discord.js";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { buildDareSummaryNotificationMessageV2 } from "#src/temporal/v2/notification/dare-summary-notification.ts";
+import { buildHallRecordBreakNotificationMessageV2 } from "#src/temporal/v2/notification/hall-record-break-notification.ts";
 import {
   readAttestedPrematchArtifactV2,
   readAttestedReportArtifactV2,
@@ -36,12 +37,14 @@ export async function buildAttestedMessageV2(
 ): Promise<MessageCreateOptions> {
   const riotMatchId = record.matchId;
   switch (record.intent.kind) {
-    // The two announcement kinds have no artifact: their render attested
+    // The announcement kinds have no artifact: their render attested
     // `text-only`, and their message is built from the intent's own payload.
     case "settlement":
       return await buildSettlementNotificationMessageV2(record);
     case "dare-summary":
       return buildDareSummaryNotificationMessageV2(record);
+    case "hall-record-break":
+      return buildHallRecordBreakNotificationMessageV2(record);
     case "postmatch":
       return buildPostmatchNotificationMessageV2(
         riotMatchId,
@@ -51,6 +54,7 @@ export async function buildAttestedMessageV2(
       return await buildPrematchNotificationMessageV2(
         riotMatchId,
         await readAttestedPrematchArtifactV2(riotMatchId, abortSignal),
+        record.intent.target,
       );
   }
 }

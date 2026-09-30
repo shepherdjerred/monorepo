@@ -180,6 +180,7 @@ export type FlagName =
   | "scout-consumer-player-profiles-enabled"
   | "scout_v2_postmatch_ownership_enabled"
   | "scout_v2_prematch_ownership_enabled"
+  | "scout_v2_progression_notifications_enabled"
   | "voice_assistant_enabled";
 
 /**
@@ -373,7 +374,9 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   // it is on.
   feature_tips_enabled: {
     default: false,
-    overrides: [{ value: true, attributes: { server: MY_SERVER } }],
+    overrides: [
+      { value: true, attributes: { server: MY_SERVER }, betaOnly: true },
+    ],
   },
   // Settlement messages are a separate rollout from the betting economy: the
   // economy must keep paying or refunding open positions even while Discord
@@ -389,12 +392,7 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
   },
   debug: {
     default: false,
-    overrides: [
-      {
-        value: true,
-        attributes: { user: ME },
-      },
-    ],
+    overrides: [{ value: true, attributes: { user: ME } }],
   },
   /**
    * Confirming an Explore-prepared report, subscription or competition.
@@ -471,6 +469,12 @@ const FLAG_REGISTRY: Record<FlagName, FlagConfig> = {
     default: false,
     overrides: [],
   },
+  /**
+   * Per server, mint new Hall record breaks as V2 intents. First path owns
+   * each guild and match; the flag is off by default and ramps per server.
+   * Targeting is mirrored in managed-flag-inventory.json.
+   */
+  scout_v2_progression_notifications_enabled: { default: false, overrides: [] },
   initial_match_history_import_enabled: {
     default: false,
     overrides: [],

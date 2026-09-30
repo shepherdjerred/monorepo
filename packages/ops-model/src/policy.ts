@@ -17,10 +17,10 @@ export const OPS_POLICY = {
   quotaWarningRatio: 0.8,
   quotaErrorRatio: 0.95,
   /**
-   * Month-to-date pay-as-you-go API spend budget across Anthropic, OpenAI,
-   * and OpenRouter, excluding fixed subscriptions.
+   * Month-to-date pay-as-you-go API spend budget across OpenAI, Anthropic,
+   * and Google, excluding fixed subscriptions.
    */
-  monthlyApiBudgetUsd: 150,
+  monthlyApiBudgetUsd: 100,
   /** Warn once the month-end projection exceeds this share of budget. */
   budgetProjectionWarningRatio: 1,
   /** Certificates expiring within this many days warn; half of it errors. */
@@ -30,6 +30,13 @@ export const OPS_POLICY = {
   diskErrorRatio: 0.9,
   /** Backups older than this many hours are stale. */
   backupMaxAgeHours: 36,
+  /** Root traces slower than this are listed as slow in the last hour. */
+  slowTraceSeconds: 5,
+  /**
+   * Tempo search result cap per query. Tempo has no TraceQL metrics here,
+   * so counts come from search results; a full page is reported as "≥".
+   */
+  traceSearchLimit: 500,
   /** Hourly snapshot samples are retained this long for review trends. */
   snapshotHistoryDays: 90,
 } as const;

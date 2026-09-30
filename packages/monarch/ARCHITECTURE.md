@@ -2,7 +2,7 @@
 
 ## Overview
 
-Monarch is an AI-powered transaction categorizer for [Monarch Money](https://www.monarchmoney.com/). It fetches transactions via the Monarch API, enriches them with data from external sources (Amazon orders, Venmo payments, Apple receipts, etc.), classifies them through the shared OpenRouter runtime, and optionally applies the changes back.
+Monarch is an AI-powered transaction categorizer for [Monarch Money](https://www.monarchmoney.com/). It fetches transactions via the Monarch API, enriches them with data from external sources (Amazon orders, Venmo payments, Apple receipts, etc.), classifies them through the shared LLM runtime, and optionally applies the changes back.
 
 ## Pipeline
 
@@ -125,7 +125,7 @@ Tier 2 batches are checkpointed in `~/.monarch-cache` under a key that hashes th
 
 #### Web Search
 
-When `--skip-research` is not set (default), the research pass uses OpenRouter's provider-defined web-search tool with at most 20 results. Its bounded evidence is passed to a tool-free Zod finalizer; semantic repair retries only the finalizer. Tier 3 combines three-result server search with the local merchant-history, nearby-transaction, and category-info AI SDK tools.
+When `--skip-research` is not set (default), the research pass uses the model provider's own server-side web search. Anthropic honours a cap of 20 searches; OpenAI and Google decide their own count, so the project rate limit is the real bound. Its bounded evidence is passed to a tool-free Zod finalizer; semantic repair retries only the finalizer. Tier 3 combines three-result server search with the local merchant-history, nearby-transaction, and category-info AI SDK tools.
 
 ### Phase 4: Verification and the transfer guard
 
@@ -198,7 +198,7 @@ src/
 │   │   ├── notes.ts               # Note rendering, plan and write
 │   │   └── types.ts               # TransactionEnrichment
 │   │
-│   ├── classifier/                 # OpenRouter and AI SDK integration
+│   ├── classifier/                 # LLM runtime and AI SDK integration
 │   │   ├── llm.ts                 # Shared runtime, bounded research, structured finalization
 │   │   ├── tier1.ts / tier2.ts / tier3.ts
 │   │   ├── tier2-checkpoint.ts    # Batch-composition keyed resume
@@ -290,7 +290,7 @@ Ordinary inference goes through `@shepherdjerred/llm-runtime` and `src/lib/class
 - Max tokens: 16,384
 - Transport retries: two for retryable network, 429, and 5xx failures
 - Semantic attempts: three total through strict `Output.object` and Zod validation
-- Web search: optional OpenRouter server tool (20 batch results; 3 tier-3 results)
+- Web search: optional provider server tool (cap of 20 batch / 3 tier-3 searches, enforced only by Anthropic)
 - Response handling: no prose or fenced-JSON parsing and no response healing
 - Usage tracking: Records input/output tokens per call for cost estimation
 
@@ -321,7 +321,7 @@ separateDeepPaths()
         v                                v
 groupByWeek() ---> buildWeekWindows() ---> classifyWeek() ---> ProposedChange[]
                                                |
-                                      OpenRouter research
+                                      provider research
                                       + Zod finalizer
                                                |
                                                v

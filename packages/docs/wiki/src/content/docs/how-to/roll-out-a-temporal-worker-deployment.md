@@ -46,8 +46,12 @@ stable image SHA with `--stable-build-id` on the first `start` command.
 For a scheduled workflow, pause the exact schedule before changing the bundle.
 After the candidate canary succeeds, trigger one bounded run and confirm the
 workflow completes before resuming the schedule. This is especially important
-for the complimentary OpenAI monitor: its Activity runs on the isolated
-`billing` queue, while the schedule starts on `monorepo-workflows`.
+for the billed LLM cost reconciliation: its Activity runs on the isolated
+`billing` queue, while the schedule starts on `monorepo-workflows`. A new
+schedule whose Workflow type only exists in the candidate should register with
+`initialPauseNote`, as `llm-billed-cost-hourly` does, and remain paused until the
+candidate receives 100% of Workflow traffic. Otherwise, a run can reach a stable
+Worker that does not register the Workflow and fail.
 
 Inspect the candidate without changing routing:
 
@@ -67,13 +71,14 @@ data.
 TEMPORAL_NAMESPACE=prod bun run worker-deployment start --build-id <candidate-image-git-sha>
 ```
 
-`start` refuses an existing ramp or firing `Temporal.*` alert. It verifies that
-the checkout SHA equals the candidate Build ID, requires a clean tracked
-checkout, replays the real Workflow suite and the retained IDs listed in
-`TEMPORAL_REPLAY_WORKFLOW_IDS`, starts a canary pinned to the candidate version,
-and waits for that Workflow to
-complete. For an empty Worker Deployment, pass the already registered stable
-Build ID so the deployment has a rollback target before candidate traffic:
+`start` refuses an existing ramp. It verifies that the checkout SHA equals the
+candidate Build ID, requires a clean tracked checkout, replays the real
+Workflow suite and the retained IDs listed in `TEMPORAL_REPLAY_WORKFLOW_IDS`,
+starts a canary pinned to the candidate version, and waits for that Workflow to
+complete. Firing Temporal alerts remain visible in monitoring but do not block
+routing changes. For an empty Worker Deployment, pass the already registered
+stable Build ID so the deployment has a rollback target before candidate
+traffic:
 
 ```bash
 TEMPORAL_NAMESPACE=prod bun run worker-deployment start \
@@ -86,27 +91,30 @@ ramp. Later releases need only `--build-id`.
 
 ## Advance to 50% and 100%
 
-After at least 30 clean minutes at 10%:
+After at least 30 minutes at 10%:
 
 ```bash
 TEMPORAL_NAMESPACE=prod bun run worker-deployment advance --build-id <candidate-image-git-sha>
 ```
 
-After at least two clean hours at 50%, run the same command again. It advances
-to 100%. Each transition rechecks candidate pollers, currently firing alerts,
-and Prometheus alert history over the entire required window. An alert that
-fired and resolved during the window still blocks the transition. An early,
-repeated, or out-of-order command fails without changing routing.
+After at least two hours at 50%, run the same command again. It advances to
+100%. Each transition rechecks candidate and stable poller history, Prometheus
+rule-evaluation health, and candidate Build ID Workflow failure counters over
+the entire required window. Temporal alerts from other workers remain visible
+in monitoring but do not block these transitions.
+An early, repeated, or out-of-order command fails without changing routing.
 
-## Promote after the soak
+## Promote at 100% traffic
 
-After at least 24 clean hours at 100%:
+After the candidate reaches 100%, confirm representative live Workflows have
+completed and run:
 
 ```bash
 TEMPORAL_NAMESPACE=prod bun run worker-deployment promote --build-id <candidate-image-git-sha>
 ```
 
-Promotion verifies that the candidate catalog image contains the requested
+Promotion rechecks the two-hour poller, rule-evaluation, and candidate failure
+history. It verifies that the candidate catalog image contains the requested
 Build ID as its baked `GIT_SHA`, copies that exact value into the stable pin,
 makes the candidate current, and removes the ramp. Catalog-first ordering makes
 an interrupted promotion safe to retry. Review and commit both the catalog and
@@ -140,26 +148,24 @@ Image commit-back retains a Workflow candidate whenever stable and candidate
 differ, so a new build cannot replace an in-flight candidate and will not
 advance the track again until this post-rollback reset lands.
 
-## Verify the complimentary OpenAI monitor
+## Verify the billed LLM cost reconciliation
 
-The monitor is healthy only when all three signals agree: the billing Activity
-has completed, official Usage and Costs data is current, and Scout review
-telemetry reports `byok="true"`. Check the current-day gauges and alert state in
-Prometheus after OpenAI's ingestion delay:
+The reconciliation is healthy when the billing Activity has completed and both
+providers report current billed cost. After the candidate carries the
+`runLlmBilledCostReconciliation` Workflow, unpause `llm-billed-cost-hourly`,
+trigger one run, and check Prometheus:
 
 ```promql
-sum by (model, service_tier, type) (openai_project_usage_tokens)
-max(openai_project_cost_usd)
-time() - max(openai_usage_reconciliation_last_success_timestamp_seconds)
-ALERTS{alertname=~"OpenAiComplimentary.*|ScoutOpenAiNotByok"}
+sum by (provider, account, window) (llm_billed_cost_usd)
+time() - max by (provider) (llm_billed_reconciliation_last_success_timestamp_seconds)
+ALERTS{alertname=~"LlmBilled.*"}
 ```
 
-`ScoutOpenAiNotByok` matches the production scrape label
-`exported_service="scout-for-lol-backend"` and `byok="false|unknown"`.
-`OpenAiComplimentaryMonitorStale` selects the billing worker by
+`LlmBilledReconciliationStale` selects the billing worker by
 `namespace="temporal",container="temporal-billing-worker"`; pod-name prefixes
-are not stable scrape labels. Any `default` service-tier tokens or non-zero
-official project cost is actionable, even when the cause is quota exhaustion.
+are not stable scrape labels. See
+[Attribute LLM spend](/how-to/attribute-llm-spend/#compare-live-and-billed-spend)
+for how to read billed against live cost.
 
 ## Native diagnostics
 

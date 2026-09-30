@@ -71,7 +71,7 @@ export const SCOUT_STAGES = [
 export const SCOUT_GATEWAY_TOPOLOGY: Readonly<
   Record<Stage, ScoutGatewayTopology>
 > = {
-  beta: "split",
+  beta: "retiring",
   // Prod has never run the split and so has nothing to retire. It is `absent`
   // rather than `retiring` on purpose: rendering a zero-replica gateway here
   // would add a Deployment, Service, ServiceMonitor and NetworkPolicy to

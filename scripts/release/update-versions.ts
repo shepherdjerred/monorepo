@@ -4,13 +4,14 @@ import { rm } from "node:fs/promises";
 
 import { setupGitAuth } from "../lib/github-auth.ts";
 import {
-  fillMissingPinState,
+  findSupersededPendingPinKeys,
   mergePinCandidates,
   mergePinStates,
+  mergeVersionCatalogSources,
   parsePinCandidates,
   parsePinCandidatesState,
   parseVersionCatalogSource,
-  reconstructGeneratedBranchPinState,
+  retainCurrentImagePins,
   rewriteVersionCatalogSource,
   serializePinCandidatesState,
   validateCandidateKeys,
@@ -26,6 +27,7 @@ const VERSION_BUMP_BRANCH = "chore/version-bump-pending";
 const VERSION_CATALOG_FILE_REL = "packages/version-catalog/src/catalog.json";
 const PIN_STATE_FILE_REL = "scripts/pin-candidates-state.json";
 const MAX_LEASE_ATTEMPTS = 3;
+const MAX_MERGE_READINESS_ATTEMPTS = 10;
 
 type GitRunner = (
   args: string[],
@@ -62,34 +64,6 @@ async function readBranchFile(
     throw new Error(`failed to read ${path} from ${ref}: ${result.stderr}`);
   }
   return result.stdout;
-}
-
-async function branchHasFile(
-  git: GitRunner,
-  ref: string,
-  path: string,
-): Promise<boolean> {
-  const result = await git(["ls-tree", "--name-only", ref, "--", path], {
-    capture: true,
-  });
-  return result.stdout.trim() === path;
-}
-
-export function generatedBuildNumberFromSubject(subject: string): number {
-  const normalized = subject.trim();
-  const current = /^chore: update image pins from build (\d+)$/.exec(
-    normalized,
-  );
-  const legacy = /^chore: bump image versions to 2\.0\.0-(\d+)$/.exec(
-    normalized,
-  );
-  const buildNumber = current?.[1] ?? legacy?.[1];
-  if (buildNumber === undefined) {
-    throw new Error(
-      `generated version bump commit has an unexpected subject: ${normalized}`,
-    );
-  }
-  return Number.parseInt(buildNumber, 10);
 }
 
 async function remoteBranchSha(git: GitRunner): Promise<string | null> {
@@ -141,6 +115,7 @@ async function prepareAttempt(
   validateCandidateKeys(batch, mainVersions);
 
   let aggregate = mainState;
+  let catalogSource = mainSource;
   if (remoteSha !== null) {
     const pendingRef = `origin/${VERSION_BUMP_BRANCH}`;
     const pendingSource = await readBranchFile(
@@ -149,45 +124,98 @@ async function prepareAttempt(
       VERSION_CATALOG_FILE_REL,
     );
     const pendingVersions = parseVersionCatalogSource(pendingSource);
+    // Every generated bump commits its full pin state beside the catalog.
+    const pendingState = parsePinCandidatesState(
+      await readBranchFile(git, pendingRef, PIN_STATE_FILE_REL),
+    );
+    validateStateAgainstVersions(pendingState, pendingVersions);
     const mergeBaseResult = await git(
       ["merge-base", "origin/main", pendingRef],
       { capture: true },
     );
     const mergeBase = mergeBaseResult.stdout.trim();
-    if (!/^[0-9a-f]{40}$/.test(mergeBase)) {
-      throw new Error(`unexpected generated bump merge base: ${mergeBase}`);
-    }
-    const subjectResult = await git(["log", "-1", "--format=%s", pendingRef], {
-      capture: true,
-    });
-    const reconstructedState = reconstructGeneratedBranchPinState(
-      parseVersionCatalogSource(
-        await readBranchFile(git, mergeBase, VERSION_CATALOG_FILE_REL),
-      ),
-      pendingVersions,
-      generatedBuildNumberFromSubject(subjectResult.stdout),
+    const baseSource = await readBranchFile(
+      git,
+      mergeBase,
+      VERSION_CATALOG_FILE_REL,
     );
-    let pendingState = reconstructedState;
-    if (await branchHasFile(git, pendingRef, PIN_STATE_FILE_REL)) {
-      const persistedState = parsePinCandidatesState(
-        await readBranchFile(git, pendingRef, PIN_STATE_FILE_REL),
-      );
-      validateStateAgainstVersions(persistedState, pendingVersions);
-      pendingState = fillMissingPinState(persistedState, reconstructedState);
-    } else {
-      console.log(
-        `reconstructed ${Object.keys(pendingState.pins).length.toString()} legacy pending image pins`,
+    const baseVersions = parseVersionCatalogSource(baseSource);
+    const baseState = parsePinCandidatesState(
+      await readBranchFile(git, mergeBase, PIN_STATE_FILE_REL),
+    );
+    validateStateAgainstVersions(baseState, baseVersions);
+    const historyCommits = await git(
+      [
+        "rev-list",
+        "--first-parent",
+        "--full-history",
+        "--reverse",
+        `${mergeBase}..origin/main`,
+        "--",
+        PIN_STATE_FILE_REL,
+      ],
+      { capture: true },
+    );
+    const mainHistory: ReturnType<typeof parsePinCandidatesState>[] = [];
+    for (const commit of historyCommits.stdout
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)) {
+      mainHistory.push(
+        parsePinCandidatesState(
+          await readBranchFile(git, commit, PIN_STATE_FILE_REL),
+        ),
       );
     }
-    validateStateAgainstVersions(pendingState, pendingVersions);
-    aggregate = mergePinStates(aggregate, pendingState);
+    const supersededPendingKeys = findSupersededPendingPinKeys(
+      mainState,
+      pendingState,
+      baseState,
+      mainHistory,
+    );
+    if (supersededPendingKeys.size > 0) {
+      console.log(
+        `Preserving main resets for pending image pins: ${[...supersededPendingKeys].join(", ")}`,
+      );
+    }
+    catalogSource = mergeVersionCatalogSources(
+      mainSource,
+      pendingSource,
+      baseSource,
+      supersededPendingKeys,
+    );
+    const mergedVersions = parseVersionCatalogSource(catalogSource);
+    // Preserve pins changed only on the generated branch. For keys unchanged
+    // there, keep main's changes and deletions so a reset can't be undone by a
+    // stale full-state snapshot.
+    const mergedPendingState = mergePinStates(
+      aggregate,
+      pendingState,
+      baseState,
+      supersededPendingKeys,
+    );
+    const { state: activePendingState, retiredKeys } = retainCurrentImagePins(
+      mergedPendingState,
+      mergedVersions,
+    );
+    if (retiredKeys.length > 0) {
+      console.log(
+        `Dropping retired image pins from pending version bump: ${retiredKeys.join(", ")}`,
+      );
+    }
+    aggregate = activePendingState;
+    catalogSource = await rewriteVersionCatalogSource(catalogSource, aggregate);
+    validateStateAgainstVersions(
+      aggregate,
+      parseVersionCatalogSource(catalogSource),
+    );
   }
   aggregate = mergePinCandidates(aggregate, batch);
 
   await resetVersionBumpBranch(git);
   await Bun.write(
     `${cloneDir}/${VERSION_CATALOG_FILE_REL}`,
-    await rewriteVersionCatalogSource(mainSource, aggregate),
+    await rewriteVersionCatalogSource(catalogSource, aggregate),
   );
   await Bun.write(
     `${cloneDir}/${PIN_STATE_FILE_REL}`,
@@ -243,6 +271,7 @@ export async function pushWithExactLease(
 
 async function openOrUpdatePullRequest(
   env: Record<string, string>,
+  expectedHead: string,
 ): Promise<void> {
   const prList = await run(
     [
@@ -302,7 +331,69 @@ async function openOrUpdatePullRequest(
   if (prNumber === "") {
     throw new Error("version commit-back PR number is empty");
   }
-  await run(
+  await enableAutoMergeWhenReady(env, prNumber, expectedHead);
+}
+
+async function enableAutoMergeWhenReady(
+  env: Record<string, string>,
+  prNumber: string,
+  expectedHead: string,
+): Promise<void> {
+  // GitHub recalculates mergeability after a force push. Arming auto-merge
+  // before that calculation finishes fails even when the new head is clean.
+  for (let attempt = 1; attempt <= MAX_MERGE_READINESS_ATTEMPTS; attempt++) {
+    if (
+      (await isVersionPinPrMergeable(env, prNumber, expectedHead)) &&
+      (await tryEnableVersionPinAutoMerge(env, prNumber))
+    )
+      return;
+    if (attempt < MAX_MERGE_READINESS_ATTEMPTS) {
+      await Bun.sleep(2000);
+    }
+  }
+  throw new Error(
+    `GitHub did not confirm auto-merge readiness for version pin PR #${prNumber}`,
+  );
+}
+
+async function isVersionPinPrMergeable(
+  env: Record<string, string>,
+  prNumber: string,
+  expectedHead: string,
+): Promise<boolean> {
+  const viewed = await run(
+    [
+      "gh",
+      "pr",
+      "view",
+      "--repo",
+      MONOREPO_REPO,
+      prNumber,
+      "--json",
+      "headRefOid,mergeable",
+      "--jq",
+      '.headRefOid + " " + .mergeable',
+    ],
+    { env, capture: true, echoCapturedStdout: false },
+  );
+  const [head, mergeable] = viewed.stdout.trim().split(" ");
+  if (head !== expectedHead) return false;
+  if (mergeable === "CONFLICTING") {
+    throw new Error(`version pin PR #${prNumber} conflicts with main`);
+  }
+  if (mergeable !== "MERGEABLE" && mergeable !== "UNKNOWN") {
+    throw new Error(
+      `unexpected mergeability for version pin PR #${prNumber}: ${mergeable ?? "missing"}`,
+    );
+  }
+  return mergeable === "MERGEABLE";
+}
+
+async function tryEnableVersionPinAutoMerge(
+  env: Record<string, string>,
+  prNumber: string,
+): Promise<boolean> {
+  const merged = await runAllowExit(
     [
       "gh",
       "pr",
@@ -314,6 +405,11 @@ async function openOrUpdatePullRequest(
       "--squash",
     ],
     { env },
+  );
+  if (merged.exitCode === 0) return true;
+  if (merged.stderr.includes("Pull Request is not mergeable")) return false;
+  throw new Error(
+    `failed to enable auto-merge for version pin PR #${prNumber}: ${merged.stderr}`,
   );
 }
 
@@ -376,7 +472,9 @@ async function commitBack(
         `version pin push lost ${MAX_LEASE_ATTEMPTS.toString()} consecutive leases`,
       );
     }
-    await openOrUpdatePullRequest(env);
+    const headResult = await git(["rev-parse", "HEAD"], { capture: true });
+    const expectedHead = headResult.stdout.trim();
+    await openOrUpdatePullRequest(env, expectedHead);
   } finally {
     await auth.cleanup();
     await rm(cloneDir, { recursive: true, force: true });

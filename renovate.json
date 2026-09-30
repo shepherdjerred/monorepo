@@ -18,11 +18,8 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update structured homelab version catalog and legacy TypeScript version files",
-      "managerFilePatterns": [
-        "packages/version-catalog/src/catalog.json",
-        "**/lib-versions.ts"
-      ],
+      "description": "Update the structured homelab version catalog",
+      "managerFilePatterns": ["packages/version-catalog/src/catalog.json"],
       "matchStrings": [
         "\"name\":\\s*\"(?<depName>[^\"]+)\",[\\s\\S]{0,240}?\"management\":\\s*\\{\\s*\"managed\":\\s*true,\\s*\"datasource\":\\s*\"(?<datasource>[^\"]+)\"(?:,\\s*\"registryUrl\":\\s*\"(?<registryUrl>[^\"]+)\")?,\\s*\"versioning\":\\s*\"(?<versioning>[^\"]+)\"(?:,\\s*\"packageName\":\\s*\"(?<packageName>[^\"]+)\")?\\s*\\},\\s*\"value\":\\s*\"(?<currentValue>[^\"@]+)(?:@(?<currentDigest>sha256:[a-f0-9]{64}))?\""
       ]
@@ -53,6 +50,29 @@
       "matchStrings": [
         "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+?)(?:\\s+versioning=(?<versioning>[a-z-]+))?\\n[ \\t]*ARG\\s+(?:YT_DLP_VERSION|UV_VERSION)=(?<currentValue>[a-zA-Z0-9._-]+)"
       ]
+    },
+    {
+      "customType": "regex",
+      "description": "Apple codesign (rcodesign) version pin in the macOS cross-compiler toolchain image",
+      "managerFilePatterns": ["packages/macos-cross-compiler/Dockerfile"],
+      "matchStrings": [
+        "#\\s*renovate:\\s*datasource=(?<datasource>[a-z-]+)\\s+depName=(?<depName>[^\\s]+)\\n[ \\t]*ARG APPLE_CODESIGN_VERSION=(?<currentValue>[0-9][a-zA-Z0-9._-]*)"
+      ],
+      "extractVersionTemplate": "^apple-codesign/(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "description": "macOS cross-compiler Swift base image, kept in sync across the structured SDK catalog and Dockerfile default",
+      "managerFilePatterns": [
+        "packages/macos-cross-compiler/sdks.json",
+        "packages/macos-cross-compiler/Dockerfile"
+      ],
+      "matchStrings": [
+        "\"swiftImage\":\\s*\"swift:(?<currentValue>[^@\"]+)@(?<currentDigest>sha256:[a-f0-9]{64})\"",
+        "ARG\\s+SWIFT_IMAGE=swift:(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker",
+      "depNameTemplate": "swift"
     },
     {
       "customType": "regex",
@@ -240,6 +260,7 @@
     },
     {
       "description": "Native TypeScript 7 owns typechecking; keep direct TypeScript on 6 for typescript-eslint project service, Astro Check, Twoslash, and TypeDoc.",
+      "groupName": "typescript",
       "matchManagers": ["bun", "npm"],
       "matchDepNames": ["typescript"],
       "allowedVersions": "<7"
@@ -276,6 +297,18 @@
       "description": "Keep the Vercel AI SDK in lockstep. Each @ai-sdk/otel release depends on the exact matching ai version, and its Telemetry types must match the ai the app compiles against, so bumping ai alone breaks typecheck.",
       "groupName": "AI SDK",
       "matchPackageNames": ["ai", "@ai-sdk/**"]
+    },
+    {
+      "description": "Bundle every package.json's eslint bump into one PR instead of ~60 separate ones",
+      "groupName": "eslint",
+      "matchManagers": ["bun", "npm"],
+      "matchDepNames": ["eslint"]
+    },
+    {
+      "description": "Bundle every package.json's prettier bump into one PR instead of ~60 separate ones",
+      "groupName": "prettier",
+      "matchManagers": ["bun", "npm"],
+      "matchDepNames": ["prettier"]
     },
     {
       "description": "Ignore architecture-specific Plex tags (armhf, arm64)",

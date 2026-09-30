@@ -38,6 +38,10 @@ export const QUALITY_RATCHET_EXCLUDED_DIRECTORIES = [
   "archive",
   "discord-video-stream",
   "target",
+  // Storybook's bundled output. Gitignored, but a local build leaves it in the
+  // working tree, and its vendored runtime carries dozens of eslint-disable
+  // comments that are not this repository's suppressions.
+  "storybook-static",
 ];
 
 const RULES: GrepRule[] = [

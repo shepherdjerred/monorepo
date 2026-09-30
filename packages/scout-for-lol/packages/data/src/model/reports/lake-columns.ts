@@ -1,4 +1,40 @@
 import { z } from "zod";
+import { MATCH_REBUILD_GATED_COLUMNS } from "#src/model/reports/match-rebuild-gated-columns.ts";
+
+const PositiveGameAssetIdSchema = z.number().int().positive();
+
+export const MatchRunePageSchema = z.object({
+  primaryStyleId: PositiveGameAssetIdSchema,
+  primaryRuneIds: z.tuple([
+    PositiveGameAssetIdSchema,
+    PositiveGameAssetIdSchema,
+    PositiveGameAssetIdSchema,
+    PositiveGameAssetIdSchema,
+  ]),
+  secondaryStyleId: PositiveGameAssetIdSchema,
+  secondaryRuneIds: z.tuple([
+    PositiveGameAssetIdSchema,
+    PositiveGameAssetIdSchema,
+  ]),
+  statShardIds: z.object({
+    offense: PositiveGameAssetIdSchema,
+    flex: PositiveGameAssetIdSchema,
+    defense: PositiveGameAssetIdSchema,
+  }),
+});
+
+export type MatchRunePage = z.infer<typeof MatchRunePageSchema>;
+
+export const MatchLoadoutSchema = z.object({
+  itemIds: z.array(z.number().int().nonnegative()).length(7),
+  summonerSpellIds: z.tuple([
+    PositiveGameAssetIdSchema,
+    PositiveGameAssetIdSchema,
+  ]),
+  runes: MatchRunePageSchema.nullable(),
+});
+
+export type MatchLoadout = z.infer<typeof MatchLoadoutSchema>;
 
 /**
  * Report-lake table schemas — the single source of truth for lake column
@@ -17,6 +53,13 @@ import { z } from "zod";
  *
  * This module must stay browser-safe: zod only, no node/Bun imports.
  */
+
+/**
+ * One final-inventory slot's item id; 0 is an empty slot. Defaulted so a row
+ * staged before the slots existed still parses — the schema fingerprint
+ * rebuilds every lake file with them, so no query reads that default.
+ */
+const ItemSlotSchema = z.number().nullable().default(null);
 
 export const MatchLakeRowSchema = z.object({
   // Match keys
@@ -54,6 +97,21 @@ export const MatchLakeRowSchema = z.object({
   individual_position: z.string(),
   lane: z.string().nullable(),
   role: z.string().nullable(),
+  // End-of-game loadout. Rune fields are collectively NULL for modes whose
+  // payload contains Riot's all-zero sentinel instead of a rune page.
+  summoner_spell_1_id: z.number(),
+  summoner_spell_2_id: z.number(),
+  primary_rune_style_id: z.number().nullable(),
+  primary_rune_0_id: z.number().nullable(),
+  primary_rune_1_id: z.number().nullable(),
+  primary_rune_2_id: z.number().nullable(),
+  primary_rune_3_id: z.number().nullable(),
+  secondary_rune_style_id: z.number().nullable(),
+  secondary_rune_0_id: z.number().nullable(),
+  secondary_rune_1_id: z.number().nullable(),
+  stat_perk_offense_id: z.number().nullable(),
+  stat_perk_flex_id: z.number().nullable(),
+  stat_perk_defense_id: z.number().nullable(),
   // Outcome
   win: z.boolean(),
   surrendered: z.boolean(),
@@ -134,6 +192,20 @@ export const MatchLakeRowSchema = z.object({
   placement: z.number().nullable(),
   subteam_placement: z.number().nullable(),
   player_subteam_id: z.number().nullable(),
+  // Final inventory: Riot's six slots and the trinket.
+  item0: ItemSlotSchema,
+  item1: ItemSlotSchema,
+  item2: ItemSlotSchema,
+  item3: ItemSlotSchema,
+  item4: ItemSlotSchema,
+  item5: ItemSlotSchema,
+  item6: ItemSlotSchema,
+  augment_1_id: z.number().nullable(),
+  augment_2_id: z.number().nullable(),
+  augment_3_id: z.number().nullable(),
+  augment_4_id: z.number().nullable(),
+  augment_5_id: z.number().nullable(),
+  augment_6_id: z.number().nullable(),
 });
 
 export type MatchLakeRow = z.infer<typeof MatchLakeRowSchema>;
@@ -259,6 +331,19 @@ export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
     individual_position: "VARCHAR",
     lane: "VARCHAR",
     role: "VARCHAR",
+    summoner_spell_1_id: "INTEGER",
+    summoner_spell_2_id: "INTEGER",
+    primary_rune_style_id: "INTEGER",
+    primary_rune_0_id: "INTEGER",
+    primary_rune_1_id: "INTEGER",
+    primary_rune_2_id: "INTEGER",
+    primary_rune_3_id: "INTEGER",
+    secondary_rune_style_id: "INTEGER",
+    secondary_rune_0_id: "INTEGER",
+    secondary_rune_1_id: "INTEGER",
+    stat_perk_offense_id: "INTEGER",
+    stat_perk_flex_id: "INTEGER",
+    stat_perk_defense_id: "INTEGER",
     win: "BOOLEAN",
     surrendered: "BOOLEAN",
     early_surrendered: "BOOLEAN",
@@ -323,7 +408,52 @@ export const MATCH_LAKE_COLUMNS: Record<keyof MatchLakeRow, DuckDbColumnType> =
     placement: "INTEGER",
     subteam_placement: "INTEGER",
     player_subteam_id: "INTEGER",
+    item0: "INTEGER",
+    item1: "INTEGER",
+    item2: "INTEGER",
+    item3: "INTEGER",
+    item4: "INTEGER",
+    item5: "INTEGER",
+    item6: "INTEGER",
+    augment_1_id: "INTEGER",
+    augment_2_id: "INTEGER",
+    augment_3_id: "INTEGER",
+    augment_4_id: "INTEGER",
+    augment_5_id: "INTEGER",
+    augment_6_id: "INTEGER",
   };
+
+/** The final-inventory slot columns, which only match_items reads. */
+export const ITEM_SLOT_COLUMNS = [
+  "item0",
+  "item1",
+  "item2",
+  "item3",
+  "item4",
+  "item5",
+  "item6",
+] as const;
+
+const REBUILD_GATED_COLUMNS = new Set<string>([
+  ...ITEM_SLOT_COLUMNS,
+  ...MATCH_REBUILD_GATED_COLUMNS,
+]);
+
+/**
+ * The match columns every ordinary read selects: all but fields gated on a
+ * rebuild of older Parquet.
+ *
+ * A read names its columns, and a build published before a column existed
+ * fails every read that names it until the lake is rebuilt (the backend's
+ * lakeSchemaFingerprint). Specialized UI readers select the new fields only
+ * after the full rebuild has published, while ordinary reports keep working.
+ */
+export const MATCH_READ_COLUMNS: Record<string, DuckDbColumnType> =
+  Object.fromEntries(
+    Object.entries(MATCH_LAKE_COLUMNS).filter(
+      ([name]) => !REBUILD_GATED_COLUMNS.has(name),
+    ),
+  );
 
 export const PREMATCH_LAKE_COLUMNS: Record<
   keyof PrematchLakeRow,

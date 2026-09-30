@@ -1,0 +1,15 @@
+{
+  "name": "@shepherdjerred/the-storm",
+  "private": true,
+  "description": "Turbo shim over the Gradle build of The Storm's Paper plugin (plugin/) \u2014 scripts wrap Gradle so the workspace joins the task graph (caching + affected). Same pattern as the Go and Rust shims.",
+  "scripts": {
+    "build": "mise exec -- gradle -p plugin assemble --console=plain",
+    "test": "mise exec -- gradle -p plugin test --console=plain",
+    "lint": "mise exec -- gradle -p plugin spotlessCheck pmdMain pmdTest --console=plain",
+    "typecheck": "mise exec -- gradle -p plugin compileJava compileTestJava --console=plain",
+    "check": "mise exec -- gradle -p plugin check --console=plain",
+    "format": "mise exec -- gradle -p plugin spotlessApply --console=plain",
+    "test:ci": "bun run test:report",
+    "test:report": "bun ../../scripts/ci/run-ci-test.ts"
+  }
+}

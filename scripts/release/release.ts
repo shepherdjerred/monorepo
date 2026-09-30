@@ -7,7 +7,7 @@
  * minted from env creds.
  *
  * Pipeline order (matches the old helper): release-pr → refine → github-release.
- * The refine step runs Codex SDK with GPT-5.6 Luna through OpenRouter using
+ * The refine step runs Codex SDK with GPT-5.6 Luna on OpenAI using
  * scripts/prompts/refine-release-please.md. It
  * rewrites the just-generated CHANGELOG entries into a consumer-focused view
  * and pushes a cleanup commit to the release PR. It exits 0 with a status
@@ -17,7 +17,7 @@
  *   bun scripts/release/release.ts [--dry-run]
  *
  * Env: GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PRIVATE_KEY,
- *      OPENROUTER_API_KEY (refine step)
+ *      OPENAI_API_KEY (refine step)
  */
 
 import { requireEnv, run } from "../lib/run.ts";
@@ -110,7 +110,7 @@ async function main(): Promise<void> {
   if (dryRun) {
     console.log(
       "DRYRUN: would run `release-please release-pr`, the Codex SDK Luna " +
-        "CHANGELOG refinement through OpenRouter (" +
+        "CHANGELOG refinement on OpenAI (" +
         "scripts/prompts/refine-release-please.md), then " +
         "`release-please github-release` against " +
         `${MONOREPO_REPO} (target-branch=main).`,
@@ -129,7 +129,7 @@ async function main(): Promise<void> {
     const releasePrTarget = await resolveReleaseTarget(root, env);
 
     // Validate the inference credential before release-please mutates the PR.
-    const openRouterApiKey = requireEnv("OPENROUTER_API_KEY");
+    const openAiApiKey = requireEnv("OPENAI_API_KEY");
     // Codex runs tool calls through a login shell. Verify that exact boundary,
     // not only this process's mise-aware PATH, before release-please mutates a PR.
     await run(["/bin/bash", "-lc", "gh --version"], {
@@ -163,7 +163,7 @@ async function main(): Promise<void> {
       // auth.env carries GH_TOKEN + the GIT_ASKPASS helper the agent's
       // git clone/push needs (the old helper's withAskpass: true).
       env,
-      openRouterApiKey,
+      openAiApiKey,
     });
     console.log(`--- CHANGELOG refinement complete (provider=${provider})`);
 

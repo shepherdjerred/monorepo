@@ -3,11 +3,14 @@ import type { NotificationIntent } from "#src/notifications/intent.ts";
 import {
   beginSend,
   confirmDelivered,
+  confirmUnsentSuppression,
   expire,
   markReady,
   operatorResolveUnknown,
   recordFailure,
   recordUnknownDelivery,
+  retireOrphaned,
+  suppress,
   suppressStale,
   type NotificationTransitionResult,
 } from "#src/notifications/intent-transitions.ts";
@@ -565,6 +568,127 @@ describe("suppressStale", () => {
   );
 });
 
+describe("suppress", () => {
+  const reasons = ["feature-disabled", "recipient-preference"] as const;
+
+  // The whole source-state table, one row per state and reason, so a state
+  // added to the union has to be classified here rather than falling through.
+  const table: readonly (readonly [
+    NotificationIntent["state"]["kind"],
+    (typeof reasons)[number],
+    NotificationTransitionResult["outcome"],
+    string | undefined,
+  ])[] = reasons.flatMap((reason) => [
+    ["pending", reason, "applied", undefined] as const,
+    ["ready", reason, "applied", undefined] as const,
+    ["sending", reason, "conflict", "send-in-flight"] as const,
+    [
+      "unknown-delivery",
+      reason,
+      "conflict",
+      "unknown-delivery-requires-operator",
+    ] as const,
+    ["delivered", reason, "conflict", "terminal-state"] as const,
+    ["expired", reason, "conflict", "terminal-state"] as const,
+    ["permission-denied", reason, "conflict", "terminal-state"] as const,
+  ]);
+
+  test("the table covers every state but suppressed, which has its own rows", () => {
+    const covered = new Set(table.map(([kind]) => kind));
+    expect([...covered, "suppressed"].sort()).toEqual(
+      Object.keys(statesByKind()).sort(),
+    );
+  });
+
+  test.each(table)(
+    "%s under %s is %s (%s)",
+    (kind, reason, outcome, conflictReason) => {
+      const result = suppress(makeIntent(statesByKind()[kind]), { reason });
+      if (outcome === "applied") {
+        expect(expectApplied(result).state).toEqual({
+          kind: "suppressed",
+          reason,
+        });
+        return;
+      }
+      expectConflict(result, conflictReason ?? "");
+    },
+  );
+
+  test("suppresses a fresh intent: the policy is not the clock", () => {
+    const intent = makeIntent({ kind: "ready" });
+    const next = expectApplied(
+      suppress(intent, { reason: "feature-disabled" }),
+    );
+    expect(next.state).toEqual({
+      kind: "suppressed",
+      reason: "feature-disabled",
+    });
+    expect(next.attemptCount).toBe(intent.attemptCount);
+    expect(next.freshnessDeadline).toBe(intent.freshnessDeadline);
+  });
+
+  test.each(reasons)("replaying a %s suppression is idempotent", (reason) => {
+    expect(
+      suppress(makeIntent({ kind: "suppressed", reason }), { reason }),
+    ).toEqual({ outcome: "already-applied" });
+  });
+
+  test.each([
+    ["stale", "feature-disabled"],
+    ["recipient-preference", "feature-disabled"],
+    ["feature-disabled", "recipient-preference"],
+  ] as const)(
+    "an intent already suppressed as %s conflicts under %s",
+    (stored, reason) => {
+      expectConflict(
+        suppress(makeIntent({ kind: "suppressed", reason: stored }), {
+          reason,
+        }),
+        "terminal-state",
+      );
+    },
+  );
+});
+
+describe("confirmUnsentSuppression", () => {
+  test("records a late opt-out against the matching unsent attempt", () => {
+    const result = confirmUnsentSuppression(makeIntent(sendingState()), {
+      attemptNonce: nonceA,
+      reason: "feature-disabled",
+    });
+    expect(expectApplied(result).state).toEqual({
+      kind: "suppressed",
+      reason: "feature-disabled",
+    });
+  });
+
+  test("rejects a different attempt nonce", () => {
+    expectConflict(
+      confirmUnsentSuppression(makeIntent(sendingState()), {
+        attemptNonce: nonceB,
+        reason: "feature-disabled",
+      }),
+      "attempt-nonce-mismatch",
+    );
+  });
+
+  test("cannot rewrite an observed or terminal outcome", () => {
+    for (const state of [
+      unknownDeliveryState(),
+      statesByKind().delivered,
+      statesByKind().suppressed,
+    ]) {
+      expect(
+        confirmUnsentSuppression(makeIntent(state), {
+          attemptNonce: nonceA,
+          reason: "feature-disabled",
+        }).outcome,
+      ).toBe("conflict");
+    }
+  });
+});
+
 describe("expire", () => {
   test.each(["pending", "ready"] as const)("%s expires", (kind) => {
     const next = expectApplied(expire(makeIntent({ kind })));
@@ -593,6 +717,83 @@ describe("expire", () => {
     (kind) => {
       expectConflict(
         expire(makeIntent(statesByKind()[kind])),
+        "terminal-state",
+      );
+    },
+  );
+});
+
+describe("retireOrphaned", () => {
+  const reasons = [
+    "subscription-deleted",
+    "channel-deleted",
+    "guild-left",
+  ] as const;
+
+  test.each(
+    (["pending", "ready"] as const).flatMap((kind) =>
+      reasons.map((reason) => [kind, reason] as const),
+    ),
+  )("%s retires as suppressed for %s", (kind, reason) => {
+    const next = expectApplied(
+      retireOrphaned(makeIntent({ kind }), { reason }),
+    );
+    expect(next.state).toEqual({ kind: "suppressed", reason });
+    expect(next.attemptCount).toBe(0);
+  });
+
+  test("an in-flight send is never retired", () => {
+    expectConflict(
+      retireOrphaned(makeIntent(sendingState()), {
+        reason: "subscription-deleted",
+      }),
+      "send-in-flight",
+    );
+  });
+
+  test("unknown-delivery is never retired", () => {
+    expectConflict(
+      retireOrphaned(makeIntent(unknownDeliveryState()), {
+        reason: "channel-deleted",
+      }),
+      "unknown-delivery-requires-operator",
+    );
+  });
+
+  test("replaying a retirement for the same reason is idempotent", () => {
+    expect(
+      retireOrphaned(makeIntent({ kind: "suppressed", reason: "guild-left" }), {
+        reason: "guild-left",
+      }),
+    ).toEqual({ outcome: "already-applied" });
+  });
+
+  test("a later observer cannot rewrite the recorded reason", () => {
+    expectConflict(
+      retireOrphaned(
+        makeIntent({ kind: "suppressed", reason: "subscription-deleted" }),
+        { reason: "channel-deleted" },
+      ),
+      "terminal-state",
+    );
+  });
+
+  test("a stale suppression is not relabelled as a retirement", () => {
+    expectConflict(
+      retireOrphaned(makeIntent({ kind: "suppressed", reason: "stale" }), {
+        reason: "subscription-deleted",
+      }),
+      "terminal-state",
+    );
+  });
+
+  test.each(["delivered", "expired", "permission-denied"] as const)(
+    "%s conflicts as terminal",
+    (kind) => {
+      expectConflict(
+        retireOrphaned(makeIntent(statesByKind()[kind]), {
+          reason: "subscription-deleted",
+        }),
         "terminal-state",
       );
     },
@@ -794,6 +995,14 @@ describe("state-machine invariants", () => {
       (intent) => suppressStale(intent, { at: afterDeadline }),
     ],
     ["expire", (intent) => expire(intent)],
+    [
+      "retireOrphaned",
+      (intent) => retireOrphaned(intent, { reason: "subscription-deleted" }),
+    ],
+    [
+      "suppress (feature-disabled)",
+      (intent) => suppress(intent, { reason: "feature-disabled" }),
+    ],
   ];
 
   test.each(nonOperatorAttempts)(

@@ -1,7 +1,7 @@
 {
   "name": "@shepherdjerred/monarch",
   "version": "0.1.0",
-  "description": "Monarch Money transaction classifier using OpenRouter + Amazon order matching",
+  "description": "Monarch Money transaction classifier using first-party LLM providers + Amazon order matching",
   "type": "module",
   "bin": {
     "monarch-classify": "./src/index.ts"
@@ -29,7 +29,7 @@
     "@shepherdjerred/architecture": "workspace:*",
     "@shepherdjerred/eslint-config": "workspace:*",
     "bun-types": "1.4.2",
-    "eslint": "^10.3.0",
+    "eslint": "^10.7.0",
     "jiti": "^2.7.0",
     "typescript": "^6.0.3",
     "@typescript/native": "npm:typescript@7.0.2",

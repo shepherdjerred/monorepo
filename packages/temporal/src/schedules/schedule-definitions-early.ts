@@ -4,8 +4,8 @@ import { schedulesInNamespace } from "./schedule-types.ts";
 
 export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
   {
-    id: "openai-complimentary-usage-hourly",
-    workflowType: "runOpenAiComplimentaryUsageReconciliation",
+    id: "llm-billed-cost-hourly",
+    workflowType: "runLlmBilledCostReconciliation",
     args: [],
     timing: {
       kind: "cron",
@@ -15,7 +15,12 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "10 minutes",
-    memo: "Hourly official OpenAI complimentary-token usage and cost reconciliation",
+    memo: "Hourly billed-spend reconciliation from the OpenAI and Anthropic cost reports, per project and workspace",
+    // Registered paused: stable workers do not register this Workflow, so a
+    // schedule run could reach an incompatible stable worker and fail before
+    // the candidate receives 100% of traffic. Unpause once it reaches 100%.
+    initialPauseNote:
+      "Awaiting 100% candidate traffic for runLlmBilledCostReconciliation; stable workers do not register this Workflow",
   },
   {
     id: "report-freshness-monitor",
@@ -76,7 +81,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     memo: "Create missing managed Flipt flags, then alert on remaining inventory drift",
   },
   {
-    id: "buildkite-bun-cache-gc",
+    id: "ci-bun-cache-gc",
     workflowType: "runBunCacheGcWorkflow",
     args: [],
     timing: {
@@ -88,7 +93,7 @@ export const EARLY_SCHEDULES = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 15-minute attempts plus exponential backoff and workflow overhead.
     workflowExecutionTimeout: "1 hour",
-    memo: "Every-five-minute Buildkite Bun cache GC on the CI node",
+    memo: "Every-five-minute Bun cache GC on the CI node",
   },
   {
     id: "turbo-cache-clean-daily",

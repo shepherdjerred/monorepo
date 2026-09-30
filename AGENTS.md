@@ -27,13 +27,15 @@ existing `SJ` issue only when the task explicitly identifies it.
 
 When the development environment itself blocks you — a tool that reliably
 fails, a documented command that does not work, missing access or fixtures
-needed to verify the change, a manual sequence you have now repeated — file it
-once in the `AI` team's `Developer Experience` project. File systemic problems
-the next agent will hit again, not one-off mistakes, unverified guesses, or
-causes you can fix inside the current scope. Filing never blocks or widens the
-task: fix small in-scope causes inline, file the rest after delivering, and
-name any issue you filed in the final report. Load the `linear-work-management`
-skill for the search-first procedure and issue shape.
+needed to verify the change, a manual sequence you have now repeated — search
+the `AI` team's `Developer Experience` project, upvote a match with a `+1`
+comment, and file a new issue only when there is no match. File systemic
+problems the next agent will hit again, not one-off mistakes, unverified
+guesses, or causes you can fix inside the current scope. Filing never blocks or
+widens the task: fix small in-scope causes inline, file the rest after
+delivering, and name any issue you filed or upvoted in the final report. Load
+the `linear-work-management` skill for the search-first procedure, vote shape,
+and issue shape.
 
 ## Workspace and runtime
 
@@ -87,14 +89,14 @@ call and distinguish authentication from authorization.
 ## Homelab ownership and delivery
 
 Infrastructure source lives under `packages/homelab`. Change repo-owned IaC and
-let Buildkite and ArgoCD apply it; do not make an untracked dashboard or cluster
+let CI and ArgoCD apply it; do not make an untracked dashboard or cluster
 mutation when a declarative path exists. Load the homelab development or
 operations skill before changing or operating that system.
 
 These are separate acceptance layers:
 
 1. source and focused local checks;
-2. exact-head Buildkite CI;
+2. exact-head Woodpecker CI;
 3. built and published artifacts;
 4. ArgoCD reconciliation to the intended revision;
 5. observed runtime health and user-visible behavior.
@@ -115,8 +117,8 @@ bunx turbo run build typecheck test lint --filter=<package>
 bunx lefthook run pre-commit
 ```
 
-Buildkite is the exhaustive gate and the CI source of truth. Use `toolkit bk` or
-`toolkit pr health`, not GitHub Actions. Run `bun run verify` locally only when
+Woodpecker is the exhaustive gate and the CI source of truth. Use
+`toolkit woodpecker` or `toolkit pr health`, not GitHub Actions. Run `bun run verify` locally only when
 reproducing CI or changing verification machinery.
 
 Verify claims from the live tree before reporting them. Preserve unrelated

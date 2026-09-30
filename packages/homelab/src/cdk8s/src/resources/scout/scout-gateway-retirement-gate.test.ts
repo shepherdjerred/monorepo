@@ -142,7 +142,6 @@ describe("Scout gateway retirement gate rendering", () => {
     for (const resources of [
       scoutResourcesWithGatewayTopology("beta", "split"),
       scoutResourcesWithGatewayTopology("beta", "absent"),
-      scoutResources("beta"),
       scoutResources("prod"),
     ]) {
       expect(gateResources(resources)).toEqual([]);

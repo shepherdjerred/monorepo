@@ -12,18 +12,14 @@
  * Authored directories have no allowlist. Generated trees and `sandbox/` are
  * not authored domains: generated output is machine-written, and
  * `sandbox/archive` is do-not-modify, so a rule that could block either is a
- * rule that cannot be obeyed. `CEILING` is a ratchet lowered by each
- * reorganization PR until it reaches `TARGET`. When they are equal, no
- * authored directory may exceed twenty-five files.
+ * rule that cannot be obeyed. No authored directory may exceed `LIMIT`
+ * files in either budget.
  */
 
 import { trackedExistingFiles } from "../lib/tracked-files.ts";
 
-/** Lowered by each reorganization PR until it reaches `TARGET`. */
-export const CEILING = 25;
-
-/** The permanent limit. When `CEILING` reaches this, the workstream is done. */
-export const TARGET = 25;
+/** The permanent per-directory limit for each budget. */
+export const LIMIT = 25;
 
 /** Advisory only — never affects the exit code. */
 export const WARN_THRESHOLD = 20;
@@ -164,21 +160,21 @@ function violationsAbove(
   );
 }
 
-/** Directories exceeding `ceiling` — these fail the check. */
+/** Directories exceeding `limit` — these fail the check. */
 export function findErrors(
   tallies: Iterable<DirectoryTally>,
-  ceiling: number = CEILING,
+  limit: number = LIMIT,
 ): Violation[] {
-  return violationsAbove(tallies, ceiling);
+  return violationsAbove(tallies, limit);
 }
 
-/** Directories over the advisory threshold but within `ceiling`. */
+/** Directories over the advisory threshold but within `limit`. */
 export function findWarnings(
   tallies: Iterable<DirectoryTally>,
-  ceiling: number = CEILING,
+  limit: number = LIMIT,
 ): Violation[] {
   return violationsAbove(tallies, WARN_THRESHOLD).filter(
-    (violation) => violation.count <= ceiling,
+    (violation) => violation.count <= limit,
   );
 }
 
@@ -228,12 +224,12 @@ export async function checkDirectoryFileCounts(
   const errors = findErrors(tallies);
   for (const error of errors) {
     console.error(
-      `ERROR: ${describe(error)} (limit ${CEILING.toString()}). Split into sub-domains.`,
+      `ERROR: ${describe(error)} (limit ${LIMIT.toString()}). Split into sub-domains.`,
     );
   }
   if (errors.length > 0) {
     throw new Error(
-      `${errors.length.toString()} directory budget(s) exceed the limit of ${CEILING.toString()}.`,
+      `${errors.length.toString()} directory budget(s) exceed the limit of ${LIMIT.toString()}.`,
     );
   }
 }

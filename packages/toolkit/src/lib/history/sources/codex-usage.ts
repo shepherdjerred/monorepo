@@ -1,4 +1,3 @@
-import { filesUnder } from "@shepherdjerred/toolkit/lib/history/sources-shared.ts";
 import {
   parseRecord,
   stringValue,
@@ -27,7 +26,7 @@ type CodexRolloutAccumulator = {
   // every local rollout file on this machine (822 files spanning over a
   // month) confirms this: none contain `token_usage_record` at all, and no
   // file mixes the two shapes. The two lists are therefore never merged
-  // per-turn — `scanCodexSessionUsage` picks whichever one is non-empty. A
+  // per-turn — `selectCodexUsageEvents` picks whichever one is non-empty. A
   // per-turn join keyed on the token counts themselves (tried in two earlier
   // passes: a signature set, then a one-for-one multiset) was reliably
   // broken by the one thing count-equality can never rule out — two
@@ -164,7 +163,9 @@ function applyTokenCount(
   location: UsageFieldLocation,
 ): void {
   const infoValue = payload["info"];
-  if (infoValue === undefined) {
+  // Codex also emits rate-limit-only token_count events with `info: null`;
+  // they carry no token usage for this turn.
+  if (infoValue === undefined || infoValue === null) {
     return;
   }
   const info = parseRecord(infoValue);
@@ -305,33 +306,65 @@ function selectCodexUsageEvents(
  * value as `thread_id` in those databases, so usage can be joined back onto
  * the documents built from them.
  */
-export async function scanCodexSessionUsage(
-  sessionsDir: string,
-): Promise<ReadonlyMap<string, readonly UsageEventEntry[]>> {
-  const files = await filesUnder(sessionsDir, ".jsonl");
-  const result = new Map<string, readonly UsageEventEntry[]>();
-  for (const file of files) {
-    const accumulator = await parseCodexRolloutFile(file);
-    if (accumulator.threadId === null) {
-      // A rollout with no thread id AND no usage is just a session Codex
-      // never assigned an id to (or one this parser doesn't yet recognize)
-      // — safe to skip. One that DOES carry usage events can't be silently
-      // dropped: there would be no key to file them under, but discarding
-      // them entirely understates every affected thread's tokens and cost.
-      if (
-        accumulator.tokenCountEvents.length > 0 ||
-        accumulator.tokenUsageRecordEvents.length > 0
-      ) {
-        throw new Error(
-          `Codex rollout has usage events but no thread id: ${file}`,
-        );
-      }
+export type CodexRolloutUsage = {
+  readonly threadId: string | null;
+  readonly events: readonly UsageEventEntry[];
+};
+
+/**
+ * Parses one rollout file's usage. A rollout with no thread id AND no
+ * usage is just a session Codex never assigned an id to (or one this
+ * parser doesn't yet recognize) — safe to skip. One that DOES carry usage
+ * events can't be silently dropped: there would be no key to file them
+ * under, but discarding them entirely understates every affected thread's
+ * tokens and cost.
+ */
+export async function parseCodexRolloutUsage(
+  filePath: string,
+): Promise<CodexRolloutUsage> {
+  const accumulator = await parseCodexRolloutFile(filePath);
+  if (accumulator.threadId === null) {
+    if (
+      accumulator.tokenCountEvents.length > 0 ||
+      accumulator.tokenUsageRecordEvents.length > 0
+    ) {
+      throw new Error(
+        `Codex rollout has usage events but no thread id: ${filePath}`,
+      );
+    }
+    return { threadId: null, events: [] };
+  }
+  return {
+    threadId: accumulator.threadId,
+    events: selectCodexUsageEvents(accumulator),
+  };
+}
+
+export type CodexSessionUsage = {
+  readonly threadId: string | null;
+  readonly events: readonly UsageEventEntry[];
+};
+
+/**
+ * Joins per-file session usage into per-thread usage: files are visited
+ * in sorted order and the last file with events for a thread wins, which
+ * is what a full re-parse of the sessions directory would produce.
+ */
+export function usageByThreadFromFiles(
+  sessionUsage: ReadonlyMap<string, CodexSessionUsage>,
+): Map<string, readonly UsageEventEntry[]> {
+  const usageByThread = new Map<string, readonly UsageEventEntry[]>();
+  for (const file of [...sessionUsage.keys()].sort()) {
+    const parsed = sessionUsage.get(file);
+    if (parsed === undefined) {
       continue;
     }
-    const events = selectCodexUsageEvents(accumulator);
-    if (events.length > 0) {
-      result.set(accumulator.threadId, events);
+    if (parsed.threadId === null) {
+      continue;
+    }
+    if (parsed.events.length > 0) {
+      usageByThread.set(parsed.threadId, parsed.events);
     }
   }
-  return result;
+  return usageByThread;
 }

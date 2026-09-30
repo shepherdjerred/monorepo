@@ -19,7 +19,6 @@ provider "argocd" {
 }
 
 provider "onepassword" {
-  # Authenticated via OP_CONNECT_TOKEN env var.
-  # Requires kubectl port-forward svc/onepassword-connect -n 1password 8080:8080
-  url = var.op_connect_url
+  # The operator-run wrapper supplies a vault-scoped service account through
+  # OP_SERVICE_ACCOUNT_TOKEN. The in-cluster Connect token is read-only.
 }

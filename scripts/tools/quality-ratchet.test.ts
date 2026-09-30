@@ -9,6 +9,7 @@ describe("quality ratchet search scope", () => {
       "archive",
       "discord-video-stream",
       "target",
+      "storybook-static",
     ]);
   });
 });

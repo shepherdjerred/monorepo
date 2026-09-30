@@ -17,8 +17,8 @@ test("AI SDK spans are children of a repository-owned GenAI parent", () => {
   telemetry.onStart({
     callId: "call-1",
     operationId: "ai.embed",
-    provider: "openrouter.embedding",
-    modelId: "openai/text-embedding-3-small",
+    provider: "openai.embedding",
+    modelId: "text-embedding-3-small",
     value: "hello",
     maxRetries: 2,
     runtimeContext: {},
@@ -32,16 +32,16 @@ test("AI SDK spans are children of a repository-owned GenAI parent", () => {
     callId: "call-1",
     embedCallId: "embed-1",
     operationId: "ai.embed.doEmbed",
-    provider: "openrouter.embedding",
-    modelId: "openai/text-embedding-3-small",
+    provider: "openai.embedding",
+    modelId: "text-embedding-3-small",
     values: ["hello"],
   });
   telemetry.onEmbedEnd({
     callId: "call-1",
     embedCallId: "embed-1",
     operationId: "ai.embed.doEmbed",
-    provider: "openrouter.embedding",
-    modelId: "openai/text-embedding-3-small",
+    provider: "openai.embedding",
+    modelId: "text-embedding-3-small",
     values: ["hello"],
     embeddings: [[0.1, 0.2]],
     usage: { tokens: 1 },
@@ -49,8 +49,8 @@ test("AI SDK spans are children of a repository-owned GenAI parent", () => {
   telemetry.onEnd({
     callId: "call-1",
     operationId: "ai.embed",
-    provider: "openrouter.embedding",
-    modelId: "openai/text-embedding-3-small",
+    provider: "openai.embedding",
+    modelId: "text-embedding-3-small",
     value: "hello",
     embedding: [0.1, 0.2],
     usage: { tokens: 1 },
@@ -64,7 +64,7 @@ test("AI SDK spans are children of a repository-owned GenAI parent", () => {
   const parent = spans.find((span) => span.name === "gen_ai.embeddings");
   const sdkOperation = spans.find(
     (span) =>
-      span.name === "embeddings openai/text-embedding-3-small" &&
+      span.name === "embeddings text-embedding-3-small" &&
       span.parentSpanContext?.spanId === parent?.spanContext().spanId,
   );
   expect(parent).toBeDefined();
@@ -96,8 +96,8 @@ test("the active subject lands on the span that carries usage", async () => {
       telemetry.onStart({
         callId: "call-subject",
         operationId: "ai.embed",
-        provider: "openrouter.embedding",
-        modelId: "openai/text-embedding-3-small",
+        provider: "openai.embedding",
+        modelId: "text-embedding-3-small",
         value: "hello",
         maxRetries: 2,
         runtimeContext: {},
@@ -111,16 +111,16 @@ test("the active subject lands on the span that carries usage", async () => {
         callId: "call-subject",
         embedCallId: "embed-subject",
         operationId: "ai.embed.doEmbed",
-        provider: "openrouter.embedding",
-        modelId: "openai/text-embedding-3-small",
+        provider: "openai.embedding",
+        modelId: "text-embedding-3-small",
         values: ["hello"],
       });
       telemetry.onEmbedEnd({
         callId: "call-subject",
         embedCallId: "embed-subject",
         operationId: "ai.embed.doEmbed",
-        provider: "openrouter.embedding",
-        modelId: "openai/text-embedding-3-small",
+        provider: "openai.embedding",
+        modelId: "text-embedding-3-small",
         values: ["hello"],
         embeddings: [[0.1, 0.2]],
         usage: { tokens: 1 },
@@ -128,8 +128,8 @@ test("the active subject lands on the span that carries usage", async () => {
       telemetry.onEnd({
         callId: "call-subject",
         operationId: "ai.embed",
-        provider: "openrouter.embedding",
-        modelId: "openai/text-embedding-3-small",
+        provider: "openai.embedding",
+        modelId: "text-embedding-3-small",
         value: "hello",
         embedding: [0.1, 0.2],
         usage: { tokens: 1 },
@@ -187,8 +187,8 @@ test("a call with no enclosing subject span carries no subject attributes", () =
   telemetry.onStart({
     callId: "call-none",
     operationId: "ai.embed",
-    provider: "openrouter.embedding",
-    modelId: "openai/text-embedding-3-small",
+    provider: "openai.embedding",
+    modelId: "text-embedding-3-small",
     value: "hello",
     maxRetries: 2,
     runtimeContext: {},
@@ -201,8 +201,8 @@ test("a call with no enclosing subject span carries no subject attributes", () =
   telemetry.onEnd({
     callId: "call-none",
     operationId: "ai.embed",
-    provider: "openrouter.embedding",
-    modelId: "openai/text-embedding-3-small",
+    provider: "openai.embedding",
+    modelId: "text-embedding-3-small",
     value: "hello",
     embedding: [0.1, 0.2],
     usage: { tokens: 1 },

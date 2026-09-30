@@ -57,7 +57,7 @@ The `customRulesPlugin` (rules namespaced `custom-rules/*`) lives in
 - `prefer-zod-validation`, `no-redundant-zod-parse`, `zod-schema-naming`
 - `prefer-bun-apis`, `require-ts-extensions`, `no-parent-imports`,
   `no-re-exports`, `no-type-guards`, `no-function-overloads`,
-  `prefer-async-await`, `prefer-date-fns`
+  `prefer-async-await`
 - `prisma-client-disconnect`, `satori-best-practices`,
   `require-container-resources`, `prefer-structured-logging`,
   `no-use-effect`, `no-dto-naming`, `no-shadcn-theme-tokens`

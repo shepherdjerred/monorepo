@@ -8,6 +8,7 @@ import {
 import {
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
+  type DiscordGuildId,
 } from "@scout-for-lol/domain/identity/discord.ts";
 import {
   NotificationAttemptNonceSchema,
@@ -183,6 +184,24 @@ export function deliveryIntentKey(
   channelId: string,
 ): string {
   return `${keyPrefix}:${channelId}`;
+}
+
+/**
+ * The key of one guild's Hall of Fame record-break announcement for a match.
+ *
+ * Keyed by GUILD rather than by channel, unlike every per-channel key above,
+ * because the decision to notify is v1's outbox identity — one announcement per
+ * (guild, match) — and the Hall channel is a setting that can change between
+ * two evaluations of the same match. Keying by channel would let one
+ * re-evaluation after a channel change mint a second announcement of the same
+ * records. The channel is the intent's target column, and every reader takes
+ * the target (and the key) from the stored row rather than rebuilding them.
+ */
+export function hallRecordBreakIntentKey(
+  riotMatchId: RiotMatchId,
+  guildId: DiscordGuildId,
+): string {
+  return `hall-record-break:${riotMatchId}:${guildId}`;
 }
 
 type RecorderConfig = {

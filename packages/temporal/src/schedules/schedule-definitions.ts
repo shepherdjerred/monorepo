@@ -10,6 +10,7 @@ import {
 } from "./schedule-types.ts";
 import { SCOUT_SCHEDULES } from "./scout-schedule-definitions.ts";
 import { BACKUP_SCHEDULES } from "./backup-schedule-definitions.ts";
+import { AGENT_CHAT_SCHEDULES } from "./agent-chat-schedule-definitions.ts";
 
 // Split out of register-schedules.ts (which sits at the repo's max-lines
 // cap) — the declarative SCHEDULES array plus its supporting types/data, no
@@ -49,6 +50,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   ...EARLY_SCHEDULES,
   ...SCOUT_SCHEDULES,
   ...BACKUP_SCHEDULES,
+  ...AGENT_CHAT_SCHEDULES,
   {
     id: "kometa-daily",
     workflowType: "runKometaWorkflow",
@@ -152,7 +154,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     taskQueue: TASK_QUEUES.WORKFLOWS,
     overlap: ScheduleOverlapPolicy.SKIP,
     workflowExecutionTimeout: "30 minutes",
-    memo: "Weekly LLM model-catalog cross-check vs models.dev, LiteLLM, and OpenRouter (opens a PR on drift)",
+    memo: "Weekly LLM model-catalog cross-check vs models.dev and LiteLLM (opens a PR on drift)",
   },
   {
     id: "scout-season-refresh-weekly",
@@ -168,7 +170,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     // Two 30-minute research attempts, their 5-minute backoff, and both
     // possible three-attempt report deliveries fit inside this bound.
     workflowExecutionTimeout: "90 minutes",
-    memo: "Weekly LoL season-date drift check (Codex SDK Luna through OpenRouter → PR if drifted)",
+    memo: "Weekly LoL season-date drift check (Codex SDK Luna on OpenAI → PR if drifted)",
   },
   {
     id: "scout-showcase-refresh-weekly",
@@ -243,7 +245,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     memo: "Weekly ZFS pool scrub + autotrim (zfspv-pool-nvme, zfspv-pool-hdd)",
   },
   {
-    id: "buildkite-uv-cache-prune-weekly",
+    id: "ci-uv-cache-prune-weekly",
     workflowType: "runUvCachePruneWorkflow",
     args: [],
     timing: {
@@ -255,10 +257,10 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 30-minute attempts plus exponential backoff and workflow overhead.
     workflowExecutionTimeout: "2 hours",
-    memo: "Weekly Buildkite uv cache prune on the CI node",
+    memo: "Weekly uv cache prune on the CI node",
   },
   {
-    id: "buildkite-trivy-db-refresh",
+    id: "ci-trivy-db-refresh",
     workflowType: "runTrivyDbRefreshWorkflow",
     args: [],
     timing: {
@@ -270,7 +272,21 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 30-minute attempts plus exponential backoff and workflow overhead.
     workflowExecutionTimeout: "2 hours",
-    memo: "Buildkite Trivy vulnerability database refresh every six hours",
+    memo: "Trivy vulnerability database refresh every six hours",
+  },
+  {
+    id: "ci-io-telemetry-daily",
+    workflowType: "runCiIoTelemetry",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "15 7 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Daily CI I/O recording rule and dashboard health check",
   },
   ...SECURITY_SCHEDULES,
   {
@@ -357,7 +373,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     requiredEnvironment: [
       "GLITTER_DISCORD_GUILD_ID",
       ...GLITTER_CORPUS_STORAGE_ENV,
-      "OPENROUTER_API_KEY",
+      "OPENAI_API_KEY",
       "GITHUB_APP_ID",
       "GITHUB_APP_INSTALLATION_ID",
       "GITHUB_APP_PRIVATE_KEY",

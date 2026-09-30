@@ -40,16 +40,12 @@ const VENDOR_INTERFACE_VARIABLES = new Set(["GRAFANA_SERVER", "GRAFANA_TOKEN"]);
 
 const GITHUB_TOKEN_EXCLUSIONS = [
   "TOFU_GITHUB_TOKEN",
-  "GLANCE_TEST_",
-  "@modelcontextprotocol",
-  "server-github expects",
   "YOUR_GITHUB_TOKEN",
   "env:GITHUB_TOKEN",
   "CHANGELOG.md",
-  "plans/",
   "dot_agents/skills/",
   "GITHUB_TOKEN_URL",
-  "buildkite/scripts/toolchain.sh",
+  "ci/scripts/toolchain.sh",
 ];
 
 export type EnvironmentVariableViolation = {

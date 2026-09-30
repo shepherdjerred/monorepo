@@ -1,0 +1,22 @@
+/** UI-only match fields selected after a fingerprint-triggered full rebuild. */
+export const MATCH_REBUILD_GATED_COLUMNS = [
+  "summoner_spell_1_id",
+  "summoner_spell_2_id",
+  "primary_rune_style_id",
+  "primary_rune_0_id",
+  "primary_rune_1_id",
+  "primary_rune_2_id",
+  "primary_rune_3_id",
+  "secondary_rune_style_id",
+  "secondary_rune_0_id",
+  "secondary_rune_1_id",
+  "stat_perk_offense_id",
+  "stat_perk_flex_id",
+  "stat_perk_defense_id",
+  "augment_1_id",
+  "augment_2_id",
+  "augment_3_id",
+  "augment_4_id",
+  "augment_5_id",
+  "augment_6_id",
+] as const;

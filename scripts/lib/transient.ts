@@ -1,8 +1,10 @@
 /**
  * Transient-failure classification for CI scripts.
  *
- * The Buildkite retry anchor (`.buildkite/pipeline.yml`) only auto-retries
- * exit codes 255 / 34 / -1 — plain exit 1 ("logical failure") never retries.
+ * A generated step retries only when its retry loop is configured to, and the
+ * loop re-runs on any non-zero exit. Exiting with EXIT_TRANSIENT (34) is what
+ * distinguishes "the network was unhappy" from "this code is wrong" in the
+ * step log, so a reader can tell a flake from a real failure without guessing.
  * Scripts that talk to external services (GitHub, ArgoCD, Cloudflare, the
  * tofu state backend) use `runMain` so that failures matching a known
  * transient signature exit with EXIT_TRANSIENT (34) and get the step's
@@ -17,7 +19,7 @@
 
 import { TransientError } from "./transient-error.ts";
 
-/** Exit code the pipeline's retry anchor treats as "transient, retry me". */
+/** Exit code that marks a failure as "transient, safe to retry". */
 export const EXIT_TRANSIENT = 34;
 
 export const TRANSIENT_ERROR_PATTERN =

@@ -53,6 +53,10 @@ const MAX_LOADING_SCREEN_IMAGE_BYTES = 1 * BYTES_PER_MIB;
 // Data Dragon splash ~180 KB), so it gets a slightly larger ceiling.
 const MAX_SPLASH_IMAGE_BYTES = 2 * BYTES_PER_MIB;
 const CLASSIC_BACKGROUND_PATH = `${IMG_DIR}/background/classic-jade.png`;
+// Riot match history still records these 15.23 Arena augments after they leave
+// the current catalog. Keep their original names and icons in the pinned cache.
+const HISTORICAL_ARENA_AUGMENT_VERSION = "15.23";
+const HISTORICAL_ARENA_AUGMENT_IDS = [71, 250] as const;
 
 /**
  * CommunityDragon *centered* splash art (≈1280×720) keyed by numeric champion
@@ -1289,12 +1293,31 @@ async function fetchAndSaveArenaAugments(arenaAugmentsUrl: string): Promise<{
 
   const data: unknown = await response.json();
   const parsed = ArenaAugmentsApiResponseSchema.parse(data);
+  const historicalResponse = await fetchWithRetry(
+    getArenaAugmentsUrl(HISTORICAL_ARENA_AUGMENT_VERSION),
+  );
+  if (!historicalResponse.ok) {
+    throw new Error(
+      `Failed to fetch historical Arena augments: ${String(historicalResponse.status)} ${historicalResponse.statusText}`,
+    );
+  }
+  const historicalData: unknown = await historicalResponse.json();
+  const historical = ArenaAugmentsApiResponseSchema.parse(historicalData);
+  const historicalAugments = HISTORICAL_ARENA_AUGMENT_IDS.map((id) => {
+    const augment = historical.augments.find(
+      (candidate) => candidate.id === id,
+    );
+    if (augment === undefined) {
+      throw new Error(`Historical Arena augment ${id.toString()} is missing`);
+    }
+    return augment;
+  });
 
   // Build the cache format keyed by ID
   const cache: Record<string, ArenaAugmentCacheEntry> = {};
   const iconPaths = new Set<string>();
 
-  for (const augment of parsed.augments) {
+  for (const augment of [...historicalAugments, ...parsed.augments]) {
     iconPaths.add(augment.iconLarge);
     iconPaths.add(augment.iconSmall);
 
@@ -1319,10 +1342,10 @@ async function fetchAndSaveArenaAugments(arenaAugmentsUrl: string): Promise<{
     JSON.stringify(cache, null, 2),
   );
   console.log(
-    `✓ Written arena-augments.json (${String(parsed.augments.length)} augments)`,
+    `✓ Written arena-augments.json (${String(Object.keys(cache).length)} augments)`,
   );
 
-  return { iconPaths, count: parsed.augments.length };
+  return { iconPaths, count: Object.keys(cache).length };
 }
 
 async function downloadAugmentImages(
@@ -1455,7 +1478,7 @@ async function maybeAppendChangelogEntry(
     return;
   }
 
-  // Ask Opus through OpenRouter to analyze deterministically fetched patch notes
+  // Ask Opus to analyze deterministically fetched patch notes
   // (`summary` + per-change data feed the AI review) plus the Scout-focused
   // `changelogHighlights` consumed here for the "What's New" entry.
   // Best-effort: a failure (no credential, timeout, bad output) falls back to just
@@ -1463,9 +1486,7 @@ async function maybeAppendChangelogEntry(
   // than blocking the asset PR or shipping a garbage changeset.
   let highlights: string[] = [];
   try {
-    console.log(
-      `🤖 Analyzing patch ${patch.patch} notes via OpenRouter Opus...`,
-    );
+    console.log(`🤖 Analyzing patch ${patch.patch} notes via Opus...`);
     const officialPatchContent = await fetchOfficialPatchNotes(patch);
     const changeset = await analyzePatch(patch, officialPatchContent);
     await savePatchChangeset(changeset);
@@ -1476,7 +1497,7 @@ async function maybeAppendChangelogEntry(
     await saveRawPatchNotes(patch, officialPatchContent);
   } catch (error) {
     console.warn(
-      `⚠ OpenRouter patch analysis failed; using data-refresh line only and leaving patch-notes.json unchanged: ${String(error)}`,
+      `⚠ Patch analysis failed; using data-refresh line only and leaving patch-notes.json unchanged: ${String(error)}`,
     );
   }
 
@@ -1507,6 +1528,24 @@ async function main(): Promise<void> {
     const requestedVersion = process.argv.find((argument) =>
       /^\d+\.\d+\.\d+$/.test(argument),
     );
+    if (process.argv.includes("--arena-augments-only")) {
+      const previousVersion = await readPreviousVersion();
+      if (previousVersion === undefined) {
+        throw new Error("--arena-augments-only requires a committed version");
+      }
+      if (
+        requestedVersion !== undefined &&
+        requestedVersion !== previousVersion
+      ) {
+        throw new Error(
+          `--arena-augments-only must use the committed Data Dragon version ${previousVersion}; received ${requestedVersion}`,
+        );
+      }
+      await fetchAndSaveArenaAugments(
+        getArenaAugmentsUrl(getCommunityDragonVersion(previousVersion)),
+      );
+      return;
+    }
     if (process.argv.includes("--classic-assets-only")) {
       const previousVersion = await readPreviousVersion();
       if (previousVersion === undefined) {

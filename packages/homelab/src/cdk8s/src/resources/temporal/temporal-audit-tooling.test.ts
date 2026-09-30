@@ -157,16 +157,15 @@ function envNames(deployment: SynthesizedDeployment): Set<string> {
 }
 
 describe("temporal homelab audit tooling configuration", () => {
-  it("injects Buildkite and Bugsink configuration", async () => {
+  it("injects Woodpecker and Bugsink configuration", async () => {
     const yaml = await synthesizeApp();
 
     expect(yaml).toContain("name: BUGSINK_URL");
     expect(yaml).toContain("value: https://bugsink.sjer.red");
-    expect(yaml).toContain("name: BUILDKITE_API_TOKEN");
-    expect(yaml).toContain("name: BUILDKITE_ORGANIZATION_SLUG");
-    expect(yaml).toContain("value: sjerred");
-    expect(yaml).toContain("name: BUILDKITE_PIPELINE_SLUG");
-    expect(yaml).toContain("value: monorepo");
+    expect(yaml).toContain("name: WOODPECKER_TOKEN");
+    expect(yaml).toContain("name: WOODPECKER_REPO_ID");
+    expect(yaml).toContain("name: WOODPECKER_URL");
+    expect(yaml).toContain("value: https://woodpecker.sjer.red");
     // Homelab-audit S3 archiving is unused; HOMELAB_AUDIT_ARCHIVE_* env vars are
     // intentionally not wired (no dead optional secret).
     expect(yaml).not.toContain("name: HOMELAB_AUDIT_ARCHIVE_BUCKET");
@@ -407,7 +406,7 @@ describe("Temporal domain worker isolation", () => {
       expect(contextEnv).not.toContain(required);
     }
     for (const required of [
-      "OPENROUTER_API_KEY",
+      "OPENAI_API_KEY",
       "GITHUB_APP_ID",
       "GITHUB_APP_INSTALLATION_ID",
       "GITHUB_APP_PRIVATE_KEY",
@@ -551,9 +550,9 @@ describe("Temporal operations worker isolation", () => {
       expect(scoutEnv).not.toContain(required);
     }
     expect(repoEnv).toContain("FRESHRSS_API_PASSWORD_FILE");
-    expect(repoEnv).toContain("BUILDKITE_API_TOKEN");
-    expect(repoEnv).toContain("OPENROUTER_API_KEY");
-    expect(scoutEnv).toContain("OPENROUTER_API_KEY");
+    expect(repoEnv).toContain("WOODPECKER_TOKEN");
+    expect(repoEnv).toContain("OPENAI_API_KEY");
+    expect(scoutEnv).toContain("OPENAI_API_KEY");
     for (const replayOnly of [
       "SCOUT_BRYAN_BUCKS_CONTROL_URL",
       "SCOUT_BRYAN_BUCKS_CONTROL_TOKEN",
@@ -643,7 +642,7 @@ describe("temporal homelab audit tooling access boundaries", () => {
     ]);
   });
 
-  it("gives the agent worker only provider auth and read-only evidence configuration", async () => {
+  it("gives the agent worker chat storage, provider auth, and read-only evidence configuration", async () => {
     const deployments = parseDeployments(await synthesizeApp());
     const agent = requireDeployment(
       deployments,
@@ -654,7 +653,12 @@ describe("temporal homelab audit tooling access boundaries", () => {
     for (const required of [
       "TEMPORAL_ADDRESS",
       "TEMPORAL_WORKER_ROLE",
-      "OPENROUTER_API_KEY",
+      "CLAUDE_CODE_OAUTH_TOKEN",
+      "CODEX_AUTH_JSON_B64",
+      "S3_ENDPOINT",
+      "AWS_ACCESS_KEY_ID",
+      "AWS_SECRET_ACCESS_KEY",
+      "OPENAI_API_KEY",
       "PROMETHEUS_URL",
       "ALERT_DASHBOARD_URL",
     ]) {
@@ -664,21 +668,16 @@ describe("temporal homelab audit tooling access boundaries", () => {
     for (const prohibited of [
       "AGENT_TASK_API_TOKEN",
       "ARGOCD_AUTH_TOKEN",
-      "AWS_ACCESS_KEY_ID",
-      "AWS_SECRET_ACCESS_KEY",
       "BUGSINK_TOKEN",
-      "BUILDKITE_API_TOKEN",
+      "WOODPECKER_TOKEN",
       "CLOUDFLARE_API_TOKEN",
       "CODEX_API_KEY",
-      "CLAUDE_CODE_OAUTH_TOKEN",
-      "CODEX_ACCESS_TOKEN",
       "GITHUB_APP_ID",
       "GITHUB_APP_INSTALLATION_ID",
       "GITHUB_APP_PRIVATE_KEY",
       "GITHUB_WEBHOOK_SECRET",
       "GRAFANA_API_KEY",
       "HA_TOKEN",
-      "OPENAI_API_KEY",
       "POSTAL_API_KEY",
       "RECIPIENT_EMAIL",
       "SENDER_EMAIL",

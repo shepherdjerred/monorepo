@@ -4,6 +4,7 @@ import {
   type ArtifactDescriptor,
 } from "@scout-for-lol/domain/artifacts/descriptors.ts";
 import {
+  IsoInstantSchema,
   RiotMatchIdSchema,
   type NotificationIntentKey,
   type RiotMatchId,
@@ -14,6 +15,8 @@ import {
 } from "@scout-for-lol/domain/match-processing/states.ts";
 import type {
   ScoutFanOutV2Result,
+  ScoutGuardedEffectV2Result,
+  ScoutNotificationIntentV2Result,
   ScoutPrematchArchiveV2Result,
   ScoutPrematchScanV2Result,
 } from "#src/activity-contracts-v2.ts";
@@ -114,7 +117,28 @@ export type ScoutV2PrematchStore = {
    * has to find its own writes rather than repeat them.
    */
   crashAfterCapture: boolean;
+  /**
+   * Intents already driven to delivery, under the shared intent key — by a
+   * notification child this store served, or by v1 on the far side of an
+   * ownership flip. The plan reads them as the real one does: a delivered
+   * intent is not drivable.
+   */
+  delivered: NotificationIntentKey[];
+  /**
+   * Guilds holding a Bryan Bucks pool for the game, one entry per pool. The
+   * markets stub opens one pool per announced channel's guild only where
+   * none stands, as `BucksMatchPool`'s unique (match, guild) makes the real
+   * open do, so a pool opened twice shows up as a duplicate entry.
+   */
+  pools: string[];
+  /** Fail the markets Activity, to prove the announcement goes out anyway. */
+  marketsFail: boolean;
+  /** Intent keys a started notification child read, in arrival order. */
+  childReads: NotificationIntentKey[];
 };
+
+/** Every test channel sits in one guild, which is the case pools dedupe on. */
+export const GUILD_ID = "300000000000000001";
 
 export function createScoutV2PrematchStore(
   overrides: Partial<ScoutV2PrematchStore> = {},
@@ -129,6 +153,10 @@ export function createScoutV2PrematchStore(
     calls: [],
     failAt: null,
     crashAfterCapture: false,
+    delivered: [],
+    pools: [],
+    marketsFail: false,
+    childReads: [],
     ...overrides,
   };
 }
@@ -145,6 +173,7 @@ export function captured(
     intentKeys: CHANNEL_IDS.map((channelId) =>
       prematchIntentKeyOf(gameRef, channelId),
     ),
+    pools: [GUILD_ID],
   });
 }
 
@@ -233,10 +262,67 @@ export function scoutV2PrematchActivityStubs(
       record("planPrematchFanOutV2");
       const prefix = `prematch-discord:${input.riotMatchId}:`;
       return {
-        notificationIntentKeys: store.intentKeys.filter((key) =>
-          key.startsWith(prefix),
+        notificationIntentKeys: store.intentKeys.filter(
+          (key) => key.startsWith(prefix) && !store.delivered.includes(key),
         ),
         lakeProjection: store.lakeProjection,
+      };
+    },
+    openPrematchMarketsV2: (): ScoutGuardedEffectV2Result => {
+      record("openPrematchMarketsV2");
+      if (store.marketsFail) {
+        throw ApplicationFailure.nonRetryable(
+          "injected markets failure",
+          "InjectedCrash",
+        );
+      }
+      if (store.intentKeys.length === 0 || store.pools.includes(GUILD_ID)) {
+        return {
+          guard: { outcome: "already-applied" },
+          fact: { outcome: "already-applied" },
+          effects: 0,
+        };
+      }
+      store.pools.push(GUILD_ID);
+      store.applied.push(`pool:${GUILD_ID}`);
+      return {
+        guard: { outcome: "applied" },
+        fact: { outcome: "applied" },
+        effects: 1,
+      };
+    },
+    /**
+     * Just enough of the notification child for it to finish: the child's
+     * first read counts as its delivery and it then sees a terminal intent,
+     * so it records nothing further and completes. The prematch tests assert
+     * WHICH children started and that each intent is delivered once, not how
+     * the notification machine drives one — `durable-v2.test.ts` owns that.
+     */
+    readNotificationIntentV2: (input: {
+      intentKey: NotificationIntentKey;
+    }): ScoutNotificationIntentV2Result => {
+      // Kept out of `calls`: the children run after their parent returns, so
+      // an ordered record of the parent's Activities must not interleave them.
+      store.childReads.push(input.intentKey);
+      if (!store.delivered.includes(input.intentKey)) {
+        store.delivered.push(input.intentKey);
+      }
+      return {
+        kind: "present",
+        intent: {
+          intentKey: input.intentKey,
+          state: {
+            kind: "delivered",
+            deliveredAt: IsoInstantSchema.parse("2026-09-13T00:00:01.000Z"),
+          },
+          attemptCount: 1,
+        },
+        gate: {
+          kind: "prematch",
+          target: "channel",
+          policy: "normal",
+          decision: "permitted",
+        },
       };
     },
   };

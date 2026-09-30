@@ -14,15 +14,15 @@ for topology and the wiki how-to guides for operator workflows.
 
 ## Layout
 
-| Directory        | Contents                                                                                                     |
-| ---------------- | ------------------------------------------------------------------------------------------------------------ |
-| `src/cdk8s`      | All Kubernetes manifests as TypeScript ([cdk8s](https://cdk8s.io/)) — see its [README](src/cdk8s/README.md)  |
-| `src/talos`      | Talos machine config patches per node plus static pods — see its [README](src/talos/README.md)               |
-| `src/tofu`       | OpenTofu stacks (Cloudflare, GitHub, Tailscale, ArgoCD, SeaweedFS, …) — see its [README](src/tofu/README.md) |
-| `src/helm-types` | Generator for type-safe Helm chart value interfaces                                                          |
-| `mac-ci`         | Bootstrap for a macOS Buildkite agent (currently dormant) — see its [README](mac-ci/README.md)               |
-| `images`         | Custom Docker images (caddy-s3proxy, obsidian-headless, redlib)                                              |
-| `scripts`        | Release/automation scripts: helm push, ArgoCD reconcile, tofu stack wrapper, Velero                          |
+| Directory        | Contents                                                                                                      |
+| ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| `src/cdk8s`      | All Kubernetes manifests as TypeScript ([cdk8s](https://cdk8s.io/)) — see its [README](src/cdk8s/README.md)   |
+| `src/talos`      | Talos machine config patches per node plus static pods — see its [README](src/talos/README.md)                |
+| `src/tofu`       | OpenTofu stacks (Cloudflare, GitHub, Tailscale, ArgoCD, SeaweedFS, …) — see its [README](src/tofu/README.md)  |
+| `src/helm-types` | Generator for type-safe Helm chart value interfaces                                                           |
+| `mac-ci`         | Bootstrap for the macOS Woodpecker agent (native lanes currently paused) — see its [README](mac-ci/README.md) |
+| `images`         | Custom Docker images (caddy-s3proxy, obsidian-headless, redlib)                                               |
+| `scripts`        | Release/automation scripts: helm push, ArgoCD reconcile, tofu stack wrapper, Velero                           |
 
 ## Details
 
@@ -46,15 +46,16 @@ some things I'm proud of:
 
 ## Deployment
 
-Deploys are driven by the static Buildkite pipeline
-([`.buildkite/pipeline.yml`](../../.buildkite/pipeline.yml)):
+Deploys are driven by the generated Woodpecker pipeline. The
+[CI pipeline guide](../docs/wiki/src/content/docs/explanation/ci-pipeline-shape.md)
+explains its change selection and release ordering:
 
-- **Every PR** runs the root `bun run verify` graph (which includes homelab's
+- **Every PR** runs the change-selected `bun run verify` graph (which includes homelab's
   `check:talos`, `lint:helm`, and `check:1password` tasks) plus change-gated
   `tofu plan`s for the affected stacks and dry-run rehearsals of the helm push
   and ArgoCD reconcile.
-- **On merge to main**, the pipeline applies the tofu stacks (infra, github,
-  cloudflare), pushes the versioned Helm chart
+- **On merge to main**, the pipeline applies selected OpenTofu stacks, publishes
+  versioned Helm charts
   (`scripts/helm/helm-push.ts`), and syncs + waits on ArgoCD
   (`scripts/argocd/argocd.ts`).
 
@@ -73,8 +74,8 @@ ArgoCD, which reverts direct mutations.
 ```bash
 talosctl gen config \
   --with-secrets secrets.yaml \
-  --talos-version v1.13.9 \
-  --kubernetes-version 1.36.4 \
+  --talos-version v1.14.1 \
+  --kubernetes-version 1.37.0 \
   --config-patch-control-plane @torvalds/patches/scheduling.yaml \
   --config-patch-control-plane @torvalds/patches/certsans.yaml \
   --config-patch-control-plane @torvalds/patches/etcd-metrics.yaml \
@@ -219,7 +220,7 @@ kubectl exec pod/shell -n maintenance -- \
 ### Upgrade Talos
 
 ```bash
-VERSION=v1.13.9
+VERSION=v1.14.1
 # Upgrade the CI worker first. The short MagicDNS name is a direct worker
 # endpoint; a worker cannot proxy its own Talos request. Use the Torvalds
 # Tailscale FQDN for all control-plane operations.
@@ -240,7 +241,7 @@ talosctl --nodes torvalds.tailnet-1a49.ts.net version
 ### Upgrade Kubernetes
 
 ```bash
-VERSION=1.36.4
+VERSION=1.37.0
 
 # `upgrade-k8s` discovers liskov by raw Tailscale IP, which does not match
 # its hostname-only Talos API certificate. Upgrade control-plane components,

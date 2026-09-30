@@ -28,8 +28,8 @@ import {
   SERIES_RANGES,
   type ChangeView,
   type SeriesRange,
-  type SnapshotResponse,
 } from "#shared/ops-schema";
+import type { SnapshotResponse } from "@shepherdjerred/ops-model/snapshot.ts";
 
 export const services = new ServiceIndex();
 

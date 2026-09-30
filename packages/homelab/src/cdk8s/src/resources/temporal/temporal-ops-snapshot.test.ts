@@ -66,6 +66,10 @@ describe("Temporal ops snapshot collector", () => {
       name: "LOKI_URL",
       value: "http://loki.loki.svc.cluster.local:3100",
     });
+    expect(env).toContainEqual({
+      name: "TEMPO_URL",
+      value: "http://tempo.tempo.svc.cluster.local:3200",
+    });
   });
 
   test("keeps the ops credentials off every other worker", () => {
@@ -83,7 +87,7 @@ describe("Temporal ops snapshot collector", () => {
     }
   });
 
-  test("lets the infra worker reach Alertmanager and Loki", () => {
+  test("lets the infra worker reach Alertmanager, Loki, and Tempo", () => {
     const policy = findTemporalResource(
       resources(),
       "NetworkPolicy",
@@ -117,6 +121,7 @@ describe("Temporal ops snapshot collector", () => {
     );
     expect(byPort.get(9093)).toBe("prometheus");
     expect(byPort.get(3100)).toBe("loki");
+    expect(byPort.get(3200)).toBe("tempo");
     // Kubernetes API and the dashboard ingest stay reachable.
     expect(byPort.has(6443)).toBe(true);
     expect(byPort.has(7341)).toBe(true);

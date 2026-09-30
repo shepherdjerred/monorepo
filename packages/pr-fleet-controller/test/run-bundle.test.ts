@@ -1369,11 +1369,11 @@ describe("run bundle inspection", () => {
       worktree: "/tmp/worktrees/pr-42",
       setupComplete: true,
       evidence: evidence(pr, {
-        buildkiteFailure: {
-          jobId: "job-1",
+        ciFailure: {
+          pipelineNumber: 1,
           name: "verify",
-          state: "failed",
-          webUrl: "https://buildkite.com/example/builds/1#job-1",
+          state: "failure",
+          webUrl: "https://woodpecker.sjer.red/repos/1/pipeline/1",
           startedAt: "2026-08-03T00:00:00.000Z",
           log: "private command log",
         },
@@ -1412,7 +1412,7 @@ describe("run bundle inspection", () => {
     expect(hidden.finalSnapshot?.prs[0]?.evidence.reviewFindings[0]?.body).toBe(
       "[hidden; pass --show-bodies]",
     );
-    expect(hidden.finalSnapshot?.prs[0]?.evidence.buildkiteFailure?.log).toBe(
+    expect(hidden.finalSnapshot?.prs[0]?.evidence.ciFailure?.log).toBe(
       "[hidden; pass --show-bodies]",
     );
     expect(hidden.finalSnapshot?.prs[0]?.escalation).toBe(

@@ -110,6 +110,13 @@
       "reason": "Rebuildable static site"
     },
     {
+      "name": "ts-mc-docs",
+      "mode": "excluded",
+      "cadences": [],
+      "excludeSuffixes": [],
+      "reason": "Rebuildable static site"
+    },
+    {
       "name": "scout-design-system",
       "mode": "excluded",
       "cadences": [],
@@ -164,6 +171,13 @@
       "cadences": ["daily"],
       "excludeSuffixes": [],
       "reason": "LLM request and response archive"
+    },
+    {
+      "name": "agent-chat-sessions",
+      "mode": "protected",
+      "cadences": ["daily"],
+      "excludeSuffixes": [],
+      "reason": "Durable Claude and Codex chat resume state"
     },
     {
       "name": "streambot-voice-captures",

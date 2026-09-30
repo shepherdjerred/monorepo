@@ -323,6 +323,32 @@ describe("pet dashboard rollout", () => {
   });
 });
 
+describe("ops digest email rollout", () => {
+  test("sends the ops digest only in prod", () => {
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === "ops-digest-email-enabled",
+    );
+    expect(declared?.default).toBe(false);
+
+    for (const [environment, enabled] of [
+      ["beta", false],
+      ["prod", true],
+    ] as const) {
+      const flag = materializeManagedNamespaceEnvironment(
+        managedFlagInventory,
+        environment,
+        "alert-dashboard",
+      ).find((candidate) => candidate.key === "ops-digest-email-enabled");
+      expect(flag).toMatchObject({
+        default: enabled,
+        rollouts: [],
+        rules: [],
+        thresholdRollouts: [],
+      });
+    }
+  });
+});
+
 describe("Scout V2 post-match ownership", () => {
   test("keeps V2 as the post-match discovery owner in every environment", () => {
     // The rollback switch, not a new surface: merging it must change nothing,
@@ -335,15 +361,60 @@ describe("Scout V2 post-match ownership", () => {
   });
 });
 
+describe("Scout V2 progression notifications", () => {
+  test("targets the beta canary and leaves production off", () => {
+    const beta = scoutPolicyFlag(
+      "beta",
+      "scout_v2_progression_notifications_enabled",
+    );
+    expect(beta.default).toBe(false);
+    expect(beta.rollouts).toEqual([
+      expect.objectContaining({
+        segmentKey: "scout-guild-1337623164146155593",
+        constraints: [
+          expect.objectContaining({
+            property: "server",
+            operator: "eq",
+            value: "1337623164146155593",
+          }),
+        ],
+        result: true,
+      }),
+    ]);
+    expect(beta.rules).toEqual([]);
+
+    expect(
+      scoutPolicyFlag("prod", "scout_v2_progression_notifications_enabled"),
+    ).toMatchObject({ default: false, rollouts: [], rules: [] });
+  });
+});
+
 describe("Scout V2 prematch ownership", () => {
-  test("leaves prematch detection with v1 in every environment", () => {
-    // A cutover switch that ramps per stage, not a rollback: merging it must
-    // change nothing, so both environments resolve the v1 ownership that
-    // already runs, and each ramp records its own environment override.
-    for (const environment of ["beta", "prod"]) {
-      expect(
-        scoutPolicyFlag(environment, "scout_v2_prematch_ownership_enabled"),
-      ).toMatchObject({ default: false, rollouts: [] });
-    }
+  test("keeps the declared default on v1 so an unreachable Flipt never moves detection", () => {
+    const declared = managedFlagInventory.flags.find(
+      (flag) => flag.key === "scout_v2_prematch_ownership_enabled",
+    );
+    expect(declared).toMatchObject({ default: false, rollouts: [] });
+  });
+
+  test("hands prematch detection to V2 in beta while prod stays on v1", () => {
+    // The cutover ramps per stage, beta first. Each ramp records its own
+    // environment override, so prod keeps resolving the v1 ownership it runs.
+    expect(
+      scoutPolicyFlag("beta", "scout_v2_prematch_ownership_enabled"),
+    ).toMatchObject({
+      default: true,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
+    expect(
+      scoutPolicyFlag("prod", "scout_v2_prematch_ownership_enabled"),
+    ).toMatchObject({
+      default: false,
+      rollouts: [],
+      rules: [],
+      thresholdRollouts: [],
+    });
   });
 });

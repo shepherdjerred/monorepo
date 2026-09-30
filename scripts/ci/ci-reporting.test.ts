@@ -132,9 +132,9 @@ describe("CI reporting boundaries", () => {
           workspace.directory,
           excluded.path,
         );
-        // A documented exclusion must reference a real suite file so it cannot
-        // rot into a stale claim once the underlying test is renamed or removed.
-        expect(await Bun.file(suitePath).exists()).toBe(true);
+        // A documented exclusion must reference a real suite file or directory
+        // so it cannot rot into a stale claim once the test is renamed or removed.
+        expect(await Bun.file(suitePath).stat()).toBeDefined();
       }
     }
   });
@@ -159,6 +159,36 @@ describe("CI reporting boundaries", () => {
     expect(() => {
       assertExcludedSuitesAreUncovered(manifest);
     }).toThrow(/excluded suite but a reporting step already runs it/);
+  });
+
+  test("allows a documented suite excluded by a broad Vitest filter", () => {
+    const manifest = TestManifestSchema.parse({
+      $schema: "./ci-test-manifest.schema.json",
+      version: 2,
+      workspaces: [
+        {
+          package: "package",
+          directory: "packages/package",
+          steps: [
+            {
+              runner: "vitest",
+              args: ["src", "--exclude", "src/emulator/audio.test.ts"],
+            },
+          ],
+          excludedSuites: [
+            {
+              path: "src/emulator/audio.test.ts",
+              reason: "Runs in a dedicated image verification stage.",
+            },
+          ],
+        },
+      ],
+      testlessWorkspaces: [],
+      separateTests: [],
+    });
+    expect(() => {
+      assertExcludedSuitesAreUncovered(manifest);
+    }).not.toThrow();
   });
 });
 
@@ -398,7 +428,7 @@ describe("Coverage report aggregation", () => {
     );
     expect(
       coverableWorkspaceSources(
-        ["packages/parent", ".buildkite/scripts"],
+        ["packages/parent", "ci/scripts"],
         ["packages/parent", "packages/parent/packages/child"],
         [
           "packages/parent/src/index.ts",
@@ -406,13 +436,13 @@ describe("Coverage report aggregation", () => {
           "packages/parent/src/generated/client.ts",
           "packages/parent/packages/child/src/index.ts",
           "packages/parent/eslint.config.ts",
-          ".buildkite/scripts/upload-pipeline.ts",
-          ".buildkite/scripts/upload-pipeline.test.ts",
+          "ci/scripts/upload-pipeline.ts",
+          "ci/scripts/upload-pipeline.test.ts",
           "packages/other/src/index.ts",
         ],
       ),
     ).toEqual([
-      ".buildkite/scripts/upload-pipeline.ts",
+      "ci/scripts/upload-pipeline.ts",
       "packages/parent/src/index.ts",
     ]);
     expect(
@@ -741,6 +771,11 @@ describe("CI reporting manifest", () => {
           "scripts/helm/lint-helm.test.ts",
           "scripts/migration-smoke.test.ts",
           "scripts/velero-backups.test.ts",
+          "scripts/argocd/argocd-apply-safety.test.ts",
+          "scripts/argocd/argocd-auto-sync-policy.test.ts",
+          "scripts/argocd/argocd-child-sync-timeout.test.ts",
+          "scripts/argocd/argocd-release-result.test.ts",
+          "scripts/tofu/tofu-stack.test.ts",
         ],
       },
     ]);
@@ -792,6 +827,7 @@ describe("CI reporting manifest", () => {
         const usesCoverage = manifestEntry.steps.some(
           (step) =>
             step.runner !== "cargo" &&
+            step.runner !== "gradle" &&
             step.runner !== "command" &&
             (step.runner !== "dotnet" || step.coverageConfig !== undefined),
         );
@@ -823,6 +859,7 @@ describe("CI reporting manifest", () => {
       "scripts/ci/ci-reporting.ts",
       "scripts/ci-test-manifest.json",
       "scripts/ci/run-ci-test.ts",
+      "scripts/ci/gradle-junit.ts",
     ]) {
       expect(rootTurbo).toContain(`"${reportingInput}"`);
     }

@@ -1,6 +1,5 @@
 import { match } from "ts-pattern";
 import {
-  MATCH_LAKE_COLUMNS,
   MATCH_TEAM_BAN_LAKE_COLUMNS,
   MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
@@ -10,6 +9,7 @@ import {
   TIMELINE_EVENT_LAKE_COLUMNS,
   TIMELINE_PARTICIPANT_FRAME_LAKE_COLUMNS,
 } from "@scout-for-lol/data/model/reports/timeline-lake-columns.ts";
+import { MATCH_READ_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.ts";
 
 /**
  * Which column names each ScoutQL source exposes, and the SQL each becomes.
@@ -320,7 +320,7 @@ export function buildPlanColumnMap(source: PlanColumnSource): ColumnMap {
       "match",
       () =>
         new Map([
-          ...sourceColumnEntries(MATCH_LAKE_COLUMNS),
+          ...sourceColumnEntries(MATCH_READ_COLUMNS),
           ...MATCH_VIRTUAL_COLUMNS,
         ]),
     )

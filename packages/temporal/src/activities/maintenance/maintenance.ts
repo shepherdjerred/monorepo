@@ -9,6 +9,18 @@ import { log } from "#observability/log.ts";
 
 const KOMETA_CONFIG_PATH = "/etc/kometa/config.yml";
 const MAINTENANCE_WORKDIR = "/tmp";
+
+/**
+ * Where the CI cache claims are mounted into the maintenance worker.
+ *
+ * Must match the volume mounts in
+ * packages/homelab/.../resources/woodpecker/maintenance-worker.ts. A mismatch
+ * is not subtle -- the subprocess fails on a missing path -- but it is the
+ * kind of mismatch a namespace rename introduces silently, so both ends name
+ * the other.
+ */
+const CI_CACHE_ROOT = "/woodpecker";
+const CI_MAINTENANCE_SCRIPTS = `${CI_CACHE_ROOT}/maintenance`;
 const HEARTBEAT_INTERVAL_MS = 15_000;
 const OUTPUT_TAIL_LINES = 20;
 const OUTPUT_TAIL_CHARS = 8192;
@@ -38,11 +50,14 @@ export type MaintenanceFetch = (
   init?: RequestInit,
 ) => Promise<Response>;
 
+/**
+ * Kinds are also the `maintenance_job` metric label, so these strings are the
+ * contract with the alerts in the homelab monitoring rules --
+ * CI_BUN_CACHE_GC_ACTIVITY there must match `ci-bun-cache-gc` here, or the
+ * staleness alert watches a job nothing reports.
+ */
 export type MaintenanceKind =
-  | "kometa"
-  | "buildkite-bun-cache-gc"
-  | "buildkite-uv-cache-prune"
-  | "buildkite-trivy-db-refresh";
+  "kometa" | "ci-bun-cache-gc" | "ci-uv-cache-prune" | "ci-trivy-db-refresh";
 
 /**
  * Label attached to every maintenance subprocess for logs and error messages.
@@ -142,29 +157,29 @@ export async function buildMaintenanceCommand(
         secretValues: [plexToken, tmdbApiKey],
       };
     }
-    case "buildkite-bun-cache-gc":
+    case "ci-bun-cache-gc":
       return {
         kind,
-        command: ["bash", "/buildkite/maintenance/bun-cache-gc.sh"],
+        command: ["bash", `${CI_MAINTENANCE_SCRIPTS}/bun-cache-gc.sh`],
         cwd: MAINTENANCE_WORKDIR,
         env: maintenanceCommandEnvironment({
-          BUN_INSTALL_CACHE_DIR: "/buildkite/bun-cache/data",
-          BUN_CACHE_LOCK_FILE: "/buildkite/bun-cache-control/.gc.lock",
+          BUN_INSTALL_CACHE_DIR: `${CI_CACHE_ROOT}/bun-cache/data`,
+          BUN_CACHE_LOCK_FILE: `${CI_CACHE_ROOT}/bun-cache-control/.gc.lock`,
           BUN_CACHE_GC_THRESHOLD_PERCENT: "60",
         }),
         secretValues: [],
       };
-    case "buildkite-uv-cache-prune":
+    case "ci-uv-cache-prune":
       return {
         kind,
         command: ["uv", "cache", "prune", "--ci"],
         cwd: MAINTENANCE_WORKDIR,
         env: maintenanceCommandEnvironment({
-          UV_CACHE_DIR: "/buildkite/uv-cache",
+          UV_CACHE_DIR: `${CI_CACHE_ROOT}/uv-cache`,
         }),
         secretValues: [],
       };
-    case "buildkite-trivy-db-refresh":
+    case "ci-trivy-db-refresh":
       return {
         kind,
         command: [
@@ -172,7 +187,7 @@ export async function buildMaintenanceCommand(
           "image",
           "--download-db-only",
           "--cache-dir",
-          "/buildkite/trivy-db",
+          `${CI_CACHE_ROOT}/trivy-db`,
         ],
         cwd: MAINTENANCE_WORKDIR,
         env: maintenanceCommandEnvironment({}),
@@ -473,13 +488,13 @@ export const maintenanceActivities = {
     await executeMaintenance("kometa");
   },
   async runBunCacheGc(): Promise<void> {
-    await executeMaintenance("buildkite-bun-cache-gc");
+    await executeMaintenance("ci-bun-cache-gc");
   },
   async runUvCachePrune(): Promise<void> {
-    await executeMaintenance("buildkite-uv-cache-prune");
+    await executeMaintenance("ci-uv-cache-prune");
   },
   async runTrivyDbRefresh(): Promise<void> {
-    await executeMaintenance("buildkite-trivy-db-refresh");
+    await executeMaintenance("ci-trivy-db-refresh");
   },
   async runTurboCacheClean(): Promise<TurboCacheCleanResult> {
     return cleanTurboCache();

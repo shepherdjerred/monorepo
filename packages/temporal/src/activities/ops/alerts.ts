@@ -4,7 +4,10 @@ import type {
 } from "@shepherdjerred/ops-clients/alertmanager.ts";
 import { METRIC_IDS } from "@shepherdjerred/ops-model/metric-ids.ts";
 import { OPS_POLICY } from "@shepherdjerred/ops-model/policy.ts";
-import type { Severity } from "@shepherdjerred/ops-model/severity.ts";
+import {
+  worstSeverity,
+  type Severity,
+} from "@shepherdjerred/ops-model/severity.ts";
 import type { SignalInput } from "@shepherdjerred/ops-model/snapshot.ts";
 import {
   ALERTMANAGER_URL,
@@ -43,18 +46,33 @@ export function alertSeverity(alert: AlertmanagerAlert): Severity {
     : (SEVERITY_BY_LABEL[label] ?? "warning");
 }
 
-function alertSignal(
-  alert: AlertmanagerAlert,
+/**
+ * One signal per alert name and namespace. Alertmanager fires one alert per
+ * label set (e.g. one per failed workflow execution), which would otherwise
+ * flood the overview with near-identical rows.
+ */
+function alertGroupSignal(
+  group: readonly AlertmanagerAlert[],
   context: OpsContext,
 ): SignalInput {
-  const alertname = alert.labels["alertname"] ?? "(unnamed alert)";
-  const namespace = alert.labels["namespace"];
-  const severity = alertSeverity(alert);
-  const firingMinutes = minutesSince(alert.startsAt, context.now);
-  const summary = alert.annotations["summary"];
-  const description = alert.annotations["description"];
+  const [first] = group;
+  if (first === undefined) {
+    throw new Error("alertGroupSignal requires at least one alert");
+  }
+  const alertname = first.labels["alertname"] ?? "(unnamed alert)";
+  const namespace = first.labels["namespace"];
+  const severity = worstSeverity(group.map((alert) => alertSeverity(alert)));
+  const since = group
+    .map((alert) => alert.startsAt)
+    .reduce((earliest, startsAt) =>
+      Date.parse(startsAt) < Date.parse(earliest) ? startsAt : earliest,
+    );
+  const firingMinutes = minutesSince(since, context.now);
+  const summary = first.annotations["summary"];
+  const description = first.annotations["description"];
+  const title = summary ?? alertname;
   return {
-    id: `alerts:${alert.fingerprint}`,
+    id: `alerts:${alertname}:${namespace ?? "-"}`,
     source: "alerts",
     section: "alerts",
     ...serviceForNamespace(context, namespace),
@@ -63,22 +81,42 @@ function alertSignal(
     needsMe:
       (severity === "error" || severity === "warning") &&
       firingMinutes >= OPS_POLICY.alertNeedsMeAfterMinutes,
-    title: truncate(summary ?? alertname, 200),
+    title: truncate(
+      group.length === 1 ? title : `${title} (×${String(group.length)})`,
+      200,
+    ),
     ...(description === undefined
       ? {}
       : { detail: truncate(description, 500) }),
-    since: new Date(Date.parse(alert.startsAt)).toISOString(),
+    since: new Date(Date.parse(since)).toISOString(),
     attributes: {
       alertname,
+      count: group.length,
       firingMinutes: Math.round(firingMinutes),
       ...(namespace === undefined ? {} : { namespace }),
     },
     links: [
       alertmanagerLink(alertname),
-      ...externalLink("native", "Runbook", alert.annotations["runbook_url"]),
+      ...externalLink("native", "Runbook", first.annotations["runbook_url"]),
       ...(namespace === undefined ? [] : [logsLink(namespace)]),
     ],
   };
+}
+
+function groupAlerts(
+  alerts: readonly AlertmanagerAlert[],
+): AlertmanagerAlert[][] {
+  const groups = new Map<string, AlertmanagerAlert[]>();
+  for (const alert of alerts) {
+    const key = `${alert.labels["alertname"] ?? ""}\u{0}${alert.labels["namespace"] ?? ""}`;
+    const group = groups.get(key);
+    if (group === undefined) {
+      groups.set(key, [alert]);
+    } else {
+      group.push(alert);
+    }
+  }
+  return [...groups.values()];
 }
 
 export function mapAlerts(
@@ -89,7 +127,9 @@ export function mapAlerts(
   const firing = alerts.filter(
     (alert) => !ALWAYS_FIRING.has(alert.labels["alertname"] ?? ""),
   );
-  const signals = firing.map((alert) => alertSignal(alert, context));
+  const signals = groupAlerts(firing).map((group) =>
+    alertGroupSignal(group, context),
+  );
   if (silences.length > 0) {
     signals.push({
       id: "alerts:silences",

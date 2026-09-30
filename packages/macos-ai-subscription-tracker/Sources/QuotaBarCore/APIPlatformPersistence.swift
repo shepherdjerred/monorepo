@@ -35,10 +35,11 @@ public final class JSONAPIPlatformSnapshotStore: APIPlatformSnapshotPersisting, 
     } catch {
       throw APIPlatformError.cacheCorrupt
     }
-    if let cache = try? JSONDecoder().decode(APIPlatformCacheFile.self, from: data) {
-      return try dictionary(from: cache.snapshots)
+    if let cache = try? JSONDecoder().decode(DecodedAPIPlatformCacheFile.self, from: data) {
+      return try dictionary(from: cache.snapshots.compactMap(\.snapshot))
     }
-    if let snapshot = try? JSONDecoder().decode(APIPlatformSnapshot.self, from: data) {
+    if let entry = try? JSONDecoder().decode(CachedAPIPlatformSnapshot.self, from: data) {
+      guard let snapshot = entry.snapshot else { return [:] }
       return [snapshot.platform: snapshot]
     }
     throw APIPlatformError.cacheCorrupt
@@ -77,6 +78,31 @@ public final class JSONAPIPlatformSnapshotStore: APIPlatformSnapshotPersisting, 
   }
 }
 
-private struct APIPlatformCacheFile: Codable {
+private struct APIPlatformCacheFile: Encodable {
   let snapshots: [APIPlatformSnapshot]
+}
+
+private struct DecodedAPIPlatformCacheFile: Decodable {
+  let snapshots: [CachedAPIPlatformSnapshot]
+}
+
+/// Platforms Brim used to support. A cache written before a platform was
+/// removed still carries its snapshot, which is a known migration, not
+/// corruption; any other unrecognized platform still fails the load.
+let retiredAPIPlatformRawValues: Set<String> = ["openrouter"]
+
+private struct CachedAPIPlatformSnapshot: Decodable {
+  let snapshot: APIPlatformSnapshot?
+
+  private enum CodingKeys: String, CodingKey {
+    case platform
+  }
+
+  init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let platform = try container.decode(String.self, forKey: .platform)
+    snapshot =
+      retiredAPIPlatformRawValues.contains(platform)
+      ? nil : try APIPlatformSnapshot(from: decoder)
+  }
 }

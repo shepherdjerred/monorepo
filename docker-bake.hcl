@@ -3,7 +3,7 @@
 # identical workspace bun-install layer the app images share — replacing the
 # serial per-image loop (45-52 min images step, build 5644/5656).
 #
-# CI (.buildkite/scripts/images/bake-images.ts) invokes this with
+# CI (ci/scripts/images/bake-images.ts) invokes this with
 # VERSION/GIT_SHA/PUSH_CACHE set; local `docker buildx bake <target>` works
 # with the dev defaults (cache is read-only unless PUSH_CACHE=true — writing
 # the ghcr buildcache refs needs a docker-container builder + push creds).
@@ -84,7 +84,7 @@ group "app" {
     "scout-for-lol",
     "discord-plays-pokemon",
     "discord-plays-mario-kart",
-    "openrouter-broadcast-ingest",
+    "woodpecker-config-extension",
   ]
 }
 
@@ -105,6 +105,17 @@ target "birmel" {
   cache-to   = cacheto("birmel")
 }
 
+# The service Woodpecker asks for each build's pipeline. Without it there is
+# no graph to run, so it is an app image like any other rather than something
+# built out of band.
+target "woodpecker-config-extension" {
+  inherits   = ["_app"]
+  dockerfile = "packages/woodpecker-config-extension/Dockerfile"
+  tags       = imagetags("woodpecker-config-extension")
+  cache-from = cachefrom("woodpecker-config-extension")
+  cache-to   = cacheto("woodpecker-config-extension")
+}
+
 target "alert-dashboard" {
   inherits   = ["_app"]
   dockerfile = "packages/alert-dashboard/Dockerfile"
@@ -119,14 +130,6 @@ target "tasknotes-server" {
   tags       = imagetags("tasknotes-server")
   cache-from = cachefrom("tasknotes-server")
   cache-to   = cacheto("tasknotes-server")
-}
-
-target "openrouter-broadcast-ingest" {
-  inherits   = ["_app"]
-  dockerfile = "packages/openrouter-broadcast-ingest/Dockerfile"
-  tags       = imagetags("openrouter-broadcast-ingest")
-  cache-from = cachefrom("openrouter-broadcast-ingest")
-  cache-to   = cacheto("openrouter-broadcast-ingest")
 }
 
 target "starlight-karma-bot" {
