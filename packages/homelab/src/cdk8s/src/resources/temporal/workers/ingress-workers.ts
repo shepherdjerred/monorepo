@@ -8,11 +8,19 @@ import { createTemporalWorkerHttpServices } from "./worker-http-services.ts";
 
 export function createTemporalIngressWorkers(
   chart: Chart,
-  props: { serverServiceName: string; secret: ISecret },
+  props: {
+    serverServiceName: string;
+    secret: ISecret;
+    blueBubblesSecret: ISecret;
+  },
 ) {
   const gatewayDeployment = createTemporalDomainWorker(chart, {
     name: "temporal-gateway",
     component: "gateway",
+    // The credential-owning ingress gateway is the beta consumer for durable
+    // iMessage chat. Its Temporal namespace remains prod, while only the
+    // feature-flag environment canaries this new ingress behavior.
+    featureFlagEnvironment: "beta",
     // The namespace initializer must create prod and beta before this control
     // worker starts. Keep the gateway with the other namespace-scoped workers
     // in wave 2, after the initializer's wave 1 hook completes.
@@ -43,6 +51,18 @@ export function createTemporalIngressWorkers(
         secret: props.secret,
         key: "AGENT_TASK_API_TOKEN",
       }),
+      BLUEBUBBLES_URL: EnvValue.fromValue("https://jobs.tailnet-1a49.ts.net"),
+      BLUEBUBBLES_PASSWORD: EnvValue.fromSecretValue({
+        secret: props.blueBubblesSecret,
+        key: "password",
+      }),
+      AGENT_CHAT_DISCORD_TOKEN: EnvValue.fromSecretValue(
+        {
+          secret: props.secret,
+          key: "AGENT_CHAT_DISCORD_TOKEN",
+        },
+        { optional: true },
+      ),
       ...sleepWebhookEnv(props.secret),
       XCODE_CLOUD_WEBHOOK_PORT: EnvValue.fromValue("9468"),
       XCODE_CLOUD_WEBHOOK_TOKEN: EnvValue.fromSecretValue({
@@ -54,6 +74,14 @@ export function createTemporalIngressWorkers(
       ),
     },
   });
+  // The Discord token is optional so this Deployment can land before the
+  // dedicated application credential exists. Restart the gateway when the
+  // 1Password Operator later adds or rotates any referenced secret value so
+  // the process observes the new environment without a manual rollout.
+  gatewayDeployment.metadata.addAnnotation(
+    "operator.1password.io/auto-restart",
+    "true",
+  );
   createTemporalWorkerHttpServices(
     chart,
     Pods.select(chart, "temporal-gateway-http-selector", {

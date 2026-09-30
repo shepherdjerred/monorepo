@@ -1,6 +1,4 @@
-// Temporal requires workflows to be exported from a single entry point.
-// These wrapper functions delegate to the actual workflow implementations
-// to satisfy the no-re-exports lint rule.
+// Temporal requires wrappers rather than re-exports from its entry point.
 import { fetchSkillCappedManifest as _fetchSkillCappedManifest } from "./homelab/fetcher.ts";
 import { generateDependencySummary as _generateDependencySummary } from "./deps-summary.ts";
 import { runDnsAudit as _runDnsAudit } from "./homelab/dns-audit.ts";
@@ -137,12 +135,36 @@ import { agentChatTurnReceiptWorkflow as _agentChatTurnReceiptWorkflow } from ".
 import type { AgentChatReceiptInput } from "#shared/agent/agent-chat-receipt.ts";
 import { agentChatCatalogWorkflow as _agentChatCatalogWorkflow } from "./agent-chat-catalog.ts";
 import { scheduledAgentChatTurnWorkflow as _scheduledAgentChatTurnWorkflow } from "./scheduled-agent-chat-turn.ts";
+import { discordAgentChatWorkflow as _discordAgentChatWorkflow } from "./discord-agent-chat.ts";
+import { httpAgentChatWorkflow as _httpAgentChatWorkflow } from "./http-agent-chat.ts";
 import type {
   AgentChatCatalogState,
   AgentChatTurnResult,
   AgentChatWorkflowInput,
   ScheduledAgentChatTurnInput,
 } from "#shared/agent/agent-chat.ts";
+import type { DiscordAgentChatCommand } from "#shared/agent/agent-chat-discord.ts";
+import type {
+  HttpAgentChatCommand,
+  HttpAgentChatStartOptions,
+} from "#shared/agent/agent-chat-http.ts";
+import type {
+  BlueBubblesCursor,
+  ImessageCommand,
+} from "#shared/agent/agent-chat-imessage.ts";
+import { blueBubblesIngressWorkflow as _blueBubblesIngressWorkflow } from "./imessage/ingress.ts";
+import { imessageAgentChatWorkflow as _imessageAgentChatWorkflow } from "./imessage/message.ts";
+
+export async function blueBubblesIngressWorkflow(
+  cursor: BlueBubblesCursor,
+): Promise<never> {
+  return _blueBubblesIngressWorkflow(cursor);
+}
+export async function imessageAgentChatWorkflow(
+  command: ImessageCommand,
+): Promise<void> {
+  return _imessageAgentChatWorkflow(command);
+}
 
 export function workerDeploymentCanaryWorkflow(
   input: WorkerDeploymentCanaryInput,
@@ -154,43 +176,33 @@ export function workerDeploymentCanaryWorkflow(
 export async function fetchSkillCappedManifest(): Promise<void> {
   return _fetchSkillCappedManifest();
 }
-
 export async function runKometaWorkflow(): Promise<void> {
   return runKometaWorkflowImplementation();
 }
-
 export async function runMainVulnScanWorkflow(): Promise<void> {
   return runMainVulnScanWorkflowImplementation();
 }
-
 export async function runCiIoTelemetry(): Promise<void> {
   return _runCiIoTelemetry();
 }
-
 export async function runLinkRotScanWorkflow(): Promise<void> {
   return runLinkRotScanWorkflowImplementation();
 }
-
 export async function runScheduleRehearsalWorkflow(): Promise<ScheduleRehearsalResult> {
   return runScheduleRehearsalWorkflowImplementation();
 }
-
 export async function runBunCacheGcWorkflow(): Promise<void> {
   return runBunCacheGcWorkflowImplementation();
 }
-
 export async function runUvCachePruneWorkflow(): Promise<void> {
   return runUvCachePruneWorkflowImplementation();
 }
-
 export async function runTrivyDbRefreshWorkflow(): Promise<void> {
   return runTrivyDbRefreshWorkflowImplementation();
 }
-
 export async function runTurboCacheCleanWorkflow(): Promise<void> {
   return runTurboCacheCleanWorkflowImplementation();
 }
-
 export async function runFreshRssSyncWorkflow(): Promise<void> {
   return _runFreshRssSyncWorkflow();
 }
@@ -464,4 +476,17 @@ export async function scheduledAgentChatTurnWorkflow(
   input: ScheduledAgentChatTurnInput,
 ): Promise<AgentChatTurnResult> {
   return _scheduledAgentChatTurnWorkflow(input);
+}
+
+export async function discordAgentChatWorkflow(
+  input: DiscordAgentChatCommand,
+): Promise<void> {
+  return _discordAgentChatWorkflow(input);
+}
+
+export async function httpAgentChatWorkflow(
+  input: HttpAgentChatCommand,
+  options?: HttpAgentChatStartOptions,
+): Promise<AgentChatTurnResult> {
+  return _httpAgentChatWorkflow(input, options);
 }

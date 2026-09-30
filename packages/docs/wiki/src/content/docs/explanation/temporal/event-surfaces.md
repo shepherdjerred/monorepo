@@ -12,12 +12,12 @@ state changes.
 Each public HTTP surface is a Cloudflare Tunnel to a dedicated port on the
 worker.
 
-| Surface                 | Public host                     | Triggers                                 |
-| ----------------------- | ------------------------------- | ---------------------------------------- |
-| GitHub webhook receiver | `pr-bot.sjer.red`               | merge-conflict check, CI pipeline cancel |
-| Agent-task API          | `temporal-agent-tasks.sjer.red` | agent tasks (bearer-token)               |
-| Sleep webhook           | `temporal-sleep.sjer.red`       | sleep workflows (bearer-token)           |
-| Xcode Cloud webhook     | `xcode-cloud-webhook.sjer.red`  | iOS build failures → Alertmanager alerts |
+| Surface                 | Public host                     | Triggers                                     |
+| ----------------------- | ------------------------------- | -------------------------------------------- |
+| GitHub webhook receiver | `pr-bot.sjer.red`               | merge-conflict check, CI pipeline cancel     |
+| Agent-task/chat API     | `temporal-agent-tasks.sjer.red` | agent tasks and durable chats (bearer-token) |
+| Sleep webhook           | `temporal-sleep.sjer.red`       | sleep workflows (bearer-token)               |
+| Xcode Cloud webhook     | `xcode-cloud-webhook.sjer.red`  | iOS build failures → Alertmanager alerts     |
 
 ## Events for state, crons for wall-clock
 

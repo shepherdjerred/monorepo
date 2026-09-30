@@ -5,6 +5,7 @@ import { Hono } from "hono";
 import { ZodError } from "zod/v4";
 import { startOrScheduleAgentTask } from "#lib/agent-task-scheduler.ts";
 import { AgentTaskInputV2Schema } from "#shared/agent/agent-task.ts";
+import { buildAgentChatApiRoutes } from "./agent-chat-api.ts";
 
 const COMPONENT = "agent-task-api";
 const DEFAULT_PORT = 9467;
@@ -59,6 +60,7 @@ export function buildAgentTaskApiApp(
   const app = new Hono();
 
   app.get("/healthz", (c) => c.text("ok\n"));
+  app.route("/", buildAgentChatApiRoutes(token, client));
 
   app.post("/agent-tasks", async (c) => {
     if (!bearerMatches(bearerToken(c.req.header("authorization")), token)) {

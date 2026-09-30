@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { executeDiscordAgentChatCommand } from "./discord-ingress.ts";
 import { dispatchScheduledAgentChatTurn } from "./dispatch-scheduled-turn.ts";
+import { executeHttpAgentChatCommand } from "./http-ingress.ts";
 import { dispatchPinnedAgentChatTurn } from "./turn-receipt.ts";
 
 const activityMocks = vi.hoisted(() => ({
   cancellation: new AbortController(),
+  continueChat: vi.fn(() => Promise.withResolvers<never>().promise),
   dispatchPinned: vi.fn(() => Promise.withResolvers<never>().promise),
   heartbeat: vi.fn(),
   runTurn: vi.fn(() => Promise.withResolvers<never>().promise),
@@ -40,6 +43,7 @@ vi.mock("#client", () => ({
 }));
 
 vi.mock("#lib/agent-chat-client.ts", () => ({
+  continueAgentChat: activityMocks.continueChat,
   runAgentChatTurn: activityMocks.runTurn,
 }));
 
@@ -117,4 +121,67 @@ describe("scheduled agent chat dispatch", () => {
       expect.any(Function),
     );
   });
+});
+
+describe("agent chat ingress cancellation", () => {
+  test.each([
+    {
+      name: "HTTP",
+      execute: () =>
+        executeHttpAgentChatCommand({
+          command: {
+            kind: "continue",
+            chatId: "http-chat",
+            request: {
+              turnId: "http-turn",
+              prompt: "Continue the investigation.",
+              submittedAt: "2026-09-14T20:01:00.000Z",
+              source: { kind: "imessage", conversationId: "chat-123" },
+            },
+          },
+          providerStartDeadline: "2026-09-14T21:01:00.000Z",
+        }),
+    },
+    {
+      name: "Discord",
+      expectedSourceSequence: "123456789012345678",
+      execute: () =>
+        executeDiscordAgentChatCommand({
+          command: {
+            kind: "continue",
+            interactionId: "123456789012345678",
+            channelId: "223456789012345678",
+            chatId: "discord-chat",
+            prompt: "Continue the investigation.",
+            submittedAt: "2026-09-14T20:01:00.000Z",
+          },
+          providerStartDeadline: "2026-09-14T21:01:00.000Z",
+        }),
+    },
+  ])(
+    "stops the $name wait when the Activity is canceled",
+    async ({ execute, expectedSourceSequence }) => {
+      const execution = execute();
+      await vi.waitFor(() => {
+        expect(activityMocks.continueChat).toHaveBeenCalledOnce();
+      });
+      if (expectedSourceSequence !== undefined) {
+        expect(activityMocks.continueChat).toHaveBeenCalledWith(
+          expect.objectContaining({
+            request: expect.objectContaining({
+              sourceSequence: expectedSourceSequence,
+            }),
+          }),
+        );
+      }
+
+      activityMocks.cancellation.abort(new Error("ingress canceled"));
+
+      await expect(execution).rejects.toThrow("ingress canceled");
+      expect(activityMocks.withAbortSignal).toHaveBeenCalledWith(
+        activityMocks.cancellation.signal,
+        expect.any(Function),
+      );
+    },
+  );
 });

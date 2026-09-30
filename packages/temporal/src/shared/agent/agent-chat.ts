@@ -21,6 +21,10 @@ export const AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS =
 // Completion still has to reach the chat Workflow, settle its Update, and
 // propagate through a receipt or scheduled dispatch after provider execution.
 export const AGENT_CHAT_SETTLEMENT_MARGIN_MS = 15 * 60 * 1000;
+// Durable result propagation includes the chat update, receipt settlement,
+// catalog mutation, ingress Activity return, and any ingress response delivery.
+export const AGENT_CHAT_RESULT_PROPAGATION_TIMEOUT_MS =
+  AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
 // A full per-chat queue, plus headroom for receipt and session persistence.
 export const AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS =
   MAX_AGENT_CHAT_PENDING_TURNS *
@@ -32,12 +36,29 @@ export const AGENT_CHAT_RECEIPT_DISPATCH_TIMEOUT_MS =
 export const AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS =
   AGENT_CHAT_DISPATCH_MAX_ATTEMPTS * AGENT_CHAT_RECEIPT_DISPATCH_TIMEOUT_MS +
   AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+// Ingress must remain available for the complete retained receipt lifetime,
+// including the initial queue delay before its first Activity can start.
+export const AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS =
+  AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
+// An iMessage command adds bounded preparation and delivery around the ingress
+// command Activity. This is also the maximum duplicate-child join lifetime.
+export const AGENT_CHAT_IMESSAGE_COMMAND_WORKFLOW_TIMEOUT_MS =
+  AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS + 10 * 60 * 1000;
+export const AGENT_CHAT_INGRESS_MAX_ATTEMPTS = Math.ceil(
+  AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS / AGENT_CHAT_COMMAND_WAIT_TIMEOUT_MS,
+);
+// A receipt started by delayed ingress must still stop provider admission early
+// enough for execution and result propagation before ingress itself expires.
+export const AGENT_CHAT_INGRESS_ADMISSION_TIMEOUT_MS =
+  AGENT_CHAT_INGRESS_WAIT_TIMEOUT_MS -
+  AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS -
+  AGENT_CHAT_RESULT_PROPAGATION_TIMEOUT_MS;
 // Reserve a complete provider execution window plus result propagation margin
 // before the receipt itself can expire.
 export const AGENT_CHAT_RECEIPT_ADMISSION_TIMEOUT_MS =
   AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS -
   AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS -
-  AGENT_CHAT_SETTLEMENT_MARGIN_MS;
+  AGENT_CHAT_RESULT_PROPAGATION_TIMEOUT_MS;
 export const AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS =
   AGENT_CHAT_RECEIPT_WORKFLOW_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
 // A scheduled dispatch must leave enough of its own Activity lifetime for the
@@ -45,7 +66,7 @@ export const AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS =
 export const AGENT_CHAT_SCHEDULE_ADMISSION_TIMEOUT_MS =
   AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS -
   AGENT_CHAT_PROVIDER_SCHEDULE_TO_CLOSE_TIMEOUT_MS -
-  AGENT_CHAT_SETTLEMENT_MARGIN_MS;
+  AGENT_CHAT_RESULT_PROPAGATION_TIMEOUT_MS;
 // Cover the globally queued dispatch Activity and leave shutdown margin.
 export const AGENT_CHAT_DISPATCH_WORKFLOW_TIMEOUT_MS =
   AGENT_CHAT_SCHEDULE_DISPATCH_TIMEOUT_MS + AGENT_CHAT_GLOBAL_QUEUE_TIMEOUT_MS;
@@ -117,12 +138,51 @@ export const AgentChatOriginSchema = z.discriminatedUnion("kind", [
 ]);
 export type AgentChatOrigin = z.infer<typeof AgentChatOriginSchema>;
 
+export const MAX_AGENT_CHAT_SOURCE_SEQUENCE = "9223372036854775806";
+
+function isRecoverableSourceSequence(value: string | number): boolean {
+  const decimal = value.toString();
+  return (
+    decimal.length < MAX_AGENT_CHAT_SOURCE_SEQUENCE.length ||
+    (decimal.length === MAX_AGENT_CHAT_SOURCE_SEQUENCE.length &&
+      decimal <= MAX_AGENT_CHAT_SOURCE_SEQUENCE)
+  );
+}
+
+export const AgentChatSourceSequenceSchema = z
+  .union([
+    z.number().int().nonnegative(),
+    z
+      .string()
+      .regex(/^(0|[1-9]\d*)$/)
+      .max(MAX_AGENT_CHAT_SOURCE_SEQUENCE.length),
+  ])
+  .refine(isRecoverableSourceSequence, {
+    message: `Source sequence must not exceed ${MAX_AGENT_CHAT_SOURCE_SEQUENCE}`,
+  });
+
+// An ingress must change this epoch before it restarts a bounded sequence. A
+// different epoch is ordered by its submitted timestamp, so an exhausted epoch
+// cannot permanently pin a binding and a delayed prior epoch cannot overwrite a
+// newer selection.
+export const AgentChatSourceEpochSchema = z
+  .union([
+    z.number().int().nonnegative(),
+    z
+      .string()
+      .regex(/^(0|[1-9]\d*)$/)
+      .max(32),
+  ])
+  .optional();
+
 export const AgentChatTurnRequestSchema = z.strictObject({
   turnId: z.string().min(1).max(512),
   prompt: AgentChatPromptSchema,
   submittedAt: z.iso.datetime({ offset: true }),
   providerStartDeadline: z.iso.datetime({ offset: true }).optional(),
   source: AgentChatOriginSchema,
+  sourceSequence: AgentChatSourceSequenceSchema.optional(),
+  sourceEpoch: AgentChatSourceEpochSchema,
 });
 export type AgentChatTurnRequest = z.infer<typeof AgentChatTurnRequestSchema>;
 
@@ -147,6 +207,8 @@ export function agentChatTurnRequestsMatch(
     previous.turnId === incoming.turnId &&
     previous.prompt === incoming.prompt &&
     previous.submittedAt === incoming.submittedAt &&
+    previous.sourceSequence === incoming.sourceSequence &&
+    previous.sourceEpoch === incoming.sourceEpoch &&
     sourcesMatch
   );
 }
@@ -318,11 +380,50 @@ export const AgentChatCatalogEntrySchema = z.strictObject({
 });
 export type AgentChatCatalogEntry = z.infer<typeof AgentChatCatalogEntrySchema>;
 
-export const AgentChatCatalogBindingSchema = z.strictObject({
-  binding: AgentChatBindingSchema,
-  chatId: AgentChatIdSchema,
+export const AgentChatBindingUpdateSchema = z.strictObject({
   updatedAt: z.iso.datetime({ offset: true }),
+  sourceSequence: AgentChatSourceSequenceSchema.optional(),
+  sourceEpoch: AgentChatSourceEpochSchema,
+  tieBreaker: z.string().min(1).max(512).optional(),
+  orderingVersion: z.literal(1).optional(),
 });
+export type AgentChatBindingUpdate = z.infer<
+  typeof AgentChatBindingUpdateSchema
+>;
+export type AgentChatBindingUpdateInput = AgentChatBindingUpdate | string;
+
+export const AgentChatCatalogBindingSchema =
+  AgentChatBindingUpdateSchema.extend({
+    binding: AgentChatBindingSchema,
+    chatId: AgentChatIdSchema,
+  });
+
+export const AgentChatCatalogBindingOperationSchema =
+  AgentChatCatalogBindingSchema.extend({
+    tieBreaker: z.string().min(1).max(512),
+    // The selected chat can differ from the requested chat when a stale
+    // operation loses precedence. Keep both so an identical retry returns its
+    // original result while a changed retry is still a conflict.
+    requestedChatId: AgentChatIdSchema.optional(),
+  });
+export type AgentChatCatalogBindingOperation = z.infer<
+  typeof AgentChatCatalogBindingOperationSchema
+>;
+
+export class AgentChatBindingConflictError extends Error {
+  public constructor(message: string) {
+    super(message);
+    this.name = "AgentChatBindingConflictError";
+  }
+}
+
+export function isAgentChatBindingConflictError(error: unknown): boolean {
+  return (
+    error instanceof AgentChatBindingConflictError ||
+    (error instanceof Error &&
+      error.message.startsWith("Agent chat binding conflict:"))
+  );
+}
 
 export const AgentChatCatalogStateSchema = z
   .strictObject({
@@ -333,6 +434,13 @@ export const AgentChatCatalogStateSchema = z
     bindings: z
       .array(AgentChatCatalogBindingSchema)
       .max(MAX_AGENT_CHAT_CATALOG_BINDINGS),
+    // Retain stable HTTP binding identities independently of the selected
+    // binding. An optional field keeps histories written before this contract
+    // compatible; new executions always initialize it.
+    bindingOperations: z
+      .array(AgentChatCatalogBindingOperationSchema)
+      .max(MAX_AGENT_CHAT_CATALOG_BINDINGS)
+      .optional(),
     retiredChatIds: z
       .array(AgentChatIdSchema)
       .max(MAX_AGENT_CHAT_CATALOG_ENTRIES)

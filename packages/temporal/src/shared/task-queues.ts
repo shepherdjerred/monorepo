@@ -25,6 +25,12 @@ export const TASK_QUEUES = {
   AGENT_CHAT_DISPATCH: "agent-chat-dispatch",
   /** Run-pinned chat updates; separate from dispatchers awaiting their receipts. */
   AGENT_CHAT_RECEIPTS: "agent-chat-receipts",
+  /** Durable Discord command execution and bot-token message delivery. */
+  AGENT_CHAT_INGRESS: "agent-chat-ingress",
+  /** Latency-sensitive Discord delivery, isolated from long command waits. */
+  AGENT_CHAT_DELIVERY: "agent-chat-delivery",
+  /** BlueBubbles polling, chat selection, and single-attempt response delivery. */
+  AGENT_CHAT_IMESSAGE: "agent-chat-imessage",
   /** Scout beta activity worker, co-located with its database and Discord bot. */
   SCOUT_BETA: "scout-beta",
   /** Scout production activity worker, co-located with its database and Discord bot. */
@@ -60,6 +66,9 @@ export const TaskQueueSchema = z.enum([
   TASK_QUEUES.BILLING,
   TASK_QUEUES.AGENT_CHAT_DISPATCH,
   TASK_QUEUES.AGENT_CHAT_RECEIPTS,
+  TASK_QUEUES.AGENT_CHAT_INGRESS,
+  TASK_QUEUES.AGENT_CHAT_DELIVERY,
+  TASK_QUEUES.AGENT_CHAT_IMESSAGE,
   TASK_QUEUES.SCOUT_BETA,
   TASK_QUEUES.SCOUT_PROD,
   TASK_QUEUES.AGENT_TASK,

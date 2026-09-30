@@ -52,6 +52,18 @@ export function createTemporalWorkerDeployment(
     "temporal-worker-secret",
     onePasswordItem.name,
   );
+  const blueBubblesItem = new OnePasswordItem(
+    chart,
+    "temporal-bluebubbles-1p",
+    {
+      spec: { itemPath: vaultItemPath("gnkfumzmerw725fhm7kck3rfuq") },
+    },
+  );
+  const blueBubblesSecret = Secret.fromSecretName(
+    chart,
+    "temporal-bluebubbles-secret",
+    blueBubblesItem.name,
+  );
   const starlightBotItem = new OnePasswordItem(
     chart,
     "temporal-starlight-bot-1p",
@@ -234,6 +246,7 @@ export function createTemporalWorkerDeployment(
     createTemporalIngressWorkers(chart, {
       serverServiceName: props.serverServiceName,
       secret,
+      blueBubblesSecret,
     });
 
   const workflowDeployments = createTemporalWorkflowWorkers(chart, {

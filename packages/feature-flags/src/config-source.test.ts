@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   initFeatureFlags,
   shutdownFeatureFlags,
@@ -55,11 +55,14 @@ describe("flag config source", () => {
     await initFeatureFlags({
       environment: { FEATURE_FLAGS_MODE: "disabled" },
     });
+    const onUnavailable = vi.fn();
     const source = createFlagConfigSource({
       targetingKey: "service",
       kinds: { featureOn: "boolean" },
+      onUnavailable,
     });
     await expect(source.get(NAMES)).resolves.toBeUndefined();
+    expect(onUnavailable).toHaveBeenCalledWith(NAMES.flag);
   });
 
   test("a key with no declared kind is never asked of the flag layer", async () => {
