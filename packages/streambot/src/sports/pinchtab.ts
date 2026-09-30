@@ -95,6 +95,7 @@ export type PinchtabConfig = {
 
 export class PinchtabSportsBrowser implements SportsPageRenderer {
   private instanceId: string | null = null;
+  private pendingInstance: Promise<string> | null = null;
 
   constructor(private readonly config: PinchtabConfig) {}
 
@@ -331,7 +332,34 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
   }
 
   private async ensureInstance(signal: AbortSignal): Promise<string> {
+    signal.throwIfAborted();
     if (this.instanceId !== null) return this.instanceId;
+    const pending = (this.pendingInstance ??= this.startInstanceAndClear());
+    const aborted = Promise.withResolvers<never>();
+    const onAbort = () => {
+      aborted.reject(
+        signal.reason instanceof Error
+          ? signal.reason
+          : new Error("Sports browser request was cancelled"),
+      );
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    try {
+      return await Promise.race([pending, aborted.promise]);
+    } finally {
+      signal.removeEventListener("abort", onAbort);
+    }
+  }
+
+  private async startInstanceAndClear(): Promise<string> {
+    try {
+      return await this.startInstance(AbortSignal.timeout(30_000));
+    } finally {
+      this.pendingInstance = null;
+    }
+  }
+
+  private async startInstance(signal: AbortSignal): Promise<string> {
     const profileName = this.config.profileName ?? PROFILE_NAME;
     const raw = await this.json("/instances", signal);
     const parsed = InstancesSchema.parse(raw);

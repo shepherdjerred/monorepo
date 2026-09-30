@@ -298,12 +298,13 @@ export class CommandHandler {
   private async handleMove(interaction: CommandInteraction): Promise<void> {
     const from = interaction.getIntegerRequired("from");
     const to = interaction.getIntegerRequired("to");
-    this.deps.dispatch({ type: "MOVE", from, to });
-    await interaction.reply(`Moved item ${String(from)} → ${String(to)}.`);
+    const result = this.runBoundary(() => this.playback.move(from, to));
+    await interaction.reply(result.message);
   }
 
   private async handleShuffle(interaction: CommandInteraction): Promise<void> {
-    await interaction.reply(this.playback.shuffle().message);
+    const result = this.runBoundary(() => this.playback.shuffle());
+    await interaction.reply(result.message);
   }
 
   private async handleLoop(interaction: CommandInteraction): Promise<void> {
@@ -314,8 +315,12 @@ export class CommandHandler {
       await interaction.reply("Invalid loop mode.");
       return;
     }
-    this.playback.setLoop(parsed.data);
-    await interaction.reply(`🔁 Loop: **${parsed.data}**.`);
+    const result = this.runBoundary(() => this.playback.setLoop(parsed.data));
+    await interaction.reply(
+      result.outcome === "loop-set"
+        ? `🔁 Loop: **${parsed.data}**.`
+        : result.message,
+    );
   }
 
   private async handleVolume(interaction: CommandInteraction): Promise<void> {

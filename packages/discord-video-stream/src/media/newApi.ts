@@ -1049,6 +1049,9 @@ export function prepareStream(
     const graphSpec = {
       width,
       height,
+      ...(mergedOptions.videoStreamIndex === undefined
+        ? {}
+        : { videoStreamIndex: mergedOptions.videoStreamIndex }),
       inputColor: mergedOptions.inputColor,
       ...(uploadMode ? { uploadInput: true } : {}),
       ...(frameRate !== undefined ? { frameRate } : {}),

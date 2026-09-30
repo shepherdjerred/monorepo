@@ -79,7 +79,7 @@ async function resolveLocalSource(
   };
 }
 
-function assertSportsHasAudioAndVideo(info: MediaInfo | null): void {
+export function assertSportsHasAudioAndVideo(info: MediaInfo | null): void {
   if (
     info === null ||
     info.videoCodec === "unknown" ||
@@ -88,7 +88,8 @@ function assertSportsHasAudioAndVideo(info: MediaInfo | null): void {
     info.width <= 0 ||
     info.height === undefined ||
     info.height <= 0 ||
-    info.audioChannels === 0
+    info.audioChannels === undefined ||
+    info.audioChannels <= 0
   ) {
     throw new Error(
       "The sports HLS source did not provide both audio and video",

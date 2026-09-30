@@ -718,6 +718,25 @@ describe("prepareStream hardwarePipelineMode", () => {
     }
   });
 
+  test("maps the selected video rendition into a subtitle overlay graph", async () => {
+    const encoder = await importVaapi();
+    const { command, output, promise } = prepareStream("video.mkv", {
+      ...hwOptions,
+      encoder,
+      videoStreamIndex: 1,
+      subtitleBurn: { path: "/tmp/subtitles.srt" },
+    });
+    promise.catch(() => {});
+    try {
+      const args = ffmpegArgs(command);
+      expect(args.join(" ")).toContain("[0:v:1]");
+      expect(args).not.toContain("0:v:0");
+    } finally {
+      killQuietly(command);
+      output.destroy();
+    }
+  });
+
   test('"upload": system-memory frames with a leading hwupload in the graph', async () => {
     const encoder = await importVaapi();
     const { command, output, promise } = prepareStream("video.mkv", {

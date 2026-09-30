@@ -81,9 +81,11 @@ export function parseFfprobeOutput(json: unknown): MediaInfo | null {
   if (!parsed.success) {
     return null;
   }
-  const videos = parsed.data.streams.filter(
-    (stream) =>
-      stream.codec_type === "video" && stream.disposition?.attached_pic !== 1,
+  const videoStreams = parsed.data.streams.filter(
+    (stream) => stream.codec_type === "video",
+  );
+  const videos = videoStreams.filter(
+    (stream) => stream.disposition?.attached_pic !== 1,
   );
   const audios = parsed.data.streams.filter(
     (stream) => stream.codec_type === "audio",
@@ -103,7 +105,9 @@ export function parseFfprobeOutput(json: unknown): MediaInfo | null {
     rawDuration === undefined ? undefined : Number(rawDuration);
   return {
     videoCodec: video?.codec_name ?? "unknown",
-    ...(video === undefined ? {} : { videoStreamIndex: selectedVideoIndex }),
+    ...(video === undefined
+      ? {}
+      : { videoStreamIndex: videoStreams.indexOf(video) }),
     width: video?.width,
     height: video?.height,
     pixelFormat: video?.pix_fmt,

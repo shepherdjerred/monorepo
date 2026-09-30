@@ -54,6 +54,24 @@ describe("parseFfprobeOutput", () => {
     });
   });
 
+  test("preserves FFmpeg video indexes when cover art precedes the playable stream", () => {
+    const info = parseFfprobeOutput({
+      streams: [
+        {
+          codec_type: "video",
+          codec_name: "mjpeg",
+          width: 600,
+          height: 600,
+          disposition: { attached_pic: 1 },
+        },
+        { codec_type: "video", codec_name: "h264", width: 1280, height: 720 },
+        { codec_type: "audio", codec_name: "aac", channels: 2 },
+      ],
+    });
+    expect(info?.videoStreamIndex).toBe(1);
+    expect(info?.videoCodec).toBe("h264");
+  });
+
   test("extracts a 2160p HEVC 10-bit HDR + TrueHD remux (the incident source)", () => {
     const info = parseFfprobeOutput({
       streams: [

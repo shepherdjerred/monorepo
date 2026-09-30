@@ -450,3 +450,53 @@ describe("PinchtabSportsBrowser lifecycle", () => {
     expect(requests.filter((url) => url.endsWith("/profiles"))).toHaveLength(1);
   });
 });
+
+describe("PinchtabSportsBrowser concurrent startup", () => {
+  it("starts one dedicated instance for simultaneous provider listings", async () => {
+    let instanceLookups = 0;
+    let profileCreates = 0;
+    let profileStarts = 0;
+    vi.stubGlobal("fetch", async (input: string, init?: RequestInit) => {
+      if (input.endsWith("/instances")) {
+        instanceLookups += 1;
+        await Promise.resolve();
+        return Response.json(
+          instanceLookups === 1
+            ? []
+            : [
+                {
+                  id: "inst-shared",
+                  profileName: "streambot",
+                  status: "running",
+                },
+              ],
+        );
+      }
+      if (input.endsWith("/profiles") && init?.method === "POST") {
+        profileCreates += 1;
+        return Response.json({ id: "profile-shared", name: "streambot" });
+      }
+      if (input.endsWith("/profiles")) return Response.json([]);
+      if (input.endsWith("/profiles/profile-shared/start")) {
+        profileStarts += 1;
+        return Response.json({ instanceId: "inst-shared" });
+      }
+      if (input.endsWith("/tabs/open"))
+        return Response.json({ id: "tab-shared" });
+      return input.endsWith("/html")
+        ? Response.json({ html: "<title>Ready</title>" })
+        : Response.json({ closed: true });
+    });
+
+    const browser = testBrowser();
+    const signal = new AbortController().signal;
+    const pages = await Promise.all([
+      browser.html("https://v2.streameast.ga/", signal),
+      browser.html("https://v2.streameast.ga/", signal),
+    ]);
+    expect(pages).toEqual(["<title>Ready</title>", "<title>Ready</title>"]);
+    expect(instanceLookups).toBe(2);
+    expect(profileCreates).toBe(1);
+    expect(profileStarts).toBe(1);
+  });
+});
