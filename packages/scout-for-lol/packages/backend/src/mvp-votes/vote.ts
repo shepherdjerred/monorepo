@@ -262,6 +262,72 @@ export async function listMatchMvpReportRefs(
   );
 }
 
+/** Keep guild ownership even when Discord can no longer resolve the channel. */
+export async function rememberMatchMvpReportTarget(
+  input: MatchMvpReportRef & {
+    matchId: MatchId;
+    serverId: DiscordGuildId;
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  await prismaClient.$transaction(async (tx) => {
+    const created = await tx.matchMvpReportTarget.createMany({
+      data: [input],
+      skipDuplicates: true,
+    });
+    const standing = await tx.matchMvpReportTarget.findUnique({
+      where: {
+        matchId_channelId_messageId: {
+          matchId: input.matchId,
+          channelId: input.channelId,
+          messageId: input.messageId,
+        },
+      },
+      select: { serverId: true },
+    });
+    if (standing?.serverId !== input.serverId) {
+      throw new Error(
+        `MVP report target ${input.channelId} for ${input.matchId} has conflicting guild ownership`,
+      );
+    }
+    if (created.count > 0) {
+      // A legacy request can close when no pre-upgrade guild evidence exists.
+      // The first owned target is new evidence even if the contest already
+      // held this exact channel/message ref, so reopen it in the same commit.
+      await tx.matchMvpTallyRefresh.updateMany({
+        where: {
+          matchId: input.matchId,
+          serverId: input.serverId,
+          pending: false,
+          lastErrorCode: "legacy-target-ownership-unknown",
+        },
+        data: {
+          pending: true,
+          nextAttemptAt: new Date(),
+          requeueGeneration: { increment: 1 },
+          targetProgress: {},
+        },
+      });
+    }
+  });
+}
+
+/** A vote button supplies the report's guild before a later REST lookup can fail. */
+export async function recordMatchMvpOwnedReportRef(
+  input: MatchMvpReportRef & {
+    matchId: MatchId;
+    serverId: DiscordGuildId;
+  },
+  prismaClient: ExtendedPrismaClient = prisma,
+): Promise<void> {
+  await rememberMatchMvpReportTarget(input, prismaClient);
+  await recordMatchMvpReportRefs(
+    input.matchId,
+    new Map([[input.channelId, input.messageId]]),
+    prismaClient,
+  );
+}
+
 export async function upsertMatchMvpVote(
   input: {
     matchId: MatchId;

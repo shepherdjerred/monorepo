@@ -2834,6 +2834,21 @@ model MatchMvpTallyRefresh {
   @@index([pending, nextAttemptAt, createdAt])
 }
 
+/// Guild ownership for a delivered MVP report target. Discord may later delete
+/// the channel or deny access, so refresh cannot recover its guild by fetching
+/// the channel at the moment it needs to retire a permanently unavailable edit.
+model MatchMvpReportTarget {
+  matchId   String
+  channelId String
+  serverId  String
+  messageId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@id([matchId, channelId, messageId])
+  @@index([matchId, serverId])
+}
+
 /// Association between an observation and one tracked account seen in the
 /// match. FK-by-value on riotMatchId (no relation) so ingestion can record
 /// participants before/independently of any other table. playerId/accountId

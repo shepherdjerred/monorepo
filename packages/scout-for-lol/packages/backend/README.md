@@ -58,9 +58,23 @@ transaction that records its message reference. Missing report refs remain
 pending until all postmatch intents record a terminal no-send outcome, when
 the request is recorded as `report-unavailable`. A later vote reopens it.
 
+The vote button also records its report message's guild in
+`MatchMvpReportTarget`. That ownership remains available after Discord deletes
+the channel or revokes access, so a permanent failure is checkpointed for the
+target without guessing its guild from the match-global report reference map.
+When every known target for the voting guild is permanently unavailable, the
+request closes with `report-target-unavailable`; an uncertain edit still
+retries. A newly recorded report reference reopens a closed request.
+The migration recovers older target ownership from prior edit checkpoints and
+unambiguous subscription channel mappings. It closes pre-upgrade requests
+whose stored refs have no provable guild target with
+`legacy-target-ownership-unknown` for operator review. A later observed owned
+target reopens the request even when its report ref was already stored.
+
 Operators can inspect `"MatchMvpTallyRefresh"` for `pending = true` rows and
 `lastErrorCode` values `awaiting-report`, `discord-target-unavailable`,
-`discord-edit-unknown`, or `report-unavailable`. Compare `desiredRevision`
+`discord-edit-unknown`, `report-unavailable`, or
+`report-target-unavailable`, or `legacy-target-ownership-unknown`. Compare `desiredRevision`
 with `appliedRevision` before
 closing an incident; a recorded vote alone does not prove the Discord tally
 was edited.
