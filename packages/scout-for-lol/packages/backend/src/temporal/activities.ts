@@ -288,13 +288,10 @@ function createBackgroundActivities(): ScoutTemporalActivityGroups["background"]
             const [
               { deliverHallRecordBreakOutbox },
               { deliverDuelStatusOutbox },
-              { reconcileCompetitiveProgression },
             ] = await Promise.all([
               import("#src/progression/hall/outbox.ts"),
               import("#src/progression/duels/outbox.ts"),
-              import("#src/progression/reconcile.ts"),
             ]);
-            await reconcileCompetitiveProgression(input.stage);
             await Promise.all([
               deliverHallRecordBreakOutbox(),
               deliverDuelStatusOutbox(),
