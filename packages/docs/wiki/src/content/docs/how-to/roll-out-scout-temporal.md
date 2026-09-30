@@ -53,6 +53,48 @@ The result must name `scout-beta-realtime`, `scout-beta-interactive`,
 `scout-beta-background`, and `scout-beta-lake`. A missing result means that
 Activity Worker is not polling its declared queue; stop the rollout.
 
+## Hand off the embedded activity queues
+
+The activity-worker split is a separate, stage-scoped rollout. Its source
+switches are `SCOUT_GATEWAY_TOPOLOGY` and `SCOUT_ACTIVITY_WORKER_TOPOLOGY` in
+`packages/homelab/src/cdk8s/src/resources/scout/topology.ts`. The standing
+worker state is `absent`; changing it does not happen as a side effect of an
+image bump. Use the normal PR, exact-head CI, image publish, and `release-root`
+path for each transition.
+
+1. Confirm the stage runs `split` gateway topology. Read the bound
+   `scout-storage-claim` PV and its `ZFSVolume.spec.shared` field using the
+   **Share a ZFS volume between pods** how-to. It must be `yes` before the
+   worker pod starts. The worker and application both mount the claim
+   read-write on the same node with the same SELinux level.
+2. Set the worker topology to `observing`. This deploys one activity-worker
+   pod after the application is healthy; the application keeps polling
+   `realtime`, `background`, and competition activities. Confirm the worker
+   Deployment is ready, its `/healthz` and `/metrics` expose the expected role
+   and queue classes, and the queue canary above completes. Watch for
+   schedule-to-start delays, duplicate-effect claims, report delivery, and
+   report-lake generation or staging errors. Keep this overlap bounded to the
+   observation release.
+3. In a second release, set the topology to `owning`. The application becomes
+   `application-isolated`, removing those three activity owners; the worker
+   remains on the same image digest and continues polling. Confirm exactly one
+   ready pod owns `realtime`, `background`, and competition activities, while
+   the application still owns `workflow`, `interactive`, and `lake`. Re-run the
+   canary and representative report, ingest, and competition flows.
+
+For rollback from `owning`, set the worker topology to `retiring` in a release.
+The worker scales to zero in sync wave -2; a wave -1 hook waits for its pod to
+exit before the wave-0 application reclaims the queues. Confirm the hook and
+queue canary, then use a later release to set `absent` after no worker pod
+remains. If the gateway split must also roll back, use its `retiring` topology
+in the same release as worker retirement so neither gateway nor activity
+ownership overlaps with the returning `combined` pod.
+
+Soak beta and review its live effects before repeating the sequence in prod.
+Prod has a separate image pin and lake volume; repeat the pin and
+`ZFSVolume.spec.shared` preflight there. A green PR or Argo `Healthy` status
+alone does not establish queue ownership or product behavior.
+
 ## Enable the durable reconciliation schedules
 
 The [two reconciliation Schedules](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/scout-schedule-definitions.ts)

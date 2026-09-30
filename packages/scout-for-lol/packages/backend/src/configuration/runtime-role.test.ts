@@ -57,6 +57,21 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
     databaseMetricSweeps: true,
     databaseSeeding: true,
   },
+  "application-isolated": {
+    championAssets: true,
+    voiceAssistant: false,
+    voiceStateAccess: false,
+    reportLakeAccess: true,
+    reportLakeFold: true,
+    temporalWorkers: ["workflow", "interactive", "lake"],
+    deferredTemporalWorkers: [],
+    discordGateway: false,
+    gatewayReadyReconciliation: false,
+    httpSurface: "full",
+    competitionActivityWorker: false,
+    databaseMetricSweeps: true,
+    databaseSeeding: true,
+  },
   gateway: {
     championAssets: true,
     voiceAssistant: true,
@@ -92,16 +107,29 @@ const EXPECTED: Readonly<Record<ScoutRuntimeRole, ScoutRuntimeCapabilities>> = {
   },
 };
 
-/** Every role except `combined`, which is the un-split shape by definition. */
-const SPLIT_ROLES = SCOUT_RUNTIME_ROLES.filter((role) => role !== "combined");
+const INTERIM_SPLIT_ROLES: readonly ScoutRuntimeRole[] = [
+  "application",
+  "gateway",
+  "activity-worker",
+];
+const FINAL_SPLIT_ROLES: readonly ScoutRuntimeRole[] = [
+  "application-isolated",
+  "gateway",
+  "activity-worker",
+];
 
 /** Which split roles declare a given capability. */
 function splitRolesWith(
+  roles: readonly ScoutRuntimeRole[],
   predicate: (capabilities: ScoutRuntimeCapabilities) => boolean,
 ): ScoutRuntimeRole[] {
-  return SPLIT_ROLES.filter((role) =>
-    predicate(scoutRuntimeCapabilities(role)),
-  );
+  return roles.filter((role) => predicate(scoutRuntimeCapabilities(role)));
+}
+
+function finalSplitRolesWith(
+  predicate: (capabilities: ScoutRuntimeCapabilities) => boolean,
+): ScoutRuntimeRole[] {
+  return splitRolesWith(FINAL_SPLIT_ROLES, predicate);
 }
 
 describe("scout runtime roles", () => {
@@ -109,29 +137,25 @@ describe("scout runtime roles", () => {
     expect(scoutRuntimeCapabilities(role)).toEqual(EXPECTED[role]);
   });
 
-  test("the vocabulary is exactly the four deployable shapes", () => {
+  test("the vocabulary includes both application handoff states", () => {
     expect([...SCOUT_RUNTIME_ROLES]).toEqual([
       "combined",
       "application",
+      "application-isolated",
       "gateway",
       "activity-worker",
     ]);
   });
 
   /**
-   * The end state is a partition: two pods polling one activity queue would
-   * double every Riot poll and every delivery, and a queue nobody polls is work
-   * that silently never happens.
+   * The end state is a partition: a queue with no poller silently stalls,
+   * while two role owners split work across processes and make rollback and
+   * per-role health ambiguous.
    *
-   * The interim is not a partition, and this pins exactly where it is not.
-   * `realtime` and `background` are declared by BOTH `application` (deployed)
-   * and `activity-worker` (not deployed, and undeployable until the report lake
-   * stops being a single-writer ReadWriteOnce volume). The overlap is safe only
-   * because the second role never runs, so it is written down here rather than
-   * waved through by loosening the check — any OTHER doubled queue still fails.
-   *
-   * When `activity-worker` ships this test fails; the fix is to delete
-   * INTERIM_DOUBLE_OWNED and restore the exact partition, not to extend it.
+   * `observing` deliberately overlaps only `realtime` and `background` while
+   * the new worker proves readiness and polling. `owning` then selects
+   * `application-isolated`, which is an exact partition again. Any other
+   * doubled queue fails this interim assertion.
    */
   test("every worker is owned, and only the interim queues are double-owned", () => {
     const INTERIM_DOUBLE_OWNED = new Set<ScoutTemporalQueueClass>([
@@ -139,7 +163,7 @@ describe("scout runtime roles", () => {
       "background",
     ]);
     for (const queueClass of SCOUT_TEMPORAL_QUEUE_CLASSES) {
-      const owners = SPLIT_ROLES.filter((role) => {
+      const owners = INTERIM_SPLIT_ROLES.filter((role) => {
         const capabilities = scoutRuntimeCapabilities(role);
         return (
           capabilities.temporalWorkers.includes(queueClass) ||
@@ -154,6 +178,22 @@ describe("scout runtime roles", () => {
     }
   });
 
+  test("the final split gives each queue exactly one owner", () => {
+    for (const queueClass of SCOUT_TEMPORAL_QUEUE_CLASSES) {
+      const owners = FINAL_SPLIT_ROLES.filter((role) => {
+        const capabilities = scoutRuntimeCapabilities(role);
+        return (
+          capabilities.temporalWorkers.includes(queueClass) ||
+          capabilities.deferredTemporalWorkers.includes(queueClass)
+        );
+      });
+      expect(owners).toHaveLength(1);
+    }
+    expect(
+      splitRolesWith(FINAL_SPLIT_ROLES, (c) => c.competitionActivityWorker),
+    ).toEqual(["activity-worker"]);
+  });
+
   test("the split covers every worker combined runs", () => {
     const combined = scoutRuntimeCapabilities("combined");
     const combinedQueues = new Set([
@@ -161,7 +201,7 @@ describe("scout runtime roles", () => {
       ...combined.deferredTemporalWorkers,
     ]);
     const split = new Set(
-      SPLIT_ROLES.flatMap((role) => [
+      FINAL_SPLIT_ROLES.flatMap((role) => [
         ...scoutRuntimeCapabilities(role).temporalWorkers,
         ...scoutRuntimeCapabilities(role).deferredTemporalWorkers,
       ]),
@@ -171,27 +211,30 @@ describe("scout runtime roles", () => {
 
   test("exactly one split role owns each singleton responsibility", () => {
     // A second gateway connection means duplicate command handling and
-    // duplicate guild-lifecycle writes; a second report-lake writer means two
-    // processes publishing builds onto one ReadWriteOnce volume; a second
+    // duplicate guild-lifecycle writes; a second report-lake publisher means
+    // two processes racing the CURRENT pointer on one shared volume; a second
     // metric sweeper multiplies one Prometheus scrape into N table sweeps.
-    const owners = splitRolesWith;
-
-    expect(owners((c) => c.discordGateway)).toEqual(["gateway"]);
-    expect(owners((c) => c.voiceAssistant)).toEqual(["gateway"]);
-    expect(owners((c) => c.voiceStateAccess)).toEqual(["gateway"]);
-    expect(owners((c) => c.reportLakeFold)).toEqual(["application"]);
-    expect(owners((c) => c.databaseMetricSweeps)).toEqual(["application"]);
-    expect(owners((c) => c.databaseSeeding)).toEqual(["application"]);
-    expect(owners((c) => c.httpSurface === "full")).toEqual(["application"]);
-    // Not a singleton during the interim, for the same reason as the realtime
-    // and background queues: `application` carries it so the split does not
-    // stop scheduled competition updates, and `activity-worker` still declares
-    // it for when it becomes deployable. Restore the single owner then.
-    expect(owners((c) => c.competitionActivityWorker)).toEqual([
-      "application",
+    expect(finalSplitRolesWith((c) => c.discordGateway)).toEqual(["gateway"]);
+    expect(finalSplitRolesWith((c) => c.voiceAssistant)).toEqual(["gateway"]);
+    expect(finalSplitRolesWith((c) => c.voiceStateAccess)).toEqual(["gateway"]);
+    expect(finalSplitRolesWith((c) => c.reportLakeFold)).toEqual([
+      "application-isolated",
+    ]);
+    expect(finalSplitRolesWith((c) => c.databaseMetricSweeps)).toEqual([
+      "application-isolated",
+    ]);
+    expect(finalSplitRolesWith((c) => c.databaseSeeding)).toEqual([
+      "application-isolated",
+    ]);
+    expect(finalSplitRolesWith((c) => c.httpSurface === "full")).toEqual([
+      "application-isolated",
+    ]);
+    expect(finalSplitRolesWith((c) => c.competitionActivityWorker)).toEqual([
       "activity-worker",
     ]);
-    expect(owners((c) => c.gatewayReadyReconciliation)).toEqual(["gateway"]);
+    expect(finalSplitRolesWith((c) => c.gatewayReadyReconciliation)).toEqual([
+      "gateway",
+    ]);
   });
 
   test("every role that runs an activity queue declares lake access", () => {
@@ -271,7 +314,7 @@ describe("runtime role parsing", () => {
 
   test("an unrecognised role throws and names the alternatives", () => {
     expect(() => parseScoutRuntimeRole("worker")).toThrow(
-      /Invalid SCOUT_RUNTIME_ROLE="worker", expected one of: combined, application, gateway, activity-worker/,
+      /Invalid SCOUT_RUNTIME_ROLE="worker", expected one of: combined, application, application-isolated, gateway, activity-worker/,
     );
   });
 

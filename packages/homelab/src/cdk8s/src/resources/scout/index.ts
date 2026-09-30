@@ -38,9 +38,13 @@ import {
   SCOUT_DUCKDB_SCRATCH,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
 import { createScoutGatewayRetirementGate } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway-retirement-gate.ts";
+import { createScoutActivityWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/activity-worker.ts";
+import { createScoutActivityWorkerRetirementGate } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/activity-worker-retirement-gate.ts";
 import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
 import {
   gatewayTopologyRunsRole,
+  scoutSplitApplicationRole,
+  type ScoutActivityWorkerTopology,
   type ScoutGatewayTopology,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
@@ -58,10 +62,27 @@ function requiredVoiceOpenAiSecret(secret: ISecret | undefined): ISecret {
   return secret;
 }
 
+function assertActivityWorkerTopology(
+  stage: Stage,
+  gatewayTopology: ScoutGatewayTopology,
+  activityWorkerTopology: ScoutActivityWorkerTopology,
+): void {
+  if (
+    !gatewayTopologyRunsRole(gatewayTopology) &&
+    (activityWorkerTopology === "observing" ||
+      activityWorkerTopology === "owning")
+  ) {
+    throw new Error(
+      `${stage} activity-worker ${activityWorkerTopology} requires a split gateway topology`,
+    );
+  }
+}
+
 export function createScoutDeployment(
   chart: Chart,
   stage: Stage,
   gatewayTopology: ScoutGatewayTopology,
+  activityWorkerTopology: ScoutActivityWorkerTopology = "absent",
 ) {
   const analytics = scoutAnalyticsConfiguration(stage);
   const deployment = new Deployment(chart, "scout-backend", {
@@ -203,6 +224,7 @@ export function createScoutDeployment(
   // pod — which runs `application` — neither mounts nor needs it. On an unsplit
   // stage the combined pod keeps it exactly as #2870 wired it.
   const splitTopology = gatewayTopologyRunsRole(gatewayTopology);
+  assertActivityWorkerTopology(stage, gatewayTopology, activityWorkerTopology);
   const voiceSecretMount =
     stage === "beta"
       ? {
@@ -424,14 +446,16 @@ export function createScoutDeployment(
         }
       : {};
 
-  // A split stage runs this Deployment as the `application` role, with the
+  // A split stage runs this Deployment as an application role, with the
   // Discord shard — and therefore voice — moved to scout-gateway. Every other
   // stage stays on the combined role, which is what an unset SCOUT_RUNTIME_ROLE
   // resolves to, so an unsplit stage's manifest is unchanged by the split.
   const roleEnvVariables: Record<string, EnvValue> = splitTopology
     ? {
         ...envVariables,
-        SCOUT_RUNTIME_ROLE: EnvValue.fromValue("application"),
+        SCOUT_RUNTIME_ROLE: EnvValue.fromValue(
+          scoutSplitApplicationRole(activityWorkerTopology),
+        ),
       }
     : { ...envVariables, ...voiceEnvVariables };
 
@@ -490,10 +514,9 @@ export function createScoutDeployment(
     matchLabels: { app: "scout", stage },
   });
 
-  // The gateway role shares this stage's claim and SELinux level by design;
-  // see createScoutGatewayDeployment for why that is safe for this role and
-  // not for activity-worker. The pin is already proven safe for a second pod
-  // above, before any of this stage's resources were built.
+  // The gateway role shares this stage's claim and SELinux level by design.
+  // Its container mount is read-only; the activity worker below needs write
+  // access to report-lake staging data.
   //
   // Rendered while retiring as well as while split — at zero replicas, which is
   // how the rollback retires the pod without an operator scaling it by hand.
@@ -514,5 +537,19 @@ export function createScoutDeployment(
   }
   if (gatewayTopology === "retiring") {
     createScoutGatewayRetirementGate(chart, stage);
+  }
+
+  if (activityWorkerTopology !== "absent") {
+    createScoutActivityWorkerDeployment(chart, stage, {
+      topology: activityWorkerTopology,
+      imageVersion,
+      envVariables,
+      claim: localPathVolume.claim,
+      selinuxLevel,
+      colocateWith: deployment,
+    });
+  }
+  if (activityWorkerTopology === "retiring") {
+    createScoutActivityWorkerRetirementGate(chart, stage);
   }
 }

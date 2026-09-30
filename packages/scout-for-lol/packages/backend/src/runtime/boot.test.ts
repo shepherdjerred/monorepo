@@ -127,6 +127,18 @@ describe("scout runtime boot", () => {
     expect(log.boot).not.toContain("discord-gateway");
   });
 
+  test("isolated application starts without competition activities", async () => {
+    const log = await boot("application-isolated");
+    expect(log.boot).toEqual([
+      "champion-assets",
+      "report-lake",
+      "temporal-core",
+      "http-server",
+      "database-seeding",
+    ]);
+    expect(log.discord).toEqual(["rest-token", "gateway-marked-disabled"]);
+  });
+
   test("gateway boots without the product HTTP surface, but with the lake", async () => {
     const log = await boot("gateway");
     expect(log.boot).toEqual([
@@ -177,14 +189,18 @@ describe("scout runtime boot", () => {
     }
   });
 
-  test("exactly one role composes the database-sweeping collectors", async () => {
+  test("one role per topology composes database-sweeping collectors", async () => {
     const sweepers: ScoutRuntimeRole[] = [];
     for (const role of SCOUT_RUNTIME_ROLES) {
       const log = await boot(role);
       expect(log.metricSweeps).toHaveLength(1);
       if (log.metricSweeps[0] === true) sweepers.push(role);
     }
-    expect(sweepers).toEqual(["combined", "application"]);
+    expect(sweepers).toEqual([
+      "combined",
+      "application",
+      "application-isolated",
+    ]);
   });
 
   test("the metric decision is made before any subsystem starts", async () => {

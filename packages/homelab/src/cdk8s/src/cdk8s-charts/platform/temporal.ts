@@ -18,6 +18,13 @@ import { createTemporalWorkerDeployment } from "@shepherdjerred/homelab/cdk8s/sr
 import { createTemporalAgentWorkerNetworkPolicy } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/agent-worker-network-policy.ts";
 import { TEMPORAL_AGENT_POD_SECURITY_ENFORCEMENT } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/agent-worker.ts";
 import { createTemporalWorkerNetworkPolicies } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/workers/worker-network-policies.ts";
+import {
+  SCOUT_ACTIVITY_WORKER_TOPOLOGY,
+  SCOUT_GATEWAY_TOPOLOGY,
+  SCOUT_STAGES,
+  type ScoutGatewayTopology,
+} from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
+import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
 
 // Every Temporal-namespace workload egresses to cluster DNS the same way;
 // shared here so it is declared once instead of drifting per-policy.
@@ -63,20 +70,47 @@ function scoutBackendIngress(): NetworkPolicyIngressRule {
  * so a blocked client here is every slash command failing to dispatch rather
  * than a worker going idle.
  *
- * Beta only, matching the stage that actually renders the split topology.
+ * Admit each stage that actually runs a separate gateway pod.
  */
-function scoutGatewayClientIngress(): NetworkPolicyIngressRule {
-  return {
-    from: [
-      {
-        namespaceSelector: {
-          matchLabels: { "kubernetes.io/metadata.name": "scout-beta" },
+export function scoutGatewayClientIngress(
+  topology: Readonly<Record<Stage, ScoutGatewayTopology>>,
+): NetworkPolicyIngressRule[] {
+  const splitStages = SCOUT_STAGES.filter(
+    (stage) => topology[stage] === "split",
+  );
+  return splitStages.length === 0
+    ? []
+    : [
+        {
+          from: splitStages.map((stage) => ({
+            namespaceSelector: {
+              matchLabels: { "kubernetes.io/metadata.name": `scout-${stage}` },
+            },
+            podSelector: { matchLabels: { app: "scout-gateway" } },
+          })),
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
         },
-        podSelector: { matchLabels: { app: "scout-gateway" } },
-      },
-    ],
-    ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
-  };
+      ];
+}
+
+/** The split activity worker polls stage-local realtime and background queues. */
+function scoutActivityWorkerIngress(): NetworkPolicyIngressRule[] {
+  const activeStages = SCOUT_STAGES.filter(
+    (stage) => SCOUT_ACTIVITY_WORKER_TOPOLOGY[stage] !== "absent",
+  );
+  return activeStages.length === 0
+    ? []
+    : [
+        {
+          from: activeStages.map((stage) => ({
+            namespaceSelector: {
+              matchLabels: { "kubernetes.io/metadata.name": `scout-${stage}` },
+            },
+            podSelector: { matchLabels: { app: "scout-activity-worker" } },
+          })),
+          ports: [{ port: IntOrString.fromNumber(7233), protocol: "TCP" }],
+        },
+      ];
 }
 
 function scoutWorkflowWorkerIngress(): NetworkPolicyIngressRule {
@@ -245,7 +279,8 @@ export function createTemporalChart(app: App) {
         },
         scoutBackendIngress(),
         scoutWorkflowWorkerIngress(),
-        scoutGatewayClientIngress(),
+        ...scoutGatewayClientIngress(SCOUT_GATEWAY_TOPOLOGY),
+        ...scoutActivityWorkerIngress(),
         {
           // Allow Prometheus scraping metrics
           from: [

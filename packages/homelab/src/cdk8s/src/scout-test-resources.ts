@@ -3,7 +3,10 @@ import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createScoutChart } from "./cdk8s-charts/scout.ts";
 import { createTemporalChart } from "./cdk8s-charts/platform/temporal.ts";
-import type { ScoutGatewayTopology } from "./resources/scout/topology.ts";
+import type {
+  ScoutActivityWorkerTopology,
+  ScoutGatewayTopology,
+} from "./resources/scout/topology.ts";
 
 export const ScoutTestResourceSchema = z
   .object({
@@ -57,7 +60,20 @@ export function scoutResourcesWithGatewayTopology(
   topology: ScoutGatewayTopology,
 ): ScoutTestResource[] {
   const app = new App();
-  createScoutChart(app, stage, undefined, topology);
+  createScoutChart(app, stage, undefined, { gateway: topology });
+  return resourcesFor(app);
+}
+
+export function scoutResourcesWithActivityWorkerTopology(
+  stage: "beta" | "prod",
+  gatewayTopology: ScoutGatewayTopology,
+  activityWorkerTopology: ScoutActivityWorkerTopology,
+): ScoutTestResource[] {
+  const app = new App();
+  createScoutChart(app, stage, undefined, {
+    gateway: gatewayTopology,
+    activityWorker: activityWorkerTopology,
+  });
   return resourcesFor(app);
 }
 

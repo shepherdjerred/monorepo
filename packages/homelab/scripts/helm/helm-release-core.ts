@@ -34,6 +34,11 @@ const REPOSITORY_CHART_URLS = new Set([
 // vault item, while the old OnePasswordItem is a stateless retired resource;
 // leaving it live keeps Scout beta OutOfSync and blocks the root release health
 // wait.
+// scout-prod can retire the activity-worker after its staged queue handoff. The
+// absent topology removes its Deployment, Service, ServiceMonitor, NetworkPolicy
+// and retirement gate prerequisites only after a zero-replica retiring release
+// has removed the worker pod. Exact-revision release-root preflight still
+// reviews every prune candidate before an application sync.
 // trmnl-dashboard is here because #3093 moved its homelab screen onto the ops
 // snapshot, retiring its Kubernetes read access. The ServiceAccount,
 // ClusterRole and ClusterRoleBinding are stateless retired resources; leaving
@@ -44,6 +49,7 @@ const PRUNED_RELEASE_CHARTS = new Set([
   "freshrss",
   "media",
   "scout-beta",
+  "scout-prod",
   "service-probes",
   "temporal",
   "trmnl-dashboard",
