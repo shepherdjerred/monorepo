@@ -40,7 +40,7 @@ export function ReportAssetIcon(props: {
   value: string | number;
 }) {
   const asset = reportAssetInfo(props.kind, props.value);
-  if (asset?.canonicalKey == null) return null;
+  if (asset.canonicalKey == null) return null;
 
   const imageProps = {
     alt: "",
