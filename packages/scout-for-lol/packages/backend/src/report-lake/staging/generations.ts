@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readdir, readFile, rename, rm } from "node:fs/promises";
+import { mkdir, readdir, readFile, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import type { ReportLakeStagingTable } from "#src/report-lake/staging.ts";
@@ -96,6 +96,11 @@ export type StagingGenerationSnapshot = {
 
 const COMMITTED_DIR = "staging-generations";
 const PENDING_DIR = ".staging-generations-pending";
+const ABANDONED_PENDING_AGE_MS = 24 * 60 * 60 * 1000;
+
+function isMissing(error: unknown): boolean {
+  return error instanceof Error && "code" in error && error.code === "ENOENT";
+}
 
 function committedRoot(lakeDir: string): string {
   return path.join(lakeDir, COMMITTED_DIR);
@@ -110,6 +115,43 @@ export async function ensureStagingGenerationDirs(
 ): Promise<void> {
   await mkdir(committedRoot(lakeDir), { recursive: true });
   await mkdir(pendingRoot(lakeDir), { recursive: true });
+}
+
+/** Reclaim writes abandoned for a day without touching a recent writer. */
+export async function reclaimAbandonedPendingGenerations(
+  lakeDir: string,
+  now = Date.now(),
+): Promise<number> {
+  let pending;
+  try {
+    pending = await readdir(pendingRoot(lakeDir), { withFileTypes: true });
+  } catch (error) {
+    if (isMissing(error)) return 0;
+    throw error;
+  }
+  let removed = 0;
+  for (const entry of pending) {
+    if (!entry.isDirectory()) continue;
+    const dir = path.join(pendingRoot(lakeDir), entry.name);
+    try {
+      const files = await readdir(dir);
+      const timestamps = await Promise.all([
+        stat(dir),
+        ...files.map(async (file) => await stat(path.join(dir, file))),
+      ]);
+      if (
+        timestamps.some((item) => now - item.mtimeMs < ABANDONED_PENDING_AGE_MS)
+      ) {
+        continue;
+      }
+      await rm(dir, { recursive: true, force: true });
+      removed += 1;
+    } catch (error) {
+      // A writer may have committed the directory during the scan.
+      if (!isMissing(error)) throw error;
+    }
+  }
+  return removed;
 }
 
 export function projectionKey(
@@ -200,18 +242,29 @@ async function committedGenerations(
   try {
     entries = await readdir(committedRoot(lakeDir), { withFileTypes: true });
   } catch (error) {
-    if (error instanceof Error && "code" in error && error.code === "ENOENT")
-      return [];
+    if (isMissing(error)) return [];
     throw error;
   }
-  return await Promise.all(
+  const generations = await Promise.all(
     entries
       .filter((entry) => entry.isDirectory())
       .map(async (entry) => {
         const dir = path.join(committedRoot(lakeDir), entry.name);
-        const manifest = ManifestSchema.parse(
-          JSON.parse(await readFile(path.join(dir, "manifest.json"), "utf8")),
-        );
+        let text: string;
+        try {
+          text = await readFile(path.join(dir, "manifest.json"), "utf8");
+        } catch (error) {
+          if (!isMissing(error)) throw error;
+          try {
+            await stat(dir);
+          } catch (directoryError) {
+            if (isMissing(directoryError)) return;
+            throw directoryError;
+          }
+          // A committed directory without its manifest is corrupt.
+          throw error;
+        }
+        const manifest = ManifestSchema.parse(JSON.parse(text));
         if (manifest.generationId !== entry.name) {
           throw new Error(
             `Staging generation manifest name mismatch at ${dir}`,
@@ -219,6 +272,9 @@ async function committedGenerations(
         }
         return { ...manifest, dir };
       }),
+  );
+  return generations.flatMap((generation) =>
+    generation === undefined ? [] : [generation],
   );
 }
 

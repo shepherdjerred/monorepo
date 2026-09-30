@@ -35,6 +35,7 @@ import {
 import { duckDbColumnsSpec } from "#src/report-lake/schema.ts";
 import { removeFoldedStagingFiles } from "#src/report-lake/staging.ts";
 import {
+  reclaimAbandonedPendingGenerations,
   removeRebuiltGenerations,
   snapshotStagingGenerations,
 } from "#src/report-lake/staging/generations.ts";
@@ -68,6 +69,7 @@ async function rebuildLocked(
   const buildId = newBuildId();
   const buildDir = buildDirPath(lakeDir, buildId);
   await mkdir(buildDir, { recursive: true });
+  await reclaimAbandonedPendingGenerations(lakeDir);
   const stagingSnapshot = await snapshotStagingGenerations(lakeDir);
   const rebuiltSources = new Set<string>();
   let published = false;

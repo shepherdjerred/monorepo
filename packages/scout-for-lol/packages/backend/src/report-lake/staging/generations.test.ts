@@ -1,11 +1,12 @@
 import { afterEach, expect, test } from "vitest";
-import { mkdtemp, readdir, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, utimes } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import {
   commitStagingGeneration,
   generationFile,
   projectionKey,
+  reclaimAbandonedPendingGenerations,
   removeFoldedGenerations,
   removeRebuiltGenerations,
   s3StagingSourceKey,
@@ -83,6 +84,36 @@ test("a multi-table projection cannot commit only one relation", async () => {
   ).rejects.toThrow();
   const snapshot = await snapshotStagingGenerations(dir);
   expect(snapshot.selected).toEqual([]);
+});
+
+test("compaction reclaims old pending writes and leaves recent writers alone", async () => {
+  const dir = await lakeDir();
+  const pending = path.join(dir, ".staging-generations-pending");
+  const old = path.join(pending, "old");
+  const recent = path.join(pending, "recent");
+  await mkdir(pending, { recursive: true });
+  await Promise.all([mkdir(old), mkdir(recent)]);
+  const oldFile = path.join(old, "matches.jsonl");
+  const recentFile = path.join(recent, "matches.jsonl");
+  await Promise.all([
+    Bun.write(oldFile, "old\n"),
+    Bun.write(recentFile, "recent\n"),
+  ]);
+  const oldTime = new Date("2026-09-28T00:00:00Z");
+  const recentTime = new Date("2026-09-30T00:00:00Z");
+  await Promise.all([
+    utimes(oldFile, oldTime, oldTime),
+    utimes(old, oldTime, oldTime),
+    utimes(recentFile, recentTime, recentTime),
+    utimes(recent, recentTime, recentTime),
+  ]);
+  expect(
+    await reclaimAbandonedPendingGenerations(
+      dir,
+      new Date("2026-09-30T01:00:00Z").getTime(),
+    ),
+  ).toBe(1);
+  expect(await readdir(pending)).toEqual(["recent"]);
 });
 
 test("all relations select the same newest generation", async () => {
@@ -237,4 +268,25 @@ test("whole query retry does not mask an unrelated query failure", async () => {
     ),
   ).rejects.toThrow("invalid query");
   expect(attempts).toBe(1);
+});
+
+test("exhausted snapshot retries preserve the missing manifest error", async () => {
+  const dir = await lakeDir();
+  const generation = await commitStagingGeneration({
+    lakeDir: dir,
+    projectionKind: "prematch",
+    naturalId: "NA1_42",
+    observedAt: new Date("2026-09-30T00:00:00Z"),
+    files: [{ table: "prematch", content: "\n" }],
+  });
+  await rm(path.join(generation.dir, "manifest.json"));
+  await expect(snapshotStagingGenerations(dir)).rejects.toThrow();
+  let failure: unknown;
+  try {
+    await withLakeQueryRetry(dir, async () => 0, { reportLakeAccess: true });
+  } catch (error) {
+    failure = error;
+  }
+  expect(failure).toBeInstanceOf(Error);
+  expect(failure).toMatchObject({ cause: { code: "ENOENT" } });
 });

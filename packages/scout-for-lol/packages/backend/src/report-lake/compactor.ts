@@ -31,6 +31,7 @@ import {
   type ReportLakeStagingTable,
 } from "#src/report-lake/staging.ts";
 import {
+  reclaimAbandonedPendingGenerations,
   removeFoldedGenerations,
   projectionKey,
   snapshotStagingGenerations,
@@ -135,6 +136,7 @@ export async function runReportLakeFold(
       // A build without a manifest is unusual but not worth failing over.
     }
 
+    await reclaimAbandonedPendingGenerations(lakeDir);
     const validated = await validateStagingSnapshot(
       await snapshotStagingGenerations(lakeDir),
     );

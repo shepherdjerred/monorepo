@@ -22,11 +22,14 @@ type LakeResolver = (
   capabilities: Pick<ScoutRuntimeCapabilities, "reportLakeAccess">,
 ) => Promise<LakeFiles>;
 
+type SnapshotResult =
+  { files: LakeFiles } | { files: undefined; reason: unknown };
+
 async function resolveQuerySnapshot(
   lakeDir: string,
   capabilities: Pick<ScoutRuntimeCapabilities, "reportLakeAccess">,
   resolveFiles: LakeResolver,
-): Promise<LakeFiles | undefined> {
+): Promise<SnapshotResult> {
   const buildBefore = await readCurrentBuildDir(lakeDir);
   let files: LakeFiles;
   try {
@@ -37,13 +40,20 @@ async function resolveQuerySnapshot(
       buildBefore !== buildAfter ||
       (error instanceof Error && "code" in error && error.code === "ENOENT")
     ) {
-      return undefined;
+      return { files: undefined, reason: error };
     }
     throw error;
   }
-  if (buildBefore !== (await readCurrentBuildDir(lakeDir))) return undefined;
+  if (buildBefore !== (await readCurrentBuildDir(lakeDir))) {
+    return {
+      files: undefined,
+      reason: new Error("CURRENT changed during lake resolution"),
+    };
+  }
   const missing = await snapshotHasMissingFiles(files);
-  return missing ? undefined : files;
+  return missing
+    ? { files: undefined, reason: new Error("Captured lake file disappeared") }
+    : { files };
 }
 
 /**
@@ -58,17 +68,23 @@ export async function retryLakeQuery<T>(
   capabilities: Pick<ScoutRuntimeCapabilities, "reportLakeAccess">,
   resolveFiles: LakeResolver,
 ): Promise<T> {
+  let lastReason: unknown;
   for (let attempt = 0; attempt < LAKE_QUERY_SNAPSHOT_ATTEMPTS; attempt++) {
-    const files = await resolveQuerySnapshot(
+    const snapshot = await resolveQuerySnapshot(
       lakeDir,
       capabilities,
       resolveFiles,
     );
-    if (files === undefined) continue;
+    if (snapshot.files === undefined) {
+      lastReason = snapshot.reason;
+      continue;
+    }
+    const { files } = snapshot;
     try {
       return await query(files);
     } catch (error) {
       if (!(await snapshotHasMissingFiles(files))) throw error;
+      lastReason = error;
       if (attempt === LAKE_QUERY_SNAPSHOT_ATTEMPTS - 1) {
         throw new Error(
           `Report lake snapshot disappeared during ${LAKE_QUERY_SNAPSHOT_ATTEMPTS.toString()} query attempts`,
@@ -79,5 +95,6 @@ export async function retryLakeQuery<T>(
   }
   throw new Error(
     `Report lake snapshot disappeared before ${LAKE_QUERY_SNAPSHOT_ATTEMPTS.toString()} query attempts`,
+    { cause: lastReason },
   );
 }
