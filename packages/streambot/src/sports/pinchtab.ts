@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { logger } from "@shepherdjerred/streambot/util/logger.ts";
 import {
+  approvedCapturedHlsUrl,
   approvedPlayerFrameUrl,
   approvedRuntimePlayerUrl,
   capturedHeaders,
@@ -144,11 +145,13 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
       while (Date.now() < deadline) {
         signal.throwIfAborted();
         const streams = await this.captureStreams(tabId, signal);
-        const first = streams[0];
-        if (first !== undefined) {
+        const selected = streams.find((entry) =>
+          approvedCapturedHlsUrl(entry.url, requestedPage),
+        );
+        if (selected !== undefined) {
           return {
-            resources: streams.map((entry) => entry.url),
-            headers: capturedHeaders(first, requestedPage.toString()),
+            resources: [selected.url],
+            headers: capturedHeaders(selected, requestedPage.toString()),
           };
         }
         const snapshot = SnapshotSchema.parse(

@@ -3,6 +3,7 @@ import { App } from "cdk8s";
 import { parseAllDocuments } from "yaml";
 import { z } from "zod";
 import { createPinchtabChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/pinchtab.ts";
+import { createMediaChart } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/media/media.ts";
 
 const NamespaceSchema = z.object({
   kind: z.literal("Namespace"),
@@ -172,6 +173,42 @@ describe("PinchTab network boundary", () => {
       podSelector: { matchLabels: { app: "streambot" } },
     });
     expect(streambotRules[0]?.ports).toEqual([{ port: 9867, protocol: "TCP" }]);
+  });
+
+  test("the Streambot ingress selector matches its actual pod template", async () => {
+    const policy = resources().flatMap((resource) => {
+      const parsed = NetworkPolicySchema.safeParse(resource);
+      return parsed.success &&
+        parsed.data.metadata.name === "pinchtab-ingress-netpol"
+        ? [parsed.data]
+        : [];
+    })[0];
+    const selector = policy?.spec.ingress
+      ?.flatMap((rule) => rule.from)
+      .find((peer) => peer.podSelector?.matchLabels["app"] === "streambot")
+      ?.podSelector?.matchLabels;
+    const media = new App({ outdir: ".test-synth-pinchtab-streambot-peer" });
+    await createMediaChart(media);
+    const StreambotDeploymentSchema = z.object({
+      kind: z.literal("Deployment"),
+      metadata: z.object({ name: z.literal("media-streambot") }),
+      spec: z.object({
+        template: z.object({
+          metadata: z.object({ labels: z.record(z.string(), z.string()) }),
+        }),
+      }),
+    });
+    const deployment = parseAllDocuments(media.synthYaml()).flatMap(
+      (document) => {
+        const parsed = StreambotDeploymentSchema.safeParse(document.toJSON());
+        return parsed.success ? [parsed.data] : [];
+      },
+    )[0];
+    if (selector === undefined || deployment === undefined) {
+      throw new Error("Streambot policy peer and pod template must exist");
+    }
+    expect(selector).toEqual({ app: "streambot" });
+    expect(deployment.spec.template.metadata.labels).toMatchObject(selector);
   });
 
   test("keeps the API available while liveness recovers Chrome", () => {

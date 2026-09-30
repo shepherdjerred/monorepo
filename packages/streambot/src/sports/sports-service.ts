@@ -1,4 +1,5 @@
 import { scoreLibraryTitle } from "@shepherdjerred/streambot/sources/library.ts";
+import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import {
   parseStreamEastEvents,
   parseTVSportsLiveEvents,
@@ -97,9 +98,14 @@ export class SportsService implements SportsCatalog {
       streamEast.status === "rejected" &&
       tvSportsLive.status === "rejected"
     ) {
-      throw new AggregateError(
-        [streamEast.reason, tvSportsLive.reason],
-        "Sports listings are temporarily unavailable",
+      throw new PlaybackCommandBoundaryError(
+        "Sports listings are temporarily unavailable. Please try again later.",
+        {
+          cause: new AggregateError(
+            [streamEast.reason, tvSportsLive.reason],
+            "Both sports providers failed",
+          ),
+        },
       );
     }
     return sortSportsEvents([

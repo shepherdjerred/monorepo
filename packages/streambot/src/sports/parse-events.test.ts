@@ -5,11 +5,54 @@ import {
   sportsEventTimeLabel,
 } from "@shepherdjerred/streambot/sports/parse-events.ts";
 import { matchSportsEvents } from "@shepherdjerred/streambot/sports/sports-service.ts";
+import { SportsService } from "@shepherdjerred/streambot/sports/sports-service.ts";
+import { sportsListingText } from "@shepherdjerred/streambot/sports/listing-text.ts";
+import { selectSportsPlayback } from "@shepherdjerred/streambot/sports/playback-selection.ts";
+import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
+import {
+  ChannelIdSchema,
+  GuildIdSchema,
+  UserIdSchema,
+} from "@shepherdjerred/streambot/types/ids.ts";
 import type { SportsEvent } from "@shepherdjerred/streambot/sports/types.ts";
 
 const NOW = new Date("2026-09-26T19:00:00.000Z");
 
 describe("sports listings", () => {
+  it("gives a useful boundary error for listing and playback when both providers fail", async () => {
+    const catalog = new SportsService({
+      html: async () => {
+        throw new Error("provider unreachable");
+      },
+      runtimeStreams: async () => {
+        throw new Error("unexpected runtime request");
+      },
+    });
+    const signal = new AbortController().signal;
+    await expect(
+      sportsListingText({
+        scope: {
+          guildId: GuildIdSchema.parse("100000000000000001"),
+          channelId: ChannelIdSchema.parse("100000000000000002"),
+          userId: UserIdSchema.parse("100000000000000003"),
+        },
+        catalog,
+        enabled: async () => true,
+        signal,
+      }),
+    ).rejects.toThrow(PlaybackCommandBoundaryError);
+    await expect(
+      selectSportsPlayback({
+        query: "Bears vs Packers",
+        provider: "auto",
+        catalog,
+        signal,
+        resolve: async () => {
+          throw new Error("must not resolve");
+        },
+      }),
+    ).rejects.toThrow("Sports listings are temporarily unavailable");
+  });
   it("parses today's StreamEast cards and drops a card from another local day", () => {
     const events = parseStreamEastEvents(
       '<div class="m-card m-card--live" data-match-id="abc" data-time="1790449200"><a class="m-card__link" href="/nfl/bears-vs-packers/" aria-label="Bears vs Packers"></a></div>' +

@@ -54,6 +54,27 @@ export function approvedRuntimePlayerUrl(page: URL): boolean {
   );
 }
 
+export function approvedCapturedHlsUrl(value: string, player: URL): boolean {
+  try {
+    const stream = new URL(value);
+    if (
+      stream.protocol !== "https:" ||
+      stream.username.length > 0 ||
+      stream.password.length > 0 ||
+      stream.port.length > 0 ||
+      !/\.m3u8$/i.test(stream.pathname)
+    ) {
+      return false;
+    }
+    return player.hostname === "embed.st"
+      ? /^lb\d+\.strmd\.st$/.test(stream.hostname)
+      : stream.hostname === "streame.center" ||
+          /^edgestream\d+\.pro$/.test(stream.hostname);
+  } catch {
+    return false;
+  }
+}
+
 export function playerControlRef(
   nodes: readonly SnapshotNode[],
   page: URL,

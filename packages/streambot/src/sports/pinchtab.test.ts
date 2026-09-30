@@ -66,7 +66,7 @@ describe("PinchtabSportsBrowser streams", () => {
         if (url.includes("/network?filter=m3u8")) {
           captures += 1;
           return Response.json({
-            count: captures === 1 ? 1 : 2,
+            count: captures === 1 ? 2 : 3,
             entries:
               captures === 1
                 ? [
@@ -74,11 +74,21 @@ describe("PinchtabSportsBrowser streams", () => {
                       url: "https://edgestream12.pro/expired.m3u8",
                       status: 404,
                     },
+                    {
+                      url: "https://ads.example.com/ad.m3u8",
+                      status: 200,
+                      requestHeaders: { Referer: "https://ads.example.com/" },
+                    },
                   ]
                 : [
                     {
                       url: "https://edgestream12.pro/expired.m3u8",
                       status: 404,
+                    },
+                    {
+                      url: "https://ads.example.com/ad.m3u8",
+                      status: 200,
+                      requestHeaders: { Referer: "https://ads.example.com/" },
                     },
                     {
                       url: "https://edgestream12.pro/live.m3u8?token=secret",

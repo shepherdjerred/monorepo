@@ -129,6 +129,7 @@ export function createStreambotDeployment(
   const deployment = new Deployment(chart, "streambot", {
     replicas: 1,
     strategy: DeploymentStrategy.recreate(),
+    podMetadata: { labels: { app: "streambot" } },
     securityContext: {
       fsGroup: STREAMBOT_GID,
     },
