@@ -129,26 +129,35 @@ function unknownDeliveryState(
   return state;
 }
 
+type NotificationQueueSubject = { matchId: string } | { duelId: string };
+
+/** Keep the queue's subject explicit without inventing a Riot match for a Duel. */
+function notificationSubject(
+  record: NotificationQueueSubject,
+): NotificationQueueSubject {
+  return "matchId" in record
+    ? { matchId: record.matchId }
+    : { duelId: record.duelId };
+}
+
 export async function readOperationsQueues(args: {
   limit: number;
   now: Date;
   after?: OperationsQueueCursors | undefined;
 }): Promise<{
   stalledMatchProcessing: readonly RiotMatchId[];
-  stalledNotifications: readonly {
+  stalledNotifications: readonly ({
     intentKey: string;
-    matchId: string;
     state: string;
     freshnessDeadline: string;
     attemptCount: number;
-  }[];
-  unknownDeliveries: readonly {
+  } & NotificationQueueSubject)[];
+  unknownDeliveries: readonly ({
     intentKey: string;
-    matchId: string;
     attemptCount: number;
     attemptNonce: string;
     state: string;
-  }[];
+  } & NotificationQueueSubject)[];
   unprojectedMatches: readonly RiotMatchId[];
   liveRecoveryBatches: readonly string[];
   unacceptedWorkflowStarts: readonly {
@@ -265,14 +274,14 @@ export async function readOperationsQueues(args: {
     // console depending on a query it does not own and cannot see change.
     stalledNotifications: notifications.items.map((record) => ({
       intentKey: record.intent.key,
-      matchId: record.matchId,
+      ...notificationSubject(record),
       state: record.intent.state.kind,
       freshnessDeadline: record.intent.freshnessDeadline,
       attemptCount: record.intent.attemptCount,
     })),
     unknownDeliveries: unknown.items.map((record) => ({
       intentKey: record.intent.key,
-      matchId: record.matchId,
+      ...notificationSubject(record),
       attemptCount: record.intent.attemptCount,
       // The nonce is not decoration: `ops_resolve_unknown_delivery` REQUIRES
       // the exact nonce of the attempt being answered, and the domain refuses

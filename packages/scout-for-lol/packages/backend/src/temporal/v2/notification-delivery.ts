@@ -41,6 +41,7 @@ import {
 } from "#src/temporal/v2/notification/hall-record-break-notification.ts";
 import { hallInstallationRetirementOfV2 } from "#src/temporal/v2/notification/intent-audience.ts";
 import { buildAttestedMessageV2 } from "#src/temporal/v2/notification/notification-message.ts";
+import { duelStatusSuppressionV2 } from "#src/temporal/v2/notification/duel-status-notification.ts";
 import {
   PreSendBudgetExpiredError,
   withPreSendBudget,
@@ -361,7 +362,7 @@ async function prepareNotificationSend(
   abortSignal: AbortSignal,
 ): Promise<PreparedSend> {
   const record = await requireIntentRecordV2(input.intentKey);
-  const riotMatchId = record.matchId;
+  const subjectId = "matchId" in record ? record.matchId : record.duelId;
   const target = record.intent.target;
   // The send boundary's own reading of the policy. `beginNotificationSendV2`
   // already refused a held intent before minting this attempt, so reaching
@@ -397,13 +398,16 @@ async function prepareNotificationSend(
 
   let message: MessageCreateOptions;
   try {
-    message = await buildAttestedMessageV2(record, abortSignal);
-    const reason = await hallPreSendSuppression(record, guildId);
+    message = await buildAttestedMessageV2(record, abortSignal, guildId);
+    const reason =
+      "matchId" in record
+        ? await hallPreSendSuppression(record, guildId)
+        : await duelStatusSuppressionV2(record);
     if (reason !== undefined) return { phase: "suppressed", reason };
   } catch (error) {
     if (error instanceof ArchivedObjectUnusableError) {
       logger.error(
-        `The attested artifact for ${riotMatchId} cannot be delivered (${error.reason}); the receipt stands but its bytes do not`,
+        `The attested artifact for ${subjectId} cannot be delivered (${error.reason}); the receipt stands but its bytes do not`,
         error,
       );
       return { phase: "failed", failure: CONTENT_UNAVAILABLE };
@@ -414,7 +418,7 @@ async function prepareNotificationSend(
       // announcement payload that cannot produce a message. Every one is a
       // producer's contract to fix, and no retry reads the row differently.
       logger.error(
-        `The evidence for ${riotMatchId} cannot be delivered from (${error.name}); the intent is parked rather than re-driven`,
+        `The evidence for ${subjectId} cannot be delivered from (${error.name}); the intent is parked rather than re-driven`,
         error,
       );
       return { phase: "failed", failure: CONTENT_UNAVAILABLE };
@@ -423,7 +427,7 @@ async function prepareNotificationSend(
   }
   if (target.kind === "dm" && (message.files ?? []).length > 0) {
     logger.error(
-      `The notification for ${riotMatchId} carries a file attachment, which sendDM cannot deliver; no producer mints DM intents for attachment-bearing reports`,
+      `The notification for ${subjectId} carries a file attachment, which sendDM cannot deliver; no producer mints DM intents for attachment-bearing reports`,
     );
     return {
       phase: "failed",

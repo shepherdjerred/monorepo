@@ -23,8 +23,8 @@ import type { Db } from "#src/database/index.ts";
 import type { ScoutWorkflowStartRecord } from "@scout-for-lol/domain/recovery/workflow-start.ts";
 import { scoutWorkflowStartRowToRecord } from "#src/database/durable/workflow-start-row.ts";
 import {
-  matchNotificationIntentRowToRecord,
-  type MatchNotificationIntentRecord,
+  notificationIntentRowToRecord,
+  type NotificationIntentRecord,
 } from "#src/database/durable/intent-row.ts";
 
 /**
@@ -176,6 +176,8 @@ const INTENT_TRUTH_WINDOW = {
   // A record break is a fact the finished game established; it is minted by
   // post-match progression, so it exists only once the result is known.
   "hall-record-break": "after-result",
+  // A Duel has no Riot match result at mint; its own series clock decides freshness.
+  "duel-status": "after-result",
 } satisfies Record<NotificationIntentKind, "before-result" | "after-result">;
 
 const BEFORE_RESULT_INTENT_KINDS: readonly string[] = Object.entries(
@@ -476,7 +478,7 @@ export async function listStalledNotificationIntents(
     limit: number;
     after?: ScanPosition | undefined;
   },
-): Promise<MatchNotificationIntentRecord[]> {
+): Promise<NotificationIntentRecord[]> {
   const keyset =
     args.after === undefined
       ? Prisma.empty
@@ -524,7 +526,7 @@ export async function listStalledNotificationIntents(
   return z
     .array(z.unknown())
     .parse(rows)
-    .map((row) => matchNotificationIntentRowToRecord(row));
+    .map((row) => notificationIntentRowToRecord(row));
 }
 
 /**
@@ -545,7 +547,7 @@ export async function listStalledNotificationIntents(
 export async function listUnknownDeliveryIntents(
   db: Db,
   args: { limit: number; after?: ScanPosition | undefined },
-): Promise<MatchNotificationIntentRecord[]> {
+): Promise<NotificationIntentRecord[]> {
   const after = args.after;
   const rows = await db.matchNotificationIntent.findMany({
     where: {
@@ -565,7 +567,7 @@ export async function listUnknownDeliveryIntents(
     orderBy: [{ unknownObservedAt: "asc" }, { intentKey: "asc" }],
     take: args.limit,
   });
-  return rows.map((row) => matchNotificationIntentRowToRecord(row));
+  return rows.map((row) => notificationIntentRowToRecord(row));
 }
 
 /**

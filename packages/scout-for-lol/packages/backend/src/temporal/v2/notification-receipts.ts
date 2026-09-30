@@ -51,7 +51,10 @@ export const SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KINDS = {
   "hall-record-break": ReceiptKindSchema.parse(
     "v2-notification-render-hall-record-break",
   ),
-} as const satisfies Record<NotificationIntentKind, ReceiptKind>;
+} as const satisfies Record<
+  Exclude<NotificationIntentKind, "duel-status">,
+  ReceiptKind
+>;
 
 /**
  * The receipt kind one intent kind's artifact is attested under. A closed
@@ -61,7 +64,7 @@ export const SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KINDS = {
  * lanes' vocabularies.
  */
 export function scoutV2NotificationRenderReceiptKind(
-  kind: NotificationIntentKind,
+  kind: Exclude<NotificationIntentKind, "duel-status">,
 ): ReceiptKind {
   return SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KINDS[kind];
 }
@@ -188,7 +191,7 @@ export const scoutV2NotificationRenderEvidenceCodec = defineVersionedCodec({
  */
 export async function readNotificationArtifactV2(
   riotMatchId: RiotMatchId,
-  kind: NotificationIntentKind,
+  kind: Exclude<NotificationIntentKind, "duel-status">,
 ): Promise<ScoutV2NotificationRenderEvidence | null> {
   const receiptKind = scoutV2NotificationRenderReceiptKind(kind);
   const receipts = await listReceipts(prisma, { matchId: riotMatchId });

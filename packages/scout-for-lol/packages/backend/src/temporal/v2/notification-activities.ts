@@ -1,3 +1,4 @@
+import { Context } from "@temporalio/activity";
 import type { ScoutV2NotificationActivities } from "#src/temporal/v2/durable-activity-surface.ts";
 import { heartbeatWhile } from "#src/temporal/activity-runtime.ts";
 
@@ -26,7 +27,13 @@ export function createScoutV2NotificationActivities(): ScoutV2NotificationActivi
         async () => {
           const { readNotificationIntentV2 } =
             await import("#src/temporal/v2/notification-reads.ts");
-          return await readNotificationIntentV2(input);
+          const execution = Context.current().info.workflowExecution;
+          if (execution === undefined) {
+            throw new Error(
+              "Notification intent read has no Workflow execution",
+            );
+          }
+          return await readNotificationIntentV2(input, execution);
         },
       ),
     markNotificationReadyV2: async (input) =>

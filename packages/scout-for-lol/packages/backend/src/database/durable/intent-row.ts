@@ -37,6 +37,24 @@ export const MatchNotificationIntentRecordSchema = z.strictObject({
   intent: NotificationIntentSchema,
 });
 
+/** A Duel status has no Riot match and carries its series as the subject. */
+export type DuelNotificationIntentRecord = z.infer<
+  typeof DuelNotificationIntentRecordSchema
+>;
+export const DuelNotificationIntentRecordSchema = z.strictObject({
+  duelId: z.uuid(),
+  intent: NotificationIntentSchema.refine(
+    (intent) =>
+      intent.kind === "duel-status" &&
+      intent.origin.kind === "live" &&
+      intent.target.kind === "channel",
+    { message: "Duel intents must be live channel duel-status announcements" },
+  ),
+});
+
+export type NotificationIntentRecord =
+  MatchNotificationIntentRecord | DuelNotificationIntentRecord;
+
 /** The columns owned by the state machine, written on every transition. */
 export type NotificationIntentStateColumns = {
   state: string;
@@ -54,9 +72,9 @@ export type NotificationIntentStateColumns = {
 /** Column shape of a MatchNotificationIntent row, minus DB-managed columns. */
 export type MatchNotificationIntentRow = NotificationIntentStateColumns & {
   intentKey: string;
-  subjectKind: "match";
+  subjectKind: "match" | "duel";
   subjectId: string;
-  riotMatchId: string;
+  riotMatchId: string | null;
   kind: string;
   originKind: string;
   recoveryBatchId: string | null;
@@ -167,6 +185,31 @@ export function serializeIntentPayload(intent: NotificationIntent): string {
   return JSON.stringify(notificationIntentCodec.serialize(intent));
 }
 
+/** Rebuild the state machine from indexed columns and check its wire payload. */
+function intentFromRow(raw: RawIntentRow): NotificationIntent {
+  const payloadIntent = notificationIntentCodec.parse(JSON.parse(raw.payload));
+  const intent = NotificationIntentSchema.parse({
+    key: raw.intentKey,
+    kind: raw.kind,
+    origin: originCandidate(raw),
+    target: targetCandidate(raw),
+    freshnessDeadline: raw.freshnessDeadline.toISOString(),
+    createdAt: raw.createdAt.toISOString(),
+    attemptCount: raw.attemptCount,
+    ...failureCandidate(raw),
+    ...(payloadIntent.announcement === undefined
+      ? {}
+      : { announcement: payloadIntent.announcement }),
+    state: stateCandidate(raw),
+  });
+  if (!Bun.deepEquals(intent, payloadIntent, true)) {
+    throw new Error(
+      `Intent ${raw.intentKey}: the payload envelope disagrees with the row's columns`,
+    );
+  }
+  return intent;
+}
+
 export function matchNotificationIntentRowToRecord(
   row: unknown,
 ): MatchNotificationIntentRecord {
@@ -180,30 +223,40 @@ export function matchNotificationIntentRowToRecord(
       `Intent ${raw.intentKey}: expected a match subject with matching subjectId and riotMatchId`,
     );
   }
-  const payloadIntent = notificationIntentCodec.parse(JSON.parse(raw.payload));
+  const intent = intentFromRow(raw);
   const record = MatchNotificationIntentRecordSchema.parse({
     matchId: raw.riotMatchId,
-    intent: {
-      key: raw.intentKey,
-      kind: raw.kind,
-      origin: originCandidate(raw),
-      target: targetCandidate(raw),
-      freshnessDeadline: raw.freshnessDeadline.toISOString(),
-      createdAt: raw.createdAt.toISOString(),
-      attemptCount: raw.attemptCount,
-      ...failureCandidate(raw),
-      ...(payloadIntent.announcement === undefined
-        ? {}
-        : { announcement: payloadIntent.announcement }),
-      state: stateCandidate(raw),
-    },
+    intent,
   });
-  if (!Bun.deepEquals(record.intent, payloadIntent, true)) {
+  if (record.intent.kind === "duel-status") {
     throw new Error(
-      `Intent ${raw.intentKey}: the payload envelope disagrees with the row's columns`,
+      `Intent ${raw.intentKey}: duel-status requires a Duel subject`,
     );
   }
   return record;
+}
+
+/** Decode a stored intent without assuming its subject is a Riot match. */
+export function notificationIntentRowToRecord(
+  row: unknown,
+): NotificationIntentRecord {
+  const raw = RawIntentRowSchema.parse(row);
+  if (raw.subjectKind === "match") {
+    return matchNotificationIntentRowToRecord(raw);
+  }
+  if (
+    raw.subjectKind !== "duel" ||
+    raw.subjectId === null ||
+    raw.riotMatchId !== null
+  ) {
+    throw new Error(
+      `Intent ${raw.intentKey}: unsupported or inconsistent ${raw.subjectKind} subject`,
+    );
+  }
+  return DuelNotificationIntentRecordSchema.parse({
+    duelId: raw.subjectId,
+    intent: intentFromRow(raw),
+  });
 }
 
 function targetColumns(target: NotificationTarget): {
@@ -296,20 +349,50 @@ export function notificationIntentTransitionPatch(
   };
 }
 
+/** Columns that have the same owner for every supported subject. */
+function intentColumns(
+  intent: NotificationIntent,
+): Omit<
+  MatchNotificationIntentRow,
+  "subjectKind" | "subjectId" | "riotMatchId"
+> {
+  return {
+    intentKey: intent.key,
+    kind: intent.kind,
+    ...originColumns(intent.origin),
+    ...targetColumns(intent.target),
+    ...notificationIntentStateColumns(intent),
+    freshnessDeadline: dateFromIsoInstant(intent.freshnessDeadline),
+    payload: serializeIntentPayload(intent),
+    createdAt: dateFromIsoInstant(intent.createdAt),
+  };
+}
+
 export function matchNotificationIntentRecordToRow(
   record: MatchNotificationIntentRecord,
 ): MatchNotificationIntentRow {
+  if (record.intent.kind === "duel-status") {
+    throw new Error(
+      `Intent ${record.intent.key}: duel-status requires a Duel subject`,
+    );
+  }
   return {
-    intentKey: record.intent.key,
+    ...intentColumns(record.intent),
     subjectKind: "match",
     subjectId: record.matchId,
     riotMatchId: record.matchId,
-    kind: record.intent.kind,
-    ...originColumns(record.intent.origin),
-    ...targetColumns(record.intent.target),
-    ...notificationIntentStateColumns(record.intent),
-    freshnessDeadline: dateFromIsoInstant(record.intent.freshnessDeadline),
-    payload: serializeIntentPayload(record.intent),
-    createdAt: dateFromIsoInstant(record.intent.createdAt),
+  };
+}
+
+/** Encode either supported subject under the existing intent state columns. */
+export function notificationIntentRecordToRow(
+  record: NotificationIntentRecord,
+): MatchNotificationIntentRow {
+  if ("matchId" in record) return matchNotificationIntentRecordToRow(record);
+  return {
+    ...intentColumns(record.intent),
+    subjectKind: "duel",
+    subjectId: record.duelId,
+    riotMatchId: null,
   };
 }

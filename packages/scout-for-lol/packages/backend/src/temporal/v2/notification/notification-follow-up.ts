@@ -51,6 +51,7 @@ function bestEffortFollowUpOf(
     case "postmatch":
     case "prematch":
     case "settlement":
+    case "duel-status":
       return undefined;
   }
 }
@@ -59,6 +60,7 @@ export async function afterNotificationDeliveredV2(
   input: ScoutIntentAttemptRefV2,
 ): Promise<ScoutNotificationFollowUpV2Result> {
   const record = await requireIntentRecordV2(input.intentKey);
+  if ("duelId" in record) return { outcome: "skipped" };
   if (record.intent.kind === "prematch") {
     // Not caught here, unlike the Dare refresh: the pool's message ref is the
     // settlement announcement's only destination, so a failure to record it

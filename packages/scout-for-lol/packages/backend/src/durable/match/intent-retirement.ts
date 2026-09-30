@@ -14,7 +14,10 @@ import {
   listRetirableIntents,
   transitionIntent,
 } from "#src/database/durable/intent-repository.ts";
-import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import type {
+  DuelNotificationIntentRecord,
+  MatchNotificationIntentRecord,
+} from "#src/database/durable/intent-row.ts";
 import { scoutDurableNotificationIntentsRetired } from "#src/metrics/durable-pipeline.ts";
 import { createLogger } from "#src/logger.ts";
 
@@ -124,7 +127,7 @@ export type NotificationRetirementSource = "send" | "sweep";
 export async function retireNotificationIntent(
   db: Db,
   args: {
-    record: MatchNotificationIntentRecord;
+    record: MatchNotificationIntentRecord | DuelNotificationIntentRecord;
     reason: NotificationRetirementReason;
     source: NotificationRetirementSource;
   },
@@ -137,7 +140,7 @@ export async function retireNotificationIntent(
   if (result.outcome === "applied") {
     scoutDurableNotificationIntentsRetired.inc({ reason, source });
     logger.info(
-      `Retired ${record.intent.kind} intent ${record.intent.key} for ${record.matchId}: its audience is gone (${reason}); nothing will be sent`,
+      `Retired ${record.intent.kind} intent ${record.intent.key} for ${"matchId" in record ? record.matchId : record.duelId}: its audience is gone (${reason}); nothing will be sent`,
       { intentKey: record.intent.key, reason, source },
     );
   }

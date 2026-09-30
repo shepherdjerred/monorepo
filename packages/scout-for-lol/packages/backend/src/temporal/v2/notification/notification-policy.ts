@@ -6,7 +6,7 @@ import {
   type ScoutNotificationGateV2,
 } from "@scout-for-lol/temporal/activity-contracts-v2";
 import { prisma } from "#src/database/index.ts";
-import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import type { NotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { getRecoveryBatch } from "#src/database/durable/recovery-repository.ts";
 
 /**
@@ -34,7 +34,7 @@ import { getRecoveryBatch } from "#src/database/durable/recovery-repository.ts";
  * same rule so a held intent is not re-driven every minute for nothing.
  */
 export async function resolveNotificationGateV2(
-  record: MatchNotificationIntentRecord,
+  record: NotificationIntentRecord,
 ): Promise<ScoutNotificationGateV2> {
   const policy = await effectivePolicy(record);
   const target = record.intent.target.kind;
@@ -47,7 +47,7 @@ export async function resolveNotificationGateV2(
 }
 
 async function effectivePolicy(
-  record: MatchNotificationIntentRecord,
+  record: NotificationIntentRecord,
 ): Promise<RecoveryPolicy> {
   const origin = record.intent.origin;
   switch (origin.kind) {
