@@ -27,6 +27,8 @@ const A =
 const B =
   "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
 const KEY = "shepherdjerred/example";
+const GIT_SHA_A = "a".repeat(40);
+const GIT_SHA_B = "b".repeat(40);
 
 function catalogSource(
   entries: { name: string; value: string; notes?: string[] }[],
@@ -60,6 +62,16 @@ function batch(
       schema: "pin-candidates/v1",
       buildNumber,
       candidates: { [key]: { version, digest } },
+    }),
+  );
+}
+
+function batchWithGitSha(gitSha: string) {
+  return parsePinCandidates(
+    JSON.stringify({
+      schema: "pin-candidates/v1",
+      buildNumber: 10,
+      candidates: { [KEY]: { version: "v10", digest: A, gitSha } },
     }),
   );
 }
@@ -138,12 +150,36 @@ describe("pin candidate schema", () => {
     ).toEqual({});
   });
 
+  test("preserves the baked routing commit through candidate state", () => {
+    const gitSha = "f".repeat(40);
+    const candidate = parsePinCandidates(
+      JSON.stringify({
+        schema: "pin-candidates/v1",
+        buildNumber: 42,
+        candidates: {
+          [KEY]: { version: "v42", digest: A, gitSha },
+        },
+      }),
+    );
+    const state = mergePinCandidates(
+      { schema: "pin-candidates-state/v1", pins: {} },
+      candidate,
+    );
+    expect(state.pins[KEY]).toEqual({
+      buildNumber: 42,
+      version: "v42",
+      digest: A,
+      gitSha,
+    });
+  });
+
   test.each([
     '{"schema":"pin-candidates/v1","buildNumber":0,"candidates":{}}',
     '{"schema":"pin-candidates/v1","buildNumber":1,"candidates":{},"extra":1}',
     `{"schema":"pin-candidates/v1","buildNumber":1,"candidates":{"x":{"version":"","digest":"${A}"}}}`,
     '{"schema":"pin-candidates/v1","buildNumber":1,"candidates":{"x":{"version":"v1","digest":"SHA256:AA"}}}',
     `{"schema":"pin-candidates/v1","buildNumber":1,"candidates":{"x":{"version":"v1","digest":"${A}","extra":1}}}`,
+    `{"schema":"pin-candidates/v1","buildNumber":1,"candidates":{"x":{"version":"v1","digest":"${A}","gitSha":"short"}}}`,
   ])("rejects malformed input: %s", (input) => {
     expect(() => parsePinCandidates(input)).toThrow();
   });
@@ -175,6 +211,31 @@ describe("key-wise monotonic arbitration", () => {
   test("equal build and identical content is idempotent", () => {
     const initial = mergePinCandidates(empty, batch(10, "v10", A));
     expect(mergePinCandidates(initial, batch(10, "v10", A))).toEqual(initial);
+  });
+
+  test("equal build preserves a known image commit from either candidate", () => {
+    const legacy = mergePinCandidates(empty, batch(10, "v10", A));
+    const known = mergePinCandidates(empty, batchWithGitSha(GIT_SHA_A));
+
+    expect(mergePinCandidates(legacy, batchWithGitSha(GIT_SHA_A))).toEqual(
+      known,
+    );
+    expect(mergePinCandidates(known, batch(10, "v10", A))).toEqual(known);
+    expect(() => mergePinCandidates(known, batchWithGitSha(GIT_SHA_B))).toThrow(
+      "conflicting candidates",
+    );
+  });
+
+  test("equal build preserves a known image commit across state merges", () => {
+    const legacy = mergePinCandidates(empty, batch(10, "v10", A));
+    const known = mergePinCandidates(empty, batchWithGitSha(GIT_SHA_A));
+    const conflicting = mergePinCandidates(empty, batchWithGitSha(GIT_SHA_B));
+
+    expect(mergePinStates(legacy, known, empty)).toEqual(known);
+    expect(mergePinStates(known, legacy, empty)).toEqual(known);
+    expect(() => mergePinStates(known, conflicting, empty)).toThrow(
+      "conflicting candidates",
+    );
   });
 
   test.each([

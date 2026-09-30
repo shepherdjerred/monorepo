@@ -11,9 +11,6 @@ const DigestSchema = z
   .string()
   .regex(/^sha256:[0-9a-f]{64}$/, "digest must be canonical sha256");
 const VersionSchema = z.string().min(1);
-const CandidateSchema = z
-  .object({ version: VersionSchema, digest: DigestSchema })
-  .strict();
 /**
  * The commit an image was built from, as baked into its `GIT_SHA`.
  *
@@ -28,9 +25,15 @@ const CandidateSchema = z
 const GitShaSchema = z
   .string()
   .regex(/^[0-9a-f]{40}$/, "gitSha must be a 40-character lowercase commit");
+const CandidateSchema = z
+  .object({
+    version: VersionSchema,
+    digest: DigestSchema,
+    gitSha: GitShaSchema.optional(),
+  })
+  .strict();
 const PinSchema = CandidateSchema.extend({
   buildNumber: z.number().int().positive(),
-  gitSha: GitShaSchema.optional(),
 });
 
 export const PinCandidatesSchema = z
@@ -206,6 +209,26 @@ function pinsEqual(
   return left.version === right.version && left.digest === right.digest;
 }
 
+function mergeSameBuildPins(
+  key: string,
+  current: PinStatePin,
+  incoming: PinStatePin,
+): PinStatePin {
+  if (
+    !pinsEqual(current, incoming) ||
+    (current.gitSha !== undefined &&
+      incoming.gitSha !== undefined &&
+      current.gitSha !== incoming.gitSha)
+  ) {
+    throw new Error(
+      `conflicting candidates for ${key} at build ${current.buildNumber.toString()}`,
+    );
+  }
+  // Older pins have no gitSha. Preserve the known image commit when one side
+  // enriches an otherwise identical pin.
+  return current.gitSha === undefined ? incoming : current;
+}
+
 function samePinState(
   left: PinStatePin | undefined,
   right: PinStatePin | undefined,
@@ -265,13 +288,9 @@ function mergePinStateEntry(
   if (pending === undefined || pending.buildNumber < main.buildNumber) {
     return main;
   }
-  if (pending.buildNumber > main.buildNumber) return pending;
-  if (!pinsEqual(main, pending)) {
-    throw new Error(
-      `conflicting candidates for ${key} at build ${main.buildNumber.toString()}`,
-    );
-  }
-  return main;
+  return pending.buildNumber > main.buildNumber
+    ? pending
+    : mergeSameBuildPins(key, main, pending);
 }
 
 export function mergePinStates(
@@ -317,11 +336,10 @@ export function mergePinCandidates(
     if (batch.buildNumber < current.buildNumber) {
       continue;
     }
-    if (!pinsEqual(current, candidate)) {
-      throw new Error(
-        `conflicting candidates for ${key} at build ${batch.buildNumber.toString()}`,
-      );
-    }
+    pins[key] = mergeSameBuildPins(key, current, {
+      buildNumber: batch.buildNumber,
+      ...candidate,
+    });
   }
   return { schema: "pin-candidates-state/v1", pins };
 }

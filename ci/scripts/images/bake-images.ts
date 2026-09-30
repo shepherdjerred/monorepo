@@ -207,6 +207,7 @@ async function setVersionCatalogMetadata(source: string): Promise<void> {
 async function setPinCandidatesMetadata(
   digests: Readonly<Record<string, string>>,
   buildNumber: string,
+  gitSha: string,
   versionCatalogSource?: string,
 ): Promise<void> {
   const parsedBuildNumber = Number(buildNumber);
@@ -218,6 +219,7 @@ async function setPinCandidatesMetadata(
   const candidates = pinCandidatesForDigests(
     digests,
     buildNumber,
+    gitSha,
     catalogSource,
   );
   await writeJsonHandoff("pin-candidates", {
@@ -309,6 +311,7 @@ export async function pushImages(
     readonly writeCandidates?: (
       digests: Readonly<Record<string, string>>,
       buildNumber: string,
+      gitSha: string,
       versionCatalogSource: string,
     ) => Promise<void>;
     readonly writeText?: TextWriter;
@@ -415,7 +418,7 @@ export async function pushImages(
     digests[managedPin.key] = digest;
   }
   await writeMetadata(digests);
-  await writeCandidates(digests, buildNumber, versionCatalog);
+  await writeCandidates(digests, buildNumber, commit, versionCatalog);
   await writeText(pushOutcomes, `${JSON.stringify(outcomes)}\n`);
 }
 
@@ -447,7 +450,7 @@ async function main(): Promise<void> {
         liveVersionCatalog ?? (await Bun.file(VERSION_CATALOG_URL).text()),
       );
       await setDigestMetadata({});
-      await setPinCandidatesMetadata({}, buildNumber);
+      await setPinCandidatesMetadata({}, buildNumber, commit);
       await Bun.write(pushOutcomes, "[]\n");
     }
     return;
