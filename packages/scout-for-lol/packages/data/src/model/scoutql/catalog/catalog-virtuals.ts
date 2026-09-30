@@ -42,6 +42,27 @@ export const MATCH_VIRTUALS: ScoutQlColumnInfo[] = [
     "Arena placement label ('Not Arena' outside Arena).",
   ),
   virtualColumn("map", "integer", "Map dimension (map_id)."),
+  // Loadout names, looked up from the bundled Data Dragon snapshot; an id
+  // newer than it reads NULL ('unknown').
+  virtualColumn("keystone", "varchar", "Keystone rune name (from perk0)."),
+  virtualColumn(
+    "primary_tree",
+    "varchar",
+    "Primary rune tree name (Precision, Domination, …).",
+  ),
+  virtualColumn("secondary_tree", "varchar", "Secondary rune tree name."),
+  virtualColumn("summoner1", "varchar", "First summoner spell name."),
+  virtualColumn("summoner2", "varchar", "Second summoner spell name."),
+  virtualColumn(
+    "spells",
+    "varchar",
+    "Both summoner spells in name order, e.g. 'Flash + Ignite' — the same pair whichever key it sat on.",
+  ),
+  virtualColumn(
+    "items",
+    "varchar",
+    "The final six-slot build as item names in name order (no trinket). Final inventory, not build order.",
+  ),
   // Looked up from this participant's team row. Numbers, not dimensions, so
   // they carry a numeric display kind rather than virtualColumn's text.
   {
