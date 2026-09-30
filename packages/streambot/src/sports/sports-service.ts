@@ -31,9 +31,17 @@ function normalizedTitle(title: string): string {
     .trim();
 }
 
+function sportsRequestTimedOut(signal: AbortSignal): boolean {
+  return (
+    signal.aborted &&
+    signal.reason instanceof Error &&
+    signal.reason.name === "TimeoutError"
+  );
+}
+
 export function throwIfSportsRequestAborted(signal: AbortSignal): void {
   if (!signal.aborted) return;
-  if (signal.reason instanceof Error && signal.reason.name === "TimeoutError") {
+  if (sportsRequestTimedOut(signal)) {
     throw new PlaybackCommandBoundaryError(
       "The sports provider took too long. Please try again later.",
       { cause: signal.reason },
@@ -98,13 +106,25 @@ export class SportsService implements SportsCatalog {
   constructor(private readonly browser: SportsPageRenderer) {}
 
   async listToday(signal: AbortSignal): Promise<readonly SportsEvent[]> {
+    throwIfSportsRequestAborted(signal);
     const results = await Promise.allSettled([
       this.browser.html(STREAMEAST_HOME, signal),
       this.browser.html(TVSPORTSLIVE_HOME, signal),
     ]);
-    throwIfSportsRequestAborted(signal);
+    // A slow provider must not discard games already returned by the other.
+    // Explicit cancellation still stops the request, even with partial results.
+    if (!sportsRequestTimedOut(signal)) throwIfSportsRequestAborted(signal);
     const streamEast = results[0];
     const tvSportsLive = results[1];
+    const events = sortSportsEvents([
+      ...(streamEast.status === "fulfilled"
+        ? parseStreamEastEvents(streamEast.value)
+        : []),
+      ...(tvSportsLive.status === "fulfilled"
+        ? parseTVSportsLiveEvents(tvSportsLive.value)
+        : []),
+    ]);
+    if (events.length === 0) throwIfSportsRequestAborted(signal);
     if (
       streamEast.status === "rejected" &&
       tvSportsLive.status === "rejected"
@@ -119,14 +139,7 @@ export class SportsService implements SportsCatalog {
         },
       );
     }
-    return sortSportsEvents([
-      ...(streamEast.status === "fulfilled"
-        ? parseStreamEastEvents(streamEast.value)
-        : []),
-      ...(tvSportsLive.status === "fulfilled"
-        ? parseTVSportsLiveEvents(tvSportsLive.value)
-        : []),
-    ]);
+    return events;
   }
 
   async search(
