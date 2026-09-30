@@ -317,11 +317,17 @@ export class PinchtabSportsBrowser implements SportsPageRenderer {
   }
 
   private async closeTab(tabId: string): Promise<void> {
-    await this.request(
-      `/tabs/${encodeURIComponent(tabId)}/close`,
-      AbortSignal.timeout(5000),
-      { method: "POST" },
-    );
+    try {
+      await this.request(
+        `/tabs/${encodeURIComponent(tabId)}/close`,
+        AbortSignal.timeout(5000),
+        { method: "POST" },
+      );
+    } catch (error) {
+      log.warn("PinchTab tab close failed", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   private async ensureInstance(signal: AbortSignal): Promise<string> {

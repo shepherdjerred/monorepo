@@ -108,6 +108,35 @@ describe("sports playback selection", () => {
     expect(selected).toBeNull();
   });
 
+  it.each(["Game of Thrones", "Match Point", "VS Code tutorial"])(
+    "does not browse sports for the ordinary title %s",
+    async (query) => {
+      const selected = await selectSportsForRequest({
+        query,
+        source: "auto",
+        provider: undefined,
+        scope,
+        enabled: async () => true,
+        signal,
+        catalog: {
+          listToday: async () => {
+            throw new Error("ordinary playback must not browse sports sites");
+          },
+          search: async () => {
+            throw new Error("ordinary playback must not browse sports sites");
+          },
+        },
+        resolve: async () => {
+          throw new Error("ordinary playback must not resolve sports");
+        },
+        onAmbiguous: () => {
+          throw new Error("ordinary playback must not ask about sports");
+        },
+      });
+      expect(selected).toBeNull();
+    },
+  );
+
   it("recognizes a game title without a provider option", async () => {
     const selected = await selectSportsForRequest({
       query: "Bears vs Packers",
@@ -151,7 +180,9 @@ describe("sports playback selection", () => {
       }),
     ).rejects.toThrow("not enabled");
   });
+});
 
+describe("sports playback boundary errors", () => {
   it("reports a provider outage for a pasted sports page instead of a raw error", async () => {
     const request = selectDirectRequestUrl({
       query: "https://v2.streameast.ga/nfl/bears-vs-packers/",
@@ -168,6 +199,32 @@ describe("sports playback selection", () => {
     await expect(request).rejects.toThrow(
       "I couldn't start the streameast stream right now. Please try again later.",
     );
+  });
+
+  it("reports a sports deadline without swallowing caller cancellation", async () => {
+    const deadline = new AbortController();
+    deadline.abort(new DOMException("deadline", "TimeoutError"));
+    const cancelled = new AbortController();
+    cancelled.abort(new DOMException("cancelled", "AbortError"));
+    for (const [requestSignal, message] of [
+      [deadline.signal, "sports provider took too long"],
+      [cancelled.signal, "cancelled"],
+    ] as const) {
+      await expect(
+        selectDirectRequestUrl({
+          query: "https://v2.streameast.ga/nfl/bears-vs-packers/",
+          spoken: false,
+          source: "auto",
+          scope,
+          enabled: async () => true,
+          signal: requestSignal,
+          resolve: async (_source, resolverSignal) => {
+            resolverSignal.throwIfAborted();
+            throw new Error("unexpected resolution");
+          },
+        }),
+      ).rejects.toThrow(message);
+    }
   });
 
   it("rejects an explicit sports provider when the flag is off", async () => {

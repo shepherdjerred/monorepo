@@ -150,6 +150,35 @@ describe("PlaybackCommandService", () => {
     expect(events).toEqual([]);
   });
 
+  test("rejects subtitle options for a live sports stream before dispatch", async () => {
+    const { service, events } = createService(
+      {},
+      {
+        guildId: "100000000000000004",
+        channelId: "100000000000000005",
+        featureGate: {
+          assistantV2: async () => false,
+          history: async () => false,
+          musicOverVoice: async () => false,
+          sportsStreaming: async () => true,
+        },
+      },
+    );
+    for (const subtitles of [{ enabled: true }, { language: "en" }]) {
+      await expect(
+        service.play({
+          query: "https://v2.streameast.ga/nfl/bears-vs-packers/",
+          source: "auto",
+          placement: "queue",
+          userId: USER,
+          spoken: false,
+          subtitles,
+        }),
+      ).rejects.toThrow("Live sports streams do not support subtitle options");
+    }
+    expect(events).toEqual([]);
+  });
+
   test("validates sports at request time but only reuses a signed URL for play now", async () => {
     const pageUrl = "https://v2.streameast.ga/nfl/bears-vs-packers/";
     const event = {

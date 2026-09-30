@@ -5,11 +5,15 @@ import type {
   SportsCatalog,
   SportsProviderPreference,
 } from "@shepherdjerred/streambot/sports/types.ts";
-import type { Source } from "@shepherdjerred/streambot/sources/source.ts";
+import type {
+  Source,
+  SubtitlePref,
+} from "@shepherdjerred/streambot/sources/source.ts";
 import type { DiscoveryScope } from "@shepherdjerred/streambot/discovery/candidate.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
 import { isHttpUrl } from "@shepherdjerred/streambot/discord/resolve.ts";
 import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
+import { throwIfSportsRequestAborted } from "@shepherdjerred/streambot/sports/sports-service.ts";
 
 export type SportsPlaybackSelection = {
   readonly source: Source;
@@ -19,9 +23,22 @@ export type SportsPlaybackSelection = {
 type PlaySource = "auto" | "history" | "local" | "youtube";
 
 function hasSportsCue(query: string, utterance: string | undefined): boolean {
-  return /\b(?:vs|versus|game|match|sports|nfl|nba|wnba|nhl|mlb)\b/i.test(
-    `${query} ${utterance ?? ""}`,
+  return (
+    /\b(?:sports|nfl|nba|wnba|nhl|mlb)\b/i.test(
+      `${query} ${utterance ?? ""}`,
+    ) || /\b[\w.-]+\s+(?:vs\.?|versus)\s+[\w.-]+\b/i.test(query)
   );
+}
+
+export function assertSportsSubtitleOptions(
+  sports: boolean,
+  subtitles: SubtitlePref | undefined,
+): void {
+  if (sports && subtitles !== undefined) {
+    throw new PlaybackCommandBoundaryError(
+      "Live sports streams do not support subtitle options yet.",
+    );
+  }
 }
 
 export async function selectDirectRequestUrl(input: {
@@ -64,7 +81,7 @@ export async function selectDirectRequestUrl(input: {
   try {
     preResolved = await input.resolve(source, input.signal);
   } catch (error) {
-    input.signal.throwIfAborted();
+    throwIfSportsRequestAborted(input.signal);
     throw new PlaybackCommandBoundaryError(
       `I couldn't start the ${event.provider} stream right now. Please try again later.`,
       { cause: error },

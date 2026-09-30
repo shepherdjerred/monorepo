@@ -31,6 +31,17 @@ function normalizedTitle(title: string): string {
     .trim();
 }
 
+export function throwIfSportsRequestAborted(signal: AbortSignal): void {
+  if (!signal.aborted) return;
+  if (signal.reason instanceof Error && signal.reason.name === "TimeoutError") {
+    throw new PlaybackCommandBoundaryError(
+      "The sports provider took too long. Please try again later.",
+      { cause: signal.reason },
+    );
+  }
+  signal.throwIfAborted();
+}
+
 export function matchSportsEvents(
   query: string,
   events: readonly SportsEvent[],
@@ -91,7 +102,7 @@ export class SportsService implements SportsCatalog {
       this.browser.html(STREAMEAST_HOME, signal),
       this.browser.html(TVSPORTSLIVE_HOME, signal),
     ]);
-    signal.throwIfAborted();
+    throwIfSportsRequestAborted(signal);
     const streamEast = results[0];
     const tvSportsLive = results[1];
     if (

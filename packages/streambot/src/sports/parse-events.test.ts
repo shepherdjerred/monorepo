@@ -53,6 +53,28 @@ describe("sports listings", () => {
       }),
     ).rejects.toThrow("Sports listings are temporarily unavailable");
   });
+
+  it("converts a listing deadline but preserves caller cancellation", async () => {
+    const catalog = new SportsService({
+      html: async (_url, requestSignal) => {
+        requestSignal.throwIfAborted();
+        throw new Error("unexpected page response");
+      },
+      runtimeStreams: async () => {
+        throw new Error("unexpected runtime request");
+      },
+    });
+    const deadline = new AbortController();
+    deadline.abort(new DOMException("deadline", "TimeoutError"));
+    await expect(catalog.listToday(deadline.signal)).rejects.toThrow(
+      "The sports provider took too long",
+    );
+    const cancelled = new AbortController();
+    cancelled.abort(new DOMException("cancelled", "AbortError"));
+    await expect(catalog.listToday(cancelled.signal)).rejects.toThrow(
+      "cancelled",
+    );
+  });
   it("parses today's StreamEast cards and drops a card from another local day", () => {
     const events = parseStreamEastEvents(
       '<div class="m-card m-card--live" data-match-id="abc" data-time="1790449200"><a class="m-card__link" href="/nfl/bears-vs-packers/" aria-label="Bears vs Packers"></a></div>' +

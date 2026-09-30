@@ -1353,20 +1353,6 @@
             }
           ],
           "result": true
-        },
-        {
-          "segmentKey": "streambot-user-160509172704739328",
-          "segmentOperator": "OR_SEGMENT_OPERATOR",
-          "matchType": "ALL_SEGMENT_MATCH_TYPE",
-          "constraints": [
-            {
-              "type": "STRING_CONSTRAINT_COMPARISON_TYPE",
-              "property": "user",
-              "operator": "eq",
-              "value": "160509172704739328"
-            }
-          ],
-          "result": true
         }
       ],
       "rules": [],

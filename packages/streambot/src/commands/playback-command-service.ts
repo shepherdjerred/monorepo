@@ -37,6 +37,7 @@ import type { PlaybackCommandResult } from "@shepherdjerred/streambot/commands/p
 import type { SportsProvider } from "@shepherdjerred/streambot/sports/types.ts";
 import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 import {
+  assertSportsSubtitleOptions,
   selectDirectRequestUrl,
   selectSportsForRequest,
   selectSportsSourceOverride,
@@ -192,13 +193,13 @@ export class PlaybackCommandService extends PlaybackControls {
     });
     const scope = this.scope(input.userId);
     const selected = await this.selectMedia(input, query, intent, scope);
-    const sports = selected.sports;
+    assertSportsSubtitleOptions(selected.sports, input.subtitles);
     const source = withSpoken(
       withMode(
         withSubtitles(selected.source, input.subtitles),
         await this.resolveMediaMode(
           input.userId,
-          sports ? "video" : requestedPlayMode(input, intent, query),
+          selected.sports ? "video" : requestedPlayMode(input, intent, query),
         ),
       ),
       input.spoken === true,
@@ -218,7 +219,7 @@ export class PlaybackCommandService extends PlaybackControls {
     });
     input.signal?.throwIfAborted();
     if (input.placement === "now") this.assertCanPlayNow(input.userId);
-    const requestId = sports
+    const requestId = selected.sports
       ? undefined
       : await recordRequest({
           deps: this.deps,
@@ -227,9 +228,7 @@ export class PlaybackCommandService extends PlaybackControls {
           intent,
           media: toRecordMedia(source, preResolved, selected.candidate),
         });
-    if (input.placement === "now") {
-      markReplacedRequest(this.deps);
-    }
+    if (input.placement === "now") markReplacedRequest(this.deps);
     this.deps.dispatch({
       type:
         input.placement === "now"
@@ -240,9 +239,9 @@ export class PlaybackCommandService extends PlaybackControls {
       source,
       requesterId: input.userId,
       ...(requestId === undefined ? {} : { requestId }),
-      // A queued sports item can wait past the lifetime of its signed HLS URL.
-      // Keep the stable watch page and resolve it again when playback starts.
-      ...(preResolved === undefined || (sports && input.placement !== "now")
+      // Resolve queued sports from the stable page when playback starts, after signed URLs may expire.
+      ...(preResolved === undefined ||
+      (selected.sports && input.placement !== "now")
         ? {}
         : { preResolved }),
     });

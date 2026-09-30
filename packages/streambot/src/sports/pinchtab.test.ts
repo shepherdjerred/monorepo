@@ -281,6 +281,26 @@ describe("PinchtabSportsBrowser TvSportsLive player", () => {
 });
 
 describe("PinchtabSportsBrowser lifecycle", () => {
+  it("keeps a successful page result when tab cleanup fails", async () => {
+    vi.stubGlobal("fetch", (input: string) => {
+      const session = sessionResponse(input, "tab-cleanup");
+      if (session !== null) return session;
+      if (input.endsWith("/html")) {
+        return Response.json({ html: "<title>Sports page</title>" });
+      }
+      return input.endsWith("/close")
+        ? Response.json({ error: "tab already gone" }, { status: 404 })
+        : Response.json({ status: "ok" });
+    });
+
+    await expect(
+      testBrowser().html(
+        "https://v2.streameast.ga/",
+        new AbortController().signal,
+      ),
+    ).resolves.toBe("<title>Sports page</title>");
+  });
+
   it("waits for an automatic TvSportsLive browser check to clear", async () => {
     let htmlReads = 0;
     vi.stubGlobal("fetch", (input: string) => {
