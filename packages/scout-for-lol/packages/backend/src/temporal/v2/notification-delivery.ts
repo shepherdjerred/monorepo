@@ -9,7 +9,7 @@ import {
 import { DiscordMessageIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import type {
   NotificationFailure,
-  NotificationPolicySuppressionReason,
+  NotificationUnsentSuppressionReason,
   NotificationTarget,
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
@@ -30,12 +30,15 @@ import {
   send,
 } from "#src/league/discord/channel.ts";
 import { deliveryAttemptNonce } from "#src/durable/match/delivery-intents.ts";
+import { prisma } from "#src/database/index.ts";
+import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { ArchivedObjectUnusableError } from "#src/report-store/s3-raw-source.ts";
 import { UndeliverableContentError } from "#src/temporal/v2/notification/undeliverable-content.ts";
 import {
   assertHallRecordBreakTargetGuildV2,
   hallRecordBreakSuppressionV2,
 } from "#src/temporal/v2/notification/hall-record-break-notification.ts";
+import { hallInstallationRetirementOfV2 } from "#src/temporal/v2/notification/intent-audience.ts";
 import { buildAttestedMessageV2 } from "#src/temporal/v2/notification/notification-message.ts";
 import {
   PreSendBudgetExpiredError,
@@ -308,7 +311,7 @@ type PreparedSend =
   | { readonly phase: "failed"; readonly failure: NotificationFailure }
   | {
       readonly phase: "suppressed";
-      readonly reason: NotificationPolicySuppressionReason;
+      readonly reason: NotificationUnsentSuppressionReason;
     };
 
 const PRE_SEND_UNAVAILABLE: NotificationFailure = {
@@ -320,6 +323,19 @@ const CONTENT_UNAVAILABLE: NotificationFailure = {
   classification: "terminal",
   reason: "content-unavailable",
 };
+
+async function hallPreSendSuppression(
+  record: MatchNotificationIntentRecord,
+  guildId: DiscordGuildId | undefined,
+): Promise<NotificationUnsentSuppressionReason | undefined> {
+  if (record.intent.kind !== "hall-record-break") return undefined;
+  const reason = await hallRecordBreakSuppressionV2(record);
+  if (reason !== undefined) return reason;
+  assertHallRecordBreakTargetGuildV2(record, guildId);
+  // The guild can be reinstalled after beginSend checked its audience. This
+  // is the last read before Discord receives the old installation's message.
+  return await hallInstallationRetirementOfV2(prisma, record);
+}
 
 async function prepareNotificationSend(
   input: ScoutIntentAttemptRefV2,
@@ -363,11 +379,8 @@ async function prepareNotificationSend(
   let message: MessageCreateOptions;
   try {
     message = await buildAttestedMessageV2(record, abortSignal);
-    if (record.intent.kind === "hall-record-break") {
-      const reason = await hallRecordBreakSuppressionV2(record);
-      if (reason !== undefined) return { phase: "suppressed", reason };
-      assertHallRecordBreakTargetGuildV2(record, guildId);
-    }
+    const reason = await hallPreSendSuppression(record, guildId);
+    if (reason !== undefined) return { phase: "suppressed", reason };
   } catch (error) {
     if (error instanceof ArchivedObjectUnusableError) {
       logger.error(

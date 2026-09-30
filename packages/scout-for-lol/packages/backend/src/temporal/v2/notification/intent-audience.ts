@@ -104,7 +104,7 @@ async function discordRetirementOf(
 }
 
 /** A removed installation cannot receive a Hall break minted for its predecessor. */
-async function hallInstallationRetirementOf(
+export async function hallInstallationRetirementOfV2(
   db: Db,
   record: MatchNotificationIntentRecord,
 ): Promise<"guild-left" | undefined> {
@@ -142,7 +142,7 @@ export async function audienceRetirementOfV2(
   // A DM's audience is one account, and no producer of these kinds mints one
   // yet; there is nothing here to ask.
   return target.kind === "channel"
-    ? ((await hallInstallationRetirementOf(db, record)) ??
+    ? ((await hallInstallationRetirementOfV2(db, record)) ??
         (await discordRetirementOf(target.channelId, discord)) ??
         (await subscriptionRetirementOf(db, record)))
     : undefined;

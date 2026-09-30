@@ -48,7 +48,16 @@ const { prisma } = testDatabase;
 const stubs = vi.hoisted(() => ({
   readChannel: vi.fn(),
   isInstalled: vi.fn(),
+  fetchChannelForDelivery: vi.fn(),
+  isPolicyEnabled: vi.fn(),
   send: vi.fn(),
+}));
+
+vi.mock("#src/configuration/flags.ts", async () => ({
+  ...(await vi.importActual<Record<string, unknown>>(
+    "#src/configuration/flags.ts",
+  )),
+  isPolicyEnabled: stubs.isPolicyEnabled,
 }));
 
 vi.mock("#src/lib/discord/bot-rest.ts", () => ({
@@ -67,7 +76,7 @@ vi.mock("#src/temporal/v2/notification/notification-message.ts", () => ({
     Promise.resolve({ content: "a live audience hears about its game" }),
 }));
 vi.mock("#src/discord/utils/channel.ts", () => ({
-  fetchChannelForDelivery: () => Promise.resolve({ guildId: undefined }),
+  fetchChannelForDelivery: stubs.fetchChannelForDelivery,
 }));
 vi.mock("#src/discord/client.ts", () => ({ client: {} }));
 vi.mock("#src/league/discord/channel.ts", async () => {
@@ -79,7 +88,7 @@ vi.mock("#src/league/discord/channel.ts", async () => {
 // Everything that can reach the production client is imported only after
 // DATABASE_URL points at this suite's database.
 const { prisma: activityPrisma } = await import("#src/database/index.ts");
-const { getIntent } =
+const { getIntent, upsertIntent } =
   await import("#src/database/durable/intent-repository.ts");
 const { oldestReadyNotificationIntentAt } =
   await import("#src/database/durable/pipeline-gaps.ts");
@@ -169,6 +178,8 @@ beforeEach(async () => {
   scoutDurableNotificationIntentsRetired.reset();
   stubs.readChannel.mockResolvedValue(liveChannel());
   stubs.isInstalled.mockResolvedValue(true);
+  stubs.fetchChannelForDelivery.mockResolvedValue({ guildId: GUILD });
+  stubs.isPolicyEnabled.mockResolvedValue(true);
   stubs.send.mockResolvedValue({ id: "100000000000000888" });
 });
 
@@ -267,6 +278,30 @@ describe("Hall audience across guild installations", () => {
       ),
     ).toBeUndefined();
     expect(stubs.isInstalled).toHaveBeenCalledWith(GUILD);
+  });
+
+  test("suppresses an old Hall attempt when the guild is reinstalled after beginSend", async () => {
+    await seedHallInstallation("2026-09-01T00:00:00.000Z");
+    const record = hallRecord();
+    expect(await upsertIntent(prisma, record)).toEqual({ outcome: "applied" });
+    const ref = attempt(record.intent.key, NONCE_A);
+
+    const begun = await beginNotificationSendV2(ref);
+    expect(begun.state).toMatchObject({ kind: "sending" });
+
+    await prisma.guildInstall.update({
+      where: { serverId: GUILD },
+      data: { installedAt: new Date("2026-09-14T00:00:00.000Z") },
+    });
+
+    const delivery = await deliverNotificationV2(ref);
+    expect(delivery).toEqual({ outcome: "suppressed", reason: "guild-left" });
+    expect(stubs.send).not.toHaveBeenCalled();
+    const recorded = await recordNotificationOutcomeV2({ ...ref, delivery });
+    expect(recorded.state).toEqual({
+      kind: "suppressed",
+      reason: "guild-left",
+    });
   });
 });
 
