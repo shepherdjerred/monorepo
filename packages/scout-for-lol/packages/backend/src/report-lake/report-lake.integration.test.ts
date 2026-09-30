@@ -40,7 +40,7 @@ import {
 } from "#src/report-lake/staging.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
-import { fetchCompetitionRankHistory } from "#src/reports/duckdb/lake-reads.ts";
+import { fetchCompetitionRankHistory } from "#src/reports/duckdb/competition-rank-history-lake-reads.ts";
 import {
   buildMatchesSource,
   buildMatchTeamBansSource,

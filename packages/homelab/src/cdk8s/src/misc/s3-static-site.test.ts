@@ -204,7 +204,7 @@ describe("generateCaddyfile", () => {
   });
 
   describe("spaFallbacks", () => {
-    it("emits a per-prefix s3proxy with overridden 404 fallback", () => {
+    it("rewrites SPA document paths before s3proxy while retaining 404s for missing assets", () => {
       const caddyfile = generateCaddyfile({
         sites: [
           {
@@ -218,7 +218,12 @@ describe("generateCaddyfile", () => {
         s3Endpoint: "https://s3.example.test",
       });
       expect(caddyfile).toContain("handle /app/* {");
-      // Inside the /app/* handle: s3proxy with /app/index.html fallback
+      expect(caddyfile).toContain(String.raw`not path_regexp \.[^/]+$`);
+      expect(caddyfile).toContain("rewrite @spaDocument /app/index.html");
+      expect(
+        caddyfile.indexOf("rewrite @spaDocument /app/index.html"),
+      ).toBeLessThan(caddyfile.indexOf("errors 404 /app/index.html"));
+      // The error page still covers missing assets without changing their status.
       expect(caddyfile).toContain("errors 404 /app/index.html");
       // Fall-through site-wide s3proxy keeps default 404 page
       expect(caddyfile).toContain("errors 404 404.html");

@@ -4,6 +4,7 @@ import { escapePrometheusTemplate } from "./shared.ts";
 import {
   SCOUT_GATEWAY_OWNER_BY_STAGE,
   SCOUT_TRPC_NON_FAULT_CODES,
+  scoutGatewayAlertRoleMatcher,
 } from "./scout-alert-constants.ts";
 import { getScoutDurableRuleGroup } from "./scout-durable-rules.ts";
 import { getScoutTemporalRuleGroup } from "./scout-temporal-rules.ts";
@@ -294,18 +295,21 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
           // Previously only caught indirectly (and slowly) by the report-missed
           // alert; this pages within minutes.
           //
-          // Scoped per stage to the role that actually holds the shard there —
-          // beta's `gateway` pod, prod's `combined` pod. The gauge is a plain
+          // Scoped per stage to the roles that can hold the shard during this
+          // release — beta's new `gateway` or its previous `combined` pod,
+          // and prod's `combined` pod. The gauge is a plain
           // prom-client gauge, so every pod that never opens a shard exports it
           // as a truthful 0; an unscoped `min by (environment)` therefore reads
           // beta's `application` pod as a Discord outage the moment the split
-          // lands. `SCOUT_GATEWAY_OWNER_BY_STAGE` is the mapping, and the one
-          // place to edit when prod splits too.
+          // lands. Root sync updates Prometheus before Scout, so a stage with
+          // a rendered gateway accepts either owner through activation and
+          // retirement. `SCOUT_GATEWAY_OWNER_BY_STAGE` selects that overlap.
           //
           // The `absent()` half of each stage is not redundant with the
-          // threshold: scoping to one role means the rule goes quiet if that
-          // stage has no gateway-owning pod scheduled at all, and "nothing is
-          // holding the shard" is exactly the outage this alert exists for.
+          // threshold: scoping to gateway-owning roles means the rule goes
+          // quiet if that stage has no owner pod scheduled at all, and
+          // "nothing is holding the shard" is exactly the outage this alert
+          // exists for.
           alert: "ScoutDiscordDisconnected",
           annotations: {
             summary: "Scout is disconnected from Discord",
@@ -314,13 +318,16 @@ export function getScoutRuleGroups(): PrometheusRuleSpecGroups[] {
             ),
           },
           expr: PrometheusRuleSpecGroupsRulesExpr.fromString(
-            SCOUT_GATEWAY_OWNER_BY_STAGE.flatMap(({ environment, role }) => {
-              const selector = `discord_connection_status{environment="${environment}",role="${role}"}`;
-              return [
-                `(min by (environment) (${selector}) == 0)`,
-                `absent(${selector})`,
-              ];
-            }).join(" or "),
+            SCOUT_GATEWAY_OWNER_BY_STAGE.flatMap(
+              ({ environment, topology }) => {
+                const roleMatcher = scoutGatewayAlertRoleMatcher(topology);
+                const selector = `discord_connection_status{environment="${environment}",${roleMatcher}}`;
+                return [
+                  `(max by (environment) (${selector}) == 0)`,
+                  `absent(${selector})`,
+                ];
+              },
+            ).join(" or "),
           ),
           for: "5m",
           labels: {

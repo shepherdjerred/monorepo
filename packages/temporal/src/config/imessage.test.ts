@@ -15,6 +15,7 @@ describe("iMessage configuration boundaries", () => {
       "second",
     ]);
     expect(ImessageOwnersSchema.parse("")).toEqual([]);
+    expect(ImessageOwnersSchema.parse("[]")).toEqual([]);
     expect(() => ImessageOwnersSchema.parse("x".repeat(201))).toThrow();
   });
   test("absence defaults off with no permitted senders", async () => {
@@ -22,6 +23,12 @@ describe("iMessage configuration boundaries", () => {
       enabled: false,
       owners: [],
     });
+  });
+  test("the managed empty variant permits no senders", async () => {
+    flag.mockImplementation((names: { key: string }) =>
+      Promise.resolve(names.key === "owners" ? { value: "[]" } : undefined),
+    );
+    expect(await imessageIngressConfig()).toMatchObject({ owners: [] });
   });
   test("explicit false remains authoritative while other flags resolve", async () => {
     flag.mockImplementation((names: { key: string }) =>

@@ -15,7 +15,7 @@ import {
   buildMatchesSource,
   buildTimelineCoverageSource,
   listParam,
-  resolveLakeFiles,
+  withLakeQueryRetry,
 } from "#src/reports/duckdb/lake.ts";
 import { runSettledWorkers } from "#src/league/explore-history/worker-pool.ts";
 
@@ -31,32 +31,33 @@ async function resolveMatchRefs(matchIds: string[]): Promise<{
   refs: z.infer<typeof MatchRefRowSchema>[];
   complete: Set<string>;
 }> {
-  const files = await resolveLakeFiles(resolveLakeDir());
-  const predicate = {
-    sql: "match_id IN (SELECT unnest(?))",
-    params: [listParam(matchIds)],
-  };
-  const matchSource = buildMatchesSource(files, predicate);
-  if (matchSource === undefined) return { refs: [], complete: new Set() };
-  const coverageSource = buildTimelineCoverageSource(files, predicate);
-  return await withDuckDBConnection(async (session) => {
-    const rows = await session.run(
-      `SELECT match_id, any_value(platform_id) AS platform_id, MIN(epoch_ms(game_creation_at)) AS game_creation_ms FROM (${matchSource.sql}) GROUP BY match_id`,
-      bindParams(session, matchSource.params),
-    );
-    const coverageRows =
-      coverageSource === undefined
-        ? []
-        : await session.run(
-            `SELECT DISTINCT match_id FROM (${coverageSource.sql}) WHERE coverage_state = 'complete'`,
-            bindParams(session, coverageSource.params),
-          );
-    return {
-      refs: rows.map((row) => MatchRefRowSchema.parse(row)),
-      complete: new Set(
-        coverageRows.map((row) => CoverageRowSchema.parse(row).match_id),
-      ),
+  return await withLakeQueryRetry(resolveLakeDir(), async (files) => {
+    const predicate = {
+      sql: "match_id IN (SELECT unnest(?))",
+      params: [listParam(matchIds)],
     };
+    const matchSource = buildMatchesSource(files, predicate);
+    if (matchSource === undefined) return { refs: [], complete: new Set() };
+    const coverageSource = buildTimelineCoverageSource(files, predicate);
+    return await withDuckDBConnection(async (session) => {
+      const rows = await session.run(
+        `SELECT match_id, any_value(platform_id) AS platform_id, MIN(epoch_ms(game_creation_at)) AS game_creation_ms FROM (${matchSource.sql}) GROUP BY match_id`,
+        bindParams(session, matchSource.params),
+      );
+      const coverageRows =
+        coverageSource === undefined
+          ? []
+          : await session.run(
+              `SELECT DISTINCT match_id FROM (${coverageSource.sql}) WHERE coverage_state = 'complete'`,
+              bindParams(session, coverageSource.params),
+            );
+      return {
+        refs: rows.map((row) => MatchRefRowSchema.parse(row)),
+        complete: new Set(
+          coverageRows.map((row) => CoverageRowSchema.parse(row).match_id),
+        ),
+      };
+    });
   });
 }
 

@@ -1,6 +1,8 @@
 import {
+  SCOUT_GATEWAY_TOPOLOGY,
   SCOUT_STAGES,
   scoutGatewayOwnerRole,
+  type ScoutGatewayTopology,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 export const SCOUT_TRPC_NON_FAULT_CODES = [
@@ -27,12 +29,11 @@ export const SCOUT_TRPC_NON_FAULT_CODES = [
  * capability table has existed since the runtime-role work, but only the ones
  * with a rendered Deployment are running anywhere.
  *
- * So this table describes what is actually running. Beta runs `gateway`: its
- * scout-gateway Deployment ships in the same revision as this line, which is
- * the whole reason the flip lives here rather than in a follow-up — the alert
- * and the topology change together and neither is briefly true alone. Prod
- * stays `combined`; its split is a later gate, blocked on nothing now that
- * Scout is PostgreSQL-only, but not taken yet.
+ * This table describes the intended owner after each stage syncs. Beta runs
+ * `gateway` in this revision, while prod stays `combined`. Root sync updates
+ * Prometheus before Scout, so the alert accepts both possible owners while a
+ * gateway is rendered, including its retirement. Once that gateway is absent,
+ * only the combined series can keep the alert clear.
  *
  * Pointing a stage at a role it does not run would not degrade gracefully — the
  * series simply would not exist, the `absent()` guard would fire, and that
@@ -50,11 +51,9 @@ export const SCOUT_TRPC_NON_FAULT_CODES = [
  * beta would page critical continuously — during a rollback, and without
  * clearing, because beta's combined series is not in its own selector.
  *
- * Deriving it from the topology gives the backward direction the guarantee the
- * forward one already had: one edit moves the pods, this alert and the
- * dashboard connection panel at a single ArgoCD revision, and neither is
- * briefly true alone. A `retiring` stage answers `combined` because the backend
- * has already taken the shard back by the time its gateway scales away.
+ * Deriving it from the topology keeps the pod, alert and dashboard target
+ * aligned after reconciliation. A `retiring` stage answers `combined` because
+ * the backend has taken the shard back by the time its gateway scales away.
  *
  * `activity-worker` is deliberately absent, and not only because it owns no
  * gateway — its Deployment is deferred out of this wave entirely.
@@ -62,7 +61,14 @@ export const SCOUT_TRPC_NON_FAULT_CODES = [
 export const SCOUT_GATEWAY_OWNER_BY_STAGE = SCOUT_STAGES.map((environment) => ({
   environment,
   role: scoutGatewayOwnerRole(environment),
+  topology: SCOUT_GATEWAY_TOPOLOGY[environment],
 }));
+
+export function scoutGatewayAlertRoleMatcher(
+  topology: ScoutGatewayTopology,
+): string {
+  return topology === "absent" ? 'role="combined"' : 'role=~"combined|gateway"';
+}
 
 /**
  * The same answer as a role set, for callers that cannot phrase a per-stage

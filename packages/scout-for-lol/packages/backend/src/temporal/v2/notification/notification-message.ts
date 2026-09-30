@@ -1,5 +1,7 @@
 import type { MessageCreateOptions } from "discord.js";
-import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import type { NotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import { buildDuelStatusNotificationMessageV2 } from "#src/temporal/v2/notification/duel-status-notification.ts";
+import { buildDareStatusNotificationMessageV2 } from "#src/temporal/v2/notification/dare-status-notification.ts";
 import { buildDareSummaryNotificationMessageV2 } from "#src/temporal/v2/notification/dare-summary-notification.ts";
 import { buildHallRecordBreakNotificationMessageV2 } from "#src/temporal/v2/notification/hall-record-break-notification.ts";
 import {
@@ -32,9 +34,26 @@ import { buildSettlementNotificationMessageV2 } from "#src/temporal/v2/notificat
  * that would otherwise answer for it.
  */
 export async function buildAttestedMessageV2(
-  record: MatchNotificationIntentRecord,
+  record: NotificationIntentRecord,
   abortSignal: AbortSignal,
+  deliveryGuildId?: string,
 ): Promise<MessageCreateOptions> {
+  if ("duelId" in record) {
+    return await buildDuelStatusNotificationMessageV2(record, deliveryGuildId);
+  }
+  if ("dareId" in record) {
+    return buildDareStatusNotificationMessageV2(record);
+  }
+  if (record.intent.kind === "duel-status") {
+    throw new Error(
+      `Intent ${record.intent.key}: duel-status requires a Duel subject`,
+    );
+  }
+  if (record.intent.kind === "dare-status") {
+    throw new Error(
+      `Intent ${record.intent.key}: dare-status requires a Dare subject`,
+    );
+  }
   const riotMatchId = record.matchId;
   switch (record.intent.kind) {
     // The announcement kinds have no artifact: their render attested

@@ -5,7 +5,7 @@ import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildMatchesSource,
   listParam,
-  resolveLakeFiles,
+  withLakeQueryRetry,
   scalarParam,
   type BoundParam,
   type SqlFragment,
@@ -358,91 +358,100 @@ export async function resolvePlayerIdentities(input: {
   if (needle.length === 0) return [];
   const match = input.match ?? "exact";
 
-  const files = await resolveLakeFiles(input.lakeDir ?? resolveLakeDir());
-  const source = buildMatchesSource(files, { sql: "TRUE", params: [] });
-  if (source === undefined) return [];
+  return await withLakeQueryRetry(
+    input.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const source = buildMatchesSource(files, { sql: "TRUE", params: [] });
+      if (source === undefined) return [];
 
-  const candidates: IdentityCandidate[] = [];
+      const candidates: IdentityCandidate[] = [];
 
-  // Tracked players first: an alias is an intentional label a server chose,
-  // so it outranks an incidental Riot ID collision.
-  const accounts = await lookupTrackedAccounts(
-    files.accountsParquet,
-    input.guildIds,
-    { needle, match, abortSignal: input.abortSignal },
+      // Tracked players first: an alias is an intentional label a server chose,
+      // so it outranks an incidental Riot ID collision.
+      const accounts = await lookupTrackedAccounts(
+        files.accountsParquet,
+        input.guildIds,
+        { needle, match, abortSignal: input.abortSignal },
+      );
+      // A PUUID joins duplicate tracking rows across servers; Discord identity
+      // joins separate accounts across servers; and (server, player) joins the
+      // accounts of one unlinked tracked player inside a server.
+      for (const group of groupAccountsByPerson(accounts)) {
+        candidates.push({
+          puuids: [...new Set(group.map((account) => account.puuid))],
+          matchedBy: "alias",
+          trackedAlias: group[0]?.player_alias,
+        });
+      }
+
+      const claimed = new Set(
+        candidates.flatMap((candidate) => candidate.puuids),
+      );
+      const riotIdMatches = await lookupByRiotId(
+        source,
+        needle,
+        match,
+        input.abortSignal,
+      );
+      // Expand every tracked Riot-ID match in one accounts scan. The old loop did
+      // one accounts query and one complete match-history scan per candidate, so a
+      // common bare name made latency grow with the number of matching accounts.
+      const expandedAccounts = await lookupAccountsByPuuids(
+        files.accountsParquet,
+        input.guildIds,
+        riotIdMatches.filter((puuid) => !claimed.has(puuid)),
+        input.abortSignal,
+      );
+      const ownerByPuuid = new Map<
+        string,
+        z.infer<typeof AccountRowSchema>[]
+      >();
+      for (const group of groupAccountsByPerson(expandedAccounts)) {
+        for (const account of group) ownerByPuuid.set(account.puuid, group);
+      }
+
+      for (const puuid of riotIdMatches) {
+        // Re-check after each expansion: two matching accounts may belong to the
+        // same person, and the first one claims the whole account set.
+        if (claimed.has(puuid)) continue;
+        // A Riot ID that belongs to a tracked account resolves to the whole
+        // person, not that one account. "GexIsAngry" is one of Aaron's three
+        // names across two accounts; answering for 160 of his 447 games would be
+        // the same under-count by a different route.
+        const owner = ownerByPuuid.get(puuid);
+        const candidatePuuids =
+          owner === undefined
+            ? [puuid]
+            : [...new Set(owner.map((account) => account.puuid))];
+        for (const claimedPuuid of candidatePuuids) claimed.add(claimedPuuid);
+        candidates.push({
+          puuids: candidatePuuids,
+          matchedBy: owner === undefined ? "riot_id" : "alias",
+          trackedAlias: owner?.[0]?.player_alias,
+        });
+      }
+
+      // One history scan for every candidate, then partition in memory. Resolution
+      // now performs a fixed number of lake reads regardless of how common a bare
+      // Riot game name is.
+      if (candidates.length === 0) return [];
+      const history = historyByPuuid(
+        await riotIdHistory(
+          source,
+          [...new Set(candidates.flatMap((candidate) => candidate.puuids))],
+          input.abortSignal,
+        ),
+      );
+      return candidates.flatMap((candidate) => {
+        const identity = summarise(
+          candidate.puuids.flatMap((puuid) => history.get(puuid) ?? []),
+          candidate.matchedBy,
+          candidate.trackedAlias,
+        );
+        return identity === undefined ? [] : [identity];
+      });
+    },
   );
-  // A PUUID joins duplicate tracking rows across servers; Discord identity
-  // joins separate accounts across servers; and (server, player) joins the
-  // accounts of one unlinked tracked player inside a server.
-  for (const group of groupAccountsByPerson(accounts)) {
-    candidates.push({
-      puuids: [...new Set(group.map((account) => account.puuid))],
-      matchedBy: "alias",
-      trackedAlias: group[0]?.player_alias,
-    });
-  }
-
-  const claimed = new Set(candidates.flatMap((candidate) => candidate.puuids));
-  const riotIdMatches = await lookupByRiotId(
-    source,
-    needle,
-    match,
-    input.abortSignal,
-  );
-  // Expand every tracked Riot-ID match in one accounts scan. The old loop did
-  // one accounts query and one complete match-history scan per candidate, so a
-  // common bare name made latency grow with the number of matching accounts.
-  const expandedAccounts = await lookupAccountsByPuuids(
-    files.accountsParquet,
-    input.guildIds,
-    riotIdMatches.filter((puuid) => !claimed.has(puuid)),
-    input.abortSignal,
-  );
-  const ownerByPuuid = new Map<string, z.infer<typeof AccountRowSchema>[]>();
-  for (const group of groupAccountsByPerson(expandedAccounts)) {
-    for (const account of group) ownerByPuuid.set(account.puuid, group);
-  }
-
-  for (const puuid of riotIdMatches) {
-    // Re-check after each expansion: two matching accounts may belong to the
-    // same person, and the first one claims the whole account set.
-    if (claimed.has(puuid)) continue;
-    // A Riot ID that belongs to a tracked account resolves to the whole
-    // person, not that one account. "GexIsAngry" is one of Aaron's three
-    // names across two accounts; answering for 160 of his 447 games would be
-    // the same under-count by a different route.
-    const owner = ownerByPuuid.get(puuid);
-    const candidatePuuids =
-      owner === undefined
-        ? [puuid]
-        : [...new Set(owner.map((account) => account.puuid))];
-    for (const claimedPuuid of candidatePuuids) claimed.add(claimedPuuid);
-    candidates.push({
-      puuids: candidatePuuids,
-      matchedBy: owner === undefined ? "riot_id" : "alias",
-      trackedAlias: owner?.[0]?.player_alias,
-    });
-  }
-
-  // One history scan for every candidate, then partition in memory. Resolution
-  // now performs a fixed number of lake reads regardless of how common a bare
-  // Riot game name is.
-  if (candidates.length === 0) return [];
-  const history = historyByPuuid(
-    await riotIdHistory(
-      source,
-      [...new Set(candidates.flatMap((candidate) => candidate.puuids))],
-      input.abortSignal,
-    ),
-  );
-  return candidates.flatMap((candidate) => {
-    const identity = summarise(
-      candidate.puuids.flatMap((puuid) => history.get(puuid) ?? []),
-      candidate.matchedBy,
-      candidate.trackedAlias,
-    );
-    return identity === undefined ? [] : [identity];
-  });
 }
 
 /**

@@ -17,6 +17,15 @@ import {
 } from "#src/report-lake/flatten.ts";
 import { flattenTimeline } from "#src/report-lake/flatten-timeline.ts";
 import {
+  type STAGING_TABLES,
+  commitStagingGeneration,
+  generationFile,
+  snapshotStagingGenerations,
+  type StagingGeneration,
+  type StagingGenerationSnapshot,
+  type StagingSource,
+} from "#src/report-lake/staging/generations.ts";
+import {
   competitionRankHistoryStagingDir,
   ensureLakeScaffold,
   matchTeamBansStagingDir,
@@ -49,16 +58,15 @@ function sanitizeFileStem(stem: string): string {
   return stem.replaceAll(/[^\w.-]/g, "_");
 }
 
-export type ReportLakeStagingTable =
-  | "matches"
-  | "match_teams"
-  | "match_team_bans"
-  | "prematch"
-  | "competition_rank_history"
-  | "timeline_events"
-  | "timeline_event_participants"
-  | "timeline_participant_frames"
-  | "timeline_coverage";
+export type ReportLakeStagingTable = (typeof STAGING_TABLES)[number];
+
+export type StagingWriteResult = {
+  success: boolean;
+  files: readonly string[];
+  generation?: StagingGeneration;
+};
+
+type StagingWriteOptions = { source?: StagingSource };
 
 export function matchStagingFilePath(lakeDir: string, matchId: string): string {
   return path.join(
@@ -153,21 +161,34 @@ export async function writeMatchStagingFile(
   lakeDir: string,
   match: RawMatch,
 ): Promise<boolean> {
+  const staged = await stageMatchGeneration(lakeDir, match);
+  return staged.success;
+}
+
+export async function stageMatchGeneration(
+  lakeDir: string,
+  match: RawMatch,
+  options: StagingWriteOptions = {},
+): Promise<StagingWriteResult> {
   try {
     await ensureLakeScaffold(lakeDir);
     const rows = flattenMatch(match);
     const matchId = match.metadata.matchId;
-    await Promise.all([
-      Bun.write(matchStagingFilePath(lakeDir, matchId), toNdjson(rows)),
-      Bun.write(
-        matchTeamStagingFilePath(lakeDir, matchId),
-        toNdjson(flattenMatchTeams(match)),
-      ),
-      Bun.write(
-        matchTeamBanStagingFilePath(lakeDir, matchId),
-        toNdjson(flattenMatchTeamBans(match)),
-      ),
-    ]);
+    const generation = await commitStagingGeneration({
+      lakeDir,
+      projectionKind: "match",
+      naturalId: stagingIdForMatch(matchId),
+      observedAt: new Date(),
+      ...(options.source === undefined ? {} : { source: options.source }),
+      files: [
+        { table: "matches", content: toNdjson(rows) },
+        { table: "match_teams", content: toNdjson(flattenMatchTeams(match)) },
+        {
+          table: "match_team_bans",
+          content: toNdjson(flattenMatchTeamBans(match)),
+        },
+      ],
+    });
     reportLakeStagingWritesTotal.inc({ table: "matches", status: "success" });
     reportLakeStagingWritesTotal.inc({
       table: "match_teams",
@@ -177,14 +198,20 @@ export async function writeMatchStagingFile(
       table: "match_team_bans",
       status: "success",
     });
-    return true;
+    return {
+      success: true,
+      generation,
+      files: generation.tables.map((table) =>
+        generationFile(generation, table),
+      ),
+    };
   } catch (error) {
     logger.warn(
       `Failed to write match staging file for ${match.metadata.matchId}`,
       { error },
     );
     reportLakeStagingWritesTotal.inc({ table: "matches", status: "failed" });
-    return false;
+    return { success: false, files: [] };
   }
 }
 
@@ -193,26 +220,40 @@ export async function writePrematchStagingFile(
   gameInfo: RawCurrentGameInfo,
   observedAt: Date,
 ): Promise<boolean> {
+  const staged = await stagePrematchGeneration(lakeDir, gameInfo, observedAt);
+  return staged.success;
+}
+
+export async function stagePrematchGeneration(
+  lakeDir: string,
+  gameInfo: RawCurrentGameInfo,
+  observedAt: Date,
+  options: StagingWriteOptions = {},
+): Promise<StagingWriteResult> {
   const dedupeKey = `${gameInfo.platformId}:${gameInfo.gameId.toString()}`;
   try {
     await ensureLakeScaffold(lakeDir);
     const rows = flattenPrematch(gameInfo, observedAt);
-    if (rows.length === 0) {
-      // Every participant was privacy-scrubbed; nothing to stage.
-      return true;
-    }
-    await Bun.write(
-      prematchStagingFilePath(lakeDir, dedupeKey),
-      toNdjson(rows),
-    );
+    const generation = await commitStagingGeneration({
+      lakeDir,
+      projectionKind: "prematch",
+      naturalId: stagingIdForPrematch(dedupeKey),
+      observedAt,
+      ...(options.source === undefined ? {} : { source: options.source }),
+      files: [{ table: "prematch", content: toNdjson(rows) }],
+    });
     reportLakeStagingWritesTotal.inc({ table: "prematch", status: "success" });
-    return true;
+    return {
+      success: true,
+      generation,
+      files: [generationFile(generation, "prematch")],
+    };
   } catch (error) {
     logger.warn(`Failed to write prematch staging file for ${dedupeKey}`, {
       error,
     });
     reportLakeStagingWritesTotal.inc({ table: "prematch", status: "failed" });
-    return false;
+    return { success: false, files: [] };
   }
 }
 
@@ -221,6 +262,16 @@ export async function writeTimelineStagingFiles(
   timeline: RawTimeline,
   observedAt: Date,
 ): Promise<boolean> {
+  const staged = await stageTimelineGeneration(lakeDir, timeline, observedAt);
+  return staged.success;
+}
+
+export async function stageTimelineGeneration(
+  lakeDir: string,
+  timeline: RawTimeline,
+  observedAt: Date,
+  options: StagingWriteOptions = {},
+): Promise<StagingWriteResult> {
   const flattened = flattenTimeline(timeline, observedAt);
   const tables = [
     { table: "timeline_events" as const, rows: flattened.events },
@@ -236,16 +287,27 @@ export async function writeTimelineStagingFiles(
   ];
   try {
     await ensureLakeScaffold(lakeDir);
-    for (const { table, rows } of tables) {
-      if (rows.length > 0) {
-        await Bun.write(
-          timelineStagingFilePath(lakeDir, table, timeline.metadata.matchId),
-          toNdjson(rows),
-        );
-      }
+    const generation = await commitStagingGeneration({
+      lakeDir,
+      projectionKind: "timeline",
+      naturalId: stagingIdForTimeline(timeline.metadata.matchId),
+      observedAt,
+      ...(options.source === undefined ? {} : { source: options.source }),
+      files: tables.map(({ table, rows }) => ({
+        table,
+        content: toNdjson(rows),
+      })),
+    });
+    for (const { table } of tables) {
       reportLakeStagingWritesTotal.inc({ table, status: "success" });
     }
-    return true;
+    return {
+      success: true,
+      generation,
+      files: generation.tables.map((table) =>
+        generationFile(generation, table),
+      ),
+    };
   } catch (error) {
     logger.warn(
       `Failed to write timeline staging files for ${timeline.metadata.matchId}`,
@@ -255,20 +317,34 @@ export async function writeTimelineStagingFiles(
       table: "timeline_coverage",
       status: "failed",
     });
-    return false;
+    return { success: false, files: [] };
   }
 }
 
 export async function writeCompetitionRankHistoryStagingFile(
   lakeDir: string,
   leaderboard: CachedLeaderboard,
+  options: StagingWriteOptions = {},
 ): Promise<boolean> {
   try {
     await ensureLakeScaffold(lakeDir);
-    await Bun.write(
-      competitionRankHistoryStagingFilePath(lakeDir, leaderboard),
-      toNdjson(flattenCompetitionRankHistory(leaderboard)),
-    );
+    const date = new Date(leaderboard.calculatedAt).toISOString().slice(0, 10);
+    await commitStagingGeneration({
+      lakeDir,
+      projectionKind: "competition_rank_history",
+      naturalId: stagingIdForCompetitionRankHistory(
+        leaderboard.competitionId,
+        date,
+      ),
+      observedAt: new Date(leaderboard.calculatedAt),
+      ...(options.source === undefined ? {} : { source: options.source }),
+      files: [
+        {
+          table: "competition_rank_history",
+          content: toNdjson(flattenCompetitionRankHistory(leaderboard)),
+        },
+      ],
+    });
     reportLakeStagingWritesTotal.inc({
       table: "competition_rank_history",
       status: "success",
@@ -287,8 +363,32 @@ export async function writeCompetitionRankHistoryStagingFile(
   }
 }
 
-/** List absolute paths of all staging files for a table. */
-export async function listStagingFiles(
+export type StagingFileEntry = {
+  file: string;
+  stem: string;
+  generation?: StagingGeneration;
+};
+
+function projectionKindForTable(table: ReportLakeStagingTable) {
+  switch (table) {
+    case "matches":
+    case "match_teams":
+    case "match_team_bans":
+      return "match";
+    case "prematch":
+      return "prematch";
+    case "competition_rank_history":
+      return "competition_rank_history";
+    case "timeline_events":
+    case "timeline_event_participants":
+    case "timeline_participant_frames":
+    case "timeline_coverage":
+      return "timeline";
+  }
+}
+
+/** Legacy flat files stay readable while their last publisher drains. */
+async function listLegacyStagingFiles(
   lakeDir: string,
   table: ReportLakeStagingTable,
 ): Promise<string[]> {
@@ -308,6 +408,47 @@ export async function listStagingFiles(
     .map((name) => path.join(dir, name));
 }
 
+export async function listStagingEntries(
+  lakeDir: string,
+  table: ReportLakeStagingTable,
+  snapshot?: StagingGenerationSnapshot,
+): Promise<StagingFileEntry[]> {
+  const committed = snapshot ?? (await snapshotStagingGenerations(lakeDir));
+  const kind = projectionKindForTable(table);
+  const selected = committed.selected.filter(
+    (generation) => generation.projectionKind === kind,
+  );
+  const selectedIds = new Set(
+    selected.map((generation) => generation.naturalId),
+  );
+  const legacyFiles = await listLegacyStagingFiles(lakeDir, table);
+  const legacy = legacyFiles
+    .map((file) => ({ file, stem: path.basename(file, ".jsonl") }))
+    .filter(({ stem }) => !selectedIds.has(stem));
+  const generations = selected.flatMap((generation) =>
+    generation.tables.includes(table)
+      ? [
+          {
+            file: generationFile(generation, table),
+            stem: generation.naturalId,
+            generation,
+          },
+        ]
+      : [],
+  );
+  return [...legacy, ...generations];
+}
+
+/** List absolute paths of one committed generation per key, plus legacy files. */
+export async function listStagingFiles(
+  lakeDir: string,
+  table: ReportLakeStagingTable,
+  snapshot?: StagingGenerationSnapshot,
+): Promise<string[]> {
+  const entries = await listStagingEntries(lakeDir, table, snapshot);
+  return entries.map(({ file }) => file);
+}
+
 /**
  * Delete staging files whose natural ids were provably folded into a
  * published build. Ids not in the folded set are left for the next run.
@@ -317,7 +458,7 @@ export async function removeFoldedStagingFiles(
   table: ReportLakeStagingTable,
   foldedIds: Set<string>,
 ): Promise<number> {
-  const files = await listStagingFiles(lakeDir, table);
+  const files = await listLegacyStagingFiles(lakeDir, table);
   let removed = 0;
   for (const file of files) {
     const stem = file

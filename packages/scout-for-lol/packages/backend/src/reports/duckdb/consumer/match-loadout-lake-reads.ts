@@ -5,7 +5,7 @@ import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildMatchesSource,
-  resolveLakeFiles,
+  withLakeQueryRetry,
   scalarParam,
 } from "#src/reports/duckdb/lake.ts";
 
@@ -48,27 +48,31 @@ export async function fetchMatchLoadoutRows(options: {
   abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
 }): Promise<LakeMatchLoadoutRow[]> {
-  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const source = buildMatchesSource(
-    files,
-    { sql: "match_id = ?", params: [scalarParam(options.matchId)] },
-    LOADOUT_COLUMNS,
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const source = buildMatchesSource(
+        files,
+        { sql: "match_id = ?", params: [scalarParam(options.matchId)] },
+        LOADOUT_COLUMNS,
+      );
+      if (source === undefined) return [];
+      const rows = await withDuckDBConnection(
+        async (session) =>
+          await session.run(
+            `SELECT match_id, game_duration_seconds, puuid, participant_id, champion_id, champion_name, ` +
+              `item0, item1, item2, item3, item4, item5, item6, ` +
+              `summoner1_id, summoner2_id, perk_primary_style, perk_sub_style, ` +
+              `perk0, perk1, perk2, perk3, perk4, perk5, ` +
+              `stat_perk_offense, stat_perk_flex, stat_perk_defense FROM (${source.sql}) ` +
+              `ORDER BY participant_id`,
+            bindParams(session, source.params),
+          ),
+        options.abortSignal === undefined
+          ? {}
+          : { abortSignal: options.abortSignal },
+      );
+      return rows.map((row) => MatchLoadoutRowSchema.parse(row));
+    },
   );
-  if (source === undefined) return [];
-  const rows = await withDuckDBConnection(
-    async (session) =>
-      await session.run(
-        `SELECT match_id, game_duration_seconds, puuid, participant_id, champion_id, champion_name, ` +
-          `item0, item1, item2, item3, item4, item5, item6, ` +
-          `summoner1_id, summoner2_id, perk_primary_style, perk_sub_style, ` +
-          `perk0, perk1, perk2, perk3, perk4, perk5, ` +
-          `stat_perk_offense, stat_perk_flex, stat_perk_defense FROM (${source.sql}) ` +
-          `ORDER BY participant_id`,
-        bindParams(session, source.params),
-      ),
-    options.abortSignal === undefined
-      ? {}
-      : { abortSignal: options.abortSignal },
-  );
-  return rows.map((row) => MatchLoadoutRowSchema.parse(row));
 }

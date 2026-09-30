@@ -41,7 +41,7 @@ import {
   type RecoveryTransitionResult,
 } from "@scout-for-lol/domain/recovery/batch-transitions.ts";
 import {
-  getIntent,
+  getSubjectIntent,
   transitionIntent,
 } from "#src/database/durable/intent-repository.ts";
 import { getProcessingState } from "#src/database/durable/observation-repository.ts";
@@ -140,7 +140,7 @@ async function executeRetryNotification(
   outcome: OperationsOutcome;
   postCommit: OperationsWorkflowStart | null;
 }> {
-  const record = await getIntent(tx, { intentKey: payload.intentKey });
+  const record = await getSubjectIntent(tx, { intentKey: payload.intentKey });
   if (record === null) {
     return {
       outcome: notFound("notification-intent", payload.intentKey),
@@ -171,7 +171,7 @@ async function executeSuppressStale(
   },
   now: Date,
 ): Promise<OperationsOutcome> {
-  const record = await getIntent(tx, { intentKey: payload.intentKey });
+  const record = await getSubjectIntent(tx, { intentKey: payload.intentKey });
   if (record === null) {
     return notFound("notification-intent", payload.intentKey);
   }
@@ -190,7 +190,7 @@ async function executeResolveUnknownDelivery(
   tx: Db,
   payload: OperationsIntentPayload & { kind: "ops_resolve_unknown_delivery" },
 ): Promise<OperationsOutcome> {
-  const record = await getIntent(tx, { intentKey: payload.intentKey });
+  const record = await getSubjectIntent(tx, { intentKey: payload.intentKey });
   if (record === null) {
     return notFound("notification-intent", payload.intentKey);
   }

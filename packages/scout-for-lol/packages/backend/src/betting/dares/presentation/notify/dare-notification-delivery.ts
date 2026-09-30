@@ -7,7 +7,7 @@ import {
 import {
   DareNotificationCategorySchema,
   DareNotificationKindSchema,
-} from "#src/betting/dares/presentation/notify/dare-notification-outbox.ts";
+} from "#src/betting/dares/presentation/notify/dare-status-message.ts";
 import { getBucksNotificationPreferences } from "#src/betting/notify/notification-preferences.ts";
 import { isPolicyEnabled } from "#src/configuration/flags.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";

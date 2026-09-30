@@ -15,9 +15,12 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/network-policies.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { SCOUT_GATEWAY_APP_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/gateway.ts";
+import { SCOUT_ACTIVITY_WORKER_APP_LABEL } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/activity-worker.ts";
 import {
   gatewayTopologyRunsRole,
+  SCOUT_ACTIVITY_WORKER_TOPOLOGY,
   SCOUT_GATEWAY_TOPOLOGY,
+  type ScoutActivityWorkerTopology,
   type ScoutGatewayTopology,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
@@ -129,20 +132,17 @@ type WorkflowWorkerImageOverrides = {
   candidate?: string;
 };
 
+type ScoutTopologyOverrides = {
+  gateway?: ScoutGatewayTopology;
+  activityWorker?: ScoutActivityWorkerTopology;
+};
+
 export function createScoutChart(
   app: App,
   stage: Stage,
   workflowWorkerImageOverrides?: WorkflowWorkerImageOverrides,
-  /**
-   * Render this stage as though its SCOUT_GATEWAY_TOPOLOGY entry said this.
-   *
-   * Same shape and purpose as `workflowWorkerImageOverrides` above: a
-   * render-time override so a topology can be exercised through the real chart
-   * without editing the standing decision. It is what lets the retirement path
-   * — the rollback this whole state exists for — be proven by rendering it
-   * rather than by mocking the module that decides it.
-   */
-  gatewayTopologyOverride?: ScoutGatewayTopology,
+  /** Render the real chart in a handoff or retirement state for verification. */
+  topologyOverrides?: ScoutTopologyOverrides,
 ) {
   const chart = new Chart(app, `scout-${stage}`, {
     namespace: `scout-${stage}`,
@@ -156,14 +156,16 @@ export function createScoutChart(
   });
 
   const gatewayTopology =
-    gatewayTopologyOverride ?? SCOUT_GATEWAY_TOPOLOGY[stage];
+    topologyOverrides?.gateway ?? SCOUT_GATEWAY_TOPOLOGY[stage];
+  const activityWorkerTopology =
+    topologyOverrides?.activityWorker ?? SCOUT_ACTIVITY_WORKER_TOPOLOGY[stage];
   // Voice belongs to whichever pod holds the shard, so this tracks `split`
   // specifically: a retiring stage has the shard back on the combined pod and
   // must get its UDP egress back with it.
   const splitTopology = gatewayTopologyRunsRole(gatewayTopology);
 
   createScoutPostgreSQLDatabase(chart, stage);
-  createScoutDeployment(chart, stage, gatewayTopology);
+  createScoutDeployment(chart, stage, gatewayTopology, activityWorkerTopology);
   const stableImage =
     workflowWorkerImageOverrides?.stable ??
     versions[`shepherdjerred/scout-for-lol/${stage}/workflows/stable`];
@@ -291,6 +293,31 @@ export function createScoutChart(
           // egresses from here.
           ...(stage === "beta" ? [discordVoiceRtpEgressRule()] : []),
         ],
+      },
+    });
+  }
+
+  if (activityWorkerTopology !== "absent") {
+    new KubeNetworkPolicy(chart, "scout-activity-worker-netpol", {
+      metadata: { name: "scout-activity-worker-netpol" },
+      spec: {
+        podSelector: {
+          matchLabels: { app: SCOUT_ACTIVITY_WORKER_APP_LABEL },
+        },
+        policyTypes: ["Ingress", "Egress"],
+        ingress: [
+          {
+            from: [
+              {
+                namespaceSelector: {
+                  matchLabels: { "kubernetes.io/metadata.name": "prometheus" },
+                },
+              },
+            ],
+            ports: [{ port: IntOrString.fromNumber(3000), protocol: "TCP" }],
+          },
+        ],
+        egress: scoutRuntimeEgressRules(),
       },
     });
   }

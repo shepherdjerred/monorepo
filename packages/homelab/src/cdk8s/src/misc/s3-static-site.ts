@@ -40,9 +40,9 @@ export type StaticSiteReverseProxy = {
 };
 
 /**
- * SPA-style fallback for client-side routing. When requests under
- * `pathPrefix` would 404 against the bucket, serve `fallbackPath` instead so
- * the SPA's router can handle the URL.
+ * SPA-style fallback for client-side routing. Extensionless paths under
+ * `pathPrefix` are rewritten to `fallbackPath` before the bucket lookup so
+ * successful document responses retain HTTP 200. Missing assets still 404.
  *
  * Without this, deep links like `/app/g/123/audit` (handled client-side by
  * React Router) would 404 on hard-refresh because the bucket has no object
@@ -216,7 +216,11 @@ ${rewriteLine}\t\treverse_proxy ${proxy.upstream} {
           false,
         );
         return `\thandle ${spa.pathPrefix} {
-${routeHeaders ? `${routeHeaders}\n` : ""}${renderS3Proxy(spa.fallbackPath)}
+${routeHeaders ? `${routeHeaders}\n` : ""}\t\t@spaDocument {
+\t\t\tnot path_regexp \\.[^/]+$
+\t\t}
+\t\trewrite @spaDocument ${spa.fallbackPath}
+${renderS3Proxy(spa.fallbackPath)}
 \t}`;
       })
       .join("\n\n");

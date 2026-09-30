@@ -34,6 +34,11 @@ import {
 } from "@scout-for-lol/data";
 import { duckDbColumnsSpec } from "#src/report-lake/schema.ts";
 import { removeFoldedStagingFiles } from "#src/report-lake/staging.ts";
+import {
+  reclaimAbandonedPendingGenerations,
+  removeRebuiltGenerations,
+  snapshotStagingGenerations,
+} from "#src/report-lake/staging/generations.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { writeAccountsParquet } from "#src/report-lake/compact-accounts.ts";
 import { rebuildTimelineParquet } from "#src/report-lake/timeline-compaction.ts";
@@ -64,6 +69,9 @@ async function rebuildLocked(
   const buildId = newBuildId();
   const buildDir = buildDirPath(lakeDir, buildId);
   await mkdir(buildDir, { recursive: true });
+  await reclaimAbandonedPendingGenerations(lakeDir);
+  const stagingSnapshot = await snapshotStagingGenerations(lakeDir);
+  const rebuiltSources = new Set<string>();
   let published = false;
 
   try {
@@ -94,6 +102,7 @@ async function rebuildLocked(
       teamWriter: matchTeamWriter,
       teamBanWriter: matchTeamBanWriter,
       foldedIds: foldedMatchIds,
+      foldedSources: rebuiltSources,
       puuidRemap,
       abortSignal: deadline,
       onProgress: (progress) => {
@@ -105,6 +114,7 @@ async function rebuildLocked(
       bucket,
       writer: prematchWriter,
       foldedIds: foldedPrematchIds,
+      foldedSources: rebuiltSources,
       puuidRemap,
       abortSignal: deadline,
       onProgress: (progress) => {
@@ -115,6 +125,7 @@ async function rebuildLocked(
       client,
       bucket,
       buildDir,
+      foldedSources: rebuiltSources,
       puuidRemap,
       abortSignal: deadline,
       timeoutMs: remainingTimeoutMs(),
@@ -182,6 +193,7 @@ async function rebuildLocked(
     const rankHistory = await writeCompetitionRankHistoryParquet({
       buildDir,
       foldedIds: foldedRankHistoryIds,
+      foldedSources: rebuiltSources,
       abortSignal: deadline,
       timeoutMs: remainingTimeoutMs(),
     });
@@ -237,6 +249,7 @@ async function rebuildLocked(
     ] as const) {
       await removeFoldedStagingFiles(lakeDir, table, timelines.foldedIds);
     }
+    await removeRebuiltGenerations(stagingSnapshot, rebuiltSources);
     await gcOldBuilds(lakeDir, GC_KEEP_BUILDS);
 
     const durationMs = Date.now() - startedAt;

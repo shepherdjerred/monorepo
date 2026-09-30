@@ -1,7 +1,10 @@
 import { DiscordAPIError } from "discord.js";
 import { describe, expect, test } from "vitest";
 import { ChannelSendError } from "#src/league/discord/channel.ts";
-import { classifyChannelSendFailure } from "#src/temporal/v2/notification-delivery.ts";
+import {
+  classifyChannelSendFailure,
+  classifyDmSendStatus,
+} from "#src/temporal/v2/notification-delivery.ts";
 
 /**
  * The decision table that decides whether a user can be told the same thing
@@ -110,5 +113,27 @@ describe("classifying a failed channel send", () => {
         outcome: "unknown",
       },
     );
+  });
+});
+
+describe("classifying an audited DM send", () => {
+  test("keeps a caught send error unknown to prevent a duplicate DM", () => {
+    expect(classifyDmSendStatus("failed", true)).toEqual({
+      outcome: "unknown",
+    });
+  });
+
+  test("retries a failure before the DM request", () => {
+    expect(classifyDmSendStatus("failed", false)).toEqual({
+      outcome: "failed",
+      failure: { classification: "retryable", reason: "service-unavailable" },
+    });
+  });
+
+  test("retries a definite budget deferral", () => {
+    expect(classifyDmSendStatus("deferred", false)).toEqual({
+      outcome: "failed",
+      failure: { classification: "retryable", reason: "service-unavailable" },
+    });
   });
 });

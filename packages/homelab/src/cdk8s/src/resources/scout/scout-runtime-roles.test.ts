@@ -12,6 +12,7 @@ import {
   SCOUT_STAGES,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 import { SCOUT_GATEWAY_OWNER_BY_STAGE } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/scout-alert-constants.ts";
+import { scoutGatewayClientIngress } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 
 const EnvEntrySchema = z
   .object({
@@ -151,27 +152,23 @@ describe("Scout runtime role assignment", () => {
     ).toEqual([]);
   });
 
-  /**
-   * `activity-worker` reads the lake AND writes its ingest staging directories,
-   * so it cannot share the ReadWriteOnce claim with the publishing role. It is
-   * deliberately absent until the lake is shareable; this asserts the deferral
-   * rather than leaving its absence to chance.
-   */
-  test("no activity-worker Deployment is rendered in either stage", () => {
+  test("the activity worker is present only in beta", () => {
     for (const stage of ["beta", "prod"] as const) {
       expect(
-        scoutResources(stage).some((resource) =>
-          resource.metadata.name.includes("activity-worker"),
+        scoutResources(stage).some(
+          (resource) =>
+            resource.kind === "Deployment" &&
+            resource.metadata.name.includes("activity-worker"),
         ),
-      ).toBe(false);
+      ).toBe(stage === "beta");
     }
   });
 });
 
 describe("Scout split-topology opt-in", () => {
-  test("beta is retiring the split and prod never ran it", () => {
+  test("beta runs the split and prod never ran it", () => {
     expect(SCOUT_GATEWAY_TOPOLOGY).toEqual({
-      beta: "retiring",
+      beta: "split",
       prod: "absent",
     });
   });
@@ -392,6 +389,31 @@ describe("Scout gateway network boundary", () => {
     );
   });
 
+  test("Temporal admits split and retiring gateways until their pods exit", () => {
+    const rules = scoutGatewayClientIngress({
+      beta: "retiring",
+      prod: "split",
+    });
+    expect(rules).toHaveLength(1);
+    expect(rules[0]?.from).toEqual([
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "scout-beta" },
+        },
+        podSelector: { matchLabels: { app: "scout-gateway" } },
+      },
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "scout-prod" },
+        },
+        podSelector: { matchLabels: { app: "scout-gateway" } },
+      },
+    ]);
+    expect(
+      scoutGatewayClientIngress({ beta: "absent", prod: "absent" }),
+    ).toEqual([]);
+  });
+
   /**
    * The complete set of Scout identities Temporal admits on gRPC.
    *
@@ -454,12 +476,11 @@ describe("Scout gateway network boundary", () => {
     }
 
     expect([...admitted].toSorted()).toEqual([
+      "scout-beta/app=scout-activity-worker",
       // The application role (and, on an unsplit stage, the combined pod):
       // embedded workers plus the competition activity dispatcher.
       "scout-beta/app=scout-backend",
-      // The gateway role's Temporal client. It runs no Activity worker, but
-      // Discord commands start Workflows they do not execute, so a blocked
-      // client here is every slash command failing to dispatch.
+      // The split gateway starts Workflows for Discord commands.
       "scout-beta/app=scout-gateway",
       "scout-beta/worker-family=scout-beta-workflows",
       "scout-prod/app=scout-backend",

@@ -116,6 +116,7 @@ describe("sendDM", () => {
     const client = clientWithSend(() =>
       Promise.reject(new Error("network exploded")),
     );
+    const onSendAttempt = vi.fn();
 
     const status = await sendDM({
       client,
@@ -124,13 +125,38 @@ describe("sendDM", () => {
       kind: "permission_error",
       guildId,
       prisma,
+      onSendAttempt,
     });
 
     expect(status).toBe("failed");
+    expect(onSendAttempt).toHaveBeenCalledOnce();
 
     const rows = await prisma.dmAuditLog.findMany();
     expect(rows).toHaveLength(1);
     expect(rows[0]?.deliveryStatus).toBe("failed");
     expect(rows[0]?.errorMessage).toContain("network exploded");
+  });
+
+  test("does not mark a recipient lookup failure as a send attempt", async () => {
+    const client = mockClient({
+      users: {
+        cache: new Map(),
+        fetch: () => Promise.reject(new Error("recipient lookup unavailable")),
+      },
+    });
+    const onSendAttempt = vi.fn();
+
+    const status = await sendDM({
+      client,
+      userId: recipientId,
+      message: "Dare progressed",
+      kind: "dare_notification",
+      guildId,
+      prisma,
+      onSendAttempt,
+    });
+
+    expect(status).toBe("failed");
+    expect(onSendAttempt).not.toHaveBeenCalled();
   });
 });

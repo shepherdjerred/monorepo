@@ -21,7 +21,7 @@ import {
 } from "#src/mvp-votes/eligibility.ts";
 import {
   loadMatchMvpRoster,
-  recordMatchMvpReportRefs,
+  recordMatchMvpOwnedReportRef,
 } from "#src/mvp-votes/vote.ts";
 
 export type VoteButtonEditReplyOptions = {
@@ -61,15 +61,6 @@ export async function handleMvpVoteButton(
   }
   const serverId = DiscordGuildIdSchema.parse(interaction.guildId);
   const matchId: MatchId = parsed.matchId;
-  const channelId = DiscordChannelIdSchema.safeParse(interaction.channelId);
-  const messageId = interaction.message?.id;
-  if (messageId !== undefined && messageId.length > 0 && channelId.success) {
-    await recordMatchMvpReportRefs(
-      matchId,
-      new Map([[channelId.data, messageId]]),
-      prismaClient,
-    );
-  }
   if (!(await isMvpVotesEnabledForGuild(serverId))) {
     await refuse(interaction, MVP_VOTE_NOT_ENABLED);
     return;
@@ -78,6 +69,14 @@ export async function handleMvpVoteButton(
   if (roster === undefined) {
     await refuse(interaction, MVP_VOTE_NO_CONTEST);
     return;
+  }
+  const channelId = DiscordChannelIdSchema.safeParse(interaction.channelId);
+  const messageId = interaction.message?.id;
+  if (messageId !== undefined && messageId.length > 0 && channelId.success) {
+    await recordMatchMvpOwnedReportRef(
+      { matchId, serverId, channelId: channelId.data, messageId },
+      prismaClient,
+    );
   }
   const voter = await findMatchMvpVoter(
     {

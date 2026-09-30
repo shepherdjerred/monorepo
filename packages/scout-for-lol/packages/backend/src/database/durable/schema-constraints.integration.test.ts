@@ -310,6 +310,25 @@ describe("MatchProcessingReceipt constraints", () => {
   });
 });
 
+function subjectColumnsForKind(kind: string): Record<string, string> {
+  if (kind === "duel-status") {
+    return {
+      subjectKind: "'duel'",
+      subjectId: "'00000000-0000-0000-0000-000000000001'",
+      riotMatchId: "NULL",
+    };
+  }
+  if (kind === "dare-status") {
+    return {
+      subjectKind: "'dare'",
+      subjectId: "'1'",
+      riotMatchId: "NULL",
+      targetKind: "'dm'",
+    };
+  }
+  return {};
+}
+
 describe("MatchNotificationIntent constraints", () => {
   const valid: Record<string, string> = {
     intentKey: "'intent-1'",
@@ -341,6 +360,7 @@ describe("MatchNotificationIntent constraints", () => {
           ...valid,
           intentKey: `'kind-${kind}'`,
           kind: `'${kind}'`,
+          ...subjectColumnsForKind(kind),
         }),
       );
     },
@@ -529,6 +549,7 @@ describe("MatchNotificationIntent subject constraints", () => {
       insertSql("MatchNotificationIntent", {
         ...valid,
         intentKey: "'duel-subject'",
+        kind: "'duel-status'",
         subjectKind: "'duel'",
         subjectId: "'0f8b4c2a-3d5e-4b6f-8a9c-1d2e3f405060'",
         riotMatchId: "NULL",
@@ -543,7 +564,12 @@ describe("MatchNotificationIntent subject constraints", () => {
     ],
     [
       "a non-match subject that still names a Riot match",
-      { ...valid, subjectKind: "'duel'", subjectId: "'duel-1'" },
+      {
+        ...valid,
+        kind: "'duel-status'",
+        subjectKind: "'duel'",
+        subjectId: "'duel-1'",
+      },
     ],
     [
       "a match subject without a Riot match id",

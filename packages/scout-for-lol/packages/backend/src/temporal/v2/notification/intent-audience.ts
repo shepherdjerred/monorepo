@@ -1,7 +1,10 @@
 import type { NotificationRetirementReason } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { NotificationTransitionResult } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
 import type { Db } from "#src/database/index.ts";
-import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import type {
+  MatchNotificationIntentRecord,
+  NotificationIntentRecord,
+} from "#src/database/durable/intent-row.ts";
 import {
   retireNotificationIntent,
   subscriptionRetirementOf,
@@ -135,10 +138,16 @@ export async function hallInstallationRetirementOfV2(
 /** The reason this intent's audience is gone, or `undefined` if it stands. */
 export async function audienceRetirementOfV2(
   db: Db,
-  record: MatchNotificationIntentRecord,
+  record: NotificationIntentRecord,
   discord: AudienceDiscordPort,
 ): Promise<NotificationRetirementReason | undefined> {
   const target = record.intent.target;
+  if ("dareId" in record) return undefined;
+  if ("duelId" in record) {
+    return target.kind === "channel"
+      ? await discordRetirementOf(target.channelId, discord)
+      : undefined;
+  }
   // A DM's audience is one account, and no producer of these kinds mints one
   // yet; there is nothing here to ask.
   return target.kind === "channel"
@@ -161,7 +170,7 @@ export async function audienceRetirementOfV2(
  */
 export async function retireIfAudienceGoneV2(
   db: Db,
-  record: MatchNotificationIntentRecord,
+  record: NotificationIntentRecord,
   discord: AudienceDiscordPort = defaultAudienceDiscordPort(),
 ): Promise<NotificationTransitionResult | undefined> {
   const state = record.intent.state.kind;

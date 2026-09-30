@@ -5,10 +5,12 @@ import { z } from "zod/v4";
 export const ImessageOwnersSchema = z
   .string()
   .transform((value) =>
-    value
-      .split(",")
-      .map((entry) => entry.trim())
-      .filter((entry) => entry !== ""),
+    value === "[]"
+      ? []
+      : value
+          .split(",")
+          .map((entry) => entry.trim())
+          .filter((entry) => entry !== ""),
   )
   .pipe(z.array(z.string().min(1).max(200)).max(20));
 function createResolver(onSourceError: () => void) {
@@ -23,7 +25,7 @@ function createResolver(onSourceError: () => void) {
       owners: {
         schema: ImessageOwnersSchema,
         sources: ["flag", "default"],
-        default: "",
+        default: "[]",
         names: { flag: "temporal-agent-chat-imessage-owners" },
       },
       claudeModel: {

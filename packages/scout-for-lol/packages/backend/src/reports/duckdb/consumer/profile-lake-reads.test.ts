@@ -9,14 +9,14 @@ import type {
   TimelineParticipantFrameLakeRow,
 } from "@scout-for-lol/data";
 import {
-  fetchChampionComparisons,
   fetchFullMatch,
   fetchTimelineCoverage,
   fetchTimelineEventPage,
   fetchTimelineFramePage,
   fetchTimelineFramesAtIndex,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
-import { fetchMatchLoadoutRows } from "#src/reports/duckdb/consumer-match-loadout-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
+import { fetchChampionComparisons } from "#src/reports/duckdb/consumer/profile-champion-comparison.ts";
+import { fetchMatchLoadoutRows } from "#src/reports/duckdb/consumer/match-loadout-lake-reads.ts";
 import { fetchMatchSupport } from "#src/reports/duckdb/community/match-support.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 import { testPuuid } from "#src/testing/test-ids.ts";
@@ -262,24 +262,31 @@ describe("consumer profile lake reads", () => {
     const rows = await fetchFullMatch({ matchId, lakeDir });
     expect(rows.map((row) => row.champion_name)).toEqual(["Ashe", "Garen"]);
     expect(rows[0]).toMatchObject({
-      item0: 1055,
+      item0: 1056,
       item6: 3340,
       summoner_spell_1_id: 4,
       primary_rune_0_id: 8005,
     });
   });
 
-  test("aborts the post-query match support read when its caller stops", async () => {
+  test("aborts post-query lake reads when their caller stops", async () => {
     const controller = new AbortController();
     controller.abort();
 
-    await expect(
-      fetchMatchSupport({
-        matchIds: [matchId],
-        lakeDir,
-        abortSignal: controller.signal,
-      }),
-    ).rejects.toMatchObject({ name: "AbortError" });
+    const options = { matchId, lakeDir, abortSignal: controller.signal };
+    const reads = [
+      () =>
+        fetchMatchSupport({
+          matchIds: [matchId],
+          lakeDir,
+          abortSignal: controller.signal,
+        }),
+      () => fetchTimelineCoverage(options),
+      () => fetchTimelineEventPage({ ...options, offset: 0, limit: 2 }),
+    ];
+    for (const read of reads) {
+      await expect(read()).rejects.toMatchObject({ name: "AbortError" });
+    }
   });
 
   test("reads the seven final items, spells, and rune selections for a match", async () => {

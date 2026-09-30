@@ -6,19 +6,22 @@ import {
 } from "#src/temporal/v2/notification-receipts.ts";
 
 describe("the V2 notification render receipt kind", () => {
+  const matchKinds = NotificationIntentKindSchema.options.filter(
+    (kind) => kind !== "duel-status" && kind !== "dare-status",
+  );
   test("is distinct per intent kind", () => {
     // A prematch and a postmatch intent name the same match id and render
     // different images; one receipt kind for both would let whichever
     // rendered first stand for the other, and a post-match report would be
     // delivered carrying the loading screen.
-    const kinds = NotificationIntentKindSchema.options.map((kind) =>
+    const kinds = matchKinds.map((kind) =>
       scoutV2NotificationRenderReceiptKind(kind),
     );
     expect(new Set(kinds).size).toBe(kinds.length);
   });
 
   test("stays inside the receipt kind vocabulary", () => {
-    for (const kind of NotificationIntentKindSchema.options) {
+    for (const kind of matchKinds) {
       expect(scoutV2NotificationRenderReceiptKind(kind)).toMatch(
         /^v2-notification-render-[a-z-]+$/u,
       );
@@ -28,6 +31,6 @@ describe("the V2 notification render receipt kind", () => {
   test("names every intent kind and nothing else", () => {
     expect(
       Object.keys(SCOUT_V2_NOTIFICATION_RENDER_RECEIPT_KINDS).sort(),
-    ).toEqual([...NotificationIntentKindSchema.options].sort());
+    ).toEqual([...matchKinds].sort());
   });
 });

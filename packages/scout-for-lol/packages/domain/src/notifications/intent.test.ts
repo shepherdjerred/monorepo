@@ -295,28 +295,33 @@ describe("announcement kinds", () => {
     data: {},
   };
 
-  test.each(["settlement", "dare-summary", "hall-record-break"] as const)(
-    "a %s intent must carry an announcement",
-    (kind) => {
-      expect(() =>
-        NotificationIntentSchema.parse({
-          ...makeIntent({ kind: "pending" }),
-          kind,
-        }),
-      ).toThrow();
-      expect(
-        NotificationIntentSchema.parse({
-          ...makeIntent({ kind: "pending" }),
-          kind,
-          announcement: envelope,
-        }).announcement,
-      ).toEqual(envelope);
-    },
-  );
+  test.each([
+    "settlement",
+    "dare-summary",
+    "duel-status",
+    "dare-status",
+    "hall-record-break",
+  ] as const)("a %s intent must carry an announcement", (kind) => {
+    expect(() =>
+      NotificationIntentSchema.parse({
+        ...makeIntent({ kind: "pending" }),
+        kind,
+      }),
+    ).toThrow();
+    expect(
+      NotificationIntentSchema.parse({
+        ...makeIntent({ kind: "pending" }),
+        kind,
+        announcement: envelope,
+      }).announcement,
+    ).toEqual(envelope);
+  });
 
   test("the announcement kinds are exactly the kinds that carry a payload", () => {
     expect([...ANNOUNCEMENT_INTENT_KINDS].sort()).toEqual([
+      "dare-status",
       "dare-summary",
+      "duel-status",
       "hall-record-break",
       "settlement",
     ]);

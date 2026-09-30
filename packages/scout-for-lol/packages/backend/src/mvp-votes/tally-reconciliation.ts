@@ -13,7 +13,10 @@ import {
 } from "#src/discord/utils/permissions.ts";
 import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { createLogger } from "#src/logger.ts";
-import { refreshMvpTallyMessages } from "#src/mvp-votes/message-refresh.ts";
+import {
+  allOwnedMvpTallyTargetsUnavailable,
+  refreshMvpTallyMessages,
+} from "#src/mvp-votes/message-refresh.ts";
 
 const logger = createLogger("mvp-tally-reconciliation");
 // Discord REST retries can outlive one sweep tick. Keep the claim well beyond
@@ -57,6 +60,17 @@ function editErrorCode(error: unknown): string {
   // A timeout or broken connection may happen after Discord accepted the edit.
   // The next attempt replaces the same embed, so the unknown outcome is safe.
   return "discord-edit-unknown";
+}
+
+function noUpdateErrorCode(input: {
+  terminalNoReport: boolean;
+  terminalTargets: boolean;
+}): string {
+  return input.terminalTargets
+    ? "report-target-unavailable"
+    : input.terminalNoReport
+      ? "report-unavailable"
+      : "awaiting-report";
 }
 
 /** Claim one coalesced request across gateway and background worker replicas. */
@@ -108,14 +122,21 @@ export async function reconcileMvpTallyRefresh(
       prismaClient,
     );
     if (!updated) {
-      const terminal = await hasTerminalNoReportOutcome(matchId, prismaClient);
+      const [terminalNoReport, terminalTargets] = await Promise.all([
+        hasTerminalNoReportOutcome(matchId, prismaClient),
+        allOwnedMvpTallyTargetsUnavailable(claimVersion, prismaClient),
+      ]);
+      const terminal = terminalNoReport || terminalTargets;
       const resolved = await prismaClient.matchMvpTallyRefresh.updateMany({
         where: claimVersion,
         data: {
           pending: !terminal,
           leaseToken: null,
           leaseUntil: null,
-          lastErrorCode: terminal ? "report-unavailable" : "awaiting-report",
+          lastErrorCode: noUpdateErrorCode({
+            terminalNoReport,
+            terminalTargets,
+          }),
           nextAttemptAt: new Date(now.getTime() + 60_000),
         },
       });

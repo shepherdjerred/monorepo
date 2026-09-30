@@ -68,7 +68,7 @@ const ManagedFlagSchema = z.discriminatedUnion("type", [
     ...ManagedFlagMetadataFields,
     ...ManagedFlagBehaviorFields,
     type: z.literal("variant"),
-    default: z.string(),
+    default: z.string().min(1),
   }),
 ]);
 
@@ -83,7 +83,7 @@ const ManagedFlagOverrideSchema = z.discriminatedUnion("type", [
     key: z.string().min(1),
     ...ManagedFlagBehaviorFields,
     type: z.literal("variant"),
-    default: z.string(),
+    default: z.string().min(1),
   }),
 ]);
 

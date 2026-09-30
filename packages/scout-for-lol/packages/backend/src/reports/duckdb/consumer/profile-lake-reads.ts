@@ -1,0 +1,428 @@
+import { z } from "zod";
+import {
+  TimelineEventLakeRowSchema,
+  TimelineParticipantFrameLakeRowSchema,
+  MatchTeamLakeRowSchema,
+  type MatchTeamLakeRow,
+  type TimelineEventLakeRow,
+  type TimelineParticipantFrameLakeRow,
+} from "@scout-for-lol/data";
+import { resolveLakeDir } from "#src/report-lake/paths.ts";
+import {
+  MATCH_LOADOUT_LAKE_COLUMNS_SQL,
+  MATCH_UI_READ_COLUMNS,
+  MatchLoadoutLakeRowSchema,
+} from "#src/report-lake/loadout.ts";
+import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
+import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
+import {
+  buildMatchesSource,
+  buildMatchTeamsSource,
+  buildTimelineCoverageSource,
+  buildTimelineEventParticipantsSource,
+  buildTimelineEventsSource,
+  buildTimelineParticipantFramesSource,
+  listParam,
+  withLakeQueryRetry,
+  scalarParam,
+  type BoundParam,
+  type SqlFragment,
+} from "#src/reports/duckdb/lake.ts";
+
+const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
+
+export async function runSource<T>(options: {
+  source: SqlFragment;
+  sql: string;
+  leadingParams?: BoundParam[];
+  trailingParams?: BoundParam[];
+  schema: z.ZodType<T>;
+  abortSignal?: AbortSignal | undefined;
+}): Promise<T[]> {
+  return await withDuckDBConnection(
+    async (session) => {
+      const rows = await session.run(
+        options.sql,
+        bindParams(session, [
+          ...(options.leadingParams ?? []),
+          ...options.source.params,
+          ...(options.trailingParams ?? []),
+        ]),
+      );
+      return rows.map((row) => options.schema.parse(row));
+    },
+    options.abortSignal === undefined
+      ? {}
+      : { abortSignal: options.abortSignal },
+  );
+}
+
+const MatchParticipantRowSchema = z
+  .object({
+    match_id: z.string(),
+    game_creation_ms: LakeIntSchema,
+    game_duration_seconds: LakeIntSchema,
+    queue: z.string().nullable(),
+    queue_id: LakeIntSchema,
+    game_mode: z.string(),
+    game_type: z.string(),
+    game_version: z.string(),
+    map_id: LakeIntSchema,
+    puuid: z.string(),
+    participant_id: LakeIntSchema,
+    team_id: LakeIntSchema,
+    player_subteam_id: LakeIntSchema.nullable(),
+    placement: LakeIntSchema.nullable(),
+    subteam_placement: LakeIntSchema.nullable(),
+    augment_1_id: LakeIntSchema.nullable(),
+    augment_2_id: LakeIntSchema.nullable(),
+    augment_3_id: LakeIntSchema.nullable(),
+    augment_4_id: LakeIntSchema.nullable(),
+    augment_5_id: LakeIntSchema.nullable(),
+    augment_6_id: LakeIntSchema.nullable(),
+    riot_id_game_name: z.string().nullable(),
+    riot_id_tagline: z.string(),
+    champion_id: LakeIntSchema,
+    champion_name: z.string(),
+    team_position: z.string(),
+    win: z.boolean(),
+    kills: LakeIntSchema,
+    deaths: LakeIntSchema,
+    assists: LakeIntSchema,
+    creep_score: LakeIntSchema,
+    gold_earned: LakeIntSchema,
+    vision_score: LakeIntSchema,
+    total_damage_dealt_to_champions: LakeIntSchema,
+    turret_kills: LakeIntSchema,
+    inhibitor_kills: LakeIntSchema,
+    baron_kills: LakeIntSchema,
+    dragon_kills: LakeIntSchema,
+  })
+  .extend(MatchLoadoutLakeRowSchema.shape);
+
+export type LakeMatchParticipantRow = z.infer<typeof MatchParticipantRowSchema>;
+
+export async function fetchFullMatch(options: {
+  matchId: string;
+  lakeDir?: string;
+}): Promise<LakeMatchParticipantRow[]> {
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const source = buildMatchesSource(
+        files,
+        {
+          sql: "match_id = ?",
+          params: [scalarParam(options.matchId)],
+        },
+        MATCH_UI_READ_COLUMNS,
+      );
+      if (source === undefined) return [];
+      return await runSource({
+        source,
+        sql:
+          `SELECT match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
+          `game_duration_seconds, queue, queue_id, game_mode, game_type, game_version, map_id, ` +
+          `puuid, participant_id, team_id, player_subteam_id, placement, subteam_placement, ` +
+          `augment_1_id, augment_2_id, augment_3_id, augment_4_id, augment_5_id, augment_6_id, ` +
+          `riot_id_game_name, riot_id_tagline, ` +
+          `champion_id, champion_name, team_position, win, kills, deaths, assists, creep_score, ` +
+          `gold_earned, vision_score, total_damage_dealt_to_champions, turret_kills, ` +
+          `inhibitor_kills, baron_kills, dragon_kills, ${MATCH_LOADOUT_LAKE_COLUMNS_SQL} ` +
+          `FROM (${source.sql}) ` +
+          `ORDER BY team_id, participant_id`,
+        schema: MatchParticipantRowSchema,
+      });
+    },
+  );
+}
+
+export async function fetchFullMatchTeams(options: {
+  matchId: string;
+  lakeDir?: string;
+}): Promise<MatchTeamLakeRow[]> {
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const source = buildMatchTeamsSource(files, {
+        sql: "match_id = ?",
+        params: [scalarParam(options.matchId)],
+      });
+      if (source === undefined) return [];
+      return await runSource({
+        source,
+        sql: `SELECT * FROM (${source.sql}) ORDER BY team_id`,
+        schema: MatchTeamLakeRowSchema,
+      });
+    },
+  );
+}
+
+const TimelineCoverageRowSchema = z.object({
+  coverage_state: z.literal("complete"),
+  data_version: z.string(),
+  frame_interval_ms: LakeIntSchema,
+  frame_count: LakeIntSchema,
+  event_count: LakeIntSchema,
+  participant_count: LakeIntSchema,
+  first_frame_timestamp_ms: LakeIntSchema.nullable(),
+  last_frame_timestamp_ms: LakeIntSchema.nullable(),
+});
+
+export type LakeTimelineCoverage = z.infer<typeof TimelineCoverageRowSchema>;
+
+export async function fetchTimelineCoverage(options: {
+  matchId: string;
+  abortSignal?: AbortSignal | undefined;
+  lakeDir?: string;
+}): Promise<LakeTimelineCoverage | null> {
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const source = buildTimelineCoverageSource(files, {
+        sql: "match_id = ?",
+        params: [scalarParam(options.matchId)],
+      });
+      if (source === undefined) return null;
+      const rows = await runSource({
+        source,
+        sql:
+          `SELECT coverage_state, data_version, frame_interval_ms, frame_count, event_count, ` +
+          `participant_count, first_frame_timestamp_ms, last_frame_timestamp_ms ` +
+          `FROM (${source.sql}) LIMIT 1`,
+        schema: TimelineCoverageRowSchema,
+        abortSignal: options.abortSignal,
+      });
+      return rows[0] ?? null;
+    },
+  );
+}
+
+const TimelineEventReadSchema = TimelineEventLakeRowSchema.omit({
+  match_id: true,
+  month: true,
+  observed_at: true,
+}).extend({
+  frame_index: LakeIntSchema,
+  event_index: LakeIntSchema,
+  frame_timestamp_ms: LakeIntSchema,
+  event_timestamp_ms: LakeIntSchema,
+  participant_id: LakeIntSchema.nullable(),
+  killer_id: LakeIntSchema.nullable(),
+  victim_id: LakeIntSchema.nullable(),
+  creator_id: LakeIntSchema.nullable(),
+  team_id: LakeIntSchema.nullable(),
+  killer_team_id: LakeIntSchema.nullable(),
+  item_id: LakeIntSchema.nullable(),
+  after_id: LakeIntSchema.nullable(),
+  before_id: LakeIntSchema.nullable(),
+  skill_slot: LakeIntSchema.nullable(),
+  level: LakeIntSchema.nullable(),
+  bounty: LakeIntSchema.nullable(),
+  shutdown_bounty: LakeIntSchema.nullable(),
+  kill_streak_length: LakeIntSchema.nullable(),
+  gold_gain: LakeIntSchema.nullable(),
+  position_x: LakeIntSchema.nullable(),
+  position_y: LakeIntSchema.nullable(),
+  winning_team_id: LakeIntSchema.nullable(),
+  real_timestamp_ms: LakeIntSchema.nullable(),
+});
+
+export type TimelineEventRead = Omit<
+  TimelineEventLakeRow,
+  "match_id" | "month" | "observed_at"
+>;
+
+const TIMELINE_EVENT_COLUMNS = Object.keys(TimelineEventReadSchema.shape).join(
+  ", ",
+);
+
+export async function fetchTimelineEventPage(options: {
+  matchId: string;
+  offset: number;
+  limit: number;
+  eventTypes?: string[];
+  participantIds?: number[];
+  abortSignal?: AbortSignal | undefined;
+  lakeDir?: string;
+}): Promise<TimelineEventRead[]> {
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const clauses = ["match_id = ?"];
+      const params: BoundParam[] = [scalarParam(options.matchId)];
+      if (options.eventTypes !== undefined) {
+        clauses.push("event_type IN (SELECT unnest(?))");
+        params.push(listParam(options.eventTypes));
+      }
+      const source = buildTimelineEventsSource(files, {
+        sql: clauses.join(" AND "),
+        params,
+      });
+      if (source === undefined) return [];
+      const participantSource =
+        options.participantIds === undefined
+          ? undefined
+          : buildTimelineEventParticipantsSource(files, {
+              sql: "match_id = ? AND participant_id IN (SELECT unnest(?))",
+              params: [
+                scalarParam(options.matchId),
+                listParam(options.participantIds),
+              ],
+            });
+      if (
+        participantSource === undefined &&
+        options.participantIds !== undefined
+      ) {
+        return [];
+      }
+      const participantClause =
+        participantSource === undefined
+          ? ""
+          : `WHERE event_id IN (SELECT event_id FROM (${participantSource.sql}))`;
+      return await runSource({
+        source,
+        trailingParams: [
+          ...(participantSource?.params ?? []),
+          scalarParam(Math.floor(options.limit)),
+          scalarParam(Math.floor(options.offset)),
+        ],
+        sql:
+          `SELECT ${TIMELINE_EVENT_COLUMNS} FROM (${source.sql}) ${participantClause} ` +
+          `ORDER BY event_timestamp_ms, frame_index, event_index, event_id LIMIT ? OFFSET ?`,
+        schema: TimelineEventReadSchema,
+        abortSignal: options.abortSignal,
+      });
+    },
+  );
+}
+
+const TimelineFrameReadSchema = TimelineParticipantFrameLakeRowSchema.omit({
+  match_id: true,
+  month: true,
+  observed_at: true,
+}).extend({
+  frame_index: LakeIntSchema,
+  frame_timestamp_ms: LakeIntSchema,
+  participant_id: LakeIntSchema,
+  position_x: LakeIntSchema,
+  position_y: LakeIntSchema,
+  current_gold: LakeIntSchema,
+  total_gold: LakeIntSchema,
+  gold_per_second: LakeIntSchema,
+  minions_killed: LakeIntSchema,
+  jungle_minions_killed: LakeIntSchema,
+  level: LakeIntSchema,
+  xp: LakeIntSchema,
+});
+
+export type TimelineFrameRead = Omit<
+  TimelineParticipantFrameLakeRow,
+  "match_id" | "month" | "observed_at"
+>;
+
+const LaneDeltaFrameSchema = z.object({
+  participant_id: LakeIntSchema,
+  total_gold: LakeIntSchema,
+  minions_killed: LakeIntSchema,
+  jungle_minions_killed: LakeIntSchema,
+  xp: LakeIntSchema,
+});
+
+export type LaneDeltaFrame = z.infer<typeof LaneDeltaFrameSchema>;
+
+export async function fetchTimelineFramesAtIndex(options: {
+  matchId: string;
+  frameIndex: number;
+  lakeDir?: string;
+}): Promise<LaneDeltaFrame[]> {
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const source = buildTimelineParticipantFramesSource(files, {
+        sql: "match_id = ? AND frame_index = ?",
+        params: [scalarParam(options.matchId), scalarParam(options.frameIndex)],
+      });
+      if (source === undefined) return [];
+      return await runSource({
+        source,
+        sql:
+          `SELECT participant_id, total_gold, minions_killed, jungle_minions_killed, xp ` +
+          `FROM (${source.sql}) ORDER BY participant_id`,
+        schema: LaneDeltaFrameSchema,
+      });
+    },
+  );
+}
+
+const TIMELINE_FRAME_COLUMNS = Object.keys(TimelineFrameReadSchema.shape).join(
+  ", ",
+);
+
+export async function fetchTimelineFramePage(options: {
+  matchId: string;
+  offset: number;
+  limit: number;
+  participantIds?: number[];
+  lakeDir?: string;
+}): Promise<TimelineFrameRead[]> {
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const clauses = ["match_id = ?"];
+      const params: BoundParam[] = [scalarParam(options.matchId)];
+      if (options.participantIds !== undefined) {
+        clauses.push("participant_id IN (SELECT unnest(?))");
+        params.push(listParam(options.participantIds));
+      }
+      const source = buildTimelineParticipantFramesSource(files, {
+        sql: clauses.join(" AND "),
+        params,
+      });
+      if (source === undefined) return [];
+      return await runSource({
+        source,
+        trailingParams: [
+          scalarParam(Math.floor(options.limit)),
+          scalarParam(Math.floor(options.offset)),
+        ],
+        sql:
+          `SELECT ${TIMELINE_FRAME_COLUMNS} FROM (${source.sql}) ` +
+          `ORDER BY frame_timestamp_ms, participant_id LIMIT ? OFFSET ?`,
+        schema: TimelineFrameReadSchema,
+      });
+    },
+  );
+}
+
+const TimelineChartFrameSchema = z.object({
+  frame_timestamp_ms: LakeIntSchema,
+  participant_id: LakeIntSchema,
+  total_gold: LakeIntSchema,
+  xp: LakeIntSchema,
+});
+
+export type TimelineChartFrame = z.infer<typeof TimelineChartFrameSchema>;
+
+export async function fetchTimelineChartFrames(options: {
+  matchId: string;
+  lakeDir?: string;
+}): Promise<TimelineChartFrame[]> {
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const source = buildTimelineParticipantFramesSource(files, {
+        sql: "match_id = ?",
+        params: [scalarParam(options.matchId)],
+      });
+      if (source === undefined) return [];
+      return await runSource({
+        source,
+        sql:
+          `SELECT frame_timestamp_ms, participant_id, total_gold, xp FROM (${source.sql}) ` +
+          `ORDER BY frame_timestamp_ms, participant_id`,
+        schema: TimelineChartFrameSchema,
+      });
+    },
+  );
+}

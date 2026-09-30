@@ -14,9 +14,13 @@ import { reportLakeCompactionSkippedTotal } from "#src/metrics/reports/report-la
 import type { ReportLakeProgress } from "#src/report-lake/compaction-types.ts";
 import type { StagingParseResult } from "#src/report-lake/fold-parquet.ts";
 import {
-  listStagingFiles,
+  listStagingEntries,
   type ReportLakeStagingTable,
 } from "#src/report-lake/staging.ts";
+import {
+  generationFile,
+  type StagingGenerationSnapshot,
+} from "#src/report-lake/staging/generations.ts";
 
 const logger = createLogger("report-lake-staging-reader");
 
@@ -50,19 +54,13 @@ type StagingRowSchema = {
 };
 
 type ParsedStagingFile =
-  | { kind: "missing_name" }
   | { kind: "invalid" }
-  | { kind: "valid"; stem: string; rows: { month: string; row: object }[] };
+  | { kind: "valid"; rows: { month: string; row: object }[] };
 
 async function parseStagingFile(
   file: string,
   schema: StagingRowSchema,
 ): Promise<ParsedStagingFile> {
-  const stem = file
-    .split("/")
-    .at(-1)
-    ?.replace(/\.jsonl$/, "");
-  if (stem === undefined) return { kind: "missing_name" };
   const fileRows: { month: string; row: object }[] = [];
   const text = await Bun.file(file).text();
   for (const line of text.split("\n")) {
@@ -77,7 +75,48 @@ async function parseStagingFile(
     if (!parsed.success) return { kind: "invalid" };
     fileRows.push({ month: parsed.data.month, row: parsed.data });
   }
-  return { kind: "valid", stem, rows: fileRows };
+  return { kind: "valid", rows: fileRows };
+}
+
+/** Validate a whole committed projection before the fold reads any table. */
+export async function validateStagingSnapshot(
+  snapshot: StagingGenerationSnapshot,
+): Promise<{
+  snapshot: StagingGenerationSnapshot;
+  skippedByTable: Map<ReportLakeStagingTable, number>;
+}> {
+  const selected: StagingGenerationSnapshot["selected"][number][] = [];
+  const skippedByTable = new Map<ReportLakeStagingTable, number>();
+  for (const generation of snapshot.selected) {
+    let valid = true;
+    for (const table of generation.tables) {
+      const parsed = await parseStagingFile(
+        generationFile(generation, table),
+        schemaForTable(table),
+      );
+      if (parsed.kind === "invalid") valid = false;
+    }
+    if (valid) {
+      selected.push(generation);
+      continue;
+    }
+    logger.warn(
+      "Committed staging generation failed validation; leaving whole projection for rebuild",
+      {
+        generationId: generation.generationId,
+        projectionKind: generation.projectionKind,
+        naturalId: generation.naturalId,
+      },
+    );
+    for (const table of generation.tables) {
+      reportLakeCompactionSkippedTotal.inc({ table });
+      skippedByTable.set(table, (skippedByTable.get(table) ?? 0) + 1);
+    }
+  }
+  return {
+    snapshot: { captured: snapshot.captured, selected },
+    skippedByTable,
+  };
 }
 
 function addRows(
@@ -95,18 +134,30 @@ function addRows(
 export async function readStagingRows(
   lakeDir: string,
   table: ReportLakeStagingTable,
-  onProgress?: (progress: ReportLakeProgress) => void,
+  options: {
+    onProgress?: ((progress: ReportLakeProgress) => void) | undefined;
+    snapshot?: StagingGenerationSnapshot;
+    skippedGenerations?: number;
+  } = {},
 ): Promise<StagingParseResult> {
   const schema = schemaForTable(table);
   const rowsByMonth = new Map<string, object[]>();
   const foldedIds = new Set<string>();
   let rows = 0;
-  let skipped = 0;
+  let skipped = options.skippedGenerations ?? 0;
 
-  for (const file of await listStagingFiles(lakeDir, table)) {
+  for (const { file, stem, generation } of await listStagingEntries(
+    lakeDir,
+    table,
+    options.snapshot,
+  )) {
     const parsed = await parseStagingFile(file, schema);
-    if (parsed.kind === "missing_name") continue;
     if (parsed.kind === "invalid") {
+      if (generation !== undefined) {
+        throw new Error(
+          `Validated staging generation ${generation.generationId} changed before fold`,
+        );
+      }
       reportLakeCompactionSkippedTotal.inc({ table });
       skipped += 1;
       logger.warn("Staging file failed validation, leaving for rebuild", {
@@ -115,8 +166,8 @@ export async function readStagingRows(
       continue;
     }
     rows += addRows(rowsByMonth, parsed.rows);
-    foldedIds.add(parsed.stem);
-    onProgress?.({
+    foldedIds.add(stem);
+    options.onProgress?.({
       phase: "reading-staging",
       table,
       files: foldedIds.size + skipped,

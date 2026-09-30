@@ -28,16 +28,18 @@ import {
 
 export type OperationsQueuesData = {
   readonly stalledMatchProcessing: readonly string[];
-  readonly stalledNotifications: readonly {
+  readonly stalledNotifications: readonly ({
     readonly intentKey: string;
-    readonly matchId: string;
     readonly state: string;
     readonly freshnessDeadline: string;
     readonly attemptCount: number;
-  }[];
-  readonly unknownDeliveries: readonly {
+  } & (
+    | { readonly matchId: string }
+    | { readonly duelId: string }
+    | { readonly dareId: number }
+  ))[];
+  readonly unknownDeliveries: readonly ({
     readonly intentKey: string;
-    readonly matchId: string;
     readonly attemptCount: number;
     /**
      * The attempt whose outcome was never observed. Required, because the read
@@ -47,7 +49,11 @@ export type OperationsQueuesData = {
      */
     readonly attemptNonce: string;
     readonly state: string;
-  }[];
+  } & (
+    | { readonly matchId: string }
+    | { readonly duelId: string }
+    | { readonly dareId: number }
+  ))[];
   readonly unprojectedMatches: readonly string[];
   readonly liveRecoveryBatches: readonly string[];
   readonly unacceptedWorkflowStarts: readonly {
@@ -158,6 +164,20 @@ function projectQueues(
         "Notification intents a Workflow should have sent by now. What each row offers follows its own state and freshness deadline, so an action is shown only where it can succeed.",
       stalled: true,
       rows: data.stalledNotifications.map((record) => {
+        const subject =
+          "matchId" in record
+            ? {
+                label: "Match",
+                id: record.matchId,
+                inspectMatchId: record.matchId,
+              }
+            : "duelId" in record
+              ? { label: "Duel", id: record.duelId, inspectMatchId: null }
+              : {
+                  label: "Dare",
+                  id: record.dareId.toString(),
+                  inspectMatchId: null,
+                };
         const { blocked, drafts } = notificationActions({
           intentKey: record.intentKey,
           state: record.state,
@@ -168,13 +188,13 @@ function projectQueues(
           id: record.intentKey,
           primary: record.intentKey,
           facts: [
-            { label: "Match", value: record.matchId },
+            { label: subject.label, value: subject.id },
             { label: "State", value: record.state },
             { label: "Attempts", value: record.attemptCount.toString() },
             { label: "Fresh until", value: record.freshnessDeadline },
           ],
           blocked,
-          inspectMatchId: record.matchId,
+          inspectMatchId: subject.inspectMatchId,
           drafts,
         };
       }),
@@ -191,7 +211,11 @@ function projectQueues(
         id: record.intentKey,
         primary: record.intentKey,
         facts: [
-          { label: "Match", value: record.matchId },
+          "matchId" in record
+            ? { label: "Match", value: record.matchId }
+            : "duelId" in record
+              ? { label: "Duel", value: record.duelId }
+              : { label: "Dare", value: record.dareId.toString() },
           { label: "Attempts", value: record.attemptCount.toString() },
           { label: "State", value: record.state },
           { label: "Attempt", value: record.attemptNonce },
@@ -199,7 +223,7 @@ function projectQueues(
         blocked: null,
         // Still offered: the answer is one fact of the intent, and the rest of
         // the match's picture is often what the investigation needs.
-        inspectMatchId: record.matchId,
+        inspectMatchId: "matchId" in record ? record.matchId : null,
         drafts: [
           resolveDeliveryDraft({
             intentKey: record.intentKey,

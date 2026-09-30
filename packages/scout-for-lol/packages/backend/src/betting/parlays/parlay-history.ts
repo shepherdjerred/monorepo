@@ -19,7 +19,7 @@ import {
 import {
   buildMatchesSource,
   listParam,
-  resolveLakeFiles,
+  withLakeQueryRetry,
   scalarParam,
   type BoundParam,
 } from "#src/reports/duckdb/lake.ts";
@@ -288,123 +288,124 @@ export async function fetchParlayHistory(
   }
   const limit = options.limit ?? PARLAY_HISTORY_LIMIT;
   const lakeDir = options.lakeDir ?? resolveLakeDir();
-  const files = await resolveLakeFiles(lakeDir);
-  const columns = historyColumns();
-  const columnList = columns.join(", ");
+  return await withLakeQueryRetry(lakeDir, async (files) => {
+    const columns = historyColumns();
+    const columnList = columns.join(", ");
 
-  const queueFilter = historyQueueFilter(options.queueType);
-  const subjectSource = buildMatchesSource(files, {
-    sql: `puuid IN (SELECT unnest(?)) AND match_id <> ? AND ${queueFilter.sql}`,
-    params: [
-      listParam(puuids),
-      scalarParam(options.excludeMatchId),
-      queueFilter.param,
-    ],
-  });
-  if (subjectSource === undefined) {
-    return new Map();
-  }
-
-  const connectionOptions = () => ({
-    timeoutMs: historyQueryTimeoutMs(options),
-  });
-  throwIfDeadlineAborted(options.deadline);
-
-  const selected = await withDuckDBConnection(async (session) => {
-    const sql =
-      `WITH ranked AS (SELECT puuid, match_id, ` +
-      `row_number() OVER (PARTITION BY puuid ORDER BY game_creation_at DESC) AS rk ` +
-      `FROM (${subjectSource.sql})) ` +
-      `SELECT puuid, match_id FROM ranked WHERE rk <= ?`;
-    const rows = await session.run(
-      sql,
-      bindParams(session, [
-        ...subjectSource.params,
-        scalarParam(limit * HISTORY_FETCH_MULTIPLIER),
-      ]),
-    );
-    return rows.map((row) =>
-      z.object({ puuid: z.string(), match_id: z.string() }).parse(row),
-    );
-  }, connectionOptions());
-  throwIfDeadlineAborted(options.deadline);
-
-  const matchIds = [...new Set(selected.map((row) => row.match_id))];
-  if (matchIds.length === 0) {
-    return new Map();
-  }
-
-  const rosterSource = buildMatchesSource(files, {
-    sql: "match_id IN (SELECT unnest(?))",
-    params: [listParam(matchIds)],
-  });
-  if (rosterSource === undefined) {
-    return new Map();
-  }
-
-  const roster = await withDuckDBConnection(async (session) => {
-    const sql =
-      `SELECT match_id, puuid, team_id, win, team_position, ` +
-      `game_duration_seconds, end_of_game_result, early_surrendered, ` +
-      `epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ${columnList} ` +
-      `FROM (${rosterSource.sql})`;
-    return await session.run(sql, bindParams(session, rosterSource.params));
-  }, connectionOptions());
-  throwIfDeadlineAborted(options.deadline);
-
-  const byMatch = new Map<string, unknown[]>();
-  for (const row of roster) {
-    const parsed = HistoryParticipantSchema.safeParse(row);
-    if (!parsed.success) {
-      continue;
+    const queueFilter = historyQueueFilter(options.queueType);
+    const subjectSource = buildMatchesSource(files, {
+      sql: `puuid IN (SELECT unnest(?)) AND match_id <> ? AND ${queueFilter.sql}`,
+      params: [
+        listParam(puuids),
+        scalarParam(options.excludeMatchId),
+        queueFilter.param,
+      ],
+    });
+    if (subjectSource === undefined) {
+      return new Map();
     }
-    const bucket = byMatch.get(parsed.data.match_id) ?? [];
-    bucket.push(row);
-    byMatch.set(parsed.data.match_id, bucket);
-  }
 
-  const wanted = new Map<string, Set<string>>();
-  for (const row of selected) {
-    const bucket = wanted.get(row.puuid) ?? new Set<string>();
-    bucket.add(row.match_id);
-    wanted.set(row.puuid, bucket);
-  }
+    const connectionOptions = () => ({
+      timeoutMs: historyQueryTimeoutMs(options),
+    });
+    throwIfDeadlineAborted(options.deadline);
 
-  const history = new Map<string, ParlayHistoryMatch[]>();
-  for (const puuid of puuids) {
-    const matches: ParlayHistoryMatch[] = [];
-    for (const matchId of wanted.get(puuid) ?? new Set<string>()) {
-      const participants = byMatch.get(matchId);
-      if (participants === undefined || isVoidMatch(participants)) {
-        continue;
-      }
-      const subjectRow = participants.find((participant) => {
-        const parsed = HistoryParticipantSchema.safeParse(participant);
-        return parsed.success && parsed.data.puuid === puuid;
-      });
-      if (subjectRow === undefined) {
-        continue;
-      }
-      const subject = HistoryParticipantSchema.parse(subjectRow);
-      const { values, teamValues, opponentValues } = historyValues(
-        subjectRow,
-        subject.team_id,
-        participants,
-        columns,
+    const selected = await withDuckDBConnection(async (session) => {
+      const sql =
+        `WITH ranked AS (SELECT puuid, match_id, ` +
+        `row_number() OVER (PARTITION BY puuid ORDER BY game_creation_at DESC) AS rk ` +
+        `FROM (${subjectSource.sql})) ` +
+        `SELECT puuid, match_id FROM ranked WHERE rk <= ?`;
+      const rows = await session.run(
+        sql,
+        bindParams(session, [
+          ...subjectSource.params,
+          scalarParam(limit * HISTORY_FETCH_MULTIPLIER),
+        ]),
       );
-      matches.push({
-        matchId,
-        createdAtMs: subject.game_creation_ms,
-        durationSeconds: subject.game_duration_seconds,
-        win: subject.win,
-        lane: subject.team_position,
-        values,
-        teamValues,
-        opponentValues,
-      });
+      return rows.map((row) =>
+        z.object({ puuid: z.string(), match_id: z.string() }).parse(row),
+      );
+    }, connectionOptions());
+    throwIfDeadlineAborted(options.deadline);
+
+    const matchIds = [...new Set(selected.map((row) => row.match_id))];
+    if (matchIds.length === 0) {
+      return new Map();
     }
-    matches.sort((left, right) => right.createdAtMs - left.createdAtMs);
-    history.set(puuid, matches.slice(0, limit));
-  }
-  return history;
+
+    const rosterSource = buildMatchesSource(files, {
+      sql: "match_id IN (SELECT unnest(?))",
+      params: [listParam(matchIds)],
+    });
+    if (rosterSource === undefined) {
+      return new Map();
+    }
+
+    const roster = await withDuckDBConnection(async (session) => {
+      const sql =
+        `SELECT match_id, puuid, team_id, win, team_position, ` +
+        `game_duration_seconds, end_of_game_result, early_surrendered, ` +
+        `epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ${columnList} ` +
+        `FROM (${rosterSource.sql})`;
+      return await session.run(sql, bindParams(session, rosterSource.params));
+    }, connectionOptions());
+    throwIfDeadlineAborted(options.deadline);
+
+    const byMatch = new Map<string, unknown[]>();
+    for (const row of roster) {
+      const parsed = HistoryParticipantSchema.safeParse(row);
+      if (!parsed.success) {
+        continue;
+      }
+      const bucket = byMatch.get(parsed.data.match_id) ?? [];
+      bucket.push(row);
+      byMatch.set(parsed.data.match_id, bucket);
+    }
+
+    const wanted = new Map<string, Set<string>>();
+    for (const row of selected) {
+      const bucket = wanted.get(row.puuid) ?? new Set<string>();
+      bucket.add(row.match_id);
+      wanted.set(row.puuid, bucket);
+    }
+
+    const history = new Map<string, ParlayHistoryMatch[]>();
+    for (const puuid of puuids) {
+      const matches: ParlayHistoryMatch[] = [];
+      for (const matchId of wanted.get(puuid) ?? new Set<string>()) {
+        const participants = byMatch.get(matchId);
+        if (participants === undefined || isVoidMatch(participants)) {
+          continue;
+        }
+        const subjectRow = participants.find((participant) => {
+          const parsed = HistoryParticipantSchema.safeParse(participant);
+          return parsed.success && parsed.data.puuid === puuid;
+        });
+        if (subjectRow === undefined) {
+          continue;
+        }
+        const subject = HistoryParticipantSchema.parse(subjectRow);
+        const { values, teamValues, opponentValues } = historyValues(
+          subjectRow,
+          subject.team_id,
+          participants,
+          columns,
+        );
+        matches.push({
+          matchId,
+          createdAtMs: subject.game_creation_ms,
+          durationSeconds: subject.game_duration_seconds,
+          win: subject.win,
+          lane: subject.team_position,
+          values,
+          teamValues,
+          opponentValues,
+        });
+      }
+      matches.sort((left, right) => right.createdAtMs - left.createdAtMs);
+      history.set(puuid, matches.slice(0, limit));
+    }
+    return history;
+  });
 }

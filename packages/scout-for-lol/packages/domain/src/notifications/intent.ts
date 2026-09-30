@@ -51,6 +51,8 @@ export const NotificationIntentKindSchema = z.enum([
   "settlement",
   "dare-summary",
   "hall-record-break",
+  "duel-status",
+  "dare-status",
 ]);
 
 /** The kinds whose message is built from an `announcement` payload. */
@@ -59,6 +61,8 @@ export const ANNOUNCEMENT_INTENT_KINDS: ReadonlySet<NotificationIntentKind> =
     "settlement",
     "dare-summary",
     "hall-record-break",
+    "duel-status",
+    "dare-status",
   ]);
 
 /**
@@ -317,6 +321,6 @@ export const NotificationIntentSchema = z
       (intent.announcement !== undefined),
     {
       message:
-        "an announcement payload is carried by exactly the settlement, dare-summary and hall-record-break kinds",
+        "an announcement payload is carried by exactly the settlement, dare-summary, hall-record-break and duel-status kinds",
     },
   );

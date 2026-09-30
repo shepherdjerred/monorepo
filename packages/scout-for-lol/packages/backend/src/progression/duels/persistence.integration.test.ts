@@ -6,6 +6,9 @@ import {
   type PlayerId,
   type Region,
 } from "@scout-for-lol/data";
+import { scoutNotificationV2WorkflowId } from "@scout-for-lol/temporal";
+import { NotificationIntentKeySchema } from "@scout-for-lol/domain/identity/brands.ts";
+import { notificationIntentCodec } from "@scout-for-lol/domain/notifications/intent-codec.ts";
 import {
   createDuelEvent,
   startDuelEvent,
@@ -25,6 +28,9 @@ import {
   markDuelReady,
 } from "#src/progression/duels/series.ts";
 import { listGuildDuels } from "#src/progression/duels/read.ts";
+import { mintDuelStatusIntent } from "#src/progression/duels/status-intent.ts";
+import { duelStatusAnnouncementCodec } from "#src/progression/duels/status-message.ts";
+import { acceptNotificationStart } from "#src/temporal/v2/notification-reads.ts";
 import {
   createTestDatabase,
   dropTestDatabase,
@@ -121,7 +127,49 @@ async function verifyConcurrentDirectDuelRetries(): Promise<void> {
   expect(retries[0]).toEqual(retries[1]);
   expect(await db.duelSeries.count()).toBe(1);
   expect(await db.duelCompetitor.count()).toBe(2);
-  expect(await db.duelStatusOutbox.count()).toBe(1);
+  const intent = await db.matchNotificationIntent.findUniqueOrThrow({
+    where: { intentKey: `duel-status:duel-invited:${requestId}` },
+  });
+  expect(intent.subjectKind).toBe("duel");
+  expect(intent.subjectId).toBe(requestId);
+  expect(intent.riotMatchId).toBeNull();
+  expect(intent.kind).toBe("duel-status");
+  const start = await db.scoutWorkflowStart.findFirstOrThrow();
+  expect(start.requestedWorkflowId).toBe(
+    scoutNotificationV2WorkflowId(
+      "dev",
+      NotificationIntentKeySchema.parse(intent.intentKey),
+    ),
+  );
+  expect(await db.scoutWorkflowStart.count()).toBe(1);
+  expect(await db.duelStatusOutbox.count()).toBe(0);
+
+  await acceptNotificationStart(
+    db,
+    {
+      stage: "dev",
+      intentKey: NotificationIntentKeySchema.parse(intent.intentKey),
+    },
+    { workflowId: start.requestedWorkflowId, runId: crypto.randomUUID() },
+  );
+  const accepted = await db.scoutWorkflowStart.findUniqueOrThrow({
+    where: { requestId: start.requestId },
+  });
+  expect(accepted.acceptedAt).toBeInstanceOf(Date);
+  await db.$transaction(async (tx) => {
+    await mintDuelStatusIntent(tx, {
+      stage: "dev",
+      guildId: GUILD_ID,
+      channelId: CHANNEL_ID,
+      dedupeKey: `duel-invited:${requestId}`,
+      payload: duelStatusAnnouncementCodec.parse(
+        notificationIntentCodec.parse(JSON.parse(intent.payload)).announcement,
+      ).payload,
+      createdAt: intent.createdAt,
+      freshnessDeadline: intent.freshnessDeadline,
+    });
+  });
+  expect(await db.scoutWorkflowStart.count()).toBe(1);
 }
 
 async function verifyCurrentDiscordIdentity(): Promise<void> {
@@ -330,6 +378,8 @@ async function verifyRoundRobinAcceptanceCap(): Promise<void> {
 
 beforeEach(async () => {
   vi.mocked(launchDuelSeries).mockClear();
+  await db.scoutWorkflowStart.deleteMany();
+  await db.matchNotificationIntent.deleteMany();
   await db.duelStatusOutbox.deleteMany();
   await db.duelSeries.deleteMany();
   await db.duelEvent.deleteMany();
@@ -348,6 +398,36 @@ afterAll(async () => {
 });
 
 describe("duel persistence", () => {
+  test("keeps a pre-cutover outbox row as the sole owner of its send", async () => {
+    const seriesId = crypto.randomUUID();
+    const dedupeKey = `duel-invited:${seriesId}`;
+    await db.duelStatusOutbox.create({
+      data: {
+        guildId: GUILD_ID,
+        channelId: CHANNEL_ID,
+        dedupeKey,
+        payloadJson: JSON.stringify({
+          kind: "invited",
+          seriesId,
+          mentionDiscordIds: [],
+        }),
+      },
+    });
+    await db.$transaction(async (tx) => {
+      await mintDuelStatusIntent(tx, {
+        stage: "dev",
+        guildId: GUILD_ID,
+        channelId: CHANNEL_ID,
+        dedupeKey,
+        payload: { kind: "invited", seriesId, mentionDiscordIds: [] },
+        createdAt: new Date(),
+        freshnessDeadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      });
+    });
+    expect(await db.matchNotificationIntent.count()).toBe(0);
+    expect(await db.scoutWorkflowStart.count()).toBe(0);
+  });
+
   test("deduplicates concurrent direct-challenge retries", async () => {
     await verifyConcurrentDirectDuelRetries();
   });

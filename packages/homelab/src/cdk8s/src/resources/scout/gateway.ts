@@ -1,11 +1,9 @@
 import { addAnthropicFederation } from "@shepherdjerred/homelab/cdk8s/src/misc/llm-provider-credentials.ts";
 import {
-  Cpu,
   Deployment,
   DeploymentStrategy,
   EnvValue,
   type IPersistentVolumeClaim,
-  Protocol,
   Service,
   Volume,
 } from "cdk8s-plus-31";
@@ -33,7 +31,7 @@ import {
 } from "@shepherdjerred/homelab/cdk8s/src/misc/selinux.ts";
 import { ARGOCD_SYNC_WAVE_ANNOTATION } from "@shepherdjerred/homelab/cdk8s/src/application-release-policy.ts";
 import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout.ts";
-import { scoutRuntimeProbes } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
+import { scoutAdminRoleContainerBase } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/probes.ts";
 import type { RenderedGatewayTopology } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 
 /** Pod label every gateway-role resource selects on. */
@@ -163,13 +161,9 @@ export type ScoutGatewayDeploymentOptions = {
  * compactor.ts` (the fold) and `report-lake/staging.ts` (ingest) — the two
  * paths this role does not run.
  *
- * `activity-worker` is NOT safe on the same terms and is deliberately absent
- * rather than scaffolded. The backend README states its precondition: "So
- * `activity-worker` needs the same volume `application` owns, and the cluster
- * PVC is ReadWriteOnce — the two roles cannot both mount it as things stand.
- * Splitting them needs the lake to become shareable (a remote store, or every
- * reader moved behind the `lake` queue) first." Until one of those lands there
- * is nothing to render, so nothing here renders it.
+ * `activity-worker` differs: it writes ingest staging data, so its container
+ * mounts the same claim read-write. The report lake's generation bundles keep
+ * those writes separate from the application's fold and publish operation.
  *
  * ## How two pods share one ReadWriteOnce ZFS volume
  *
@@ -261,18 +255,6 @@ export function createScoutGatewayDeployment(
 
   deployment.addContainer(
     withCommonProps({
-      image: `ghcr.io/shepherdjerred/scout-for-lol:${options.imageVersion}`,
-      ports: [
-        {
-          name: "port-3000",
-          number: 3000,
-          protocol: Protocol.TCP,
-        },
-      ],
-      securityContext: {
-        ensureNonRoot: false,
-        readOnlyRootFilesystem: false,
-      },
       // No Temporal activity workers, no lake fold and no report rendering,
       // but this is the pod that loads the Hey Scout voice runtime (three
       // sherpa int8 graphs, silero VAD and the openWakeWord cascade) and runs
@@ -284,15 +266,11 @@ export function createScoutGatewayDeployment(
       // query on top of that, so the request covers it and the limit matches
       // the application pod's: contain an outlier rather than let it take the
       // node's shared burst memory.
-      resources: {
-        cpu: { request: Cpu.millis(50) },
-        memory: { request: Size.gibibytes(3), limit: Size.gibibytes(8) },
-      },
       // Identical probe paths to the application role. `httpSurface: "admin"`
       // serves /ping, /livez, /healthz and /metrics on the same port 3000 as
       // the full server (backend src/http/admin-server.ts) — the surface that
       // is missing here is the product's, not the operator's.
-      ...scoutRuntimeProbes(),
+      ...scoutAdminRoleContainerBase(options.imageVersion),
       volumeMounts: [
         {
           path: "/data",

@@ -18,11 +18,11 @@ import {
   fetchTimelineCoverage,
   fetchTimelineEventPage,
   type TimelineEventRead,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import {
   fetchMatchLoadoutRows,
   type LakeMatchLoadoutRow,
-} from "#src/reports/duckdb/consumer-match-loadout-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/match-loadout-lake-reads.ts";
 
 const runeById = new Map(listRunes().map((rune) => [rune.id, rune]));
 const spellByNumericId = new Map(

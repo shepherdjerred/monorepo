@@ -21,6 +21,7 @@ import {
 import type { PipelineOwner } from "@scout-for-lol/domain/match-processing/states.ts";
 import type { RecoveryPolicy } from "@scout-for-lol/domain/recovery/batch.ts";
 import { DiscordAccountIdSchema } from "@scout-for-lol/domain/identity/discord.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import { ScoutStageSchema } from "@scout-for-lol/temporal/contracts";
 import { SCOUT_WORKFLOW_NAMES } from "@scout-for-lol/temporal/identifiers";
 import {
@@ -32,7 +33,11 @@ import {
 import type { ScoutReconciliationScanV2Result } from "@scout-for-lol/temporal/activity-contracts-v2";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testChannelId, testPuuid } from "#src/testing/test-ids.ts";
-import { upsertIntent } from "#src/database/durable/intent-repository.ts";
+import {
+  upsertIntent,
+  upsertSubjectIntent,
+} from "#src/database/durable/intent-repository.ts";
+import { duelStatusAnnouncementCodec } from "#src/progression/duels/status-message.ts";
 import { observeMatch } from "#src/database/durable/observation-repository.ts";
 import { recordReceipt } from "#src/database/durable/receipt-repository.ts";
 import {
@@ -828,6 +833,42 @@ describe("the notification family", () => {
       expect(page.pending.notifications).not.toContain(intentKey(name));
     }
     expect(page.pending.notifications).not.toContain(STALE_INTENT);
+  });
+
+  test("drives a Duel status intent without requiring a Riot match", async () => {
+    const duelId = "00000000-0000-4000-8000-000000000902";
+    const key = NotificationIntentKeySchema.parse(
+      "duel-status:duel-invited:reconciliation-902",
+    );
+    expect(
+      await upsertSubjectIntent(prisma, {
+        duelId,
+        intent: NotificationIntentSchema.parse({
+          key,
+          kind: "duel-status",
+          origin: { kind: "live" },
+          target: { kind: "channel", channelId: testChannelId("8702") },
+          freshnessDeadline: PENDING_DEADLINE,
+          createdAt: "2026-09-12T09:00:00.000Z",
+          attemptCount: 0,
+          announcement: duelStatusAnnouncementCodec.serialize({
+            guildId: DiscordGuildIdSchema.parse("100000000000000902"),
+            payload: {
+              kind: "invited",
+              seriesId: duelId,
+              mentionDiscordIds: [],
+            },
+          }),
+          state: { kind: "pending" },
+        }),
+      }),
+    ).toEqual({ outcome: "applied" });
+
+    const duelPage = await scanPipelineReconciliationPageV2({
+      stage: STAGE,
+      trigger: "schedule",
+    });
+    expect(duelPage.pending.notifications).toContain(key);
   });
 });
 

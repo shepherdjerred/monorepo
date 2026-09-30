@@ -16,6 +16,7 @@ import {
   type ScoutStage,
 } from "@scout-for-lol/temporal";
 import type { ExtendedPrismaClient } from "#src/database/index.ts";
+import { mintDuelStatusIntent } from "#src/progression/duels/status-intent.ts";
 import {
   duelCompetitorsUseOneRiotRegion,
   duelCompetitorCreateData,
@@ -176,19 +177,20 @@ export async function createDirectDuel(
         },
       },
     });
-    await tx.duelStatusOutbox.create({
-      data: {
-        guildId: options.guildId,
-        channelId: options.channelId,
-        dedupeKey: `duel-invited:${row.id}`,
-        payloadJson: JSON.stringify({
-          kind: "invited",
-          seriesId: row.id,
-          mentionDiscordIds: [...first.accounts, ...second.accounts].map(
-            (account) => account.discordId,
-          ),
-        }),
+    await mintDuelStatusIntent(tx, {
+      stage: options.stage,
+      guildId: options.guildId,
+      channelId: options.channelId,
+      dedupeKey: `duel-invited:${row.id}`,
+      payload: {
+        kind: "invited",
+        seriesId: row.id,
+        mentionDiscordIds: [...first.accounts, ...second.accounts].map(
+          (account) => DiscordAccountIdSchema.parse(account.discordId),
+        ),
       },
+      createdAt: now,
+      freshnessDeadline: deadlineAt,
     });
     return row;
   });
