@@ -24,6 +24,11 @@ import {
   type StackDefinition,
   type TofuStack,
 } from "./tofu-stack-manifest.ts";
+import {
+  loadReviewedPlatformPlan,
+  publishPlatformPlan,
+  consumeReviewedPlatformPlan,
+} from "./platform-plan-handoff.ts";
 
 const STACKS_REL = "src/tofu";
 
@@ -44,7 +49,14 @@ const AMBIENT_ENV_ALLOWLIST = [
   "USER",
 ] as const;
 
-type TofuAction = "validate" | "plan" | "apply";
+type TofuAction = "validate" | "plan" | "apply" | "prepare" | "apply-saved";
+
+const REVIEWABLE_PLATFORM_STACKS = new Set<TofuStack>([
+  "openai",
+  "anthropic",
+  "discord",
+  "cloudflare-tokens",
+]);
 
 function homelabRoot(): string {
   return new URL("../..", import.meta.url).pathname;
@@ -269,13 +281,17 @@ async function validateStack(
 
 function usage(): never {
   console.error(
-    "Usage: bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate|plan|apply [--dry-run]",
+    "Usage: bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate|plan|apply|prepare|apply-saved [--dry-run]",
   );
   process.exit(1);
 }
 
 function parseAction(value: string | undefined): TofuAction {
-  return value === "validate" || value === "plan" || value === "apply"
+  return value === "validate" ||
+    value === "plan" ||
+    value === "apply" ||
+    value === "prepare" ||
+    value === "apply-saved"
     ? value
     : usage();
 }
@@ -310,6 +326,70 @@ async function plan(
   throw new Error(message);
 }
 
+async function reviewedPlatformOperation(input: {
+  readonly stack: TofuStack;
+  readonly definition: StackDefinition;
+  readonly action: "prepare" | "apply-saved";
+  readonly env: Record<string, string>;
+  readonly options: RunOptions;
+}): Promise<void> {
+  const { stack, definition, action, env, options } = input;
+  if (definition.platform === undefined) {
+    throw new Error(`platform definition is missing for ${stack}`);
+  }
+  const planRoot = await temporaryDirectory("tofu-reviewed-plan", env);
+  const planPath = `${planRoot}/plan.tfplan`;
+  try {
+    if (action === "prepare") {
+      const result = await runAllowExit(
+        [
+          "tofu",
+          `-chdir=${STACKS_REL}/${stack}`,
+          "plan",
+          "-input=false",
+          "-detailed-exitcode",
+          `-out=${planPath}`,
+        ],
+        options,
+      );
+      if (result.exitCode !== 0 && result.exitCode !== 2) {
+        throw new Error(
+          `tofu saved plan failed (exit ${result.exitCode.toString()})`,
+        );
+      }
+      await publishPlatformPlan(definition.platform, planPath);
+      return;
+    }
+    const sourcePipeline = requireEnv("TOFU_PLATFORM_PLAN_PIPELINE");
+    await loadReviewedPlatformPlan(
+      definition.platform,
+      sourcePipeline,
+      planPath,
+    );
+    await run(
+      [
+        "tofu",
+        `-chdir=${STACKS_REL}/${stack}`,
+        "apply",
+        "-input=false",
+        planPath,
+      ],
+      options,
+    );
+    console.log(`--- applied reviewed plan: ${stack}`);
+    try {
+      await consumeReviewedPlatformPlan(sourcePipeline);
+    } catch (error) {
+      throw new Error(
+        `OpenTofu apply succeeded for ${stack}, but plan ${sourcePipeline} remains unconsumed; inspect live state before any retry`,
+        { cause: error },
+      );
+    }
+  } finally {
+    await removeTemporaryDirectory(planRoot);
+  }
+}
+
 async function main(): Promise<void> {
   const args = Bun.argv.slice(2);
   if (args.includes("--help") || args.includes("-h")) usage();
@@ -318,6 +398,12 @@ async function main(): Promise<void> {
   if (stackName === undefined) usage();
   const stack = parseTofuStack(stackName);
   const action = parseAction(positional[1]);
+  if (
+    (action === "prepare" || action === "apply-saved") &&
+    !REVIEWABLE_PLATFORM_STACKS.has(stack)
+  ) {
+    throw new Error(`reviewed plan operation is unavailable for ${stack}`);
+  }
   const root = homelabRoot();
   const stackDir = `${root}/${STACKS_REL}/${stack}`;
   if (!(await Bun.file(`${stackDir}/providers.tf`).exists())) {
@@ -345,6 +431,16 @@ async function main(): Promise<void> {
   );
   if (action === "plan") {
     await plan(stack, definition, options);
+    return;
+  }
+  if (action === "prepare" || action === "apply-saved") {
+    await reviewedPlatformOperation({
+      stack,
+      definition,
+      action,
+      env,
+      options,
+    });
     return;
   }
   await run(

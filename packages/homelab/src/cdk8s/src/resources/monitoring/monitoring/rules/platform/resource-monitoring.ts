@@ -377,7 +377,7 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
             description: escapePrometheusTemplate(
               "Node {{ $labels.instance }} node_load1 is {{ $value }}, far above CPU thread count. " +
                 "This pattern preceded every 2026-07 kernel hard-lockup freeze. Consider killing " +
-                "in-flight Buildkite builds now — kubectl/talosctl may stop responding within minutes.",
+                "in-flight Woodpecker builds now — kubectl/talosctl may stop responding within minutes.",
             ),
             summary:
               "Node load1 critically high — imminent scheduler lockup risk",
@@ -408,7 +408,7 @@ export function getResourceMonitoringRuleGroups(): PrometheusRuleSpecGroups[] {
         {
           // Security: the CI node is excluded from the generic rule above
           // because legitimate CI pins its CPU hot, but excluding it entirely
-          // would let a compromised Buildkite step mine undetected. Keep the
+          // would let a compromised Woodpecker step mine undetected. Keep the
           // same compound CPU + egress signal active even while a job runs:
           // job presence is attacker-controlled and cannot be an exemption.
           alert: "PotentialCryptoMiningCiNode",

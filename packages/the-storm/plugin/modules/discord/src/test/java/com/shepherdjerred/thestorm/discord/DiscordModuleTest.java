@@ -28,7 +28,13 @@ final class DiscordModuleTest {
               "up",
               "down",
               "{count}: {players}",
-              "nobody"));
+              "nobody",
+              "Ticket #{id} [{server}/{priority}] {category} from **{reporter}**: {summary}",
+              "Ticket #{id} [{server}] claimed by **{staff}**",
+              "Ticket #{id} [{server}] resolved by **{staff}**",
+              "Ticket #{id} [{server}/{priority}] needs a human: {summary}",
+              "Ticket #{id} [{server}] reopened",
+              "Ticket #{id} [{server}] triaged [{priority}]: {evidence}"));
 
   @Test
   void refusesToStartWithoutSecrets() {

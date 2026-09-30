@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { codexProvider, qodoProvider } from "@shepherdjerred/code-review";
 import {
-  checksWithBuildkiteSoftFailure,
-  parseBuildkiteBuild,
+  checksAsEvidence,
+  parseCiPipeline,
   parsePrList,
   reviewFindings,
   reviewFindingsFromThreads,
@@ -85,96 +85,41 @@ describe("external evidence parsing", () => {
     expect(prs[1]?.authorType).toBe("Bot");
   });
 
-  test("validates Buildkite job metadata without loose casts", () => {
-    const build = parseBuildkiteBuild(
+  test("validates pipeline workflow metadata without loose casts", () => {
+    const pipeline = parseCiPipeline(
       JSON.stringify({
+        number: 7557,
         commit: "abc",
-        jobs: [
-          {
-            id: "job",
-            name: "verify",
-            state: "failed",
-            web_url: "https://buildkite.com/example/builds/1#job",
-            started_at: "2026-07-29T00:00:00Z",
-            soft_failed: false,
-          },
+        status: "failure",
+        workflows: [
+          { name: "verify", state: "failure", started: 1_785_000_000 },
         ],
       }),
     );
-    expect(build.commit).toBe("abc");
-    expect(build.jobs[0]?.name).toBe("verify");
+    expect(pipeline.commit).toBe("abc");
+    expect(pipeline.workflows[0]?.name).toBe("verify");
   });
 });
 
-describe("Buildkite soft-failure correlation", () => {
-  const build = "https://buildkite.com/sjerred/monorepo/builds/7557";
-  const checks: RawCheck[] = [
-    {
-      name: "buildkite/monorepo/pr",
-      state: "failure",
-      bucket: "fail",
-      link: build,
-    },
-    {
-      name: "buildkite/monorepo/pr/shield-trivy",
-      state: "failure",
-      bucket: "fail",
-      link: `${build}#trivy-job`,
-    },
-    {
-      name: "buildkite/monorepo/pr/mag-semgrep",
-      state: "failure",
-      bucket: "fail",
-      link: `${build}#semgrep-job`,
-    },
-  ];
-
-  function softFor(
-    name: string,
-    jobs: { id: string; soft_failed?: boolean }[],
-  ) {
-    const evidence = checksWithBuildkiteSoftFailure(checks, jobs);
-    const check = evidence.find((entry) => entry.name === name);
-    if (check === undefined) throw new Error(`missing check ${name}`);
-    return check.softFail;
-  }
-
-  test("derives softness from job metadata, not the check name", () => {
-    // A Trivy finding (exit 7) is soft; a hard Trivy scanner/infra failure is
-    // not — the name regex could not tell them apart.
-    expect(
-      softFor("buildkite/monorepo/pr/shield-trivy", [
-        { id: "trivy-job", soft_failed: true },
-      ]),
-    ).toBe(true);
-    expect(
-      softFor("buildkite/monorepo/pr/shield-trivy", [
-        { id: "trivy-job", soft_failed: false },
-      ]),
-    ).toBe(false);
-
-    // A normal Semgrep finding (exit 1) is soft and must NOT dispatch a repair
-    // worker, even though the old name regex never matched "semgrep".
-    expect(
-      softFor("buildkite/monorepo/pr/mag-semgrep", [
-        { id: "semgrep-job", soft_failed: true },
-      ]),
-    ).toBe(true);
-    expect(
-      softFor("buildkite/monorepo/pr/mag-semgrep", [
-        { id: "semgrep-job", soft_failed: false },
-      ]),
-    ).toBe(false);
-  });
-
-  test("treats the aggregate check and uncorrelated jobs as hard", () => {
-    // The aggregate check carries no job fragment; a missing job is never soft.
-    expect(softFor("buildkite/monorepo/pr", [])).toBe(false);
-    expect(
-      softFor("buildkite/monorepo/pr/shield-trivy", [
-        { id: "unrelated-job", soft_failed: true },
-      ]),
-    ).toBe(false);
+describe("check evidence", () => {
+  /**
+   * The Buildkite era needed the whole build fetched so each check could be matched to
+   * its job and advisory findings excluded. The advisory lanes now exit 0 when
+   * findings are not fatal, so a failing check is simply a failure.
+   */
+  test("passes checks through without soft-failure correlation", () => {
+    const checks: RawCheck[] = [
+      {
+        name: "ci/woodpecker/pr/verify",
+        state: "failure",
+        bucket: "fail",
+        link: "https://woodpecker.sjer.red/repos/1/pipeline/7557",
+      },
+    ];
+    const evidence = checksAsEvidence(checks);
+    expect(evidence).toHaveLength(1);
+    expect(evidence[0]?.name).toBe("ci/woodpecker/pr/verify");
+    expect(evidence[0]?.bucket).toBe("fail");
   });
 });
 

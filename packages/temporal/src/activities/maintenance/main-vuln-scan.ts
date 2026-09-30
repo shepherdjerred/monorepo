@@ -10,11 +10,11 @@ import {
 } from "./main-repository-scan.ts";
 /**
  * The warm Trivy database PVC mounted into the maintenance worker — kept fresh
- * every six hours by `buildkite-trivy-db-refresh`, which is why the scan runs
+ * every six hours by `ci-trivy-db-refresh`, which is why the scan runs
  * with `--skip-db-update` on the maintenance queue instead of downloading a
  * database per run on an unscoped worker.
  */
-const TRIVY_CACHE_DIR = "/buildkite/trivy-db";
+const TRIVY_CACHE_DIR = "/woodpecker/trivy-db";
 const EXCERPT_LIMIT = 2000;
 
 /**
@@ -139,7 +139,7 @@ const TRIVY_SCAN_COMMAND = [
 /**
  * Shallow-clones current `main` (the repo is public — no credentials) and runs
  * a Trivy filesystem scan for HIGH/CRITICAL vulnerabilities against the warm
- * Buildkite Trivy database. The clone's own `.trivyignore` applies
+ * Woodpecker Trivy database. The clone's own `.trivyignore` applies
  * automatically because the scan runs from the clone root.
  *
  * Runs on the maintenance queue: that worker mounts the warm DB PVC, and its

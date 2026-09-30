@@ -178,12 +178,7 @@ final class HttpBrainClientTest {
             List.of(new CommentSnapshot(9, ALICE, false, "it was stone", NOW)),
             List.of(
                 new ModerationHistory(
-                    "ban",
-                    Optional.of(UUID.randomUUID()),
-                    "Mod",
-                    "spam",
-                    NOW,
-                    Optional.empty())),
+                    "ban", Optional.of(UUID.randomUUID()), "Mod", "spam", NOW, Optional.empty())),
             false,
             List.of(sample("hello")));
     try (var brain = scripted(exchanges, new Script(200, script))) {

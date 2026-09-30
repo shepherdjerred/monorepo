@@ -1167,6 +1167,18 @@
       "thresholdRollouts": []
     },
     {
+      "key": "storm-brain-model",
+      "owner": "storm",
+      "namespace": "storm",
+      "source": "storm-brain",
+      "purpose": "Select the Storm brain LLM model.",
+      "type": "variant",
+      "default": "gpt-5.6-luna",
+      "rollouts": [],
+      "rules": [],
+      "thresholdRollouts": []
+    },
+    {
       "key": "streambot-assistant-v2-enabled",
       "owner": "streambot",
       "namespace": "streambot",
@@ -1536,11 +1548,7 @@
     },
     {
       "category": "observability",
-      "controls": [
-        "telemetry",
-        "Sentry",
-        "LLM archive"
-      ],
+      "controls": ["telemetry", "Sentry", "LLM archive"],
       "reason": "Observability initialization is boot-scoped and must not disappear behind an unauthenticated runtime toggle."
     },
     {

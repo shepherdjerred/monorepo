@@ -117,7 +117,7 @@ Interactive input:
 ## Agent tools
 
 The language model never receives a general shell, unrestricted filesystem, or
-raw GitHub/Buildkite mutation tool.
+raw GitHub/CI mutation tool.
 
 The master receives:
 
@@ -130,7 +130,7 @@ The master receives:
 
 Each worker receives:
 
-- normalized current-head PR, Buildkite, merge-tree, and review evidence;
+- normalized current-head PR, CI, merge-tree, and review evidence;
 - inherited-work inspection for staged and unstaged patches, untracked paths,
   local commits, and local/remote divergence; untracked file contents are never
   serialized, and subprocess capture limits fail closed before authorization;

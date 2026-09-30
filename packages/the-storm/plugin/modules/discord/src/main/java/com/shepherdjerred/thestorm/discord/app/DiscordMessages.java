@@ -40,34 +40,6 @@ public record DiscordMessages(
     String ticketReopened,
     String ticketTriaged) {
 
-  public DiscordMessages(
-      String chat,
-      String join,
-      String leave,
-      String death,
-      String advancement,
-      String start,
-      String stop,
-      String list,
-      String listEmpty) {
-    this(
-        chat,
-        join,
-        leave,
-        death,
-        advancement,
-        start,
-        stop,
-        list,
-        listEmpty,
-        "Ticket #{id} [{server}/{priority}] {category} from **{reporter}**: {summary}",
-        "Ticket #{id} [{server}] claimed by **{staff}**",
-        "Ticket #{id} [{server}] resolved by **{staff}**",
-        "Ticket #{id} [{server}/{priority}] needs a human: {summary}",
-        "Ticket #{id} [{server}] reopened",
-        "Ticket #{id} [{server}] triaged [{priority}]: {evidence}");
-  }
-
   public DiscordMessages {
     chatTemplate(chat);
     playerTemplate(join);

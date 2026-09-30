@@ -10,6 +10,7 @@ import {
 } from "./schedule-types.ts";
 import { SCOUT_SCHEDULES } from "./scout-schedule-definitions.ts";
 import { BACKUP_SCHEDULES } from "./backup-schedule-definitions.ts";
+import { MINECRAFT_SCHEDULES } from "./minecraft-schedule-definitions.ts";
 
 // Split out of register-schedules.ts (which sits at the repo's max-lines
 // cap) — the declarative SCHEDULES array plus its supporting types/data, no
@@ -49,23 +50,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
   ...EARLY_SCHEDULES,
   ...SCOUT_SCHEDULES,
   ...BACKUP_SCHEDULES,
-  {
-    id: "the-storm-mining-reset-quarterly",
-    workflowType: "runMiningWorldResetWorkflow",
-    args: [],
-    timing: {
-      kind: "cron",
-      // The Activity uses its own queue so it cannot delay 05:30–07:30 infra audits.
-      expression: "15 5 1 1,4,7,10 *",
-      timezone: "America/Los_Angeles",
-    },
-    taskQueue: TASK_QUEUES.WORKFLOWS,
-    overlap: ScheduleOverlapPolicy.SKIP,
-    workflowExecutionTimeout: "7 hours",
-    memo: "Reset The Storm's disposable mining world after an isolated Velero PVC snapshot while the server is hibernated",
-    initialPauseNote:
-      "Awaiting restored-backup rehearsal, reset Job dry run, and live server/world rollout acceptance",
-  },
+  ...MINECRAFT_SCHEDULES,
   {
     id: "kometa-daily",
     workflowType: "runKometaWorkflow",
@@ -260,7 +245,7 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     memo: "Weekly ZFS pool scrub + autotrim (zfspv-pool-nvme, zfspv-pool-hdd)",
   },
   {
-    id: "buildkite-uv-cache-prune-weekly",
+    id: "ci-uv-cache-prune-weekly",
     workflowType: "runUvCachePruneWorkflow",
     args: [],
     timing: {
@@ -272,10 +257,10 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 30-minute attempts plus exponential backoff and workflow overhead.
     workflowExecutionTimeout: "2 hours",
-    memo: "Weekly Buildkite uv cache prune on the CI node",
+    memo: "Weekly uv cache prune on the CI node",
   },
   {
-    id: "buildkite-trivy-db-refresh",
+    id: "ci-trivy-db-refresh",
     workflowType: "runTrivyDbRefreshWorkflow",
     args: [],
     timing: {
@@ -287,7 +272,21 @@ export const SCHEDULES: ScheduleDefinition[] = schedulesInNamespace("prod", [
     overlap: ScheduleOverlapPolicy.SKIP,
     // Three 30-minute attempts plus exponential backoff and workflow overhead.
     workflowExecutionTimeout: "2 hours",
-    memo: "Buildkite Trivy vulnerability database refresh every six hours",
+    memo: "Trivy vulnerability database refresh every six hours",
+  },
+  {
+    id: "ci-io-telemetry-daily",
+    workflowType: "runCiIoTelemetry",
+    args: [],
+    timing: {
+      kind: "cron",
+      expression: "15 7 * * *",
+      timezone: "America/Los_Angeles",
+    },
+    taskQueue: TASK_QUEUES.WORKFLOWS,
+    overlap: ScheduleOverlapPolicy.SKIP,
+    workflowExecutionTimeout: "30 minutes",
+    memo: "Daily CI I/O recording rule and dashboard health check",
   },
   ...SECURITY_SCHEDULES,
   {

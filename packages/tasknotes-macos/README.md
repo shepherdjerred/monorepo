@@ -73,9 +73,9 @@ changes on every build and loses the trust grant.
 SwiftLint ships a static Linux binary, and the Vitest suite covers only the
 platform-independent `scripts/` helpers. The Swift suites need a Swift
 toolchain and the Rust XCFramework, so they stay on the hard `tasknotes-native`
-Buildkite lane after Linux `verify`, which changed TaskNotes paths also
-select; it validates the Swift bindings, runs `mac:verify` and `mac:analyze`,
-and executes all six UI flows with the one preflight-discovered Apple
+Woodpecker lane after Linux `verify`, which changed TaskNotes paths also
+select. It validates the Swift bindings, runs `mac:verify` and `mac:analyze`,
+and executes the signed UI suite with the one preflight-discovered Apple
 Development certificate. The root lefthook `pre-commit` hook still runs the
 fast local subset, and `mac:verify` remains the focused pre-PR command.
 

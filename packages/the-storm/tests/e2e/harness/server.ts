@@ -332,7 +332,8 @@ async function overlayAgentTopLevel(
   stagedAgentYml: string,
   agent: StartServerOptions["agent"],
 ): Promise<void> {
-  const lines = (await Bun.file(stagedAgentYml).text()).split("\n");
+  const content = await Bun.file(stagedAgentYml).text();
+  const lines = content.split("\n");
   for (const [key, value] of Object.entries(agent)) {
     const index = lines.findIndex((line) => line.startsWith(`${key}: `));
     if (index === -1) {
@@ -349,7 +350,8 @@ async function overlaySweep(
   stagedAgentYml: string,
   sweep: StartServerOptions["sweep"],
 ): Promise<void> {
-  const lines = (await Bun.file(stagedAgentYml).text()).split("\n");
+  const content = await Bun.file(stagedAgentYml).text();
+  const lines = content.split("\n");
   for (const [key, value] of Object.entries(sweep)) {
     const index = lines.findIndex((line) => line.startsWith(`  ${key}: `));
     if (index === -1) {

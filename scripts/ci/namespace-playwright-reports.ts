@@ -12,6 +12,7 @@
 // an already-prefixed manifest report. The manifest maps each report directory
 // back to its package name for the prefix; an unknown directory fails fast.
 import path from "node:path";
+import { mkdir } from "node:fs/promises";
 import { Glob } from "bun";
 import {
   namespaceJUnit,
@@ -35,6 +36,10 @@ const packagesByReportDirectory = new Map(
 );
 
 let namespaced = 0;
+// A fully cached browser run has no freshly written JUnit reports. The runner
+// still records the cache hits in its selection report and writes an empty
+// report index, so the namespace pass must accept an absent report directory.
+await mkdir(reportsRoot, { recursive: true });
 for await (const relative of new Glob("**/playwright.xml").scan(reportsRoot)) {
   const reportDirectory = relative.split(/[\\/]/)[0];
   const workspace =

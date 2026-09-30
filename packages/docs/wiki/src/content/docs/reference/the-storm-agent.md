@@ -58,10 +58,11 @@ it.
 Namespace `storm`, environment `prod`. Both default off; flipping needs no
 plugin restart.
 
-| Flag                           | Effect                                |
-| ------------------------------ | ------------------------------------- |
-| `storm-brain-classify-enabled` | `POST /v1/classify` answers; else 503 |
-| `storm-brain-triage-enabled`   | `POST /v1/triage` answers; else 503   |
+| Flag                           | Effect                                                     |
+| ------------------------------ | ---------------------------------------------------------- |
+| `storm-brain-classify-enabled` | `POST /v1/classify` answers; else 503                      |
+| `storm-brain-triage-enabled`   | `POST /v1/triage` answers; else 503                        |
+| `storm-brain-model`            | Selects the model on brain startup; restart brain to apply |
 
 A 503 completes the plugin flow silently and records nothing.
 
@@ -87,5 +88,5 @@ points: re-derive the cost floor from measured spend after the shadow soak.
 
 ## Service endpoints
 
-The plugin calls the brain at `http://storm-brain.storm-brain.svc.cluster.local:3000`.
+The plugin calls the brain at `http://storm-brain-service.storm-brain.svc.cluster.local:3000`.
 The contract, error table, and metrics live in `packages/storm-brain/README.md`.

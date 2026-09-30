@@ -48,18 +48,6 @@
     "reason": "Disposable OpenTofu provider archives - re-downloadable, holds no state"
   },
   {
-    "namespace": "woodpecker-ci",
-    "name": "woodpecker-codex-auth",
-    "backup": "disabled",
-    "reason": "Refreshable ChatGPT-managed Codex credential bundle"
-  },
-  {
-    "namespace": "woodpecker-ci",
-    "name": "woodpecker-trivy-db",
-    "backup": "disabled",
-    "reason": "Rebuildable vulnerability database cache"
-  },
-  {
     "namespace": "phoenix",
     "name": "pgdata-phoenix-postgresql-0",
     "backup": "enabled",
@@ -72,46 +60,16 @@
     "reason": "Rebuildable BuildKit cache"
   },
   {
-    "namespace": "buildkite",
-    "name": "buildkite-bun-cache",
-    "backup": "disabled",
-    "reason": "Rebuildable Bun package cache"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-bun-cache-control",
-    "backup": "disabled",
-    "reason": "Disposable Bun cache coordination locks"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-codex-auth",
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-codex-auth",
     "backup": "disabled",
     "reason": "Refreshable ChatGPT-managed Codex credential bundle"
   },
   {
-    "namespace": "buildkite",
-    "name": "buildkite-git-mirrors-liskov",
-    "backup": "disabled",
-    "reason": "Rebuildable Git mirror cache"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-tofu-plugin-cache",
-    "backup": "disabled",
-    "reason": "Rebuildable OpenTofu plugin cache"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-trivy-db",
+    "namespace": "woodpecker-ci",
+    "name": "woodpecker-trivy-db",
     "backup": "disabled",
     "reason": "Rebuildable vulnerability database cache"
-  },
-  {
-    "namespace": "buildkite",
-    "name": "buildkite-uv-cache",
-    "backup": "disabled",
-    "reason": "Rebuildable Python package cache"
   },
   {
     "namespace": "chartmuseum",

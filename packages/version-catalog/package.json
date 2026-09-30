@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./internal-image-pins": "./src/internal-image-pins.ts",
     "./catalog.json": "./src/catalog.json",
     "./schema.json": "./src/schema.json"
   },

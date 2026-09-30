@@ -1,3 +1,4 @@
+import { createFlagConfigSource } from "@shepherdjerred/feature-flags/config-source.ts";
 import { createBrainApp, createBrainLogger } from "./app.ts";
 import { createBrain } from "./brain.ts";
 import { loadBrainConfig } from "./config.ts";
@@ -8,16 +9,21 @@ import {
 } from "./flags.ts";
 import { createBrainMetrics, createMetricsHandler } from "./metrics.ts";
 
-const config = loadBrainConfig();
 const logger = createBrainLogger();
 const metrics = createBrainMetrics();
+await initBrainFlags((message) => {
+  logger.warn(`Feature flags failed to initialize: ${message}`);
+});
+
+const config = await loadBrainConfig({
+  flagSource: createFlagConfigSource({
+    targetingKey: "storm-brain",
+    kinds: { model: "string" },
+  }),
+});
 const brain = createBrain({
   model: config.model,
   timeoutMs: config.llmTimeoutMs,
-});
-
-await initBrainFlags((message) => {
-  logger.warn(`Feature flags failed to initialize: ${message}`);
 });
 
 const app = createBrainApp(config, {

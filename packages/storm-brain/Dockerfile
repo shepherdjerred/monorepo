@@ -19,6 +19,7 @@ COPY --parents \
   packages/llm-models \
   packages/llm-runtime \
   packages/llm-observability \
+  packages/config \
   packages/s3-signed-request \
   packages/feature-flags \
   packages/storm-brain \

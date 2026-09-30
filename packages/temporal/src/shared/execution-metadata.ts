@@ -109,6 +109,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runDnsAudit: "infra",
   runHomelabCrdImportsRefresh: "infra",
   runHomelabAuditWorkflow: "infra",
+  runCiIoTelemetry: "infra",
   runOpsSnapshot: "infra",
   runOpsDigest: "infra",
   runMiningWorldResetWorkflow: "infra",
@@ -122,7 +123,7 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   generateDependencySummary: "repo",
   runProtobufWatch: "repo",
   runPokeemeraldDataRefresh: "repo",
-  cancelBuildkiteBuildsWorkflow: "repo",
+  cancelCiPipelinesWorkflow: "repo",
   checkPrMergeConflictsWorkflow: "repo",
 
   // TASK_QUEUES.REPORTS

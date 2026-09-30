@@ -40,7 +40,7 @@ serverId: survival
 # The storm-brain service. The token never lives here: it comes from the
 # environment variable named below. Without it the module refuses to start.
 brain:
-  baseUrl: http://storm-brain.storm-brain.svc.cluster.local:3000
+  baseUrl: http://storm-brain-service.storm-brain.svc.cluster.local:3000
   bearerTokenEnv: STORM_BRAIN_BEARER_TOKEN
   # How long a brain call may take, in millis (1000-300000). Past the
   # service's own 60s LLM timeout, so a slow model surfaces as the

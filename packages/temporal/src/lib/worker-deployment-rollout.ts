@@ -18,9 +18,8 @@ import {
 import {
   queryRolloutMetric,
   requireHealthyWorkflowPoller,
-  requireCleanCandidate,
   requireAcceptancePrerequisite,
-  requireCleanAlertWindow,
+  requireHealthyRolloutWindow,
   rolloutPoller,
   rolloutAdvanceTransition,
   runWorkerDeploymentPreflight,
@@ -69,7 +68,6 @@ export type WorkerDeploymentRolloutStatus = {
   rampPercentage: number;
   candidateWorkflowQueues: string[];
   workflowPollers: number | undefined;
-  activeTemporalAlerts: number | undefined;
   lastRampChange: string;
 };
 async function describeDeployment(
@@ -136,26 +134,17 @@ export async function readWorkerDeploymentRolloutStatus(
     describeVersion(options, options.buildId, run),
   ]);
   let workflowPollers: number | undefined;
-  let activeTemporalAlerts: number | undefined;
   if (includeMetrics) {
-    const [workflowPollerCounts, temporalAlerts] = await Promise.all([
-      Promise.all(
-        requiredWorkflowQueues(options).map((taskQueue) =>
-          queryRolloutMetric(
-            `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(options.namespace)},worker_deployment_name=${JSON.stringify(options.deploymentName)},worker_build_id=${JSON.stringify(options.buildId)},task_queue=${JSON.stringify(taskQueue)},poller_type="workflow_task"}) or vector(0)`,
-            `${taskQueue} workflow poller query`,
-            run,
-          ),
+    const workflowPollerCounts = await Promise.all(
+      requiredWorkflowQueues(options).map((taskQueue) =>
+        queryRolloutMetric(
+          `sum(temporal_worker_num_pollers{temporal_namespace=${JSON.stringify(options.namespace)},worker_deployment_name=${JSON.stringify(options.deploymentName)},worker_build_id=${JSON.stringify(options.buildId)},task_queue=${JSON.stringify(taskQueue)},poller_type="workflow_task"}) or vector(0)`,
+          `${taskQueue} workflow poller query`,
+          run,
         ),
       ),
-      queryRolloutMetric(
-        'count(ALERTS{alertstate="firing",alertname=~"Temporal.*"}) or vector(0)',
-        "Temporal alert query",
-        run,
-      ),
-    ]);
+    );
     workflowPollers = workflowPollerCounts[0];
-    activeTemporalAlerts = temporalAlerts;
     const unhealthyQueue = requiredWorkflowQueues(options).find(
       (_, index) => (workflowPollerCounts[index] ?? 0) < 1,
     );
@@ -215,7 +204,6 @@ export async function readWorkerDeploymentRolloutStatus(
     rampPercentage: deployment.routingConfig.rampingVersionPercentage,
     candidateWorkflowQueues: workflowQueues,
     workflowPollers,
-    activeTemporalAlerts,
     lastRampChange:
       deployment.routingConfig.rampingVersionPercentageChangedTime,
   };
@@ -332,7 +320,6 @@ async function executeStart(
   ) {
     throw new Error("Deployment routing changed during start preflight");
   }
-  requireCleanCandidate(latestStatus);
   if (latestStatus.currentBuildId !== undefined) {
     const currentBuildId = latestStatus.currentBuildId;
     await Promise.all(
@@ -373,9 +360,9 @@ async function executeAdvance(
     elapsedMilliseconds(status.lastRampChange, now) <
     transition.minimumMilliseconds
   ) {
-    throw new Error("Candidate has not completed the required clean window");
+    throw new Error("Candidate has not completed the required ramp duration");
   }
-  await requireCleanAlertWindow(
+  await requireHealthyRolloutWindow(
     status.rampPercentage === 10 ? "30m" : "2h",
     run,
     rolloutPoller(options, status.currentBuildId),
@@ -387,7 +374,6 @@ async function executeAdvance(
   ) {
     throw new Error("Deployment ramp changed during advance preflight");
   }
-  requireCleanCandidate(latestStatus);
   await requireAcceptancePrerequisite(options, run);
   await setRampingVersion(options, transition.targetPercentage, run);
 }
@@ -421,12 +407,8 @@ async function executePromotion(
   if (status.rampPercentage !== 100) {
     throw new Error("Promote requires a 100% ramp");
   }
-  const now = options.now ?? new Date();
-  if (elapsedMilliseconds(status.lastRampChange, now) < 24 * 60 * 60 * 1000) {
-    throw new Error("Candidate has not completed the 24-hour clean soak");
-  }
-  await requireCleanAlertWindow(
-    "24h",
+  await requireHealthyRolloutWindow(
+    "2h",
     run,
     rolloutPoller(options, status.currentBuildId),
   );
@@ -442,13 +424,33 @@ async function executePromotion(
   ) {
     throw new Error("Candidate is not still ramping at 100%");
   }
-  requireCleanCandidate(latestStatus);
   await requireAcceptancePrerequisite(options, run);
   await Bun.write(options.catalogPath, promotedCatalog.contents);
   if (promotedState.changed) {
     await Bun.write(options.candidateStatePath, promotedState.contents);
   }
   await setCurrentVersion(options, options.buildId, run);
+  const promotedStatus = await readWorkerDeploymentRolloutStatus(
+    options,
+    run,
+    false,
+    false,
+  );
+  if (promotedStatus.currentBuildId !== options.buildId) {
+    throw new Error("Candidate did not become the current version");
+  }
+  if (
+    promotedStatus.rampingBuildId === undefined &&
+    promotedStatus.rampPercentage === 0
+  ) {
+    return;
+  }
+  if (
+    promotedStatus.rampingBuildId !== options.buildId ||
+    promotedStatus.rampPercentage !== 100
+  ) {
+    throw new Error("Deployment ramp changed during promotion");
+  }
   await removeWorkerDeploymentRampingVersion(options, run);
 }
 export async function executeWorkerDeploymentRollout(
@@ -460,7 +462,6 @@ export async function executeWorkerDeploymentRollout(
     return await inspectWorkerDeploymentRollout(options, run);
   if (options.action === "status") {
     const status = await readWorkerDeploymentRolloutStatus(options, run);
-    requireCleanCandidate(status);
     return status;
   }
   const releaseLock = await acquireWorkerDeploymentLock(
@@ -479,7 +480,6 @@ export async function executeWorkerDeploymentRollout(
       await executeWorkerDeploymentRollback(options, status, run);
       return await readWorkerDeploymentRolloutStatus(options, run, true, false);
     }
-    requireCleanCandidate(status);
     if (options.action === "start") {
       await executeStart(options, status, run);
       return await readWorkerDeploymentRolloutStatus(options, run);

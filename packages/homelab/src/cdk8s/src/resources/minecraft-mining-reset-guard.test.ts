@@ -5,6 +5,7 @@ import { z } from "zod";
 import { createMinecraftTsmcApp } from "./argo-applications/games/minecraft-tsmc.ts";
 import {
   createMinecraftMiningResetGuard,
+  MINING_RESET_IMAGE_ANNOTATION,
   MINING_RESET_LOCK_ANNOTATION,
 } from "./minecraft-mining-reset-guard.ts";
 
@@ -70,6 +71,12 @@ describe("The Storm mining reset guard", () => {
       spec.ignoreDifferences.find((entry) => entry.kind === "StatefulSet")
         ?.jsonPointers,
     ).toContain("/metadata/annotations/sjer.red~1mining-reset-lock");
+    expect(
+      spec.ignoreDifferences.find((entry) => entry.kind === "StatefulSet")
+        ?.jsonPointers,
+    ).toContain(
+      `/metadata/annotations/${MINING_RESET_IMAGE_ANNOTATION.replaceAll("/", "~1")}`,
+    );
     expect(
       spec.ignoreDifferences.find((entry) => entry.kind === "Service")
         ?.jsonPointers,

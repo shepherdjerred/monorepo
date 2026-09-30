@@ -78,7 +78,7 @@ export function createTemporalMiningResetRbac(
       {
         apiGroups: ["batch"],
         resources: ["jobs"],
-        verbs: ["create", "get"],
+        verbs: ["create", "get", "delete"],
       },
     ],
   });

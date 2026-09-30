@@ -118,10 +118,11 @@ test.each(["beta", "prod"] as const)(
 
 describe("central Workflow schedule routing", () => {
   const definitions = [
-    ["buildkite-bun-cache-gc", "runBunCacheGcWorkflow", "1 hour"],
+    ["ci-bun-cache-gc", "runBunCacheGcWorkflow", "1 hour"],
     ["kometa-daily", "runKometaWorkflow", "2 hours"],
-    ["buildkite-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
-    ["buildkite-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
+    ["ci-uv-cache-prune-weekly", "runUvCachePruneWorkflow", "2 hours"],
+    ["ci-trivy-db-refresh", "runTrivyDbRefreshWorkflow", "2 hours"],
+    ["ci-io-telemetry-daily", "runCiIoTelemetry", "30 minutes"],
     ["turbo-cache-clean-daily", "runTurboCacheCleanWorkflow", "30 minutes"],
   ] as const;
 
@@ -337,12 +338,37 @@ test("billed LLM cost reconciles hourly on the shared Workflow queue", () => {
   });
 });
 
-test("billed LLM cost registers paused until its Workflow candidate is promoted", () => {
-  // The stable bundle predates runLlmBilledCostReconciliation, so an unpaused
-  // first run would fail and trip the alerts that gate the rollout itself.
+test("billed LLM cost remains paused until the candidate receives all Workflow traffic", () => {
+  // Stable workers do not register this Workflow, so its schedule must remain
+  // paused until the candidate receives 100% of traffic.
+  const initialPauseNote = findScheduleById(
+    "llm-billed-cost-hourly",
+  )?.initialPauseNote;
+  expect(initialPauseNote).toContain("100% candidate traffic");
+  expect(initialPauseNote).toContain(
+    "stable workers do not register this Workflow",
+  );
+  const schedule = findScheduleById("llm-billed-cost-hourly");
   expect(
-    findScheduleById("llm-billed-cost-hourly")?.initialPauseNote,
-  ).toContain("candidate promotion");
+    buildScheduleState(
+      schedule,
+      {},
+      {
+        paused: true,
+        note: "Awaiting Workflow candidate promotion with runLlmBilledCostReconciliation",
+      },
+    ),
+  ).toEqual({ paused: true, note: initialPauseNote });
+  expect(
+    buildScheduleState(
+      schedule,
+      {},
+      {
+        paused: true,
+        note: "Paused by operator for incident review",
+      },
+    ),
+  ).toEqual({ paused: true, note: "Paused by operator for incident review" });
 });
 
 describe("ops overview schedules", () => {
@@ -470,6 +496,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runKometaWorkflow",
   "runUvCachePruneWorkflow",
   "runTrivyDbRefreshWorkflow",
+  "runCiIoTelemetry",
   "runMainVulnScanWorkflow",
   "runLinkRotScanWorkflow",
   "runTurboCacheCleanWorkflow",

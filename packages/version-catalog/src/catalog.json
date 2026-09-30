@@ -152,7 +152,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17828@sha256:d9e51995b9fe7cddc6b01d4502d4b853d39ea2987942b6dc40fc51e15f8e5de5",
+      "value": "2.0.0-1002644@sha256:63e7c6dd3442a3e904e07fa6a2f7e2e47734543fe89976f826c40a5369e674bb",
       "notes": [
         "not managed by renovate — built from packages/streambot; CI's version commit-back fills the",
         "real tag@digest after the first image push. Seed digest is a placeholder until then."
@@ -667,7 +667,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17926@sha256:b70bfc2b3431e92676a10ed39da3a03417577ee3ef44f5347dbf4e300474b8c4",
+      "value": "2.0.0-1002844@sha256:1634fe7e57839826d6c6920297c791d44622a3cb24663132c02f6f7623ada74f",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -714,7 +714,7 @@
       },
       "value": "2.0.0-12197@sha256:9acbf285a1fbe164deea3e2fe0a16a000a442cc0d269e74b2e4850f49e4946db",
       "notes": [
-        "Stable Scout beta Workflow Worker image - promoted after a 24-hour clean soak",
+        "Stable Scout beta Workflow Worker image - promoted after a healthy 100% ramp",
         "not managed by renovate"
       ]
     },
@@ -740,7 +740,7 @@
       },
       "value": "2.0.0-9495@sha256:513c2c6ef457ee91b8a18ec2c6f999558617560f57b21cc70440e3ab833c0347",
       "notes": [
-        "Stable Scout prod Workflow Worker image - promoted after a 24-hour clean soak",
+        "Stable Scout prod Workflow Worker image - promoted after a healthy 100% ramp",
         "not managed by renovate"
       ]
     },
@@ -751,7 +751,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17828@sha256:3fcd065a1e61f226562ee8518a8f1c9f543637f01bd749d4e07ddbc640cb6753",
+      "value": "2.0.0-1002644@sha256:faaf1a029180da3a01f7ad6bb56bd1961e073a7fc4dca096700351f7fb9706de",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
@@ -774,8 +774,22 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17828@sha256:97da1a1a15640f1f0bd35ebb924b8fd65c4b5a8453c6c9dcdf66c4ea1c578acf",
+      "value": "2.0.0-1002792@sha256:26b6daaf218b857da5e407962d4fa70e7b8bdb0251b8dbbb22f4cee984845f56",
       "notes": ["not managed by renovate"]
+    },
+    {
+      "name": "shepherdjerred/woodpecker-config-extension",
+      "category": "internal-image",
+      "artifactType": "image",
+      "management": {
+        "managed": false
+      },
+      "value": "2.0.0-1002844@sha256:4095f67b105297e60a15e9a4d6138c445d91f7bca7ec06c5efac0bb6aa7f8f31",
+      "notes": [
+        "not managed by renovate — bootstrap build, pushed by hand: Woodpecker",
+        "needs this service to generate the pipeline that would otherwise build",
+        "it. The main image release replaces the pin through version commit-back."
+      ]
     },
     {
       "name": "shepherdjerred/alert-dashboard",
@@ -784,7 +798,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17828@sha256:d70e058f58ca7c2a9d9237b5a25d1c728e975b1dcd12a1e73661e0090f591004",
+      "value": "2.0.0-1002644@sha256:7e0db9ed32f2523e3968fa906c8ba6413092e766a500daf64ff1db5ddb28e97a",
       "notes": [
         "not managed by renovate — CI version-commit-back replaces this after each",
         "image push."
@@ -811,7 +825,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17828@sha256:f7c4959ce4f1fe30820806c8ea72b65446438e435e065ccf785784ae3aae643b",
+      "value": "2.0.0-1002844@sha256:f3d1ec102e93e5e7905d437144df6e97cc7bfb6bd4f69df1921d0c1a9179934e",
       "notes": ["not managed by renovate"]
     },
     {
@@ -821,7 +835,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17828@sha256:ff6ea72fd9aa50b4102300acece33870eee909101f6cc0824a30c28785158e5b",
+      "value": "2.0.0-1002644@sha256:8b1651dd8b9d9c158d2d39a8a2ca2a50eed82ef02b6d27f16fe81b1e4eeb751a",
       "notes": [
         "not managed by renovate — placeholder digest; CI version-commit-back fills",
         "the real digest after the first successful image push."
@@ -875,6 +889,114 @@
         "packageName": "agent-stack-k8s"
       },
       "value": "0.50.0@sha256:9d0d052f73362fe28143faa9b0a5ee3fdefedc93e2d7ad9ab8f65b15d50ca4bd"
+    },
+    {
+      "name": "texlive/texlive",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "TL2024-historic@sha256:7995b32f28e7d91c11fc8b222b97244949c58cb2b61c4705e2d3f39f97bc8c31"
+    },
+    {
+      "name": "grafana/tempo",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "3.0.3@sha256:0296560ac66f8a3600d7fb3014a52c189d4d9c3549ad6ff441bf2409855d68d5"
+    },
+    {
+      "name": "minio/mc",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "RELEASE.2025-04-03T17-07-56Z@sha256:69fb6e6ca209008ae3cacf9f63c2524f68a1322dc921c8992ba2cc99c5bef3c6"
+    },
+    {
+      "name": "minio/minio",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "docker"
+      },
+      "value": "RELEASE.2025-04-08T15-41-24Z@sha256:8834ae47a2de3509b83e0e70da9369c24bbbc22de42f2a2eddc530eee88acd1b"
+    },
+    {
+      "name": "aquasec/trivy",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "0.72.0@sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f"
+    },
+    {
+      "name": "semgrep/semgrep",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "1.170.0@sha256:c98f8829eea377274ee4b10656458b078b88232469b2ff913f091c2317347c9d"
+    },
+    {
+      "name": "woodpeckerci/woodpecker-server",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v3.18.1@sha256:58dafbe56bb3529d78b48ee8d56a1f4b0886748763fd04ac23c01cc06c3dd24e"
+    },
+    {
+      "name": "woodpeckerci/woodpecker-agent",
+      "category": "upstream",
+      "artifactType": "image",
+      "management": {
+        "managed": true,
+        "datasource": "docker",
+        "registryUrl": "https://docker.io",
+        "versioning": "semver"
+      },
+      "value": "v3.18.1@sha256:73ee7cc63161b40bfefa4a26eae45c518a09124ab34f7e3c5e781df85e1ba4ac"
+    },
+    {
+      "name": "woodpecker-ci/plugin-git",
+      "category": "upstream",
+      "artifactType": "source",
+      "management": {
+        "managed": false
+      },
+      "value": "2.10.1@sha256:04cd1a2f9b53a4f6706a881a3d42bfdc5c16562962887e46b9922834e38524b7",
+      "notes": [
+        "macOS local agent binary; update the release version and darwin-arm64 asset SHA-256 together"
+      ]
     },
     {
       "name": "ducktors/turborepo-remote-cache",
@@ -1424,7 +1546,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17828@sha256:6300b04794b6cb016ec3ff798b115b1132e30fc05a6dc4a6f4976e23d5f45454",
+      "value": "2.0.0-1002644@sha256:9c312ddf176ff90fdb74bcd5457452f7a7441e3982d8bf1b0cc1d88f2da77674",
       "notes": [
         "Custom tasknotes-server image - TaskNotes API server for mobile app",
         "not managed by renovate"
@@ -1486,7 +1608,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-18006@sha256:29e7d5d5ecfae38037feab4f0868ac0097e05094290ff2376518df4f6f769486",
+      "value": "2.0.0-1002844@sha256:381e817cfdc8ece21cf1e17e1b4c9f3828f01cb3ee98e576f3c2996d4d231c55",
       "notes": [
         "Custom temporal-worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1499,7 +1621,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17396@sha256:904831b54d3fdd491ebfe2a8a437dec4e1f2d9bafb62a729b35666fd21720512",
+      "value": "2.0.0-1002826@sha256:34825872a97c73cb1f463011eb8623296db89282f207912a3baca360b16c9beb",
       "notes": [
         "Candidate central Workflow Worker image - updated by CI pipeline",
         "not managed by renovate"
@@ -1512,9 +1634,9 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17262@sha256:9c6d04cdf407c3722d21caa3a7745d8e1638c32fed2cadb8f3e29d60c7bd912e",
+      "value": "2.0.0-1002817@sha256:b3479221851e3ccbbcf1bb2f1c279fdcb48dca602aae8dec1dcec1f32e0ac273",
       "notes": [
-        "Stable central Workflow Worker image - promoted after a 24-hour clean soak",
+        "Stable central Workflow Worker image - promoted after a healthy 100% ramp",
         "not managed by renovate"
       ]
     },
@@ -1525,7 +1647,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-17828@sha256:306b88c66343bf2c7373384a0ea582b4e58ddc3194e14f279f3e235165387a53",
+      "value": "2.0.0-1002644@sha256:2323d0c6b8e7a8a33699f78c33a4ceefbfc851314977b106a270ad253b2ce2c6",
       "notes": [
         "Custom TRMNL dashboard image - updated by CI pipeline",
         "not managed by renovate"

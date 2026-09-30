@@ -6,10 +6,9 @@ Manages external resources with [OpenTofu](https://opentofu.org/), including inf
 
 ```text
 tofu/
-├── argocd/              # ArgoCD account token for Buildkite, stored in 1Password
+├── argocd/              # ArgoCD account token for Woodpecker, stored in 1Password
 ├── arr/                 # Radarr/Sonarr/Prowlarr config, imported from the live instances
 ├── asuswrt/             # Asus routers & APs (custom provider, local-run only)
-├── buildkite/           # Buildkite cluster + monorepo pipeline settings
 ├── cloudflare/          # DNS zones, bot management, email security (one .tf per domain)
 ├── cloudflare-tokens/   # Scoped API tokens, isolated from the DNS stack
 ├── discord/             # Imported Discord bot application settings
@@ -33,8 +32,7 @@ Each subdirectory is an independent root module with its own `backend.tf` (S3 st
   - `cloudflare` — `CLOUDFLARE_API_TOKEN`, `TF_VAR_cloudflare_account_id`
   - `github` — `TF_VAR_github_token` (fine-grained PAT, classic PAT, or GitHub App token)
   - `tailscale` — `TAILSCALE_OAUTH_CLIENT_ID` / `TAILSCALE_OAUTH_CLIENT_SECRET` (scope `acl`)
-  - `buildkite` — `TF_VAR_buildkite_api_token`
-  - `argocd` — ArgoCD admin credentials plus `OP_CONNECT_TOKEN` for the 1Password provider
+  - `argocd` — ArgoCD admin credentials plus `OP_SERVICE_ACCOUNT_TOKEN` for 1Password item writes
   - `arr` — Radarr/Sonarr/Prowlarr API credentials (see `arr/providers.tf`)
   - `asuswrt` — `TF_VAR_asuswrt_username` / `TF_VAR_asuswrt_password`, the shared router/AP admin login
   - `discord` — one bot token per imported application plus `TOFU_STATE_ENCRYPTION_PASSPHRASE`
@@ -53,6 +51,49 @@ stack's unique state passphrase remain in 1Password.
 
 To validate without state or platform access, run
 `bun packages/homelab/scripts/tofu/tofu-stack.ts <stack> validate`.
+
+### Unattended local 1Password access
+
+The `argocd` stack updates an item in the homelab vault. The Connect token used
+by the in-cluster operator can read this vault but cannot write it. Desktop app
+authentication prompts for each provider or CLI invocation. Use a separate
+1Password service account for operator-run work:
+
+1. In 1Password.com, create a service account with **Read Items** and **Write
+   Items** access only to the homelab vault (`v64ocnykdqju4ui6j6pua56xw4`).
+   Leave vault creation and access to other vaults disabled. Save the token in
+   your Personal vault, which service accounts cannot access.
+2. On the operator's Mac, copy the newly issued token into the login Keychain
+   once with the enrollment helper. It accepts the full token as hidden terminal
+   input, validates it with service-account authentication, and updates the
+   Keychain entry. The `security add-generic-password -w` password prompt can
+   truncate long tokens, so do not use it here. Do not paste the token into a
+   shell argument, environment file, terminal output, or repository file:
+
+   ```bash
+   swift scripts/onepassword/enroll-service-account.swift
+   ```
+
+3. Prefix commands that need this vault with the wrapper. It reads the token
+   from Keychain into the child process environment without invoking desktop
+   authentication. An already supplied `OP_SERVICE_ACCOUNT_TOKEN` also works
+   on non-macOS hosts. Set `ARGOCD_AUTH_TOKEN` to the admin token's secret
+   reference in this vault before an ArgoCD plan or apply. The separate
+   `service-account.env` contains only vault references the service account can
+   read; the general `.env` also contains Personal vault references. Do not
+   print the token:
+
+   ```bash
+   scripts/onepassword/with-service-account.sh op vault list
+   scripts/onepassword/with-service-account.sh \
+     op run --env-file packages/homelab/src/tofu/service-account.env -- \
+     bun packages/homelab/scripts/tofu/tofu-stack.ts argocd plan
+   ```
+
+The service account's vault access and permissions are fixed at creation. Revoke
+and replace it if the token is exposed or the scope needs to change. The same
+wrapper works for the vault snapshot command; it does not change Kubernetes
+operator credentials or grant CI jobs write access.
 
 ## Usage
 
@@ -75,11 +116,11 @@ tofu -chdir=cloudflare apply
 
 ## CI/CD
 
-The static Buildkite pipeline ([`.buildkite/pipeline.yml`](../../../../.buildkite/pipeline.yml)) drives these stacks via `packages/homelab/scripts/tofu/tofu-stack.ts`:
+Woodpecker drives the CI stacks via `packages/homelab/scripts/tofu/tofu-stack.ts`:
 
 - **Every PR** (when tofu inputs change): credentialed plans for the established infrastructure stacks and backend-disabled validation with dummy encryption values for the five platform stacks.
-- **On merge to main**: applies `seaweedfs`, `tailscale`, `buildkite`, and `arr` (`tofu-apply` step); `github` in its own no-retry step (GitHub API mutations are not idempotent on partial failure); and `cloudflare` after the ArgoCD sync step's TunnelBinding deletion gate.
-- **Platform control planes on main**: separate, serialized, no-retry jobs for `openai`, `anthropic`, `discord`, and `cloudflare-tokens`. Ordinary main builds plan only. An operator sets `TOFU_PLATFORM_APPLY` to exactly one stack name on a targeted main build to run that stack's plan and apply; the selector omits the other three jobs. `anthropic-federation` and `google` validate on PRs but have no CI plan or apply job: their credentials are an operator's OAuth token and ADC, so an operator applies them locally through the wrapper. Each job receives only its own platform credentials and the shared state identity.
+- **On merge to main**: applies changed infrastructure stacks, including `github` in its own no-retry step, and applies `cloudflare` after the ArgoCD sync step's TunnelBinding deletion gate.
+- **Platform control planes on main**: separate, serialized preview jobs for `openai`, `anthropic`, `discord`, and `cloudflare-tokens`, selected by each stack's changed paths. An operator triggers a targeted manual build with `TOFU_PLATFORM_PLAN` set to one stack. After reviewing its saved plan, a second manual build supplies `TOFU_PLATFORM_APPLY` and `TOFU_PLATFORM_PLAN_PIPELINE` to apply those exact plan bytes. The encrypted plan expires after 24 hours and is replaced by a consumed marker after a successful apply. `anthropic-federation` and `google` validate on PRs but have no CI plan or apply job: their credentials are an operator's OAuth token and ADC, so an operator applies them locally through the wrapper. Each CI job receives only its own platform credentials and the shared state identity.
 - The `argocd` stack is operator-run only — it is not in the CI plan/apply loops.
 - `asuswrt` is not in the CI loops either, and cannot be: the CI pod has tailnet-only egress and cannot reach the LAN routers. It is run by hand from a machine on both the LAN and the tailnet — see [`asuswrt/README.md`](asuswrt/README.md).
 
@@ -196,9 +237,10 @@ public visibility, auto-delete branches on merge, auto-merge enabled. The `monor
 the PR title and its body from the list of squashed commits.
 
 The `monorepo` default-branch ruleset (`rulesets.tf`) enforces linear history, blocks deletion and
-non-fast-forward pushes, and requires the `ci/merge-conflict` and aggregate `buildkite/monorepo/pr`
-status checks. (The code-review gate — provider-neutral, Codex by default — feeds the aggregate
-`buildkite/monorepo/pr` status rather than being its own required check.)
+non-fast-forward pushes, and requires the `ci/merge-conflict` and aggregate
+`ci/woodpecker/pr/ci-complete` status checks. The code-review gate feeds the Woodpecker aggregate
+status rather than being its own required check. Repository admins have a PR-only bypass for
+reviewed control-plane recovery; direct pushes remain subject to the ruleset.
 
 ### SeaweedFS
 
@@ -211,17 +253,13 @@ The `homelab-tofu-state` bucket has `prevent_destroy = true` since it stores sta
 
 The tailnet ACL policy (`tailscale_acl`): `tagOwners`, access rules, Tailscale SSH, and policy `tests`. Moves the tailnet from implicit allow-all (every device trusted) to deny-by-default — the account owner keeps full access, non-admin humans get only the published `*.ts.net` apps, and tagged/untrusted devices are denied by default.
 
-### Buildkite
-
-The Buildkite cluster and the `monorepo` pipeline's Buildkite-side settings (repo, branch rules, visibility kept private, upload step). The committed `.buildkite/pipeline.yml` remains the pipeline definition.
-
 ### \*arr
 
 Radarr/Sonarr/Prowlarr configuration imported from the live instances. Quality profiles and custom formats are owned by Recyclarr, and Radarr/Sonarr indexers by Prowlarr's application sync — neither is in this stack.
 
 ### ArgoCD
 
-Mints the `buildkite` ArgoCD account token and writes it to 1Password for the CI sync steps.
+Mints the `woodpecker` ArgoCD account token and writes it to 1Password for the CI sync steps.
 
 ### Asus routers
 

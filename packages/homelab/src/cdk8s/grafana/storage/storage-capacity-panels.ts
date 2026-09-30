@@ -2,7 +2,7 @@ import * as dashboard from "@grafana/grafana-foundation-sdk/dashboard";
 import {
   createTimeseriesPanel,
   createStatPanel,
-} from "@shepherdjerred/homelab/cdk8s/grafana/buildkite/buildkite-dashboard-panels.ts";
+} from "@shepherdjerred/homelab/cdk8s/grafana/shared/dashboard-panels.ts";
 
 const PVC_FILTER = 'persistentvolumeclaim=~"$volume"';
 

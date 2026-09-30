@@ -14,7 +14,7 @@ consumer proves the replacement works, then revoke it.
 
 | Provider  | Stack                  | Applied by | Credential in 1Password                   |
 | --------- | ---------------------- | ---------- | ----------------------------------------- |
-| OpenAI    | `openai`               | Buildkite  | `OPENAI_API_KEY` field                    |
+| OpenAI    | `openai`               | Woodpecker | `OPENAI_API_KEY` field                    |
 | Google    | `google`               | Operator   | Per-workload item, written by OpenTofu    |
 | Anthropic | `anthropic-federation` | Operator   | Per-workload ID item, written by OpenTofu |
 
@@ -29,8 +29,12 @@ command output, or chat.
 1. Add a new `openai_service_accounts` entry for the workload in
    `openai/desired-state.json`, with a new dated name and the same
    `onepassword_targets`. Keep the old entry.
-2. Merge, then apply the stack on a targeted main build with
-   `TOFU_PLATFORM_APPLY=openai`.
+2. Merge, then trigger a manual build of the current main commit with
+   `TOFU_PLATFORM_PLAN=openai`. Review its successful saved plan and record the
+   pipeline number. Within 24 hours, trigger a second manual build of the same
+   commit with `TOFU_PLATFORM_APPLY=openai` and
+   `TOFU_PLATFORM_PLAN_PIPELINE=<reviewed pipeline number>`. The second build
+   applies the exact reviewed plan after release admission.
 3. Read the new key from the stack's sensitive `openai_service_account_handoffs`
    output and write it to the target field.
 4. Wait for the 1Password Connect operator to refresh the Kubernetes Secret, then
@@ -149,5 +153,5 @@ workload until that copy is updated.
   credential model.
 - [Attribute LLM spend](/how-to/attribute-llm-spend/) — the live and billed
   spend series, and rotating the billing worker's admin keys.
-- [Rotate a Buildkite CI credential](/how-to/rotate-buildkite-credentials/) — the
+- [Rotate a CI credential](/how-to/rotate-ci-credentials/) — the
   release refiner's `OPENAI_API_KEY` grant.

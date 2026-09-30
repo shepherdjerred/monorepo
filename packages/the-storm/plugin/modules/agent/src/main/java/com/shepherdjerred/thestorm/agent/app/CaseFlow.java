@@ -1,8 +1,8 @@
 package com.shepherdjerred.thestorm.agent.app;
 
 import com.shepherdjerred.thestorm.agent.domain.AgentDecision;
-import com.shepherdjerred.thestorm.essentials.app.ModerationService;
 import com.shepherdjerred.thestorm.essentials.app.ModerationHistory;
+import com.shepherdjerred.thestorm.essentials.app.ModerationService;
 import com.shepherdjerred.thestorm.tickets.app.TicketSnapshot;
 import java.util.List;
 import java.util.Optional;

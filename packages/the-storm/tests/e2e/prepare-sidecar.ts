@@ -41,6 +41,7 @@ const mechanicsConfig = path.join(
 const pluginVolume = Bun.env["STORM_E2E_PLUGIN_DIR"];
 const dataVolume = Bun.env["STORM_E2E_DATA_DIR"];
 const rconPassword = Bun.env["STORM_E2E_RCON_PASSWORD"];
+const rconHost = Bun.env["STORM_E2E_RCON_HOST"] ?? "127.0.0.1";
 if (
   pluginVolume === undefined ||
   dataVolume === undefined ||
@@ -73,7 +74,7 @@ const deadline = Date.now() + 300_000;
 for (;;) {
   try {
     const client = await RconClient.connect({
-      host: "127.0.0.1",
+      host: rconHost,
       port: 25_575,
       password: rconPassword,
       timeoutMs: 2000,

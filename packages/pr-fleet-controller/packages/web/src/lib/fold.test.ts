@@ -96,8 +96,8 @@ const WAITING_PR = {
   evidence: {
     headSha: "a".repeat(40),
     checks: [],
-    buildkiteCurrentHead: true,
-    buildkiteFailure: null,
+    ciCurrentHead: true,
+    ciFailure: null,
     conflict: false,
     reviewFindings: [],
     hostedReviewComplete: false,

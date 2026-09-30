@@ -7,6 +7,7 @@ import { ApiObject, type Chart } from "cdk8s";
  * present, even if the router has not observed the Service opt-out yet.
  */
 export const MINING_RESET_LOCK_ANNOTATION = "sjer.red/mining-reset-lock";
+export const MINING_RESET_IMAGE_ANNOTATION = "sjer.red/mining-reset-image";
 
 export function createMinecraftMiningResetGuard(chart: Chart): void {
   const policyName = "minecraft-tsmc-mining-reset-lock.sjer.red";

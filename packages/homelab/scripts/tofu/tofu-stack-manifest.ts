@@ -23,7 +23,6 @@ export type TofuStack =
   | "argocd"
   | "arr"
   | "asuswrt"
-  | "buildkite"
   | "cloudflare"
   | "cloudflare-tokens"
   | "discord"
@@ -36,11 +35,11 @@ export type TofuStack =
 
 export const STATE_CREDENTIALS: readonly CredentialMapping[] = [
   {
-    source: "SEAWEEDFS_STATE_ACCESS_KEY_ID",
+    source: "SEAWEEDFS_TOFU_STATE_ACCESS_KEY_ID",
     target: "AWS_ACCESS_KEY_ID",
   },
   {
-    source: "SEAWEEDFS_STATE_SECRET_ACCESS_KEY",
+    source: "SEAWEEDFS_TOFU_STATE_SECRET_ACCESS_KEY",
     target: "AWS_SECRET_ACCESS_KEY",
   },
 ];
@@ -83,7 +82,10 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
   argocd: {
     credentials: [
       { source: "ARGOCD_AUTH_TOKEN", target: "TF_VAR_argocd_auth_token" },
-      { source: "OP_CONNECT_TOKEN", target: "OP_CONNECT_TOKEN" },
+      {
+        source: "OP_SERVICE_ACCOUNT_TOKEN",
+        target: "OP_SERVICE_ACCOUNT_TOKEN",
+      },
     ],
   },
   arr: {
@@ -108,11 +110,6 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
     credentials: [
       { source: "ASUSWRT_USERNAME", target: "TF_VAR_asuswrt_username" },
       { source: "ASUSWRT_PASSWORD", target: "TF_VAR_asuswrt_password" },
-    ],
-  },
-  buildkite: {
-    credentials: [
-      { source: "BUILDKITE_ADMIN_TOKEN", target: "TF_VAR_buildkite_api_token" },
     ],
   },
   cloudflare: {
@@ -206,11 +203,11 @@ export const STACK_MANIFEST: Readonly<Record<TofuStack, StackDefinition>> = {
   seaweedfs: {
     credentials: [
       {
-        source: "SEAWEEDFS_DEPLOY_ACCESS_KEY_ID",
+        source: "SEAWEEDFS_TOFU_ADMIN_ACCESS_KEY_ID",
         target: "TF_VAR_seaweedfs_access_key_id",
       },
       {
-        source: "SEAWEEDFS_DEPLOY_SECRET_ACCESS_KEY",
+        source: "SEAWEEDFS_TOFU_ADMIN_SECRET_ACCESS_KEY",
         target: "TF_VAR_seaweedfs_secret_access_key",
       },
     ],
@@ -235,7 +232,6 @@ const TOFU_STACKS: readonly TofuStack[] = [
   "argocd",
   "arr",
   "asuswrt",
-  "buildkite",
   "cloudflare",
   "cloudflare-tokens",
   "discord",

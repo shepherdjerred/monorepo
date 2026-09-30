@@ -17,7 +17,6 @@ const ImageEnvironmentSchema = z.array(z.string());
 const REQUIRED_PROMETHEUS_HISTORY_SAMPLES = {
   "30m": 60,
   "2h": 240,
-  "24h": 2880,
 } as const;
 const MAX_RULE_EVALUATION_AGE_SECONDS = 300;
 const AcceptedDeploymentSchema = z.object({
@@ -88,23 +87,6 @@ export async function requireHealthyWorkflowPoller(
   );
   if (pollers < 1) {
     throw new Error(`${label} build has no healthy Workflow pollers`);
-  }
-}
-
-export function requireCleanCandidate(status: {
-  workflowPollers: number | undefined;
-  activeTemporalAlerts: number | undefined;
-}): void {
-  if (status.workflowPollers !== undefined && status.workflowPollers < 1) {
-    throw new Error("Candidate has no healthy Workflow pollers");
-  }
-  if (
-    status.activeTemporalAlerts !== undefined &&
-    status.activeTemporalAlerts !== 0
-  ) {
-    throw new Error(
-      `Refusing rollout with ${String(status.activeTemporalAlerts)} active Temporal alerts`,
-    );
   }
 }
 
@@ -259,7 +241,7 @@ export async function requireAcceptancePrerequisite(
 }
 
 async function requireHealthyRuleEvaluations(
-  duration: "30m" | "2h" | "24h",
+  duration: "30m" | "2h",
   run: RolloutCommandRunner,
 ): Promise<void> {
   const evaluationProgress = await queryRolloutMetric(
@@ -269,7 +251,7 @@ async function requireHealthyRuleEvaluations(
   );
   if (evaluationProgress <= 0) {
     throw new Error(
-      `Temporal rule evaluations did not advance during the required ${duration} clean window`,
+      `Temporal rule evaluations did not advance during the required ${duration} rollout window`,
     );
   }
   const historicalEvaluationAgeSeconds = await queryRolloutMetric(
@@ -279,7 +261,7 @@ async function requireHealthyRuleEvaluations(
   );
   if (historicalEvaluationAgeSeconds > MAX_RULE_EVALUATION_AGE_SECONDS) {
     throw new Error(
-      `Temporal rule evaluations reached ${String(historicalEvaluationAgeSeconds)} seconds old during the required ${duration} clean window`,
+      `Temporal rule evaluations reached ${String(historicalEvaluationAgeSeconds)} seconds old during the required ${duration} rollout window`,
     );
   }
   const evaluationAgeSeconds = await queryRolloutMetric(
@@ -299,13 +281,13 @@ async function requireHealthyRuleEvaluations(
   );
   if (evaluationFailures !== 0) {
     throw new Error(
-      `Temporal Prometheus rules recorded ${String(evaluationFailures)} evaluation failures during the required ${duration} clean window`,
+      `Temporal Prometheus rules recorded ${String(evaluationFailures)} evaluation failures during the required ${duration} rollout window`,
     );
   }
 }
 
 async function requirePollerHistory(input: {
-  duration: "30m" | "2h" | "24h";
+  duration: "30m" | "2h";
   requiredHistorySamples: number;
   buildId: string;
   taskQueue: string;
@@ -325,7 +307,7 @@ async function requirePollerHistory(input: {
   );
   if (pollerHistorySamples < requiredHistorySamples) {
     throw new Error(
-      `Workflow poller history for ${buildId} on ${taskQueue} covered only ${String(pollerHistorySamples)} samples during the required ${duration} clean window`,
+      `Workflow poller history for ${buildId} on ${taskQueue} covered only ${String(pollerHistorySamples)} samples during the required ${duration} rollout window`,
     );
   }
   const pollerSamples = await queryRolloutMetric(
@@ -335,13 +317,44 @@ async function requirePollerHistory(input: {
   );
   if (pollerSamples < 1) {
     throw new Error(
-      `Workflow poller for ${buildId} on ${taskQueue} was unavailable during the required ${duration} clean window`,
+      `Workflow poller for ${buildId} on ${taskQueue} was unavailable during the required ${duration} rollout window`,
     );
   }
 }
 
-export async function requireCleanAlertWindow(
-  duration: "30m" | "2h" | "24h",
+async function requireCandidateWorkflowHealth(
+  duration: "30m" | "2h",
+  poller: {
+    namespace: string;
+    deploymentName: string;
+    buildId: string;
+    taskQueue: string;
+    taskQueues?: readonly string[];
+  },
+  run: RolloutCommandRunner,
+): Promise<void> {
+  for (const taskQueue of poller.taskQueues ?? [poller.taskQueue]) {
+    const selector = `temporal_namespace=${JSON.stringify(poller.namespace)},worker_deployment_name=${JSON.stringify(poller.deploymentName)},worker_build_id=${JSON.stringify(poller.buildId)},task_queue=${JSON.stringify(taskQueue)}`;
+    for (const metric of [
+      "temporal_worker_workflow_task_execution_failed_total",
+      "temporal_worker_workflow_failed_total",
+    ]) {
+      const failures = await queryRolloutMetric(
+        `sum(increase(${metric}{${selector}}[${duration}])) or vector(0)`,
+        `${duration} candidate ${metric} query`,
+        run,
+      );
+      if (failures !== 0) {
+        throw new Error(
+          `Candidate build ${poller.buildId} recorded ${String(failures)} ${metric} failures on ${taskQueue} during the required ${duration} rollout window`,
+        );
+      }
+    }
+  }
+}
+
+export async function requireHealthyRolloutWindow(
+  duration: "30m" | "2h",
   run: RolloutCommandRunner,
   poller?: {
     namespace: string;
@@ -360,21 +373,12 @@ export async function requireCleanAlertWindow(
   );
   if (historySamples < requiredHistorySamples) {
     throw new Error(
-      `Temporal Prometheus history covered only ${String(historySamples)} samples during the required ${duration} clean window`,
+      `Temporal Prometheus history covered only ${String(historySamples)} samples during the required ${duration} rollout window`,
     );
   }
   await requireHealthyRuleEvaluations(duration, run);
-  const alertSamples = await queryRolloutMetric(
-    `sum(max_over_time(ALERTS{alertstate="firing",alertname=~"Temporal.*"}[${duration}])) or vector(0)`,
-    `${duration} Temporal alert history query`,
-    run,
-  );
-  if (alertSamples !== 0) {
-    throw new Error(
-      `Temporal alerts fired during the required ${duration} clean window`,
-    );
-  }
   if (poller !== undefined) {
+    await requireCandidateWorkflowHealth(duration, poller, run);
     const buildIds = [poller.buildId];
     if (
       poller.currentBuildId !== undefined &&

@@ -1,9 +1,20 @@
+import { defineConfig } from "@shepherdjerred/config";
+import type { ConfigSource } from "@shepherdjerred/config/source.ts";
 import { requireNativeRoute } from "@shepherdjerred/llm-models";
 import { z } from "zod";
 
 const DEFAULT_MODEL = "gpt-5.6-luna";
 const DEFAULT_MAX_BODY_BYTES = 256 * 1024;
 const DEFAULT_LLM_TIMEOUT_MS = 60_000;
+
+const ModelConfigDefinition = {
+  model: {
+    schema: z.string().min(1),
+    sources: ["flag", "default"],
+    default: DEFAULT_MODEL,
+    names: { flag: "storm-brain-model" },
+  },
+} as const;
 
 const ServiceConfigSchema = z.object({
   bearerToken: z.string().min(32),
@@ -30,20 +41,29 @@ function required(env: EnvLookup, key: string): string {
   return value;
 }
 
-function text(env: EnvLookup, key: string, fallback: string): string {
-  const value = env[key];
-  return value === undefined || value === "" ? fallback : value;
-}
-
 function integer(env: EnvLookup, key: string, fallback: number): number {
   const value = env[key];
   return value === undefined || value === "" ? fallback : Number(value);
 }
 
-export function loadBrainConfig(env: EnvLookup = Bun.env): BrainConfig {
+export type BrainConfigOptions = {
+  readonly environment?: EnvLookup;
+  readonly flagSource?: ConfigSource;
+};
+
+export async function loadBrainConfig(
+  options: BrainConfigOptions = {},
+): Promise<BrainConfig> {
+  const env = options.environment ?? Bun.env;
+  const resolver = defineConfig({
+    definition: ModelConfigDefinition,
+    sources: {
+      ...(options.flagSource === undefined ? {} : { flag: options.flagSource }),
+    },
+  });
   const config = ServiceConfigSchema.parse({
     bearerToken: required(env, "STORM_BRAIN_BEARER_TOKEN"),
-    model: text(env, "STORM_BRAIN_MODEL", DEFAULT_MODEL),
+    model: await resolver.value("model"),
     maxBodyBytes: integer(
       env,
       "STORM_BRAIN_MAX_BODY_BYTES",

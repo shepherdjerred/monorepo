@@ -48,19 +48,21 @@ even on 502s.
 
 ## Configuration
 
-| Variable                     | Required | Default        | Notes                                                          |
-| ---------------------------- | -------- | -------------- | -------------------------------------------------------------- |
-| `STORM_BRAIN_BEARER_TOKEN`   | yes      | —              | ≥32 chars, shared secret with the game                         |
-| `OPENAI_API_KEY`             | yes      | —              | Backend key for the default model, checked at boot             |
-| `STORM_BRAIN_MODEL`          | no       | `gpt-5.6-luna` | Must exist in `@shepherdjerred/llm-models` with a native route |
-| `STORM_BRAIN_MAX_BODY_BYTES` | no       | 262144         | Per-request cap                                                |
-| `STORM_BRAIN_LLM_TIMEOUT_MS` | no       | 60000          | Per-call LLM timeout                                           |
-| `PORT` / `METRICS_PORT`      | no       | 3000 / 9090    | Must differ                                                    |
+| Variable                     | Required | Default     | Notes                                              |
+| ---------------------------- | -------- | ----------- | -------------------------------------------------- |
+| `STORM_BRAIN_BEARER_TOKEN`   | yes      | —           | ≥32 chars, shared secret with the game             |
+| `OPENAI_API_KEY`             | yes      | —           | Backend key for the default model, checked at boot |
+| `STORM_BRAIN_MAX_BODY_BYTES` | no       | 262144      | Per-request cap                                    |
+| `STORM_BRAIN_LLM_TIMEOUT_MS` | no       | 60000       | Per-call LLM timeout                               |
+| `PORT` / `METRICS_PORT`      | no       | 3000 / 9090 | Must differ                                        |
 
 Flow enablement is not configuration: `POST /v1/classify` checks the
 `storm-brain-classify-enabled` flag and `/v1/triage` checks
 `storm-brain-triage-enabled`, both default off. See
 [`managed-flag-inventory.json`](../feature-flags/src/managed-flag-inventory.json).
+The `storm-brain-model` variant selects the model at service startup; changing
+it takes effect after the service restarts. It defaults to `gpt-5.6-luna`; the
+selected model must exist in `@shepherdjerred/llm-models` with a native route.
 
 ## Observability
 

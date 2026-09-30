@@ -1,8 +1,8 @@
 package com.shepherdjerred.thestorm.essentials.app;
 
 import java.time.Instant;
-import java.util.UUID;
 import java.util.Optional;
+import java.util.UUID;
 
 /** Read-only moderation history exposed across module boundaries. */
 public record ModerationHistory(

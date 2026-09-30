@@ -1,12 +1,16 @@
 #!/usr/bin/env bun
 /**
- * Enforce the Buildkite credential contract end to end.
+ * Enforce the CI credential contract end to end.
  *
- * Every command step must use the unprivileged service account, disable its
- * Kubernetes API token, and receive exactly the secretKeyRef grants declared
- * in `.buildkite/secret-grants.json`. The check also proves each granted key is
- * present and non-blank in the committed hashed 1Password snapshot, then
- * verifies that every statically reachable `requireEnv` is satisfied.
+ * Reads the generated step model rather than committed pipeline YAML. The
+ * grants in that model ARE the manifest now -- there is no second copy of them
+ * to drift from, so the comparison that used to guard against that drift is
+ * gone with the manifest.
+ *
+ * What remains is the part that matters: every granted key must be present and
+ * non-blank in the committed hashed 1Password snapshot, and every statically
+ * reachable `requireEnv` must be satisfied by the grants its step actually
+ * holds.
  *
  * Scope, deliberately narrow: only `requireEnv` imported from
  * `scripts/lib/run.ts` counts. Five unrelated `requireEnv`-shaped helpers exist
@@ -25,31 +29,20 @@
  */
 import { createHash } from "node:crypto";
 import path from "node:path";
-import { parse } from "yaml";
 import { Project, SyntaxKind, type SourceFile } from "ts-morph";
-import { z } from "zod";
+import type { PipelineStep } from "../../lib/ci/ci-env-pipeline.ts";
 import {
-  collectSteps,
-  type PipelineStep,
-} from "../../lib/ci/ci-env-pipeline.ts";
-import {
-  collectSteps as collectGrantSteps,
-  compareStepGrants,
-} from "../../lib/ci/ci-secret-grant-pipeline.ts";
+  generatedPipelineSteps,
+  GeneratedStepsSchema,
+} from "../../lib/ci/ci-env-generated.ts";
 import {
   declaredSecretItems,
-  parseSecretGrantManifest,
   parseVaultSnapshot,
   validateGrantCatalog,
-  type SecretGrantManifest,
   type VaultSnapshot,
 } from "../../lib/ci/ci-secret-grant-schema.ts";
 
 const REPOSITORY_ROOT = path.resolve(import.meta.dir, "..", "..", "..");
-const MANIFEST_PATH = path.join(
-  REPOSITORY_ROOT,
-  ".buildkite/secret-grants.json",
-);
 const SNAPSHOT_PATH = path.join(
   REPOSITORY_ROOT,
   "packages",
@@ -66,7 +59,7 @@ const SNAPSHOT_PATH = path.join(
  */
 const CI_SECRET_DECLARATION = path.join(
   REPOSITORY_ROOT,
-  "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/buildkite.ts",
+  "packages/homelab/src/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts",
 );
 /** The only `requireEnv` whose contract this check models. */
 const REQUIRE_ENV_MODULE = path.join(
@@ -77,11 +70,15 @@ const REQUIRE_ENV_MODULE = path.join(
 );
 
 /**
- * Names the Buildkite agent injects into every step. They are never carried by
- * the secret and never assigned in a command, so without this they would all
- * read as missing.
+ * Names the CI agent injects into every step. They are never carried by a
+ * secret and never assigned in a command, so without this they would all read
+ * as missing.
+ *
+ * `BUILDKITE_` is deliberately not here any more: nothing injects it, so a
+ * script still reading one should be reported as reading an unprovided
+ * variable rather than excused.
  */
-const AGENT_PROVIDED_PREFIXES = ["BUILDKITE_", "CI_"] as const;
+const AGENT_PROVIDED_PREFIXES = ["CI_"] as const;
 const AGENT_PROVIDED_NAMES = new Set([
   "CI",
   "PATH",
@@ -459,25 +456,33 @@ function secretFields(
   };
 }
 
-async function readPipeline(pipelinePath: string): Promise<unknown> {
-  try {
-    return parse(
-      await Bun.file(path.join(REPOSITORY_ROOT, pipelinePath)).text(),
-      { merge: true, maxAliasCount: -1 },
-    );
-  } catch (error: unknown) {
-    fail(`check-ci-env: could not read ${pipelinePath}: ${String(error)}`, 2);
+/**
+ * Ask the generator for the full step model.
+ *
+ * Run as a subprocess rather than imported so this check stays usable even if
+ * the generator's dependencies are not installed in this package's closure.
+ */
+async function generatedStepsJson(): Promise<string> {
+  const child = Bun.spawn(
+    ["bun", "packages/woodpecker-config-extension/src/dump-steps.ts"],
+    { stdout: "pipe", stderr: "inherit" },
+  );
+  const [text, exitCode] = await Promise.all([
+    new Response(child.stdout).text(),
+    child.exited,
+  ]);
+  if (exitCode !== 0) {
+    fail(`check-ci-env: could not read the generated step model`, 2);
   }
+  return text;
 }
 
 async function readCredentialInputs(): Promise<{
-  manifest: SecretGrantManifest;
   snapshot: VaultSnapshot;
   declarations: string;
 }> {
   try {
     return {
-      manifest: parseSecretGrantManifest(await Bun.file(MANIFEST_PATH).json()),
       snapshot: parseVaultSnapshot(await Bun.file(SNAPSHOT_PATH).json()),
       declarations: await Bun.file(CI_SECRET_DECLARATION).text(),
     };
@@ -490,9 +495,12 @@ async function readCredentialInputs(): Promise<{
 }
 
 async function main(): Promise<void> {
-  const { manifest, snapshot, declarations } = await readCredentialInputs();
+  const { snapshot, declarations } = await readCredentialInputs();
+  const generated = GeneratedStepsSchema.parse(
+    JSON.parse(await generatedStepsJson()),
+  );
   const errors = validateGrantCatalog({
-    manifest,
+    grants: generated.flatMap((step) => step.secrets ?? []),
     snapshot,
     declarationSource: declarations,
   });
@@ -516,30 +524,15 @@ async function main(): Promise<void> {
     return computed;
   };
 
-  const requirementSteps: PipelineStep[] = [];
-  let grantStepCount = 0;
-  let grantCount = 0;
-  for (const [pipelinePath, expected] of Object.entries(manifest.pipelines)) {
-    const pipeline = await readPipeline(pipelinePath);
-    const globalEnv = z
-      .object({ env: z.record(z.string(), z.unknown()).optional() })
-      .loose()
-      .parse(pipeline);
-    const globalEnvNames = Object.keys(globalEnv.env ?? {});
-    const grantSteps = collectGrantSteps(pipeline, globalEnvNames);
-    errors.push(
-      ...grantSteps.errors.map((error) => `${pipelinePath}: ${error}`),
-      ...compareStepGrants(grantSteps.steps, expected).map(
-        (error) => `${pipelinePath}: ${error}`,
-      ),
-    );
-    grantStepCount += grantSteps.steps.length;
-    grantCount += grantSteps.steps.reduce(
-      (total, step) => total + step.grants.length,
-      0,
-    );
-    requirementSteps.push(...collectSteps(pipeline, globalEnvNames));
-  }
+  const requirementSteps: PipelineStep[] = generatedPipelineSteps(generated);
+  const grantStepCount = generated.filter(
+    (step) => (step.secrets ?? []).length > 0,
+  ).length;
+  const grantCount = generated.reduce(
+    (total, step) => total + (step.secrets ?? []).length,
+    0,
+  );
+
   errors.push(
     ...collectErrors({
       steps: requirementSteps,

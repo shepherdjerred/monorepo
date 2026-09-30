@@ -416,10 +416,6 @@
       "clones": 1,
       "tokens": 101
     },
-    "packages/homelab/src/cdk8s/grafana/buildkite/buildkite-dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/static-site-probes-dashboard.ts": {
-      "clones": 1,
-      "tokens": 70
-    },
     "packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts|packages/homelab/src/cdk8s/grafana/gitckup-dashboard.ts": {
       "clones": 3,
       "tokens": 281
@@ -455,6 +451,10 @@
     "packages/homelab/src/cdk8s/grafana/scout/scout-dashboard.ts|packages/homelab/src/cdk8s/grafana/tasknotes-dashboard.ts": {
       "clones": 1,
       "tokens": 140
+    },
+    "packages/homelab/src/cdk8s/grafana/shared/dashboard-panels.ts|packages/homelab/src/cdk8s/grafana/static-site-probes-dashboard.ts": {
+      "clones": 1,
+      "tokens": 70
     },
     "packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts|packages/homelab/src/cdk8s/grafana/storage/seaweedfs-backup-dashboard.ts": {
       "clones": 1,
@@ -568,6 +568,10 @@
       "clones": 6,
       "tokens": 688
     },
+    "packages/homelab/src/cdk8s/src/backup-policy/pvc-backup-policy.test.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/ci-namespace.test.ts": {
+      "clones": 1,
+      "tokens": 91
+    },
     "packages/homelab/src/cdk8s/src/cdk8s-charts/home.ts|packages/homelab/src/cdk8s/src/cdk8s-charts/media/freshrss.ts": {
       "clones": 1,
       "tokens": 71
@@ -632,6 +636,14 @@
       "clones": 2,
       "tokens": 206
     },
+    "packages/homelab/src/cdk8s/src/resources/phoenix/index.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/config-extension-workload.ts": {
+      "clones": 1,
+      "tokens": 85
+    },
+    "packages/homelab/src/cdk8s/src/resources/phoenix/index.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/index.ts": {
+      "clones": 1,
+      "tokens": 93
+    },
     "packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/single-app-postgresql.ts": {
       "clones": 1,
       "tokens": 90
@@ -640,6 +652,14 @@
       "clones": 1,
       "tokens": 82
     },
+    "packages/homelab/src/cdk8s/src/resources/postgres/scout-db.ts|packages/homelab/src/cdk8s/src/resources/postgres/woodpecker-db.ts": {
+      "clones": 1,
+      "tokens": 90
+    },
+    "packages/homelab/src/cdk8s/src/resources/postgres/single-app-postgresql.ts|packages/homelab/src/cdk8s/src/resources/postgres/woodpecker-db.ts": {
+      "clones": 1,
+      "tokens": 107
+    },
     "packages/homelab/src/cdk8s/src/resources/temporal/workers/operations-workers.ts|packages/homelab/src/cdk8s/src/resources/temporal/workers/worker.ts": {
       "clones": 1,
       "tokens": 82
@@ -647,6 +667,10 @@
     "packages/homelab/src/cdk8s/src/resources/torrents/radarr.ts|packages/homelab/src/cdk8s/src/resources/torrents/sonarr.ts": {
       "clones": 2,
       "tokens": 146
+    },
+    "packages/homelab/src/cdk8s/src/resources/woodpecker/ci-namespace.test.ts|packages/homelab/src/cdk8s/src/resources/woodpecker/ci-namespace.test.ts": {
+      "clones": 1,
+      "tokens": 78
     },
     "packages/homelab/src/helm-types/src/cli.test.ts|packages/homelab/src/helm-types/src/cli.test.ts": {
       "clones": 3,
@@ -1327,10 +1351,6 @@
     "packages/temporal/src/activities/glitter/corpus/glitter-corpus-recovery.ts|packages/temporal/src/activities/glitter/corpus/glitter-corpus-snapshot.ts": {
       "clones": 2,
       "tokens": 194
-    },
-    "packages/temporal/src/activities/homelab/homelab-audit-buildkite.ts|packages/temporal/src/activities/homelab/homelab-audit-collectors.ts": {
-      "clones": 1,
-      "tokens": 78
     },
     "packages/temporal/src/activities/homelab/homelab-audit.test.ts|packages/toolkit/test/bugsink/client.test.ts": {
       "clones": 1,

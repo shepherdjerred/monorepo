@@ -36,7 +36,13 @@ final class DiscordRelayTest {
               "The Storm has woken up",
               "The Storm sleeps. Join ts-mc.net to wake it.",
               "Online ({count}): {players}",
-              "Nobody is online."));
+              "Nobody is online.",
+              "Ticket #{id} [{server}/{priority}] {category} from **{reporter}**: {summary}",
+              "Ticket #{id} [{server}] claimed by **{staff}**",
+              "Ticket #{id} [{server}] resolved by **{staff}**",
+              "Ticket #{id} [{server}/{priority}] needs a human: {summary}",
+              "Ticket #{id} [{server}] reopened",
+              "Ticket #{id} [{server}] triaged [{priority}]: {evidence}"));
 
   private static final String ZWSP = String.valueOf((char) 0x200B);
 

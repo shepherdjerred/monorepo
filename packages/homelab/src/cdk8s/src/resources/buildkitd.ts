@@ -29,12 +29,13 @@ import {
   ciNodeTaintedNode,
 } from "@shepherdjerred/homelab/cdk8s/src/misc/nodes.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
+import { WOODPECKER_CI_NAMESPACE } from "@shepherdjerred/homelab/cdk8s/src/resources/argo-applications/ci/woodpecker-credentials.ts";
 
 // Plaintext gRPC port. BuildKit serves the build API here; the buildx `remote`
 // driver in CI connects to it in-cluster. No TLS/mTLS: the endpoint is a
 // ClusterIP Service reachable only inside the cluster (never a Tailscale/tunnel
 // ingress), on a single-tenant homelab. The NetworkPolicy below restricts
-// ingress to the buildkite namespace.
+// ingress to the woodpecker-ci namespace.
 const PORT = 1234;
 
 // HTTP debug endpoint: serves Prometheus /metrics (and pprof). Scraped by the
@@ -82,7 +83,7 @@ debug = false
 `;
 
 export function createBuildkitdDeployment(chart: Chart) {
-  // Own namespace, separate from `buildkite`: this is a long-running service,
+  // Own namespace, separate from `woodpecker-ci`: this is a long-running service,
   // not a CI batch job, and keeping it out of the CI namespace keeps that
   // separation obvious. PSA `privileged` because rootful buildkitd needs it.
   // CI reaches this at
@@ -239,7 +240,7 @@ export function createBuildkitdDeployment(chart: Chart) {
   });
 
   // The gRPC endpoint is plaintext and privileged — restrict ingress to the
-  // CI job pods (buildkite namespace) so nothing else in the cluster can drive
+  // CI job pods (woodpecker-ci namespace) so nothing else in the cluster can drive
   // builds through it. Egress stays open: buildkitd pulls base images and
   // pushes to ghcr.
   new KubeNetworkPolicy(chart, "buildkitd-ingress-netpol", {
@@ -252,7 +253,9 @@ export function createBuildkitdDeployment(chart: Chart) {
           from: [
             {
               namespaceSelector: {
-                matchLabels: { "kubernetes.io/metadata.name": "buildkite" },
+                matchLabels: {
+                  "kubernetes.io/metadata.name": WOODPECKER_CI_NAMESPACE,
+                },
               },
             },
           ],

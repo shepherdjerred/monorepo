@@ -138,13 +138,13 @@ Only corpus capture and context-refresh are scheduled.
 | -------------------------------- | -------------------------------- | ------------- | --------------------------------------------- |
 | zfs-maintenance                  | Sun 03:00                        | deterministic | scrub + autotrim                              |
 | the-storm-mining-reset-quarterly | quarter day 1, 05:15 PT (paused) | deterministic | stopped-server Velero snapshot + mining reset |
-| buildkite-uv-cache-prune-weekly  | Sun 03:15                        | deterministic | uv cache prune                                |
+| ci-uv-cache-prune-weekly         | Sun 03:15                        | deterministic | uv cache prune                                |
 | bugsink-housekeeping             | daily 03:00                      | deterministic | DB cleanup                                    |
 | velero-orphan-audit              | daily 03:30                      | deterministic | metrics only                                  |
 | velero-r2-orphan-audit           | daily 04:00                      | deterministic | metrics only                                  |
 | kometa-daily                     | daily 04:30                      | deterministic | Plex metadata sync                            |
-| buildkite-bun-cache-gc           | every 5 min                      | deterministic | Bun cache GC                                  |
-| buildkite-trivy-db-refresh       | every 6 hours                    | deterministic | Trivy database refresh                        |
+| ci-bun-cache-gc                  | every 5 min                      | deterministic | Bun cache GC                                  |
+| ci-trivy-db-refresh              | every 6 hours                    | deterministic | Trivy database refresh                        |
 | dns-audit                        | daily 06:00                      | deterministic | logs                                          |
 | golink-sync                      | daily 05:00                      | deterministic | golink reconcile                              |
 | temporal-failure-watch           | every 5 min                      | deterministic | durable alert occurrence                      |
@@ -173,7 +173,7 @@ Parameters for the sleep and morning routines are in
 | Workflow             | Trigger             | Brain         | Output           |
 | -------------------- | ------------------- | ------------- | ---------------- |
 | merge-conflict check | PR push / main push | deterministic | required status  |
-| buildkite-cancel     | PR close            | deterministic | cancelled builds |
+| ci-pipeline-cancel   | PR close            | deterministic | cancelled builds |
 
 ## Agent tasks
 

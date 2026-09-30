@@ -104,7 +104,7 @@ describe("buildAuditPrompt", () => {
         "Audit tooling preflight:\n\n- Remote checks: passed.",
     });
 
-    expect(prompt).toContain("`toolkit bk` — Buildkite CLI");
+    expect(prompt).toContain("`toolkit woodpecker` — Woodpecker CLI");
     expect(prompt).toContain("`toolkit temporal` — Temporal CLI");
     expect(prompt).toContain("TEMPORAL_ADDRESS");
     expect(prompt).toContain('ALERTS{alertstate="firing"}');
