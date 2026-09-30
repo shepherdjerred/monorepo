@@ -199,6 +199,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
         const found = await resolvePlayerIdentities({
           query: inputData.query,
           guildIds: turn.guildIds,
+          abortSignal: params.abortSignal,
         });
         return {
           candidates: found.map((identity) => ({
@@ -294,7 +295,10 @@ export function createExploreTools(options: ExploreToolsOptions) {
         state.lastQueryMatchIds = matchIdsInPreview(preview, source);
         const cardSupportRows =
           params.surface === "web" || params.surface === "voice"
-            ? await fetchMatchSupport([...state.lastQueryMatchIds])
+            ? await fetchMatchSupport(
+                [...state.lastQueryMatchIds],
+                params.abortSignal,
+              )
             : [];
         state.lastMatchIds = new Set(
           cardSupportRows

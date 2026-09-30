@@ -15,7 +15,11 @@ import { resolveLakeDir } from "#src/report-lake/paths.ts";
 import { resetTestLake, writeTestLake } from "#src/testing/test-report-lake.ts";
 import { executeReportQuery } from "#src/reports/query/query-engine.ts";
 import type { ReportResultRow } from "#src/reports/query/query-types.ts";
-import { guildScope } from "#src/reports/duckdb/scope.ts";
+import {
+  GLOBAL_SCOPE,
+  guildScope,
+  serversScope,
+} from "#src/reports/duckdb/scope.ts";
 
 const { prisma } = createTestDatabase("report-query-engine-test");
 const serverId = testGuildId("919191");
@@ -77,6 +81,63 @@ describe("executeReportQuery cancellation", () => {
           GROUP BY player
           ORDER BY games DESC
           LIMIT 10
+        `,
+        now,
+        abortSignal: controller.signal,
+      }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+  });
+
+  test("aborts the server-people prerequisite read", async () => {
+    const secondServerId = testGuildId("929292");
+    await writeTestLake(lakeDir, {
+      serverId,
+      alsoTrackedBy: [secondServerId],
+      matchFacts: [
+        temporalMatch("NA1_ABORT_SERVERS", now.toISOString(), false),
+      ],
+    });
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(
+      executeReportQuery({
+        prisma,
+        scope: serversScope([serverId, secondServerId]),
+        queryText: `
+          SELECT COUNT(*) AS games
+          FROM match_participants
+          WHERE queue IN ('solo') AND ${BOUND}
+          GROUP BY player
+          ORDER BY games DESC
+          LIMIT 10
+        `,
+        now,
+        abortSignal: controller.signal,
+      }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+  });
+
+  test("aborts player-reference identity resolution", async () => {
+    await writeTestLake(lakeDir, {
+      serverId,
+      matchFacts: [
+        temporalMatch("NA1_ABORT_PLAYER_REF", now.toISOString(), false),
+      ],
+    });
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(
+      executeReportQuery({
+        prisma,
+        scope: GLOBAL_SCOPE,
+        askerGuildIds: [serverId],
+        queryText: `
+          SELECT COUNT(*) AS games
+          FROM match_participants
+          WHERE player = player('Temporal Player')
+          GROUP BY player
         `,
         now,
         abortSignal: controller.signal,

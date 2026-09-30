@@ -139,6 +139,20 @@ afterAll(async () => {
 });
 
 describe("player identity resolution", () => {
+  test("cancels identity reads when the caller stops", async () => {
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(
+      resolvePlayerIdentities({
+        query: "Aaron",
+        guildIds: [serverId],
+        lakeDir,
+        abortSignal: controller.signal,
+      }),
+    ).rejects.toMatchObject({ name: "AbortError" });
+  });
+
   test("an alias resolves to every account and every past name", async () => {
     const found = await resolvePlayerIdentities({
       query: "Aaron",

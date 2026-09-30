@@ -89,7 +89,11 @@ async function queryInput(input: PlanExecutionInput): Promise<PlanQueryInput> {
   // Merged before compiling: the merge is transitive, so it runs in code.
   const serverPeople =
     input.scope.kind === "servers"
-      ? await loadServerPeople(files.accountsParquet, input.scope.serverIds)
+      ? await loadServerPeople(
+          files.accountsParquet,
+          input.scope.serverIds,
+          input.abortSignal,
+        )
       : undefined;
   return {
     plan: input.plan,

@@ -74,7 +74,10 @@ export class InvalidSavedQueryError extends Error {
  * rather than matching nothing.
  */
 async function resolvePlanPlayerRefs(
-  params: Pick<ExecuteReportQueryParams, "askerGuildIds" | "scope">,
+  params: Pick<
+    ExecuteReportQueryParams,
+    "abortSignal" | "askerGuildIds" | "scope"
+  >,
   plan: ScoutQlPlan,
 ): Promise<Map<number, string[]> | undefined> {
   if (plan.playerRefs.length === 0) return undefined;
@@ -89,6 +92,7 @@ async function resolvePlanPlayerRefs(
     // Global callers without an asker have no permission-bounded alias scope.
     // A guild report always does: its execution scope is the boundary.
     aliasScopeAvailable: guildIds.length > 0,
+    abortSignal: params.abortSignal,
   });
 }
 
