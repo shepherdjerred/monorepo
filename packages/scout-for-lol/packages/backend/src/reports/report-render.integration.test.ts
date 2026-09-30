@@ -55,6 +55,7 @@ function fact(input: {
   matchId: string;
   win: boolean;
   discordId?: string | null;
+  championId?: number;
   championName?: string;
   items?: number[];
 }): TestLakeMatchFact {
@@ -62,6 +63,7 @@ function fact(input: {
     playerId: input.player,
     playerAlias: input.alias,
     ...(input.discordId === undefined ? {} : { discordId: input.discordId }),
+    ...(input.championId === undefined ? {} : { championId: input.championId }),
     matchId: input.matchId,
     puuid: testPuuid(`render-${input.alias}`),
     queue: "solo",
@@ -418,6 +420,7 @@ describe("RENDER clause — leaderboard mention fallbacks", () => {
         fact({
           player: 1,
           alias: "Lux",
+          championId: 99,
           championName: "Lux",
           matchId: "NA1_lux",
           win: true,
