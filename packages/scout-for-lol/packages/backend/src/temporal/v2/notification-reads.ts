@@ -16,10 +16,10 @@ import {
 } from "@scout-for-lol/temporal/contracts-v2";
 import { prisma } from "#src/database/index.ts";
 import {
-  getIntent,
+  getSubjectIntent,
   type UpsertIntentResult,
 } from "#src/database/durable/intent-repository.ts";
-import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import type { NotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { resolveNotificationGateV2 } from "#src/temporal/v2/notification/notification-policy.ts";
 
 /**
@@ -52,7 +52,7 @@ import { resolveNotificationGateV2 } from "#src/temporal/v2/notification/notific
 export async function readNotificationIntentV2(input: {
   intentKey: NotificationIntentKey;
 }): Promise<ScoutNotificationIntentV2Result> {
-  const record = await getIntent(prisma, { intentKey: input.intentKey });
+  const record = await getSubjectIntent(prisma, { intentKey: input.intentKey });
   if (record === null) {
     return { kind: "absent" };
   }
@@ -86,8 +86,8 @@ export function intentSummaryV2(
  */
 export async function requireIntentRecordV2(
   intentKey: NotificationIntentKey,
-): Promise<MatchNotificationIntentRecord> {
-  const record = await getIntent(prisma, { intentKey });
+): Promise<NotificationIntentRecord> {
+  const record = await getSubjectIntent(prisma, { intentKey });
   if (record === null) {
     throw ApplicationFailure.nonRetryable(
       `Notification intent ${intentKey} does not exist`,

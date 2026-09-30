@@ -5,8 +5,9 @@ import {
 } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
 import { prisma } from "#src/database/index.ts";
 import { transitionIntent } from "#src/database/durable/intent-repository.ts";
-import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import type { NotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { hallRecordBreakSuppressionV2 } from "#src/temporal/v2/notification/hall-record-break-notification.ts";
+import { duelStatusSuppressionV2 } from "#src/temporal/v2/notification/duel-status-notification.ts";
 import { MalformedAnnouncementIntentError } from "#src/temporal/v2/notification/announcement-codecs.ts";
 
 /**
@@ -28,10 +29,21 @@ import { MalformedAnnouncementIntentError } from "#src/temporal/v2/notification/
  * it has a policy before this compiles.
  */
 async function kindSuppressionOfV2(
-  record: MatchNotificationIntentRecord,
+  record: NotificationIntentRecord,
 ): Promise<NotificationPolicySuppressionReason | undefined> {
   switch (record.intent.kind) {
+    case "duel-status":
+      if (!("duelId" in record))
+        throw new Error("Duel status requires a Duel subject");
+      try {
+        return await duelStatusSuppressionV2(record);
+      } catch (error) {
+        if (error instanceof MalformedAnnouncementIntentError) return undefined;
+        throw error;
+      }
     case "hall-record-break":
+      if (!("matchId" in record))
+        throw new Error("Hall notification requires a match subject");
       try {
         return await hallRecordBreakSuppressionV2(record);
       } catch (error) {
@@ -63,7 +75,7 @@ async function kindSuppressionOfV2(
  * contract as the audience check beside it.
  */
 export async function suppressIfKindPolicyForbidsV2(
-  record: MatchNotificationIntentRecord,
+  record: NotificationIntentRecord,
 ): Promise<NotificationTransitionResult | undefined> {
   const state = record.intent.state.kind;
   if (state !== "pending" && state !== "ready") return undefined;

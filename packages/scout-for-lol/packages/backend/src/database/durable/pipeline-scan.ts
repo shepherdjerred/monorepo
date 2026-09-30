@@ -176,6 +176,8 @@ const INTENT_TRUTH_WINDOW = {
   // A record break is a fact the finished game established; it is minted by
   // post-match progression, so it exists only once the result is known.
   "hall-record-break": "after-result",
+  // A Duel has no Riot match result at mint; its own series clock decides freshness.
+  "duel-status": "after-result",
 } satisfies Record<NotificationIntentKind, "before-result" | "after-result">;
 
 const BEFORE_RESULT_INTENT_KINDS: readonly string[] = Object.entries(

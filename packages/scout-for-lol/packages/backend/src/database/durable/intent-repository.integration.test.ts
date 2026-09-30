@@ -21,9 +21,13 @@ import { createTestDatabase } from "#src/testing/test-database.ts";
 import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import {
   getIntent,
+  getSubjectIntent,
   transitionIntent,
   upsertIntent,
+  upsertSubjectIntent,
 } from "#src/database/durable/intent-repository.ts";
+import { duelStatusAnnouncementCodec } from "#src/progression/duels/status-message.ts";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 
 const { prisma } = createTestDatabase("durable-intent-repository");
 
@@ -76,6 +80,57 @@ describe("upsertIntent", () => {
       outcome: "conflict",
       reason: "intent-differs",
     });
+  });
+});
+
+describe("Duel subject intents", () => {
+  test("stores a status without a Riot match and transitions it by key", async () => {
+    const duelId = "00000000-0000-4000-8000-000000000901";
+    const record = {
+      duelId,
+      intent: NotificationIntentSchema.parse({
+        key: "duel-status:duel-invited:integration-901",
+        kind: "duel-status",
+        origin: { kind: "live" },
+        target: { kind: "channel", channelId: "300000000000000901" },
+        freshnessDeadline: DEADLINE_ISO,
+        createdAt: AT_ISO,
+        attemptCount: 0,
+        announcement: duelStatusAnnouncementCodec.serialize({
+          guildId: DiscordGuildIdSchema.parse("100000000000000901"),
+          payload: { kind: "invited", seriesId: duelId, mentionDiscordIds: [] },
+        }),
+        state: { kind: "pending" },
+      }),
+    };
+    expect(await upsertSubjectIntent(prisma, record)).toEqual({
+      outcome: "applied",
+    });
+    expect(await upsertSubjectIntent(prisma, record)).toEqual({
+      outcome: "already-applied",
+    });
+    const stored = await getSubjectIntent(prisma, {
+      intentKey: record.intent.key,
+    });
+    expect(stored).toEqual(record);
+    expect(
+      await prisma.matchNotificationIntent.findUniqueOrThrow({
+        where: { intentKey: record.intent.key },
+      }),
+    ).toMatchObject({
+      subjectKind: "duel",
+      subjectId: duelId,
+      riotMatchId: null,
+    });
+    const moved = await transitionIntent(prisma, {
+      intentKey: record.intent.key,
+      transition: markReady,
+    });
+    expect(moved.outcome).toBe("applied");
+    const readied = await getSubjectIntent(prisma, {
+      intentKey: record.intent.key,
+    });
+    expect(readied?.intent.state).toEqual({ kind: "ready" });
   });
 });
 

@@ -1,5 +1,6 @@
 import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { MatchIdSchema } from "@scout-for-lol/data";
+import { DiscordGuildIdSchema } from "@scout-for-lol/data";
 import {
   IsoInstantSchema,
   NotificationIntentKeySchema,
@@ -15,8 +16,12 @@ import type { StoredObject } from "#src/storage/object-integrity.ts";
 import { computeSha256Digest } from "#src/storage/object-integrity.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import { testChannelId } from "#src/testing/test-ids.ts";
-import { upsertIntent } from "#src/database/durable/intent-repository.ts";
+import {
+  upsertIntent,
+  upsertSubjectIntent,
+} from "#src/database/durable/intent-repository.ts";
 import { listReceipts } from "#src/database/durable/receipt-repository.ts";
+import { duelStatusAnnouncementCodec } from "#src/progression/duels/status-message.ts";
 
 /**
  * The render Activity against real receipts and claims, with the world it
@@ -162,6 +167,41 @@ beforeEach(() => {
 });
 
 describe("render receipts are keyed by kind", () => {
+  test("a Duel status has no match render receipt or object", async () => {
+    const duelId = crypto.randomUUID();
+    const intentKey = NotificationIntentKeySchema.parse(
+      `duel-status:duel-invited:${duelId}`,
+    );
+    expect(
+      await upsertSubjectIntent(prisma, {
+        duelId,
+        intent: NotificationIntentSchema.parse({
+          key: intentKey,
+          kind: "duel-status",
+          origin: { kind: "live" },
+          target: { kind: "channel", channelId: testChannelId("901") },
+          freshnessDeadline: "2099-01-01T00:00:00.000Z",
+          createdAt: "2026-09-18T00:00:00.000Z",
+          attemptCount: 0,
+          announcement: duelStatusAnnouncementCodec.serialize({
+            guildId: DiscordGuildIdSchema.parse("100000000000000901"),
+            payload: {
+              kind: "invited",
+              seriesId: duelId,
+              mentionDiscordIds: [],
+            },
+          }),
+          state: { kind: "pending" },
+        }),
+      }),
+    ).toEqual({ outcome: "applied" });
+    expect(
+      await renderNotificationArtifactV2({ stage: STAGE, intentKey }),
+    ).toEqual({ outcome: "rendered" });
+    expect(world.renders).toBe(0);
+    expect(world.puts).toHaveLength(0);
+    expect(await prisma.matchProcessingReceipt.count()).toBe(0);
+  });
   test("a standing prematch receipt does not satisfy a postmatch render", async () => {
     const matchId = nextMatch();
     const prematch = await seedIntent(matchId, "prematch", "9401");

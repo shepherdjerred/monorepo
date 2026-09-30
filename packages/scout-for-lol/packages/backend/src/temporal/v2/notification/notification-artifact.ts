@@ -146,7 +146,7 @@ export type ScoutV2AttestedPrematchArtifact =
 
 async function requireRenderEvidence(
   riotMatchId: RiotMatchId,
-  kind: NotificationIntentKind,
+  kind: Exclude<NotificationIntentKind, "duel-status">,
 ): Promise<ScoutV2NotificationRenderEvidence> {
   const evidence = await readNotificationArtifactV2(riotMatchId, kind);
   if (evidence === null) {

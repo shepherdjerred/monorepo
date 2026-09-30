@@ -1,7 +1,5 @@
 import { EmbedBuilder, escapeMarkdown } from "discord.js";
-import { z } from "zod";
 import {
-  DiscordAccountIdSchema,
   DiscordChannelIdSchema,
   DiscordGuildIdSchema,
 } from "@scout-for-lol/data";
@@ -11,33 +9,17 @@ import { send as sendChannelMessage } from "#src/league/discord/channel.ts";
 import { duelRolloutAllowed } from "#src/progression/duels/access.ts";
 import { loadProgressionOutboxRows } from "#src/progression/outbox.ts";
 import {
+  DuelStatusPayloadSchema,
+  type DuelStatusPayload,
+} from "#src/progression/duels/status-message.ts";
+import {
   claimScoutEffect,
   completeScoutEffect,
   recordScoutEffectFailure,
 } from "#src/temporal/effect-claims.ts";
 
-const DuelStatusPayloadSchema = z.discriminatedUnion("kind", [
-  z.strictObject({
-    kind: z.literal("invited"),
-    seriesId: z.uuid(),
-    mentionDiscordIds: DiscordAccountIdSchema.array(),
-  }),
-  z.strictObject({
-    kind: z.literal("overdue"),
-    seriesId: z.uuid(),
-    mentionDiscordIds: DiscordAccountIdSchema.array(),
-  }),
-  z.strictObject({
-    kind: z.literal("code_ready"),
-    seriesId: z.uuid(),
-    gameNumber: z.number().int().positive(),
-  }),
-]);
-
-function renderStatus(
-  payload: z.infer<typeof DuelStatusPayloadSchema>,
-  guildId: string,
-) {
+/** The legacy Duel copy shared with V2's subject-aware send. */
+export function renderDuelStatus(payload: DuelStatusPayload, guildId: string) {
   const path = new URL(
     `duels/${guildId}/series/${payload.seriesId}`,
     getDashboardUrl(),
@@ -121,7 +103,7 @@ export async function deliverDuelStatusOutbox(): Promise<void> {
           lastError: null,
         },
       });
-      const rendered = renderStatus(
+      const rendered = renderDuelStatus(
         DuelStatusPayloadSchema.parse(JSON.parse(row.payloadJson)),
         guildId,
       );

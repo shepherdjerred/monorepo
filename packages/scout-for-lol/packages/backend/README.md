@@ -716,16 +716,29 @@ load-bearing for anyone extending it.
 
 The row's `subjectKind` and `subjectId` name the event being announced.
 Existing match intents use `match` and the Riot match id; `riotMatchId` remains
-indexed for match fan-out. The schema also reserves `duel` and `dare` subjects
-for their later notification producers, where `riotMatchId` is absent. During
+indexed for match fan-out. Duel status uses `duel` and the series id, with no
+Riot match id. The schema reserves `dare` for its later notification producer. During
 the schema rollout, a match row with a NULL `subjectId` is read from its
 required `riotMatchId` because older application pods still write that shape.
 New writers populate both match columns, and the database rejects a mismatch.
 
+Duel challenge, lobby-ready, and overdue transitions mint `duel-status` intents
+and request a V2 notification Workflow in the same database transaction as the
+series change. Reconciliation starts a requested Workflow after a producer
+crash. The invite expires at the series deadline; lobby-ready and overdue
+messages expire after two hours and seven days respectively. The shared Duel
+message builder serves both V2 and the legacy `DuelStatusOutbox` drain, which
+continues to deliver rows created before the producer cutover. A legacy row
+owns its dedupe key even after delivery; a producer seeing that row does not
+mint a V2 intent for the same message. V2 stores the
+guild, series, and mention list in a versioned announcement and verifies the
+series and target channel before sending. It does not create a match render
+receipt for a Duel subject.
+
 ### An intent says what it announces and where it came from
 
 Every intent carries a `kind` (`postmatch` | `prematch` | `settlement` |
-`dare-summary` | `hall-record-break`) and an `origin`
+`dare-summary` | `hall-record-break` | `duel-status`) and an `origin`
 (`live`, or `recovery` naming the batch that minted it). Both are fixed at
 mint, mirrored into columns, and versioned in the payload envelope
 (`notificationIntentCodec` version 3; a version-1 payload derives its kind from
