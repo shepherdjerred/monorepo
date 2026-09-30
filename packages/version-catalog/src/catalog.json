@@ -698,7 +698,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-13153@sha256:146077c0658715f5f15493d33e58923a1dd31ff65a97976b12359c39ffabb1d7",
+      "value": "2.0.0-1003424@sha256:1ea3b3efcf282e063500dff092444b309156ebbd9644188edc3c40cb5ee20302",
       "notes": [
         "Candidate Scout beta Workflow Worker image - updated by version commit-back",
         "not managed by renovate"
@@ -711,9 +711,9 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-12197@sha256:9acbf285a1fbe164deea3e2fe0a16a000a442cc0d269e74b2e4850f49e4946db",
+      "value": "2.0.0-1003424@sha256:1ea3b3efcf282e063500dff092444b309156ebbd9644188edc3c40cb5ee20302",
       "notes": [
-        "Stable Scout beta Workflow Worker image - promoted after a healthy 100% ramp",
+        "Stable Scout beta Workflow Worker image - bootstrapped from the accepted beta backend image; later pins are promoted after a healthy 100% ramp",
         "not managed by renovate"
       ]
     },

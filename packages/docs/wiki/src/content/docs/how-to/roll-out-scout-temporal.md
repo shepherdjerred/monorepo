@@ -43,7 +43,7 @@ Run the side-effect-free queue canary against the deployed Scout workers:
 
 ```bash
 cd packages/scout-for-lol/packages/temporal
-bun run canary -- \
+bun run canary \
   --stage beta \
   --address <beta-address> \
   --namespace beta
@@ -119,6 +119,14 @@ are created paused on each stage.
 
 ## Start the beta Workflow Deployment ramp
 
+For the first rollout, pin both beta Workflow tracks in the version catalog to
+the same accepted, workflow-capable beta backend image and release them before
+starting a ramp. Both pods register the same build ID; the embedded backend
+continues polling until routing changes. Confirm both Workflow Worker pods are
+ready and the deployment has no current or ramping version. A later Scout image
+release supplies a distinct candidate build for the ramp. Keep the candidate
+pin state in sync with the catalog.
+
 Configure the private Temporal endpoint for every rollout command in this
 shell:
 
@@ -131,7 +139,7 @@ Inspect the current routing and candidate registration before mutating it:
 
 ```bash
 cd packages/temporal
-TEMPORAL_NAMESPACE=beta bun run worker-deployment inspect -- \
+TEMPORAL_NAMESPACE=beta bun run worker-deployment inspect \
   --target scout-beta \
   --build-id <candidate-image-git-sha>
 ```
@@ -140,7 +148,7 @@ For the first ramp, provide the accepted stable build explicitly. Later ramps
 can use the routing already recorded by Temporal:
 
 ```bash
-TEMPORAL_NAMESPACE=beta bun run worker-deployment start -- \
+TEMPORAL_NAMESPACE=beta bun run worker-deployment start \
   --target scout-beta \
   --build-id <candidate-image-git-sha> \
   --stable-build-id <stable-image-git-sha>
@@ -175,11 +183,11 @@ Use the rollout command to advance only after its alert and health windows are
 clean:
 
 ```bash
-TEMPORAL_NAMESPACE=beta bun run worker-deployment status -- \
+TEMPORAL_NAMESPACE=beta bun run worker-deployment status \
   --target scout-beta \
   --build-id <candidate-image-git-sha>
 
-TEMPORAL_NAMESPACE=beta bun run worker-deployment advance -- \
+TEMPORAL_NAMESPACE=beta bun run worker-deployment advance \
   --target scout-beta \
   --build-id <candidate-image-git-sha>
 ```
@@ -201,7 +209,7 @@ candidate at 100% traffic. Promote when:
 The promotion command verifies the two-hour health window again:
 
 ```bash
-TEMPORAL_NAMESPACE=beta bun run worker-deployment promote -- \
+TEMPORAL_NAMESPACE=beta bun run worker-deployment promote \
   --target scout-beta \
   --build-id <candidate-image-git-sha>
 ```
@@ -223,7 +231,7 @@ If replay, canaries, alerts, or runtime evidence fail, stop routing new Workflow
 tasks to the candidate:
 
 ```bash
-TEMPORAL_NAMESPACE=<beta-or-prod> bun run worker-deployment rollback -- \
+TEMPORAL_NAMESPACE=<beta-or-prod> bun run worker-deployment rollback \
   --target <scout-beta-or-scout-prod> \
   --build-id <candidate-image-git-sha>
 ```
