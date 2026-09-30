@@ -27,6 +27,30 @@ const CONTEXT = {
   changedFiles: ["packages/scout-for-lol/src/index.ts"],
 };
 
+const IMAGES = {
+  base: "ghcr.io/shepherdjerred/ci-base@sha256:" + "a".repeat(64),
+  playwright: "ghcr.io/shepherdjerred/ci-playwright@sha256:" + "b".repeat(64),
+  catalog: {
+    "aquasec/trivy": "aquasec/trivy:0.72.0",
+    "semgrep/semgrep": "semgrep/semgrep:1.170.0",
+    "texlive/texlive": "texlive/texlive:TL2024-historic",
+    "trmnl/trmnlp": "trmnl/trmnlp:v0.11.0",
+    "grafana/tempo": "grafana/tempo:3.0.3",
+    "mikefarah/yq": "mikefarah/yq:latest",
+    "minio/mc": "minio/mc:RELEASE",
+    "minio/minio": "minio/minio:RELEASE",
+  },
+};
+
+function keysFor(changedFiles: string[], branch = "feature") {
+  return selectSteps(buildPipelineSteps({ images: IMAGES, changedBase: "x" }), {
+    event: branch === "main" ? "push" : "pull_request",
+    branch,
+    defaultBranch: "main",
+    changedFiles,
+  }).map((item) => item.key);
+}
+
 describe("selection", () => {
   test("keeps a step whose changed-path guard matches", () => {
     const selected = selectSteps(
@@ -312,33 +336,6 @@ describe("emission", () => {
  * no admission and no provider credentials.
  */
 describe("ported lanes", () => {
-  const IMAGES = {
-    base: "ghcr.io/shepherdjerred/ci-base@sha256:" + "a".repeat(64),
-    playwright: "ghcr.io/shepherdjerred/ci-playwright@sha256:" + "b".repeat(64),
-    catalog: {
-      "aquasec/trivy": "aquasec/trivy:0.72.0",
-      "semgrep/semgrep": "semgrep/semgrep:1.170.0",
-      "texlive/texlive": "texlive/texlive:TL2024-historic",
-      "trmnl/trmnlp": "trmnl/trmnlp:v0.11.0",
-      "grafana/tempo": "grafana/tempo:3.0.3",
-      "mikefarah/yq": "mikefarah/yq:latest",
-      "minio/mc": "minio/mc:RELEASE",
-      "minio/minio": "minio/minio:RELEASE",
-    },
-  };
-
-  function keysFor(changedFiles: string[], branch = "feature") {
-    return selectSteps(
-      buildPipelineSteps({ images: IMAGES, changedBase: "x" }),
-      {
-        event: branch === "main" ? "push" : "pull_request",
-        branch,
-        defaultBranch: "main",
-        changedFiles,
-      },
-    ).map((s) => s.key);
-  }
-
   test("a lockfile change selects the scanners", () => {
     expect(keysFor(["bun.lock"])).toContain("trivy");
   });
@@ -365,16 +362,6 @@ describe("ported lanes", () => {
         "alert-dashboard-sqlite",
       ]),
     );
-  });
-
-  test("a shared checkout selector change still selects Playwright", () => {
-    for (const path of [
-      "ci/scripts/migration-core.ts",
-      "ci/scripts/selectors/ci-changed.ts",
-      "ci/scripts/selectors/ensure-ancestor.ts",
-    ]) {
-      expect(keysFor([path]), path).toContain("playwright-e2e");
-    }
   });
 
   test("scanners are pull-request only", () => {
@@ -555,4 +542,24 @@ describe("ported lanes", () => {
     expect(joined).toContain('exit "$trivy_status"');
     expect(trivy?.allowFailure).toBeUndefined();
   });
+});
+
+test("a shared checkout selector change still selects Playwright", () => {
+  const steps = buildPipelineSteps({ images: IMAGES, changedBase: "x" });
+  for (const path of [
+    "ci/scripts/migration-core.ts",
+    "ci/scripts/selectors/ci-changed.ts",
+    "ci/scripts/selectors/ensure-ancestor.ts",
+  ]) {
+    const selected = selectSteps(steps, {
+      event: "pull_request",
+      branch: "feature",
+      defaultBranch: "main",
+      changedFiles: [path],
+    });
+    expect(
+      selected.map((item) => item.key),
+      path,
+    ).toContain("playwright-e2e");
+  }
 });
