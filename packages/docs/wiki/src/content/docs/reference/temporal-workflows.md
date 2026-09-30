@@ -186,9 +186,34 @@ All heartbeat emails use one validated report envelope. A clear status requires
 successful evidence for every required check; partial and failed runs still
 send. Models cannot select the status or subject.
 
+## Durable agent chats
+
+| Workflow                  | Trigger                    | Brain                           | Output                           |
+| ------------------------- | -------------------------- | ------------------------------- | -------------------------------- |
+| agent-chat                | ingress or schedule update | Claude Code or Codex App Server | cataloged resumable turn         |
+| agent-chat-turn-receipt   | shared chat client         | deterministic                   | retained run-pinned turn outcome |
+| agent-chat-catalog        | client update              | deterministic                   | chat metadata + active bindings  |
+| scheduled-agent-chat-turn | declared Temporal Schedule | deterministic dispatcher        | update to a cataloged chat       |
+
+Agent chat Activities run on `agent-task`. Scheduled dispatch waits on its own
+`agent-chat-dispatch` queue inside the repo worker process, so it occupies
+neither the provider queue nor unrelated `repo-automation`. Provider session
+slices are stored in SeaweedFS; the workspace is fresh for each turn.
+Receipt dispatch uses a separate `agent-chat-receipts` queue in the repo process,
+so a scheduled dispatcher waiting for a receipt cannot occupy its executor.
+Every global Activity queue has a schedule-to-close admission bound in addition
+to its execution timeout. Scheduled turns carry the occurrence's provider-start
+deadline through the receipt and chat update; both the chat Workflow and the
+provider Activity reject an expired turn before creating a workspace or invoking
+Claude Code or Codex. This prevents a backed-up global queue from applying a
+scheduled turn after its originating Workflow has timed out.
+
+Source: [receipt dispatch contract](/reference/durable-agent-chat-storage/#turn-receipts).
+
 ## Related
 
 - [Schedule reference](/reference/temporal-schedules/) — cron mechanics
 - [Roll out Scout's Temporal workers](/how-to/roll-out-scout-temporal/) — cutover and soak procedure
 - [Agent task input](/reference/agent-task-input/) — the task schema
+- [Durable agent chats](/explanation/temporal/durable-agent-chats/) — chat identity and persistence boundaries
 - [Why Temporal](/explanation/temporal/overview/) — what the fleet is for
