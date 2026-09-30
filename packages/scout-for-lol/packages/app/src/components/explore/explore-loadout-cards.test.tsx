@@ -117,6 +117,26 @@ describe("ExploreLoadoutCards", () => {
     expect(markup).toContain("ID 999999");
   });
 
+  test("labels unknown rune IDs instead of rendering missing-asset placeholders", () => {
+    const unknownRune = ExploreLoadoutCardSchema.parse({
+      ...card(),
+      runePage: {
+        ...card().runePage,
+        keystone: {
+          id: 999_999,
+          assetKey: "999999",
+          name: "Rune 999999",
+          known: false,
+        },
+      },
+    });
+    const markup = renderToStaticMarkup(
+      <ExploreLoadoutCards cards={[unknownRune]} />,
+    );
+    expect(markup).toContain("Unknown rune ID 999999");
+    expect(markup).toContain("ID 999999");
+  });
+
   test("explains when an older card omits the build path truncation field", () => {
     const olderCard: Record<string, unknown> = { ...card() };
     delete olderCard["buildPathTruncated"];

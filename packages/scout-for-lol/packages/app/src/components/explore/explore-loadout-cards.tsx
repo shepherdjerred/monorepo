@@ -28,10 +28,30 @@ function ItemImage(props: { itemId: number; name: string; className: string }) {
 }
 
 function RuneImage(props: {
+  id: number;
   assetKey: string;
   name: string;
+  known?: boolean | undefined;
+  kind?: "rune" | "rune tree";
   className: string;
 }) {
+  const kind = props.kind ?? "rune";
+  const unknown =
+    props.known === false ||
+    (props.known === undefined && props.assetKey === String(props.id));
+  if (unknown) {
+    const label = `Unknown ${kind} ID ${props.id.toString()}`;
+    return (
+      <span
+        role="img"
+        aria-label={label}
+        title={label}
+        className="inline-flex min-h-7 min-w-12 items-center justify-center rounded border border-amber-500/60 bg-scout-surface px-1 text-center text-[9px] leading-tight text-scout-ink"
+      >
+        ID {props.id.toString()}
+      </span>
+    );
+  }
   return (
     <RuneIcon
       rune={props.assetKey}
@@ -157,38 +177,50 @@ function RunePage(props: { card: ExploreLoadoutCard }) {
       <div className="flex flex-wrap items-center gap-2">
         {runePage.primaryTree !== null && (
           <RuneImage
+            id={runePage.primaryTree.id}
             assetKey={runePage.primaryTree.assetKey}
             name={`${runePage.primaryTree.name} tree`}
+            known={runePage.primaryTree.known}
+            kind="rune tree"
             className="size-8 rounded-full border border-scout-border"
           />
         )}
         {runePage.keystone !== null && (
           <RuneImage
+            id={runePage.keystone.id}
             assetKey={runePage.keystone.assetKey}
             name={runePage.keystone.name}
+            known={runePage.keystone.known}
             className="size-9 rounded-full border border-amber-400/70"
           />
         )}
         {runePage.primaryRunes.map((rune) => (
           <RuneImage
             key={rune.id}
+            id={rune.id}
             assetKey={rune.assetKey}
             name={rune.name}
+            known={rune.known}
             className="size-7 rounded-full border border-scout-border"
           />
         ))}
         {runePage.secondaryTree !== null && (
           <RuneImage
+            id={runePage.secondaryTree.id}
             assetKey={runePage.secondaryTree.assetKey}
             name={`${runePage.secondaryTree.name} tree`}
+            known={runePage.secondaryTree.known}
+            kind="rune tree"
             className="ml-2 size-8 rounded-full border border-scout-border"
           />
         )}
         {runePage.secondaryRunes.map((rune) => (
           <RuneImage
             key={rune.id}
+            id={rune.id}
             assetKey={rune.assetKey}
             name={rune.name}
+            known={rune.known}
             className="size-7 rounded-full border border-scout-border"
           />
         ))}
@@ -375,8 +407,10 @@ function ExploreLoadoutCardView(props: { card: ExploreLoadoutCard }) {
           {card.runePage.keystone !== null && (
             <section className="flex items-center" aria-label="Keystone">
               <RuneImage
+                id={card.runePage.keystone.id}
                 assetKey={card.runePage.keystone.assetKey}
                 name={card.runePage.keystone.name}
+                known={card.runePage.keystone.known}
                 className="size-7 rounded-full border border-amber-400/70"
               />
             </section>

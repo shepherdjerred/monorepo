@@ -40,6 +40,7 @@ const NamedRuneSchema = z
     id: z.number().int().positive(),
     assetKey: z.string().min(1).max(120),
     name: z.string().min(1).max(120),
+    known: z.boolean().optional(),
   })
   .strict();
 

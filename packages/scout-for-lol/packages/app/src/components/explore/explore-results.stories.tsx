@@ -369,6 +369,30 @@ export const UnknownBuildPathItem: Story = {
   ),
 };
 
+export const UnknownRune: Story = {
+  args: { preview: null, visualization: null },
+  render: () => (
+    <div className="mx-auto max-w-3xl space-y-3">
+      <ExploreLoadoutCards
+        cards={[
+          {
+            ...loadoutCard("L"),
+            runePage: {
+              ...loadoutCard("L").runePage,
+              keystone: {
+                id: 999_999,
+                assetKey: "999999",
+                name: "Rune 999999",
+                known: false,
+              },
+            },
+          },
+        ]}
+      />
+    </div>
+  ),
+};
+
 export const LoadoutAnswer: Story = {
   args: { preview: null, visualization: null },
   render: () => (

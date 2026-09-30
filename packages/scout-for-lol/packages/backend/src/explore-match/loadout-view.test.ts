@@ -304,4 +304,23 @@ describe("Explore loadout card hydration", () => {
     });
     expect(card).not.toHaveProperty("puuid");
   });
+
+  test("marks rune IDs outside the pinned catalog as unknown", () => {
+    const card = buildExploreLoadoutCard({
+      request: ExploreLoadoutCardRequestSchema.parse({
+        matchId: "NA1_12345",
+        puuid: PUUID,
+        size: "L",
+      }),
+      row: { ...LOADOUT_ROW, perk0: 999_999 },
+      timelineEvents: null,
+    });
+
+    expect(card.runePage.keystone).toEqual({
+      id: 999_999,
+      assetKey: "999999",
+      name: "Rune 999999",
+      known: false,
+    });
+  });
 });

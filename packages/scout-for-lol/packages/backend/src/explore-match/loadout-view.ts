@@ -117,6 +117,7 @@ function namedRune(runeId: number | null) {
     id: runeId,
     assetKey: iconName ?? rune?.key ?? String(runeId),
     name: rune?.name ?? `Rune ${runeId.toString()}`,
+    known: rune !== undefined,
   };
 }
 
@@ -131,6 +132,7 @@ function namedTree(treeId: number | null) {
     id: treeId,
     assetKey: iconName ?? String(treeId),
     name: tree?.name ?? `Rune tree ${treeId.toString()}`,
+    known: tree !== undefined,
   };
 }
 
