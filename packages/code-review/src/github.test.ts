@@ -78,20 +78,33 @@ const BODY =
   "\n" +
   "</blockquote></details>\n";
 
-function reviewListing(commitOid: string | null): unknown {
+function reviewNode(
+  id: string,
+  submittedAt: string,
+  commitOid: string | null,
+  body: string | null,
+): unknown {
+  return {
+    id,
+    submittedAt,
+    author: { login: CODERABBIT_LOGIN },
+    body,
+    commit: commitOid === null ? null : { oid: commitOid },
+  };
+}
+
+function reviewListing(
+  commitOid: string | null,
+  extraNodes: unknown[] = [],
+): unknown {
   return {
     data: {
       repository: {
         pullRequest: {
           reviews: {
             nodes: [
-              {
-                id: "R1",
-                submittedAt: "2026-09-27T05:00:00Z",
-                author: { login: CODERABBIT_LOGIN },
-                body: BODY,
-                commit: commitOid === null ? null : { oid: commitOid },
-              },
+              reviewNode("R1", "2026-09-27T05:00:00Z", commitOid, BODY),
+              ...extraNodes,
             ],
             pageInfo: { hasNextPage: false, endCursor: null },
           },
@@ -101,13 +114,12 @@ function reviewListing(commitOid: string | null): unknown {
   };
 }
 
-function assembledBodyFinding(evaluateHead?: string | null) {
+function assembledBodyFinding(extraNodes: unknown[] = []) {
   const { threads } = assembleProviderThreads({
     provider: coderabbitProvider,
     threadPayloads: [threadListing(LIVE_HEAD)],
-    reviewPayloads: [reviewListing(REVIEW_COMMIT)],
+    reviewPayloads: [reviewListing(REVIEW_COMMIT, extraNodes)],
     headRefOid: LIVE_HEAD,
-    evaluateHead,
     issueComment: null,
   });
   if (threads.length !== 1) throw new Error("expected one body finding");
@@ -115,14 +127,16 @@ function assembledBodyFinding(evaluateHead?: string | null) {
 }
 
 describe("assembleProviderThreads", () => {
-  test("marks body findings against the evaluated head, not the live head", () => {
-    // The build under evaluation targets the reviewed commit even though the
-    // PR has since advanced: the finding is current for that build's gate.
-    expect(assembledBodyFinding(REVIEW_COMMIT)?.isOutdated).toBe(false);
-    // A different evaluated head really did supersede the review.
-    expect(assembledBodyFinding("other789")?.isOutdated).toBe(true);
-    // Without an evaluated head the live head stays the comparison basis.
-    expect(assembledBodyFinding()?.isOutdated).toBe(true);
+  test("keeps body findings current until a newer review supersedes them", () => {
+    // No successor review: the finding is current even though the PR has
+    // since advanced past the reviewed commit.
+    expect(assembledBodyFinding()?.isOutdated).toBe(false);
+    // A newer review that drops the finding supersedes it.
+    expect(
+      assembledBodyFinding([
+        reviewNode("R2", "2026-09-27T06:00:00Z", "other789", null),
+      ])?.isOutdated,
+    ).toBe(true);
   });
 });
 
@@ -152,7 +166,6 @@ describe("fetchSharedProviderThreads", () => {
       number: 3189,
       token: "token",
       providers: [codexProvider, coderabbitProvider],
-      evaluateHead: REVIEW_COMMIT,
     });
     // One threads query plus one reviews query total — not one round per
     // provider — so every provider partitions the same snapshot.

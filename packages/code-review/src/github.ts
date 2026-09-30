@@ -94,11 +94,6 @@ export async function fetchReviewThreads(input: {
    * so this function fetches it; `null` means "fetched, none found".
    */
   issueComment?: ReviewIssueComment | null | undefined;
-  /**
-   * Exact head under evaluation, for body-finding outdated marking (see
-   * {@link assembleProviderThreads}). Defaults to the live head.
-   */
-  evaluateHead?: string | null | undefined;
 }): Promise<{ threads: ReviewThread[]; headRefOid: string | null }> {
   const listing = await fetchReviewListing(input);
   const { completion } = input.provider;
@@ -116,7 +111,6 @@ export async function fetchReviewThreads(input: {
     threadPayloads: listing.threadPayloads,
     reviewPayloads: listing.reviewPayloads,
     headRefOid: listing.headRefOid,
-    evaluateHead: input.evaluateHead,
     issueComment: comment,
   });
 }

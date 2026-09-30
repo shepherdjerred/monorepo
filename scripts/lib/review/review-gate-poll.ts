@@ -340,7 +340,6 @@ export async function verifyPassBeforeAccepting(input: {
         number,
         token,
         providers,
-        evaluateHead: head,
       });
       return byProvider;
     });

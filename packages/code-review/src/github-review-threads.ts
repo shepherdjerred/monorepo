@@ -27,7 +27,6 @@ export function appendReviewBodyFindings(
   parsed: ParsedReviewThread[],
   providerReviews: readonly ProviderReview[],
   provider: ReviewProvider,
-  head: string | null,
 ): void {
   const parseBodies = provider.parseReviewBodyFindings;
   if (parseBodies === null) return;
@@ -40,17 +39,23 @@ export function appendReviewBodyFindings(
       commitOid: review.commitOid,
     }));
   for (const finding of parseBodies(snapshots)) {
-    // A body finding is current only while its review still reads the head.
-    // A fix pushed after the review leaves the text in place — unlike an
-    // addressable thread, nothing marks it resolved — so without this every
-    // historical body finding would veto every later head forever. Marking it
-    // outdated keeps it visible without blocking, exactly like GitHub's own
-    // outdated threads. An unknown commit or head stays current: the
-    // least-understood finding still blocks.
-    const superseded =
-      finding.reviewCommitOid !== null &&
-      head !== null &&
-      finding.reviewCommitOid !== head;
+    // A body finding stays current until a strictly newer review by the same
+    // provider supersedes it. A head change alone never retires it: unlike
+    // an addressable thread, nothing marks a body finding resolved, so
+    // retiring on every push would let an unrelated commit silently drop a
+    // P0 the provider has not re-reviewed — and a clean sibling provider
+    // could then pass the OR gate over an unreviewed Critical. When the
+    // provider does re-review, the older copy goes outdated; a repeated
+    // finding stays live through its newer copy. An unknown timestamp stays
+    // current: the least-understood finding still blocks.
+    const submittedAt = finding.reviewSubmittedAt;
+    const superseded = snapshots.some(
+      (snapshot) =>
+        snapshot.id !== finding.reviewId &&
+        snapshot.submittedAt !== null &&
+        submittedAt !== null &&
+        snapshot.submittedAt > submittedAt,
+    );
     if (superseded) {
       finding.thread.isOutdated = true;
     }

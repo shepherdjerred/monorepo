@@ -83,16 +83,13 @@ export async function fetchReviewListing(input: {
 /**
  * Assemble one provider's threads from a shared {@link ReviewListing}:
  * provider-specific severity parsing, body findings, attribution, and
- * duplicate merging. `evaluateHead` selects the commit body findings are
- * marked outdated against — the exact head under evaluation, which lags the
- * live head when the PR advances mid-build. Defaults to the live head.
+ * duplicate merging.
  */
 export function assembleProviderThreads(input: {
   provider: ReviewProvider;
   threadPayloads: readonly unknown[];
   reviewPayloads: readonly unknown[];
   headRefOid: string | null;
-  evaluateHead?: string | null | undefined;
   /** Resolved issue comment; `null` means fetched, none found. */
   issueComment: ReviewIssueComment | null;
 }): { threads: ReviewThread[]; headRefOid: string | null } {
@@ -108,12 +105,7 @@ export function assembleProviderThreads(input: {
   // outside-diff sections) contribute body findings before attribution, so a
   // body finding shares its review's ordinal — and merges with its thread
   // copy — instead of drifting into a review position of its own.
-  appendReviewBodyFindings(
-    parsed,
-    providerReviews,
-    input.provider,
-    input.evaluateHead ?? input.headRefOid,
-  );
+  appendReviewBodyFindings(parsed, providerReviews, input.provider);
   // Attribution needs every page: a thread's ordinal is its review's position
   // among all of this provider's reviews, including clean reviews that opened
   // no thread and therefore do not appear in `parsed`.
@@ -144,7 +136,6 @@ export async function fetchSharedProviderThreads(input: {
   number: number;
   token: string;
   providers: readonly ReviewProvider[];
-  evaluateHead?: string | null | undefined;
 }): Promise<{
   byProvider: Map<string, ReviewThread[]>;
   headRefOid: string | null;
@@ -166,7 +157,6 @@ export async function fetchSharedProviderThreads(input: {
       threadPayloads: listing.threadPayloads,
       reviewPayloads: listing.reviewPayloads,
       headRefOid: listing.headRefOid,
-      evaluateHead: input.evaluateHead,
       issueComment: comment,
     });
     byProvider.set(provider.id, threads);

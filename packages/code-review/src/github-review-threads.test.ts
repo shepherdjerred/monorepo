@@ -106,12 +106,9 @@ describe("attributeRaisedInReview", () => {
   });
 });
 
-function appended(
-  reviews: ProviderReview[],
-  head: string | null,
-): ParsedReviewThread[] {
+function appended(reviews: ProviderReview[]): ParsedReviewThread[] {
   const parsed: ParsedReviewThread[] = [];
-  appendReviewBodyFindings(parsed, reviews, coderabbitProvider, head);
+  appendReviewBodyFindings(parsed, reviews, coderabbitProvider);
   return parsed;
 }
 
@@ -140,27 +137,71 @@ describe("appendReviewBodyFindings", () => {
     };
   }
 
-  test("keeps body findings from the head review current", () => {
-    const [entry] = appended([review({ id: "r1" })], "abc123");
+  test("keeps body findings current with no newer review", () => {
+    const [entry] = appended([review({ id: "r1" })]);
     expect(entry?.thread.isOutdated).toBe(false);
     expect(entry?.thread.priority).toBe(2);
     expect(entry?.thread.path).toBe("src/example.ts");
     expect(entry?.review?.id).toBe("r1");
   });
 
-  test("marks body findings from older reviews outdated", () => {
-    const [entry] = appended([review({ id: "r1" })], "def456");
-    expect(entry?.thread.isOutdated).toBe(true);
+  test("stays current across a head change the provider has not reviewed", () => {
+    // An unrelated push must not retire a finding CodeRabbit has not
+    // re-reviewed: the OR gate would otherwise pass on a sibling's clean
+    // review over an unreviewed P0.
+    const [entry] = appended([review({ id: "r1", commitOid: "abc123" })]);
+    expect(entry?.thread.isOutdated).toBe(false);
   });
 
-  test("stays current when the commit or head is unknown", () => {
-    const [noCommit] = appended(
-      [review({ id: "r1", commitOid: null })],
-      "def456",
-    );
+  test("marks body findings superseded by a newer review outdated", () => {
+    const entries = appended([
+      review({
+        id: "r1",
+        submittedAt: "2026-05-24T19:03:46Z",
+        commitOid: "abc123",
+      }),
+      review({
+        id: "r2",
+        submittedAt: "2026-05-24T20:03:46Z",
+        commitOid: "def456",
+        body: "**Actionable comments posted: 0**",
+      }),
+    ]);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]?.thread.isOutdated).toBe(true);
+    expect(entries[0]?.review?.id).toBe("r1");
+  });
+
+  test("a repeated finding stays live through its newer copy", () => {
+    const entries = appended([
+      review({
+        id: "r1",
+        submittedAt: "2026-05-24T19:03:46Z",
+        commitOid: "abc123",
+      }),
+      review({
+        id: "r2",
+        submittedAt: "2026-05-24T20:03:46Z",
+        commitOid: "def456",
+      }),
+    ]);
+    expect(entries).toHaveLength(2);
+    expect(
+      entries.find((entry) => entry.review?.id === "r1")?.thread.isOutdated,
+    ).toBe(true);
+    expect(
+      entries.find((entry) => entry.review?.id === "r2")?.thread.isOutdated,
+    ).toBe(false);
+  });
+
+  test("stays current when a timestamp is unknown", () => {
+    const [noCommit] = appended([review({ id: "r1", commitOid: null })]);
     expect(noCommit?.thread.isOutdated).toBe(false);
-    const [noHead] = appended([review({ id: "r1" })], null);
-    expect(noHead?.thread.isOutdated).toBe(false);
+    const [nullOlder] = appended([
+      review({ id: "r1", submittedAt: null }),
+      review({ id: "r2", submittedAt: "2026-05-24T20:03:46Z", body: null }),
+    ]);
+    expect(nullOlder?.thread.isOutdated).toBe(false);
   });
 
   test("ignores other authors and providers without a body parser", () => {
@@ -169,15 +210,9 @@ describe("appendReviewBodyFindings", () => {
       parsed,
       [review({ id: "r1", authorLogin: "shepherdjerred" })],
       coderabbitProvider,
-      "abc123",
     );
     expect(parsed).toEqual([]);
-    appendReviewBodyFindings(
-      parsed,
-      [review({ id: "r1" })],
-      qodoProvider,
-      "abc123",
-    );
+    appendReviewBodyFindings(parsed, [review({ id: "r1" })], qodoProvider);
     expect(parsed).toEqual([]);
   });
 });
