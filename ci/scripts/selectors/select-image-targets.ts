@@ -65,6 +65,7 @@ const GLOBAL_IMAGE_INPUTS = [
   "ci/scripts/migration-core.ts",
   "ci/scripts/images/production-bake-environment.ts",
   "ci/scripts/selectors/select-image-targets.ts",
+  "ci/scripts/selectors/ensure-ancestor.ts",
   "ci/scripts/selectors/select-image-targets-lockfile.ts",
   "ci/scripts/selectors/select-image-targets-pins.ts",
   "ci/scripts/selectors/select-image-targets-workspaces.ts",
