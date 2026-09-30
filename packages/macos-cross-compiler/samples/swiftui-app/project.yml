@@ -24,3 +24,13 @@ targets:
       base:
         CODE_SIGN_IDENTITY: "-"
         SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+  HelloTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [Tests]
+    dependencies:
+      - target: HelloSwiftUI
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_IDENTITY: "-"

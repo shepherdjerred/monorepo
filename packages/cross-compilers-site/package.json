@@ -1,9 +1,9 @@
 {
-  "name": "@shepherdjerred/macos-cross-site",
+  "name": "@shepherdjerred/cross-compilers-site",
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "description": "Marketing site for the macos-cross-compiler Docker image",
+  "description": "Marketing site for the macOS and Windows cross-compiler Docker images",
   "license": "GPL-3.0-only",
   "scripts": {
     "dev": "astro dev",

@@ -52,7 +52,7 @@ const RULES: readonly ArchitectureRule[] = [
     description:
       "provider credentials are read by @shepherdjerred/llm-runtime and wired only by reviewed deployment and credential paths",
     pattern:
-      /\b(?:ANTHROPIC_API_KEY|CLAUDE_CODE_OAUTH_TOKEN|CODEX_ACCESS_TOKEN|CODEX_API_KEY|GEMINI_API_KEY|GOOGLE_GENERATIVE_AI_API_KEY|GROQ_API_KEY|OPENAI_API_KEY|XAI_API_KEY)\b/,
+      /\b(?:ANTHROPIC_API_KEY|CLAUDE_CODE_OAUTH_TOKEN|CODEX_ACCESS_TOKEN|CODEX_AUTH_JSON_B64|CODEX_API_KEY|GEMINI_API_KEY|GOOGLE_GENERATIVE_AI_API_KEY|GROQ_API_KEY|OPENAI_API_KEY|XAI_API_KEY)\b/,
   },
   {
     id: "federation-shadowing-key",
@@ -127,6 +127,8 @@ const POKEMON_CODEX_SUBSCRIPTION_PATHS = new Set([
 // reviewed adapters; the manifest exception applies only to the Claude SDK
 // dependency declaration.
 const DURABLE_AGENT_CREDENTIAL_PATHS = new Set([
+  "packages/homelab/src/cdk8s/src/resources/temporal/workers/worker.ts",
+  "packages/temporal/src/activities/agent/chat/run-agent-chat-turn.ts",
   "packages/temporal/src/lib/agent-runner/claude.ts",
   "packages/temporal/src/lib/agent-runner/codex.ts",
 ]);

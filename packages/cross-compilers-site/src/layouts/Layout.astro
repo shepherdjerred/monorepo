@@ -1,5 +1,15 @@
 ---
 import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "cross-compilers - Build macOS, iOS, and Windows apps on Linux",
+  description = "Linux container images that build native macOS, iOS, Mac Catalyst, and Windows software: Swift, C, C++, Objective-C, Rust, .NET, and WinUI, with no Mac or Windows machine in the loop.",
+} = Astro.props;
 ---
 
 <!doctype html>
@@ -10,11 +20,8 @@ import "../styles/global.css";
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <meta name="color-scheme" content="dark light" />
-    <title>macos-cross-compiler - Build macOS and iOS apps on Linux</title>
-    <meta
-      name="description"
-      content="A Docker image that compiles, links, and signs macOS, iOS, and Mac Catalyst software on Linux: Swift, SwiftUI, SwiftPM, C, C++, Objective-C, and Rust, with Xcode-identical output."
-    />
+    <title>{title}</title>
+    <meta name="description" content={description} />
   </head>
   <body class="bg-white text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100">
     <a

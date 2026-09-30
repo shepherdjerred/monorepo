@@ -1,12 +1,13 @@
-# macos-cross-site
+# cross-compilers-site
 
 Astro + Tailwind marketing site for the
-[macos-cross-compiler](../macos-cross-compiler/) Docker image, served at
-<https://macos-cross.sjer.red>.
+[macos-cross-compiler](../macos-cross-compiler/) and
+[windows-cross-compiler](../windows-cross-compiler/) Docker images, served at
+<https://cross-compilers.sjer.red>.
 
 ## Commands
 
-Run from `packages/macos-cross-site`:
+Run from `packages/cross-compilers-site`:
 
 ```bash
 bun run dev       # astro dev

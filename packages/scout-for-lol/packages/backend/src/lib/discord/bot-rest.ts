@@ -484,6 +484,13 @@ export function botRest(): BotRestReader {
   return sharedReader;
 }
 
+/** The bot's current guild membership, bypassing the ordinary member cache. */
+export async function freshBotMember(
+  guildId: string,
+): Promise<DiscordGuildMember | null> {
+  return await botRest().freshGuildMember(guildId, configuration.applicationId);
+}
+
 const cdn = new CDN();
 
 /** The display name Discord would show for a member inside their guild. */

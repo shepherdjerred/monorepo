@@ -36,12 +36,15 @@ export const TEMPORAL_ROWS_LIMIT = 2000;
  * budget. A bucketed query is capped far higher because its rows are points on
  * a chart, not lines in a table.
  */
-export function effectiveRowLimit(plan: ScoutQlPlan): number {
+export function effectiveRowLimit(
+  plan: ScoutQlPlan,
+  rowLimitCeiling?: number,
+): number {
   const ceiling =
     planTemporalGrouping(plan) === null
       ? REPORT_MAX_ROWS_LIMIT
       : TEMPORAL_ROWS_LIMIT;
-  return Math.min(plan.limit, ceiling);
+  return Math.min(plan.limit, Math.max(ceiling, rowLimitCeiling ?? 0));
 }
 
 export type PlanResultInput = {

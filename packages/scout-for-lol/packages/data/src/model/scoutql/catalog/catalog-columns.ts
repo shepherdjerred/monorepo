@@ -1,11 +1,13 @@
 import {
-  ITEM_SLOT_COLUMNS,
+  LOADOUT_COLUMNS,
   MATCH_LAKE_COLUMNS,
-  MATCH_TEAM_BAN_LAKE_COLUMNS,
-  MATCH_TEAM_LAKE_COLUMNS,
   PREMATCH_LAKE_COLUMNS,
   type DuckDbColumnType,
 } from "#src/model/reports/lake-columns.ts";
+import {
+  MATCH_TEAM_BAN_LAKE_COLUMNS,
+  MATCH_TEAM_LAKE_COLUMNS,
+} from "#src/model/reports/match-team-lake-columns.ts";
 import { MATCH_REBUILD_GATED_COLUMNS } from "#src/model/reports/match-rebuild-gated-columns.ts";
 import { rawDisplayKind } from "#src/model/scoutql/catalog/catalog-display.ts";
 import {
@@ -70,15 +72,17 @@ const LAKE_TYPE: Record<DuckDbColumnType, ScoutQlColumnType> = {
 };
 
 /**
- * Excluded from every catalog: partitioning and dedupe plumbing, and the raw
- * inventory slots, which no ScoutQL source reads yet.
+ * Excluded from every catalog: partitioning/dedupe plumbing and UI fields
+ * whose reads are gated on a completed lake rebuild.
  */
 const INTERNAL_COLUMNS = new Set<string>([
   "month",
   "dedupe_key",
-  ...ITEM_SLOT_COLUMNS,
   ...MATCH_REBUILD_GATED_COLUMNS,
 ]);
+
+/** Loadout ids are identifiers, so they display as text, never as counts. */
+const LOADOUT = new Set(LOADOUT_COLUMNS);
 
 function physicalColumns(
   lake: Record<string, DuckDbColumnType>,
@@ -90,7 +94,9 @@ function physicalColumns(
       name,
       type: LAKE_TYPE[type],
       description: describe(name, overrides),
-      displayKind: rawDisplayKind(name, LAKE_TYPE[type]),
+      displayKind: LOADOUT.has(name)
+        ? "text"
+        : rawDisplayKind(name, LAKE_TYPE[type]),
       virtual: false,
       contexts: ALL_CONTEXTS,
     }));
@@ -154,6 +160,8 @@ const GROUP_EXCLUDED = new Set([
   "placement",
   "subteam_placement",
   "player_subteam_id",
+  // One player's loadout has no meaning for a group row.
+  ...LOADOUT_COLUMNS,
 ]);
 
 function playerGroupsColumns(): ScoutQlColumnInfo[] {

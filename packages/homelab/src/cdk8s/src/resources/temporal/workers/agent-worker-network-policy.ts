@@ -81,6 +81,18 @@ export function createTemporalAgentWorkerNetworkPolicy(chart: Chart): void {
           ],
           ports: [{ port: IntOrString.fromNumber(4318), protocol: "TCP" }],
         },
+        {
+          to: [
+            {
+              namespaceSelector: {
+                matchLabels: {
+                  "kubernetes.io/metadata.name": "seaweedfs",
+                },
+              },
+            },
+          ],
+          ports: [{ port: IntOrString.fromNumber(8333), protocol: "TCP" }],
+        },
         // Flipt egress (8080, for temporalFeatureFlagEnvironment()'s
         // temporal-call-graph-tracing check) is granted by the shared
         // temporal-workers-flipt-egress policy in worker-network-policies.ts,

@@ -4,8 +4,10 @@ import { rm } from "node:fs/promises";
 
 import { setupGitAuth } from "../lib/github-auth.ts";
 import {
+  findSupersededPendingPinKeys,
   mergePinCandidates,
   mergePinStates,
+  mergeVersionCatalogSources,
   parsePinCandidates,
   parsePinCandidatesState,
   parseVersionCatalogSource,
@@ -113,6 +115,7 @@ async function prepareAttempt(
   validateCandidateKeys(batch, mainVersions);
 
   let aggregate = mainState;
+  let catalogSource = mainSource;
   if (remoteSha !== null) {
     const pendingRef = `origin/${VERSION_BUMP_BRANCH}`;
     const pendingSource = await readBranchFile(
@@ -121,29 +124,98 @@ async function prepareAttempt(
       VERSION_CATALOG_FILE_REL,
     );
     const pendingVersions = parseVersionCatalogSource(pendingSource);
-    // Every generated bump commits its pin state beside the catalog, so the
-    // pending branch's state file is the authority for its pins.
+    // Every generated bump commits its full pin state beside the catalog.
     const pendingState = parsePinCandidatesState(
       await readBranchFile(git, pendingRef, PIN_STATE_FILE_REL),
     );
     validateStateAgainstVersions(pendingState, pendingVersions);
-    const { state: activePendingState, retiredKeys } = retainCurrentImagePins(
+    const mergeBaseResult = await git(
+      ["merge-base", "origin/main", pendingRef],
+      { capture: true },
+    );
+    const mergeBase = mergeBaseResult.stdout.trim();
+    const baseSource = await readBranchFile(
+      git,
+      mergeBase,
+      VERSION_CATALOG_FILE_REL,
+    );
+    const baseVersions = parseVersionCatalogSource(baseSource);
+    const baseState = parsePinCandidatesState(
+      await readBranchFile(git, mergeBase, PIN_STATE_FILE_REL),
+    );
+    validateStateAgainstVersions(baseState, baseVersions);
+    const historyCommits = await git(
+      [
+        "rev-list",
+        "--first-parent",
+        "--full-history",
+        "--reverse",
+        `${mergeBase}..origin/main`,
+        "--",
+        PIN_STATE_FILE_REL,
+      ],
+      { capture: true },
+    );
+    const mainHistory: ReturnType<typeof parsePinCandidatesState>[] = [];
+    for (const commit of historyCommits.stdout
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)) {
+      mainHistory.push(
+        parsePinCandidatesState(
+          await readBranchFile(git, commit, PIN_STATE_FILE_REL),
+        ),
+      );
+    }
+    const supersededPendingKeys = findSupersededPendingPinKeys(
+      mainState,
       pendingState,
-      mainVersions,
+      baseState,
+      mainHistory,
+    );
+    if (supersededPendingKeys.size > 0) {
+      console.log(
+        `Preserving main resets for pending image pins: ${[...supersededPendingKeys].join(", ")}`,
+      );
+    }
+    catalogSource = mergeVersionCatalogSources(
+      mainSource,
+      pendingSource,
+      baseSource,
+      supersededPendingKeys,
+    );
+    const mergedVersions = parseVersionCatalogSource(catalogSource);
+    // Preserve pins changed only on the generated branch. For keys unchanged
+    // there, keep main's changes and deletions so a reset can't be undone by a
+    // stale full-state snapshot.
+    const mergedPendingState = mergePinStates(
+      aggregate,
+      pendingState,
+      baseState,
+      supersededPendingKeys,
+    );
+    const { state: activePendingState, retiredKeys } = retainCurrentImagePins(
+      mergedPendingState,
+      mergedVersions,
     );
     if (retiredKeys.length > 0) {
       console.log(
         `Dropping retired image pins from pending version bump: ${retiredKeys.join(", ")}`,
       );
     }
-    aggregate = mergePinStates(aggregate, activePendingState);
+    aggregate = activePendingState;
+    catalogSource = await rewriteVersionCatalogSource(catalogSource, aggregate);
+    validateStateAgainstVersions(
+      aggregate,
+      parseVersionCatalogSource(catalogSource),
+    );
   }
   aggregate = mergePinCandidates(aggregate, batch);
 
   await resetVersionBumpBranch(git);
   await Bun.write(
     `${cloneDir}/${VERSION_CATALOG_FILE_REL}`,
-    await rewriteVersionCatalogSource(mainSource, aggregate),
+    await rewriteVersionCatalogSource(catalogSource, aggregate),
   );
   await Bun.write(
     `${cloneDir}/${PIN_STATE_FILE_REL}`,
