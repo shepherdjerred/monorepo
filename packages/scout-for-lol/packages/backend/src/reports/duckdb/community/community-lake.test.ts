@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { fetchFullMatch } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+import { fetchFullMatch } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import { fetchPlayerMatchHistory } from "#src/reports/duckdb/lake-reads.ts";
 import {
   fetchGuildAccountCounts,

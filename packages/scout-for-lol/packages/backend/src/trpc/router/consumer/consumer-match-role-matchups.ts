@@ -3,7 +3,7 @@ import type {
   LakeMatchParticipantRow,
   LakeTimelineCoverage,
   LaneDeltaFrame,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import { isStandardRiftGame } from "#src/trpc/router/consumer/standard-rift.ts";
 
 export const LANE_DELTA_MINUTE = 15;

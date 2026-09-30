@@ -10,7 +10,7 @@ import type {
   LakeMatchParticipantRow,
   LakeTimelineCoverage,
   LaneDeltaFrame,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import { buildRoleMatchups } from "#src/trpc/router/consumer/consumer-match-role-matchups.ts";
 import {
   configureConsumerProfileFeatureTest,

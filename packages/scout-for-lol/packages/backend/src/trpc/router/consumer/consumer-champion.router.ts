@@ -14,7 +14,7 @@ import {
 } from "@scout-for-lol/data";
 import { prisma } from "#src/database/index.ts";
 import { assertConsumerPlayerScope } from "#src/consumer/player-access.ts";
-import { fetchChampionComparisons } from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+import { fetchChampionComparisons } from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import { protectedProcedure, router } from "#src/trpc/trpc.ts";
 import { enqueueChampionMasteryRefresh } from "#src/temporal/work-store.ts";
 import {

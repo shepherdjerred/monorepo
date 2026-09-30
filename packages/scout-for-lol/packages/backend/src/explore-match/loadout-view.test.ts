@@ -16,16 +16,16 @@ import {
 import {
   fetchMatchLoadoutRows,
   type LakeMatchLoadoutRow,
-} from "#src/reports/duckdb/consumer-match-loadout-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/match-loadout-lake-reads.ts";
 import {
   fetchTimelineCoverage,
   fetchTimelineEventPage,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 
-vi.mock("#src/reports/duckdb/consumer-match-loadout-lake-reads.ts", () => ({
+vi.mock("#src/reports/duckdb/consumer/match-loadout-lake-reads.ts", () => ({
   fetchMatchLoadoutRows: vi.fn(),
 }));
-vi.mock("#src/reports/duckdb/consumer-profile-lake-reads.ts", () => ({
+vi.mock("#src/reports/duckdb/consumer/profile-lake-reads.ts", () => ({
   fetchTimelineCoverage: vi.fn(),
   fetchTimelineEventPage: vi.fn(),
 }));

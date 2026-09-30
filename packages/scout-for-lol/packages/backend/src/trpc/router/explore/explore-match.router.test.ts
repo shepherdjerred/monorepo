@@ -2,8 +2,8 @@ import { afterAll, beforeEach, describe, expect, test, vi } from "vitest";
 import type {
   LakeMatchParticipantRow,
   TimelineChartFrame,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
-import * as lakeReads from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
+import * as lakeReads from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import { resetConfigurationForTests } from "#src/configuration.ts";
 import { createOfflineTrpcHarness } from "#src/testing/test-trpc-caller.ts";
 import { testGuildId } from "#src/testing/test-ids.ts";
@@ -99,7 +99,7 @@ const fullFrames = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((participantId) =>
 const fetchFullMatch = vi.fn(async () => swiftplayRows);
 const fetchTimelineChartFrames = vi.fn(async () => fullFrames);
 
-vi.doMock("#src/reports/duckdb/consumer-profile-lake-reads.ts", () => ({
+vi.doMock("#src/reports/duckdb/consumer/profile-lake-reads.ts", () => ({
   ...lakeReads,
   fetchFullMatch,
   fetchTimelineChartFrames,

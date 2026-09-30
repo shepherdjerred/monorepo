@@ -17,7 +17,7 @@ import {
   fetchTimelineChartFrames,
   fetchTimelineCoverage,
   fetchTimelineEventPage,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import {
   fetchMatchTimelineEvents,
   fetchMatchTimelineFrames,

@@ -118,23 +118,7 @@ export async function pollBlueBubblesMessages(rawCursor: BlueBubblesCursor) {
   // a later successful evaluation can process messages received in the gap.
   if (!config.sourceAvailable)
     return BlueBubblesPollResultSchema.parse({ ...cursor, commands: [] });
-  if (!config.enabled || config.owners.length === 0) {
-    const progress = await initialBlueBubblesPage(cursor);
-    return BlueBubblesPollResultSchema.parse({
-      startedAt: cursor.startedAt,
-      initialized: progress.initialized,
-      lastRowId: progress.lastRowId,
-      sourceEpoch: cursor.sourceEpoch,
-      ...(progress.initializationHighWaterRowId === undefined
-        ? {}
-        : {
-            initializationHighWaterRowId: progress.initializationHighWaterRowId,
-          }),
-      commands: [],
-    });
-  }
-  const initializing = !cursor.initialized;
-  if (initializing) {
+  if (!config.enabled || config.owners.length === 0 || !cursor.initialized) {
     const progress = await initialBlueBubblesPage(cursor);
     return BlueBubblesPollResultSchema.parse({
       startedAt: cursor.startedAt,
