@@ -44,6 +44,17 @@ export const PR_DRY_RUN_TIER: ResourceTier = {
 };
 
 /**
+ * Image orchestration runs the build on the separate BuildKit service. The
+ * Woodpecker container only prepares inputs, starts the build, and records
+ * pins. Images and both CI refresh lanes peaked below 0.2 GiB over four days;
+ * reserve 2 GiB for cold runs while retaining the heavy tier's hard limits.
+ */
+export const IMAGE_ORCHESTRATION_TIER: ResourceTier = {
+  ...VERIFY_TIER,
+  memoryRequest: "2Gi",
+};
+
+/**
  * Thin deploy/publish/report steps whose work is seconds even cold.
  *
  * Small requests so the scheduler places them alongside a running heavy step

@@ -1,6 +1,6 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
-import { MEDIUM_TIER, VERIFY_TIER } from "#src/pipeline/tiers.ts";
+import { IMAGE_ORCHESTRATION_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
 import {
   GITHUB_DOWNLOAD,
   STATE_BACKEND,
@@ -105,7 +105,7 @@ export function releaseChainSteps(
       ],
       dependsOn: ["verify", "homelab-release-admission"],
       timeoutMinutes: 60,
-      resources: VERIFY_TIER,
+      resources: IMAGE_ORCHESTRATION_TIER,
       defaultBranchOnly: true,
       concurrency: { limit: 1, group: "image-push" },
       secrets: [
