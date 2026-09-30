@@ -56,7 +56,6 @@ All times are `America/Los_Angeles`.
 | `scout-queue-windows-daily`        | daily 06:45         | Scout queue windows are up to date | Action needed: Scout queue-window warnings |
 | `scout-season-refresh-weekly`      | Monday 07:00        | Scout season dates are up to date  | Scout season-date update created           |
 | `tasknotes-skipped-files-canary`   | Monday 09:00        | TaskNotes looks healthy            | Action needed: TaskNotes problem found     |
-| `protobufjs-v8-watch-weekly`       | Monday 09:00        | Temporal still uses protobufjs v7  | Temporal can move to protobufjs v8         |
 | `main-vuln-scan-weekly`            | Sunday 05:00        | No high-risk vulnerabilities found | Action needed: vulnerabilities found       |
 | `link-rot-scan-weekly`             | Sunday 09:00        | No broken links found              | Broken or unreachable links found          |
 

@@ -7,7 +7,7 @@ import {
   WorkdirEnvSchema,
   type CloneParams,
   type WorkdirDeps,
-} from "./pr-review-workdir.ts";
+} from "./agent-workdir.ts";
 
 function makeFakeDeps(opts: {
   cloneError?: string;
@@ -88,7 +88,7 @@ describe("gitProcessEnvironment", () => {
       ),
     ).toEqual({
       PATH: "/usr/bin",
-      HOME: "/tmp/pr-review-workdir",
+      HOME: "/tmp/agent-workdir",
       GIT_CONFIG_GLOBAL: "/dev/null",
       GIT_CONFIG_NOSYSTEM: "1",
       GIT_TERMINAL_PROMPT: "0",
@@ -109,9 +109,9 @@ describe("gitProcessEnvironment", () => {
 });
 
 describe("workdirPathFor", () => {
-  it("places the workdir under /tmp/pr-review-workdir/", () => {
+  it("places the workdir under /tmp/agent-workdir/", () => {
     const result = workdirPathFor("simple-id");
-    expect(result.startsWith("/tmp/pr-review-workdir/")).toBe(true);
+    expect(result.startsWith("/tmp/agent-workdir/")).toBe(true);
   });
 
   it("sanitizes path-unsafe characters from the workflow id", () => {
@@ -141,7 +141,7 @@ describe("provisionWorkdir", () => {
       deps,
     });
     expect(path).toBe(workdirPathFor("wf-123"));
-    expect(calls.mkdir).toEqual(["/tmp/pr-review-workdir"]);
+    expect(calls.mkdir).toEqual(["/tmp/agent-workdir"]);
     expect(calls.rmrf).toEqual([path]);
     expect(calls.clone).toHaveLength(1);
     expect(calls.clone[0]?.dest).toBe(path);
@@ -181,7 +181,7 @@ describe("provisionWorkdir", () => {
 describe("cleanupWorkdir", () => {
   it("rm -rf's the workdir path", async () => {
     const { deps, calls } = makeFakeDeps({});
-    await cleanupWorkdir("/tmp/pr-review-workdir/wf-x", deps);
-    expect(calls.rmrf).toEqual(["/tmp/pr-review-workdir/wf-x"]);
+    await cleanupWorkdir("/tmp/agent-workdir/wf-x", deps);
+    expect(calls.rmrf).toEqual(["/tmp/agent-workdir/wf-x"]);
   });
 });

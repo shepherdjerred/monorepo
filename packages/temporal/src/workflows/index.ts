@@ -43,8 +43,6 @@ import { runPokeemeraldDataRefresh as _runPokeemeraldDataRefresh } from "./dpp-p
 import type { PokeemeraldDataRefreshResult } from "#activities/dpp-pokeemerald-data-refresh.ts";
 import { runScoutShowcaseRefresh as _runScoutShowcaseRefresh } from "./scout/scout-showcase-refresh.ts";
 import { runScoutQueueWindowsWatch as _runScoutQueueWindowsWatch } from "./scout/scout-queue-windows.ts";
-import { runScoutCompetitionUpdatesWorkflow as _runScoutCompetitionUpdatesWorkflow } from "./scout/scout-competition-updates.ts";
-import type { ScoutCompetitionUpdateDispatchResult } from "./scout/scout-competition-updates.ts";
 import type { ScoutQueueWindowsResult } from "#activities/scout/scout-queue-windows.ts";
 import type { ScoutShowcaseRefreshResult } from "#activities/scout/scout-showcase-refresh.ts";
 import { runScoutBryanBucksAnalyticsWorkflow as _runScoutBryanBucksAnalyticsWorkflow } from "./scout/scout-bryan-bucks.ts";
@@ -55,7 +53,6 @@ import type {
   ScoutSeasonRefreshResult,
 } from "#activities/scout/scout-season-refresh.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab/homelab-audit.ts";
-import { runProtobufWatch as _runProtobufWatch } from "./ci/protobuf-watch.ts";
 import { runCiIoTelemetry as _runCiIoTelemetry } from "./ci/ci-io-telemetry.ts";
 import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
 import { monitorReportFreshness as _monitorReportFreshness } from "./scout/report-freshness.ts";
@@ -316,13 +313,6 @@ export async function runScoutQueueWindowsWatch(): Promise<ScoutQueueWindowsResu
   return _runScoutQueueWindowsWatch();
 }
 
-export async function runScoutCompetitionUpdatesWorkflow(): Promise<{
-  beta: ScoutCompetitionUpdateDispatchResult;
-  prod: ScoutCompetitionUpdateDispatchResult;
-}> {
-  return _runScoutCompetitionUpdatesWorkflow();
-}
-
 export async function runScoutSeasonRefreshWorkflow(
   input: ScoutSeasonRefreshInput = {},
 ): Promise<ScoutSeasonRefreshResult> {
@@ -334,10 +324,6 @@ export async function runHomelabAuditWorkflow(
   reportTaskQueue?: string,
 ): Promise<void> {
   return _runHomelabAuditWorkflow(input, reportTaskQueue);
-}
-
-export async function runProtobufWatch(): Promise<void> {
-  return _runProtobufWatch();
 }
 
 export async function runTasknotesCanary(): Promise<void> {

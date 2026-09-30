@@ -67,7 +67,7 @@ COPY --parents \
 # source package with no gitignored dist directory.
 RUN cd packages/home-assistant && bun run build
 # llm-models' package `main`/`exports` resolve to a gitignored `dist/`, so a
-# consumer that imports it (temporal's pr-review cost activity) crashes at
+# consumer that imports it (temporal's LLM cost accounting) crashes at
 # startup with `Cannot find module '@shepherdjerred/llm-models'` unless the
 # catalog is compiled first. (home-assistant and llm-observability export their
 # `src/` directly and need no build.)

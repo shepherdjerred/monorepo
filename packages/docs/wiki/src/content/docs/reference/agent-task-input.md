@@ -163,11 +163,11 @@ inheriting the worker environment.
 | Postal, S3, GitHub App, and ingress secrets | absent; delivery executes on the reports worker queue    |
 | ArgoCD, Grafana, Woodpecker, HA, Cloudflare | absent                                                   |
 
-The trusted, source-controlled agents are the exception. The homelab audit and
-the Scout season refresh do inherit the worker's operational credentials,
-because their prompts are code rather than user input; even there the bot's own
-GitHub credentials, every report-delivery credential, and every inference
-credential other than their own provider's are removed.
+The trusted, source-controlled agent is the exception. The Scout season refresh
+does inherit the worker's operational credentials, because its prompt is code
+rather than user input; even there the bot's own GitHub credentials, every
+report-delivery credential, and every inference credential other than its own
+provider's are removed.
 
 This lets generic investigations query the public repository, read-only
 Kubernetes API, Prometheus, and alert ledger without crossing the delivery or

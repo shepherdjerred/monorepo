@@ -11,7 +11,7 @@ import {
   runCommand,
   type GitCommandRunner,
 } from "./scout-season-refresh-git.ts";
-import { gitProcessEnvironment } from "#lib/pr-review-workdir.ts";
+import { gitProcessEnvironment } from "#lib/agent-workdir.ts";
 
 const TIMESTAMP_ONLY_DIFF = [
   "diff --git a/packages/scout-for-lol/packages/frontend/src/data/generated/scout-showcase-assets.json b/packages/scout-for-lol/packages/frontend/src/data/generated/scout-showcase-assets.json",
