@@ -1,6 +1,6 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep, SecretGrant } from "#src/pipeline/model.ts";
-import { MEDIUM_TIER, VERIFY_TIER } from "#src/pipeline/tiers.ts";
+import { IMAGE_ORCHESTRATION_TIER, MEDIUM_TIER } from "#src/pipeline/tiers.ts";
 import {
   GITHUB_DOWNLOAD,
   grant,
@@ -55,7 +55,7 @@ function refreshStep(
     ],
     dependsOn: ["verify"],
     timeoutMinutes,
-    resources: VERIFY_TIER,
+    resources: IMAGE_ORCHESTRATION_TIER,
     defaultBranchOnly: true,
     concurrency: { limit: 1, group: `${lane}-refresh` },
     secrets: [GITHUB_DOWNLOAD, GHCR_PUSH, ...GITHUB_APP],
