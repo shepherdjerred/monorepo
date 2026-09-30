@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { resolveMatchIdsSource } from "#src/reports/duckdb/community/match-source.ts";
+import { withMatchIdsSource } from "#src/reports/duckdb/community/match-source.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 
@@ -18,14 +18,19 @@ export async function fetchHistoryRosters(options: {
   matchIds: string[];
   lakeDir?: string;
 }) {
-  const source = await resolveMatchIdsSource(options.matchIds, options.lakeDir);
-  if (source === undefined) return [];
-  return await withDuckDBConnection(async (session) => {
-    const rows = await session.run(
-      `SELECT match_id, participant_id, team_id, champion_name, riot_id_game_name, riot_id_tagline ` +
-        `FROM (${source.sql}) ORDER BY match_id, team_id, participant_id`,
-      bindParams(session, source.params),
-    );
-    return rows.map((row) => HistoryRosterRowSchema.parse(row));
-  });
+  return await withMatchIdsSource(
+    options.matchIds,
+    options.lakeDir,
+    async (source) => {
+      if (source === undefined) return [];
+      return await withDuckDBConnection(async (session) => {
+        const rows = await session.run(
+          `SELECT match_id, participant_id, team_id, champion_name, riot_id_game_name, riot_id_tagline ` +
+            `FROM (${source.sql}) ORDER BY match_id, team_id, participant_id`,
+          bindParams(session, source.params),
+        );
+        return rows.map((row) => HistoryRosterRowSchema.parse(row));
+      });
+    },
+  );
 }

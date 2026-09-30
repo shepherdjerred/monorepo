@@ -20,7 +20,7 @@ import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
 import {
   buildMatchesSource,
   listParam,
-  resolveLakeFiles,
+  withLakeQueryRetry,
 } from "#src/reports/duckdb/lake.ts";
 import { runSettledWorkers } from "#src/league/explore-history/worker-pool.ts";
 
@@ -30,18 +30,21 @@ const KnownMatchRowSchema = z.object({ match_id: MatchIdSchema });
 
 async function fetchKnownMatchIds(matchIds: string[]): Promise<Set<string>> {
   if (matchIds.length === 0) return new Set();
-  const files = await resolveLakeFiles(resolveLakeDir());
-  const source = buildMatchesSource(files, {
-    sql: "match_id IN (SELECT unnest(?))",
-    params: [listParam(matchIds)],
-  });
-  if (source === undefined) return new Set();
-  return await withDuckDBConnection(async (session) => {
-    const rows = await session.run(
-      `SELECT DISTINCT match_id FROM (${source.sql})`,
-      bindParams(session, source.params),
-    );
-    return new Set(rows.map((row) => KnownMatchRowSchema.parse(row).match_id));
+  return await withLakeQueryRetry(resolveLakeDir(), async (files) => {
+    const source = buildMatchesSource(files, {
+      sql: "match_id IN (SELECT unnest(?))",
+      params: [listParam(matchIds)],
+    });
+    if (source === undefined) return new Set();
+    return await withDuckDBConnection(async (session) => {
+      const rows = await session.run(
+        `SELECT DISTINCT match_id FROM (${source.sql})`,
+        bindParams(session, source.params),
+      );
+      return new Set(
+        rows.map((row) => KnownMatchRowSchema.parse(row).match_id),
+      );
+    });
   });
 }
 

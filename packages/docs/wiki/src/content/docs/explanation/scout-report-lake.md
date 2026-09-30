@@ -276,7 +276,7 @@ game's match and timeline the same receipt.
 ```mermaid
 sequenceDiagram
   accTitle: Ingest write contract
-  accDescr: The post-match cron writes raw JSON to S3 first, and that write throws on failure because raw data is unrecoverable. It then overwrites the match's staging file in the lake directory, and that write never throws because the nightly rebuild re-derives the row from S3.
+  accDescr: The post-match cron writes raw JSON to S3 first, and that write throws on failure because raw data is unrecoverable. It then writes every match relation into a new staging directory and commits the directory with one rename. A failed staging write is reported to the ingest caller, while the nightly rebuild can re-derive the rows from S3.
 
   participant C as Post-match cron
   participant S as S3 raw store
@@ -284,20 +284,18 @@ sequenceDiagram
 
   C->>S: put games/.../match.json
   Note over C,S: must succeed — throws on failure
-  C->>L: overwrite matches-recent/matchId.jsonl
+  C->>L: commit one match generation with every relation
   Note over C,L: best effort — never throws
 ```
 
-Staging is one NDJSON file per match under `matches-recent/`, written as a
-whole-file overwrite rather than an append
+Staging commits an immutable generation for each match, timeline, prematch, or
+daily rank projection. The writer fills a private directory, then makes every
+relation visible with one rename
 ([staging.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/staging.ts)).
-Re-ingesting the same match rewrites the same file, so rows can never
-interleave the way concurrent appends would, and a successful retry is
-idempotent. The overwrite is not atomic, though: it targets the final path
-rather than writing a temporary file and renaming it, so a crash or a storage
-failure mid-write can leave a truncated file on disk. That is why compaction
-validates every staged line and skips the whole file when one fails, and why
-the nightly rebuild re-derives the row from S3 regardless.
+Concurrent retries keep separate generations. Readers select one complete
+generation per natural key, so they cannot combine rows from different captures.
+The manifest records the exact source object and digest when S3 supplied the
+projection. Older flat staging files remain readable while their writers drain.
 
 Supported timelines are normalized into four relations. `timeline_events` gives
 each event a stable ID; `timeline_event_participants` records semantic roles;
@@ -403,14 +401,18 @@ A fold runs every fifteen minutes
 ([compactor.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/report-lake/compactor.ts)).
 It hardlinks the previous build's files into a new build directory, converts
 the staged NDJSON into small per-month Parquet files, and deletes only the
-staging files it provably folded. Hardlinking makes fold cost proportional to
-the backlog, not to the size of the lake.
+generations captured before the fold. A generation committed during the fold
+survives for the next build. Hardlinking makes fold cost proportional to the
+backlog, not to the size of the lake.
 
 A rebuild runs nightly. It enumerates the supported raw prefixes in S3, streams
 every retained match and timeline through the same flatteners, and writes each
 table fresh. The rebuild is
 simultaneously the defragmenter (folds leave one small file per touched
 month), the backfill mechanism, and the recovery path.
+After publication, it retires a captured generation only when it read the
+same S3 object key and byte digest. This keeps a newer or locally sourced
+projection visible if it was absent from the rebuild.
 
 Rescanning everything nightly sounds expensive, but the Parquet side is not
 the cost: DuckDB converts 100k flattened rows into partitioned Parquet in
@@ -419,8 +421,9 @@ dominated by fetching each raw JSON object from S3 (16 concurrent GETs —
 minutes at current scale), and a slow rebuild is invisible to readers because
 queries keep serving the previous build until the pointer swap below.
 
-A staging file with any invalid line is skipped whole, left on disk for the
-rebuild, and counted in `report_lake_compaction_skipped_total`
+A committed generation with an invalid relation is skipped as a whole and left
+for rebuild. Legacy flat files are still validated individually. Skips count in
+`report_lake_compaction_skipped_total`
 ([report-lake.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/metrics/report-lake.ts)).
 Growth in that counter is the early warning that Riot's payloads drifted from
 the Zod schemas.
@@ -439,7 +442,11 @@ Readers never wait for compaction. Every query unions the published Parquet
 with the raw staging NDJSON, then deduplicates with a window function in
 [lake.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/duckdb/lake.ts).
 A match is therefore queryable seconds after ingest, up to fifteen minutes
-before any Parquet exists for it.
+before any Parquet exists for it. Each query captures one staging selection and
+one published build. If cleanup removes a captured path before execution, the
+whole query resolves a fresh snapshot and retries within a fixed bound.
+The retry boundary starts at
+[lake.ts](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/reports/duckdb/lake.ts).
 
 ```mermaid
 flowchart LR

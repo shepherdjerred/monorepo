@@ -18,7 +18,7 @@ import {
   buildMatchesSource,
   buildTimelineCoverageSource,
   listParam,
-  resolveLakeFiles,
+  withLakeQueryRetry,
   scalarParam,
 } from "#src/reports/duckdb/lake.ts";
 import type { ToolTracker } from "#src/reports/ai/scoutql-tools.ts";
@@ -44,52 +44,55 @@ async function inspectCoverage(puuid: string): Promise<{
   firstGameAt: string | null;
   lastGameAt: string | null;
 }> {
-  const files = await resolveLakeFiles(resolveLakeDir());
-  const matches = buildMatchesSource(files, {
-    sql: "puuid = ?",
-    params: [scalarParam(puuid)],
-  });
-  if (matches === undefined) {
-    return { games: 0, timelines: 0, firstGameAt: null, lastGameAt: null };
-  }
-  return await withDuckDBConnection(async (session) => {
-    const matchRows = await session.run(
-      `SELECT COUNT(DISTINCT match_id) AS games, MIN(epoch_ms(game_creation_at)) AS first_game_ms, MAX(epoch_ms(game_creation_at)) AS last_game_ms FROM (${matches.sql})`,
-      bindParams(session, matches.params),
-    );
-    const coverage = CoverageRowSchema.parse(matchRows[0]);
-    const idRows = await session.run(
-      `SELECT DISTINCT match_id FROM (${matches.sql})`,
-      bindParams(session, matches.params),
-    );
-    const matchIds = idRows.map((row) => MatchIdRowSchema.parse(row).match_id);
-    const timelineSource =
-      matchIds.length === 0
-        ? undefined
-        : buildTimelineCoverageSource(files, {
-            sql: "coverage_state = 'complete' AND match_id IN (SELECT unnest(?))",
-            params: [listParam(matchIds)],
-          });
-    let timelines = 0;
-    if (timelineSource !== undefined) {
-      const timelineRows = await session.run(
-        `SELECT COUNT(DISTINCT match_id) AS timelines FROM (${timelineSource.sql})`,
-        bindParams(session, timelineSource.params),
-      );
-      timelines = TimelineCountRowSchema.parse(timelineRows[0]).timelines;
+  return await withLakeQueryRetry(resolveLakeDir(), async (files) => {
+    const matches = buildMatchesSource(files, {
+      sql: "puuid = ?",
+      params: [scalarParam(puuid)],
+    });
+    if (matches === undefined) {
+      return { games: 0, timelines: 0, firstGameAt: null, lastGameAt: null };
     }
-    return {
-      games: coverage.games,
-      timelines,
-      firstGameAt:
-        coverage.first_game_ms === null
-          ? null
-          : new Date(coverage.first_game_ms).toISOString(),
-      lastGameAt:
-        coverage.last_game_ms === null
-          ? null
-          : new Date(coverage.last_game_ms).toISOString(),
-    };
+    return await withDuckDBConnection(async (session) => {
+      const matchRows = await session.run(
+        `SELECT COUNT(DISTINCT match_id) AS games, MIN(epoch_ms(game_creation_at)) AS first_game_ms, MAX(epoch_ms(game_creation_at)) AS last_game_ms FROM (${matches.sql})`,
+        bindParams(session, matches.params),
+      );
+      const coverage = CoverageRowSchema.parse(matchRows[0]);
+      const idRows = await session.run(
+        `SELECT DISTINCT match_id FROM (${matches.sql})`,
+        bindParams(session, matches.params),
+      );
+      const matchIds = idRows.map(
+        (row) => MatchIdRowSchema.parse(row).match_id,
+      );
+      const timelineSource =
+        matchIds.length === 0
+          ? undefined
+          : buildTimelineCoverageSource(files, {
+              sql: "coverage_state = 'complete' AND match_id IN (SELECT unnest(?))",
+              params: [listParam(matchIds)],
+            });
+      let timelines = 0;
+      if (timelineSource !== undefined) {
+        const timelineRows = await session.run(
+          `SELECT COUNT(DISTINCT match_id) AS timelines FROM (${timelineSource.sql})`,
+          bindParams(session, timelineSource.params),
+        );
+        timelines = TimelineCountRowSchema.parse(timelineRows[0]).timelines;
+      }
+      return {
+        games: coverage.games,
+        timelines,
+        firstGameAt:
+          coverage.first_game_ms === null
+            ? null
+            : new Date(coverage.first_game_ms).toISOString(),
+        lastGameAt:
+          coverage.last_game_ms === null
+            ? null
+            : new Date(coverage.last_game_ms).toISOString(),
+      };
+    });
   });
 }
 

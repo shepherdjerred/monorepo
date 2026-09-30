@@ -76,6 +76,7 @@ export async function rebuildTimelineParquet(options: {
   client: S3Client;
   bucket: string;
   buildDir: string;
+  foldedSources?: Set<string>;
   abortSignal: AbortSignal;
   timeoutMs: number;
   /** Old→new PUUIDs for timelines captured under a previous API key. */
@@ -93,6 +94,9 @@ export async function rebuildTimelineParquet(options: {
     bucket: options.bucket,
     writers,
     foldedIds,
+    ...(options.foldedSources === undefined
+      ? {}
+      : { foldedSources: options.foldedSources }),
     puuidRemap: options.puuidRemap,
     abortSignal: options.abortSignal,
     ...(options.onProgress === undefined

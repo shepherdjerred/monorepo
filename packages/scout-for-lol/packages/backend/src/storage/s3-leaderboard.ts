@@ -3,6 +3,7 @@ import {
   GetObjectCommand,
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
+import { createHash } from "node:crypto";
 import { createS3Client } from "#src/storage/s3-client.ts";
 import {
   CachedLeaderboardSchema,
@@ -141,7 +142,17 @@ export async function saveCachedLeaderboard(
     });
 
     await client.send(snapshotCommand);
-    await writeCompetitionRankHistoryStagingFile(resolveLakeDir(), leaderboard);
+    await writeCompetitionRankHistoryStagingFile(
+      resolveLakeDir(),
+      leaderboard,
+      {
+        source: {
+          kind: "s3",
+          key: snapshotKey,
+          digest: createHash("sha256").update(body).digest("hex"),
+        },
+      },
+    );
 
     const uploadTime = Date.now() - startTime;
     logger.info(

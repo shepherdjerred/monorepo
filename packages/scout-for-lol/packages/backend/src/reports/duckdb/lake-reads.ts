@@ -1,9 +1,6 @@
 import {
-  CachedLeaderboardSchema,
   type PlayerProfileGameWindow,
   type QueueType,
-  type CachedLeaderboard,
-  type CompetitionId,
 } from "@scout-for-lol/data";
 import { z } from "zod";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
@@ -17,11 +14,10 @@ import {
   type DuckDBSession,
 } from "#src/reports/duckdb/instance.ts";
 import {
-  buildCompetitionRankHistorySource,
   buildMatchesSource,
   listParam,
-  resolveLakeFiles,
   scalarParam,
+  withLakeQueryRetry,
   type BoundParam,
   type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
@@ -88,28 +84,29 @@ export async function fetchRecentGamesForPuuids(options: {
     return [];
   }
   const lakeDir = options.lakeDir ?? resolveLakeDir();
-  const files = await resolveLakeFiles(lakeDir);
-  const source = buildMatchesSource(files, {
-    sql: "puuid IN (SELECT unnest(?)) AND match_id <> ?",
-    params: [listParam(options.puuids), scalarParam(options.excludeMatchId)],
-  });
-  if (source === undefined) {
-    return [];
-  }
-  const sql =
-    `SELECT match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
-    `champion_name, team_position, queue, win, kills, deaths, assists, ` +
-    `creep_score, game_duration_seconds, team_id FROM (${source.sql}) ` +
-    `ORDER BY game_creation_ms DESC LIMIT ?`;
-  return await withDuckDBConnection(async (session) => {
-    const rows = await session.run(
-      sql,
-      bindParams(session, [
-        ...source.params,
-        scalarParam(Math.floor(options.limit)),
-      ]),
-    );
-    return rows.map((row) => HistoryGameRowSchema.parse(row));
+  return await withLakeQueryRetry(lakeDir, async (files) => {
+    const source = buildMatchesSource(files, {
+      sql: "puuid IN (SELECT unnest(?)) AND match_id <> ?",
+      params: [listParam(options.puuids), scalarParam(options.excludeMatchId)],
+    });
+    if (source === undefined) {
+      return [];
+    }
+    const sql =
+      `SELECT match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
+      `champion_name, team_position, queue, win, kills, deaths, assists, ` +
+      `creep_score, game_duration_seconds, team_id FROM (${source.sql}) ` +
+      `ORDER BY game_creation_ms DESC LIMIT ?`;
+    return await withDuckDBConnection(async (session) => {
+      const rows = await session.run(
+        sql,
+        bindParams(session, [
+          ...source.params,
+          scalarParam(Math.floor(options.limit)),
+        ]),
+      );
+      return rows.map((row) => HistoryGameRowSchema.parse(row));
+    });
   });
 }
 
@@ -126,38 +123,39 @@ export async function fetchRecentQueueGamesForPuuids(options: {
 }): Promise<QueueHistoryGameRow[]> {
   if (options.puuids.length === 0) return [];
   const lakeDir = options.lakeDir ?? resolveLakeDir();
-  const files = await resolveLakeFiles(lakeDir);
-  const source = buildMatchesSource(files, {
-    sql: "puuid IN (SELECT unnest(?)) AND match_id <> ? AND queue = ?",
-    params: [
-      listParam(options.puuids),
-      scalarParam(options.excludeMatchId),
-      scalarParam(options.queue),
-    ],
+  return await withLakeQueryRetry(lakeDir, async (files) => {
+    const source = buildMatchesSource(files, {
+      sql: "puuid IN (SELECT unnest(?)) AND match_id <> ? AND queue = ?",
+      params: [
+        listParam(options.puuids),
+        scalarParam(options.excludeMatchId),
+        scalarParam(options.queue),
+      ],
+    });
+    if (source === undefined) return [];
+    const sql =
+      `WITH ranked_history AS (` +
+      `SELECT puuid, match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
+      `champion_name, team_position, queue, win, kills, deaths, assists, ` +
+      `creep_score, game_duration_seconds, team_id, ` +
+      `row_number() OVER (PARTITION BY puuid ORDER BY game_creation_at DESC) AS history_rank ` +
+      `FROM (${source.sql})) ` +
+      `SELECT puuid, match_id, game_creation_ms, champion_name, team_position, queue, ` +
+      `win, kills, deaths, assists, creep_score, game_duration_seconds, team_id ` +
+      `FROM ranked_history WHERE history_rank <= ? ORDER BY puuid, game_creation_ms DESC`;
+    const connectionOptions =
+      options.timeoutMs === undefined ? {} : { timeoutMs: options.timeoutMs };
+    return await withDuckDBConnection(async (session) => {
+      const rows = await session.run(
+        sql,
+        bindParams(session, [
+          ...source.params,
+          scalarParam(Math.floor(options.limitPerPlayer)),
+        ]),
+      );
+      return rows.map((row) => QueueHistoryGameRowSchema.parse(row));
+    }, connectionOptions);
   });
-  if (source === undefined) return [];
-  const sql =
-    `WITH ranked_history AS (` +
-    `SELECT puuid, match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
-    `champion_name, team_position, queue, win, kills, deaths, assists, ` +
-    `creep_score, game_duration_seconds, team_id, ` +
-    `row_number() OVER (PARTITION BY puuid ORDER BY game_creation_at DESC) AS history_rank ` +
-    `FROM (${source.sql})) ` +
-    `SELECT puuid, match_id, game_creation_ms, champion_name, team_position, queue, ` +
-    `win, kills, deaths, assists, creep_score, game_duration_seconds, team_id ` +
-    `FROM ranked_history WHERE history_rank <= ? ORDER BY puuid, game_creation_ms DESC`;
-  const connectionOptions =
-    options.timeoutMs === undefined ? {} : { timeoutMs: options.timeoutMs };
-  return await withDuckDBConnection(async (session) => {
-    const rows = await session.run(
-      sql,
-      bindParams(session, [
-        ...source.params,
-        scalarParam(Math.floor(options.limitPerPlayer)),
-      ]),
-    );
-    return rows.map((row) => QueueHistoryGameRowSchema.parse(row));
-  }, connectionOptions);
 }
 
 const TeamRowSchema = z.object({
@@ -184,22 +182,23 @@ export async function fetchTeamRowsForMatches(options: {
     return [];
   }
   const lakeDir = options.lakeDir ?? resolveLakeDir();
-  const files = await resolveLakeFiles(lakeDir);
-  const source = buildMatchesSource(files, {
-    sql: "match_id IN (SELECT unnest(?)) AND puuid IN (SELECT unnest(?)) AND puuid <> ?",
-    params: [
-      listParam(options.matchIds),
-      listParam(options.puuids),
-      scalarParam(options.excludePuuid),
-    ],
-  });
-  if (source === undefined) {
-    return [];
-  }
-  const sql = `SELECT match_id, team_id, win, puuid FROM (${source.sql})`;
-  return await withDuckDBConnection(async (session) => {
-    const rows = await session.run(sql, bindParams(session, source.params));
-    return rows.map((row) => TeamRowSchema.parse(row));
+  return await withLakeQueryRetry(lakeDir, async (files) => {
+    const source = buildMatchesSource(files, {
+      sql: "match_id IN (SELECT unnest(?)) AND puuid IN (SELECT unnest(?)) AND puuid <> ?",
+      params: [
+        listParam(options.matchIds),
+        listParam(options.puuids),
+        scalarParam(options.excludePuuid),
+      ],
+    });
+    if (source === undefined) {
+      return [];
+    }
+    const sql = `SELECT match_id, team_id, win, puuid FROM (${source.sql})`;
+    return await withDuckDBConnection(async (session) => {
+      const rows = await session.run(sql, bindParams(session, source.params));
+      return rows.map((row) => TeamRowSchema.parse(row));
+    });
   });
 }
 
@@ -208,13 +207,17 @@ export async function fetchTeamRowsForMatches(options: {
  * Resolve the lake and build a matches source for one predicate.
  * `undefined` means the lake has no files yet — callers return [].
  */
-async function matchesSourceFor(
+async function withMatchesSource<T>(
   lakeDir: string | undefined,
   predicate: SqlFragment,
-  loadout: readonly string[] = [],
-): Promise<SqlFragment | undefined> {
-  const files = await resolveLakeFiles(lakeDir ?? resolveLakeDir());
-  return buildMatchesSource(files, predicate, loadout);
+  loadout: readonly string[],
+  action: (source: SqlFragment | undefined) => Promise<T>,
+): Promise<T> {
+  return await withLakeQueryRetry(
+    lakeDir ?? resolveLakeDir(),
+    async (files) =>
+      await action(buildMatchesSource(files, predicate, loadout)),
+  );
 }
 
 /** Run `sql` over a built source and parse every row with `schema`. */
@@ -354,35 +357,37 @@ export async function fetchPlayerMatchHistory(options: {
     );
   }
 
-  const source = await matchesSourceFor(
+  return await withMatchesSource(
     options.lakeDir,
     {
       sql: clauses.join(" AND "),
       params,
     },
     MATCH_UI_READ_COLUMNS,
+    async (source) => {
+      if (source === undefined) {
+        return [];
+      }
+      const limitSql = options.limit === undefined ? "" : "LIMIT ?";
+      return await runLakeQuery({
+        source,
+        sql:
+          `SELECT match_id, puuid, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
+          `game_duration_seconds, queue, queue_id, game_mode, placement, subteam_placement, player_subteam_id, ` +
+          `augment_1_id, augment_2_id, augment_3_id, augment_4_id, augment_5_id, augment_6_id, ` +
+          `champion_id, champion_name, team_position, team_id, win, kills, deaths, assists, creep_score, ` +
+          `gold_earned, total_damage_dealt_to_champions, vision_score, time_played, ` +
+          `${MATCH_LOADOUT_LAKE_COLUMNS_SQL} ` +
+          `FROM (${source.sql}) ${DEDUPE_TO_ONE_ROW_PER_MATCH} ` +
+          `ORDER BY game_creation_ms DESC, match_id DESC ${limitSql}`,
+        extraParams:
+          options.limit === undefined
+            ? []
+            : [scalarParam(Math.floor(options.limit))],
+        schema: PlayerMatchHistoryRowSchema,
+      });
+    },
   );
-  if (source === undefined) {
-    return [];
-  }
-  const limitSql = options.limit === undefined ? "" : "LIMIT ?";
-  return await runLakeQuery({
-    source,
-    sql:
-      `SELECT match_id, puuid, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
-      `game_duration_seconds, queue, queue_id, game_mode, placement, subteam_placement, player_subteam_id, ` +
-      `augment_1_id, augment_2_id, augment_3_id, augment_4_id, augment_5_id, augment_6_id, ` +
-      `champion_id, champion_name, team_position, team_id, win, kills, deaths, assists, creep_score, ` +
-      `gold_earned, total_damage_dealt_to_champions, vision_score, time_played, ` +
-      `${MATCH_LOADOUT_LAKE_COLUMNS_SQL} ` +
-      `FROM (${source.sql}) ${DEDUPE_TO_ONE_ROW_PER_MATCH} ` +
-      `ORDER BY game_creation_ms DESC, match_id DESC ${limitSql}`,
-    extraParams:
-      options.limit === undefined
-        ? []
-        : [scalarParam(Math.floor(options.limit))],
-    schema: PlayerMatchHistoryRowSchema,
-  });
 }
 
 const ChampionPoolRowSchema = z.object({
@@ -422,38 +427,41 @@ export async function fetchPlayerChampionPool(options: {
   if (options.puuids.length === 0) {
     return [];
   }
-  const source = await matchesSourceFor(
+  return await withMatchesSource(
     options.lakeDir,
     playerPredicate(options),
+    [],
+    async (source) => {
+      if (source === undefined) {
+        return [];
+      }
+      const limitSql =
+        options.games === 20 || options.games === 50 ? "LIMIT ?" : "";
+      return await runLakeQuery({
+        source,
+        sql:
+          `WITH player_matches AS (` +
+          `SELECT * FROM (${source.sql}) ${DEDUPE_TO_ONE_ROW_PER_MATCH} ` +
+          `ORDER BY game_creation_at DESC, match_id DESC ${limitSql}) ` +
+          `SELECT champion_id, champion_name, count(*) AS games, ` +
+          `sum(CASE WHEN win THEN 1 ELSE 0 END)::BIGINT AS wins, ` +
+          `sum(kills)::BIGINT AS kills, sum(deaths)::BIGINT AS deaths, ` +
+          `sum(assists)::BIGINT AS assists, sum(creep_score)::BIGINT AS creep_score, ` +
+          `sum(time_played)::BIGINT AS time_played, ` +
+          `sum(COALESCE(gold_earned, 0))::BIGINT AS gold_earned, ` +
+          `sum(COALESCE(vision_score, 0))::BIGINT AS vision_score, ` +
+          `sum(COALESCE(total_damage_dealt_to_champions, 0))::BIGINT AS damage_to_champions, ` +
+          `mode(CASE WHEN upper(trim(team_position)) IN ('', 'INVALID') THEN NULL ELSE team_position END) AS team_position ` +
+          `FROM player_matches ` +
+          `GROUP BY champion_id, champion_name ORDER BY games DESC, champion_name ASC`,
+        extraParams:
+          options.games === 20 || options.games === 50
+            ? [scalarParam(options.games)]
+            : [],
+        schema: ChampionPoolRowSchema,
+      });
+    },
   );
-  if (source === undefined) {
-    return [];
-  }
-  const limitSql =
-    options.games === 20 || options.games === 50 ? "LIMIT ?" : "";
-  return await runLakeQuery({
-    source,
-    sql:
-      `WITH player_matches AS (` +
-      `SELECT * FROM (${source.sql}) ${DEDUPE_TO_ONE_ROW_PER_MATCH} ` +
-      `ORDER BY game_creation_at DESC, match_id DESC ${limitSql}) ` +
-      `SELECT champion_id, champion_name, count(*) AS games, ` +
-      `sum(CASE WHEN win THEN 1 ELSE 0 END)::BIGINT AS wins, ` +
-      `sum(kills)::BIGINT AS kills, sum(deaths)::BIGINT AS deaths, ` +
-      `sum(assists)::BIGINT AS assists, sum(creep_score)::BIGINT AS creep_score, ` +
-      `sum(time_played)::BIGINT AS time_played, ` +
-      `sum(COALESCE(gold_earned, 0))::BIGINT AS gold_earned, ` +
-      `sum(COALESCE(vision_score, 0))::BIGINT AS vision_score, ` +
-      `sum(COALESCE(total_damage_dealt_to_champions, 0))::BIGINT AS damage_to_champions, ` +
-      `mode(CASE WHEN upper(trim(team_position)) IN ('', 'INVALID') THEN NULL ELSE team_position END) AS team_position ` +
-      `FROM player_matches ` +
-      `GROUP BY champion_id, champion_name ORDER BY games DESC, champion_name ASC`,
-    extraParams:
-      options.games === 20 || options.games === 50
-        ? [scalarParam(options.games)]
-        : [],
-    schema: ChampionPoolRowSchema,
-  });
 }
 
 const TeamTotalsRowSchema = z.object({
@@ -476,77 +484,25 @@ export async function fetchTeamTotalsForMatches(options: {
   if (options.matchIds.length === 0) {
     return [];
   }
-  const source = await matchesSourceFor(options.lakeDir, {
-    sql: "match_id IN (SELECT unnest(?))",
-    params: [listParam(options.matchIds)],
-  });
-  if (source === undefined) {
-    return [];
-  }
-  return await runLakeQuery({
-    source,
-    sql:
-      `SELECT match_id, team_id, sum(kills)::BIGINT AS team_kills, ` +
-      `sum(total_damage_dealt_to_champions)::BIGINT AS team_damage_to_champions ` +
-      `FROM (${source.sql}) GROUP BY match_id, team_id`,
-    schema: TeamTotalsRowSchema,
-  });
-}
-
-const CompetitionRankHistoryRowSchema = z.object({
-  calculated_ms: z.union([z.bigint(), z.number()]).transform(Number),
-  player_id: z.union([z.bigint(), z.number()]).transform(Number),
-  player_name: z.string(),
-  score: z.number(),
-  rank: z.union([z.bigint(), z.number()]).transform(Number),
-});
-
-/**
- * Read the disposable competition_rank_history materialization. Undefined
- * means the current lake predates this source, allowing the API migration
- * path to read authoritative S3 directly; an empty array is a valid built
- * source with no snapshots for this competition.
- */
-export async function fetchCompetitionRankHistory(options: {
-  competitionId: CompetitionId;
-  lakeDir?: string;
-}): Promise<CachedLeaderboard[] | undefined> {
-  const lakeDir = options.lakeDir ?? resolveLakeDir();
-  const files = await resolveLakeFiles(lakeDir);
-  const source = buildCompetitionRankHistorySource(files, {
-    sql: "competition_id = ?",
-    params: [scalarParam(options.competitionId)],
-  });
-  if (source === undefined) {
-    return undefined;
-  }
-  return await withDuckDBConnection(async (session) => {
-    const rows = await session.run(
-      `SELECT epoch_ms(calculated_at)::BIGINT AS calculated_ms, player_id, player_name, score, rank FROM (${source.sql}) ORDER BY calculated_at ASC, rank ASC`,
-      bindParams(session, source.params),
-    );
-    const snapshots = new Map<
-      number,
-      z.infer<typeof CompetitionRankHistoryRowSchema>[]
-    >();
-    for (const row of rows) {
-      const parsed = CompetitionRankHistoryRowSchema.parse(row);
-      const bucket = snapshots.get(parsed.calculated_ms) ?? [];
-      bucket.push(parsed);
-      snapshots.set(parsed.calculated_ms, bucket);
-    }
-    return [...snapshots.entries()].map(([calculatedMs, entries]) =>
-      CachedLeaderboardSchema.parse({
-        version: "v1",
-        competitionId: options.competitionId,
-        calculatedAt: new Date(calculatedMs).toISOString(),
-        entries: entries.map((entry) => ({
-          playerId: entry.player_id,
-          playerName: entry.player_name,
-          score: entry.score,
-          rank: entry.rank,
-        })),
-      }),
-    );
-  });
+  return await withMatchesSource(
+    options.lakeDir,
+    {
+      sql: "match_id IN (SELECT unnest(?))",
+      params: [listParam(options.matchIds)],
+    },
+    [],
+    async (source) => {
+      if (source === undefined) {
+        return [];
+      }
+      return await runLakeQuery({
+        source,
+        sql:
+          `SELECT match_id, team_id, sum(kills)::BIGINT AS team_kills, ` +
+          `sum(total_damage_dealt_to_champions)::BIGINT AS team_damage_to_champions ` +
+          `FROM (${source.sql}) GROUP BY match_id, team_id`,
+        schema: TeamTotalsRowSchema,
+      });
+    },
+  );
 }

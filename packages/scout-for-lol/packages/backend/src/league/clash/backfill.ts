@@ -13,7 +13,7 @@ import {
   buildMatchesSource,
   buildPrematchSource,
   listParam,
-  resolveLakeFiles,
+  withLakeQueryRetry,
   scalarParam,
   type SqlFragment,
 } from "#src/reports/duckdb/lake.ts";
@@ -126,39 +126,40 @@ export async function backfillClashSightingsFromLake(): Promise<number> {
 }
 
 async function loadClashLakeRows(puuids: string[]): Promise<LakeClashRow[]> {
-  const files = await resolveLakeFiles(resolveLakeDir());
-  const prematch = buildPrematchSource(files, {
-    sql: "puuid IN (SELECT unnest(?)) AND queue IN (SELECT unnest(?))",
-    params: [listParam(puuids), listParam(["clash", "aram clash"])],
+  return await withLakeQueryRetry(resolveLakeDir(), async (files) => {
+    const prematch = buildPrematchSource(files, {
+      sql: "puuid IN (SELECT unnest(?)) AND queue IN (SELECT unnest(?))",
+      params: [listParam(puuids), listParam(["clash", "aram clash"])],
+    });
+    const matches = buildMatchesSource(files, {
+      sql: "puuid IN (SELECT unnest(?)) AND queue = ?",
+      params: [listParam(puuids), scalarParam("clash")],
+    });
+    const rows: LakeClashRow[] = [];
+    if (prematch !== undefined) {
+      rows.push(
+        ...(await queryClashLake({
+          source: prematch,
+          sql:
+            `SELECT platform_id, game_id, puuid, queue, champion_id, team_id, ` +
+            `COALESCE(epoch_ms(game_start_at), epoch_ms(observed_at))::BIGINT AS observed_ms, ` +
+            `NULL AS win, 'prematch' AS source FROM (${prematch.sql})`,
+        })),
+      );
+    }
+    if (matches !== undefined) {
+      rows.push(
+        ...(await queryClashLake({
+          source: matches,
+          sql:
+            `SELECT platform_id, game_id, puuid, queue, champion_id, team_id, ` +
+            `epoch_ms(game_start_at)::BIGINT AS observed_ms, win, 'match' AS source ` +
+            `FROM (${matches.sql})`,
+        })),
+      );
+    }
+    return rows;
   });
-  const matches = buildMatchesSource(files, {
-    sql: "puuid IN (SELECT unnest(?)) AND queue = ?",
-    params: [listParam(puuids), scalarParam("clash")],
-  });
-  const rows: LakeClashRow[] = [];
-  if (prematch !== undefined) {
-    rows.push(
-      ...(await queryClashLake({
-        source: prematch,
-        sql:
-          `SELECT platform_id, game_id, puuid, queue, champion_id, team_id, ` +
-          `COALESCE(epoch_ms(game_start_at), epoch_ms(observed_at))::BIGINT AS observed_ms, ` +
-          `NULL AS win, 'prematch' AS source FROM (${prematch.sql})`,
-      })),
-    );
-  }
-  if (matches !== undefined) {
-    rows.push(
-      ...(await queryClashLake({
-        source: matches,
-        sql:
-          `SELECT platform_id, game_id, puuid, queue, champion_id, team_id, ` +
-          `epoch_ms(game_start_at)::BIGINT AS observed_ms, win, 'match' AS source ` +
-          `FROM (${matches.sql})`,
-      })),
-    );
-  }
-  return rows;
 }
 
 async function queryClashLake(input: {

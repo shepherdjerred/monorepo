@@ -16,10 +16,12 @@ const REBUILD_TIMEOUT_MS = 30 * 60 * 1000;
 export async function writeCompetitionRankHistoryParquet(options: {
   buildDir: string;
   foldedIds?: Set<string>;
+  foldedSources?: Set<string>;
   abortSignal?: AbortSignal;
   timeoutMs?: number;
 }): Promise<{ rows: number; skipped: number }> {
-  const { buildDir, foldedIds, abortSignal, timeoutMs } = options;
+  const { buildDir, foldedIds, foldedSources, abortSignal, timeoutMs } =
+    options;
   const bucket = configuration.s3BucketName;
   if (bucket === undefined) {
     throw new Error(
@@ -33,6 +35,7 @@ export async function writeCompetitionRankHistoryParquet(options: {
     bucket,
     writer,
     ...(foldedIds === undefined ? {} : { foldedIds }),
+    ...(foldedSources === undefined ? {} : { foldedSources }),
     ...(abortSignal === undefined ? {} : { abortSignal }),
   });
   await writer.close();

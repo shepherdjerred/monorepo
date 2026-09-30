@@ -28,10 +28,8 @@ import {
   scoutRuntimeCapabilities,
 } from "#src/configuration/runtime-role.ts";
 import { ensureLakeScaffold } from "#src/report-lake/paths.ts";
-import {
-  assertReportLakeAccess,
-  resolveLakeFiles,
-} from "#src/reports/duckdb/lake.ts";
+import { assertReportLakeAccess } from "#src/reports/duckdb/lake/access.ts";
+import { resolveLakeFiles } from "#src/reports/duckdb/lake.ts";
 
 const roots: string[] = [];
 

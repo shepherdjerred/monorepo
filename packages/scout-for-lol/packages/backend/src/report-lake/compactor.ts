@@ -26,12 +26,23 @@ import {
   resolveLakeDir,
 } from "#src/report-lake/paths.ts";
 import { lakeSchemaFingerprint } from "#src/report-lake/schema.ts";
-import { removeFoldedStagingFiles } from "#src/report-lake/staging.ts";
+import {
+  removeFoldedStagingFiles,
+  type ReportLakeStagingTable,
+} from "#src/report-lake/staging.ts";
+import {
+  removeFoldedGenerations,
+  projectionKey,
+  snapshotStagingGenerations,
+} from "#src/report-lake/staging/generations.ts";
 import { writeAccountsParquet } from "#src/report-lake/compact-accounts.ts";
 import { linkTreeContents } from "#src/report-lake/link-tree.ts";
 import type { CompactionOptions } from "#src/report-lake/compaction-types.ts";
 import { writeFoldParquet } from "#src/report-lake/fold-parquet.ts";
-import { readStagingRows } from "#src/report-lake/read-staging-rows.ts";
+import {
+  readStagingRows,
+  validateStagingSnapshot,
+} from "#src/report-lake/read-staging-rows.ts";
 import { rebuildReportLake } from "#src/report-lake/rebuild-report-lake.ts";
 
 const logger = createLogger("report-lake-compactor");
@@ -124,51 +135,28 @@ export async function runReportLakeFold(
       // A build without a manifest is unusual but not worth failing over.
     }
 
-    const stagedMatches = await readStagingRows(
-      lakeDir,
-      "matches",
-      options.onProgress,
+    const validated = await validateStagingSnapshot(
+      await snapshotStagingGenerations(lakeDir),
     );
-    const stagedPrematches = await readStagingRows(
-      lakeDir,
-      "prematch",
-      options.onProgress,
-    );
-    const stagedMatchTeams = await readStagingRows(
-      lakeDir,
-      "match_teams",
-      options.onProgress,
-    );
-    const stagedMatchTeamBans = await readStagingRows(
-      lakeDir,
-      "match_team_bans",
-      options.onProgress,
-    );
-    const stagedRankHistory = await readStagingRows(
-      lakeDir,
-      "competition_rank_history",
-      options.onProgress,
-    );
-    const stagedTimelineEvents = await readStagingRows(
-      lakeDir,
-      "timeline_events",
-      options.onProgress,
-    );
-    const stagedTimelineEventParticipants = await readStagingRows(
-      lakeDir,
+    const read = async (table: ReportLakeStagingTable) =>
+      await readStagingRows(lakeDir, table, {
+        onProgress: options.onProgress,
+        snapshot: validated.snapshot,
+        skippedGenerations: validated.skippedByTable.get(table) ?? 0,
+      });
+    const stagedMatches = await read("matches");
+    const stagedPrematches = await read("prematch");
+    const stagedMatchTeams = await read("match_teams");
+    const stagedMatchTeamBans = await read("match_team_bans");
+    const stagedRankHistory = await read("competition_rank_history");
+    const stagedTimelineEvents = await read("timeline_events");
+    const stagedTimelineEventParticipants = await read(
       "timeline_event_participants",
-      options.onProgress,
     );
-    const stagedTimelineParticipantFrames = await readStagingRows(
-      lakeDir,
+    const stagedTimelineParticipantFrames = await read(
       "timeline_participant_frames",
-      options.onProgress,
     );
-    const stagedTimelineCoverage = await readStagingRows(
-      lakeDir,
-      "timeline_coverage",
-      options.onProgress,
-    );
+    const stagedTimelineCoverage = await read("timeline_coverage");
     await writeFoldParquet(buildDir, buildId, "matches", stagedMatches);
     await writeFoldParquet(buildDir, buildId, "match_teams", stagedMatchTeams);
     await writeFoldParquet(
@@ -278,6 +266,14 @@ export async function runReportLakeFold(
       lakeDir,
       "timeline_coverage",
       stagedTimelineCoverage.foldedIds,
+    );
+    await removeFoldedGenerations(
+      validated.snapshot,
+      new Set(
+        validated.snapshot.selected.map((generation) =>
+          projectionKey(generation.projectionKind, generation.naturalId),
+        ),
+      ),
     );
     await gcOldBuilds(lakeDir, GC_KEEP_BUILDS);
 

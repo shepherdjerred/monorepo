@@ -8,7 +8,7 @@ import {
   buildTimelineCoverageSource,
   buildTimelineEventParticipantsSource,
   buildTimelineEventsSource,
-  resolveLakeFiles,
+  withLakeQueryRetry,
   scalarParam,
   type LakeFiles,
   type SqlFragment,
@@ -94,59 +94,60 @@ export async function loadDareTimelineEvidenceV2(
   matchId: string,
   lakeDir: string = resolveLakeDir(),
 ): Promise<DareTimelineEvidenceV2> {
-  const files = await resolveLakeFiles(lakeDir);
-  const coverage = matchSource(files, matchId, buildTimelineCoverageSource);
-  if (coverage === undefined)
-    return { coverage: "missing", events: [], participants: [] };
-  const events = matchSource(files, matchId, buildTimelineEventsSource);
-  const participants = matchSource(
-    files,
-    matchId,
-    buildTimelineEventParticipantsSource,
-  );
-  return await withDuckDBConnection(async (session) => {
-    const coverageRows = TimelineCoverageEvidenceRowSchema.array().parse(
-      await session.run(
-        `SELECT coverage_state FROM (${coverage.sql})`,
-        bindParams(session, coverage.params),
-      ),
-    );
-    if (coverageRows.length === 0) {
+  return await withLakeQueryRetry(lakeDir, async (files) => {
+    const coverage = matchSource(files, matchId, buildTimelineCoverageSource);
+    if (coverage === undefined)
       return { coverage: "missing", events: [], participants: [] };
-    }
-    const eventRows =
-      events === undefined
-        ? []
-        : TimelineEventEvidenceRowSchema.array().parse(
-            await session.run(
-              `SELECT event_id, event_type, event_timestamp_ms, item_id, monster_type, building_type FROM (${events.sql}) ORDER BY frame_index ASC, event_index ASC`,
-              bindParams(session, events.params),
-            ),
-          );
-    const participantRows =
-      participants === undefined
-        ? []
-        : TimelineParticipantEvidenceRowSchema.array().parse(
-            await session.run(
-              `SELECT event_id, puuid, role FROM (${participants.sql}) ORDER BY event_id ASC, role ASC, role_index ASC`,
-              bindParams(session, participants.params),
-            ),
-          );
-    return {
-      coverage: "complete",
-      events: eventRows.map((row) => ({
-        eventId: row.event_id,
-        eventType: row.event_type,
-        timestampMs: row.event_timestamp_ms,
-        itemId: row.item_id,
-        monsterType: row.monster_type,
-        buildingType: row.building_type,
-      })),
-      participants: participantRows.map((row) => ({
-        eventId: row.event_id,
-        puuid: row.puuid,
-        role: row.role,
-      })),
-    };
+    const events = matchSource(files, matchId, buildTimelineEventsSource);
+    const participants = matchSource(
+      files,
+      matchId,
+      buildTimelineEventParticipantsSource,
+    );
+    return await withDuckDBConnection(async (session) => {
+      const coverageRows = TimelineCoverageEvidenceRowSchema.array().parse(
+        await session.run(
+          `SELECT coverage_state FROM (${coverage.sql})`,
+          bindParams(session, coverage.params),
+        ),
+      );
+      if (coverageRows.length === 0) {
+        return { coverage: "missing", events: [], participants: [] };
+      }
+      const eventRows =
+        events === undefined
+          ? []
+          : TimelineEventEvidenceRowSchema.array().parse(
+              await session.run(
+                `SELECT event_id, event_type, event_timestamp_ms, item_id, monster_type, building_type FROM (${events.sql}) ORDER BY frame_index ASC, event_index ASC`,
+                bindParams(session, events.params),
+              ),
+            );
+      const participantRows =
+        participants === undefined
+          ? []
+          : TimelineParticipantEvidenceRowSchema.array().parse(
+              await session.run(
+                `SELECT event_id, puuid, role FROM (${participants.sql}) ORDER BY event_id ASC, role ASC, role_index ASC`,
+                bindParams(session, participants.params),
+              ),
+            );
+      return {
+        coverage: "complete",
+        events: eventRows.map((row) => ({
+          eventId: row.event_id,
+          eventType: row.event_type,
+          timestampMs: row.event_timestamp_ms,
+          itemId: row.item_id,
+          monsterType: row.monster_type,
+          buildingType: row.building_type,
+        })),
+        participants: participantRows.map((row) => ({
+          eventId: row.event_id,
+          puuid: row.puuid,
+          role: row.role,
+        })),
+      };
+    });
   });
 }
