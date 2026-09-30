@@ -35,6 +35,7 @@ import {
   writeFallbackReport,
   type TextWriter,
 } from "./image-selection-report.ts";
+import { ensureAncestor } from "../selectors/ensure-ancestor.ts";
 
 const registry = "ghcr.io/shepherdjerred";
 const selectionReport = "image-selection-report.json";
@@ -95,8 +96,9 @@ export async function annotate(
  * believe images already exist for content nobody built.
  *
  * Reading it here rather than asking the API again keeps one answer per build.
- * The commit is still validated against this checkout, because an environment
- * variable is not proof that the commit is reachable from HEAD.
+ * The commit is still validated against this checkout, deepening Woodpecker's
+ * shallow clone when needed, because an environment variable is not proof
+ * that the commit is reachable from HEAD.
  */
 export async function lastSuccessfulImageReleaseCommit(
   currentCommit: string,
@@ -105,14 +107,12 @@ export async function lastSuccessfulImageReleaseCommit(
 ): Promise<string | undefined> {
   const commit = environment["CI_LAST_IMAGE_RELEASE_COMMIT"];
   if (commit === undefined || commit.length === 0) return undefined;
-  for (const command of [
-    ["git", "cat-file", "-e", `${commit}^{commit}`],
-    ["git", "merge-base", "--is-ancestor", commit, currentCommit],
-  ]) {
-    const validation = await executor(command);
-    if (validation.exitCode !== 0) return undefined;
-  }
-  return commit;
+  const canFetch =
+    environment["CI_PIPELINE_EVENT"] === "push" ||
+    environment["CI_PIPELINE_EVENT"] === "manual";
+  return (await ensureAncestor(commit, currentCommit, executor, canFetch))
+    ? commit
+    : undefined;
 }
 
 export async function selectedTargets(

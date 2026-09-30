@@ -4,6 +4,7 @@ import {
   selectorPathsForLane,
 } from "../migration-core.ts";
 import { requestedPlatformTofuApply } from "./tofu-lane-paths.ts";
+import { ensureAncestor } from "./ensure-ancestor.ts";
 
 /**
  * Lane decisions are no longer recorded anywhere.
@@ -49,15 +50,17 @@ async function main(): Promise<number> {
     console.log(`${lane}: no CI_CHANGED_BASE; running`);
     return 0;
   }
-  for (const command of [
-    ["git", "cat-file", "-e", `${base}^{commit}`],
-    ["git", "merge-base", "--is-ancestor", base, "HEAD"],
-  ]) {
-    const validation = await execute(command);
-    if (validation.exitCode !== 0) {
-      console.log(`${lane}: selector base ${base} invalid; running`);
-      return 0;
-    }
+  if (
+    !(await ensureAncestor(
+      base,
+      "HEAD",
+      execute,
+      Bun.env["CI_PIPELINE_EVENT"] === "push" ||
+        Bun.env["CI_PIPELINE_EVENT"] === "manual",
+    ))
+  ) {
+    console.log(`${lane}: selector base ${base} invalid; running`);
+    return 0;
   }
   if (lane === "images") {
     const selection = await execute([
