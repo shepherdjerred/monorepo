@@ -1,5 +1,13 @@
 import { ApplicationFailure } from "@temporalio/common";
-import type { NotificationIntentKey } from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  WorkflowRunIdSchema,
+  type NotificationIntentKey,
+} from "@scout-for-lol/domain/identity/brands.ts";
+import {
+  SCOUT_WORKFLOW_NAMES,
+  scoutNotificationV2WorkflowId,
+  type ScoutStage,
+} from "@scout-for-lol/temporal";
 import type { NotificationIntent } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { NotificationTransitionResult } from "@scout-for-lol/domain/notifications/intent-transitions.ts";
 import {
@@ -15,12 +23,18 @@ import {
   type ScoutDurableCommitV2,
 } from "@scout-for-lol/temporal/contracts-v2";
 import { prisma } from "#src/database/index.ts";
+import type { Db } from "#src/database/index.ts";
 import {
   getSubjectIntent,
   type UpsertIntentResult,
 } from "#src/database/durable/intent-repository.ts";
+import {
+  getWorkflowStart,
+  recordWorkflowStartAccepted,
+} from "#src/database/durable/workflow-start-repository.ts";
 import type { NotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { resolveNotificationGateV2 } from "#src/temporal/v2/notification/notification-policy.ts";
+import { toIsoInstant } from "#src/durable/match/match-identity.ts";
 
 /**
  * The V2 notification lane's reads, and the two translations every one of its
@@ -49,9 +63,14 @@ import { resolveNotificationGateV2 } from "#src/temporal/v2/notification/notific
  * intent under a policy that forbids its target is reported `held`, and the
  * Workflow stops there without rendering or minting an attempt.
  */
-export async function readNotificationIntentV2(input: {
-  intentKey: NotificationIntentKey;
-}): Promise<ScoutNotificationIntentV2Result> {
+export async function readNotificationIntentV2(
+  input: {
+    stage: ScoutStage;
+    intentKey: NotificationIntentKey;
+  },
+  execution: { workflowId: string; runId: string },
+): Promise<ScoutNotificationIntentV2Result> {
+  await acceptNotificationStart(prisma, input, execution);
   const record = await getSubjectIntent(prisma, { intentKey: input.intentKey });
   if (record === null) {
     return { kind: "absent" };
@@ -61,6 +80,47 @@ export async function readNotificationIntentV2(input: {
     intent: intentSummaryV2(record.intent),
     gate: await resolveNotificationGateV2(record),
   });
+}
+
+/** A child reaching its first Activity proves Temporal accepted the handoff. */
+export async function acceptNotificationStart(
+  db: Db,
+  input: { stage: ScoutStage; intentKey: NotificationIntentKey },
+  execution: { workflowId: string; runId: string },
+): Promise<void> {
+  const expectedId = scoutNotificationV2WorkflowId(
+    input.stage,
+    input.intentKey,
+  );
+  if (execution.workflowId !== expectedId) {
+    throw new Error(
+      `Notification start ${execution.workflowId} does not match ${expectedId}`,
+    );
+  }
+  const request = await getWorkflowStart(db, {
+    requestedWorkflowId: expectedId,
+  });
+  if (request === null) return;
+  if (request.acceptance !== null) return;
+  if (
+    request.workflowType !== SCOUT_WORKFLOW_NAMES.notificationV2 ||
+    request.inputPayload.kind !== SCOUT_WORKFLOW_NAMES.notificationV2 ||
+    !Bun.deepEquals(request.inputPayload.data, input, true)
+  ) {
+    throw new Error(
+      `Notification start ${expectedId} has different requested facts`,
+    );
+  }
+  const result = await recordWorkflowStartAccepted(db, {
+    requestId: request.requestId,
+    acceptedAt: toIsoInstant(new Date()),
+    runId: WorkflowRunIdSchema.parse(execution.runId),
+  });
+  if (result.outcome === "answered-by-another-run") {
+    throw new Error(
+      `Notification start ${expectedId} was accepted by another run`,
+    );
+  }
 }
 
 /** One intent in the domain's own state vocabulary, parsed before it travels. */

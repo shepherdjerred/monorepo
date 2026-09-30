@@ -83,6 +83,8 @@ export async function mintDuelStatusIntent(
   ) {
     throw new Error(`Duel status intent ${key} was reused for different facts`);
   }
+  if (standing !== null) return;
+
   const input = { stage: args.stage, intentKey: key };
   const requested = await requestWorkflowStart(db, {
     requestedWorkflowId: scoutNotificationV2WorkflowId(args.stage, key),

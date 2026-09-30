@@ -725,7 +725,10 @@ New writers populate both match columns, and the database rejects a mismatch.
 Duel challenge, lobby-ready, and overdue transitions mint `duel-status` intents
 and request a V2 notification Workflow in the same database transaction as the
 series change. Reconciliation starts a requested Workflow after a producer
-crash. The invite expires at the series deadline; lobby-ready and overdue
+crash. Its first read Activity records Temporal's run id as acceptance of that
+request, so later sweeps stop treating it as an unaccepted start. Repeated
+producer transitions reuse the standing intent without opening a new request.
+The invite expires at the series deadline; lobby-ready and overdue
 messages expire after two hours and seven days respectively. The shared Duel
 message builder serves both V2 and the legacy `DuelStatusOutbox` drain, which
 continues to deliver rows created before the producer cutover. A legacy row
