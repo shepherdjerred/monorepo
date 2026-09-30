@@ -1,7 +1,7 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL, UV_CACHE } from "#src/pipeline/cache.ts";
-import { VERIFY_TIER } from "#src/pipeline/tiers.ts";
+import { TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import { scannerSteps } from "#src/pipeline/lanes/scanners.ts";
 import { alertDashboardSteps } from "#src/pipeline/lanes/alert-dashboard.ts";
 import { resumeSteps } from "#src/pipeline/lanes/resume.ts";
@@ -123,7 +123,7 @@ export function buildPipelineSteps({
         CI_CHANGED_BASE: verifyBase ?? changedBase ?? "",
       },
       timeoutMinutes: 30,
-      resources: VERIFY_TIER,
+      resources: TURBO_VERIFY_TIER,
       secrets: [
         {
           secret: "ci-github-credentials",

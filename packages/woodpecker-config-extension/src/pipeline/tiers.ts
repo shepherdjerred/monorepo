@@ -1,20 +1,16 @@
 import type { ResourceTier } from "#src/pipeline/model.ts";
 
 /**
- * Resource tiers, carried over verbatim from the Buildkite pod anchors.
- *
- * These numbers are incident-derived, not estimates, so they are ported as-is
- * rather than re-derived. Changing one changes how many steps the CI node
- * admits concurrently.
+ * Resource requests govern Kueue admission on the CI node. Limits still bound
+ * each container after admission.
  */
 
 /**
  * Heavy steps: the full turbo graph on a cold cache.
  *
- * The memory request was sized under Buildkite, whose workspace was a
- * memory-backed volume charged to the pod. Woodpecker's workspace is a claim
- * on the CI node's NVMe, so part of this reservation no longer covers
- * anything; it is kept until measured usage says what to lower it to.
+ * The workspace moved from a Buildkite memory volume to the CI node's NVMe,
+ * but Woodpecker verify pods have still reached over 13 GiB of memory. Keep
+ * memory headroom for heavy builds and releases.
  */
 export const VERIFY_TIER: ResourceTier = {
   cpuRequest: "1",
@@ -23,6 +19,28 @@ export const VERIFY_TIER: ResourceTier = {
   memoryLimit: "24Gi",
   ephemeralStorageRequest: "2Gi",
   ephemeralStorageLimit: "40Gi",
+};
+
+/**
+ * The full Turbo verify graph has reached over 9 CPU cores. Reserve most of
+ * that demand so Kueue cannot admit too many verify pods at once; other heavy
+ * release steps retain the shared tier's smaller CPU request.
+ */
+export const TURBO_VERIFY_TIER: ResourceTier = {
+  ...VERIFY_TIER,
+  cpuRequest: "8",
+};
+
+/**
+ * PR release rehearsals run sequential commands, not the full Turbo graph.
+ * Their measured working set stayed below 1 GiB over four days, so 4 GiB
+ * reserves cold-run headroom without occupying a verify pod's 18 GiB slot.
+ * Keep the heavy tier's limits for an unexpectedly expensive rehearsal.
+ */
+export const PR_DRY_RUN_TIER: ResourceTier = {
+  ...VERIFY_TIER,
+  cpuRequest: "1",
+  memoryRequest: "4Gi",
 };
 
 /**
@@ -89,14 +107,13 @@ export const CONTAINED_TIER: ResourceTier = {
 /**
  * Browser steps: headless Chromium plus the app under test.
  *
- * The large memory REQUEST is the point -- browsers are not bursty, they hold
- * their working set, so a small request would let the scheduler overcommit the
- * node and get the lane OOM-killed mid-suite.
+ * Four days of Woodpecker runs peaked below 4 CPU cores and 3 GiB of memory.
+ * Reserve room above those peaks while retaining the existing hard limits.
  */
 export const BROWSER_TIER: ResourceTier = {
-  cpuRequest: "1",
+  cpuRequest: "3",
   cpuLimit: "8",
-  memoryRequest: "9Gi",
+  memoryRequest: "6Gi",
   memoryLimit: "12Gi",
   ephemeralStorageRequest: "2Gi",
   ephemeralStorageLimit: "20Gi",

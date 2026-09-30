@@ -1,6 +1,6 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
-import { MEDIUM_TIER, VERIFY_TIER } from "#src/pipeline/tiers.ts";
+import { MEDIUM_TIER, PR_DRY_RUN_TIER } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 import {
   GITHUB_DOWNLOAD,
@@ -78,7 +78,7 @@ export function prGateSteps(images: CiImages): CiStep[] {
       ],
       dependsOn: ["verify"],
       timeoutMinutes: 30,
-      resources: VERIFY_TIER,
+      resources: PR_DRY_RUN_TIER,
       events: ["pull_request"],
       changed: {
         include: [
