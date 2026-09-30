@@ -1528,11 +1528,10 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-0@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "value": "2.0.0-1003373@sha256:af95c857b8a2e682eb0601b52ba0c2388753f869b9f68ceb3019dbc46d413228",
       "notes": [
         "The Storm's Minecraft server image (minecraft-tsmc), built from packages/the-storm/server",
-        "by the infra bake group. not managed by renovate — CI's version commit-back writes the real",
-        "tag@digest after the first image push; the zero digest is the unpublished placeholder."
+        "by the infra bake group. Not managed by renovate; CI version commit-back updates the pin."
       ]
     },
     {
