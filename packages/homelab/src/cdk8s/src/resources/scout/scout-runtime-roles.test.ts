@@ -12,6 +12,7 @@ import {
   SCOUT_STAGES,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/scout/topology.ts";
 import { SCOUT_GATEWAY_OWNER_BY_STAGE } from "@shepherdjerred/homelab/cdk8s/src/resources/monitoring/monitoring/rules/scout-alert-constants.ts";
+import { scoutGatewayClientIngress } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/platform/temporal.ts";
 
 const EnvEntrySchema = z
   .object({
@@ -151,12 +152,7 @@ describe("Scout runtime role assignment", () => {
     ).toEqual([]);
   });
 
-  /**
-   * `activity-worker` reads the lake AND writes its ingest staging directories,
-   * so it cannot share the ReadWriteOnce claim with the publishing role. It is
-   * deliberately absent until the lake is shareable; this asserts the deferral
-   * rather than leaving its absence to chance.
-   */
+  /** Activation is a stage-scoped decision after the storage preflight. */
   test("no activity-worker Deployment is rendered in either stage", () => {
     for (const stage of ["beta", "prod"] as const) {
       expect(
@@ -392,6 +388,22 @@ describe("Scout gateway network boundary", () => {
     );
   });
 
+  test("Temporal admits the prod gateway when prod is split", () => {
+    const rules = scoutGatewayClientIngress({
+      beta: "retiring",
+      prod: "split",
+    });
+    expect(rules).toHaveLength(1);
+    expect(rules[0]?.from).toEqual([
+      {
+        namespaceSelector: {
+          matchLabels: { "kubernetes.io/metadata.name": "scout-prod" },
+        },
+        podSelector: { matchLabels: { app: "scout-gateway" } },
+      },
+    ]);
+  });
+
   /**
    * The complete set of Scout identities Temporal admits on gRPC.
    *
@@ -457,10 +469,6 @@ describe("Scout gateway network boundary", () => {
       // The application role (and, on an unsplit stage, the combined pod):
       // embedded workers plus the competition activity dispatcher.
       "scout-beta/app=scout-backend",
-      // The gateway role's Temporal client. It runs no Activity worker, but
-      // Discord commands start Workflows they do not execute, so a blocked
-      // client here is every slash command failing to dispatch.
-      "scout-beta/app=scout-gateway",
       "scout-beta/worker-family=scout-beta-workflows",
       "scout-prod/app=scout-backend",
       "scout-prod/worker-family=scout-prod-workflows",

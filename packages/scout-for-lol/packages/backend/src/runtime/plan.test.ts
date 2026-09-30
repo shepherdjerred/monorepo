@@ -52,6 +52,16 @@ describe("runtime boot order", () => {
     expect(steps).not.toContain("voice-assistant");
   });
 
+  test("isolated application omits competition activity boot", () => {
+    expect(bootStepsFor("application-isolated")).toEqual([
+      "champion-assets",
+      "report-lake",
+      "temporal-core",
+      "http-server",
+      "database-seeding",
+    ]);
+  });
+
   test("gateway boots the shard and nothing that owns data", () => {
     const steps = bootStepsFor("gateway");
     expect(steps).toEqual([
@@ -162,6 +172,16 @@ describe("runtime shutdown order", () => {
       // Interim, mirroring the boot plan: drained here until `activity-worker`
       // is deployable and takes it back.
       "competition-worker",
+      "http-server",
+      "dynamic-config",
+      "product-analytics",
+      "database",
+    ]);
+  });
+
+  test("isolated application has no competition activity to drain", () => {
+    expect(shutdownStepsFor("application-isolated")).toEqual([
+      "temporal",
       "http-server",
       "dynamic-config",
       "product-analytics",

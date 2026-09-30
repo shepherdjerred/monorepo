@@ -1,5 +1,5 @@
-import { Duration } from "cdk8s";
-import { Probe } from "cdk8s-plus-31";
+import { Duration, Size } from "cdk8s";
+import { Cpu, Probe, Protocol } from "cdk8s-plus-31";
 
 /** The port every Scout runtime role serves its HTTP surface on. */
 export const SCOUT_HTTP_PORT = 3000;
@@ -30,5 +30,22 @@ export function scoutRuntimeProbes() {
       periodSeconds: Duration.seconds(30),
       failureThreshold: 3,
     }),
+  };
+}
+
+/** Shared image, HTTP port, probes, and resource envelope for admin-only pods. */
+export function scoutAdminRoleContainerBase(imageVersion: string) {
+  return {
+    image: `ghcr.io/shepherdjerred/scout-for-lol:${imageVersion}`,
+    ports: [{ name: "port-3000", number: 3000, protocol: Protocol.TCP }],
+    securityContext: {
+      ensureNonRoot: false,
+      readOnlyRootFilesystem: false,
+    },
+    resources: {
+      cpu: { request: Cpu.millis(50) },
+      memory: { request: Size.gibibytes(3), limit: Size.gibibytes(8) },
+    },
+    ...scoutRuntimeProbes(),
   };
 }

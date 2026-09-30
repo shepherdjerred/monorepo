@@ -2,7 +2,7 @@
  * The closed set of shapes one Scout backend image can boot into, and exactly
  * which subsystems each one starts.
  *
- * One image, four roles, selected by `SCOUT_RUNTIME_ROLE` at startup. The point
+ * One image, five roles, selected by `SCOUT_RUNTIME_ROLE` at startup. The point
  * of writing them as a table rather than as branches at each call site is that
  * the set of subsystems a pod runs is then a value that can be read, printed
  * and asserted — a role cannot half-configure a pod by forgetting a branch,
@@ -14,8 +14,7 @@
  * ## The roles
  *
  * - `combined` — everything, in the order the single-pod deployment has always
- *   booted it. This is the default and the only role Kubernetes runs today;
- *   splitting the deployment is a separate change. Local development uses it
+ *   booted it. This is the default on an unsplit stage. Local development uses it
  *   whenever it wants the Discord gateway.
  * - `application` — the web surface: HTTP/tRPC/OAuth/SSE, every embedded
  *   Temporal worker, and the DuckDB report lake. No gateway connection, so it
@@ -24,11 +23,9 @@
  *
  *   INTERIM: it also carries the `realtime` and `background` queues and the
  *   competition activity worker — everything `combined` runs except the shard.
- *   Those belong to `activity-worker`, which cannot be deployed until the
- *   report lake stops being a single-writer ReadWriteOnce volume. Splitting the
- *   shard off without them would stop Riot polling, ingest, report delivery and
- *   scheduled competition updates, so the deployable split is
- *   combined-minus-shard rather than the full four-way one.
+ *   Those belong to `activity-worker`. The observing handoff keeps them here
+ *   until the separate worker is healthy and polling; the owning topology
+ *   switches this pod to `application-isolated`.
  * - `gateway` — the Discord gateway connection: commands, guild lifecycle and
  *   the Hey Scout voice assistant. Voice is gateway-coupled by design (it reads
  *   an active voice connection's audio), which makes this role explicitly
@@ -39,6 +36,9 @@
  * - `activity-worker` — the `realtime` and `background` Temporal activity
  *   workers plus the competition activity worker: Riot polling, ingestion,
  *   report rendering and Discord delivery over REST. No gateway connection.
+ * - `application-isolated` — the application after the activity-worker queue
+ *   handoff. It retains workflow, interactive, and lake workers but no longer
+ *   polls realtime, background, or competition activities.
  *
  * `gateway` and `activity-worker` serve health and metrics endpoints but not
  * the product's HTTP surface — see {@link ScoutRuntimeCapabilities.httpSurface}.
@@ -49,6 +49,7 @@ import { z } from "zod";
 export const ScoutRuntimeRoleSchema = z.enum([
   "combined",
   "application",
+  "application-isolated",
   "gateway",
   "activity-worker",
 ]);
@@ -88,7 +89,7 @@ export type ScoutHttpSurface = "full" | "admin";
 export type ScoutRuntimeCapabilities = {
   /**
    * Verify the bundled Data Dragon champion images before serving. True for
-   * every role: all four render champion-bearing output (reports, command
+   * every role: all five render champion-bearing output (reports, command
    * embeds, `/api/image/*`), and the check is a local file sweep whose whole
    * job is to crash the pod at boot rather than at notification time.
    */
@@ -216,12 +217,9 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
     reportLakeFold: true,
     // INTERIM: combined-minus-shard, not the end state.
     //
-    // `realtime` and `background` belong to `activity-worker`, but that role
-    // cannot be deployed while the report lake is a single-writer
-    // ReadWriteOnce volume (see the README's activity-worker note). Until it
-    // can be, moving the shard off `combined` without these would stop both
-    // queues outright — Riot polling, prematch, match ingest, report runs,
-    // parlay generation and Discord delivery — so this role carries them.
+    // `realtime` and `background` belong to `activity-worker`. Keep them here
+    // until the observing handoff has proved that pod healthy and polling;
+    // switching to `application-isolated` then removes these queues.
     //
     // They are always-on here rather than deferred: deferral waits for the
     // gateway login, and this role never logs a shard in, so a deferred worker
@@ -229,8 +227,8 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
     // uses, and it is sound for the same reason — the gatewayless sweep moved
     // these Activities off the live guild cache and behind ports.
     //
-    // Remove these and `competitionActivityWorker` below when `activity-worker`
-    // becomes deployable.
+    // The owning topology selects `application-isolated` instead of this
+    // interim role; this row remains the rollback and observing shape.
     temporalWorkers: [...ALWAYS_ON_WORKERS, ...DISCORD_WORKERS],
     deferredTemporalWorkers: NO_WORKERS,
     discordGateway: false,
@@ -240,6 +238,21 @@ const SCOUT_RUNTIME_CAPABILITIES: Readonly<
     // `activity-worker` would, so without it here the split silently stops
     // scheduled competition updates.
     competitionActivityWorker: true,
+    databaseMetricSweeps: true,
+    databaseSeeding: true,
+  },
+  "application-isolated": {
+    championAssets: true,
+    voiceAssistant: false,
+    voiceStateAccess: false,
+    reportLakeAccess: true,
+    reportLakeFold: true,
+    temporalWorkers: ALWAYS_ON_WORKERS,
+    deferredTemporalWorkers: NO_WORKERS,
+    discordGateway: false,
+    gatewayReadyReconciliation: false,
+    httpSurface: "full",
+    competitionActivityWorker: false,
     databaseMetricSweeps: true,
     databaseSeeding: true,
   },

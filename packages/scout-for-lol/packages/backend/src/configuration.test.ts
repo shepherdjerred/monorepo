@@ -227,7 +227,7 @@ describe("local runtime flags", () => {
     // A typo'd role that silently fell back to `combined` would put a second
     // gateway connection and a second report-lake writer into the cluster.
     expect(() => configuration.runtimeRole).toThrow(
-      /Invalid SCOUT_RUNTIME_ROLE="aplication", expected one of: combined, application, gateway, activity-worker/,
+      /Invalid SCOUT_RUNTIME_ROLE="aplication", expected one of: combined, application, application-isolated, gateway, activity-worker/,
     );
   });
 

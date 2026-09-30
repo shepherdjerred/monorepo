@@ -72,7 +72,11 @@ async function thrownBy(operation: () => Promise<unknown>): Promise<unknown> {
   throw new Error("expected the operation to be refused");
 }
 
-const GATEWAYLESS: ScoutRuntimeRole[] = ["application", "activity-worker"];
+const GATEWAYLESS: ScoutRuntimeRole[] = [
+  "application",
+  "application-isolated",
+  "activity-worker",
+];
 const WITH_GATEWAY: ScoutRuntimeRole[] = ["combined", "gateway"];
 
 describe("voice-state capability", () => {

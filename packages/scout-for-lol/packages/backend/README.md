@@ -1194,31 +1194,28 @@ directly. Two rules come with it:
 
 ## Runtime roles
 
-The image boots into one of four shapes, selected by `SCOUT_RUNTIME_ROLE`
+The image boots into one of five shapes, selected by `SCOUT_RUNTIME_ROLE`
 (default `combined`). The vocabulary and the exact subsystem set per role are
 one table in `configuration/runtime-role.ts`; `runtime/plan.ts` derives the boot
 and shutdown order from it, and `runtime/subsystems.ts` performs the steps. An
 unrecognised value throws at startup rather than falling back.
 
-| Subsystem                                        | `combined`                                                                     | `application`                                               | `gateway`          | `activity-worker`    |
-| ------------------------------------------------ | ------------------------------------------------------------------------------ | ----------------------------------------------------------- | ------------------ | -------------------- |
-| Champion asset verification                      | yes                                                                            | yes                                                         | yes                | yes                  |
-| Voice assistant (Hey Scout)                      | yes                                                                            | —                                                           | yes                | —                    |
-| Report lake mounted (reads + staging writes)     | yes                                                                            | yes                                                         | yes                | yes                  |
-| Report-lake fold / publish at boot               | yes                                                                            | yes                                                         | —                  | —                    |
-| Temporal workers                                 | workflow, interactive, lake (+ realtime, background once the gateway is ready) | workflow, interactive, lake, realtime, background (interim) | none (client only) | realtime, background |
-| Discord gateway login, commands, guild lifecycle | yes                                                                            | —                                                           | yes                | —                    |
-| Discord REST                                     | yes                                                                            | yes                                                         | yes                | yes                  |
-| HTTP surface                                     | full                                                                           | full                                                        | health + metrics   | health + metrics     |
-| Competition activity worker                      | yes                                                                            | yes (interim)                                               | —                  | yes                  |
-| Database-sweeping metric collectors              | yes                                                                            | yes                                                         | —                  | —                    |
-| Season / freshness-gauge seeding                 | yes                                                                            | yes                                                         | —                  | —                    |
+| Subsystem                           | `combined`                                        | `application`                                     | `application-isolated`      | `gateway`          | `activity-worker`    |
+| ----------------------------------- | ------------------------------------------------- | ------------------------------------------------- | --------------------------- | ------------------ | -------------------- |
+| Champion assets                     | yes                                               | yes                                               | yes                         | yes                | yes                  |
+| Voice assistant and Discord gateway | yes                                               | —                                                 | —                           | yes                | —                    |
+| Report-lake access                  | read + write                                      | read + write                                      | read + write                | read-only          | read + staging write |
+| Report-lake fold / publish          | yes                                               | yes                                               | yes                         | —                  | —                    |
+| Temporal workers                    | workflow, interactive, lake, realtime, background | workflow, interactive, lake, realtime, background | workflow, interactive, lake | none (client only) | realtime, background |
+| Discord REST                        | yes                                               | yes                                               | yes                         | yes                | yes                  |
+| HTTP surface                        | full                                              | full                                              | full                        | health + metrics   | health + metrics     |
+| Competition activity worker         | yes                                               | yes                                               | —                           | —                  | yes                  |
+| Database metric sweeps and seeding  | yes                                               | yes                                               | yes                         | —                  | —                    |
 
 Notes that are easy to get wrong:
 
-- **`combined` is what Kubernetes runs.** The other three exist so the
-  deployment can be split; splitting it is a separate change. `combined` boots
-  and drains in exactly the order it always has, and the role tests assert that.
+- **`combined` is the unsplit role.** It boots and drains in the established
+  order. Split stages select the other roles through stage-scoped topology.
 - **Voice is gateway-coupled by design.** It reads an active voice connection's
   audio, so it cannot be moved off the shard. That makes `gateway` an explicitly
   stateful role.
@@ -1239,26 +1236,25 @@ ask` and the Dare commands execute the Explore agent in the process that
   sweep the database on every `/metrics` scrape. Every role serves `/metrics`,
   but running those four collectors on all of them would turn one Prometheus
   scrape interval into N full sweeps of the same tables.
-- **Reading the lake is wider than publishing it, and it is why
-  `activity-worker` is not deployable yet.** Every embedded Temporal activity
+- **Reading the lake is wider than publishing it.** Every embedded Temporal activity
   queue reads the lake somewhere: `realtime` settles SQL dares and evaluates
   hall progression, `interactive` answers Explore queries, `background` runs
   reports, parlay generation and the summoner-index
   backfill, and `lake` is the compactor. Several of them also write its staging
-  directories. So `activity-worker` needs the same volume `application` owns,
-  and the cluster PVC is ReadWriteOnce — the two roles cannot both mount it as
-  things stand. Splitting them needs the lake to become shareable (a remote
-  store, or every reader moved behind the `lake` queue) first.
-- **So the deployed split is combined-minus-shard, not the four-way one.**
-  Because `activity-worker` cannot run yet, `application` carries `realtime`,
+  directories. `activity-worker` mounts the same ZFS claim as the application
+  with write access, on the same node and SELinux level. The volume must have
+  `ZFSVolume.spec.shared=yes`; generation bundles keep independent staging
+  writes separate from the application's fold and publish operation.
+- **The queue handoff takes two releases.** `application` carries `realtime`,
   `background` and the competition activity worker in the interim — marked
   `(interim)` in the table above. Moving the shard out without them would not
   redistribute that work, it would stop it: Riot polling, prematch, match
   ingest, report delivery and scheduled competition updates all live on those
-  queues. `activity-worker` still declares them, so the two roles overlap on
-  paper; that is safe only while exactly one of them is deployed, and the role
-  tests pin the overlap so it cannot widen unnoticed. Hand these back when the
-  lake becomes shareable.
+  queues. The `observing` topology deploys `activity-worker` alongside this
+  interim owner to prove readiness and polling. After that observation, the
+  `owning` topology switches the backend to `application-isolated`, leaving
+  exactly one owner for those queues. Rollback uses `retiring` to scale the
+  worker down and wait for pod exit before the application reclaims them.
 - **A lake-reading role that does not publish verifies instead.** An empty or
   unmounted lake is not an error for DuckDB — it scans zero parquet files and
   returns zero rows — so a worker would record every report run and dare

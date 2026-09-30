@@ -57,6 +57,20 @@ import type { Stage } from "@shepherdjerred/homelab/cdk8s/src/cdk8s-charts/scout
 export type ScoutGatewayTopology = "split" | "retiring" | "absent";
 
 /**
+ * The activity queue handoff is two releases: `observing` starts the new pod
+ * while the application keeps polling, then `owning` removes those queues from
+ * the application after the new pod has been observed ready. `retiring` scales
+ * the worker down before the application reclaims its queues on rollback.
+ */
+export type ScoutActivityWorkerTopology =
+  "absent" | "observing" | "owning" | "retiring";
+
+export type RenderedActivityWorkerTopology = Exclude<
+  ScoutActivityWorkerTopology,
+  "absent"
+>;
+
+/**
  * Every stage, in the order the derived monitoring table renders them.
  *
  * Spelled out rather than taken from `Object.keys` so the alert expression's
@@ -78,6 +92,28 @@ export const SCOUT_GATEWAY_TOPOLOGY: Readonly<
   // production that have never existed there.
   prod: "absent",
 };
+
+/** Activation is stage-scoped and requires a separate, reviewed release. */
+export const SCOUT_ACTIVITY_WORKER_TOPOLOGY: Readonly<
+  Record<Stage, ScoutActivityWorkerTopology>
+> = {
+  beta: "absent",
+  prod: "absent",
+};
+
+export function activityWorkerOwnsQueues(
+  topology: ScoutActivityWorkerTopology,
+): boolean {
+  return topology === "owning";
+}
+
+export function scoutSplitApplicationRole(
+  topology: ScoutActivityWorkerTopology,
+): "application" | "application-isolated" {
+  return activityWorkerOwnsQueues(topology)
+    ? "application-isolated"
+    : "application";
+}
 
 /**
  * The topology runs the `gateway` role in its own pod.
