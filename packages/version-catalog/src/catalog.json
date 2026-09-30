@@ -666,7 +666,7 @@
       "management": {
         "managed": false
       },
-      "value": "2.0.0-1003373@sha256:036c05977f26941eff1031ad294f41b5159c50f55711f3f78a0a05b78a5b0a78",
+      "value": "2.0.0-1003424@sha256:1ea3b3efcf282e063500dff092444b309156ebbd9644188edc3c40cb5ee20302",
       "notes": ["not managed by renovate — beta updated by version-commit-back"]
     },
     {
