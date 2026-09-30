@@ -72,6 +72,8 @@ describe("MVP message refresh", () => {
     "unknown channel error",
     "unknown message error",
     "deleted during edit",
+    "missing access error",
+    "missing permissions during edit",
   ] as const)(
     "updates live reports when another target is deleted (%s)",
     async (missingMode) => {
@@ -82,6 +84,11 @@ describe("MVP message refresh", () => {
             if (missingMode === "unknown channel error") {
               throw Object.assign(new Error("Unknown Channel"), {
                 code: 10_003,
+              });
+            }
+            if (missingMode === "missing access error") {
+              throw Object.assign(new Error("Missing Access"), {
+                code: 50_001,
               });
             }
           }
@@ -114,6 +121,14 @@ describe("MVP message refresh", () => {
           ) {
             throw Object.assign(new Error("Unknown Message"), {
               code: 10_008,
+            });
+          }
+          if (
+            missingMode === "missing permissions during edit" &&
+            target.channelId === firstChannel
+          ) {
+            throw Object.assign(new Error("Missing Permissions"), {
+              code: 50_013,
             });
           }
           edits.push(target.messageId);

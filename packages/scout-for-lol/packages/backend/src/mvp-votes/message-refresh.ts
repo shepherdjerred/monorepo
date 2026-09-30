@@ -12,7 +12,10 @@ import { RiotMatchIdSchema } from "@scout-for-lol/domain/identity/brands.ts";
 import { prisma, type ExtendedPrismaClient } from "#src/database/index.ts";
 import { listIntentsForMatch } from "#src/database/durable/intent-repository.ts";
 import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
-import { isMissingChannelError } from "#src/discord/utils/permissions.ts";
+import {
+  isMissingChannelError,
+  isPermissionError,
+} from "#src/discord/utils/permissions.ts";
 import { createLogger } from "#src/logger.ts";
 import { enqueuePerKey } from "#src/utils/enqueue-per-key.ts";
 import { guildAliasesForRoster } from "#src/mvp-votes/eligibility.ts";
@@ -256,12 +259,13 @@ async function editReportTally(
   } catch (error) {
     if (
       isMissingChannelError(error) ||
+      isPermissionError(error) ||
       MissingMessageErrorSchema.safeParse(error).success
     ) {
       // The persisted refs are match-global. A deleted channel in another
       // guild or message must not prevent still-live reports from updating.
       logger.warn(
-        `MVP tally target ${ref.channelId}/${ref.messageId} no longer exists`,
+        `MVP tally target ${ref.channelId}/${ref.messageId} is unavailable`,
         error,
       );
       return false;
