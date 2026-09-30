@@ -448,7 +448,7 @@ describe("MatchNotificationIntent constraints", () => {
     [
       "a malformed riot match id",
       { ...valid, intentKey: "'i13'", riotMatchId: "'NA1_'" },
-      "MatchNotificationIntent_riot_match_id_format_check",
+      "MatchNotificationIntent_subject_check",
     ],
     [
       "an empty intent key",
@@ -504,6 +504,55 @@ describe("MatchNotificationIntent constraints", () => {
     await expectRejected(
       insertSql("MatchNotificationIntent", values),
       constraint,
+    );
+  });
+});
+
+describe("MatchNotificationIntent subject constraints", () => {
+  const valid: Record<string, string> = {
+    intentKey: "'subject-intent'",
+    riotMatchId: "'NA1_1'",
+    kind: "'postmatch'",
+    originKind: "'live'",
+    targetKind: "'channel'",
+    targetId: "'300000000000000001'",
+    state: "'pending'",
+    attemptCount: "0",
+    freshnessDeadline: NOW,
+    payload: INTENT_PAYLOAD,
+    createdAt: NOW,
+    updatedAt: NOW,
+  };
+
+  test("accepts a non-match subject without a Riot match id", async () => {
+    await prisma.$executeRawUnsafe(
+      insertSql("MatchNotificationIntent", {
+        ...valid,
+        intentKey: "'duel-subject'",
+        subjectKind: "'duel'",
+        subjectId: "'0f8b4c2a-3d5e-4b6f-8a9c-1d2e3f405060'",
+        riotMatchId: "NULL",
+      }),
+    );
+  });
+
+  test.each([
+    [
+      "a match subject id that disagrees with its Riot match id",
+      { ...valid, subjectId: "'NA1_2'" },
+    ],
+    [
+      "a non-match subject that still names a Riot match",
+      { ...valid, subjectKind: "'duel'", subjectId: "'duel-1'" },
+    ],
+    [
+      "a match subject without a Riot match id",
+      { ...valid, riotMatchId: "NULL" },
+    ],
+  ])("rejects %s", async (_name, values) => {
+    await expectRejected(
+      insertSql("MatchNotificationIntent", values),
+      "MatchNotificationIntent_subject_check",
     );
   });
 });
