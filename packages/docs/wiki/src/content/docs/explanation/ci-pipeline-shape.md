@@ -45,6 +45,12 @@ with the PR target branch. Within that workflow, Turbo runs at most three tasks
 at once and each Vitest process uses at most four workers, matching the pod's
 12-CPU limit.
 
+The extension passes the last green main base to every workflow. Selectors
+inside the site, package publishing, CI image refresh, and Scout workflows use
+it to skip unchanged targets. Without a valid base they run conservatively, so
+the base must travel with each workflow rather than only with `verify` and the
+release chain.
+
 When the [catalog comparator](https://github.com/shepherdjerred/monorepo/blob/main/packages/version-catalog/src/internal-image-pins.ts)
 finds only internal image build number and digest changes,
 [`verify`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/verify.ts)

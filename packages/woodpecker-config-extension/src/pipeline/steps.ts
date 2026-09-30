@@ -111,7 +111,7 @@ export function buildPipelineSteps({
     CI_LAST_IMAGE_RELEASE_COMMIT: imageReleaseBase ?? "",
   };
 
-  return [
+  const steps: CiStep[] = [
     {
       key: "verify",
       label: "verify",
@@ -152,4 +152,16 @@ export function buildPipelineSteps({
     ...observabilityE2eSteps(images),
     ...prGateSteps(images),
   ];
+
+  // Each workflow has its own container and environment. The in-step
+  // ci-changed selectors must receive the same last-green base as the graph
+  // selector; otherwise they fail open and publish, deploy, or rebuild on
+  // every main push. Verify may override it with its newer successful base.
+  return steps.map((step) => ({
+    ...step,
+    environment: {
+      CI_CHANGED_BASE: changedBase ?? "",
+      ...step.environment,
+    },
+  }));
 }
