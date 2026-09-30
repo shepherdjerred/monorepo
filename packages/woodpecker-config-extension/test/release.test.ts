@@ -333,6 +333,7 @@ describe("coverage of the Buildkite pipeline", () => {
     "playwright-e2e-main": "playwright-e2e",
     "docker-e2e-pr": "docker-e2e",
     "docker-e2e-main": "docker-e2e",
+    "paper-e2e-pr": "paper-e2e-pr",
     "pr-dryrun": "pr-dryrun",
     "codex-review-gate": "codex-review-gate",
     "tofu-plan-seaweedfs": "tofu-plan-seaweedfs",
@@ -396,8 +397,8 @@ describe("coverage of the Buildkite pipeline", () => {
     "tofu-platform-openrouter": "retired with the OpenRouter platform stack",
   };
 
-  test("accounts for all 60 Buildkite steps", () => {
-    expect(Object.keys(COVERAGE).length + Object.keys(RETIRED).length).toBe(60);
+  test("accounts for all 61 Buildkite steps", () => {
+    expect(Object.keys(COVERAGE).length + Object.keys(RETIRED).length).toBe(61);
   });
 
   test("every claimed successor actually exists", () => {

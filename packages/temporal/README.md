@@ -33,6 +33,7 @@ the beta-owned Bryan Bucks analytics schedule; all other central queues are
 | `home`            | `home`                                                          |                    4 |
 | `reports`         | `reports`                                                       |                    4 |
 | `infra`           | `infra`                                                         |                    1 |
+| `infra`           | `mining-reset`                                                  |                    1 |
 | `repo`            | `repo-automation`, `agent-chat-dispatch`, `agent-chat-receipts` |          1 per queue |
 | `scout`           | `scout`                                                         |                    1 |
 | `agent`           | `agent-task`                                                    |                    1 |

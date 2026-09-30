@@ -1,0 +1,73 @@
+# The crew records what the standard rail batch changes before another ore cart runs.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-rail-audit:
+    name: "The Rail Audit"
+    giver: marcus
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-rail-order
+    text:
+      offer: "Dorran has a standard spare batch. I need a written check that tells us which rails were replaced and which were only inspected."
+      accept: "Bring paper, ink and a compass for a rail audit."
+      decline: "I will compare the old cart notes by hand."
+      finish: "The crew can distinguish a new repair from an old warning."
+      summary: "Record the South Mines rail repairs before another cart runs."
+      questions: []
+    start: audit
+    stages:
+      audit:
+        journal: "Bring Marcus 12 paper, 2 ink sacs and a compass."
+        waiting: "A good audit marks the current route, not a former shaft."
+        complete: "The latest rail repairs are documented."
+        objectives:
+          - deliver marcus 12 PAPER
+          - deliver marcus 2 INK_SAC
+          - deliver marcus 1 COMPASS
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-third-cart:
+    name: "The Third Cart"
+    giver: dorran
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-rail-audit
+    text:
+      offer: "Marcus's audit is clear. A third cart can carry ore only if the new line yields enough for a proper load."
+      accept: "Mine iron ore in the main world for the third cart."
+      decline: "The cart can stay empty until the crew is ready."
+      finish: "The crew has ore for a third measured run on its repaired line."
+      summary: "Gather a measured iron load for the South Mines third cart."
+      questions: []
+    start: ore
+    stages:
+      ore:
+        journal: "Mine 24 iron ore blocks in the main world."
+        waiting: "Count the blocks at the face before the cart moves."
+        complete: "The third cart has a measured ore load."
+        objectives:
+          - mine 24 IRON_ORE
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

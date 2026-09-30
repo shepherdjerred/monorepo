@@ -1,0 +1,92 @@
+# The windmill remains a remembered spawn landmark. These errands organize
+# its present-day caretakers without requiring the historical altar ritual.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-mill-watch:
+    name: The Mill Watch
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed storm-signatures
+    text:
+      offer: Braxton has signatures, but a register only works if someone sees the mill each day. Help me prepare a watch kit.
+      accept: Bring lanterns and paper, then tell Walter where to put his observations.
+      decline: The mill will still need eyes tomorrow.
+      finish: Walter will enter each observation beside the repair records. We can spot a change before a storm.
+      summary: Equip a daily windmill watch and link it to Braxton's register.
+      questions: []
+    start: kit
+    stages:
+      kit:
+        journal: Bring Martha 4 lanterns and 8 paper for the mill watch.
+        waiting: A good watch needs light and a place to write.
+        complete: The kit is ready. Walter should know where the notes go.
+        objectives:
+          - deliver martha 4 LANTERN
+          - deliver martha 8 PAPER
+        onComplete: []
+        next: [{ to: observer, when: [], label: none }]
+        timeLimit: none
+      observer:
+        journal: Ask Walter to record what the mill watch sees.
+        waiting: Walter can compare the notes with his altar sketch.
+        complete: Each new observation will go into the signed register.
+        objectives:
+          - talk walter
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  a-clear-record:
+    name: A Clear Record
+    giver: braxton
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-mill-watch
+    text:
+      offer: The new watch found a damaged line in my copy of the mill register. I want a second copy kept away from the weather.
+      accept: Bring books and ink, then ask Marcus to confirm the supply entries.
+      decline: I will keep the old copy dry until you return.
+      finish: Marcus confirmed the deliveries. The town has two matching records before the next storm.
+      summary: Preserve a second, checked copy of the windmill register.
+      questions: []
+    start: copy
+    stages:
+      copy:
+        journal: Bring Braxton 4 books and 4 ink sacs for a second mill record.
+        waiting: A copy is useful only if every line can be read.
+        complete: The entries are copied. Marcus should check the supply lines.
+        objectives:
+          - deliver braxton 4 BOOK
+          - deliver braxton 4 INK_SAC
+        onComplete: []
+        next: [{ to: check, when: [], label: none }]
+        timeLimit: none
+      check:
+        journal: Ask Marcus to check the mill's supply entries.
+        waiting: Marcus remembers which carts carried the repair supplies.
+        complete: The second copy agrees with the cart record.
+        objectives:
+          - talk marcus
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

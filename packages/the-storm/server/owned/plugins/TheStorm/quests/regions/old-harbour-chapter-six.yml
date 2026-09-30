@@ -1,0 +1,81 @@
+# The river custom grows into a practical welcome for new fishers.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  a-fishers-basket:
+    name: "A Fisher's Basket"
+    giver: oswin
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-first-catch-share
+    text:
+      offer: "The first catch became a meal. The next newcomer should have a place to keep a catch before it is shared."
+      accept: "Craft barrels for the river fishers."
+      decline: "I will loan out the old basket for another day."
+      finish: "New fishers have dry barrels for their catches."
+      summary: "Make simple storage for the present-day river fishers."
+      questions: []
+    start: barrels
+    stages:
+      barrels:
+        journal: "Craft 6 barrels in the main world for Oswin."
+        waiting: "A sound barrel keeps the catch clean on the walk back."
+        complete: "The barrels are ready. Bring them to Oswin."
+        objectives:
+          - craft 6 BARREL
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Bring Oswin 6 barrels for the river fishers."
+        waiting: "The new fishers need the barrels at the river."
+        complete: "Oswin has barrels ready for new fishers."
+        objectives:
+          - deliver oswin 6 BARREL
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-river-supper:
+    name: "The River Supper"
+    giver: stanley
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed a-fishers-basket
+    text:
+      offer: "Oswin has barrels for the catch. Let the next fishing day end with enough food to welcome people who never knew the old harbour."
+      accept: "Catch fish and bring bread for a river supper."
+      decline: "I will keep the table ready."
+      finish: "The supper belongs to the current river community, with the old harbour remembered by name."
+      summary: "Provide a shared supper for today's river fishers."
+      questions: []
+    start: supper
+    stages:
+      supper:
+        journal: "Catch 8 fish in the main world and bring Stanley 12 bread."
+        waiting: "A welcome is better when everyone can sit down to eat."
+        complete: "Stanley has food for the river supper."
+        objectives:
+          - fish 8 any
+          - deliver stanley 12 BREAD
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

@@ -1,0 +1,522 @@
+# Owned by the repository; the plugin never writes it. Parsed strictly: every
+# spell must be present with every key, unknown keys are errors, and every
+# material, particle, sound, entity type and vanilla item model is checked
+# against the server at enable.
+#
+# Spells are items. `/spells bind <spell>` gives a reusable focus for a spell
+# you know (Spellcaster tier from the tracks module; quest-only spells also
+# need thestorm.spells.learned.<id>). Right-click to cast; a focus cast
+# consumes its reagents. Administrators hand out single-use scrolls with
+# `/spells scroll <spell> <player> [amount]`: anyone can read one, and the
+# scroll is the cost.
+#
+# tier: Spellcaster level I..V (1..5) a focus needs.
+# learned: quest-only; also needs thestorm.spells.learned.<id>.
+# reagents: material name -> amount consumed per focus cast.
+# cooldownSeconds / cooldownGroup: spells in one group share one cooldown and
+#   one native cooldown overlay on their items.
+# look.model: the item_model. Vanilla models stand in until the server
+#   resource pack ships thestorm:spell/<id> models.
+# fx: a data-free particle name and a sound event key.
+# settings: ranges and radii in blocks, durations in seconds (Dawn and Dusk:
+#   minutes), damage in half-hearts, velocities in blocks per tick.
+
+label: Spells
+
+scroll:
+  model: minecraft:paper
+  readSeconds: 1.2
+  sound: item.book.page_turn
+  maxStack: 16
+
+# No spell ever affects these.
+immuneEntities: [ENDER_DRAGON, WITHER, WARDEN, ELDER_GUARDIAN]
+
+spells:
+  # ---------------------------------------------------------------- Tier I
+  mark:
+    enabled: true
+    tier: 1
+    learned: false
+    reagents: { REDSTONE: 15, LAPIS_LAZULI: 15 }
+    cooldownSeconds: 60
+    cooldownGroup: mark
+    look:
+      name: "<light_purple>Mark"
+      lore:
+        [
+          "<gray>Fix this place in your memory,",
+          "<gray>so Recall can bring you back.",
+        ]
+      model: minecraft:compass
+    fx: { particle: PORTAL, sound: block.respawn_anchor.set_spawn }
+    settings: {}
+
+  recall:
+    enabled: true
+    tier: 1
+    learned: false
+    reagents: { REDSTONE: 15 }
+    cooldownSeconds: 300
+    cooldownGroup: recall
+    look:
+      name: "<light_purple>Recall"
+      lore: ["<gray>Return to your Mark."]
+      model: minecraft:recovery_compass
+    fx: { particle: REVERSE_PORTAL, sound: entity.enderman.teleport }
+    settings: { searchRadius: 3 }
+
+  haste:
+    enabled: true
+    tier: 1
+    learned: false
+    reagents: { REDSTONE: 15 }
+    cooldownSeconds: 90
+    cooldownGroup: haste
+    look:
+      name: "<light_purple>Haste"
+      lore: ["<gray>Quick feet, quick hands."]
+      model: minecraft:sugar
+    fx: { particle: CLOUD, sound: entity.illusioner.cast_spell }
+    settings: { durationSeconds: 30, amplifier: 1 }
+
+  firenova:
+    enabled: true
+    tier: 1
+    learned: false
+    reagents: { REDSTONE: 10 }
+    cooldownSeconds: 30
+    cooldownGroup: firenova
+    look:
+      name: "<light_purple>Fire Nova"
+      lore: ["<gray>A ring of flame bursts around you."]
+      model: minecraft:blaze_powder
+    fx: { particle: FLAME, sound: entity.blaze.shoot }
+    settings: { radius: 5, damage: 4, fireSeconds: 4 }
+
+  cripple:
+    enabled: true
+    tier: 1
+    learned: false
+    reagents: { REDSTONE: 10 }
+    cooldownSeconds: 20
+    cooldownGroup: cripple
+    look:
+      name: "<light_purple>Cripple"
+      lore: ["<gray>Slow and weaken what you look at."]
+      model: minecraft:fermented_spider_eye
+    fx: { particle: WITCH, sound: entity.evoker.cast_spell }
+    settings: { range: 20, durationSeconds: 8, amplifier: 1 }
+
+  confusion:
+    enabled: true
+    tier: 1
+    learned: false
+    reagents: { REDSTONE: 10 }
+    cooldownSeconds: 45
+    cooldownGroup: confusion
+    look:
+      name: "<light_purple>Confusion"
+      lore: ["<gray>The monsters around you", "<gray>turn on each other."]
+      model: minecraft:spider_eye
+    fx: { particle: WITCH, sound: entity.illusioner.mirror_move }
+    settings: { radius: 12 }
+
+  roar:
+    enabled: true
+    tier: 1
+    learned: false
+    reagents: { REDSTONE: 15 }
+    cooldownSeconds: 45
+    cooldownGroup: roar
+    look:
+      name: "<light_purple>Roar"
+      lore: ["<gray>Every monster nearby", "<gray>comes for you instead."]
+      model: minecraft:goat_horn
+    fx: { particle: ANGRY_VILLAGER, sound: entity.ravager.roar }
+    settings: { radius: 12 }
+
+  silence:
+    enabled: true
+    tier: 1
+    learned: false
+    reagents: { REDSTONE: 10 }
+    cooldownSeconds: 60
+    cooldownGroup: silence
+    look:
+      name: "<light_purple>Silence"
+      lore: ["<gray>The player you look at", "<gray>cannot cast for a while."]
+      model: minecraft:ink_sac
+    fx: { particle: SQUID_INK, sound: entity.evoker.prepare_attack }
+    settings: { range: 20, durationSeconds: 10 }
+
+  dowse:
+    enabled: true
+    tier: 1
+    learned: false
+    reagents: { REDSTONE: 10 }
+    cooldownSeconds: 10
+    cooldownGroup: dowse
+    look:
+      name: "<light_purple>Dowse"
+      lore: ["<gray>Rain on every fire around you."]
+      model: minecraft:prismarine_crystals
+    fx: { particle: SPLASH, sound: block.fire.extinguish }
+    settings: { radius: 6 }
+
+  cleanse:
+    enabled: true
+    tier: 1
+    learned: true
+    reagents: { REDSTONE: 10, LAPIS_LAZULI: 5 }
+    cooldownSeconds: 60
+    cooldownGroup: cleanse
+    look:
+      name: "<light_purple>Cleanse"
+      lore: ["<gray>Wash away poison, withering,", "<gray>fire and frost."]
+      model: minecraft:glistering_melon_slice
+    fx: { particle: WAX_OFF, sound: block.beacon.power_select }
+    settings: {}
+
+  # --------------------------------------------------------------- Tier II
+  phase:
+    enabled: true
+    tier: 2
+    learned: false
+    reagents: { REDSTONE: 10, GLOWSTONE_DUST: 2 }
+    cooldownSeconds: 20
+    cooldownGroup: phase
+    look:
+      name: "<light_purple>Phase"
+      lore: ["<gray>Step through the wall", "<gray>in front of you."]
+      model: minecraft:ender_pearl
+    fx: { particle: REVERSE_PORTAL, sound: entity.enderman.teleport }
+    settings: { reach: 6 }
+
+  wall:
+    enabled: true
+    tier: 2
+    learned: false
+    reagents: { REDSTONE: 15, GLOWSTONE_DUST: 2 }
+    cooldownSeconds: 30
+    cooldownGroup: wall
+    look:
+      name: "<light_purple>Wall"
+      lore:
+        [
+          "<gray>Raise a wall where you look.",
+          "<gray>It crumbles after a while.",
+        ]
+      model: minecraft:brick
+    fx: { particle: LARGE_SMOKE, sound: block.deepslate_bricks.place }
+    settings:
+      {
+        range: 20,
+        width: 5,
+        height: 3,
+        durationSeconds: 12,
+        material: DEEPSLATE_BRICKS,
+      }
+
+  geyser:
+    enabled: true
+    tier: 2
+    learned: false
+    reagents: { REDSTONE: 10, GLOWSTONE_DUST: 2 }
+    cooldownSeconds: 15
+    cooldownGroup: geyser
+    look:
+      name: "<light_purple>Geyser"
+      lore: ["<gray>Water erupts under", "<gray>what you look at."]
+      model: minecraft:heart_of_the_sea
+    fx: { particle: SPLASH, sound: block.bubble_column.upwards_inside }
+    settings: { range: 20, lift: 1.2, damage: 2 }
+
+  stealth:
+    enabled: true
+    tier: 2
+    learned: false
+    reagents: { REDSTONE: 10, GLOWSTONE_DUST: 4 }
+    cooldownSeconds: 90
+    cooldownGroup: stealth
+    look:
+      name: "<light_purple>Stealth"
+      lore:
+        [
+          "<gray>Fade from sight. Monsters lose you;",
+          "<gray>attacking breaks the spell.",
+        ]
+      model: minecraft:phantom_membrane
+    fx: { particle: LARGE_SMOKE, sound: entity.illusioner.prepare_blindness }
+    settings: { durationSeconds: 20 }
+
+  farm:
+    enabled: true
+    tier: 2
+    learned: false
+    reagents: { REDSTONE: 10, BONE_MEAL: 8 }
+    cooldownSeconds: 60
+    cooldownGroup: farm
+    look:
+      name: "<light_purple>Farm"
+      lore: ["<gray>The crops around you ripen."]
+      model: minecraft:bone_meal
+    fx: { particle: HAPPY_VILLAGER, sound: block.composter.fill_success }
+    settings: { radius: 5, stages: 2 }
+
+  forcepush:
+    enabled: true
+    tier: 2
+    learned: false
+    reagents: { REDSTONE: 10, GLOWSTONE_DUST: 2 }
+    cooldownSeconds: 20
+    cooldownGroup: forcepush
+    look:
+      name: "<light_purple>Force Push"
+      lore: ["<gray>A gale throws back", "<gray>everything around you."]
+      model: minecraft:wind_charge
+    fx: { particle: GUST, sound: entity.breeze.wind_burst }
+    settings: { radius: 6, strength: 1.2, lift: 0.4 }
+
+  disarm:
+    enabled: true
+    tier: 2
+    learned: false
+    reagents: { REDSTONE: 10, GLOWSTONE_DUST: 2 }
+    cooldownSeconds: 30
+    cooldownGroup: disarm
+    look:
+      name: "<light_purple>Disarm"
+      lore: ["<gray>Knock the weapon from", "<gray>the hand you look at."]
+      model: minecraft:tripwire_hook
+    fx: { particle: CRIT, sound: entity.item.break }
+    settings: { range: 16 }
+
+  shadowstep:
+    enabled: true
+    tier: 2
+    learned: false
+    reagents: { REDSTONE: 10, GLOWSTONE_DUST: 2 }
+    cooldownSeconds: 20
+    cooldownGroup: shadowstep
+    look:
+      name: "<light_purple>Shadowstep"
+      lore: ["<gray>Appear behind what you look at."]
+      model: minecraft:echo_shard
+    fx: { particle: SMOKE, sound: entity.enderman.teleport }
+    settings: { range: 20 }
+
+  divine:
+    enabled: true
+    tier: 2
+    learned: false
+    reagents: { REDSTONE: 32, LAPIS_LAZULI: 12 }
+    cooldownSeconds: 120
+    cooldownGroup: divine
+    look:
+      name: "<light_purple>Divine"
+      lore:
+        ["<gray>Sense the nearest diamonds", "<gray>in the rock around you."]
+      model: minecraft:amethyst_shard
+    fx: { particle: END_ROD, sound: block.amethyst_block.chime }
+    settings: { radius: 16, blocks: [DIAMOND_ORE, DEEPSLATE_DIAMOND_ORE] }
+
+  # -------------------------------------------------------------- Tier III
+  leap:
+    enabled: true
+    tier: 3
+    learned: false
+    reagents: { REDSTONE: 10, AMETHYST_SHARD: 1 }
+    cooldownSeconds: 20
+    cooldownGroup: leap
+    look:
+      name: "<light_purple>Leap"
+      lore: ["<gray>Bound forward. You land softly."]
+      model: minecraft:rabbit_foot
+    fx: { particle: CLOUD, sound: entity.wind_charge.wind_burst }
+    settings: { forward: 1.6, upward: 0.9 }
+
+  dawn:
+    enabled: true
+    tier: 3
+    learned: false
+    reagents: { REDSTONE: 30, LAPIS_LAZULI: 10, AMETHYST_SHARD: 2 }
+    cooldownSeconds: 300
+    cooldownGroup: sky
+    look:
+      name: "<light_purple>Dawn"
+      lore: ["<gray>Your own sky turns to morning.", "<gray>Only you see it."]
+      model: minecraft:sunflower
+    fx: { particle: WAX_ON, sound: block.bell.use }
+    settings: { targetTime: 0, durationMinutes: 20 }
+
+  dusk:
+    enabled: true
+    tier: 3
+    learned: false
+    reagents: { REDSTONE: 30, LAPIS_LAZULI: 10, AMETHYST_SHARD: 2 }
+    cooldownSeconds: 300
+    cooldownGroup: sky
+    look:
+      name: "<light_purple>Dusk"
+      lore: ["<gray>Your own sky turns to evening.", "<gray>Only you see it."]
+      model: minecraft:clock
+    fx: { particle: SCULK_SOUL, sound: entity.phantom.ambient }
+    settings: { targetTime: 12500, durationMinutes: 20 }
+
+  freeze:
+    enabled: true
+    tier: 3
+    learned: false
+    reagents: { REDSTONE: 10, AMETHYST_SHARD: 2 }
+    cooldownSeconds: 30
+    cooldownGroup: freeze
+    look:
+      name: "<light_purple>Freeze"
+      lore:
+        [
+          "<gray>Frost locks up what you look at",
+          "<gray>and ices the water around it.",
+        ]
+      model: minecraft:snowball
+    fx: { particle: SNOWFLAKE, sound: entity.player.hurt_freeze }
+    settings:
+      { range: 20, durationSeconds: 6, iceRadius: 3, iceMaterial: PACKED_ICE }
+
+  drainlife:
+    enabled: true
+    tier: 3
+    learned: false
+    reagents: { REDSTONE: 10, AMETHYST_SHARD: 2 }
+    cooldownSeconds: 30
+    cooldownGroup: drainlife
+    look:
+      name: "<light_purple>Drain Life"
+      lore: ["<gray>Take life from what you look at."]
+      model: minecraft:nether_wart
+    fx: { particle: DAMAGE_INDICATOR, sound: entity.vex.charge }
+    settings: { range: 16, damage: 6, healRatio: 0.5 }
+
+  blink:
+    enabled: true
+    tier: 3
+    learned: true
+    reagents: { REDSTONE: 10, AMETHYST_SHARD: 1 }
+    cooldownSeconds: 15
+    cooldownGroup: blink
+    look:
+      name: "<light_purple>Blink"
+      lore: ["<gray>Flicker to where you look."]
+      model: minecraft:chorus_fruit
+    fx: { particle: PORTAL, sound: entity.shulker.teleport }
+    settings: { range: 16 }
+
+  carpet:
+    enabled: true
+    tier: 3
+    learned: true
+    reagents: { REDSTONE: 10, AMETHYST_SHARD: 1 }
+    cooldownSeconds: 45
+    cooldownGroup: carpet
+    look:
+      name: "<light_purple>Carpet"
+      lore:
+        [
+          "<gray>A little cloud, soft as a ghast,",
+          "<gray>holds you up for a moment.",
+        ]
+      model: minecraft:ghast_tear
+    fx: { particle: CLOUD, sound: entity.happy_ghast.ambient }
+    settings: { size: 3, durationSeconds: 10, material: WHITE_WOOL }
+
+  # --------------------------------------------------------------- Tier IV
+  entomb:
+    enabled: true
+    tier: 4
+    learned: false
+    reagents: { REDSTONE: 10, AMETHYST_SHARD: 4 }
+    cooldownSeconds: 60
+    cooldownGroup: entomb
+    look:
+      name: "<light_purple>Entomb"
+      lore: ["<gray>Seal what you look at", "<gray>in dark glass for a moment."]
+      model: minecraft:tinted_glass
+    fx: { particle: WHITE_ASH, sound: block.glass.place }
+    settings: { range: 16, durationSeconds: 5, material: TINTED_GLASS }
+
+  purge:
+    enabled: true
+    tier: 4
+    learned: false
+    reagents: { REDSTONE: 20, LAPIS_LAZULI: 10, AMETHYST_SHARD: 2 }
+    cooldownSeconds: 90
+    cooldownGroup: purge
+    look:
+      name: "<light_purple>Purge"
+      lore: ["<gray>Light scours the monsters", "<gray>around you."]
+      model: minecraft:glowstone_dust
+    fx: { particle: END_ROD, sound: block.beacon.activate }
+    settings: { radius: 10, damage: 12 }
+
+  stormcall:
+    enabled: true
+    tier: 4
+    learned: false
+    reagents: { REDSTONE: 10, BREEZE_ROD: 1 }
+    cooldownSeconds: 30
+    cooldownGroup: stormcall
+    look:
+      name: "<light_purple>Storm Call"
+      lore:
+        [
+          "<gray>Call lightning where you look.",
+          "<gray>It only bites where rain falls.",
+        ]
+      model: minecraft:lightning_rod
+    fx: { particle: ELECTRIC_SPARK, sound: entity.lightning_bolt.thunder }
+    settings: { range: 32, radius: 3, damage: 8, fireSeconds: 3 }
+
+  ward:
+    enabled: true
+    tier: 4
+    learned: false
+    reagents: { REDSTONE: 20, GLOWSTONE_DUST: 8, BREEZE_ROD: 1 }
+    cooldownSeconds: 180
+    cooldownGroup: ward
+    look:
+      name: "<light_purple>Ward"
+      lore: ["<gray>A bubble monsters cannot enter."]
+      model: minecraft:shield
+    fx: { particle: ENCHANT, sound: block.conduit.activate }
+    settings: { radius: 6, durationSeconds: 60, pushStrength: 0.6 }
+
+  # ---------------------------------------------------------------- Tier V
+  thunderclap:
+    enabled: true
+    tier: 5
+    learned: false
+    reagents: { REDSTONE: 20, AMETHYST_SHARD: 2, BREEZE_ROD: 1 }
+    cooldownSeconds: 45
+    cooldownGroup: thunderclap
+    look:
+      name: "<light_purple>Thunderclap"
+      lore:
+        ["<gray>Clap thunder; the shockwave", "<gray>hurls everything away."]
+      model: minecraft:breeze_rod
+    fx: { particle: EXPLOSION, sound: entity.lightning_bolt.impact }
+    settings: { radius: 6, damage: 6, knockback: 1.4 }
+
+  chainlightning:
+    enabled: true
+    tier: 5
+    learned: false
+    reagents: { REDSTONE: 20, BREEZE_ROD: 2 }
+    cooldownSeconds: 45
+    cooldownGroup: chainlightning
+    look:
+      name: "<light_purple>Chain Lightning"
+      lore: ["<gray>Lightning leaps from foe to foe."]
+      model: minecraft:prismarine_shard
+    fx: { particle: ELECTRIC_SPARK, sound: entity.lightning_bolt.impact }
+    settings:
+      { range: 24, jumpRange: 6, maxTargets: 5, damage: 8, falloff: 0.8 }

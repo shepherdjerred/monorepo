@@ -1,0 +1,12 @@
+{
+  "file": "/data/plugins/Chunky/config.yml",
+  "ops": [
+    {
+      "$put": {
+        "path": "$",
+        "key": "continue-on-restart",
+        "value": true
+      }
+    }
+  ]
+}

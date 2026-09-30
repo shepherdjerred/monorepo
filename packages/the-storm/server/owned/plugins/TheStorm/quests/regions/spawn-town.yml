@@ -1,0 +1,92 @@
+# New Spawn Town chapter after the imported 2017 errands. Both quests take place
+# in the permanent main world and use people already present around the windmill.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-windmills-shadow:
+    name: The Windmill's Shadow
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 25
+    requirements: []
+    text:
+      offer: The mill turns when the fields are still. Walter says the altar beneath it is drawing the storm. Help me keep the wheat safe while he studies it.
+      accept: Bring me dry grain and a lightning rod. I'll move the harvest away from the mill.
+      decline: The grain can wait, but the clouds will not.
+      finish: The harvest is safe. Walter can look beneath the mill now.
+      summary: Protect Martha's harvest while Walter investigates the windmill altar.
+      questions: []
+    start: protect-harvest
+    stages:
+      protect-harvest:
+        journal: Bring Martha 32 wheat and a lightning rod before Walter examines the mill.
+        waiting: The grain must stay dry while Walter works.
+        complete: That's the harvest secured. Walter is waiting by his study.
+        objectives:
+          - deliver martha 32 WHEAT
+          - deliver martha 1 LIGHTNING_ROD
+        onComplete: []
+        next: [{ to: walter, when: [], label: none }]
+        timeLimit: none
+      walter:
+        journal: Ask Walter what he found beneath the windmill.
+        waiting: Walter has a theory about the altar.
+        complete: He found redstone dust in the mill's foundations, arranged like a circuit.
+        objectives:
+          - talk walter
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 350
+      - points 1
+      - reputation townsfolk 1
+
+  the-mill-register:
+    name: The Mill Register
+    giver: braxton
+    category: side
+    repeat: once
+    estimatedMinutes: 30
+    requirements:
+      - completed the-windmills-shadow
+    text:
+      offer: Walter says the mill's foundations were altered. My old ledger records every repair, but half the pages are missing. Help me rebuild the register.
+      accept: Bring paper, ink and a compass. Then ask Marcus who hauled stone to the mill.
+      decline: Very well. The missing pages will still be missing tomorrow.
+      finish: Marcus remembers a cart that arrived during a thunderstorm. I've added his account to the register.
+      summary: Reconstruct Braxton's windmill repair ledger and question Marcus.
+      questions: []
+    start: records
+    stages:
+      records:
+        journal: Bring Braxton 8 paper, 2 ink sacs and a compass for a new mill register.
+        waiting: A record without ink is only a rumour.
+        complete: These pages will do. Marcus kept the carts; ask what he recalls.
+        objectives:
+          - deliver braxton 8 PAPER
+          - deliver braxton 2 INK_SAC
+          - deliver braxton 1 COMPASS
+        onComplete: []
+        next: [{ to: witness, when: [], label: none }]
+        timeLimit: none
+      witness:
+        journal: Ask Marcus who delivered stone to the mill during the storm.
+        waiting: Marcus knows the old supply route.
+        complete: Marcus remembers the cart, but not who signed for it. The register now has a lead.
+        objectives:
+          - talk marcus
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 450
+      - points 1
+      - reputation townsfolk 1

@@ -1,0 +1,19 @@
+{
+  "file": "/data/config/paper-world-defaults.yml",
+  "ops": [
+    {
+      "$put": {
+        "path": "$.anticheat.anti-xray",
+        "key": "enabled",
+        "value": true
+      }
+    },
+    {
+      "$put": {
+        "path": "$.fixes",
+        "key": "disable-unloaded-chunk-enderpearl-exploit",
+        "value": true
+      }
+    }
+  ]
+}

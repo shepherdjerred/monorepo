@@ -38,6 +38,8 @@ val modules =
         "skills",
         "seasonal",
         "world",
+        "tickets",
+        "agent",
     )
 
 include("core", "architecture", "dist")

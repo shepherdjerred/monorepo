@@ -1,0 +1,72 @@
+# A public water trial gains a second observation and a durable readers copy.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  a-second-observation:
+    name: "A Second Observation"
+    giver: walter
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-repeatable-trial
+    text:
+      offer: "The first trial gives us a method. A second observation of river life can show whether the method records more than one kind of water."
+      accept: "Catch fish in the main world and bring sample bottles."
+      decline: "I will leave a blank comparison page."
+      finish: "The study circle has a second observation to compare with the first."
+      summary: "Add a river-life observation to the library water study."
+      questions: []
+    start: observe
+    stages:
+      observe:
+        journal: "Catch 8 fish in the main world and bring Walter 8 glass bottles."
+        waiting: "Record what the river yields before drawing a conclusion."
+        complete: "Walter can compare two water observations."
+        objectives:
+          - fish 8 any
+          - deliver walter 8 GLASS_BOTTLE
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1
+
+  the-readers-copy:
+    name: "The Readers' Copy"
+    giver: winston
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed a-second-observation
+    text:
+      offer: "Walter has two observations. Give the readers a copy that keeps the method and results together instead of spreading loose pages."
+      accept: "Craft books for the study circle in the main world."
+      decline: "The notes will stay on Walter's desk."
+      finish: "Readers can repeat the trial from a shared copy and challenge its results."
+      summary: "Bind the library study into copies for public readers."
+      questions: []
+    start: copies
+    stages:
+      copies:
+        journal: "Craft 10 books in the main world for Winston."
+        waiting: "A study is stronger when another reader can repeat it."
+        complete: "The study circle has durable readers copies."
+        objectives:
+          - craft 10 BOOK
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1

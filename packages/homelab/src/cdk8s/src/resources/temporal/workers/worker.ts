@@ -26,6 +26,7 @@ import { createTemporalWorkflowWorkers } from "./workflow-worker.ts";
 import { FRESHRSS_DESIRED_JSON } from "@shepherdjerred/homelab/cdk8s/src/resources/freshrss/freshrss-config.ts";
 import {
   createTemporalWorkerMaintenanceRbac,
+  createTemporalMiningResetRbac,
   createTemporalWorkerIngressReaderRbac,
   createTemporalWorkerServiceAccount,
 } from "@shepherdjerred/homelab/cdk8s/src/resources/temporal/worker-rbac.ts";
@@ -154,6 +155,7 @@ export function createTemporalWorkerDeployment(
 
   createTemporalWorkerIngressReaderRbac(chart, [infraServiceAccount]);
   createTemporalWorkerMaintenanceRbac(chart, [infraServiceAccount]);
+  createTemporalMiningResetRbac(chart, infraServiceAccount);
 
   // Cluster-wide read-only RBAC for deterministic collectors and generic
   // report-only investigations. Only the infra worker receives the separate

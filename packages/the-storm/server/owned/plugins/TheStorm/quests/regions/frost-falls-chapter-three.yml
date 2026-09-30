@@ -1,0 +1,93 @@
+# Frost Falls was a historical player town. Its name now marks a traveller's
+# shelter; these quests do not require the vanished settlement.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-shelter-register:
+    name: The Shelter Register
+    giver: lenox
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-frost-falls-banner
+    text:
+      offer: The banner helps travellers find the hearth. A register can tell Edgar which supplies need replacing after a hard night.
+      accept: Bring books and ink, then ask Edgar what the shelter uses most.
+      decline: Edgar can keep a count in his head for another night.
+      finish: The register has its first entries and a place for the next watch to write.
+      summary: Create a supply register for the Frost Falls memorial shelter.
+      questions: []
+    start: pages
+    stages:
+      pages:
+        journal: Bring Lenox 4 books and 2 ink sacs for the shelter register.
+        waiting: Each watch needs enough room to record its supplies.
+        complete: The pages are ready. Edgar knows what the hearth consumes.
+        objectives:
+          - deliver lenox 4 BOOK
+          - deliver lenox 2 INK_SAC
+        onComplete: []
+        next: [{ to: keeper, when: [], label: none }]
+        timeLimit: none
+      keeper:
+        journal: Ask Edgar which shelter supplies need counting.
+        waiting: Edgar has watched the hearth through the night.
+        complete: Coal, food and blankets each have a line in the register.
+        objectives:
+          - talk edgar
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  a-warm-welcome:
+    name: A Warm Welcome
+    giver: edgar
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-shelter-register
+    text:
+      offer: The register shows the first watch used its blankets. Let us replace them before another traveller arrives.
+      accept: Craft two white beds in the main world and bring them with bread and coal.
+      decline: I will keep the fire high while you gather supplies.
+      finish: The beds are made, the shelf is full and the register shows a shelter ready to welcome someone.
+      summary: Replenish the Frost Falls memorial shelter after its first watch.
+      questions: []
+    start: beds
+    stages:
+      beds:
+        journal: Craft 2 white beds in the main world for the shelter.
+        waiting: Clean beds help a cold traveller rest.
+        complete: The beds are made. Bring them to Edgar with food and fuel.
+        objectives:
+          - craft 2 WHITE_BED
+        onComplete: []
+        next: [{ to: restock, when: [], label: none }]
+        timeLimit: none
+      restock:
+        journal: Bring Edgar 2 white beds, 12 bread and 16 coal.
+        waiting: A welcome needs rest, warmth and a meal.
+        complete: The shelter is ready for its next traveller.
+        objectives:
+          - deliver edgar 2 WHITE_BED
+          - deliver edgar 12 BREAD
+          - deliver edgar 16 COAL
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

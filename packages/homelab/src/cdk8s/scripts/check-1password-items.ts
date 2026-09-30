@@ -67,6 +67,12 @@ const SecretVolumeSchema = z.object({
   secretName: z.string(),
   items: z.array(z.object({ key: z.string() })).optional(),
 });
+const HelmRconSchema = z.object({
+  enabled: z.boolean().optional(),
+  withGeneratedPassword: z.boolean().optional(),
+  existingSecret: z.string().min(1),
+  secretKey: z.string().min(1),
+});
 const ManifestSchema = z.object({
   apiVersion: z.string().optional(),
   kind: z.string().optional(),
@@ -100,8 +106,8 @@ function addKey(
   keys.add(key);
 }
 
-/** Recursively collect specific secret-key consumption (secretKeyRef + volume secret items). */
-function collectConsumption(
+/** Recursively collect specific secret-key consumption, including Helm RCON values. */
+export function collectConsumption(
   node: unknown,
   into: Map<string, Set<string>>,
 ): void {
@@ -124,6 +130,17 @@ function collectConsumption(
   if (secret.success) {
     for (const item of secret.data.items ?? [])
       addKey(into, secret.data.secretName, item.key);
+  }
+
+  // The Minecraft Helm chart consumes this secret internally. It has no
+  // rendered secretKeyRef in the Argo Application valuesObject for us to find.
+  const rcon = HelmRconSchema.safeParse(object["rcon"]);
+  if (
+    rcon.success &&
+    rcon.data.enabled !== false &&
+    rcon.data.withGeneratedPassword !== true
+  ) {
+    addKey(into, rcon.data.existingSecret, rcon.data.secretKey);
   }
 
   for (const value of Object.values(object)) collectConsumption(value, into);

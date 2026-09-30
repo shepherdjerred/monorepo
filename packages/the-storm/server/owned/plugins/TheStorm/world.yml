@@ -1,0 +1,51 @@
+# Worlds the world module requires to be provisioned and loaded before enable.
+# Paper already owns world, world_nether and world_the_end. Owned by the
+# repository; the plugin never writes it.
+# sleepPercentage is the share of awake players who must be in a bed to skip
+# the night, on every overworld. Entering a bed is the only vote.
+
+sleepPercentage: 50
+# The crier reads current main-world weather and time only when asked. It
+# remains disabled until the world module and command are playtested live.
+crier:
+  enabled: false
+  world: world
+# One weather-grounded archive bark on arrival near the windmill spawn per
+# Pacific date. Event-driven; no repeating task or automatic server broadcast.
+ambient:
+  enabled: false
+  world: world
+  # Block position of the repo-owned Essentials spawn.yml gameplay arrival.
+  spawnX: -440
+  spawnY: 71
+  spawnZ: -66
+  spawnRadius: 24
+  verticalRadius: 8
+  timeZone: America/Los_Angeles
+# Records only observed arrivals and deaths after activation. The command is
+# read-only, on demand, and requires crier.enabled above.
+digest:
+  enabled: false
+  world: world
+  timeZone: America/Los_Angeles
+# The single anchor must be measured at the current windmill spawn before enabling.
+# A nearby arrival can begin one finite, item-barter visit per Pacific date.
+merchant:
+  enabled: false
+  world: world
+  anchors: []
+  arrivalRadius: 12
+  visitMinutes: 20
+  timeZone: America/Los_Angeles
+worlds:
+  - name: wilds
+    preset: large_biomes
+    rtp: true
+  - name: peaks
+    preset: amplified
+    rtp: true
+  # This resource world is disposable; its quarterly reset is managed by
+  # Temporal only after a backup and while the server is stopped.
+  - name: mining
+    preset: normal
+    rtp: true

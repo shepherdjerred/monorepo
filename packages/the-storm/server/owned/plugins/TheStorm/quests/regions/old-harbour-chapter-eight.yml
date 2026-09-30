@@ -1,0 +1,81 @@
+# The present river community inherits the old harbour's welcome without a vanished dock.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-loaner-boats:
+    name: "The Loaner Boats"
+    giver: oswin
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-catch-register
+    text:
+      offer: "The catch register counts what new fishers bring in. A few shared boats will let them learn the current river with someone experienced."
+      accept: "Craft oak boats for the river fishers in the main world."
+      decline: "They can stay on the bank for this season."
+      finish: "New fishers have boats to share under Oswin's eye."
+      summary: "Make shared boats for the present-day river fishers."
+      questions: []
+    start: boats
+    stages:
+      boats:
+        journal: "Craft 4 oak boats in the main world for Oswin."
+        waiting: "A loaner boat should return ready for the next newcomer."
+        complete: "Oswin has four shared river boats."
+        objectives:
+          - craft 4 OAK_BOAT
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1
+
+  a-river-welcome:
+    name: "A River Welcome"
+    giver: stanley
+    category: side
+    repeat: once
+    estimatedMinutes: 50
+    requirements:
+      - completed the-loaner-boats
+    text:
+      offer: "Oswin has rods and boats, and our register shows the catch. Bring a meal for the next newcomers, then let Oswin welcome them to today's river."
+      accept: "Catch fish, bring bread, then speak with Oswin."
+      decline: "The supper table can wait for another catch."
+      finish: "The old harbour's welcome lives on with the fishers of the current river."
+      summary: "Complete a public welcome for the current river fishing community."
+      questions: []
+    start: meal
+    stages:
+      meal:
+        journal: "Catch 12 fish in the main world and bring Stanley 20 bread."
+        waiting: "The meal should be made from a current river catch."
+        complete: "Stanley has a welcoming supper ready."
+        objectives:
+          - fish 12 any
+          - deliver stanley 20 BREAD
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Tell Oswin the newcomer supper is ready."
+        waiting: "Oswin can invite the new fishers to the river table."
+        complete: "Oswin welcomes the next river fishers."
+        objectives:
+          - talk oswin
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 650
+      - points 1
+      - reputation townsfolk 1

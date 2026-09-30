@@ -1,0 +1,93 @@
+# A main-world watch closes the route account with a standing resupply plan.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-watch-beacon:
+    name: The Watch Beacon
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-safe-return
+    text:
+      offer: Iovita's return account showed how easily a marker disappears at night. A bright signal kit can help the next patrol find home.
+      accept: Bring lanterns, fences and a compass. Iovita will check the direction notes.
+      decline: The patrol will keep the old markers in sight.
+      finish: Iovita checked the notes. The watch can carry a signal kit on its next route.
+      summary: Equip the Wilds fringe watch with a homeward signal kit.
+      questions: []
+    start: signal
+    stages:
+      signal:
+        journal: Bring the Guard Captain 8 lanterns, 16 oak fences and a compass.
+        waiting: A signal must be easy to recognize from the return path.
+        complete: The kit is ready. Iovita should check its bearing.
+        objectives:
+          - deliver guard-captain 8 LANTERN
+          - deliver guard-captain 16 OAK_FENCE
+          - deliver guard-captain 1 COMPASS
+        onComplete: []
+        next: [{ to: bearing, when: [], label: none }]
+        timeLimit: none
+      bearing:
+        journal: Ask Iovita to check the signal kit's homeward bearing.
+        waiting: A bright marker is harmful if it points the wrong way.
+        complete: The signal kit is approved for patrol.
+        objectives:
+          - talk iovita
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation storm-watch 1
+
+  the-next-patrol:
+    name: The Next Patrol
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-watch-beacon
+    text:
+      offer: A safe return is useful only if the next watch can repeat it. Let us hand over a fresh map and supplies.
+      accept: Bring paper, torches and bread. The Guard Captain will take the handover.
+      decline: I will leave the old account with the watch.
+      finish: The next patrol has a map, light and food. The route account can keep growing.
+      summary: Hand the Wilds fringe route account to the next patrol.
+      questions: []
+    start: handover
+    stages:
+      handover:
+        journal: Bring Iovita 12 paper, 16 torches and 12 bread.
+        waiting: The next patrol needs a writable map and supplies.
+        complete: The handover is ready. The Guard Captain should receive it.
+        objectives:
+          - deliver iovita 12 PAPER
+          - deliver iovita 16 TORCH
+          - deliver iovita 12 BREAD
+        onComplete: []
+        next: [{ to: captain, when: [], label: none }]
+        timeLimit: none
+      captain:
+        journal: Give the Guard Captain the next patrol's route account.
+        waiting: The watch will choose its path in the present world.
+        complete: The route account is in the patrol's hands.
+        objectives:
+          - talk guard-captain
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation storm-watch 1

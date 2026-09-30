@@ -2,8 +2,10 @@ package com.shepherdjerred.thestorm.seasonal;
 
 import com.shepherdjerred.thestorm.core.module.ModuleContext;
 import com.shepherdjerred.thestorm.core.module.StormModule;
+import com.shepherdjerred.thestorm.seasonal.adapter.paper.SeasonalDoors;
+import com.shepherdjerred.thestorm.seasonal.domain.SeasonalConfig;
 
-/** Entry point of the seasonal module. Scaffolded; not implemented yet. */
+/** Yearly, date-windowed events in the main world, beginning with Stormnight. */
 public final class SeasonalModule implements StormModule {
 
   @Override
@@ -13,6 +15,18 @@ public final class SeasonalModule implements StormModule {
 
   @Override
   public void enable(ModuleContext context) {
-    context.logger().info("{} module enabled (scaffold)", id());
+    var config = context.loadConfig("seasonal.yml", SeasonalConfig.class);
+    var world = context.plugin().getServer().getWorld(config.mainWorld());
+    if (world == null) {
+      throw new IllegalStateException("Seasonal main world is not loaded: " + config.mainWorld());
+    }
+    context
+        .plugin()
+        .getServer()
+        .getPluginManager()
+        .registerEvents(
+            new SeasonalDoors(context.plugin(), config, context.time(), context.random()),
+            context.plugin());
+    context.logger().info("Loaded {} seasonal events", config.events().size());
   }
 }

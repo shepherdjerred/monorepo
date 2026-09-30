@@ -1,0 +1,144 @@
+# The agent module (the AI staff member). Owned by the repository; the
+# plugin never writes it. Every key is required.
+#
+# Each ladder answers one offense with escalating rungs: repeats within
+# the window climb one rung per strike, and anything past the top rung
+# repeats the top. Actions with a length take a duration (30s, 15m, 2h,
+# 7d, 2w, or runs like 1d12h); warn, kick, and escalate take none.
+# Bans are never autonomous: ladders top out at temporary bans and
+# escalation, and offenses without a ladder always escalate.
+
+# shadow watches without acting; active enforces. Arming is always an explicit edit.
+mode: shadow
+
+# The confidence that enforces a chat classification (above 0 through 1).
+classifyThreshold: 0.8
+
+# The confidence that attaches triage to a ticket (above 0 through 1).
+triageThreshold: 0.7
+
+# The confidence that resolves a ticket outright (above 0 through 1).
+resolveThreshold: 0.95
+
+# The deterministic layer-one checks: floods, invites, bursts, and repeats act
+# without a brain call, while caps, links, and shouting ask the brain.
+prefilters:
+  maxLines: 5
+  windowSeconds: 10
+  maxLength: 400
+  maxRepeats: 3
+  capsMinLength: 20
+  capsPercent: 70
+
+# How many autonomous decisions in a hundred surface for spot-checks (0-100).
+reviewSamplePercent: 10
+
+# Which server this agent staffs. Decision rows carry it so shared surfaces
+# never mix servers up.
+serverId: survival
+
+# The storm-brain service. The token never lives here: it comes from the
+# environment variable named below. Without it the module refuses to start.
+brain:
+  baseUrl: http://storm-brain-service.storm-brain.svc.cluster.local:3000
+  bearerTokenEnv: STORM_BRAIN_BEARER_TOKEN
+  # How long a brain call may take, in millis (1000-300000). Past the
+  # service's own 60s LLM timeout, so a slow model surfaces as the
+  # service's answer rather than a client timeout.
+  timeoutMs: 65000
+
+# The stale-ticket sweep. Every interval the agent re-drives open tickets
+# the brain never triaged and escalates open tickets past the SLA. The
+# sweep runs on boot too, catching what crashed or slept through triage.
+sweep:
+  # How often the sweep runs while the server is awake, in minutes (1-1440).
+  intervalMinutes: 15
+  # How old an untriaged ticket must be before the sweep works it again (0-10080).
+  redriveAfterMinutes: 10
+  # How long a ticket rests after a re-drive attempt; 0 disables (0-10080).
+  redriveBackoffMinutes: 60
+  # How old an open ticket must be before the sweep escalates it (0-10080).
+  slaAfterMinutes: 240
+
+# The known-answer catalog. New tickets naming an entry's keyword get the
+# entry's reply; repeat askers get the reply cut once two prior askings are
+# still remembered. First match wins; an empty catalog answers nothing.
+faq:
+  enabled: true
+  # How fast repeat-asker hits fade, in hours (1-720).
+  halfLifeHours: 168
+  entries:
+    - id: starter-kit
+      keywords: [starter kit, starting kit, starting items, how do I start]
+      reply: "New players get the starter kit automatically on first join: an iron sword, stone tools, and bread. Run /kit to see the kits."
+      link: ""
+    - id: server-rules
+      keywords: [server rules, what are the rules, read the rules]
+      reply: "The rules live in game: run /rules to read them."
+      link: ""
+    - id: report-grief
+      keywords: [report grief, someone griefed, rollback]
+      reply: "To report grief, file a ticket: /ticket grief <what happened>. Say where it happened; the ticket keeps where you filed from."
+      link: ""
+
+# The new-player greeting. Essentials already teleports and kits
+# first-joiners; this is the staff voice on top: starter tips and where to
+# read more.
+onboarding:
+  enabled: true
+  lines:
+    - "Welcome to The Storm! A few tips to start:"
+    - "New players get a starter kit on first join: sword, tools, and bread. Run /kit to see the kits."
+    - "Run /rules to read the server rules."
+    - "Need staff? File a ticket: /ticket <what happened>."
+
+ladders:
+  - offense: spam
+    repeatWithin: 7d
+    steps:
+      - { action: mute, duration: 10m }
+      - { action: mute, duration: 1h }
+      - { action: tempban, duration: 1d }
+      - { action: escalate, duration: none }
+  - offense: advertising
+    repeatWithin: 30d
+    steps:
+      - { action: mute, duration: 1h }
+      - { action: tempban, duration: 7d }
+      - { action: escalate, duration: none }
+  - offense: slur
+    repeatWithin: 30d
+    steps:
+      - { action: mute, duration: 1d }
+      - { action: tempban, duration: 7d }
+      - { action: escalate, duration: none }
+  - offense: toxicity
+    repeatWithin: 7d
+    steps:
+      - { action: warn, duration: none }
+      - { action: mute, duration: 1h }
+      - { action: mute, duration: 1d }
+      - { action: escalate, duration: none }
+  - offense: grief
+    repeatWithin: 30d
+    steps:
+      - { action: tempban, duration: 1d }
+      - { action: tempban, duration: 7d }
+      - { action: escalate, duration: none }
+  - offense: theft
+    repeatWithin: 30d
+    steps:
+      - { action: tempban, duration: 1d }
+      - { action: tempban, duration: 7d }
+      - { action: escalate, duration: none }
+  - offense: cheat
+    repeatWithin: 90d
+    steps:
+      - { action: tempban, duration: 7d }
+      - { action: escalate, duration: none }
+  - offense: harassment
+    repeatWithin: 30d
+    steps:
+      - { action: mute, duration: 1d }
+      - { action: tempban, duration: 7d }
+      - { action: escalate, duration: none }

@@ -1,0 +1,80 @@
+# Dorran handles South Mines hand-ins without binding quests to a mine entrance.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  lamps-for-dorran:
+    name: Lamps for Dorran
+    giver: dorran
+    category: side
+    repeat: once
+    estimatedMinutes: 30
+    requirements: []
+    text:
+      offer: The South Mines opened again, but the lower passages are dim. Send a crew in without light and they'll come back without ore.
+      accept: Bring lanterns and iron bars. I'll hang them above the rail.
+      decline: Then the lower passages stay closed.
+      finish: The lamps are hung. The crew can see where the tunnel bends.
+      summary: Supply lasting light for Dorran's mine crew.
+      questions: []
+    start: lamps
+    stages:
+      lamps:
+        journal: Bring Dorran 12 lanterns and 8 iron bars.
+        waiting: Torches burn out on the wet stone. I need lanterns.
+        complete: Every turn is lit. We can survey the lower seam.
+        objectives:
+          - deliver dorran 12 LANTERN
+          - deliver dorran 8 IRON_BARS
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 450
+      - points 1
+      - reputation townsfolk 1
+
+  a-vein-worth-mapping:
+    name: A Vein Worth Mapping
+    giver: dorran
+    category: side
+    repeat: once
+    estimatedMinutes: 50
+    requirements:
+      - completed lamps-for-dorran
+    text:
+      offer: The crew found a deep iron seam, but no one agrees where it starts. A map would keep us from digging the same wall twice.
+      accept: Mine deep iron ore in the main world, then bring me a fresh map.
+      decline: We'll keep the seam marked with chalk.
+      finish: Now the crew can work the seam without losing the way back.
+      summary: Survey a deep iron seam for the South Mines.
+      questions: []
+    start: seam
+    stages:
+      seam:
+        journal: Mine 12 deepslate iron ore in the main world.
+        waiting: The deep seam is harder to read than surface ore.
+        complete: That's enough to trace the vein. Bring me a map.
+        objectives:
+          - mine 12 DEEPSLATE_IRON_ORE
+        onComplete: []
+        next: [{ to: map, when: [], label: none }]
+        timeLimit: none
+      map:
+        journal: Bring Dorran an empty map so the crew can record the seam.
+        waiting: A plain map will do. The crew will fill it in.
+        complete: I'll put this beside the rail plan Marcus made.
+        objectives:
+          - deliver dorran 1 MAP
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 750
+      - points 2
+      - reputation townsfolk 1

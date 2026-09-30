@@ -371,6 +371,48 @@ describe("ported lanes", () => {
     expect(keysFor(["bun.lock"], "main")).not.toContain("trivy");
   });
 
+  test("The Storm source and E2E harness select the Paper E2E lane", () => {
+    expect(
+      keysFor(["packages/the-storm/plugin/core/src/main/java/Example.java"]),
+    ).toContain("paper-e2e-pr");
+    expect(keysFor(["packages/the-storm/tests/e2e/boot.test.ts"])).toContain(
+      "paper-e2e-pr",
+    );
+    expect(
+      keysFor(["packages/docs/wiki/src/content/docs/index.md"]),
+    ).not.toContain("paper-e2e-pr");
+  });
+
+  test("Paper E2E uses the pinned Paper image and service-host addressing", () => {
+    const paperStep = buildPipelineSteps({
+      images: IMAGES,
+      changedBase: "x",
+    }).find((candidate) => candidate.key === "paper-e2e-pr");
+    expect(paperStep?.services?.[0]?.image).toMatch(/@sha256:[a-f0-9]{64}$/u);
+    expect(paperStep?.environment?.["STORM_E2E_HOST"]).toBe("paper");
+    expect(paperStep?.environment?.["STORM_E2E_RCON_HOST"]).toBe("paper");
+  });
+
+  test("Paper E2E connects its fake brain through the service network", () => {
+    const paperStep = buildPipelineSteps({
+      images: IMAGES,
+      changedBase: "x",
+    }).find((candidate) => candidate.key === "paper-e2e-pr");
+    expect(paperStep?.environment?.["STORM_E2E_BRAIN_HOST"]).toBe(
+      "storm-brain",
+    );
+    expect(paperStep?.services?.map(({ name }) => name)).toEqual([
+      "paper",
+      "storm-brain",
+    ]);
+    const paperService = paperStep?.services?.find(
+      (service) => service.name === "paper",
+    );
+    expect(paperService?.environment?.["STORM_BRAIN_BEARER_TOKEN"]).toBe(
+      paperStep?.environment?.["STORM_E2E_BRAIN_TOKEN"],
+    );
+  });
+
   test("Semgrep fetches PR and target history before resolving its merge base", () => {
     const semgrep = buildPipelineSteps({
       images: IMAGES,

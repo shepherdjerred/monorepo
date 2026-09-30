@@ -1,0 +1,82 @@
+# The mapped Wilds fringe route passes from one patrol to the next.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-daylight-survey:
+    name: "The Daylight Survey"
+    giver: iovita
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed the-marker-log
+    text:
+      offer: "The marker log shows what the dusk patrol repaired. A daylight survey will help the next guard distinguish an old mark from a new warning."
+      accept: "Craft compasses for the survey team in the main world."
+      decline: "I will compare the signs from the gate."
+      finish: "The watch has a repeatable daylight survey route."
+      summary: "Equip a daylight survey of the present Wilds fringe."
+      questions: []
+    start: survey
+    stages:
+      survey:
+        journal: "Craft 4 compasses in the main world for Iovita."
+        waiting: "A survey should begin at the current town gate."
+        complete: "Iovita has compasses for the daylight survey."
+        objectives:
+          - craft 4 COMPASS
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation storm-watch 1
+
+  the-watch-handover:
+    name: "The Watch Handover"
+    giver: guard-captain
+    category: side
+    repeat: once
+    estimatedMinutes: 50
+    requirements:
+      - completed the-daylight-survey
+    text:
+      offer: "The daylight route and dusk log agree. Stock a handover kit, then let Iovita confirm that the next patrol can follow the same markers."
+      accept: "Bring maps, signs and torches, then report to Iovita."
+      decline: "I will brief the next patrol from memory."
+      finish: "The Wilds fringe watch has a route it can maintain and hand on safely."
+      summary: "Hand the current Wilds fringe patrol route to the next watch."
+      questions: []
+    start: handover-kit
+    stages:
+      handover-kit:
+        journal: "Bring the Guard Captain 2 maps, 12 oak signs and 24 torches."
+        waiting: "The next patrol should inherit tools as well as directions."
+        complete: "The Guard Captain has a complete handover kit."
+        objectives:
+          - deliver guard-captain 2 MAP
+          - deliver guard-captain 12 OAK_SIGN
+          - deliver guard-captain 24 TORCH
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Tell Iovita the next patrol has its route kit."
+        waiting: "Iovita can verify the route against her marker log."
+        complete: "Iovita confirms the watch handover."
+        objectives:
+          - talk iovita
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 650
+      - points 1
+      - reputation storm-watch 1

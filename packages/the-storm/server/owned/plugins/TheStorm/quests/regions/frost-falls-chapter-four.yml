@@ -1,0 +1,93 @@
+# The Frost Falls story follows a present-day memorial shelter. The former
+# player town is remembered rather than treated as a reachable settlement.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  a-place-to-rest:
+    name: A Place to Rest
+    giver: edgar
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed a-warm-welcome
+    text:
+      offer: The beds and food are ready. The hearth still needs a simple sign so a tired traveller knows where to ask for help.
+      accept: Bring signs and lanterns, then tell Lenox how the shelter is marked.
+      decline: I will keep the lantern lit by the door.
+      finish: Lenox has entered the new sign in the shelter record. The welcome is easier to find.
+      summary: Mark the Frost Falls memorial hearth for travellers.
+      questions: []
+    start: sign
+    stages:
+      sign:
+        journal: Bring Edgar 4 oak signs and 4 lanterns.
+        waiting: A traveller should see the shelter before the fire goes out.
+        complete: The shelter has a clear sign. Lenox should update the record.
+        objectives:
+          - deliver edgar 4 OAK_SIGN
+          - deliver edgar 4 LANTERN
+        onComplete: []
+        next: [{ to: record, when: [], label: none }]
+        timeLimit: none
+      record:
+        journal: Tell Lenox how the memorial shelter is marked.
+        waiting: The register should describe the welcome as it is now.
+        complete: The sign and shelter are recorded together.
+        objectives:
+          - talk lenox
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-hearth-kept:
+    name: The Hearth Kept
+    giver: lenox
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed a-place-to-rest
+    text:
+      offer: Frost Falls is a memory, but this shelter is real. Its final record should name the people who keep the hearth warm today.
+      accept: Bring coal, wool and bread for another watch, then ask Edgar to take the next turn.
+      decline: The record can wait, but the fire cannot.
+      finish: Edgar will keep the hearth. The old town's kindness has a present-day home.
+      summary: Sustain the memorial shelter and finish its first watch record.
+      questions: []
+    start: watch
+    stages:
+      watch:
+        journal: Bring Lenox 24 coal, 8 white wool and 12 bread.
+        waiting: A warm welcome takes work after the first night.
+        complete: The supplies are ready. Edgar can take the next watch.
+        objectives:
+          - deliver lenox 24 COAL
+          - deliver lenox 8 WHITE_WOOL
+          - deliver lenox 12 BREAD
+        onComplete: []
+        next: [{ to: keeper, when: [], label: none }]
+        timeLimit: none
+      keeper:
+        journal: Ask Edgar to keep the next hearth watch.
+        waiting: A shelter lasts because someone returns to tend it.
+        complete: The hearth has a keeper and the record has a new name.
+        objectives:
+          - talk edgar
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

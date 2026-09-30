@@ -1,0 +1,94 @@
+# Marcus's caravan route is a present-day route plan, not a mapped road from a
+# lost world. Guards and suppliers prepare the next journey in the main world.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-waystation-kit:
+    name: The Waystation Kit
+    giver: marcus
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-returning-cart
+    text:
+      offer: The returning cart brought supplies home. The next driver needs a repair kit that can travel with the wagon.
+      accept: Bring planks, iron and torches. The Guard Captain can check that the kit suits the route.
+      decline: I will keep a place on the cart for it.
+      finish: The watch approves the kit. A driver can repair a wheel and signal for help.
+      summary: Equip Marcus's caravan with a portable repair kit.
+      questions: []
+    start: stock
+    stages:
+      stock:
+        journal: Bring Marcus 24 oak planks, 12 iron ingots and 16 torches.
+        waiting: The kit must fit in a wagon and help in poor light.
+        complete: The cart has a repair kit. Ask the Guard Captain to inspect it.
+        objectives:
+          - deliver marcus 24 OAK_PLANKS
+          - deliver marcus 12 IRON_INGOT
+          - deliver marcus 16 TORCH
+        onComplete: []
+        next: [{ to: inspection, when: [], label: none }]
+        timeLimit: none
+      inspection:
+        journal: Ask the Guard Captain to inspect the caravan repair kit.
+        waiting: A driver should know when to wait for a patrol.
+        complete: The kit is approved for the next journey.
+        objectives:
+          - talk guard-captain
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1
+
+  an-arrival-notice:
+    name: An Arrival Notice
+    giver: martha
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-waystation-kit
+    text:
+      offer: Marcus's cart can travel safely, but the market needs to know when the next load arrives. A notice should survive rain.
+      accept: Bring signs and honeycomb for weatherproof notices, then let Marcus know what the market expects.
+      decline: I will keep asking the drivers as they come in.
+      finish: Marcus has the market's request and a notice can go up before each delivery.
+      summary: Set a clear arrival notice for the caravan and town market.
+      questions: []
+    start: notices
+    stages:
+      notices:
+        journal: Bring Martha 8 oak signs, 4 honeycomb and 8 paper.
+        waiting: The arrival notice should stay legible in rain.
+        complete: The market can post its needs. Tell Marcus what to carry.
+        objectives:
+          - deliver martha 8 OAK_SIGN
+          - deliver martha 4 HONEYCOMB
+          - deliver martha 8 PAPER
+        onComplete: []
+        next: [{ to: driver, when: [], label: none }]
+        timeLimit: none
+      driver:
+        journal: Tell Marcus the market has a new arrival notice.
+        waiting: Marcus can give the drivers the current request.
+        complete: Each cart can announce its arrival before unloading.
+        objectives:
+          - talk marcus
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

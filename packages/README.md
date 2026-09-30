@@ -16,6 +16,7 @@ hold only scoped invariants that agents must keep in context.
 | [macos-cross-compiler](macos-cross-compiler/)                   | Public Docker images that build macOS, iOS, and Catalyst apps on Linux                   |
 | [temporal](temporal/)                                           | Temporal worker: scheduled automation, agent tasks, homelab audits, PR-opening refreshes |
 | [trmnl-dashboard](trmnl-dashboard/)                             | TRMNL e-ink dashboard backend aggregating home/homelab status                            |
+| [storm-brain](storm-brain/)                                     | LLM classify/triage brain for The Storm's AI staff agent (Bun + Hono)                    |
 
 ## Discord streaming
 
@@ -77,6 +78,7 @@ hold only scoped invariants that agents must keep in context.
 | [better-skill-capped](better-skill-capped/)     | Web client rebuilding Skill Capped's catalog UI              |
 | [cooklang-for-obsidian](cooklang-for-obsidian/) | Obsidian plugin rendering `.cook` recipes with rich previews |
 | [the-storm](the-storm/)                         | Paper plugin for The Storm (ts-mc.net) Minecraft server      |
+| [the-storm-brain](the-storm/brain/)             | Opt-in Mineflayer companion pilot for The Storm              |
 
 ## Infrastructure & tooling
 

@@ -525,6 +525,9 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runScoutSeasonRefreshWorkflow",
   "runScoutBryanBucksAnalyticsWorkflow",
   "runZfsMaintenanceWorkflow",
+  // Reset sleeps while polling the backup and Job only inside its heartbeat
+  // Activity; the Workflow awaits that one bounded Activity.
+  "runMiningWorldResetWorkflow",
   "runBugsinkHousekeepingWorkflow",
   // Awaits a single pruneScoutImages activity (list+delete). No workflow-level
   // sleeps; the activity carries its own startToCloseTimeout + retry budget.

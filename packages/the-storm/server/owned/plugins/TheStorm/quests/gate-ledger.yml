@@ -1,0 +1,80 @@
+# The Gate Ledger is new content built from the Storm Watch and Braxton lore.
+# Both outcomes remain completable. Later stories can read gate-ledger-outcome
+# to acknowledge the player's public accusation or private investigation.
+
+factions: {}
+variables:
+  gate-ledger-outcome: 1 means the captain was accused; 2 means the payment trail was followed
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-gate-ledger:
+    name: The Gate Ledger
+    giver: iovita
+    category: story
+    repeat: once
+    estimatedMinutes: 25
+    requirements:
+      - completed ready-for-battle
+    text:
+      offer: The Watch calls every dangerous journey a training exercise. Braxton pays their invoices, and Thomas supplies their gear. Ask all three what the new arrivals are being sent to do.
+      accept: Listen before you accuse anyone. Bring me a name I can put in the record.
+      decline: The record will still be here when you are ready.
+      finish: I have written down what you found. The town will remember your choice.
+      summary: Find out who profits when the Watch sends new arrivals beyond the gate.
+      questions:
+        - label: Why ask me?
+          answer: You have fought beside the Watch. They may speak more freely to you than to me.
+    start: interviews
+    stages:
+      interviews:
+        journal: Ask Braxton about the Watch's payments and Thomas about its equipment orders.
+        waiting: Braxton keeps the accounts. Thomas sees what the Watch asks him to forge.
+        complete: Their stories do not quite match. Hear the captain's explanation.
+        objectives:
+          - talk braxton
+          - talk thomas
+        onComplete: []
+        next: [{ to: captain, when: [], label: none }]
+        timeLimit: none
+      captain:
+        journal: Ask the Guard Captain why new arrivals are sent beyond the gate.
+        waiting: The captain owes you an answer.
+        complete: The captain says the dangerous patrols are necessary. Return to Iovita to decide whether to accuse him or follow the money.
+        objectives:
+          - talk guard-captain
+        onComplete: []
+        next:
+          - { to: accuse, when: [], label: Accuse the captain }
+          - { to: trace, when: [], label: Follow the payment trail }
+        timeLimit: none
+      accuse:
+        journal: Tell Iovita that you hold the captain responsible for the patrols.
+        waiting: If you name him, I will put it on the public record.
+        complete: Iovita records the accusation. The Watch will know who brought it.
+        objectives:
+          - talk iovita
+        onComplete:
+          - set gate-ledger-outcome 1
+          - reputation townsfolk 1
+          - reputation storm-watch -1
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+      trace:
+        journal: Ask Braxton to trace the payments before Iovita names anyone.
+        waiting: The account book may tell us who ordered those patrols.
+        complete: Braxton finds an unexplained supplier entry. You have a lead, and the captain remains under suspicion.
+        objectives:
+          - talk braxton
+        onComplete:
+          - set gate-ledger-outcome 2
+          - reputation townsfolk 2
+          - reputation storm-watch 1
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 100
+      - points 2

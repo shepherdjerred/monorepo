@@ -1,0 +1,81 @@
+# The open study circle records questions alongside the answers it tests.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  the-question-shelf:
+    name: "The Question Shelf"
+    giver: winston
+    category: side
+    repeat: once
+    estimatedMinutes: 35
+    requirements:
+      - completed the-study-circle
+    text:
+      offer: "The study circle has copies of Walter's notes. Readers should have a place to leave questions before the next trial."
+      accept: "Craft books for a public question shelf."
+      decline: "I will keep taking questions aloud."
+      finish: "Readers can record their own questions for Walter to test."
+      summary: "Create a public question shelf for the library study circle."
+      questions: []
+    start: books
+    stages:
+      books:
+        journal: "Craft 8 books in the main world for Winston."
+        waiting: "A question kept in writing can be checked later."
+        complete: "The books are ready. Bring them to Winston."
+        objectives:
+          - craft 8 BOOK
+        onComplete: []
+        next: [{ to: handoff, when: [], label: none }]
+        timeLimit: none
+      handoff:
+        journal: "Bring Winston 8 books for the public question shelf."
+        waiting: "The study circle needs the books on its shelf."
+        complete: "The study circle has blank books for questions."
+        objectives:
+          - deliver winston 8 BOOK
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 500
+      - points 1
+      - reputation townsfolk 1
+
+  the-repeatable-trial:
+    name: "The Repeatable Trial"
+    giver: walter
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-question-shelf
+    text:
+      offer: "Winston's readers have asked how to repeat a water test. We need measured bottles and a fresh log, not a story about a lost tower."
+      accept: "Bring glass bottles and paper for a repeatable trial."
+      decline: "I will answer them from the old notes."
+      finish: "Anyone in the study circle can repeat the water observation and write down the result."
+      summary: "Prepare a repeatable water trial for library readers."
+      questions: []
+    start: trial
+    stages:
+      trial:
+        journal: "Bring Walter 12 glass bottles and 16 paper."
+        waiting: "Every reader should start with the same amount and a blank page."
+        complete: "Walter's trial kit can be used by the whole circle."
+        objectives:
+          - deliver walter 12 GLASS_BOTTLE
+          - deliver walter 16 PAPER
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1

@@ -614,6 +614,16 @@
       ]
     },
     {
+      "package": "@shepherdjerred/storm-brain",
+      "directory": "packages/storm-brain",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["test/"]
+        }
+      ]
+    },
+    {
       "package": "@shepherdjerred/streambot",
       "directory": "packages/streambot",
       "steps": [
@@ -950,6 +960,22 @@
         {
           "runner": "gradle",
           "args": ["-p", "plugin", "test"]
+        }
+      ],
+      "excludedSuites": [
+        {
+          "path": "tests/e2e",
+          "reason": "Real-server E2E runs through test:e2e in the dedicated paper-e2e-pr Woodpecker lane, with Paper as a service and Mineflayer clients. The full reporting task does not start the game server."
+        }
+      ]
+    },
+    {
+      "package": "@shepherdjerred/the-storm-brain",
+      "directory": "packages/the-storm/brain",
+      "steps": [
+        {
+          "runner": "vitest",
+          "args": ["src"]
         }
       ]
     }

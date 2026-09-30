@@ -1,0 +1,19 @@
+{
+  "file": "/data/plugins/mcMMO/config.yml",
+  "ops": [
+    {
+      "$put": {
+        "path": "$.General",
+        "key": "MOTD_Enabled",
+        "value": false
+      }
+    },
+    {
+      "$put": {
+        "path": "$.Mob_Healthbar",
+        "key": "Enabled",
+        "value": false
+      }
+    }
+  ]
+}

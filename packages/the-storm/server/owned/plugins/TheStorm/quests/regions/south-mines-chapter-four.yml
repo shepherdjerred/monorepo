@@ -1,0 +1,93 @@
+# The present-day mine crew closes its first ore-cart cycle with repairs and
+# a checked manifest. Ore objectives remain in the permanent main world.
+factions: {}
+variables: {}
+regions: {}
+hooks: {}
+templates: {}
+
+quests:
+  a-bent-rail:
+    name: A Bent Rail
+    giver: dorran
+    category: side
+    repeat: once
+    estimatedMinutes: 40
+    requirements:
+      - completed the-miners-share
+    text:
+      offer: The first cart delivered the crew's supplies, but the return run found a bent rail. Repair it before the next manifest goes out.
+      accept: Bring rails, iron and timber. Marcus can confirm the cart has a safe return path.
+      decline: I will hold the next load at the mine.
+      finish: Marcus knows the route is repaired. The crew can use its next cart.
+      summary: Replace a damaged rail after the first South Mines cart run.
+      questions: []
+    start: repair
+    stages:
+      repair:
+        journal: Bring Dorran 16 rails, 8 iron ingots and 16 oak planks.
+        waiting: Check the ledger before choosing where to reinforce the line.
+        complete: The replacement rail is ready. Marcus should inspect the return run.
+        objectives:
+          - deliver dorran 16 RAIL
+          - deliver dorran 8 IRON_INGOT
+          - deliver dorran 16 OAK_PLANKS
+        onComplete: []
+        next: [{ to: cart, when: [], label: none }]
+        timeLimit: none
+      cart:
+        journal: Ask Marcus to confirm the mine cart's return route.
+        waiting: Marcus knows how the cart handled the first run.
+        complete: The next cart has a repaired line and a checked route.
+        objectives:
+          - talk marcus
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 550
+      - points 1
+      - reputation townsfolk 1
+
+  the-second-manifest:
+    name: The Second Manifest
+    giver: dorran
+    category: side
+    repeat: once
+    estimatedMinutes: 45
+    requirements:
+      - completed a-bent-rail
+    text:
+      offer: The rail is sound. A second ore count will tell us whether the route is useful beyond one good run.
+      accept: Mine iron ore in the main world and bring a map and paper for the new manifest.
+      decline: I will leave a blank page for the next load.
+      finish: Two matching runs make a route we can trust. Marcus has the new manifest.
+      summary: Confirm the repaired mine route with a second ore-cart manifest.
+      questions: []
+    start: ore
+    stages:
+      ore:
+        journal: Mine 12 deepslate iron ore in the main world.
+        waiting: Count fresh ore for this run, not the first cart's load.
+        complete: The second load is counted. Dorran needs the route record.
+        objectives:
+          - mine 12 DEEPSLATE_IRON_ORE
+        onComplete: []
+        next: [{ to: manifest, when: [], label: none }]
+        timeLimit: none
+      manifest:
+        journal: Bring Dorran a map and 8 paper for the second manifest.
+        waiting: The cart needs a record of what was found and where it can go.
+        complete: The repaired route has its second recorded run.
+        objectives:
+          - deliver dorran 1 MAP
+          - deliver dorran 8 PAPER
+        onComplete: []
+        next: [{ to: complete, when: [], label: none }]
+        timeLimit: none
+    onAccept: []
+    rewards:
+      - crystals 600
+      - points 1
+      - reputation townsfolk 1
