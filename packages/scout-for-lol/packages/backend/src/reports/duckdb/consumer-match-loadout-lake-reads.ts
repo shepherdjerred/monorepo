@@ -45,6 +45,7 @@ export type LakeMatchLoadoutRow = z.infer<typeof MatchLoadoutRowSchema>;
 /** Read the participant and loadout columns needed by an Explore card. */
 export async function fetchMatchLoadoutRows(options: {
   matchId: string;
+  abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
 }): Promise<LakeMatchLoadoutRow[]> {
   const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
@@ -65,6 +66,9 @@ export async function fetchMatchLoadoutRows(options: {
           `ORDER BY participant_id`,
         bindParams(session, source.params),
       ),
+    options.abortSignal === undefined
+      ? {}
+      : { abortSignal: options.abortSignal },
   );
   return rows.map((row) => MatchLoadoutRowSchema.parse(row));
 }

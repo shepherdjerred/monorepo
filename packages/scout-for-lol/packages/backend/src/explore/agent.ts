@@ -183,6 +183,7 @@ async function streamExploreAgentInternal(
       ? await hydrateExploreLoadoutCards({
           requests: answer.loadoutCards,
           eligiblePairs: state.lastQueryLoadoutPairs,
+          abortSignal: params.abortSignal,
         })
       : [];
 

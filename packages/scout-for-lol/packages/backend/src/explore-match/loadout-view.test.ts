@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
   ExploreLoadoutCardRequestSchema,
   ReportAiModelPreviewSummarySchema,
@@ -7,11 +7,28 @@ import {
 import {
   buildExploreLoadoutCard,
   buildPathFromEvents,
+  exploreLoadoutPairKey,
+  hydrateExploreLoadoutCards,
   loadoutPairsForSurface,
   loadoutPairsInPreview,
   skillOrderFromEvents,
 } from "#src/explore-match/loadout-view.ts";
-import type { LakeMatchLoadoutRow } from "#src/reports/duckdb/consumer-match-loadout-lake-reads.ts";
+import {
+  fetchMatchLoadoutRows,
+  type LakeMatchLoadoutRow,
+} from "#src/reports/duckdb/consumer-match-loadout-lake-reads.ts";
+import {
+  fetchTimelineCoverage,
+  fetchTimelineEventPage,
+} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+
+vi.mock("#src/reports/duckdb/consumer-match-loadout-lake-reads.ts", () => ({
+  fetchMatchLoadoutRows: vi.fn(),
+}));
+vi.mock("#src/reports/duckdb/consumer-profile-lake-reads.ts", () => ({
+  fetchTimelineCoverage: vi.fn(),
+  fetchTimelineEventPage: vi.fn(),
+}));
 
 const PUUID = "0192af5b-0c88-7c3a-a17f-858c0a170001";
 const LOADOUT_ROW: LakeMatchLoadoutRow = {
@@ -256,6 +273,60 @@ describe("loadout timeline reconstruction", () => {
 });
 
 describe("Explore loadout card hydration", () => {
+  test("propagates cancellation through every lake read", async () => {
+    const controller = new AbortController();
+    const request = ExploreLoadoutCardRequestSchema.parse({
+      matchId: LOADOUT_ROW.match_id,
+      puuid: PUUID,
+      size: "L",
+    });
+    vi.mocked(fetchMatchLoadoutRows).mockResolvedValue([LOADOUT_ROW]);
+    vi.mocked(fetchTimelineCoverage).mockResolvedValue({
+      coverage_state: "complete",
+      data_version: "v1",
+      frame_interval_ms: 60_000,
+      frame_count: 1,
+      event_count: 0,
+      participant_count: 1,
+      first_frame_timestamp_ms: null,
+      last_frame_timestamp_ms: null,
+    });
+    vi.mocked(fetchTimelineEventPage).mockResolvedValue([]);
+
+    await hydrateExploreLoadoutCards({
+      requests: [request],
+      eligiblePairs: new Set([
+        exploreLoadoutPairKey({
+          matchId: request.matchId,
+          puuid: request.puuid,
+        }),
+      ]),
+      abortSignal: controller.signal,
+    });
+
+    expect(fetchMatchLoadoutRows).toHaveBeenCalledWith({
+      matchId: request.matchId,
+      abortSignal: controller.signal,
+    });
+    expect(fetchTimelineCoverage).toHaveBeenCalledWith({
+      matchId: request.matchId,
+      abortSignal: controller.signal,
+    });
+    expect(fetchTimelineEventPage).toHaveBeenCalledWith({
+      matchId: request.matchId,
+      offset: 0,
+      limit: 5000,
+      eventTypes: [
+        "ITEM_PURCHASED",
+        "ITEM_UNDO",
+        "ITEM_SOLD",
+        "SKILL_LEVEL_UP",
+      ],
+      participantIds: [LOADOUT_ROW.participant_id],
+      abortSignal: controller.signal,
+    });
+  });
+
   test("maps participant fields and asset filenames without retaining the PUUID", () => {
     const card = buildExploreLoadoutCard({
       request: ExploreLoadoutCardRequestSchema.parse({

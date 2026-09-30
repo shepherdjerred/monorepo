@@ -310,8 +310,11 @@ function runePage(row: LakeMatchLoadoutRow) {
 async function timelineForParticipant(
   matchId: string,
   participantId: number,
+  abortSignal: AbortSignal | undefined,
 ): Promise<TimelineEventRead[] | null> {
-  const coverage = await fetchTimelineCoverage({ matchId });
+  abortSignal?.throwIfAborted();
+  const coverage = await fetchTimelineCoverage({ matchId, abortSignal });
+  abortSignal?.throwIfAborted();
   if (coverage === null) return null;
   return await fetchTimelineEventPage({
     matchId,
@@ -319,6 +322,7 @@ async function timelineForParticipant(
     limit: TIMELINE_EVENT_LIMIT,
     eventTypes: TIMELINE_EVENT_TYPES,
     participantIds: [participantId],
+    abortSignal,
   }).then((events) =>
     events.filter((event) => event.participant_id === participantId),
   );
@@ -361,8 +365,13 @@ export function buildExploreLoadoutCard(input: {
 
 async function hydrateOne(
   request: ExploreLoadoutCardRequest,
+  abortSignal: AbortSignal | undefined,
 ): Promise<ExploreLoadoutCard> {
-  const rows = await fetchMatchLoadoutRows({ matchId: request.matchId });
+  abortSignal?.throwIfAborted();
+  const rows = await fetchMatchLoadoutRows({
+    matchId: request.matchId,
+    abortSignal,
+  });
   const row = rows.find(
     (candidate) =>
       candidate.match_id === request.matchId &&
@@ -376,6 +385,7 @@ async function hydrateOne(
   const timelineEvents = await timelineForParticipant(
     request.matchId,
     row.participant_id,
+    abortSignal,
   );
   return buildExploreLoadoutCard({ request, row, timelineEvents });
 }
@@ -383,9 +393,11 @@ async function hydrateOne(
 export async function hydrateExploreLoadoutCards(input: {
   requests: ExploreLoadoutCardRequest[];
   eligiblePairs: Set<string>;
+  abortSignal?: AbortSignal | undefined;
 }): Promise<ExploreLoadoutCard[]> {
   assertEligibleExploreLoadoutCardRequests(input);
+  input.abortSignal?.throwIfAborted();
   return await Promise.all(
-    input.requests.map((request) => hydrateOne(request)),
+    input.requests.map((request) => hydrateOne(request, input.abortSignal)),
   );
 }

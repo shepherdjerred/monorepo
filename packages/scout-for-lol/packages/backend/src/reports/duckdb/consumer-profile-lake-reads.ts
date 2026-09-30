@@ -267,6 +267,7 @@ export type LakeTimelineCoverage = z.infer<typeof TimelineCoverageRowSchema>;
 
 export async function fetchTimelineCoverage(options: {
   matchId: string;
+  abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
 }): Promise<LakeTimelineCoverage | null> {
   const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
@@ -282,6 +283,7 @@ export async function fetchTimelineCoverage(options: {
       `participant_count, first_frame_timestamp_ms, last_frame_timestamp_ms ` +
       `FROM (${source.sql}) LIMIT 1`,
     schema: TimelineCoverageRowSchema,
+    abortSignal: options.abortSignal,
   });
   return rows[0] ?? null;
 }
@@ -331,6 +333,7 @@ export async function fetchTimelineEventPage(options: {
   limit: number;
   eventTypes?: string[];
   participantIds?: number[];
+  abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
 }): Promise<TimelineEventRead[]> {
   const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
@@ -373,6 +376,7 @@ export async function fetchTimelineEventPage(options: {
       `SELECT ${TIMELINE_EVENT_COLUMNS} FROM (${source.sql}) ${participantClause} ` +
       `ORDER BY event_timestamp_ms, frame_index, event_index, event_id LIMIT ? OFFSET ?`,
     schema: TimelineEventReadSchema,
+    abortSignal: options.abortSignal,
   });
 }
 
