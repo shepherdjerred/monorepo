@@ -338,7 +338,7 @@ function ReadyCommunity(props: {
             this view.
           </p>
           {tab === "people" ? (
-            <PeopleTab overview={overview.data} />
+            <PeopleTab key={selectedGuild} overview={overview.data} />
           ) : (
             <ConsumerGuildTeamTools
               key={selectedGuild}
