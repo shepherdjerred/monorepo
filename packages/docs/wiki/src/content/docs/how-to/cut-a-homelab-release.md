@@ -249,6 +249,14 @@ identity without changing its credential or other bucket grants. Wait for the
 1Password operator to update the `seaweedfs-s3-credentials` Secret in the
 `seaweedfs` namespace.
 
+Wait for the updated configuration to reach the gateway's mounted file, then
+[reload its identities with SIGHUP](https://github.com/seaweedfs/seaweedfs/blob/4.47/weed/s3api/s3api_server.go#L441):
+
+```bash
+kubectl exec -n seaweedfs deployment/seaweedfs-s3 -- \
+  sh -c 'test "$(cat /proc/1/comm)" = weed && kill -HUP 1'
+```
+
 Use the existing 1Password-backed site credential to probe the new bucket with
 `aws s3api list-objects-v2`. It must succeed for the new bucket and return
 `AccessDenied` for `homelab-tofu-state`. Once both probes pass, retry the

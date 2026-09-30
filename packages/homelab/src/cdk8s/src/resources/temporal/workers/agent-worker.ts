@@ -7,6 +7,7 @@ import {
   Deployment,
   DeploymentStrategy,
   type EnvValue,
+  type k8s,
   Pods,
   Service,
   type ServiceAccount,
@@ -182,6 +183,7 @@ ip6tables -L OUTPUT -n`,
       "kube-root-ca.crt",
     ),
     {
+      name: "public-cluster-ca",
       items: { "ca.crt": { path: "ca.crt" } },
       defaultMode: 0o444,
     },
@@ -212,7 +214,7 @@ ip6tables -L OUTPUT -n`,
             },
           },
           {
-            downwardAPI: {
+            downwardApi: {
               items: [
                 {
                   path: "namespace",
@@ -226,7 +228,7 @@ ip6tables -L OUTPUT -n`,
           },
         ],
       },
-    }),
+    } satisfies k8s.Volume),
     JsonPatch.add("/spec/template/spec/containers/0/volumeMounts/-", {
       name: hiddenServiceAccountVolume,
       mountPath: "/var/run/secrets/kubernetes.io/serviceaccount",
