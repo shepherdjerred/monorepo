@@ -20,6 +20,7 @@ import { duckDbColumnsSpec } from "#src/report-lake/schema.ts";
 import { listStagingFiles } from "#src/report-lake/staging.ts";
 import { snapshotStagingGenerations } from "#src/report-lake/staging/generations.ts";
 import { retryLakeQuery } from "#src/reports/duckdb/lake/query-retry.ts";
+import type { LakeFiles as CapturedLakeFiles } from "#src/reports/duckdb/lake/files.ts";
 import { assertReportLakeAccess } from "#src/reports/duckdb/lake/access.ts";
 
 /**
@@ -57,25 +58,7 @@ export type SqlFragment = {
 };
 
 export type LakeFiles = {
-  matchesParquet: string[];
-  matchesStaging: string[];
-  matchTeamsParquet: string[];
-  matchTeamsStaging: string[];
-  matchTeamBansParquet: string[];
-  matchTeamBansStaging: string[];
-  prematchParquet: string[];
-  prematchStaging: string[];
-  accountsParquet: string | undefined;
-  competitionRankHistoryParquet: string[];
-  competitionRankHistoryStaging: string[];
-  timelineEventsParquet: string[];
-  timelineEventsStaging: string[];
-  timelineEventParticipantsParquet: string[];
-  timelineEventParticipantsStaging: string[];
-  timelineParticipantFramesParquet: string[];
-  timelineParticipantFramesStaging: string[];
-  timelineCoverageParquet: string[];
-  timelineCoverageStaging: string[];
+  [Key in keyof CapturedLakeFiles]: CapturedLakeFiles[Key];
 };
 
 export async function withLakeQueryRetry<T>(

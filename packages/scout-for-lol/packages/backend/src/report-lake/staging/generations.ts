@@ -2,7 +2,6 @@ import { createHash, randomUUID } from "node:crypto";
 import { mkdir, readdir, readFile, rename, rm, stat } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
-import type { ReportLakeStagingTable } from "#src/report-lake/staging.ts";
 
 export const STAGING_TABLES = [
   "matches",
@@ -15,6 +14,7 @@ export const STAGING_TABLES = [
   "timeline_participant_frames",
   "timeline_coverage",
 ] as const;
+export type ReportLakeStagingTable = (typeof STAGING_TABLES)[number];
 
 const ProjectionKindSchema = z.enum([
   "match",
@@ -329,18 +329,34 @@ export async function removeFoldedGenerations(
   return removed;
 }
 
-/** A rebuild retires only captured generations whose exact S3 bytes it read. */
+/** A rebuild retires exact sources and superseded siblings of a rebuilt winner. */
 export async function removeRebuiltGenerations(
   snapshot: StagingGenerationSnapshot,
   rebuiltSources: ReadonlySet<string>,
 ): Promise<number> {
+  const rebuiltProjectionKeys = new Set(
+    snapshot.selected
+      .filter(
+        (generation) =>
+          generation.source.kind === "s3" &&
+          rebuiltSources.has(
+            s3StagingSourceKey(generation.source.key, generation.source.digest),
+          ),
+      )
+      .map((generation) =>
+        projectionKey(generation.projectionKind, generation.naturalId),
+      ),
+  );
   let removed = 0;
   for (const generation of snapshot.captured) {
-    if (generation.source.kind !== "s3") continue;
     if (
-      !rebuiltSources.has(
-        s3StagingSourceKey(generation.source.key, generation.source.digest),
-      )
+      !rebuiltProjectionKeys.has(
+        projectionKey(generation.projectionKind, generation.naturalId),
+      ) &&
+      (generation.source.kind !== "s3" ||
+        !rebuiltSources.has(
+          s3StagingSourceKey(generation.source.key, generation.source.digest),
+        ))
     )
       continue;
     await rm(generation.dir, { recursive: true, force: true });

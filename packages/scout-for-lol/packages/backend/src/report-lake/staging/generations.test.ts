@@ -215,6 +215,45 @@ test("rebuild cleanup requires the exact source object and digest", async () => 
   ).toBe(1);
 });
 
+test("rebuild cleanup retires captured siblings only after rebuilding the selected source", async () => {
+  const dir = await lakeDir();
+  const options = {
+    lakeDir: dir,
+    projectionKind: "prematch" as const,
+    naturalId: "NA1_42",
+    files: [{ table: "prematch" as const, content: "\n" }],
+  };
+  const older = await commitStagingGeneration({
+    ...options,
+    observedAt: new Date("2026-09-30T00:00:00Z"),
+    source: { kind: "s3", key: "games/NA1_42/prematch.json", digest: "old" },
+  });
+  const selected = await commitStagingGeneration({
+    ...options,
+    observedAt: new Date("2026-09-30T00:01:00Z"),
+    source: { kind: "s3", key: "games/NA1_42/prematch.json", digest: "new" },
+  });
+  const snapshot = await snapshotStagingGenerations(dir);
+  const later = await commitStagingGeneration({
+    ...options,
+    observedAt: new Date("2026-09-30T00:02:00Z"),
+    source: { kind: "s3", key: "games/NA1_42/prematch.json", digest: "later" },
+  });
+  expect(
+    await removeRebuiltGenerations(
+      snapshot,
+      new Set([s3StagingSourceKey("games/NA1_42/prematch.json", "new")]),
+    ),
+  ).toBe(2);
+  expect(await Bun.file(generationFile(older, "prematch")).exists()).toBe(
+    false,
+  );
+  expect(await Bun.file(generationFile(selected, "prematch")).exists()).toBe(
+    false,
+  );
+  expect(await Bun.file(generationFile(later, "prematch")).exists()).toBe(true);
+});
+
 test("whole query retry resolves a new snapshot after cleanup", async () => {
   const dir = await lakeDir();
   await commitStagingGeneration({

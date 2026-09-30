@@ -1,6 +1,6 @@
 import type { ScoutRuntimeCapabilities } from "#src/configuration/runtime-role.ts";
 import { readCurrentBuildDir } from "#src/report-lake/paths.ts";
-import type { LakeFiles } from "#src/reports/duckdb/lake.ts";
+import type { LakeFiles } from "#src/reports/duckdb/lake/files.ts";
 
 const LAKE_QUERY_SNAPSHOT_ATTEMPTS = 3;
 

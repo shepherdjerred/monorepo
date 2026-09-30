@@ -17,6 +17,7 @@ import {
 } from "#src/report-lake/flatten.ts";
 import { flattenTimeline } from "#src/report-lake/flatten-timeline.ts";
 import {
+  type STAGING_TABLES,
   commitStagingGeneration,
   generationFile,
   snapshotStagingGenerations,
@@ -57,16 +58,7 @@ function sanitizeFileStem(stem: string): string {
   return stem.replaceAll(/[^\w.-]/g, "_");
 }
 
-export type ReportLakeStagingTable =
-  | "matches"
-  | "match_teams"
-  | "match_team_bans"
-  | "prematch"
-  | "competition_rank_history"
-  | "timeline_events"
-  | "timeline_event_participants"
-  | "timeline_participant_frames"
-  | "timeline_coverage";
+export type ReportLakeStagingTable = (typeof STAGING_TABLES)[number];
 
 export type StagingWriteResult = {
   success: boolean;
