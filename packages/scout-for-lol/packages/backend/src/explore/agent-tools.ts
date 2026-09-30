@@ -295,10 +295,10 @@ export function createExploreTools(options: ExploreToolsOptions) {
         state.lastQueryMatchIds = matchIdsInPreview(preview, source);
         const cardSupportRows =
           params.surface === "web" || params.surface === "voice"
-            ? await fetchMatchSupport(
-                [...state.lastQueryMatchIds],
-                params.abortSignal,
-              )
+            ? await fetchMatchSupport({
+                matchIds: [...state.lastQueryMatchIds],
+                abortSignal: params.abortSignal,
+              })
             : [];
         state.lastMatchIds = new Set(
           cardSupportRows
