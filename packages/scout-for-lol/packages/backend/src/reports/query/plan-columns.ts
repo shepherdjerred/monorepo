@@ -86,11 +86,19 @@ export function planResultColumns(
   columns: string[],
 ): ReportResultColumn[] {
   const catalog = scoutQlSourceCatalog(plan.source);
+  const assetFor = (column: string) => {
+    const info = catalog?.columns.get(column);
+    // Name-backed virtual dimensions already contain display values. They do
+    // not carry enough identity to safely resolve an icon (spell names such
+    // as "Flash" can refer to multiple assets), so only identifier-backed
+    // columns receive asset formatting metadata.
+    return info?.type === "integer" || info?.type === "bigint"
+      ? info.asset
+      : undefined;
+  };
   const groupingAsset = (index: number) => {
     const grouping = plan.groupings[index];
-    return grouping?.kind === "column"
-      ? catalog?.columns.get(grouping.column)?.asset
-      : undefined;
+    return grouping?.kind === "column" ? assetFor(grouping.column) : undefined;
   };
 
   return columns.map((column) => {
@@ -99,7 +107,7 @@ export function planResultColumns(
       column === LABEL_COLUMN
         ? undefined
         : output === undefined
-          ? catalog?.columns.get(column)?.asset
+          ? assetFor(column)
           : output.expr.kind === "grouping-ref"
             ? groupingAsset(output.expr.index)
             : undefined;
@@ -115,7 +123,7 @@ export function planResultColumns(
   });
 }
 
-/** Render each asset grouping from its typed key before charts consume labels. */
+/** Render identifier-backed asset groupings before charts consume labels. */
 export function planResultDimensions(
   plan: ScoutQlPlan,
   label: string,
@@ -126,9 +134,13 @@ export function planResultDimensions(
   const rendered = label.split(" • ");
   return plan.groupings.map((grouping, index) => {
     const key = keys[index];
-    const asset =
+    const info =
       grouping.kind === "column"
-        ? catalog?.columns.get(grouping.column)?.asset
+        ? catalog?.columns.get(grouping.column)
+        : undefined;
+    const asset =
+      info?.type === "integer" || info?.type === "bigint"
+        ? info.asset
         : undefined;
     return asset === undefined ||
       key === undefined ||

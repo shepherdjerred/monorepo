@@ -6,19 +6,19 @@ import {
 } from "#src/reports/query/plan-columns.ts";
 
 describe("plan result asset metadata", () => {
-  test("marks an asset grouping and its echoed output", () => {
+  test("marks an identifier-backed asset grouping and its echoed output", () => {
     const plan = {
       source: "match_participants",
       outputs: [
         {
-          name: "keystone",
+          name: "perk0",
           expr: { kind: "grouping-ref", index: 0 },
           displayKind: "text",
           additive: false,
           evidence: { kind: "sample" },
         },
       ],
-      groupings: [{ kind: "column", column: "keystone", name: "keystone" }],
+      groupings: [{ kind: "column", column: "perk0", name: "perk0" }],
       timeWindow: { kind: "unbounded" },
       orderBy: [],
       limit: 10,
@@ -26,19 +26,46 @@ describe("plan result asset metadata", () => {
       render: { kind: "TABLE" },
     } satisfies ScoutQlPlan;
 
-    expect(planResultColumns(plan, ["label", "keystone"])).toEqual([
+    expect(planResultColumns(plan, ["label", "perk0"])).toEqual([
       {
         key: "label",
-        label: "Keystone",
+        label: "Perk0",
         format: "text",
       },
       {
-        key: "keystone",
-        label: "Keystone",
+        key: "perk0",
+        label: "Perk0",
         format: "text",
         asset: "rune",
       },
     ]);
+  });
+
+  test("keeps name-backed asset groupings as display text", () => {
+    const plan = {
+      source: "match_participants",
+      outputs: [
+        {
+          name: "summoner1",
+          expr: { kind: "grouping-ref", index: 0 },
+          displayKind: "text",
+          additive: false,
+          evidence: { kind: "sample" },
+        },
+      ],
+      groupings: [{ kind: "column", column: "summoner1", name: "summoner1" }],
+      timeWindow: { kind: "unbounded" },
+      orderBy: [],
+      limit: 10,
+      playerRefs: [],
+      render: { kind: "TABLE" },
+    } satisfies ScoutQlPlan;
+
+    expect(planResultColumns(plan, ["label", "summoner1"])).toEqual([
+      { key: "label", label: "Summoner1", format: "text" },
+      { key: "summoner1", label: "Summoner1", format: "text" },
+    ]);
+    expect(planResultDimensions(plan, "Flash", ["Flash"])).toEqual(["Flash"]);
   });
 
   test("formats asset dimensions in composite labels from typed grouping keys", () => {
