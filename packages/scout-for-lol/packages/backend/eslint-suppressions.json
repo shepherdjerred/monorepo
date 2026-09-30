@@ -311,11 +311,6 @@
       "count": 1
     }
   },
-  "src/reports/identity.ts": {
-    "sonarjs/cognitive-complexity": {
-      "count": 1
-    }
-  },
   "src/storage/s3-query.ts": {
     "sonarjs/cognitive-complexity": {
       "count": 2

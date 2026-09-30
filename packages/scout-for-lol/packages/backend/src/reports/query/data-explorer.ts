@@ -2,11 +2,11 @@ import type { DuckDBValue } from "@duckdb/node-api";
 import { z } from "zod";
 import type { DiscordGuildId } from "@scout-for-lol/data";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
+import { buildAccountsSource } from "#src/reports/duckdb/lake/accounts-source.ts";
 import {
-  buildAccountsSource,
   buildMatchesSource,
   buildPrematchSource,
-  resolveLakeFiles,
+  withLakeQueryRetry,
   scalarParam,
   type BoundParam,
   type LakeFiles,
@@ -113,36 +113,37 @@ export async function browseReportData(params: {
   const direction = params.input.sort?.direction ?? "desc";
   const offset = params.input.cursor ?? 0;
 
-  const files = await resolveLakeFiles(resolveLakeDir());
-  const source = buildExplorerSource(files, table.id, params.serverId);
-  if (source === undefined) {
-    return { columns: selectedColumns, rows: [], nextCursor: null };
-  }
-  const selectList = selectedColumns.map((entry) => entry.id).join(", ");
-  const predicate = filterPredicate(filters);
-  const where = predicate.sql.length === 0 ? "" : ` WHERE ${predicate.sql}`;
-  const sql =
-    `SELECT ${selectList} FROM (${source.sql})${where} ` +
-    `ORDER BY ${sortColumn.id} ${direction.toUpperCase()} ` +
-    `LIMIT ? OFFSET ?`;
-  const page = await withDuckDBConnection(async (session) => {
-    const rows = await session.run(
-      sql,
-      bindParams(session, [
-        ...source.params,
-        ...predicate.params,
-        scalarParam(params.input.pageSize + 1),
-        scalarParam(offset),
-      ]),
-    );
-    return rows.map((row) => normalizeRow(row, selectedColumns));
+  return await withLakeQueryRetry(resolveLakeDir(), async (files) => {
+    const source = buildExplorerSource(files, table.id, params.serverId);
+    if (source === undefined) {
+      return { columns: selectedColumns, rows: [], nextCursor: null };
+    }
+    const selectList = selectedColumns.map((entry) => entry.id).join(", ");
+    const predicate = filterPredicate(filters);
+    const where = predicate.sql.length === 0 ? "" : ` WHERE ${predicate.sql}`;
+    const sql =
+      `SELECT ${selectList} FROM (${source.sql})${where} ` +
+      `ORDER BY ${sortColumn.id} ${direction.toUpperCase()} ` +
+      `LIMIT ? OFFSET ?`;
+    const page = await withDuckDBConnection(async (session) => {
+      const rows = await session.run(
+        sql,
+        bindParams(session, [
+          ...source.params,
+          ...predicate.params,
+          scalarParam(params.input.pageSize + 1),
+          scalarParam(offset),
+        ]),
+      );
+      return rows.map((row) => normalizeRow(row, selectedColumns));
+    });
+    const hasMore = page.length > params.input.pageSize;
+    return {
+      columns: selectedColumns,
+      rows: page.slice(0, params.input.pageSize),
+      nextCursor: hasMore ? offset + params.input.pageSize : null,
+    };
   });
-  const hasMore = page.length > params.input.pageSize;
-  return {
-    columns: selectedColumns,
-    rows: page.slice(0, params.input.pageSize),
-    nextCursor: hasMore ? offset + params.input.pageSize : null,
-  };
 }
 
 function buildExplorerSource(

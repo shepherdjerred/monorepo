@@ -4,8 +4,6 @@ import {
   TimelineParticipantFrameLakeRowSchema,
   MatchTeamLakeRowSchema,
   type MatchTeamLakeRow,
-  type PlayerProfileGameWindow,
-  type QueueType,
   type TimelineEventLakeRow,
   type TimelineParticipantFrameLakeRow,
 } from "@scout-for-lol/data";
@@ -25,7 +23,7 @@ import {
   buildTimelineEventsSource,
   buildTimelineParticipantFramesSource,
   listParam,
-  resolveLakeFiles,
+  withLakeQueryRetry,
   scalarParam,
   type BoundParam,
   type SqlFragment,
@@ -33,7 +31,7 @@ import {
 
 const LakeIntSchema = z.union([z.bigint(), z.number()]).transform(Number);
 
-async function runSource<T>(options: {
+export async function runSource<T>(options: {
   source: SqlFragment;
   sql: string;
   leadingParams?: BoundParam[];
@@ -57,102 +55,6 @@ async function runSource<T>(options: {
       ? {}
       : { abortSignal: options.abortSignal },
   );
-}
-
-function queuePredicate(queues: QueueType[] | undefined): {
-  sql: string;
-  params: BoundParam[];
-} {
-  return queues === undefined
-    ? { sql: "", params: [] }
-    : {
-        sql: "queue IN (SELECT unnest(?))",
-        params: [listParam(queues)],
-      };
-}
-
-export type ChampionComparisonEntry = {
-  entryKey: string;
-  puuids: string[];
-};
-
-const ChampionComparisonRowSchema = z.object({
-  entry_key: z.string(),
-  champion_name: z.string(),
-  games: LakeIntSchema,
-  wins: LakeIntSchema,
-  kills: LakeIntSchema,
-  deaths: LakeIntSchema,
-  assists: LakeIntSchema,
-  creep_score: LakeIntSchema,
-  gold_earned: LakeIntSchema,
-  vision_score: LakeIntSchema,
-  damage_to_champions: LakeIntSchema,
-  time_played: LakeIntSchema,
-});
-
-export type LakeChampionComparisonRow = z.infer<
-  typeof ChampionComparisonRowSchema
->;
-
-export async function fetchChampionComparisons(options: {
-  championId: number;
-  entries: ChampionComparisonEntry[];
-  games: PlayerProfileGameWindow;
-  queues?: QueueType[];
-  lakeDir?: string;
-}): Promise<LakeChampionComparisonRow[]> {
-  const pairs = options.entries.flatMap((entry) =>
-    entry.puuids.map((puuid) => ({ entryKey: entry.entryKey, puuid })),
-  );
-  if (pairs.length === 0) return [];
-  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const allPuuids = [...new Set(pairs.map((pair) => pair.puuid))];
-  const queues = queuePredicate(options.queues);
-  const source = buildMatchesSource(files, {
-    sql: ["puuid IN (SELECT unnest(?))", "champion_id = ?", queues.sql]
-      .filter((part) => part.length > 0)
-      .join(" AND "),
-    params: [
-      listParam(allPuuids),
-      scalarParam(options.championId),
-      ...queues.params,
-    ],
-  });
-  if (source === undefined) return [];
-  const requestedSql = pairs.map(() => "(?, ?)").join(", ");
-  const requestedParams = pairs.flatMap((pair) => [
-    scalarParam(pair.entryKey),
-    scalarParam(pair.puuid),
-  ]);
-  const windowClause =
-    options.games === "all" ? "" : "WHERE player_game_rank <= ?";
-  const windowParams =
-    options.games === "all" ? [] : [scalarParam(options.games)];
-  return await runSource({
-    source,
-    leadingParams: requestedParams,
-    trailingParams: windowParams,
-    sql:
-      `WITH requested(entry_key, puuid) AS (VALUES ${requestedSql}), ` +
-      `deduped AS (` +
-      `SELECT requested.entry_key, matches.* FROM (${source.sql}) AS matches ` +
-      `INNER JOIN requested ON requested.puuid = matches.puuid ` +
-      `QUALIFY row_number() OVER (` +
-      `PARTITION BY requested.entry_key, matches.match_id ORDER BY matches.puuid) = 1), ` +
-      `ranked AS (` +
-      `SELECT *, row_number() OVER (` +
-      `PARTITION BY entry_key ORDER BY game_creation_at DESC, match_id DESC) AS player_game_rank ` +
-      `FROM deduped), scoped AS (SELECT * FROM ranked ${windowClause}) ` +
-      `SELECT entry_key, min(champion_name) AS champion_name, count(*)::BIGINT AS games, ` +
-      `sum(CASE WHEN win THEN 1 ELSE 0 END)::BIGINT AS wins, ` +
-      `sum(kills)::BIGINT AS kills, sum(deaths)::BIGINT AS deaths, ` +
-      `sum(assists)::BIGINT AS assists, sum(creep_score)::BIGINT AS creep_score, ` +
-      `sum(gold_earned)::BIGINT AS gold_earned, sum(vision_score)::BIGINT AS vision_score, ` +
-      `sum(total_damage_dealt_to_champions)::BIGINT AS damage_to_champions, ` +
-      `sum(time_played)::BIGINT AS time_played FROM scoped GROUP BY entry_key`,
-    schema: ChampionComparisonRowSchema,
-  });
 }
 
 const MatchParticipantRowSchema = z
@@ -204,48 +106,56 @@ export async function fetchFullMatch(options: {
   matchId: string;
   lakeDir?: string;
 }): Promise<LakeMatchParticipantRow[]> {
-  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const source = buildMatchesSource(
-    files,
-    {
-      sql: "match_id = ?",
-      params: [scalarParam(options.matchId)],
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const source = buildMatchesSource(
+        files,
+        {
+          sql: "match_id = ?",
+          params: [scalarParam(options.matchId)],
+        },
+        MATCH_UI_READ_COLUMNS,
+      );
+      if (source === undefined) return [];
+      return await runSource({
+        source,
+        sql:
+          `SELECT match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
+          `game_duration_seconds, queue, queue_id, game_mode, game_type, game_version, map_id, ` +
+          `puuid, participant_id, team_id, player_subteam_id, placement, subteam_placement, ` +
+          `augment_1_id, augment_2_id, augment_3_id, augment_4_id, augment_5_id, augment_6_id, ` +
+          `riot_id_game_name, riot_id_tagline, ` +
+          `champion_id, champion_name, team_position, win, kills, deaths, assists, creep_score, ` +
+          `gold_earned, vision_score, total_damage_dealt_to_champions, turret_kills, ` +
+          `inhibitor_kills, baron_kills, dragon_kills, ${MATCH_LOADOUT_LAKE_COLUMNS_SQL} ` +
+          `FROM (${source.sql}) ` +
+          `ORDER BY team_id, participant_id`,
+        schema: MatchParticipantRowSchema,
+      });
     },
-    MATCH_UI_READ_COLUMNS,
   );
-  if (source === undefined) return [];
-  return await runSource({
-    source,
-    sql:
-      `SELECT match_id, epoch_ms(game_creation_at)::BIGINT AS game_creation_ms, ` +
-      `game_duration_seconds, queue, queue_id, game_mode, game_type, game_version, map_id, ` +
-      `puuid, participant_id, team_id, player_subteam_id, placement, subteam_placement, ` +
-      `augment_1_id, augment_2_id, augment_3_id, augment_4_id, augment_5_id, augment_6_id, ` +
-      `riot_id_game_name, riot_id_tagline, ` +
-      `champion_id, champion_name, team_position, win, kills, deaths, assists, creep_score, ` +
-      `gold_earned, vision_score, total_damage_dealt_to_champions, turret_kills, ` +
-      `inhibitor_kills, baron_kills, dragon_kills, ${MATCH_LOADOUT_LAKE_COLUMNS_SQL} ` +
-      `FROM (${source.sql}) ` +
-      `ORDER BY team_id, participant_id`,
-    schema: MatchParticipantRowSchema,
-  });
 }
 
 export async function fetchFullMatchTeams(options: {
   matchId: string;
   lakeDir?: string;
 }): Promise<MatchTeamLakeRow[]> {
-  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const source = buildMatchTeamsSource(files, {
-    sql: "match_id = ?",
-    params: [scalarParam(options.matchId)],
-  });
-  if (source === undefined) return [];
-  return await runSource({
-    source,
-    sql: `SELECT * FROM (${source.sql}) ORDER BY team_id`,
-    schema: MatchTeamLakeRowSchema,
-  });
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const source = buildMatchTeamsSource(files, {
+        sql: "match_id = ?",
+        params: [scalarParam(options.matchId)],
+      });
+      if (source === undefined) return [];
+      return await runSource({
+        source,
+        sql: `SELECT * FROM (${source.sql}) ORDER BY team_id`,
+        schema: MatchTeamLakeRowSchema,
+      });
+    },
+  );
 }
 
 const TimelineCoverageRowSchema = z.object({
@@ -266,22 +176,26 @@ export async function fetchTimelineCoverage(options: {
   abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
 }): Promise<LakeTimelineCoverage | null> {
-  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const source = buildTimelineCoverageSource(files, {
-    sql: "match_id = ?",
-    params: [scalarParam(options.matchId)],
-  });
-  if (source === undefined) return null;
-  const rows = await runSource({
-    source,
-    sql:
-      `SELECT coverage_state, data_version, frame_interval_ms, frame_count, event_count, ` +
-      `participant_count, first_frame_timestamp_ms, last_frame_timestamp_ms ` +
-      `FROM (${source.sql}) LIMIT 1`,
-    schema: TimelineCoverageRowSchema,
-    abortSignal: options.abortSignal,
-  });
-  return rows[0] ?? null;
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const source = buildTimelineCoverageSource(files, {
+        sql: "match_id = ?",
+        params: [scalarParam(options.matchId)],
+      });
+      if (source === undefined) return null;
+      const rows = await runSource({
+        source,
+        sql:
+          `SELECT coverage_state, data_version, frame_interval_ms, frame_count, event_count, ` +
+          `participant_count, first_frame_timestamp_ms, last_frame_timestamp_ms ` +
+          `FROM (${source.sql}) LIMIT 1`,
+        schema: TimelineCoverageRowSchema,
+        abortSignal: options.abortSignal,
+      });
+      return rows[0] ?? null;
+    },
+  );
 }
 
 const TimelineEventReadSchema = TimelineEventLakeRowSchema.omit({
@@ -332,48 +246,55 @@ export async function fetchTimelineEventPage(options: {
   abortSignal?: AbortSignal | undefined;
   lakeDir?: string;
 }): Promise<TimelineEventRead[]> {
-  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const clauses = ["match_id = ?"];
-  const params: BoundParam[] = [scalarParam(options.matchId)];
-  if (options.eventTypes !== undefined) {
-    clauses.push("event_type IN (SELECT unnest(?))");
-    params.push(listParam(options.eventTypes));
-  }
-  const source = buildTimelineEventsSource(files, {
-    sql: clauses.join(" AND "),
-    params,
-  });
-  if (source === undefined) return [];
-  const participantSource =
-    options.participantIds === undefined
-      ? undefined
-      : buildTimelineEventParticipantsSource(files, {
-          sql: "match_id = ? AND participant_id IN (SELECT unnest(?))",
-          params: [
-            scalarParam(options.matchId),
-            listParam(options.participantIds),
-          ],
-        });
-  if (participantSource === undefined && options.participantIds !== undefined) {
-    return [];
-  }
-  const participantClause =
-    participantSource === undefined
-      ? ""
-      : `WHERE event_id IN (SELECT event_id FROM (${participantSource.sql}))`;
-  return await runSource({
-    source,
-    trailingParams: [
-      ...(participantSource?.params ?? []),
-      scalarParam(Math.floor(options.limit)),
-      scalarParam(Math.floor(options.offset)),
-    ],
-    sql:
-      `SELECT ${TIMELINE_EVENT_COLUMNS} FROM (${source.sql}) ${participantClause} ` +
-      `ORDER BY event_timestamp_ms, frame_index, event_index, event_id LIMIT ? OFFSET ?`,
-    schema: TimelineEventReadSchema,
-    abortSignal: options.abortSignal,
-  });
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const clauses = ["match_id = ?"];
+      const params: BoundParam[] = [scalarParam(options.matchId)];
+      if (options.eventTypes !== undefined) {
+        clauses.push("event_type IN (SELECT unnest(?))");
+        params.push(listParam(options.eventTypes));
+      }
+      const source = buildTimelineEventsSource(files, {
+        sql: clauses.join(" AND "),
+        params,
+      });
+      if (source === undefined) return [];
+      const participantSource =
+        options.participantIds === undefined
+          ? undefined
+          : buildTimelineEventParticipantsSource(files, {
+              sql: "match_id = ? AND participant_id IN (SELECT unnest(?))",
+              params: [
+                scalarParam(options.matchId),
+                listParam(options.participantIds),
+              ],
+            });
+      if (
+        participantSource === undefined &&
+        options.participantIds !== undefined
+      ) {
+        return [];
+      }
+      const participantClause =
+        participantSource === undefined
+          ? ""
+          : `WHERE event_id IN (SELECT event_id FROM (${participantSource.sql}))`;
+      return await runSource({
+        source,
+        trailingParams: [
+          ...(participantSource?.params ?? []),
+          scalarParam(Math.floor(options.limit)),
+          scalarParam(Math.floor(options.offset)),
+        ],
+        sql:
+          `SELECT ${TIMELINE_EVENT_COLUMNS} FROM (${source.sql}) ${participantClause} ` +
+          `ORDER BY event_timestamp_ms, frame_index, event_index, event_id LIMIT ? OFFSET ?`,
+        schema: TimelineEventReadSchema,
+        abortSignal: options.abortSignal,
+      });
+    },
+  );
 }
 
 const TimelineFrameReadSchema = TimelineParticipantFrameLakeRowSchema.omit({
@@ -415,19 +336,23 @@ export async function fetchTimelineFramesAtIndex(options: {
   frameIndex: number;
   lakeDir?: string;
 }): Promise<LaneDeltaFrame[]> {
-  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const source = buildTimelineParticipantFramesSource(files, {
-    sql: "match_id = ? AND frame_index = ?",
-    params: [scalarParam(options.matchId), scalarParam(options.frameIndex)],
-  });
-  if (source === undefined) return [];
-  return await runSource({
-    source,
-    sql:
-      `SELECT participant_id, total_gold, minions_killed, jungle_minions_killed, xp ` +
-      `FROM (${source.sql}) ORDER BY participant_id`,
-    schema: LaneDeltaFrameSchema,
-  });
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const source = buildTimelineParticipantFramesSource(files, {
+        sql: "match_id = ? AND frame_index = ?",
+        params: [scalarParam(options.matchId), scalarParam(options.frameIndex)],
+      });
+      if (source === undefined) return [];
+      return await runSource({
+        source,
+        sql:
+          `SELECT participant_id, total_gold, minions_killed, jungle_minions_killed, xp ` +
+          `FROM (${source.sql}) ORDER BY participant_id`,
+        schema: LaneDeltaFrameSchema,
+      });
+    },
+  );
 }
 
 const TIMELINE_FRAME_COLUMNS = Object.keys(TimelineFrameReadSchema.shape).join(
@@ -441,29 +366,33 @@ export async function fetchTimelineFramePage(options: {
   participantIds?: number[];
   lakeDir?: string;
 }): Promise<TimelineFrameRead[]> {
-  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const clauses = ["match_id = ?"];
-  const params: BoundParam[] = [scalarParam(options.matchId)];
-  if (options.participantIds !== undefined) {
-    clauses.push("participant_id IN (SELECT unnest(?))");
-    params.push(listParam(options.participantIds));
-  }
-  const source = buildTimelineParticipantFramesSource(files, {
-    sql: clauses.join(" AND "),
-    params,
-  });
-  if (source === undefined) return [];
-  return await runSource({
-    source,
-    trailingParams: [
-      scalarParam(Math.floor(options.limit)),
-      scalarParam(Math.floor(options.offset)),
-    ],
-    sql:
-      `SELECT ${TIMELINE_FRAME_COLUMNS} FROM (${source.sql}) ` +
-      `ORDER BY frame_timestamp_ms, participant_id LIMIT ? OFFSET ?`,
-    schema: TimelineFrameReadSchema,
-  });
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const clauses = ["match_id = ?"];
+      const params: BoundParam[] = [scalarParam(options.matchId)];
+      if (options.participantIds !== undefined) {
+        clauses.push("participant_id IN (SELECT unnest(?))");
+        params.push(listParam(options.participantIds));
+      }
+      const source = buildTimelineParticipantFramesSource(files, {
+        sql: clauses.join(" AND "),
+        params,
+      });
+      if (source === undefined) return [];
+      return await runSource({
+        source,
+        trailingParams: [
+          scalarParam(Math.floor(options.limit)),
+          scalarParam(Math.floor(options.offset)),
+        ],
+        sql:
+          `SELECT ${TIMELINE_FRAME_COLUMNS} FROM (${source.sql}) ` +
+          `ORDER BY frame_timestamp_ms, participant_id LIMIT ? OFFSET ?`,
+        schema: TimelineFrameReadSchema,
+      });
+    },
+  );
 }
 
 const TimelineChartFrameSchema = z.object({
@@ -479,17 +408,21 @@ export async function fetchTimelineChartFrames(options: {
   matchId: string;
   lakeDir?: string;
 }): Promise<TimelineChartFrame[]> {
-  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const source = buildTimelineParticipantFramesSource(files, {
-    sql: "match_id = ?",
-    params: [scalarParam(options.matchId)],
-  });
-  if (source === undefined) return [];
-  return await runSource({
-    source,
-    sql:
-      `SELECT frame_timestamp_ms, participant_id, total_gold, xp FROM (${source.sql}) ` +
-      `ORDER BY frame_timestamp_ms, participant_id`,
-    schema: TimelineChartFrameSchema,
-  });
+  return await withLakeQueryRetry(
+    options.lakeDir ?? resolveLakeDir(),
+    async (files) => {
+      const source = buildTimelineParticipantFramesSource(files, {
+        sql: "match_id = ?",
+        params: [scalarParam(options.matchId)],
+      });
+      if (source === undefined) return [];
+      return await runSource({
+        source,
+        sql:
+          `SELECT frame_timestamp_ms, participant_id, total_gold, xp FROM (${source.sql}) ` +
+          `ORDER BY frame_timestamp_ms, participant_id`,
+        schema: TimelineChartFrameSchema,
+      });
+    },
+  );
 }

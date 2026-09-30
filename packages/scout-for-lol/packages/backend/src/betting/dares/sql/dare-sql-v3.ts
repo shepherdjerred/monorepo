@@ -12,6 +12,7 @@ import {
   type DareTargetBindingV2,
 } from "@scout-for-lol/data";
 import { resolveLakeDir } from "#src/report-lake/paths.ts";
+import { withLakeQueryRetry } from "#src/reports/duckdb/lake.ts";
 import {
   withDuckDBConnection,
   type DuckDBSession,
@@ -297,73 +298,78 @@ export async function executeDareSqlV3(input: {
   matchOrder?: "oldest" | "newest" | undefined;
 }): Promise<DareSqlV3Evidence> {
   const compilation = DareSqlV3CompilationSchema.parse(input.compilation);
-  return await withDuckDBConnection(async (session) => {
-    const canonicalSql = await verifiedCanonicalSql(session, compilation);
-    await createDareSqlV3LakeRelations(session, {
-      targets: input.targets,
-      start: input.start,
-      end: input.end,
-      lakeDir: input.lakeDir ?? resolveLakeDir(),
-      maxEligibleGames: compilation.maxEligibleGames,
-      excludeMultiTeamGames: dareSqlV3ComparesOpponentTeams(
-        compilation.immutableAst,
-      ),
-      matchOrder: input.matchOrder ?? "oldest",
-    });
-    const resultRows = await session.run(canonicalSql);
-    if (resultRows.length !== 1) {
-      throw new Error("Dare SQL root query must return exactly one row.");
-    }
-    const result = RootRowSchema.parse(resultRows[0]);
-    const results = await executeGameSetRows(session, compilation);
-    const race = dareSqlV3RaceEvidence(compilation.competition, results);
-    const matchRows = await session.run(
-      "SELECT i.match_id FROM _dare_match_ids AS i JOIN matches AS m USING (match_id) ORDER BY m.game_end_at, i.match_id",
-    );
-    const sourceMatchIds = matchRows.map(
-      (row) => MatchIdRowSchema.parse(row).match_id,
-    );
-    const needsTimeline = compilation.facts.physicalSources.some((source) =>
-      source.startsWith("timeline_"),
-    );
-    let coverage: "complete" | "missing_timeline" | "not_required" =
-      "not_required";
-    if (needsTimeline) {
-      const coverageRows = await session.run(
-        "SELECT COUNT(*)::BIGINT AS missing FROM _dare_match_ids AS m LEFT JOIN timeline_coverage AS c USING (match_id) WHERE c.match_id IS NULL",
-      );
-      coverage =
-        Number(CoverageRowSchema.parse(coverageRows[0]).missing) === 0
-          ? "complete"
-          : "missing_timeline";
-    }
-    const timelineEvents = needsTimeline
-      ? await relevantDareTimelineEvents(session, compilation)
-      : [];
-    const evaluatedAchievement =
-      race === null ? result.achieved : race.leaders.length > 0;
-    if (
-      coverage !== "missing_timeline" &&
-      result.achieved !== evaluatedAchievement
-    ) {
-      throw new Error(
-        "Dare SQL race root must be true exactly when at least one lane qualifies.",
-      );
-    }
-    return DareSqlV3EvidenceSchema.parse({
-      achieved: coverage === "missing_timeline" ? null : evaluatedAchievement,
-      results,
-      targetDependencies:
-        race === null || race.leaders.length === 0
-          ? compilation.facts.targetKeys
-          : race.leaders,
-      coverage,
-      sourceMatchIds,
-      queryHash: compilation.queryHash,
-      timelineEvents,
-      race,
-    });
-  });
+  return await withLakeQueryRetry(
+    input.lakeDir ?? resolveLakeDir(),
+    async (files) =>
+      await withDuckDBConnection(async (session) => {
+        const canonicalSql = await verifiedCanonicalSql(session, compilation);
+        await createDareSqlV3LakeRelations(session, {
+          targets: input.targets,
+          start: input.start,
+          end: input.end,
+          files,
+          maxEligibleGames: compilation.maxEligibleGames,
+          excludeMultiTeamGames: dareSqlV3ComparesOpponentTeams(
+            compilation.immutableAst,
+          ),
+          matchOrder: input.matchOrder ?? "oldest",
+        });
+        const resultRows = await session.run(canonicalSql);
+        if (resultRows.length !== 1) {
+          throw new Error("Dare SQL root query must return exactly one row.");
+        }
+        const result = RootRowSchema.parse(resultRows[0]);
+        const results = await executeGameSetRows(session, compilation);
+        const race = dareSqlV3RaceEvidence(compilation.competition, results);
+        const matchRows = await session.run(
+          "SELECT i.match_id FROM _dare_match_ids AS i JOIN matches AS m USING (match_id) ORDER BY m.game_end_at, i.match_id",
+        );
+        const sourceMatchIds = matchRows.map(
+          (row) => MatchIdRowSchema.parse(row).match_id,
+        );
+        const needsTimeline = compilation.facts.physicalSources.some((source) =>
+          source.startsWith("timeline_"),
+        );
+        let coverage: "complete" | "missing_timeline" | "not_required" =
+          "not_required";
+        if (needsTimeline) {
+          const coverageRows = await session.run(
+            "SELECT COUNT(*)::BIGINT AS missing FROM _dare_match_ids AS m LEFT JOIN timeline_coverage AS c USING (match_id) WHERE c.match_id IS NULL",
+          );
+          coverage =
+            Number(CoverageRowSchema.parse(coverageRows[0]).missing) === 0
+              ? "complete"
+              : "missing_timeline";
+        }
+        const timelineEvents = needsTimeline
+          ? await relevantDareTimelineEvents(session, compilation)
+          : [];
+        const evaluatedAchievement =
+          race === null ? result.achieved : race.leaders.length > 0;
+        if (
+          coverage !== "missing_timeline" &&
+          result.achieved !== evaluatedAchievement
+        ) {
+          throw new Error(
+            "Dare SQL race root must be true exactly when at least one lane qualifies.",
+          );
+        }
+        return DareSqlV3EvidenceSchema.parse({
+          achieved:
+            coverage === "missing_timeline" ? null : evaluatedAchievement,
+          results,
+          targetDependencies:
+            race === null || race.leaders.length === 0
+              ? compilation.facts.targetKeys
+              : race.leaders,
+          coverage,
+          sourceMatchIds,
+          queryHash: compilation.queryHash,
+          timelineEvents,
+          race,
+        });
+      }),
+  );
 }
 
 function outerParenthesesWrap(expression: string): boolean {

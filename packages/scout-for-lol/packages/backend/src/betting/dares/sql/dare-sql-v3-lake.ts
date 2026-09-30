@@ -26,7 +26,7 @@ import {
   buildTimelineEventParticipantsSource,
   buildTimelineEventsSource,
   buildTimelineParticipantFramesSource,
-  resolveLakeFiles,
+  type LakeFiles,
   scalarParam,
   type BoundParam,
   type SqlFragment,
@@ -90,13 +90,13 @@ export async function createDareSqlV3LakeRelations(
     targets: readonly DareTargetBindingV2[];
     start: Date;
     end: Date;
-    lakeDir: string;
+    files: LakeFiles;
     maxEligibleGames: number;
     excludeMultiTeamGames: boolean;
     matchOrder: "oldest" | "newest";
   },
 ): Promise<void> {
-  const files = await resolveLakeFiles(input.lakeDir);
+  const files = input.files;
   const windowPredicate = {
     sql: "epoch_ms(game_start_at) > ? AND epoch_ms(game_end_at) <= ?",
     params: [

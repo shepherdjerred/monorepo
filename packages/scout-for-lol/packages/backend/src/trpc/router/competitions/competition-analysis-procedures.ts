@@ -12,7 +12,7 @@ import {
 } from "#src/league/competition/analysis.ts";
 import { resolveCompetitionAnalysisDates } from "#src/league/competition/analysis-dates.ts";
 import { mergeCompetitionRankHistory } from "#src/league/competition/analysis-results.ts";
-import { fetchCompetitionRankHistory } from "#src/reports/duckdb/lake-reads.ts";
+import { fetchCompetitionRankHistory } from "#src/reports/duckdb/competition-rank-history-lake-reads.ts";
 import {
   loadCachedLeaderboard,
   loadHistoricalLeaderboardSnapshots,

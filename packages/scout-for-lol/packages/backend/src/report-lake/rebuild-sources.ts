@@ -1,4 +1,5 @@
 import { ListObjectsV2Command, type S3Client } from "@aws-sdk/client-s3";
+import { createHash } from "node:crypto";
 import {
   CachedLeaderboardSchema,
   RawCurrentGameInfoSchema,
@@ -23,6 +24,7 @@ import {
   stagingIdForPrematch,
   stagingIdForTimeline,
 } from "#src/report-lake/staging.ts";
+import { s3StagingSourceKey } from "#src/report-lake/staging/generations.ts";
 import {
   MATCH_PREFIX,
   PREMATCH_PREFIX,
@@ -38,6 +40,13 @@ const logger = createLogger("report-lake-rebuild-sources");
 const REBUILD_S3_CONCURRENCY = 16;
 const LEADERBOARD_PREFIX = "leaderboards/";
 
+function sourceKey(key: string, rawText: string): string {
+  return s3StagingSourceKey(
+    key,
+    createHash("sha256").update(rawText).digest("hex"),
+  );
+}
+
 // --- Rebuild source: S3 (canonical) ---
 
 type RebuildSourceOptions = {
@@ -45,6 +54,7 @@ type RebuildSourceOptions = {
   bucket: string;
   writer: NdjsonFileWriter;
   foldedIds: Set<string>;
+  foldedSources?: Set<string>;
   /**
    * Old→new PUUIDs for payloads captured under a previous API key. Applied
    * before validation, so flattening never sees an old-domain identifier.
@@ -72,8 +82,9 @@ export async function populateMatchesFromS3(
   const flush = async (): Promise<void> => {
     const parsedMatches = await Promise.all(
       batch.map(async (key) => {
+        const rawText = await readRawObjectText(client, bucket, key, options);
         const rawParsed: unknown = remapRawJson(
-          JSON.parse(await readRawObjectText(client, bucket, key, options)),
+          JSON.parse(rawText),
           options.puuidRemap,
         );
         const parsed = RawMatchSchema.safeParse(rawParsed);
@@ -83,16 +94,17 @@ export async function populateMatchesFromS3(
           });
           return null;
         }
-        return parsed.data;
+        return { match: parsed.data, source: sourceKey(key, rawText) };
       }),
     );
     batch.length = 0;
-    for (const match of parsedMatches) {
-      if (match === null) {
+    for (const result of parsedMatches) {
+      if (result === null) {
         skipped += 1;
         reportLakeCompactionSkippedTotal.inc({ table: "matches" });
         continue;
       }
+      const { match } = result;
       for (const row of flattenMatch(match)) {
         writer.write(row);
       }
@@ -103,6 +115,7 @@ export async function populateMatchesFromS3(
         options.teamBanWriter.write(row);
       }
       foldedIds.add(stagingIdForMatch(match.metadata.matchId));
+      options.foldedSources?.add(result.source);
     }
     options.onProgress?.({
       files: foldedIds.size + skipped,
@@ -247,6 +260,7 @@ export async function populateTimelinesFromS3(options: {
   bucket: string;
   writers: TimelineRebuildWriters;
   foldedIds: Set<string>;
+  foldedSources?: Set<string>;
   /** Old→new PUUIDs for payloads captured under a previous API key. */
   puuidRemap: ReadonlyMap<string, string>;
   abortSignal?: AbortSignal;
@@ -262,15 +276,14 @@ export async function populateTimelinesFromS3(options: {
   const flush = async (): Promise<void> => {
     const timelines = await Promise.all(
       batch.map(async (item) => {
+        const rawText = await readRawObjectText(
+          options.client,
+          options.bucket,
+          item.key,
+          options,
+        );
         const rawParsed: unknown = remapRawJson(
-          JSON.parse(
-            await readRawObjectText(
-              options.client,
-              options.bucket,
-              item.key,
-              options,
-            ),
-          ),
+          JSON.parse(rawText),
           options.puuidRemap,
         );
         const parsed = RawTimelineSchema.safeParse(rawParsed);
@@ -281,7 +294,11 @@ export async function populateTimelinesFromS3(options: {
           );
           return null;
         }
-        return { timeline: parsed.data, observedAt: item.observedAt };
+        return {
+          timeline: parsed.data,
+          observedAt: item.observedAt,
+          source: sourceKey(item.key, rawText),
+        };
       }),
     );
     batch.length = 0;
@@ -308,6 +325,7 @@ export async function populateTimelinesFromS3(options: {
       options.foldedIds.add(
         stagingIdForTimeline(result.timeline.metadata.matchId),
       );
+      options.foldedSources?.add(result.source);
     }
     options.onProgress?.({
       files: options.foldedIds.size + skipped,
@@ -352,10 +370,14 @@ export async function populatePrematchFromS3(
   const flush = async (): Promise<void> => {
     const parsedPrematches = await Promise.all(
       batch.map(async (item) => {
+        const rawText = await readRawObjectText(
+          client,
+          bucket,
+          item.key,
+          options,
+        );
         const rawParsed: unknown = remapRawJson(
-          JSON.parse(
-            await readRawObjectText(client, bucket, item.key, options),
-          ),
+          JSON.parse(rawText),
           options.puuidRemap,
         );
         const parsed = RawCurrentGameInfoSchema.safeParse(rawParsed);
@@ -366,7 +388,11 @@ export async function populatePrematchFromS3(
           );
           return null;
         }
-        return { gameInfo: parsed.data, observedAt: item.observedAt };
+        return {
+          gameInfo: parsed.data,
+          observedAt: item.observedAt,
+          source: sourceKey(item.key, rawText),
+        };
       }),
     );
     batch.length = 0;
@@ -397,6 +423,7 @@ export async function populatePrematchFromS3(
         writer.write(row);
       }
       foldedIds.add(stagingId);
+      options.foldedSources?.add(result.source);
     }
     options.onProgress?.({
       files: foldedIds.size + skipped,
@@ -449,6 +476,7 @@ export async function populateCompetitionRankHistoryFromS3(options: {
   bucket: string;
   writer: NdjsonFileWriter;
   foldedIds?: Set<string>;
+  foldedSources?: Set<string>;
   abortSignal?: AbortSignal;
 }): Promise<number> {
   const { client, bucket, writer, foldedIds, abortSignal } = options;
@@ -484,14 +512,13 @@ export async function populateCompetitionRankHistoryFromS3(options: {
         chunk.map(async (key) => {
           // No remap here: leaderboard caches key on playerId/playerName and
           // carry no PUUIDs, verified against the stored objects themselves.
-          const rawParsed: unknown = JSON.parse(
-            await readRawObjectText(
-              client,
-              bucket,
-              key,
-              abortSignal === undefined ? {} : { abortSignal },
-            ),
+          const rawText = await readRawObjectText(
+            client,
+            bucket,
+            key,
+            abortSignal === undefined ? {} : { abortSignal },
           );
+          const rawParsed: unknown = JSON.parse(rawText);
           const parsed = CachedLeaderboardSchema.safeParse(rawParsed);
           if (!parsed.success) {
             logger.warn(
@@ -500,7 +527,7 @@ export async function populateCompetitionRankHistoryFromS3(options: {
             );
             return null;
           }
-          return parsed.data;
+          return { leaderboard: parsed.data, source: sourceKey(key, rawText) };
         }),
       );
       for (const snapshot of snapshots) {
@@ -511,15 +538,18 @@ export async function populateCompetitionRankHistoryFromS3(options: {
           });
           continue;
         }
-        for (const row of flattenCompetitionRankHistory(snapshot)) {
+        for (const row of flattenCompetitionRankHistory(snapshot.leaderboard)) {
           writer.write(row);
         }
         foldedIds?.add(
           stagingIdForCompetitionRankHistory(
-            snapshot.competitionId,
-            new Date(snapshot.calculatedAt).toISOString().slice(0, 10),
+            snapshot.leaderboard.competitionId,
+            new Date(snapshot.leaderboard.calculatedAt)
+              .toISOString()
+              .slice(0, 10),
           ),
         );
+        options.foldedSources?.add(snapshot.source);
       }
     }
 
