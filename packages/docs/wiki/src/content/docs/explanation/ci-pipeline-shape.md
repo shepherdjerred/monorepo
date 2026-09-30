@@ -126,7 +126,9 @@ preserve coverage.
   wiki, the alert dashboard, and Scout's public/docs/app design
   audit. The browser matrix comes from the pinned `ci-playwright` image, so the
   lane is about published sites rather than about Playwright as a tool. The
-  design audit uses a deterministic local boot and fixture; see [Run the Scout
+  lane installs the pinned Node runtime alongside Bun so Scout's static
+  Storybook preview serves the full catalog without Bun's HTTP stream failure.
+  The design audit uses a deterministic local boot and fixture; see [Run the Scout
   design audit](/how-to/run-scout-design-audit/).
 - **llm-observability E2E** is the dedicated tracing-stack lane. It starts Tempo
   and MinIO as workflow services and runs only

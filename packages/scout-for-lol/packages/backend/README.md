@@ -41,6 +41,30 @@ bun run compact:report-lake  # Manually fold/rebuild the DuckDB report lake
 
 ### Durable Temporal work
 
+Community MVP votes commit a `MatchMvpTallyRefresh` row in the same database
+transaction as the ballot. One row per match and guild tracks the desired and
+applied tally revisions. The gateway attempts a prompt edit after acknowledging
+the voter; the `mvp-tally-refresh` Temporal Schedule sweeps pending rows each
+minute on beta and production, including rows left by a gateway restart.
+Workers claim a short database lease, replace the tally embed idempotently,
+and leave a newer revision pending if another vote arrives during the edit. A
+late worker requeues its stale edit through a generation check, even when an
+active worker is completing the same vote revision. Each successful target
+edit is checkpointed against the claimed revision and generation, so a partial
+failure retries only unfinished targets. An in-flight edit is recorded as an
+unknown outcome until it is checkpointed; replacing the embed makes a crash
+retry safe. A new delivered report target reopens an applied tally in the same
+transaction that records its message reference. Missing report refs remain
+pending until all postmatch intents record a terminal no-send outcome, when
+the request is recorded as `report-unavailable`. A later vote reopens it.
+
+Operators can inspect `"MatchMvpTallyRefresh"` for `pending = true` rows and
+`lastErrorCode` values `awaiting-report`, `discord-target-unavailable`,
+`discord-edit-unknown`, or `report-unavailable`. Compare `desiredRevision`
+with `appliedRevision` before
+closing an incident; a recorded vote alone does not prove the Discord tally
+was edited.
+
 Detached prediction and parlay work is inserted once before its Temporal
 workflow starts. Reconciliation starts only never-accepted `queued` rows.
 After Temporal exhausts the activity's four-attempt budget, the row remains
