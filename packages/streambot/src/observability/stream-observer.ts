@@ -181,7 +181,8 @@ export function createStreamObserver(
     onCommand: (command) => {
       const engaged = commandUsesHardwareDecode(command);
       if (!audioOnly) hwDecodeEngaged.set(engaged ? 1 : 0);
-      log.info("ffmpeg command", { command, hwDecodeEngaged: engaged });
+      // The command can contain signed media URLs and HTTP authorization headers.
+      log.info("ffmpeg command started", { hwDecodeEngaged: engaged });
       // A new command is a new progress epoch. A `/seek` restarts ffmpeg at a new `-ss` offset, so
       // its output timemark restarts near zero; without resetting the previous media/wall samples,
       // the "media advanced" check would compare the new low timemark against the old (higher) one,

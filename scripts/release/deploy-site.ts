@@ -28,6 +28,14 @@ import { SEAWEEDFS_AWS_ENV, SEAWEEDFS_ENDPOINT } from "../lib/seaweedfs.ts";
 type DeploySiteBase = {
   bucket: string;
   name: string;
+  /**
+   * Retired names that still resolve to this entry. The Woodpecker config
+   * extension is a version-pinned image built from main, so a renamed site's
+   * PR CI (and post-merge main builds until the extension redeploys) still
+   * address it by the old name. Remove once the redeployed extension's
+   * generated loops use the new name.
+   */
+  aliases?: readonly string[];
   url: string;
   /** Package dir the buildCmd runs in (relative to repo root). */
   buildDir: string;
@@ -132,11 +140,12 @@ const DEPLOY_SITES: readonly DeploySite[] = [
   },
   {
     bucket: "macos-cross",
-    name: "macos-cross-site",
+    name: "cross-compilers-site",
+    aliases: ["macos-cross-site"],
     url: "https://macos-cross.sjer.red",
-    buildDir: "packages/macos-cross-site",
+    buildDir: "packages/cross-compilers-site",
     buildCmd: "bun --no-install run astro build",
-    distDir: "packages/macos-cross-site/dist",
+    distDir: "packages/cross-compilers-site/dist",
     target: "s3",
     immutablePrefixes: ["_astro/"],
   },
@@ -299,9 +308,12 @@ function selectSite(args: string[]): DeploySite {
   if (siteName === undefined || positional.length > 1) {
     usage();
   }
-  // Match by name or by bucket (bucket is space-free — preferred in scripts).
+  // Match by name, alias, or bucket (bucket is space-free — preferred in scripts).
   const site = DEPLOY_SITES.find(
-    (s) => s.name === siteName || s.bucket === siteName,
+    (s) =>
+      s.name === siteName ||
+      s.bucket === siteName ||
+      (s.aliases ?? []).includes(siteName),
   );
   if (!site) {
     console.error(`Unknown site: ${siteName}`);

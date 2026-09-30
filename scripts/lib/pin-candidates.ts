@@ -4,6 +4,7 @@ import {
   parseVersionCatalogText,
   serializeVersionCatalog,
   type VersionCatalog,
+  type VersionCatalogEntry,
 } from "@shepherdjerred/version-catalog";
 
 const DigestSchema = z
@@ -49,6 +50,7 @@ export const PinCandidatesStateSchema = z
 
 export type PinCandidates = z.infer<typeof PinCandidatesSchema>;
 export type PinCandidatesState = z.infer<typeof PinCandidatesStateSchema>;
+type PinStatePin = PinCandidatesState["pins"][string];
 
 function parseJson(text: string, description: string): unknown {
   try {
@@ -78,6 +80,57 @@ export function serializePinCandidatesState(state: PinCandidatesState): string {
 export function parseVersionCatalogSource(source: string): Map<string, string> {
   const catalog = parseVersionCatalogText(source);
   return new Map(catalog.entries.map((entry) => [entry.name, entry.value]));
+}
+
+function sameVersionCatalogEntry(
+  left: VersionCatalogEntry | undefined,
+  right: VersionCatalogEntry | undefined,
+): boolean {
+  return left === undefined || right === undefined
+    ? left === right
+    : JSON.stringify(left) === JSON.stringify(right);
+}
+
+/**
+ * Apply pending catalog changes on top of main using their merge base.
+ * Main wins concurrent catalog edits, including retirements; generated pin
+ * state is merged separately and rewrites the selected image values later.
+ */
+export function mergeVersionCatalogSources(
+  mainSource: string,
+  pendingSource: string,
+  baseSource: string,
+  supersededPendingKeys: ReadonlySet<string> = new Set(),
+): string {
+  const main = parseVersionCatalogText(mainSource);
+  const pending = parseVersionCatalogText(pendingSource);
+  const base = parseVersionCatalogText(baseSource);
+  const mainEntries = new Map(main.entries.map((entry) => [entry.name, entry]));
+  const pendingEntries = new Map(
+    pending.entries.map((entry) => [entry.name, entry]),
+  );
+  const baseEntries = new Map(base.entries.map((entry) => [entry.name, entry]));
+  const names = new Set([
+    ...main.entries.map((entry) => entry.name),
+    ...pending.entries.map((entry) => entry.name),
+  ]);
+  const entries: VersionCatalogEntry[] = [];
+
+  for (const name of names) {
+    const mainEntry = mainEntries.get(name);
+    const pendingEntry = pendingEntries.get(name);
+    const baseEntry = baseEntries.get(name);
+    const mergedEntry = supersededPendingKeys.has(name)
+      ? mainEntry
+      : sameVersionCatalogEntry(pendingEntry, baseEntry)
+        ? mainEntry
+        : sameVersionCatalogEntry(mainEntry, baseEntry)
+          ? pendingEntry
+          : mainEntry;
+    if (mergedEntry !== undefined) entries.push(mergedEntry);
+  }
+
+  return serializeVersionCatalog({ ...main, entries });
 }
 
 function imageKeys(versions: Map<string, string>): Set<string> {
@@ -153,21 +206,101 @@ function pinsEqual(
   return left.version === right.version && left.digest === right.digest;
 }
 
-export function mergePinStates(
-  base: PinCandidatesState,
+function samePinState(
+  left: PinStatePin | undefined,
+  right: PinStatePin | undefined,
+): boolean {
+  return left === undefined || right === undefined
+    ? left === right
+    : left.buildNumber === right.buildNumber &&
+        left.version === right.version &&
+        left.digest === right.digest &&
+        left.gitSha === right.gitSha;
+}
+
+/**
+ * Find pending pins that main carried after the merge base and later changed
+ * away from. This catches generated PRs squash-merged into main and then
+ * explicitly reset before the pending branch itself is rewritten.
+ */
+export function findSupersededPendingPinKeys(
+  main: PinCandidatesState,
   pending: PinCandidatesState,
-): PinCandidatesState {
-  let merged = base;
-  for (const [key, pin] of Object.entries(pending.pins)) {
-    merged = mergePinCandidates(merged, {
-      schema: "pin-candidates/v1",
-      buildNumber: pin.buildNumber,
-      candidates: {
-        [key]: { version: pin.version, digest: pin.digest },
-      },
-    });
+  base: PinCandidatesState,
+  mainHistory: readonly PinCandidatesState[],
+): Set<string> {
+  const superseded = new Set<string>();
+  for (const [key, pendingPin] of Object.entries(pending.pins)) {
+    if (
+      samePinState(pendingPin, base.pins[key]) ||
+      samePinState(main.pins[key], pendingPin)
+    ) {
+      continue;
+    }
+    if (
+      mainHistory.some((snapshot) =>
+        samePinState(snapshot.pins[key], pendingPin),
+      )
+    ) {
+      superseded.add(key);
+    }
   }
-  return merged;
+  return superseded;
+}
+
+function mergePinStateEntry(
+  key: string,
+  main: PinStatePin | undefined,
+  pending: PinStatePin | undefined,
+  base: PinStatePin | undefined,
+): PinStatePin | undefined {
+  if (samePinState(pending, base)) return main;
+  if (samePinState(main, base)) return pending;
+  if (main === undefined) {
+    return pending !== undefined &&
+      (base === undefined || pending.buildNumber > base.buildNumber)
+      ? pending
+      : undefined;
+  }
+  if (pending === undefined || pending.buildNumber < main.buildNumber) {
+    return main;
+  }
+  if (pending.buildNumber > main.buildNumber) return pending;
+  if (!pinsEqual(main, pending)) {
+    throw new Error(
+      `conflicting candidates for ${key} at build ${main.buildNumber.toString()}`,
+    );
+  }
+  return main;
+}
+
+export function mergePinStates(
+  main: PinCandidatesState,
+  pending: PinCandidatesState,
+  base: PinCandidatesState,
+  supersededPendingKeys: ReadonlySet<string> = new Set(),
+): PinCandidatesState {
+  const pins = new Map(Object.entries(main.pins));
+  const keys = new Set([
+    ...Object.keys(base.pins),
+    ...Object.keys(main.pins),
+    ...Object.keys(pending.pins),
+  ]);
+
+  for (const key of keys) {
+    const result = supersededPendingKeys.has(key)
+      ? main.pins[key]
+      : mergePinStateEntry(
+          key,
+          main.pins[key],
+          pending.pins[key],
+          base.pins[key],
+        );
+    if (result === undefined) pins.delete(key);
+    else pins.set(key, result);
+  }
+
+  return { schema: main.schema, pins: Object.fromEntries(pins) };
 }
 
 export function mergePinCandidates(

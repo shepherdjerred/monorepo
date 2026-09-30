@@ -7,7 +7,6 @@ export const TAILORED_REPORT_TYPES = [
   "homelab-audit",
   "link-rot-scan",
   "main-vuln-scan",
-  "protobufjs-v8-watch",
   "scout-data-dragon",
   "scout-lane-priors",
   "scout-queue-windows",
@@ -117,16 +116,6 @@ const SUBJECT_POLICIES = {
       partial: "Vulnerability scan could not finish",
       failed: "Vulnerability scan failed",
     }),
-  "protobufjs-v8-watch": (report) =>
-    subjectFromCopy(report, {
-      clear: "Temporal still uses protobufjs v7",
-      changed: "Temporal protobufjs compatibility changed",
-      attention: "Temporal can move to protobufjs v8",
-      pending: "Temporal still uses protobufjs v7",
-      inconclusive: "protobufjs compatibility check could not finish",
-      partial: "protobufjs compatibility check could not finish",
-      failed: "protobufjs compatibility check failed",
-    }),
   "scout-data-dragon": (report) =>
     subjectFromCopy(report, {
       clear: "Scout data is up to date",
@@ -211,8 +200,7 @@ function presentationTone(
   if (
     report.execution !== "complete" ||
     report.verdict === "inconclusive" ||
-    (report.verdict === "pending" &&
-      report.reportType !== "protobufjs-v8-watch")
+    report.verdict === "pending"
   ) {
     return "incomplete";
   }

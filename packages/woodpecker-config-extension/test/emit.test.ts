@@ -189,3 +189,26 @@ describe("service entrypoints", () => {
     expect(tempo?.commands).toBeUndefined();
   });
 });
+
+describe("review gate providers", () => {
+  test("the gate step enables every confirmed-reviewing provider", () => {
+    const step = testPipelineSteps().find(
+      (candidate) => candidate.key === "codex-review-gate",
+    );
+    expect(step).toBeDefined();
+    if (step === undefined) return;
+    // The key stays stable for the required-check ruleset; the env selects
+    // the multi-provider OR gate (one clean review passes, a P0 vetoes).
+    expect(step.environment?.["REVIEW_PROVIDERS"]).toBe("codex,coderabbit");
+    const emitted = z
+      .object({
+        steps: z.tuple([
+          z.object({ environment: z.record(z.string(), z.string()) }),
+        ]),
+      })
+      .parse(parse(substitute(emitWorkflow(step, TEST_IDENTITY))));
+    expect(emitted.steps[0].environment["REVIEW_PROVIDERS"]).toBe(
+      "codex,coderabbit",
+    );
+  });
+});

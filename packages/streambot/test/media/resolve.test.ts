@@ -6,6 +6,8 @@ import {
 } from "@shepherdjerred/streambot/discord/resolve.ts";
 import type { LibraryEntry } from "@shepherdjerred/streambot/sources/library.ts";
 import { NoUsableFormatError } from "@shepherdjerred/streambot/sources/format-select.ts";
+import { parseFfprobeOutput } from "@shepherdjerred/streambot/sources/probe.ts";
+import { assertSportsHasAudioAndVideo } from "@shepherdjerred/streambot/sources/resolve.ts";
 
 const entries: LibraryEntry[] = [
   {
@@ -23,6 +25,24 @@ describe("isHttpUrl", () => {
     expect(isHttpUrl("ftp://example.com")).toBe(false);
     expect(isHttpUrl("just text")).toBe(false);
   });
+});
+
+test("live sports requires a confirmed positive audio channel count", () => {
+  const video = {
+    codec_type: "video",
+    codec_name: "h264",
+    width: 1280,
+    height: 720,
+  };
+  const audio = { codec_type: "audio", codec_name: "aac" };
+  const missingChannels = parseFfprobeOutput({ streams: [video, audio] });
+  const valid = parseFfprobeOutput({
+    streams: [video, { ...audio, channels: 2 }],
+  });
+  expect(() => assertSportsHasAudioAndVideo(missingChannels)).toThrow(
+    "did not provide both audio and video",
+  );
+  expect(() => assertSportsHasAudioAndVideo(valid)).not.toThrow();
 });
 
 describe("resolvePlayQuery", () => {

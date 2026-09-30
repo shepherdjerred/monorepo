@@ -8,6 +8,7 @@ import type {
   NotificationPolicySuppressionReason,
   NotificationRetirementReason,
   NotificationSuppressionReason,
+  NotificationUnsentSuppressionReason,
   OperatorUnknownResolution,
 } from "#src/notifications/intent.ts";
 
@@ -328,7 +329,7 @@ export function confirmUnsentSuppression(
   intent: NotificationIntent,
   args: {
     attemptNonce: NotificationAttemptNonce;
-    reason: NotificationPolicySuppressionReason;
+    reason: NotificationUnsentSuppressionReason;
   },
 ): NotificationTransitionResult {
   const state = intent.state;

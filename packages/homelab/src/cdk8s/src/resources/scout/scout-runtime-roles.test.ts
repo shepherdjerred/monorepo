@@ -62,6 +62,32 @@ const RoleDeploymentSchema = z.object({
   }),
 });
 
+const DuckDbRuntimeDeploymentSchema = z.object({
+  template: z.object({
+    spec: z.object({
+      containers: z
+        .array(
+          z
+            .object({
+              env: z.array(EnvEntrySchema),
+              resources: z
+                .object({
+                  requests: z.record(z.string(), z.string()).optional(),
+                  limits: z.record(z.string(), z.string()).optional(),
+                })
+                .loose()
+                .optional(),
+              volumeMounts: z
+                .array(z.looseObject({ mountPath: z.string() }))
+                .optional(),
+            })
+            .loose(),
+        )
+        .nonempty(),
+    }),
+  }),
+});
+
 const NetworkPolicySpecSchema = z.object({
   podSelector: z.object({ matchLabels: z.record(z.string(), z.string()) }),
   policyTypes: z.array(z.string()),
@@ -238,6 +264,45 @@ describe("Scout gateway report-lake sharing", () => {
     expect(level).toBe(
       backend.template.spec.securityContext.seLinuxOptions?.level,
     );
+  });
+
+  test("report query roles get DuckDB scratch and the gateway memory budget", () => {
+    const app = DuckDbRuntimeDeploymentSchema.parse(
+      findResource(
+        scoutResources("beta"),
+        "Deployment",
+        "scout-beta-scout-backend",
+      ).spec,
+    );
+    const gateway = DuckDbRuntimeDeploymentSchema.parse(
+      findResource(
+        scoutResources("beta"),
+        "Deployment",
+        "scout-beta-scout-gateway",
+      ).spec,
+    );
+
+    for (const deployment of [app, gateway]) {
+      const container = deployment.template.spec.containers[0];
+      expect(container?.env).toEqual(
+        expect.arrayContaining([
+          { name: "REPORT_DUCKDB_THREADS", value: "4" },
+          { name: "REPORT_DUCKDB_MEMORY_LIMIT", value: "3GB" },
+          { name: "REPORT_DUCKDB_TEMP_DIR", value: "/scratch/duckdb" },
+          { name: "REPORT_DUCKDB_MAX_TEMP_SIZE", value: "7GiB" },
+        ]),
+      );
+      expect(container?.volumeMounts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ mountPath: "/scratch/duckdb" }),
+        ]),
+      );
+    }
+
+    expect(gateway.template.spec.containers[0]?.resources).toMatchObject({
+      requests: { memory: "3072Mi" },
+      limits: { memory: "8192Mi" },
+    });
   });
 });
 

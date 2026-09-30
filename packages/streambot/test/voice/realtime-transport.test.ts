@@ -432,7 +432,7 @@ describe("custom Realtime transport", () => {
     );
     expect(
       result.transport.connectOptions?.initialSessionConfig?.tools,
-    ).toHaveLength(22);
+    ).toHaveLength(23);
   });
 
   test("deletes committed audio and inserts verified command text before response", async () => {

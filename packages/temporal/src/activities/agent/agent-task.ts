@@ -54,7 +54,6 @@ import { decodeAgentTaskPayload } from "#activities/agent/agent-task-result.ts";
 import { prepareAgentTaskWorkdir } from "#activities/agent/agent-task-workdir.ts";
 import {
   cleanup,
-  pauseSchedule,
   scheduleFollowUp,
   sendEmail,
   sendFailureReport,
@@ -452,7 +451,6 @@ export function createAgentTaskActivities(
     sendAgentTaskEmail: sendEmail,
     sendAgentTaskFailureReport: sendFailureReport,
     scheduleAgentTaskFollowUp: scheduleFollowUp,
-    pauseAgentTaskSchedule: pauseSchedule,
     cleanupAgentTaskWorkdir: cleanup,
   };
 }

@@ -67,7 +67,7 @@ COPY --parents \
 # source package with no gitignored dist directory.
 RUN cd packages/home-assistant && bun run build
 # llm-models' package `main`/`exports` resolve to a gitignored `dist/`, so a
-# consumer that imports it (temporal's pr-review cost activity) crashes at
+# consumer that imports it (temporal's LLM cost accounting) crashes at
 # startup with `Cannot find module '@shepherdjerred/llm-models'` unless the
 # catalog is compiled first. (home-assistant and llm-observability export their
 # `src/` directly and need no build.)
@@ -153,7 +153,7 @@ ARG KOMETA_COMMIT=1b43f5f113242059c74330bebed041d5f94f50c7
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -qq; \
-    apt-get install -y -qq --no-install-recommends ca-certificates curl git iptables libxml2 util-linux; \
+    apt-get install -y -qq --no-install-recommends bubblewrap ca-certificates curl git iptables libxml2 procps util-linux; \
     rm -rf /var/lib/apt/lists/*
 
 # --- gh CLI (per-arch release tarball) ---

@@ -228,4 +228,37 @@ describe("buildVideoPrepareOptions", () => {
     expect(options.audioInput).toBeUndefined();
     expect(options.customHeaders).toBeUndefined();
   });
+
+  test("passes provider-specific HLS demuxer options only for that resolved source", () => {
+    const inputOptions = [
+      "-allowed_segment_extensions",
+      "none,ts,m4s,m3u8",
+      "-extension_picky",
+      "0",
+    ];
+    const options = buildVideoPrepareOptions({
+      stream,
+      resolved: {
+        ...VIDEO,
+        ffmpegInputOptions: inputOptions,
+        ffmpegVideoStreamIndex: 1,
+        ffmpegAudioStreamIndex: 1,
+      },
+      startSeconds: 0,
+      volumePercent: 100,
+      pipelineMode: "sw",
+    });
+    expect(options.customInputOptions).toEqual(inputOptions);
+    expect(options.videoStreamIndex).toBe(1);
+    expect(options.audioStreamIndex).toBe(1);
+    expect(
+      buildVideoPrepareOptions({
+        stream,
+        resolved: VIDEO,
+        startSeconds: 0,
+        volumePercent: 100,
+        pipelineMode: "sw",
+      }).customInputOptions,
+    ).toBeUndefined();
+  });
 });

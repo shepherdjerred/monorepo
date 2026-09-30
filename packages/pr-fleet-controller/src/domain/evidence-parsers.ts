@@ -251,6 +251,17 @@ export function reviewFindings(input: {
   issueComment: ReviewIssueComment | null;
   provider: ReviewProvider;
 }): ReviewFinding[] {
+  // Providers whose findings also live in review bodies (CodeRabbit's
+  // "outside diff range" sections) are unreadable here: this evidence path
+  // fetches threads and the issue comment, never review bodies. Fail loudly
+  // instead of reporting a findings-free PR ready — same rule as the CLI's
+  // provider default (see cli/main.ts).
+  if (input.provider.parseReviewBodyFindings !== null) {
+    throw new Error(
+      `Review provider '${input.provider.id}' keeps findings in review bodies, which the fleet evidence path does not fetch. ` +
+        `Classify this PR with a thread- or issue-comment-backed provider instead.`,
+    );
+  }
   return [
     ...reviewFindingsFromThreads(input.threads, input.provider),
     ...reviewFindingsFromIssueComment(input.issueComment, input.provider),

@@ -97,8 +97,16 @@ describe("createBotRestReader caching", () => {
 
   test("freshGuildMember bypasses the cache on every call", async () => {
     const clock = { value: 0 };
-    const member = { user: { id: USER, username: "someone" }, roles: [] };
-    const harness = reader(() => Promise.resolve(member), clock);
+    let joinedAt = "2026-09-01T00:00:00.000+00:00";
+    const harness = reader(
+      () =>
+        Promise.resolve({
+          user: { id: USER, username: "someone" },
+          joined_at: joinedAt,
+          roles: [],
+        }),
+      clock,
+    );
 
     // Warm the cache, then prove the cached read is served from it and the
     // fresh read is not — inside the same TTL window, with no clock movement.
@@ -106,7 +114,10 @@ describe("createBotRestReader caching", () => {
     await harness.rest.guildMember(GUILD, USER);
     expect(harness.routes).toHaveLength(1);
 
-    await harness.rest.freshGuildMember(GUILD, USER);
+    joinedAt = "2026-09-14T00:00:00.000+00:00";
+    expect(await harness.rest.freshGuildMember(GUILD, USER)).toMatchObject({
+      joined_at: joinedAt,
+    });
     await harness.rest.freshGuildMember(GUILD, USER);
     expect(harness.routes).toHaveLength(3);
   });

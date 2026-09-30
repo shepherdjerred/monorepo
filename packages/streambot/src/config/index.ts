@@ -69,6 +69,10 @@ export function loadConfig(env: EnvLookup = Bun.env): Config {
       adminIds: list(env["ADMIN_IDS"]),
       peerUserbotIds: list(env["PEER_USERBOT_IDS"]),
     },
+    pinchtab: {
+      baseUrl: str(env["PINCHTAB_BASE_URL"]),
+      token: str(env["PINCHTAB_TOKEN"]),
+    },
     library: {
       videosDir: env["VIDEOS_DIR"],
       mediaDirs: list(env["MEDIA_DIRS"]),

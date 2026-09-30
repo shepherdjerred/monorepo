@@ -60,6 +60,10 @@ export class CommandHandler {
       return;
     }
     if (group === "playback") {
+      if (sub === "sports") {
+        await this.handleSports(interaction);
+        return;
+      }
       await this.media.runPlayback(sub, interaction);
       return;
     }
@@ -157,6 +161,9 @@ export class CommandHandler {
       case "sources":
         await this.handleSources(interaction);
         return true;
+      case "sports":
+        await this.handleSports(interaction);
+        return true;
       case "help":
         await interaction.reply(helpText(this.deps.config.voice.enabled));
         return true;
@@ -236,6 +243,23 @@ export class CommandHandler {
     await interaction.replyPaginated(sourcesPages(sources, query));
   }
 
+  private async handleSports(interaction: CommandInteraction): Promise<void> {
+    await interaction.defer();
+    try {
+      const listing = await this.playback.listSports(
+        interaction.userId,
+        AbortSignal.timeout(SOURCES_TIMEOUT_MS),
+      );
+      await interaction.editReply(listing);
+    } catch (error) {
+      if (error instanceof PlaybackCommandBoundaryError) {
+        await interaction.editReply(error.message);
+        return;
+      }
+      throw error;
+    }
+  }
+
   private async handleSkip(interaction: CommandInteraction): Promise<void> {
     const result = this.runBoundary(() =>
       this.playback.skip(interaction.userId),
@@ -274,12 +298,13 @@ export class CommandHandler {
   private async handleMove(interaction: CommandInteraction): Promise<void> {
     const from = interaction.getIntegerRequired("from");
     const to = interaction.getIntegerRequired("to");
-    this.deps.dispatch({ type: "MOVE", from, to });
-    await interaction.reply(`Moved item ${String(from)} → ${String(to)}.`);
+    const result = this.runBoundary(() => this.playback.move(from, to));
+    await interaction.reply(result.message);
   }
 
   private async handleShuffle(interaction: CommandInteraction): Promise<void> {
-    await interaction.reply(this.playback.shuffle().message);
+    const result = this.runBoundary(() => this.playback.shuffle());
+    await interaction.reply(result.message);
   }
 
   private async handleLoop(interaction: CommandInteraction): Promise<void> {
@@ -290,8 +315,12 @@ export class CommandHandler {
       await interaction.reply("Invalid loop mode.");
       return;
     }
-    this.playback.setLoop(parsed.data);
-    await interaction.reply(`🔁 Loop: **${parsed.data}**.`);
+    const result = this.runBoundary(() => this.playback.setLoop(parsed.data));
+    await interaction.reply(
+      result.outcome === "loop-set"
+        ? `🔁 Loop: **${parsed.data}**.`
+        : result.message,
+    );
   }
 
   private async handleVolume(interaction: CommandInteraction): Promise<void> {

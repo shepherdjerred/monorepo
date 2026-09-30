@@ -16,9 +16,10 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
-    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test/",
+    "test": "bun --no-install --bun vitest --config ../../vitest.config.ts run test/ src/sports/",
     "test:integration": "bun --no-install --bun vitest --config ../../vitest.config.ts run --testTimeout 120000 integration/",
     "e2e": "bun run e2e/run.ts",
+    "e2e:sports": "bun run e2e/sports-live.ts",
     "e2e:voice-assistant": "bun run e2e/voice-assistant.ts",
     "e2e:voice-recovery": "bun run e2e/voice-recovery.ts",
     "voice:corpus:generate": "bun run scripts/voice-corpus-generate.ts",

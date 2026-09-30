@@ -129,6 +129,19 @@ function matchRow(): MatchLakeRow {
     augment_4_id: null,
     augment_5_id: null,
     augment_6_id: null,
+    summoner1_id: null,
+    summoner2_id: null,
+    perk_primary_style: null,
+    perk_sub_style: null,
+    perk0: null,
+    perk1: null,
+    perk2: null,
+    perk3: null,
+    perk4: null,
+    perk5: null,
+    stat_perk_offense: null,
+    stat_perk_flex: null,
+    stat_perk_defense: null,
   };
 }
 

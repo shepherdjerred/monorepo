@@ -1,4 +1,4 @@
-import { provisionWorkdir } from "#lib/pr-review-workdir.ts";
+import { provisionWorkdir } from "#lib/agent-workdir.ts";
 import { providerSubprocessUid } from "#shared/agent/agent-subprocess-identity.ts";
 import {
   AgentTaskInputSchema,

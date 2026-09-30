@@ -60,7 +60,7 @@ export async function mergeTask(input: {
       }
       await github.merge(pr.number, pr.headRefOid);
     }
-    await input.linear.complete(state.issue.identifier, pr.url);
+    await input.linear.complete(state.issue, pr.url);
     await input.save(state, "done", {
       latestHeadSha: pr.headRefOid,
       resumePhase: null,
@@ -89,19 +89,45 @@ export async function collectDiagnostics(input: {
   });
 }
 
+export type TaskStore = {
+  save: (state: TaskState) => Promise<void>;
+};
+
 export async function pauseTask(input: {
   state: TaskState;
   reason: string;
   linear: LinearClient;
-  store: StateStore;
+  store: TaskStore;
 }): Promise<void> {
-  await input.store.save({
+  // Mutate first, save after: if the label add fails, local state still
+  // describes runnable work instead of a park that never landed, so the
+  // next run retries the turn rather than resuming stopped work.
+  const parked = {
     ...input.state,
     phase: "needs_human",
     resumePhase: input.state.resumePhase ?? input.state.phase,
     updatedAt: currentTimestamp(),
-  });
-  await input.linear.needsHuman(input.state.issue.identifier, input.reason);
+  } as const;
+  try {
+    await input.linear.needsHuman(input.state.issue, input.reason);
+    await input.store.save({ ...parked });
+  } catch (error) {
+    // The label may have landed without the save: roll it back so the
+    // next run retries the turn instead of running parked work. Best
+    // effort — the original error still throws so the failure is recorded.
+    try {
+      await input.linear.requeue(input.state.issue);
+    } catch (rollbackError) {
+      const detail =
+        rollbackError instanceof Error
+          ? rollbackError.message
+          : String(rollbackError);
+      console.error(
+        `${input.state.issue.identifier}: park rollback failed: ${detail}`,
+      );
+    }
+    throw error;
+  }
   console.error(`${input.state.issue.identifier}: ${input.reason}`);
 }
 

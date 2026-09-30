@@ -50,6 +50,7 @@ import {
 import type { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
 import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
+import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
 
 const log = logger.child("command-bot");
 /** Subcommands that start (or join) a session in the issuer's current voice channel. */
@@ -75,6 +76,7 @@ const STATELESS_SUBCOMMANDS = new Set([
   "list",
   "search",
   "sources",
+  "sports",
   "help",
   "favorites",
   "favorite-remove",
@@ -100,6 +102,7 @@ export type CommandBotDeps = {
   readonly discovery?: DiscoveryService;
   readonly history?: MediaHistoryStore;
   readonly featureGate?: MediaFeatureGate;
+  readonly sports?: SportsCatalog;
 };
 
 /**
@@ -443,6 +446,7 @@ export class CommandBot {
       ...(this.deps.featureGate === undefined
         ? {}
         : { featureGate: this.deps.featureGate }),
+      ...(this.deps.sports === undefined ? {} : { sports: this.deps.sports }),
     });
   }
 

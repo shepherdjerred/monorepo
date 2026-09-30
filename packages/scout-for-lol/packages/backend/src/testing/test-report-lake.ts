@@ -10,6 +10,7 @@ import {
   type MatchTeamBanLakeRow,
   type MatchTeamLakeRow,
   type PrematchLakeRow,
+  type RUNE_SPELL_COLUMNS,
   type TimelineCoverageLakeRow,
   type TimelineEventParticipantLakeRow,
   type TimelineEventLakeRow,
@@ -37,6 +38,7 @@ import { resolveLakeFiles, type LakeFiles } from "#src/reports/duckdb/lake.ts";
 import { matchLoadoutLakeFields } from "#src/report-lake/loadout.ts";
 import {
   augmentFields,
+  DEFAULT_SCOUTQL_LOADOUT,
   itemSlots,
 } from "#src/testing/report-lake/match-fields.ts";
 
@@ -100,6 +102,10 @@ export type TestLakeMatchFact = {
   riotIdTagline?: string;
   /** Final inventory by slot (0-6); missing slots are empty. */
   items?: number[];
+  /** ScoutQL spell/rune ids; defaults to Flash + Ignite, Conqueror. */
+  scoutQlLoadout?: Partial<
+    Pick<MatchLakeRow, (typeof RUNE_SPELL_COLUMNS)[number]>
+  >;
   gameCreationAt: Date;
 };
 
@@ -231,6 +237,8 @@ function matchRowFromFact(fact: TestLakeMatchFact): MatchLakeRow {
     player_subteam_id: fact.playerSubteamId ?? null,
     ...itemSlots(fact.items ?? loadout.itemIds),
     ...augmentFields(fact.augmentIds),
+    ...DEFAULT_SCOUTQL_LOADOUT,
+    ...fact.scoutQlLoadout,
   };
 }
 

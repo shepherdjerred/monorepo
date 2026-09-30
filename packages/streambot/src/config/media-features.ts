@@ -13,6 +13,7 @@ export type MediaFeatureGate = {
    * the mode they were stamped with rather than changing transport mid-queue.
    */
   readonly musicOverVoice: (scope: DiscoveryScope) => Promise<boolean>;
+  readonly sportsStreaming?: (scope: DiscoveryScope) => Promise<boolean>;
 };
 
 async function enabled(
@@ -32,4 +33,6 @@ export const mediaFeatureGate: MediaFeatureGate = {
   history: (scope) => enabled("streambot-history-enabled", scope),
   musicOverVoice: (scope) =>
     enabled("streambot-music-over-voice-enabled", scope),
+  sportsStreaming: (scope) =>
+    enabled("streambot-sports-streaming-enabled", scope),
 };

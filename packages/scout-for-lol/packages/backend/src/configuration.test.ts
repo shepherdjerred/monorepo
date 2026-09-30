@@ -19,7 +19,11 @@ type TrackedKey =
   | "TEMPORAL_NAMESPACE"
   | "TEMPORAL_SCHEDULE_RECONCILIATION"
   | "BB_ASK_MODEL"
-  | "EXPLORE_MODEL";
+  | "EXPLORE_MODEL"
+  | "REPORT_DUCKDB_THREADS"
+  | "REPORT_DUCKDB_MEMORY_LIMIT"
+  | "REPORT_DUCKDB_TEMP_DIR"
+  | "REPORT_DUCKDB_MAX_TEMP_SIZE";
 
 function snapshotEnv(): Record<TrackedKey, string | undefined> {
   return {
@@ -33,6 +37,10 @@ function snapshotEnv(): Record<TrackedKey, string | undefined> {
       Bun.env["TEMPORAL_SCHEDULE_RECONCILIATION"],
     BB_ASK_MODEL: Bun.env["BB_ASK_MODEL"],
     EXPLORE_MODEL: Bun.env["EXPLORE_MODEL"],
+    REPORT_DUCKDB_THREADS: Bun.env["REPORT_DUCKDB_THREADS"],
+    REPORT_DUCKDB_MEMORY_LIMIT: Bun.env["REPORT_DUCKDB_MEMORY_LIMIT"],
+    REPORT_DUCKDB_TEMP_DIR: Bun.env["REPORT_DUCKDB_TEMP_DIR"],
+    REPORT_DUCKDB_MAX_TEMP_SIZE: Bun.env["REPORT_DUCKDB_MAX_TEMP_SIZE"],
   };
 }
 
@@ -55,7 +63,11 @@ function restoreEnv(snapshot: Record<TrackedKey, string | undefined>) {
       key === "TEMPORAL_NAMESPACE" ||
       key === "TEMPORAL_SCHEDULE_RECONCILIATION" ||
       key === "BB_ASK_MODEL" ||
-      key === "EXPLORE_MODEL"
+      key === "EXPLORE_MODEL" ||
+      key === "REPORT_DUCKDB_THREADS" ||
+      key === "REPORT_DUCKDB_MEMORY_LIMIT" ||
+      key === "REPORT_DUCKDB_TEMP_DIR" ||
+      key === "REPORT_DUCKDB_MAX_TEMP_SIZE"
     ) {
       restoreEnvKey(key, snapshot[key]);
     }
@@ -238,6 +250,40 @@ describe("local runtime flags", () => {
     Bun.env["EXPLORE_MODEL"] = "gpt-5.6-terra";
     resetConfigurationForTests();
     expect(configuration.exploreModel).toBe("gpt-5.6-terra");
+  });
+});
+
+describe("report DuckDB configuration", () => {
+  const initial = snapshotEnv();
+
+  afterEach(() => {
+    restoreEnv(initial);
+  });
+
+  test("defaults to the plan's query resources and bounded spill", () => {
+    delete Bun.env["REPORT_DUCKDB_THREADS"];
+    delete Bun.env["REPORT_DUCKDB_MEMORY_LIMIT"];
+    delete Bun.env["REPORT_DUCKDB_TEMP_DIR"];
+    delete Bun.env["REPORT_DUCKDB_MAX_TEMP_SIZE"];
+    resetConfigurationForTests();
+
+    expect(configuration.reportDuckDbThreads).toBe(4);
+    expect(configuration.reportDuckDbMemoryLimit).toBe("3GB");
+    expect(configuration.reportDuckDbTempDir).toBeUndefined();
+    expect(configuration.reportDuckDbMaxTempSize).toBe("7GiB");
+  });
+
+  test("reads the configured resource and spill limits", () => {
+    Bun.env["REPORT_DUCKDB_THREADS"] = "4";
+    Bun.env["REPORT_DUCKDB_MEMORY_LIMIT"] = "3GB";
+    Bun.env["REPORT_DUCKDB_TEMP_DIR"] = "/scratch/duckdb";
+    Bun.env["REPORT_DUCKDB_MAX_TEMP_SIZE"] = "7GiB";
+    resetConfigurationForTests();
+
+    expect(configuration.reportDuckDbThreads).toBe(4);
+    expect(configuration.reportDuckDbMemoryLimit).toBe("3GB");
+    expect(configuration.reportDuckDbTempDir).toBe("/scratch/duckdb");
+    expect(configuration.reportDuckDbMaxTempSize).toBe("7GiB");
   });
 });
 
