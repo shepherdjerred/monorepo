@@ -39,18 +39,24 @@ async function runSource<T>(options: {
   leadingParams?: BoundParam[];
   trailingParams?: BoundParam[];
   schema: z.ZodType<T>;
+  abortSignal?: AbortSignal | undefined;
 }): Promise<T[]> {
-  return await withDuckDBConnection(async (session) => {
-    const rows = await session.run(
-      options.sql,
-      bindParams(session, [
-        ...(options.leadingParams ?? []),
-        ...options.source.params,
-        ...(options.trailingParams ?? []),
-      ]),
-    );
-    return rows.map((row) => options.schema.parse(row));
-  });
+  return await withDuckDBConnection(
+    async (session) => {
+      const rows = await session.run(
+        options.sql,
+        bindParams(session, [
+          ...(options.leadingParams ?? []),
+          ...options.source.params,
+          ...(options.trailingParams ?? []),
+        ]),
+      );
+      return rows.map((row) => options.schema.parse(row));
+    },
+    options.abortSignal === undefined
+      ? {}
+      : { abortSignal: options.abortSignal },
+  );
 }
 
 function queuePredicate(queues: QueueType[] | undefined): {

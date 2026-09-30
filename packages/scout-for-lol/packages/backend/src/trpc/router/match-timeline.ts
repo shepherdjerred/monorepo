@@ -1,7 +1,7 @@
 import {
   fetchTimelineEventPage,
   fetchTimelineFramePage,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 
 export const MATCH_TIMELINE_PAGE_SIZE = 100;
 export const MATCH_KEY_EVENT_TYPES = [

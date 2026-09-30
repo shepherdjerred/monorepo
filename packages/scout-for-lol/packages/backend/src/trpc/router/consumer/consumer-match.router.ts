@@ -19,7 +19,7 @@ import {
   fetchTimelineEventPage,
   fetchTimelineFramesAtIndex,
   type LakeMatchParticipantRow,
-} from "#src/reports/duckdb/consumer-profile-lake-reads.ts";
+} from "#src/reports/duckdb/consumer/profile-lake-reads.ts";
 import {
   buildRoleMatchups,
   LANE_DELTA_MINUTE,

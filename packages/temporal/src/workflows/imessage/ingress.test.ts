@@ -30,6 +30,7 @@ describe("BlueBubbles durable cursor", () => {
             startedAt: cursor.startedAt,
             initialized: true,
             lastRowId: 2,
+            sourceEpoch: cursor.sourceEpoch,
             commands:
               cursor.lastRowId === 0
                 ? [
@@ -87,6 +88,7 @@ describe("BlueBubbles durable cursor", () => {
           startedAt: "2026-09-17T00:00:00.000Z",
           initialized: true,
           lastRowId: 2,
+          sourceEpoch: 1,
         });
         const currentDescription = await current.describe();
         expect(currentDescription.runId).not.toBe(first.runId);
