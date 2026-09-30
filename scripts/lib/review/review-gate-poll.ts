@@ -100,7 +100,7 @@ function errorCode(error: unknown): string | null {
  * than failing the gate. Retry ONLY recognized transient failures — a 5xx
  * response, or a transport-level failure (socket closed/refused, DNS error,
  * timeout — by message OR error code). Everything else fails fast so the step
- * doesn't hold a Buildkite agent until the gate deadline: a 4xx (bad token
+ * doesn't hold a CI agent slot until the gate deadline: a 4xx (bad token
  * / missing permission), a GraphQL application-error payload (HTTP 200 +
  * `errors`), and — critically — an unexpected-shape / invariant error thrown by
  * our own parsers (e.g. `parseThreadPage` when `reviewThreads` is missing) all

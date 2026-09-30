@@ -433,8 +433,8 @@ export function evaluateMultiGate(input: {
   );
   // The quota path needs EVERY enabled snapshot to be a blocked failure, not
   // just every failure. A skip evaluates to `passed`, so without the length
-  // check a skip beside quota blocks would exit 42: Buildkite would soft-fail
-  // a step no provider reviewed. Skips stay visible in the hard-fail message
+  // check a skip beside quota blocks would exit 42: the step would go
+  // advisory when no provider reviewed. Skips stay visible in the hard-fail message
   // via the ignored-blocked note instead.
   if (
     failed.length === evaluated.length &&

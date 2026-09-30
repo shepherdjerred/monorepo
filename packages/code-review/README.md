@@ -3,8 +3,8 @@
 Provider-neutral library for reasoning about automated PR code review: which
 bots post reviews (Codex, Greptile, Qodo, CodeRabbit), whether each has
 finished reviewing the head commit, and whether their unresolved findings
-should block. It is the single shared vocabulary behind the `review-gate`
-Buildkite step
+should block. It is the single shared vocabulary behind the review-gate
+CI step
 ([scripts/review/wait-for-review.ts](../../scripts/review/wait-for-review.ts)) and the PR
 fleet controller ([packages/pr-fleet-controller](../pr-fleet-controller/)).
 
