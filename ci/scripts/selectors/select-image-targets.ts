@@ -97,6 +97,8 @@ export const TARGET_PATH_PREFIXES: Readonly<Record<string, readonly string[]>> =
     "discord-plays-pokemon": ["packages/discord-plays-pokemon/"],
     "discord-plays-mario-kart": ["packages/discord-plays-mario-kart/"],
     infra: [
+      "packages/homelab/src/domain-registry.json",
+      "packages/homelab/src/domain-registry.ts",
       "packages/homelab/images/",
       "packages/homelab/scripts/smoke-images.ts",
       "packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts",

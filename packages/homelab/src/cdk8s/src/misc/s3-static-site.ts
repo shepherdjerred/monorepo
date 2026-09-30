@@ -14,6 +14,15 @@ import { withCommonProps } from "./common.ts";
 import versions from "@shepherdjerred/homelab/cdk8s/src/versions.ts";
 import { ApiObject } from "cdk8s";
 import { Probe } from "@shepherdjerred/homelab/cdk8s/generated/imports/monitoring.coreos.com.ts";
+import {
+  mailPolicyText,
+  type MailPolicy,
+} from "homelab/src/domain-registry.ts";
+
+export type MailPolicyHost = {
+  hostname: string;
+  policy: MailPolicy;
+};
 
 export type StaticSiteProbeConfig = {
   endpoint: string;
@@ -144,6 +153,7 @@ export function renderHeaderBlock(
 
 export type S3StaticSitesProps = {
   sites: StaticSiteConfig[];
+  mailPolicies?: MailPolicyHost[];
   s3Endpoint: string;
   s3Region?: string;
   credentialsSecretName: string;
@@ -151,6 +161,7 @@ export type S3StaticSitesProps = {
 
 export type CaddyfileGeneratorProps = {
   sites: StaticSiteConfig[];
+  mailPolicies?: MailPolicyHost[];
   s3Endpoint: string;
   s3Region?: string;
 };
@@ -253,6 +264,25 @@ ${proxyBlocks ? `\n${proxyBlocks}\n` : ""}${spaBlocks ? `\n${spaBlocks}\n` : ""}
 	handle {
 ${renderS3Proxy(notFoundPage)}
 	}
+}
+`);
+  }
+
+  for (const host of props.mailPolicies ?? []) {
+    const policy = mailPolicyText(host.policy);
+    blocks.push(`http://${host.hostname} {
+\theader {
+\t\tContent-Type "text/plain; charset=utf-8"
+\t\tCache-Control "no-store"
+\t\tX-Content-Type-Options "nosniff"
+\t\t-Server
+\t}
+\thandle /.well-known/mta-sts.txt {
+\t\trespond \`${policy}\` 200
+\t}
+\thandle {
+\t\trespond "Not found" 404
+\t}
 }
 `);
   }
@@ -417,6 +447,50 @@ export class S3StaticSites extends Construct {
       selector: deployment,
       ports: [{ port: 80 }],
     });
+
+    for (const host of props.mailPolicies ?? []) {
+      // Each policy has a body-aware public Probe below; the backend health is
+      // already covered by the static-site fleet served by this same Caddy.
+      // @tunnel-dns-coverage:mail-domains-from ../../../domain-registry.json
+      createCloudflareTunnelBinding(
+        this,
+        `tunnel-${hostnameSlug(host.hostname)}`,
+        {
+          serviceName: this.service.name,
+          namespace,
+          fqdn: host.hostname,
+          disableDnsUpdates: true,
+          disableProbe: true,
+          port: 80,
+        },
+      );
+
+      new Probe(this, `probe-${hostnameSlug(host.hostname)}`, {
+        metadata: {
+          name: `static-site-${hostnameSlug(host.hostname)}`,
+          namespace,
+          labels: { release: "prometheus" },
+        },
+        spec: {
+          jobName: `static-site-${host.hostname}`,
+          interval: "60s",
+          module: "mta_sts_policy",
+          prober: {
+            url: "prometheus-prometheus-blackbox-exporter.prometheus:9115",
+          },
+          targets: {
+            staticConfig: {
+              static: [`https://${host.hostname}/.well-known/mta-sts.txt`],
+              labels: {
+                endpoint: "mta-sts",
+                path: "/.well-known/mta-sts.txt",
+                site: host.hostname,
+              },
+            },
+          },
+        },
+      });
+    }
 
     for (const site of props.sites) {
       // DNS is managed by OpenTofu — operator must not touch DNS records.

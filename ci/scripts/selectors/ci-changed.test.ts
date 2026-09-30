@@ -205,6 +205,12 @@ test("forces every runtime-selected fixed-corpus lane", () => {
   }
 });
 
+test("domain registry changes select the OpenTofu lane", () => {
+  expect(selectorPathsForLane("tofu")).toContain(
+    "packages/homelab/src/domain-registry.json",
+  );
+});
+
 test("accepts only one exact main-only platform apply request", () => {
   expect(
     requestedPlatformTofuApply({

@@ -101,6 +101,8 @@ describe("selectImageTargets", () => {
 
   test("rebuilds infra when the generated Caddyfile changes", async () => {
     for (const path of [
+      "packages/homelab/src/domain-registry.json",
+      "packages/homelab/src/domain-registry.ts",
       "packages/homelab/src/cdk8s/scripts/generate-caddyfile.ts",
       "packages/homelab/src/cdk8s/src/misc/common.ts",
       "packages/homelab/src/cdk8s/src/misc/s3-static-site.ts",
