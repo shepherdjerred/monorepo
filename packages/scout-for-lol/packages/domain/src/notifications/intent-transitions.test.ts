@@ -652,6 +652,17 @@ describe("suppress", () => {
 });
 
 describe("confirmUnsentSuppression", () => {
+  test("records an installation change before Discord sees the attempt", () => {
+    const result = confirmUnsentSuppression(makeIntent(sendingState()), {
+      attemptNonce: nonceA,
+      reason: "guild-left",
+    });
+    expect(expectApplied(result).state).toEqual({
+      kind: "suppressed",
+      reason: "guild-left",
+    });
+  });
+
   test("records a late opt-out against the matching unsent attempt", () => {
     const result = confirmUnsentSuppression(makeIntent(sendingState()), {
       attemptNonce: nonceA,

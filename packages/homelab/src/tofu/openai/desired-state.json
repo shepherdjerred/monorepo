@@ -55,6 +55,9 @@
     },
     "temporal-active-2026-09": {
       "name": "Temporal"
+    },
+    "storm-brain": {
+      "name": "Storm Brain"
     }
   },
   "openai_service_accounts": {
@@ -138,6 +141,16 @@
           "vault_field": "OPENAI_API_KEY"
         }
       ]
+    },
+    "storm-brain-2026-09": {
+      "project_key": "storm-brain",
+      "name": "storm-brain 2026-09",
+      "onepassword_targets": [
+        {
+          "vault_item_id": "mpv7cti3fpwrfobgr6ydnemydy",
+          "vault_field": "OPENAI_API_KEY"
+        }
+      ]
     }
   },
   "openai_organization_users": {
@@ -201,6 +214,15 @@
       "notification_channel_type": "email",
       "notification_channel_recipients": ["openai@sjer.red"],
       "notification_channel_subject_prefix": "buildkite-openai"
+    },
+    "storm-brain-monthly": {
+      "project_key": "storm-brain",
+      "threshold_amount": 2,
+      "currency": "USD",
+      "interval": "month",
+      "notification_channel_type": "email",
+      "notification_channel_recipients": ["openai@sjer.red"],
+      "notification_channel_subject_prefix": "storm-brain-openai"
     }
   },
   "openai_groups": {},
@@ -274,6 +296,11 @@
         "gpt-5.6-terra",
         "text-embedding-3-small"
       ]
+    },
+    "storm-brain": {
+      "project_key": "storm-brain",
+      "mode": "allow_list",
+      "model_ids": ["gpt-5.6-luna"]
     }
   },
   "openai_project_hosted_tool_permissions": {},
@@ -317,6 +344,12 @@
     "scout-prod-monthly": {
       "project_key": "scout-prod-active-2026-09",
       "threshold_amount": 2500,
+      "currency": "USD",
+      "interval": "month"
+    },
+    "storm-brain-monthly": {
+      "project_key": "storm-brain",
+      "threshold_amount": 500,
       "currency": "USD",
       "interval": "month"
     }

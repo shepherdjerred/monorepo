@@ -18,6 +18,7 @@ import type {
 import type { DiscoveryService } from "@shepherdjerred/streambot/discovery/discovery-service.ts";
 import type { MediaHistoryStore } from "@shepherdjerred/streambot/history/media-history.ts";
 import type { MediaFeatureGate } from "@shepherdjerred/streambot/config/media-features.ts";
+import type { SportsCatalog } from "@shepherdjerred/streambot/sports/types.ts";
 
 /**
  * The command layer's contract types.
@@ -118,4 +119,5 @@ export type CommandHandlerDeps = {
   readonly guildId?: string;
   readonly channelId?: string;
   readonly featureGate?: MediaFeatureGate;
+  readonly sports?: SportsCatalog;
 };

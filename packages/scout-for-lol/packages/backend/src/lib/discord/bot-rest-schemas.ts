@@ -60,6 +60,8 @@ export const DiscordGuildMemberSchema = z.object({
   nick: z.string().nullish(),
   /** Per-guild avatar override, distinct from `user.avatar`. */
   avatar: z.string().nullish(),
+  /** Current membership's join time; changes when Scout leaves and rejoins. */
+  joined_at: z.iso.datetime({ offset: true }).nullish(),
   roles: z.array(z.string()).default([]),
 });
 export type DiscordGuildMember = z.infer<typeof DiscordGuildMemberSchema>;

@@ -45,6 +45,12 @@ with the PR target branch. Within that workflow, Turbo runs at most three tasks
 at once and each Vitest process uses at most four workers, matching the pod's
 12-CPU limit.
 
+The extension passes the last green main base to every workflow. Selectors
+inside the site, package publishing, CI image refresh, and Scout workflows use
+it to skip unchanged targets. Without a valid base they run conservatively, so
+the base must travel with each workflow rather than only with `verify` and the
+release chain.
+
 When the [catalog comparator](https://github.com/shepherdjerred/monorepo/blob/main/packages/version-catalog/src/internal-image-pins.ts)
 finds only internal image build number and digest changes,
 [`verify`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/verify.ts)
@@ -186,10 +192,16 @@ and still look green.
 
 ## The review gate waits for the exact head
 
-The required PR review gate is Codex. Its latest PR review must name the exact
-head commit; a clean review is represented by Codex's 👍 reaction. Unresolved
-Codex findings then fold into the gate decision. Qodo remains available as an
-optional provider, but is not required. The gate is
+The required PR review gate is multi-provider: one enabled reviewer (Codex,
+CodeRabbit — selected by `REVIEW_PROVIDERS`, default Codex) must finish
+reviewing the exact head commit with no blocking findings, while
+an unresolved P0 from any enabled provider vetoes the pass. Qodo and Greptile
+stay registered but out of the enabled set until their apps are installed and
+observed reviewing: an enabled-but-silent provider holds every PR at the
+deadline instead of passing it. Codex names the
+head in its latest PR review, and a clean Codex review is represented by its
+👍 reaction; each provider's completion signal is documented in
+`packages/code-review`. The gate is
 [`wait-for-review.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/review/wait-for-review.ts).
 
 Binding to the head commit is the whole point. A review comment from an earlier
@@ -201,6 +213,14 @@ make the gate approve unreviewed changes.
 Steps pass values to later steps through a build-scoped SeaweedFS prefix,
 `s3://ci-handoff/<pipeline number>/<key>.json`, written and read by
 [`ci-handoff.ts`](https://github.com/shepherdjerred/monorepo/blob/main/scripts/lib/ci/ci-handoff.ts).
+
+A provider running out of quota is not a review failure. No review happened,
+and blocking every merge on a billing state would stop the rest of CI from
+counting. One blocked provider is ignored while the rest review; when every
+enabled provider posts its usage-limit notice for the exact head, the gate
+exits with status 42, and the step treats that status alone as advisory.
+Findings, unresolved threads, timeouts, and every other error exit with
+another status and still fail the required gate.
 
 There is one path rather than two. Buildkite offered build metadata for small
 values and artifacts for large ones, so every handoff had to choose, and image

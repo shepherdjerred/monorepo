@@ -29,6 +29,7 @@ import {
 import { formatTimecode } from "@shepherdjerred/streambot/util/timecode.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
 import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
+import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 
 /** Namespace prefix for every player-card component id, versioned so a format change is detectable. */
 export const CONTROL_ID_PREFIX = "sb:v1:";
@@ -150,6 +151,9 @@ export function resolveControlAction(request: ControlRequest): ControlOutcome {
     };
   }
 
+  const sportsOutcome = sportsControlOutcome(view, action);
+  if (sportsOutcome !== null) return sportsOutcome;
+
   switch (action) {
     case ControlAction.Skip:
     case ControlAction.Pause:
@@ -196,6 +200,28 @@ export function resolveControlAction(request: ControlRequest): ControlOutcome {
     case ControlAction.Chapter:
       return chapterSeek(view, request.chapterNumber);
   }
+}
+
+function sportsControlOutcome(
+  view: PlaybackView,
+  action: ControlAction,
+): ControlOutcome | null {
+  const source = view.current?.source;
+  if (source?.kind !== "url" || sportsEventForSource(source.url) === null) {
+    return null;
+  }
+  if (
+    action === ControlAction.Skip ||
+    action === ControlAction.Stop ||
+    action === ControlAction.VolumeDown ||
+    action === ControlAction.VolumeUp
+  ) {
+    return null;
+  }
+  return {
+    kind: "denied",
+    message: "Live sports support play, skip/stop, and volume only.",
+  };
 }
 
 function resolveRequesterControl(

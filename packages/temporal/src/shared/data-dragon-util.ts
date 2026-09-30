@@ -41,26 +41,15 @@ export function branchName(version: string): string {
 }
 
 /**
- * Whether `headRefName` is a branch this updater generated for `version`. Used
- * to authenticate a dedup-matched PR as ours rather than an arbitrary same-title
- * PR. Accepts the current deterministic `chore/scout-data-dragon-<version>`
- * shape (see `branchName`) and, so a still-open PR from a prior run isn't missed
- * during the rollout, the legacy `chore/scout-data-dragon-<version>-<8 hex>`
- * shape. Version is compared literally (its dots are not treated as regex).
+ * Whether `headRefName` is the branch this updater generated for `version`
+ * (see `branchName`). Used to authenticate a dedup-matched PR as ours rather
+ * than an arbitrary same-title PR.
  */
 export function isDataDragonBranch(
   headRefName: string,
   version: string,
 ): boolean {
-  const deterministic = `${DATA_DRAGON_BRANCH_PREFIX}${version}`;
-  if (headRefName === deterministic) {
-    return true;
-  }
-  const legacyPrefix = `${deterministic}-`;
-  return (
-    headRefName.startsWith(legacyPrefix) &&
-    /^[0-9a-f]{8}$/.test(headRefName.slice(legacyPrefix.length))
-  );
+  return headRefName === branchName(version);
 }
 
 /**

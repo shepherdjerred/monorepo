@@ -1,6 +1,6 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
-import { MEDIUM_TIER, VERIFY_TIER } from "#src/pipeline/tiers.ts";
+import { MEDIUM_TIER, PR_DRY_RUN_TIER } from "#src/pipeline/tiers.ts";
 import { GLOBAL_SELECTOR_INPUTS } from "#src/pipeline/inputs.ts";
 import {
   GITHUB_DOWNLOAD,
@@ -29,7 +29,7 @@ const DRY_RUN_SITES = [
   "webring",
   "cooklang-rich-preview",
   "stocks-sjer-red",
-  "macos-cross-site",
+  "cross-compilers-site",
   "wiki",
   "better-skill-capped",
   "glitter",
@@ -78,7 +78,7 @@ export function prGateSteps(images: CiImages): CiStep[] {
       ],
       dependsOn: ["verify"],
       timeoutMinutes: 30,
-      resources: VERIFY_TIER,
+      resources: PR_DRY_RUN_TIER,
       events: ["pull_request"],
       changed: {
         include: [
@@ -110,6 +110,15 @@ export function prGateSteps(images: CiImages): CiStep[] {
       label: "automated review gate",
       image: images.base,
       commands: [". ci/scripts/toolchain.sh", "ci/scripts/review-gate.sh"],
+      // Multi-provider OR gate: one clean review from any enabled provider
+      // passes, a P0 from any of them vetoes, and unanimous quota blocks
+      // stay advisory. Only providers confirmed reviewing in production
+      // belong here — a silent provider holds every PR at the deadline.
+      // The step key stays `codex-review-gate` so the required-check
+      // ruleset does not churn.
+      environment: {
+        REVIEW_PROVIDERS: "codex,coderabbit",
+      },
       timeoutMinutes: 90,
       resources: MEDIUM_TIER,
       events: ["pull_request"],

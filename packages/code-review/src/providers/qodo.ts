@@ -677,6 +677,9 @@ export const qodoProvider: ReviewProvider = {
   parseSeverity: parseQodoSeverity,
   parseFindingTitle: parseQodoFindingTitle,
   findingKey: qodoFindingKey,
+  // Qodo's second surface is its persistent issue comment, parsed through the
+  // completion strategy — never a review body.
+  parseReviewBodyFindings: null,
   completion: {
     kind: "issue-comment",
     marker: QODO_REVIEW_MARKER,

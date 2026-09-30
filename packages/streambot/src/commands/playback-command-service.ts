@@ -28,14 +28,28 @@ import type {
   DiscoveryScope,
   MediaCandidate,
 } from "@shepherdjerred/streambot/discovery/candidate.ts";
-import { pickOfficialSameWork } from "@shepherdjerred/streambot/discovery/same-work.ts";
-import type { RecordMedia } from "@shepherdjerred/streambot/history/media-history.ts";
 import {
   PlaybackCommandBlockedError,
   PlaybackCommandBoundaryError,
 } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import { PlaybackControls } from "@shepherdjerred/streambot/commands/playback-controls.ts";
 import type { PlaybackCommandResult } from "@shepherdjerred/streambot/commands/playback-command-types.ts";
+import type { SportsProvider } from "@shepherdjerred/streambot/sports/types.ts";
+import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
+import {
+  assertSportsSubtitleOptions,
+  selectDirectRequestUrl,
+  selectSportsForRequest,
+  selectSportsSourceOverride,
+} from "@shepherdjerred/streambot/sports/playback-selection.ts";
+import { sportsListingText } from "@shepherdjerred/streambot/sports/listing-text.ts";
+import {
+  markReplacedRequest,
+  recordFailed,
+  recordRequest,
+  toRecordMedia,
+} from "@shepherdjerred/streambot/commands/playback-recording.ts";
+import { searchMediaText } from "@shepherdjerred/streambot/discovery/search-media-text.ts";
 
 const RESOLVE_TIMEOUT_MS = 30_000;
 
@@ -56,15 +70,19 @@ type PlayInput = {
   readonly subtitles?: SubtitlePref;
   /** Per-request transport override; `undefined` and `"auto"` both mean "let the classifier decide". */
   readonly mode?: MediaMode;
+  readonly provider?: SportsProvider | "auto";
 };
 
 type SelectedMedia = {
   readonly source: Source;
   readonly candidate?: MediaCandidate;
+  readonly sports: boolean;
+  readonly preResolved?: ResolvedSource;
 };
 
 type ResolvePlayableInput = {
   readonly source: Source;
+  readonly preResolved?: ResolvedSource;
   readonly play: PlayInput;
   readonly query: string;
   readonly intent: MediaIntent;
@@ -175,12 +193,13 @@ export class PlaybackCommandService extends PlaybackControls {
     });
     const scope = this.scope(input.userId);
     const selected = await this.selectMedia(input, query, intent, scope);
+    assertSportsSubtitleOptions(selected.sports, input.subtitles);
     const source = withSpoken(
       withMode(
         withSubtitles(selected.source, input.subtitles),
         await this.resolveMediaMode(
           input.userId,
-          requestedPlayMode(input, intent, query),
+          selected.sports ? "video" : requestedPlayMode(input, intent, query),
         ),
       ),
       input.spoken === true,
@@ -194,14 +213,22 @@ export class PlaybackCommandService extends PlaybackControls {
       query,
       intent,
       scope,
+      ...(selected.preResolved === undefined
+        ? {}
+        : { preResolved: selected.preResolved }),
     });
     input.signal?.throwIfAborted();
     if (input.placement === "now") this.assertCanPlayNow(input.userId);
-    const media = this.toRecordMedia(source, preResolved, selected.candidate);
-    const requestId = await this.recordRequest(scope, query, intent, media);
-    if (input.placement === "now") {
-      this.markReplacedRequest();
-    }
+    const requestId = selected.sports
+      ? undefined
+      : await recordRequest({
+          deps: this.deps,
+          scope,
+          query,
+          intent,
+          media: toRecordMedia(source, preResolved, selected.candidate),
+        });
+    if (input.placement === "now") markReplacedRequest(this.deps);
     this.deps.dispatch({
       type:
         input.placement === "now"
@@ -212,7 +239,11 @@ export class PlaybackCommandService extends PlaybackControls {
       source,
       requesterId: input.userId,
       ...(requestId === undefined ? {} : { requestId }),
-      ...(preResolved === undefined ? {} : { preResolved }),
+      // Resolve queued sports from the stable page when playback starts, after signed URLs may expire.
+      ...(preResolved === undefined ||
+      (selected.sports && input.placement !== "now")
+        ? {}
+        : { preResolved }),
     });
     const label =
       selected.candidate?.title ?? preResolved?.title ?? sourceLabel(source);
@@ -237,23 +268,52 @@ export class PlaybackCommandService extends PlaybackControls {
     scope: DiscoveryScope | null,
   ): Promise<SelectedMedia> {
     if (input.sourceOverride !== undefined) {
-      return { source: input.sourceOverride };
+      const sportsOverride = await selectSportsSourceOverride({
+        source: input.sourceOverride,
+        scope,
+        enabled: this.deps.featureGate?.sportsStreaming,
+        signal: this.boundedSignal(input.signal),
+        resolve: this.deps.resolvePlaySource,
+      });
+      if (sportsOverride !== null) return sportsOverride;
+      return {
+        source: input.sourceOverride,
+        sports: false,
+      };
     }
-    if (input.spoken === false && isHttpUrl(query)) {
-      if (input.source === "local" || input.source === "history") {
-        throw new PlaybackCommandBoundaryError(
-          "A URL cannot use the local or history source.",
-        );
-      }
-      return { source: { kind: "url", url: query } };
-    }
+    const signal = this.boundedSignal(input.signal);
+    const direct = await selectDirectRequestUrl({
+      query,
+      spoken: input.spoken,
+      source: input.source,
+      scope,
+      enabled: this.deps.featureGate?.sportsStreaming,
+      signal,
+      resolve: this.deps.resolvePlaySource,
+    });
+    if (direct !== null) return direct;
+    const sports = await selectSportsForRequest({
+      query,
+      ...(input.utterance === undefined ? {} : { utterance: input.utterance }),
+      source: input.source,
+      provider: input.provider,
+      scope,
+      enabled: this.deps.featureGate?.sportsStreaming,
+      signal,
+      catalog: this.deps.sports,
+      resolve: this.deps.resolvePlaySource,
+      onAmbiguous: () => {
+        this.clarificationGeneration += 1;
+      },
+    });
+    if (sports !== null) return { ...sports, sports: true };
     const discoveryEnabled = await this.discoveryEnabled(scope);
     if (
       !discoveryEnabled ||
       scope === null ||
       this.deps.discovery === undefined
     ) {
-      return { source: this.selectSource(query, input.source) };
+      return { source: this.selectSource(query, input.source), sports: false };
     }
     const result = await this.deps.discovery.resolve(
       intent,
@@ -261,14 +321,26 @@ export class PlaybackCommandService extends PlaybackControls {
       this.boundedSignal(input.signal),
     );
     if (result.kind === "not-found") {
-      await this.recordFailed(scope, query, intent, "not-found");
+      await recordFailed({
+        deps: this.deps,
+        scope,
+        query,
+        intent,
+        errorCode: "not-found",
+      });
       throw new PlaybackCommandBoundaryError(
         `I couldn't find ${query} in history, the library, or YouTube.`,
       );
     }
     if (result.kind === "ambiguous") {
       this.clarificationGeneration += 1;
-      await this.recordFailed(scope, query, intent, "ambiguous");
+      await recordFailed({
+        deps: this.deps,
+        scope,
+        query,
+        intent,
+        errorCode: "ambiguous",
+      });
       const choices = result.candidates
         .slice(0, 3)
         .map((item, index) => `${String(index + 1)}, ${item.title}`)
@@ -277,13 +349,18 @@ export class PlaybackCommandService extends PlaybackControls {
         `I found a few matches: ${choices}. Say the title, or first, second, or third.`,
       );
     }
-    return { source: result.candidate.source, candidate: result.candidate };
+    return {
+      source: result.candidate.source,
+      candidate: result.candidate,
+      sports: false,
+    };
   }
 
   private async resolvePlayable(
     input: ResolvePlayableInput,
   ): Promise<ResolvedSource | undefined> {
     const { source, play, query, intent, scope } = input;
+    if (input.preResolved !== undefined) return input.preResolved;
     if (source.kind === "file") return undefined;
     const signal = this.boundedSignal(play.signal);
     try {
@@ -295,7 +372,13 @@ export class PlaybackCommandService extends PlaybackControls {
         await this.announceBlocked(play.userId);
       }
       if (scope !== null) {
-        await this.recordFailed(scope, query, intent, "resolve-failed");
+        await recordFailed({
+          deps: this.deps,
+          scope,
+          query,
+          intent,
+          errorCode: "resolve-failed",
+        });
       }
       throw new PlaybackCommandBoundaryError(
         classifyPlayError(error, source.kind),
@@ -314,33 +397,6 @@ export class PlaybackCommandService extends PlaybackControls {
     return scope !== null && this.deps.featureGate !== undefined
       ? await this.deps.featureGate.assistantV2(scope)
       : this.deps.discovery !== undefined;
-  }
-
-  private async recordRequest(
-    scope: DiscoveryScope | null,
-    query: string,
-    intent: MediaIntent,
-    media: RecordMedia,
-  ): Promise<string | undefined> {
-    if (scope === null || this.deps.history === undefined) return undefined;
-    const enabled =
-      this.deps.featureGate === undefined ||
-      (await this.deps.featureGate.history(scope));
-    return enabled
-      ? this.deps.history.recordQueueRequest({
-          scope,
-          rawQuery: query,
-          intent,
-          media,
-        })
-      : undefined;
-  }
-
-  private markReplacedRequest(): void {
-    const requestId = this.deps.view().current?.requestId;
-    if (requestId !== undefined) {
-      this.deps.history?.updateRequest(requestId, "skipped");
-    }
   }
 
   private playResult(
@@ -363,6 +419,15 @@ export class PlaybackCommandService extends PlaybackControls {
       readonly utterance?: string;
     },
   ): Promise<PlaybackCommandResult> {
+    const currentSource = this.deps.view().current?.source;
+    if (
+      currentSource?.kind === "url" &&
+      sportsEventForSource(currentSource.url) !== null
+    ) {
+      throw new PlaybackCommandBoundaryError(
+        "Live sports support play, skip/stop, and volume only.",
+      );
+    }
     const scope = this.scope(userId);
     if (scope === null || this.deps.history === undefined) {
       throw new PlaybackCommandBoundaryError(
@@ -411,31 +476,26 @@ export class PlaybackCommandService extends PlaybackControls {
     source: VoicePlaySource,
     signal: AbortSignal,
   ): Promise<string> {
-    const scope = this.scope(userId);
-    const discovery = this.deps.discovery;
-    if (scope === null || discovery === undefined) {
-      return this.searchLibraryTitles(query, 5);
-    }
-    const matches = await discovery.search(
-      inferMediaIntent({ query, source }),
-      scope,
+    return await searchMediaText({
+      query,
+      source,
+      scope: this.scope(userId),
+      discovery: this.deps.discovery,
       signal,
-    );
-    if (matches.length === 0) return "I couldn't find any matching media.";
-    discovery.rememberCandidates(scope, matches);
-    const official = pickOfficialSameWork(matches);
-    if (official !== undefined) {
-      return `These matches are the same work. Play this official/best match: ${official.title}.`;
-    }
-    if (matches.length > 1) {
-      this.clarificationGeneration += 1;
-    }
-    return matches
-      .map(
-        (candidate, index) =>
-          `${String(index + 1)}. ${candidate.title}, ${candidate.reason}`,
-      )
-      .join("; ");
+      libraryFallback: () => this.searchLibraryTitles(query, 5),
+      onAmbiguous: () => {
+        this.clarificationGeneration += 1;
+      },
+    });
+  }
+
+  async listSports(userId: UserId, signal: AbortSignal): Promise<string> {
+    return await sportsListingText({
+      scope: this.scope(userId),
+      catalog: this.deps.sports,
+      enabled: this.deps.featureGate?.sportsStreaming,
+      signal: this.boundedSignal(signal),
+    });
   }
 
   private selectSource(query: string, requested: VoicePlaySource): Source {
@@ -466,52 +526,4 @@ export class PlaybackCommandService extends PlaybackControls {
           userId,
         };
   }
-
-  private async recordFailed(
-    scope: DiscoveryScope,
-    query: string,
-    intent: ReturnType<typeof inferMediaIntent>,
-    errorCode: string,
-  ): Promise<void> {
-    if (
-      this.deps.history === undefined ||
-      (this.deps.featureGate !== undefined &&
-        !(await this.deps.featureGate.history(scope)))
-    ) {
-      return;
-    }
-    this.deps.history.recordQueueRequest({
-      scope,
-      rawQuery: query,
-      intent,
-      status: "failed",
-      errorCode,
-    });
-  }
-
-  private toRecordMedia(
-    source: Source,
-    resolved: ResolvedSource | undefined,
-    candidate: MediaCandidate | undefined,
-  ): RecordMedia {
-    const provenance = resolved?.provenance;
-    return {
-      title: candidate?.title ?? resolved?.title ?? sourceLabel(source),
-      provider: mediaProvider(source, candidate),
-      source,
-      canonicalUrl: candidate?.canonicalUrl ?? provenance?.canonicalUrl,
-      channel: candidate?.channel ?? provenance?.channel,
-      thumbnailUrl: candidate?.thumbnailUrl ?? provenance?.thumbnailUrl,
-      durationSeconds: candidate?.durationSeconds ?? resolved?.durationSeconds,
-    };
-  }
-}
-
-function mediaProvider(
-  source: Source,
-  candidate: MediaCandidate | undefined,
-): RecordMedia["provider"] {
-  return source.kind === "file" || candidate?.provider === "local"
-    ? "local"
-    : "youtube";
 }

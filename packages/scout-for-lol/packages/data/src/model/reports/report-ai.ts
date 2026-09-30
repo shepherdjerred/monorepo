@@ -13,6 +13,7 @@ export const REPORT_AI_MAX_TOOL_CALLS = 30;
 export const REPORT_AI_MAX_PREVIEW_CALLS = 10;
 export const REPORT_AI_PREVIEW_MAX_ROWS = 10;
 export const REPORT_VISUALIZATION_PREVIEW_MAX_ROWS = 12;
+export const EXPLORE_MODEL_PREVIEW_MAX_ROWS = 50;
 export const REPORT_AI_TIMEOUT_MS = 180_000;
 export const REPORT_AI_MAX_OUTPUT_TOKENS = 4000;
 export const REPORT_AI_DEFAULT_WEEKLY_LIMIT = 30;
@@ -171,8 +172,15 @@ export type ReportAiPreviewSummary = z.infer<
   typeof ReportAiPreviewSummarySchema
 >;
 
-export const ReportAiModelPreviewSummarySchema =
-  ReportAiPreviewSummarySchema.omit({ visualizationRows: true }).strip();
+export const ReportAiModelPreviewSummarySchema = z
+  .object({
+    columns: z.array(ReportResultColumnSchema).max(20),
+    rows: z.array(ReportAiPreviewRowSchema).max(EXPLORE_MODEL_PREVIEW_MAX_ROWS),
+    rowsReturned: z.number().int().nonnegative().default(0),
+    rowsScanned: z.number().int().nonnegative(),
+    renderKind: ReportOutputFormatSchema,
+  })
+  .strip();
 
 export type ReportAiModelPreviewSummary = z.infer<
   typeof ReportAiModelPreviewSummarySchema

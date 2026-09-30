@@ -1,5 +1,5 @@
 /**
- * Run one real report-only Claude agent task through the production queue.
+ * Run one real report-only Codex agent task through the production queue.
  * This is intentionally an operator command: it sends one tagged email and
  * must only be run after the worker image has been deployed.
  *
@@ -53,8 +53,8 @@ async function main(): Promise<void> {
     contractVersion: 2,
     title: "Agent-task structured-output canary",
     prompt:
-      "Use Bash to run `printf 'agent-task-canary-ok\\n'` to exercise provider receipt extraction. Report the declared check exactly once and cite collector:structured-output:canary-sentinel. Return no synthesis.",
-    provider: "claude",
+      "Run `printf 'agent-task-canary-ok\\n'` in the shell to exercise provider receipt extraction. Report the declared check exactly once and cite collector:structured-output:canary-sentinel. Return no synthesis.",
+    provider: "codex",
     mode: "report-only",
     repo: { fullName: "shepherdjerred/monorepo", ref: "main" },
     checks: [
@@ -63,7 +63,7 @@ async function main(): Promise<void> {
         label: "Structured output and evidence",
         required: true,
         evidenceRequirement:
-          "A successful Bash receipt containing agent-task-canary-ok.",
+          "A successful shell receipt containing agent-task-canary-ok.",
         evidenceCollectors: [
           {
             id: "canary-sentinel",

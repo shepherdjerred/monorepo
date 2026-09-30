@@ -65,8 +65,8 @@ if [[ ! -f "$WAIT_SCRIPT" ]]; then
   echo "review gate: wait-for-review.ts is absent from the fetched main source" >&2
   exit 1
 fi
-# Exit status 42 is the gate's "the provider declared it cannot review at all"
-# (quota exhaustion) status, REVIEW_GATE_BLOCKED_EXIT_CODE in
+# Exit status 42 is the gate's "every enabled provider declared it cannot
+# review at all" (quota exhaustion) status, REVIEW_GATE_BLOCKED_EXIT_CODE in
 # @shepherdjerred/code-review. Treat only that result as advisory here so the
 # Woodpecker step succeeds; every other non-zero status (findings, unresolved
 # threads, timeouts, errors) still fails the pipeline.
@@ -80,9 +80,9 @@ else
 fi
 
 if [[ "$GATE_STATUS" -eq "$QUOTA_EXIT_STATUS" ]]; then
-  PROVIDER_NAME="${REVIEW_PROVIDER:-codex}"
+  PROVIDER_NAMES="${REVIEW_PROVIDERS:-${REVIEW_PROVIDER:-codex}}"
   printf '%s\n' \
-    "**${PROVIDER_NAME} review skipped: out of quota.** The gate reported that no review ran for this head. Rely on Greptile's review for this PR, or add ${PROVIDER_NAME} credits and re-run the gate." \
+    "**Review providers (${PROVIDER_NAMES}) skipped: out of quota.** The gate reported that no review ran for this head. Add credits and re-run the gate." \
     >&2
   exit 0
 fi

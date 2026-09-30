@@ -46,6 +46,8 @@ export function executionDomainForTaskQueue(
     case TASK_QUEUES.SCOUT_PROD:
       return "scout";
     case TASK_QUEUES.AGENT_TASK:
+    case TASK_QUEUES.AGENT_CHAT_DISPATCH:
+    case TASK_QUEUES.AGENT_CHAT_RECEIPTS:
       return "agent";
     case TASK_QUEUES.GLITTER_CORPUS:
     case TASK_QUEUES.GLITTER_CONTEXT:
@@ -121,7 +123,6 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runFliptFlagInventory: "repo",
   runLlmBilledCostReconciliation: "platform",
   generateDependencySummary: "repo",
-  runProtobufWatch: "repo",
   runPokeemeraldDataRefresh: "repo",
   cancelCiPipelinesWorkflow: "repo",
   checkPrMergeConflictsWorkflow: "repo",
@@ -154,6 +155,10 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
 
   // TASK_QUEUES.AGENT_TASK
   agentTaskWorkflow: "agent",
+  agentChatWorkflow: "agent",
+  agentChatTurnReceiptWorkflow: "agent",
+  agentChatCatalogWorkflow: "agent",
+  scheduledAgentChatTurnWorkflow: "agent",
 
   // TASK_QUEUES.SCOUT / SCOUT_BETA / SCOUT_PROD (packages/temporal and
   // @scout-for-lol/temporal workflows)
@@ -165,7 +170,6 @@ const WORKFLOW_TYPE_DOMAINS: Readonly<Record<string, ExecutionDomain>> = {
   runScoutBryanBucksAnalyticsWorkflow: "scout",
   runScoutQueueWindowsWatch: "scout",
   runScoutImageGcWorkflow: "scout",
-  runScoutCompetitionUpdatesWorkflow: "scout",
   scoutRealtimePollWorkflow: "scout",
   scoutPostMatchDiscoveryWorkflow: "scout",
   scoutPostMatchDiscoveryV2Workflow: "scout",

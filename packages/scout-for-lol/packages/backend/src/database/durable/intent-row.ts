@@ -54,6 +54,8 @@ export type NotificationIntentStateColumns = {
 /** Column shape of a MatchNotificationIntent row, minus DB-managed columns. */
 export type MatchNotificationIntentRow = NotificationIntentStateColumns & {
   intentKey: string;
+  subjectKind: "match";
+  subjectId: string;
   riotMatchId: string;
   kind: string;
   originKind: string;
@@ -67,7 +69,9 @@ export type MatchNotificationIntentRow = NotificationIntentStateColumns & {
 
 const RawIntentRowSchema = z.object({
   intentKey: z.string(),
-  riotMatchId: z.string(),
+  subjectKind: z.enum(["match", "duel", "dare"]),
+  subjectId: z.string().nullable(),
+  riotMatchId: z.string().nullable(),
   kind: z.string(),
   originKind: z.string(),
   recoveryBatchId: z.string().nullable(),
@@ -167,6 +171,15 @@ export function matchNotificationIntentRowToRecord(
   row: unknown,
 ): MatchNotificationIntentRecord {
   const raw = RawIntentRowSchema.parse(row);
+  if (
+    raw.subjectKind !== "match" ||
+    raw.riotMatchId === null ||
+    (raw.subjectId !== null && raw.subjectId !== raw.riotMatchId)
+  ) {
+    throw new Error(
+      `Intent ${raw.intentKey}: expected a match subject with matching subjectId and riotMatchId`,
+    );
+  }
   const payloadIntent = notificationIntentCodec.parse(JSON.parse(raw.payload));
   const record = MatchNotificationIntentRecordSchema.parse({
     matchId: raw.riotMatchId,
@@ -288,6 +301,8 @@ export function matchNotificationIntentRecordToRow(
 ): MatchNotificationIntentRow {
   return {
     intentKey: record.intent.key,
+    subjectKind: "match",
+    subjectId: record.matchId,
     riotMatchId: record.matchId,
     kind: record.intent.kind,
     ...originColumns(record.intent.origin),

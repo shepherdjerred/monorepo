@@ -219,6 +219,12 @@ export type PrepareStreamOptions = {
    */
   customInputOptions: string[];
 
+  /** Select one video rendition instead of mapping every video stream. Omit to retain legacy mapping. */
+  videoStreamIndex?: number;
+
+  /** Select one audio rendition from the primary input. Omit to retain legacy mapping. */
+  audioStreamIndex?: number;
+
   /**
    * Custom ffmpeg flags/options to pass directly to ffmpeg
    * These will be added to the command after other options
@@ -523,6 +529,11 @@ export function redactHeaderArgument(value: string): string {
     .join("\r\n");
 }
 
+/** Signed media URLs must not survive in observer command lines or stderr tails. */
+export function redactMediaUrls(value: string): string {
+  return value.replaceAll(/https?:\/\/[^\s"'<>]+/gu, "[redacted media URL]");
+}
+
 function ffmpegCommandLine(
   executable: string,
   args: readonly string[],
@@ -530,7 +541,9 @@ function ffmpegCommandLine(
   // `-headers` takes its value as the NEXT argument, so redaction keys off the preceding flag
   // rather than trying to recognise a credential by shape.
   const rendered = args.map((arg, index) =>
-    args[index - 1] === "-headers" ? redactHeaderArgument(arg) : arg,
+    redactMediaUrls(
+      args[index - 1] === "-headers" ? redactHeaderArgument(arg) : arg,
+    ),
   );
   return [executable, ...rendered].map(quoteCommandArgument).join(" ");
 }
@@ -558,7 +571,7 @@ function createFfmpegStderrHandler(
   };
 
   return (line: string) => {
-    stderrTail.push(line);
+    stderrTail.push(redactMediaUrls(line));
     if (stderrTail.length > 50) stderrTail.shift();
 
     const inputMatch = /^\s*Input #0,\s*([^,]+(?:,[^,]+)*),\s*from /u.exec(
@@ -748,6 +761,12 @@ export function prepareStream(
       },
       customInputOptions:
         opts.customInputOptions ?? defaultOptions.customInputOptions,
+      ...(opts.videoStreamIndex === undefined
+        ? {}
+        : { videoStreamIndex: opts.videoStreamIndex }),
+      ...(opts.audioStreamIndex === undefined
+        ? {}
+        : { audioStreamIndex: opts.audioStreamIndex }),
       customFfmpegFlags:
         opts.customFfmpegFlags ?? defaultOptions.customFfmpegFlags,
       inputColor: opts.inputColor ?? defaultOptions.inputColor,
@@ -763,6 +782,20 @@ export function prepareStream(
   }
 
   const mergedOptions = mergeOptions(options);
+  if (
+    mergedOptions.videoStreamIndex !== undefined &&
+    (!Number.isInteger(mergedOptions.videoStreamIndex) ||
+      mergedOptions.videoStreamIndex < 0)
+  ) {
+    throw new Error("videoStreamIndex must be a non-negative integer");
+  }
+  if (
+    mergedOptions.audioStreamIndex !== undefined &&
+    (!Number.isInteger(mergedOptions.audioStreamIndex) ||
+      mergedOptions.audioStreamIndex < 0)
+  ) {
+    throw new Error("audioStreamIndex must be a non-negative integer");
+  }
 
   // `audioOnly` does not modify the video path, it deletes it. Anything that is only meaningful in
   // terms of a video stream is therefore a contradiction rather than a setting to quietly ignore —
@@ -962,6 +995,10 @@ export function prepareStream(
     bitrateVideoMax,
     videoCodec,
   } = mergedOptions;
+  const videoMap =
+    mergedOptions.videoStreamIndex === undefined
+      ? "0:v"
+      : `0:v:${String(mergedOptions.videoStreamIndex)}`;
 
   if (audioOnly) {
     // One guard replaces the entire video output stage: no `-map 0:v`, no `-c:v`/`-b:v`/`-bf 0`/
@@ -984,7 +1021,7 @@ export function prepareStream(
         "inputColor 'hdr' is ignored when noTranscoding is set: the video stream is copied through unmodified, so no tonemap can apply",
       );
     }
-    commandBuilder.addOutputOption(["-map", "0:v"]);
+    commandBuilder.addOutputOption(["-map", videoMap]);
     commandBuilder.videoCodec("copy");
   } else {
     if (!encoderSettings)
@@ -1012,6 +1049,9 @@ export function prepareStream(
     const graphSpec = {
       width,
       height,
+      ...(mergedOptions.videoStreamIndex === undefined
+        ? {}
+        : { videoStreamIndex: mergedOptions.videoStreamIndex }),
       inputColor: mergedOptions.inputColor,
       ...(uploadMode ? { uploadInput: true } : {}),
       ...(frameRate !== undefined ? { frameRate } : {}),
@@ -1032,7 +1072,7 @@ export function prepareStream(
           encoderOutFilters: encoderSettings.outFilters ?? [],
         });
     if (graph.kind === "filterChain") {
-      commandBuilder.addOutputOption(["-map", "0:v"]);
+      commandBuilder.addOutputOption(["-map", videoMap]);
       commandBuilder.videoFilter(graph.filters);
     } else {
       // Multi-branch graph (GPU subtitle overlay): -filter_complex plus -map of its labeled
@@ -1084,7 +1124,13 @@ export function prepareStream(
     // without one yields a NUT containing nothing, and a realtime consumer waits on it forever.
     // Required mapping turns that into an immediate, classifiable ffmpeg startup failure
     // ("Stream map '' matches no streams") instead of a silent hang.
-    const audioMap = audioInput ? "1:a:0" : audioOnly ? "0:a:0" : "0:a:0?";
+    const audioMap = audioInput
+      ? "1:a:0"
+      : mergedOptions.audioStreamIndex === undefined
+        ? audioOnly
+          ? "0:a:0"
+          : "0:a:0?"
+        : `0:a:${String(mergedOptions.audioStreamIndex)}`;
     commandBuilder
       .addOutputOption(["-map", audioMap])
       .audioChannels(2)

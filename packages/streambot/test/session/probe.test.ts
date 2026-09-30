@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   isHdrTransfer,
   parseFfprobeOutput,
+  redactProbeError,
   resolutionBucket,
 } from "@shepherdjerred/streambot/sources/probe.ts";
 
@@ -16,6 +17,15 @@ describe("resolutionBucket", () => {
   });
 });
 
+test("ffprobe diagnostics do not retain signed source URLs", () => {
+  const source = "https://cdn.example/live.m3u8?token=secret123";
+  const message = `Failed to read ${source}; redirected to https://cdn2.example/a?sig=abc`;
+  const redacted = redactProbeError(message, source);
+  expect(redacted).not.toContain("secret123");
+  expect(redacted).not.toContain("sig=abc");
+  expect(redacted).toContain("[redacted media URL]");
+});
+
 describe("isHdrTransfer", () => {
   test("recognises PQ and HLG as HDR", () => {
     expect(isHdrTransfer("smpte2084")).toBe(true);
@@ -26,6 +36,42 @@ describe("isHdrTransfer", () => {
 });
 
 describe("parseFfprobeOutput", () => {
+  test("selects the complete A/V rendition when an HLS master has empty first tracks", () => {
+    const info = parseFfprobeOutput({
+      streams: [
+        { codec_type: "video", codec_name: "h264", width: 0, height: 0 },
+        { codec_type: "audio", codec_name: "aac", channels: 0 },
+        { codec_type: "video", codec_name: "h264", width: 960, height: 540 },
+        { codec_type: "audio", codec_name: "aac", channels: 2 },
+      ],
+    });
+    expect(info).toMatchObject({
+      videoStreamIndex: 1,
+      audioStreamIndex: 1,
+      width: 960,
+      height: 540,
+      audioChannels: 2,
+    });
+  });
+
+  test("preserves FFmpeg video indexes when cover art precedes the playable stream", () => {
+    const info = parseFfprobeOutput({
+      streams: [
+        {
+          codec_type: "video",
+          codec_name: "mjpeg",
+          width: 600,
+          height: 600,
+          disposition: { attached_pic: 1 },
+        },
+        { codec_type: "video", codec_name: "h264", width: 1280, height: 720 },
+        { codec_type: "audio", codec_name: "aac", channels: 2 },
+      ],
+    });
+    expect(info?.videoStreamIndex).toBe(1);
+    expect(info?.videoCodec).toBe("h264");
+  });
+
   test("extracts a 2160p HEVC 10-bit HDR + TrueHD remux (the incident source)", () => {
     const info = parseFfprobeOutput({
       streams: [

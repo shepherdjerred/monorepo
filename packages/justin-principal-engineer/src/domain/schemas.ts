@@ -23,6 +23,7 @@ export const LinearIssueSchema = z.object({
   description: z.string().nullable().default(null),
   url: z.url(),
   priority: z.number().int(),
+  team: z.object({ key: z.string().min(1) }).optional(),
   createdAt: z.string().min(1),
   state: z.object({
     name: z.string().min(1),
@@ -43,6 +44,16 @@ export const FeedbackSchema = z.object({
 });
 export type Feedback = z.infer<typeof FeedbackSchema>;
 
+const VisualTargetSchema = z.object({
+  package: z.string().min(1),
+  // NOTE: .regex() on purpose. z.toJSONSchema renders .startsWith()
+  // as {"format": "starts_with"}, which strict structured-output
+  // providers reject; .regex() renders {"pattern": ...} instead.
+  route: z.string().regex(/^\//, "Route must start with /"),
+  name: z.string().regex(/^[a-z0-9][a-z0-9._-]*$/),
+  waitForSelector: z.string().min(1).optional(),
+});
+
 export const AgentOutputSchema = z.object({
   status: z.enum(["changed", "no_change", "needs_human"]),
   commitTitle: z
@@ -53,18 +64,29 @@ export const AgentOutputSchema = z.object({
   summary: z.string().min(1),
   verification: z.array(z.string()),
   resolvedFindingKeys: z.array(z.string().min(1)).default([]),
-  visualTargets: z
-    .array(
-      z.object({
-        package: z.string().min(1),
-        route: z.string().startsWith("/"),
-        name: z.string().regex(/^[a-z0-9][a-z0-9._-]*$/),
-        waitForSelector: z.string().min(1).optional(),
-      }),
-    )
-    .default([]),
+  visualTargets: z.array(VisualTargetSchema).default([]),
 });
 export type AgentOutput = z.infer<typeof AgentOutputSchema>;
+
+// Strict structured-output providers require every property in `required`,
+// with absence modeled as null rather than omission. This wire twin derives
+// from the semantic shape so the two cannot drift; parse the model response
+// with it first, map nulls back to undefined, then validate AgentOutputSchema
+// as usual. schemas.test.ts guards the strict invariants (no string formats,
+// complete `required` coverage).
+export const AgentOutputWireSchema = z.object({
+  status: AgentOutputSchema.shape.status,
+  commitTitle: AgentOutputSchema.shape.commitTitle,
+  summary: AgentOutputSchema.shape.summary,
+  verification: AgentOutputSchema.shape.verification,
+  resolvedFindingKeys: z.array(z.string().min(1)),
+  visualTargets: z.array(
+    VisualTargetSchema.extend({
+      waitForSelector: z.string().min(1).nullable(),
+    }),
+  ),
+});
+export type AgentOutputWire = z.infer<typeof AgentOutputWireSchema>;
 
 export const AgentTurnInputSchema = z.object({
   provider: ProviderSchema,

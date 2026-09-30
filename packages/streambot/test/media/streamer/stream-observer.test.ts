@@ -1,4 +1,4 @@
-import { describe, expect, test } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 import {
   commandUsesHardwareDecode,
   createStreamObserver,
@@ -62,6 +62,25 @@ describe("createStreamObserver", () => {
     const disengaged = await hwDecodeEngaged.get();
     expect(disengaged.values[0]?.value).toBe(0);
     dispose();
+  });
+
+  test("does not log signed media URLs or headers from the ffmpeg command", () => {
+    const write = vi
+      .spyOn(process.stdout, "write")
+      .mockImplementation(() => true);
+    const { observer, dispose } = createStreamObserver(false);
+    try {
+      observer.onCommand?.(
+        "ffmpeg -headers 'Authorization: Bearer sensitive' -i 'https://edgestream4.pro/live.m3u8?st=sensitive' out",
+      );
+      const output = write.mock.calls.map(([chunk]) => String(chunk)).join("");
+      expect(output).toContain("ffmpeg command started");
+      expect(output).not.toContain("sensitive");
+      expect(output).not.toContain("edgestream4.pro");
+    } finally {
+      dispose();
+      write.mockRestore();
+    }
   });
 
   test("onSendStats counts late frames only when ratio > 1", async () => {

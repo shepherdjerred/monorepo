@@ -1,7 +1,7 @@
 import Foundation
 import Yams
 
-/// The Info.plist keys XcodeGen writes for an application before merging the
+/// The Info.plist keys XcodeGen writes for a target before merging the
 /// spec's `info.properties` over them.
 private let xcodeGenInfoDefaults: [String: String] = [
   "CFBundleDevelopmentRegion": "$(DEVELOPMENT_LANGUAGE)",
@@ -9,15 +9,30 @@ private let xcodeGenInfoDefaults: [String: String] = [
   "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)",
   "CFBundleInfoDictionaryVersion": "6.0",
   "CFBundleName": "$(PRODUCT_NAME)",
-  "CFBundlePackageType": "APPL",
+  "CFBundlePackageType": "$(PRODUCT_BUNDLE_PACKAGE_TYPE)",
   "CFBundleShortVersionString": "1.0",
   "CFBundleVersion": "1",
 ]
 
-/// Assemble, and sign, the `.app` bundle.
+/// The keys Xcode generates for `GENERATE_INFOPLIST_FILE` when the target
+/// names no Info.plist of its own; empty values are left out.
+private let generatedInfoDefaults: [String: String] = [
+  "CFBundleDevelopmentRegion": "$(DEVELOPMENT_LANGUAGE)",
+  "CFBundleExecutable": "$(EXECUTABLE_NAME)",
+  "CFBundleIdentifier": "$(PRODUCT_BUNDLE_IDENTIFIER)",
+  "CFBundleInfoDictionaryVersion": "6.0",
+  "CFBundleName": "$(PRODUCT_NAME)",
+  "CFBundlePackageType": "$(PRODUCT_BUNDLE_PACKAGE_TYPE)",
+  "CFBundleShortVersionString": "$(MARKETING_VERSION)",
+  "CFBundleVersion": "$(CURRENT_PROJECT_VERSION)",
+]
+
+/// Assemble, and sign, the target's bundle: an `.app`, or an `.xctest`.
+/// `plugIns` (a hosted test bundle) are embedded before the host is signed,
+/// so its signature seals them, as Xcode's does.
 func assembleBundle(
   _ target: AppTarget, executable: URL, frameworks: [PackageFramework], resourceBundles: [URL],
-  compiledAssets: URL?, output: URL, toolchain: Toolchain
+  compiledAssets: URL?, output: URL, toolchain: Toolchain, plugIns: [URL] = []
 ) throws -> URL {
   let manager = FileManager.default
   let settings = target.settings
@@ -29,7 +44,9 @@ func assembleBundle(
   try manager.createDirectory(at: executableDirectory, withIntermediateDirectories: true)
 
   try manager.copyReplacing(executable, to: executableDirectory.appendingPathComponent(executable.lastPathComponent))
-  try Data("APPL????".utf8).write(to: contents.appendingPathComponent("PkgInfo"))
+  if target.productType == .application {
+    try Data("APPL????".utf8).write(to: contents.appendingPathComponent("PkgInfo"))
+  }
 
   // Resources: Xcode's Copy Bundle Resources flattens groups into Resources/.
   for (source, name) in target.resources {
@@ -86,7 +103,12 @@ func assembleBundle(
       output.appendingPathComponent("\(app.lastPathComponent).dSYM"))
   }
 
-  try sign(app, target: target, work: output)
+  for plugIn in plugIns {
+    try manager.createDirectory(at: contents.appendingPathComponent("PlugIns"), withIntermediateDirectories: true)
+    try manager.copyReplacing(plugIn, to: contents.appendingPathComponent("PlugIns/\(plugIn.lastPathComponent)"))
+  }
+
+  try sign(app, target: target, work: output, hostsTests: !plugIns.isEmpty)
   return app
 }
 
@@ -98,8 +120,10 @@ func infoPlist(_ target: AppTarget, assetInfo: [String: Any], toolchain: Toolcha
     for (key, value) in info["properties"] as? [String: Any] ?? [:] { plist[key] = value }
   } else if let path = settings["INFOPLIST_FILE"], !path.isEmpty {
     plist = try readPlist(target.spec.root.appendingPathComponent(path))
+  } else if settings.bool("GENERATE_INFOPLIST_FILE") {
+    plist = generatedInfoDefaults.filter { !settings.expand($0.value).isEmpty }
   } else {
-    throw BuildError("target \(target.name) has neither `info:` nor INFOPLIST_FILE")
+    throw BuildError("target \(target.name) has no `info:`, INFOPLIST_FILE, or GENERATE_INFOPLIST_FILE")
   }
   if settings.bool("GENERATE_INFOPLIST_FILE") {
     for (key, value) in settings.all where key.hasPrefix("INFOPLIST_KEY_") {
@@ -121,7 +145,9 @@ func infoPlist(_ target: AppTarget, assetInfo: [String: Any], toolchain: Toolcha
   case .iOS:
     plist["MinimumOSVersion"] = try target.platform.deploymentTarget(settings)
     plist["UIDeviceFamily"] = deviceFamilies(settings).filter { $0 == 1 || $0 == 2 }
-    plist["UIRequiredDeviceCapabilities"] = plist["UIRequiredDeviceCapabilities"] ?? ["arm64"]
+    if target.productType == .application {
+      plist["UIRequiredDeviceCapabilities"] = plist["UIRequiredDeviceCapabilities"] ?? ["arm64"]
+    }
   case .macCatalyst:
     plist["UIDeviceFamily"] = deviceFamilies(settings).contains(6) ? [6] : [2]
     // The macOS release equivalent to the iOS deployment target, from the SDK's own map.
@@ -131,8 +157,10 @@ func infoPlist(_ target: AppTarget, assetInfo: [String: Any], toolchain: Toolcha
       throw BuildError("SDKSettings.json has no macOS equivalent for Mac Catalyst \(iOSMinimum)")
     }
     plist["LSMinimumSystemVersion"] = plist["LSMinimumSystemVersion"] ?? macOSMinimum
-    plist["NSSupportsAutomaticTermination"] = plist["NSSupportsAutomaticTermination"] ?? true
-    plist["NSSupportsSuddenTermination"] = plist["NSSupportsSuddenTermination"] ?? true
+    if target.productType == .application {
+      plist["NSSupportsAutomaticTermination"] = plist["NSSupportsAutomaticTermination"] ?? true
+      plist["NSSupportsSuddenTermination"] = plist["NSSupportsSuddenTermination"] ?? true
+    }
   }
   return plist
 }
@@ -228,7 +256,7 @@ private func expandPlist(_ value: Any, _ settings: BuildSettings) throws -> Any 
 
 /// Code-sign the bundle with `rcodesign`: ad-hoc for `CODE_SIGN_IDENTITY = -`,
 /// otherwise with the PKCS#12 identity named by the environment.
-private func sign(_ app: URL, target: AppTarget, work: URL) throws {
+private func sign(_ app: URL, target: AppTarget, work: URL, hostsTests: Bool) throws {
   let settings = target.settings
   var entitlements: [String: Any] = [:]
   if let spec = target.raw["entitlements"] as? [String: Any], let properties = spec["properties"] as? [String: Any] {
@@ -237,8 +265,18 @@ private func sign(_ app: URL, target: AppTarget, work: URL) throws {
     entitlements = try readPlist(target.spec.root.appendingPathComponent(path))
   }
   // Xcode injects this for development signing so a debugger can attach.
-  if target.configuration.lowercased() == "debug", settings.bool("CODE_SIGN_INJECT_BASE_ENTITLEMENTS") {
+  // Only an application carries them; Xcode signs a test bundle without any.
+  if target.productType == .application, target.configuration.lowercased() == "debug",
+    settings.bool("CODE_SIGN_INJECT_BASE_ENTITLEMENTS")
+  {
     entitlements["com.apple.security.get-task-allow"] = true
+  }
+  // A macOS test host gets the sandbox exceptions testmanagerd needs to drive it.
+  if hostsTests, target.platform.isMacBundle {
+    entitlements["com.apple.security.temporary-exception.files.absolute-path.read-only"] = ["/"]
+    entitlements["com.apple.security.temporary-exception.mach-lookup.global-name"] = [
+      "com.apple.testmanagerd", "com.apple.dt.testmanagerd.runner", "com.apple.coresymbolicationd",
+    ]
   }
 
   var arguments = ["sign"]

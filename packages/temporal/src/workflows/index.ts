@@ -44,8 +44,6 @@ import { runPokeemeraldDataRefresh as _runPokeemeraldDataRefresh } from "./dpp-p
 import type { PokeemeraldDataRefreshResult } from "#activities/dpp-pokeemerald-data-refresh.ts";
 import { runScoutShowcaseRefresh as _runScoutShowcaseRefresh } from "./scout/scout-showcase-refresh.ts";
 import { runScoutQueueWindowsWatch as _runScoutQueueWindowsWatch } from "./scout/scout-queue-windows.ts";
-import { runScoutCompetitionUpdatesWorkflow as _runScoutCompetitionUpdatesWorkflow } from "./scout/scout-competition-updates.ts";
-import type { ScoutCompetitionUpdateDispatchResult } from "./scout/scout-competition-updates.ts";
 import type { ScoutQueueWindowsResult } from "#activities/scout/scout-queue-windows.ts";
 import type { ScoutShowcaseRefreshResult } from "#activities/scout/scout-showcase-refresh.ts";
 import { runScoutBryanBucksAnalyticsWorkflow as _runScoutBryanBucksAnalyticsWorkflow } from "./scout/scout-bryan-bucks.ts";
@@ -56,7 +54,6 @@ import type {
   ScoutSeasonRefreshResult,
 } from "#activities/scout/scout-season-refresh.ts";
 import { runHomelabAuditWorkflow as _runHomelabAuditWorkflow } from "./homelab/homelab-audit.ts";
-import { runProtobufWatch as _runProtobufWatch } from "./ci/protobuf-watch.ts";
 import { runCiIoTelemetry as _runCiIoTelemetry } from "./ci/ci-io-telemetry.ts";
 import { runTasknotesCanary as _runTasknotesCanary } from "./tasknotes-canary.ts";
 import { monitorReportFreshness as _monitorReportFreshness } from "./scout/report-freshness.ts";
@@ -135,6 +132,17 @@ import type {
   OpsDigestKind,
   OpsPublishSummary,
 } from "#activities/ops/ops-publish.ts";
+import { agentChatWorkflow as _agentChatWorkflow } from "./agent-chat.ts";
+import { agentChatTurnReceiptWorkflow as _agentChatTurnReceiptWorkflow } from "./agent-chat-turn-receipt.ts";
+import type { AgentChatReceiptInput } from "#shared/agent/agent-chat-receipt.ts";
+import { agentChatCatalogWorkflow as _agentChatCatalogWorkflow } from "./agent-chat-catalog.ts";
+import { scheduledAgentChatTurnWorkflow as _scheduledAgentChatTurnWorkflow } from "./scheduled-agent-chat-turn.ts";
+import type {
+  AgentChatCatalogState,
+  AgentChatTurnResult,
+  AgentChatWorkflowInput,
+  ScheduledAgentChatTurnInput,
+} from "#shared/agent/agent-chat.ts";
 
 export function workerDeploymentCanaryWorkflow(
   input: WorkerDeploymentCanaryInput,
@@ -321,13 +329,6 @@ export async function runScoutQueueWindowsWatch(): Promise<ScoutQueueWindowsResu
   return _runScoutQueueWindowsWatch();
 }
 
-export async function runScoutCompetitionUpdatesWorkflow(): Promise<{
-  beta: ScoutCompetitionUpdateDispatchResult;
-  prod: ScoutCompetitionUpdateDispatchResult;
-}> {
-  return _runScoutCompetitionUpdatesWorkflow();
-}
-
 export async function runScoutSeasonRefreshWorkflow(
   input: ScoutSeasonRefreshInput = {},
 ): Promise<ScoutSeasonRefreshResult> {
@@ -339,10 +340,6 @@ export async function runHomelabAuditWorkflow(
   reportTaskQueue?: string,
 ): Promise<void> {
   return _runHomelabAuditWorkflow(input, reportTaskQueue);
-}
-
-export async function runProtobufWatch(): Promise<void> {
-  return _runProtobufWatch();
 }
 
 export async function runTasknotesCanary(): Promise<void> {
@@ -443,4 +440,28 @@ export async function runOpsDigest(input: {
   kind: OpsDigestKind;
 }): Promise<{ kind: OpsDigestKind }> {
   return _runOpsDigest(input);
+}
+
+export async function agentChatWorkflow(
+  input: AgentChatWorkflowInput,
+): Promise<never> {
+  return _agentChatWorkflow(input);
+}
+
+export async function agentChatTurnReceiptWorkflow(
+  input: AgentChatReceiptInput,
+): Promise<AgentChatTurnResult> {
+  return _agentChatTurnReceiptWorkflow(input);
+}
+
+export async function agentChatCatalogWorkflow(
+  state?: AgentChatCatalogState,
+): Promise<never> {
+  return _agentChatCatalogWorkflow(state);
+}
+
+export async function scheduledAgentChatTurnWorkflow(
+  input: ScheduledAgentChatTurnInput,
+): Promise<AgentChatTurnResult> {
+  return _scheduledAgentChatTurnWorkflow(input);
 }

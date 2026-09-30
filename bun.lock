@@ -295,6 +295,24 @@
         "typescript": "^6.0.3",
       },
     },
+    "packages/cross-compilers-site": {
+      "name": "@shepherdjerred/cross-compilers-site",
+      "version": "0.0.1",
+      "dependencies": {
+        "@iconify-json/heroicons": "^1.2.3",
+        "@tailwindcss/vite": "^4.2.4",
+        "astro": "^7.3.3",
+        "astro-icon": "^1.1.5",
+        "tailwindcss": "^4.2.4",
+      },
+      "devDependencies": {
+        "@astrojs/check": "^0.9.8",
+        "@shepherdjerred/eslint-config": "workspace:*",
+        "@typescript/native": "npm:typescript@7.0.2",
+        "jiti": "^2.7.0",
+        "typescript": "^6.0.3",
+      },
+    },
     "packages/discord-plays-core": {
       "name": "@shepherdjerred/discord-plays-core",
       "version": "0.0.1",
@@ -1046,24 +1064,6 @@
     "packages/macos-cross-compiler": {
       "name": "@shepherdjerred/macos-cross-compiler",
       "version": "0.1.0",
-    },
-    "packages/macos-cross-site": {
-      "name": "@shepherdjerred/macos-cross-site",
-      "version": "0.0.1",
-      "dependencies": {
-        "@iconify-json/heroicons": "^1.2.3",
-        "@tailwindcss/vite": "^4.2.4",
-        "astro": "^7.3.3",
-        "astro-icon": "^1.1.5",
-        "tailwindcss": "^4.2.4",
-      },
-      "devDependencies": {
-        "@astrojs/check": "^0.9.8",
-        "@shepherdjerred/eslint-config": "workspace:*",
-        "@typescript/native": "npm:typescript@7.0.2",
-        "jiti": "^2.7.0",
-        "typescript": "^6.0.3",
-      },
     },
     "packages/monarch": {
       "name": "@shepherdjerred/monarch",
@@ -2048,7 +2048,6 @@
         "octokit": "^5.0.4",
         "prom-client": "^15.1.3",
         "sanitize-html": "^2.17.4",
-        "semver": "^7.7.3",
         "simple-git": "^3.36.0",
         "zod": "^4.4.3",
       },
@@ -2061,7 +2060,6 @@
         "@tsconfig/recommended": "^1.0.13",
         "@tsconfig/strictest": "^2.0.8",
         "@types/bun": "1.4.2",
-        "@types/semver": "^7.7.1",
         "@typescript/native": "npm:typescript@7.0.2",
         "@vitest/coverage-istanbul": "5.0.1",
         "eslint": "^10.7.0",
@@ -4109,6 +4107,8 @@
 
     "@shepherdjerred/cooklang-rich-preview": ["@shepherdjerred/cooklang-rich-preview@workspace:packages/cooklang-rich-preview"],
 
+    "@shepherdjerred/cross-compilers-site": ["@shepherdjerred/cross-compilers-site@workspace:packages/cross-compilers-site"],
+
     "@shepherdjerred/discord-plays-core": ["@shepherdjerred/discord-plays-core@workspace:packages/discord-plays-core"],
 
     "@shepherdjerred/discord-plays-mario-kart-scripts": ["@shepherdjerred/discord-plays-mario-kart-scripts@workspace:packages/discord-plays-mario-kart"],
@@ -4148,8 +4148,6 @@
     "@shepherdjerred/loaded": ["@shepherdjerred/loaded@workspace:packages/loaded"],
 
     "@shepherdjerred/macos-cross-compiler": ["@shepherdjerred/macos-cross-compiler@workspace:packages/macos-cross-compiler"],
-
-    "@shepherdjerred/macos-cross-site": ["@shepherdjerred/macos-cross-site@workspace:packages/macos-cross-site"],
 
     "@shepherdjerred/monarch": ["@shepherdjerred/monarch@workspace:packages/monarch"],
 
@@ -4690,8 +4688,6 @@
     "@types/sanitize-html": ["@types/sanitize-html@2.16.1", "", { "dependencies": { "htmlparser2": "^10.1" } }, "sha512-n9wjs8bCOTyN/ynwD8s/nTcTreIHB1vf31vhLMGqUPNHaweKC4/fAl4Dj+hUlCTKYgm4P3k83fmiFfzkZ6sgMA=="],
 
     "@types/sax": ["@types/sax@1.2.7", "", { "dependencies": { "@types/node": "*" } }, "sha512-rO73L89PJxeYM3s3pPPjiPgVVcymqU490g0YO5n5By0k2Erzj6tay/4lr1CHAAU4JyOWd1rpQ8bCf6cZfHU96A=="],
-
-    "@types/semver": ["@types/semver@7.8.0", "", {}, "sha512-1mAINjtQCXXeLkJ9ehXkwOcBpqtLxiVtKhpUf83DdRNdQKV0iXZpaHYqRr7nj+wvxuJzoAmAwXI+sCNMv1CzLQ=="],
 
     "@types/send": ["@types/send@1.2.1", "", { "dependencies": { "@types/node": "*" } }, "sha512-arsCikDvlU99zl1g69TcAB3mzZPpxgw0UQnaHeC1Nwb015xp8bknZv5rIfri9xTOcMuaVgvabfIRA7PSZVuZIQ=="],
 

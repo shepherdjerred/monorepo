@@ -40,6 +40,10 @@ import type { UserId } from "@shepherdjerred/streambot/types/ids.ts";
 import { PlaybackCommandService } from "@shepherdjerred/streambot/commands/playback-command-service.ts";
 import { PlaybackCommandBoundaryError } from "@shepherdjerred/streambot/commands/playback-command-errors.ts";
 import {
+  SportsProviderPreferenceSchema,
+  type SportsProviderPreference,
+} from "@shepherdjerred/streambot/sports/types.ts";
+import {
   inferMediaIntent,
   MediaPlacementSchema,
   MediaSourcePreferenceSchema,
@@ -58,6 +62,7 @@ type PlayCommandInput = {
   readonly next: boolean;
   /** Raw `mode:` option. The feature gate is applied later, per request, not here. */
   readonly mode: MediaMode | undefined;
+  readonly provider?: SportsProviderPreference;
 };
 
 type DiscoveredPlayInput = PlayCommandInput & {
@@ -71,6 +76,15 @@ function ackMessage(
   subtitles: SubtitlePref | undefined,
 ): string {
   return `${next ? "Up next" : "Queued"}: **${label}**${subtitlesSuffix(subtitles)}\n\nTip: ${randomTip()}`;
+}
+
+function requestedSportsProvider(
+  interaction: CommandInteraction,
+): SportsProviderPreference | undefined {
+  const value = interaction.getString("provider");
+  return value === null
+    ? undefined
+    : SportsProviderPreferenceSchema.parse(value);
 }
 
 export async function runPlayCommand(
@@ -92,6 +106,7 @@ export async function runPlayCommand(
   const requestedMode = MediaModeSchema.parse(
     interaction.getString("mode") ?? "auto",
   );
+  const provider = requestedSportsProvider(interaction);
 
   // Subtitles only exist on a picture. `mode:music` plays audio only, `prepareStream` throws if a
   // burn is passed with it, and the music branch drops one silently — so an explicit subtitle
@@ -141,7 +156,7 @@ export async function runPlayCommand(
     return;
   }
 
-  if (deps.discovery !== undefined) {
+  if (deps.discovery !== undefined || deps.sports !== undefined) {
     await runDiscoveredPlay({
       deps,
       interaction,
@@ -151,6 +166,7 @@ export async function runPlayCommand(
       mode: effectiveMode,
       source: selectedSource,
       placement: selectedPlacement,
+      ...(provider === undefined ? {} : { provider }),
     });
     return;
   }
@@ -324,6 +340,7 @@ async function runDiscoveredPlay(input: DiscoveredPlayInput): Promise<void> {
       spoken: false,
       ...(subtitles === undefined ? {} : { subtitles }),
       ...(mode === undefined ? {} : { mode }),
+      ...(input.provider === undefined ? {} : { provider: input.provider }),
     });
     await interaction.editReply(`${result.message}\n\nTip: ${randomTip()}`);
   } catch (error) {
