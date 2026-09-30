@@ -167,6 +167,17 @@ beforeEach(() => {
   world.renderDelayMs = 0;
 });
 
+async function expectStatusWithoutMatchRender(
+  intentKey: NotificationIntentKey,
+): Promise<void> {
+  expect(
+    await renderNotificationArtifactV2({ stage: STAGE, intentKey }),
+  ).toEqual({ outcome: "rendered" });
+  expect(world.renders).toBe(0);
+  expect(world.puts).toHaveLength(0);
+  expect(await prisma.matchProcessingReceipt.count()).toBe(0);
+}
+
 describe("render receipts are keyed by kind", () => {
   test("a Dare status has no match render receipt or object", async () => {
     const intentKey = NotificationIntentKeySchema.parse(
@@ -195,12 +206,7 @@ describe("render receipts are keyed by kind", () => {
         }),
       }),
     ).toEqual({ outcome: "applied" });
-    expect(
-      await renderNotificationArtifactV2({ stage: STAGE, intentKey }),
-    ).toEqual({ outcome: "rendered" });
-    expect(world.renders).toBe(0);
-    expect(world.puts).toHaveLength(0);
-    expect(await prisma.matchProcessingReceipt.count()).toBe(0);
+    await expectStatusWithoutMatchRender(intentKey);
   });
 
   test("a Duel status has no match render receipt or object", async () => {
@@ -231,12 +237,7 @@ describe("render receipts are keyed by kind", () => {
         }),
       }),
     ).toEqual({ outcome: "applied" });
-    expect(
-      await renderNotificationArtifactV2({ stage: STAGE, intentKey }),
-    ).toEqual({ outcome: "rendered" });
-    expect(world.renders).toBe(0);
-    expect(world.puts).toHaveLength(0);
-    expect(await prisma.matchProcessingReceipt.count()).toBe(0);
+    await expectStatusWithoutMatchRender(intentKey);
   });
   test("a standing prematch receipt does not satisfy a postmatch render", async () => {
     const matchId = nextMatch();

@@ -118,11 +118,20 @@ describe("classifying a failed channel send", () => {
 
 describe("classifying an audited DM send", () => {
   test("keeps a caught send error unknown to prevent a duplicate DM", () => {
-    expect(classifyDmSendStatus("failed")).toEqual({ outcome: "unknown" });
+    expect(classifyDmSendStatus("failed", true)).toEqual({
+      outcome: "unknown",
+    });
+  });
+
+  test("retries a failure before the DM request", () => {
+    expect(classifyDmSendStatus("failed", false)).toEqual({
+      outcome: "failed",
+      failure: { classification: "retryable", reason: "service-unavailable" },
+    });
   });
 
   test("retries a definite budget deferral", () => {
-    expect(classifyDmSendStatus("deferred")).toEqual({
+    expect(classifyDmSendStatus("deferred", false)).toEqual({
       outcome: "failed",
       failure: { classification: "retryable", reason: "service-unavailable" },
     });

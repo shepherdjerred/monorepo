@@ -218,9 +218,9 @@ async function sendWithoutReply(
  *
  * `sendDM` is the only path allowed to message a user — it owns the DmAuditLog
  * row and the non-core message budget — so this routes through it rather than
- * opening a second send path. It never throws and never returns a message id:
- * a failed send can be ambiguous because the Discord request may have landed
- * before the helper caught the error.
+ * opening a second send path. It does not return a message id. The callback
+ * marks when a request may have left, so a failure before that point retries
+ * and a failure afterward stays unknown for operator resolution.
  *
  * A DM cannot carry the report image. `sendDM` sends content and embeds, not
  * files, and a match report IS its attachment — so an intent that would deliver
@@ -235,21 +235,31 @@ async function sendToAccount(
   kind: NotificationIntentKind,
   guildId: DiscordGuildId | undefined,
 ): Promise<ScoutNotificationDeliveryV2Result> {
-  const status = await sendDM({
-    client,
-    userId: accountId,
-    message: message.content ?? "",
-    kind: kind === "dare-status" ? "dare_notification" : "match_notification",
-    ...(guildId === undefined ? {} : { guildId }),
-    suppressMentions: kind === "dare-status",
-    prisma,
-  });
-  return classifyDmSendStatus(status);
+  let sendAttempted = false;
+  try {
+    const status = await sendDM({
+      client,
+      userId: accountId,
+      message: message.content ?? "",
+      kind: kind === "dare-status" ? "dare_notification" : "match_notification",
+      ...(guildId === undefined ? {} : { guildId }),
+      suppressMentions: kind === "dare-status",
+      prisma,
+      onSendAttempt: () => {
+        sendAttempted = true;
+      },
+    });
+    return classifyDmSendStatus(status, sendAttempted);
+  } catch (error) {
+    logger.error(`Audited DM delivery to ${accountId} failed`, error);
+    return classifyDmSendStatus("failed", sendAttempted);
+  }
 }
 
-/** A caught DM send error may follow a successful Discord write. */
+/** A caught error is ambiguous only after the Discord request may have left. */
 export function classifyDmSendStatus(
   status: DmStatus,
+  sendAttempted: boolean,
 ): ScoutNotificationDeliveryV2Result {
   switch (status) {
     case "sent":
@@ -270,7 +280,15 @@ export function classifyDmSendStatus(
         failure: { classification: "retryable", reason: "service-unavailable" },
       };
     case "failed":
-      return { outcome: "unknown" };
+      return sendAttempted
+        ? { outcome: "unknown" }
+        : {
+            outcome: "failed",
+            failure: {
+              classification: "retryable",
+              reason: "service-unavailable",
+            },
+          };
   }
 }
 
