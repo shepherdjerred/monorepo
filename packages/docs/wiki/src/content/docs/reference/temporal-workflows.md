@@ -108,6 +108,8 @@ changing model identity.
 | competition updates        | every minute                      | deterministic          | due Discord standings          |
 | clash snapshot             | every 15 minutes                  | deterministic          | Clash-v1 schedule and roster   |
 | notification intent expiry | every 5 minutes                   | deterministic          | overdue intents to `expired`   |
+| progression reconciliation | every minute, initially paused    | deterministic          | resume interrupted starts      |
+| V2 pipeline reconciliation | every minute, initially paused    | deterministic          | re-drive stalled V2 work       |
 | realtime and post-match    | fixed Schedules                   | deterministic          | match child Workflows          |
 | initial history            | reconciliation                    | deterministic          | paged S3/lake ingestion        |
 | Explore ranked history     | on-demand Explore tool            | deterministic          | 100 ranked games + lake fold   |

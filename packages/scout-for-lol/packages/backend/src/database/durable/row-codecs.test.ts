@@ -448,6 +448,43 @@ describe("MatchNotificationIntent codec", () => {
   });
 });
 
+describe("MatchNotificationIntent subject codec", () => {
+  const original: MatchNotificationIntentRecord = {
+    matchId: RiotMatchIdSchema.parse(MATCH_ID),
+    intent: NotificationIntentSchema.parse({
+      key: "intent-NA1_5312279829-post-match",
+      kind: "postmatch",
+      origin: { kind: "live" },
+      target: { kind: "channel", channelId: CHANNEL_ID },
+      freshnessDeadline: LATER_ISO,
+      createdAt: AT_ISO,
+      attemptCount: 0,
+      state: { kind: "pending" },
+    }),
+  };
+
+  test("reads a match row written by an older pod without subjectId", () => {
+    const row = matchNotificationIntentRecordToRow(original);
+    expect(
+      matchNotificationIntentRowToRecord({ ...row, subjectId: null }),
+    ).toEqual(original);
+  });
+
+  test("rejects a subject that disagrees with the match identity", () => {
+    const row = matchNotificationIntentRecordToRow(original);
+    expect(() =>
+      matchNotificationIntentRowToRecord({ ...row, subjectId: "NA1_2" }),
+    ).toThrow(/match subject/);
+    expect(() =>
+      matchNotificationIntentRowToRecord({
+        ...row,
+        subjectKind: "duel",
+        riotMatchId: null,
+      }),
+    ).toThrow(/match subject/);
+  });
+});
+
 describe("MatchRecoveryBatch codec", () => {
   const baseRow = {
     recoveryBatchId: "recovery-2026-09-07",

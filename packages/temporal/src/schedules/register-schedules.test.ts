@@ -410,17 +410,6 @@ describe("ops overview schedules", () => {
   });
 });
 
-test("protobuf watch timeout covers collection and both delivery paths", () => {
-  const timeout = findScheduleById(
-    "protobufjs-v8-watch-weekly",
-  ).workflowExecutionTimeout;
-  expect(timeout).toBe("25 minutes");
-  if (timeout === undefined) {
-    throw new Error("protobufjs-v8-watch-weekly lacks a timeout");
-  }
-  expect(durationToMs(timeout)).toBeGreaterThan(15 * ONE_MINUTE);
-});
-
 test.each([
   ["scout-season-refresh-weekly", "90 minutes", 78],
   ["scout-queue-windows-daily", "90 minutes", 75],
@@ -509,7 +498,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "runLinkRotScanWorkflow",
   "monitorReportFreshness",
   "generateDependencySummary",
-  "runProtobufWatch",
   "runTasknotesCanary",
   "runDnsAudit",
   "runHomelabAuditWorkflow",
@@ -534,7 +522,6 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   // carries its own startToCloseTimeout + retry budget.
   "runScoutShowcaseRefresh",
   "runScoutQueueWindowsWatch",
-  "runScoutCompetitionUpdatesWorkflow",
   "runScoutSeasonRefreshWorkflow",
   "runScoutBryanBucksAnalyticsWorkflow",
   "runZfsMaintenanceWorkflow",
@@ -562,6 +549,7 @@ const WORKFLOWS_WITHOUT_LONG_SLEEPS = new Set([
   "scoutRealtimePollWorkflow",
   "scoutPostMatchDiscoveryV2Workflow",
   "scoutIngestionReconciliationWorkflow",
+  "scoutPipelineReconciliationV2Workflow",
   "scoutBackgroundJobWorkflow",
   "scoutReportScheduleReconcilerWorkflow",
   "scoutReportLakeWorkflow",
@@ -685,7 +673,28 @@ describe("DELETED_SCHEDULE_IDS", () => {
   });
 });
 
-test("terminates running executions of retired workflow types", async () => {
+const RETIRED_FIXTURE = [
+  { workflowType: "retiredProdWorkflow", namespace: "prod" },
+  { workflowType: "retiredBetaWorkflow", namespace: "beta" },
+] as const;
+
+function createWorkflowQueryRecorder(queries: string[]) {
+  return {
+    workflow: {
+      list({ query }: { query: string }) {
+        queries.push(query);
+        return (async function* () {
+          // These tests assert which workflow types are queried.
+        })();
+      },
+      getHandle() {
+        return { terminate: () => Promise.resolve() };
+      },
+    },
+  };
+}
+
+test("terminates running executions of injected retired workflow types", async () => {
   const queries: string[] = [];
   const terminated: string[] = [];
   const client = {
@@ -706,15 +715,12 @@ test("terminates running executions of retired workflow types", async () => {
     },
   };
 
-  // "dev" reconciles every namespace, so this covers the whole list.
-  await terminateRetiredWorkflowExecutions(client, "dev");
+  // "dev" reconciles every namespace, so this covers the whole injected list.
+  await terminateRetiredWorkflowExecutions(client, "dev", RETIRED_FIXTURE);
 
   expect(queries).toEqual([
-    'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
-    'WorkflowType = "runOpenAiComplimentaryUsageReconciliation" AND ExecutionStatus = "Running"',
-    'WorkflowType = "runScoutWeeklyParlayWorkflow" AND ExecutionStatus = "Running"',
-    'WorkflowType = "runScoutWeeklyParlayCatchupWorkflow" AND ExecutionStatus = "Running"',
-    'WorkflowType = "runCiIoImpact" AND ExecutionStatus = "Running"',
+    'WorkflowType = "retiredProdWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "retiredBetaWorkflow" AND ExecutionStatus = "Running"',
   ]);
   expect(terminated).toEqual(
     Array.from(
@@ -726,54 +732,40 @@ test("terminates running executions of retired workflow types", async () => {
 });
 
 test("terminates a retired workflow in the namespace it actually ran in", async () => {
-  // A week-long weekly parlay execution can still be open when this deploys.
-  // Deleting its Schedule only stops future starts, so both handlers must be
-  // terminated or the execution retries against a bundle without them.
+  // Deleting a Schedule only stops future starts. Existing runs still need
+  // termination in the namespace where they started.
   const queries: string[] = [];
-  const client = {
-    workflow: {
-      list({ query }: { query: string }) {
-        queries.push(query);
-        return (async function* () {
-          // No executions; this test only asserts coverage of the type list.
-        })();
-      },
-      getHandle() {
-        return { terminate: () => Promise.resolve() };
-      },
-    },
-  };
-
-  // The weekly parlay schedule was beta-only. Terminating just in prod would
-  // have left exactly the week-long executions this is meant to stop.
-  await terminateRetiredWorkflowExecutions(client, "beta");
+  await terminateRetiredWorkflowExecutions(
+    createWorkflowQueryRecorder(queries),
+    "beta",
+    RETIRED_FIXTURE,
+  );
 
   expect(queries).toEqual([
-    'WorkflowType = "runScoutWeeklyParlayWorkflow" AND ExecutionStatus = "Running"',
-    'WorkflowType = "runScoutWeeklyParlayCatchupWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "retiredBetaWorkflow" AND ExecutionStatus = "Running"',
   ]);
 
   const prodQueries: string[] = [];
   await terminateRetiredWorkflowExecutions(
-    {
-      workflow: {
-        list({ query }: { query: string }) {
-          prodQueries.push(query);
-          return (async function* () {
-            // No executions; this asserts which types are queried.
-          })();
-        },
-        getHandle() {
-          return { terminate: () => Promise.resolve() };
-        },
-      },
-    },
+    createWorkflowQueryRecorder(prodQueries),
     "prod",
+    RETIRED_FIXTURE,
   );
   expect(prodQueries).toEqual([
-    'WorkflowType = "observeReviewSignalsWorkflow" AND ExecutionStatus = "Running"',
+    'WorkflowType = "retiredProdWorkflow" AND ExecutionStatus = "Running"',
+  ]);
+});
+
+test("terminates workflows for schedules being removed", async () => {
+  const queries: string[] = [];
+  await terminateRetiredWorkflowExecutions(
+    createWorkflowQueryRecorder(queries),
+    "prod",
+  );
+
+  expect(queries).toEqual([
     'WorkflowType = "runOpenAiComplimentaryUsageReconciliation" AND ExecutionStatus = "Running"',
-    'WorkflowType = "runCiIoImpact" AND ExecutionStatus = "Running"',
+    'WorkflowType = "runProtobufWatch" AND ExecutionStatus = "Running"',
   ]);
 });
 
@@ -950,43 +942,17 @@ describe("orphan schedule detection", () => {
   const declaredIds = new Set(SCHEDULES.map((schedule) => schedule.id));
   const deletedIds = new Set<string>(DELETED_SCHEDULE_IDS);
 
-  test("review-signal collector schedule is queued for deletion", () => {
-    expect(DELETED_SCHEDULE_IDS).toContain("review-signals-collect");
-    expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
-      "review-signals-collect",
-    );
-  });
-
-  test("retired CI I/O schedule is queued for deletion", () => {
-    expect(DELETED_SCHEDULE_IDS).toContain("ci-io-post-merge-impact");
-    expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
-      "ci-io-post-merge-impact",
-    );
-  });
-
-  test("the retired weekly parlay schedule is queued for deletion in beta", () => {
-    // Listing it among the prod ids would not delete it: reconciliation filters
-    // deletions by namespace, and this schedule only ever existed in beta.
-    const entry = DELETED_SCHEDULES.find(
-      (schedule) => schedule.id === "scout-weekly-parlay",
-    );
-    expect(entry?.namespace).toBe("beta");
-    expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(
-      "scout-weekly-parlay",
-    );
-  });
-
-  test("both pokeemerald wasm schedules are queued for deletion", () => {
-    // The pokeemerald.wasm download workflow is gone — the wasm was built
-    // from source in the old CI image build. Both the weekly and the older monthly
-    // schedule must be deleted (and absent from SCHEDULES) so neither keeps
-    // firing a workflow that's no longer in the bundle.
-    for (const id of [
-      "pokeemerald-wasm-weekly",
-      "pokeemerald-wasm-monthly",
+  test("the retired tournament lobby pollers are deleted in their own namespaces", () => {
+    // Reconciliation filters deletions by namespace, so each poller must be
+    // listed under the namespace it lived in.
+    for (const [id, namespace] of [
+      ["scout-prod-tournament-lobby-poll", "prod"],
+      ["scout-beta-tournament-lobby-poll", "beta"],
     ] as const) {
-      expect(DELETED_SCHEDULE_IDS).toContain(id);
-      expect(SCHEDULES.map((s) => s.id)).not.toContain(id);
+      expect(
+        DELETED_SCHEDULES.find((schedule) => schedule.id === id)?.namespace,
+      ).toBe(namespace);
+      expect(SCHEDULES.map((schedule) => schedule.id)).not.toContain(id);
     }
   });
 

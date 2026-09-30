@@ -118,13 +118,12 @@ authenticated source must become a typed deterministic collector. Stable
 recurring checks, including the daily homelab audit, already use that stronger
 pattern.
 
-The trusted, source-controlled agents are the exception that proves the rule.
-The homelab audit and the Scout season refresh do inherit the worker's
-operational credentials, because their prompts are code rather than user input.
-Even there the same three categories are removed: the bot's own GitHub
-credentials, every report-delivery credential, and every inference credential
-other than the one their own provider needs — a Claude agent never sees the
-Codex subscription token, and vice versa.
+The trusted, source-controlled agent is the exception that proves the rule.
+The Scout season refresh does inherit the worker's operational credentials,
+because its prompt is code rather than user input. Even there the same three
+categories are removed: the bot's own GitHub credentials, every report-delivery
+credential, and every inference credential other than the one its own provider
+needs.
 
 ## The blast radius, stated plainly
 

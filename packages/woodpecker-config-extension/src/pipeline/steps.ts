@@ -1,7 +1,7 @@
 import type { CiImages } from "#src/images.ts";
 import type { CiStep } from "#src/pipeline/model.ts";
 import { BUN_CACHE, BUN_CACHE_CONTROL, UV_CACHE } from "#src/pipeline/cache.ts";
-import { VERIFY_TIER } from "#src/pipeline/tiers.ts";
+import { TURBO_VERIFY_TIER } from "#src/pipeline/tiers.ts";
 import { scannerSteps } from "#src/pipeline/lanes/scanners.ts";
 import { alertDashboardSteps } from "#src/pipeline/lanes/alert-dashboard.ts";
 import { resumeSteps } from "#src/pipeline/lanes/resume.ts";
@@ -111,7 +111,7 @@ export function buildPipelineSteps({
     CI_LAST_IMAGE_RELEASE_COMMIT: imageReleaseBase ?? "",
   };
 
-  return [
+  const steps: CiStep[] = [
     {
       key: "verify",
       label: "verify",
@@ -123,7 +123,7 @@ export function buildPipelineSteps({
         CI_CHANGED_BASE: verifyBase ?? changedBase ?? "",
       },
       timeoutMinutes: 30,
-      resources: VERIFY_TIER,
+      resources: TURBO_VERIFY_TIER,
       secrets: [
         {
           secret: "ci-github-credentials",
@@ -152,4 +152,16 @@ export function buildPipelineSteps({
     ...observabilityE2eSteps(images),
     ...prGateSteps(images),
   ];
+
+  // Each workflow has its own container and environment. The in-step
+  // ci-changed selectors must receive the same last-green base as the graph
+  // selector; otherwise they fail open and publish, deploy, or rebuild on
+  // every main push. Verify may override it with its newer successful base.
+  return steps.map((step) => ({
+    ...step,
+    environment: {
+      CI_CHANGED_BASE: changedBase ?? "",
+      ...step.environment,
+    },
+  }));
 }

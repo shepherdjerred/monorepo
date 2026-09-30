@@ -1,4 +1,4 @@
-import { patched, proxyActivities, sleep } from "@temporalio/workflow";
+import { proxyActivities, sleep } from "@temporalio/workflow";
 import type { AgentTaskActivities } from "#activities/agent/agent-task.ts";
 import type { RunAgentTaskResult } from "#shared/agent/agent-task-result-types.ts";
 import type { AgentTaskInput } from "#shared/agent/agent-task.ts";
@@ -31,28 +31,18 @@ export function agentActivityRetryFor(
 }
 
 export function agentTaskFailureStageFor(input: {
-  v2Reporting: boolean;
   reportAttempted: boolean;
   reportDelivered: boolean;
-  postDeliveryFailureReporting: boolean;
 }): "execution" | "follow-up-dispatch" | undefined {
-  if (!input.v2Reporting) {
-    return undefined;
-  }
   if (!input.reportAttempted) {
     return "execution";
   }
-  return input.reportDelivered && input.postDeliveryFailureReporting
-    ? "follow-up-dispatch"
-    : undefined;
+  return input.reportDelivered ? "follow-up-dispatch" : undefined;
 }
 
 function agentActivitiesFor(
   input: AgentTaskInput,
-): Pick<
-  AgentTaskActivities,
-  "runAgentTask" | "investigateAgentTask" | "finalizeAgentTask"
-> {
+): Pick<AgentTaskActivities, "investigateAgentTask" | "finalizeAgentTask"> {
   const timeoutMinutes = input.agentTimeoutMinutes ?? 90;
   return proxyActivities<AgentTaskActivities>({
     taskQueue: TASK_QUEUES.AGENT_TASK,
@@ -65,12 +55,8 @@ function agentActivitiesFor(
 async function executeAgentTask(
   input: AgentTaskInput,
   workdir: string,
-  twoPhaseV2: boolean,
 ): Promise<RunAgentTaskResult> {
   const activities = agentActivitiesFor(input);
-  if (!twoPhaseV2 || input.contractVersion !== 2) {
-    return activities.runAgentTask({ input, workdir });
-  }
   const investigation = await activities.investigateAgentTask({
     input,
     workdir,
@@ -105,40 +91,16 @@ async function waitUntilRunAt(runAt: string | undefined): Promise<void> {
 async function dispatchFollowUp(
   input: AgentTaskInput,
   result: RunAgentTaskResult,
-  allowLegacySelfCancel: boolean,
 ): Promise<void> {
-  const payload = result.payload;
-  if (payload.followUp !== undefined) {
+  if (result.payload.followUp !== undefined) {
     await workdirActivities.scheduleAgentTaskFollowUp({
       parent: input,
-      followUp: payload.followUp,
-    });
-  }
-
-  if (
-    allowLegacySelfCancel &&
-    result.contractVersion === 1 &&
-    "cancelCron" in payload &&
-    payload.cancelCron === true &&
-    input.allowSelfCancel &&
-    input.scheduleId !== undefined
-  ) {
-    await workdirActivities.pauseAgentTaskSchedule({
-      scheduleId: input.scheduleId,
-      reason:
-        payload.cancelReason ??
-        `Agent task "${input.title}" requested schedule pause`,
+      followUp: result.payload.followUp,
     });
   }
 }
 
 export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
-  const v2Reporting = patched("agent-task-report-v2");
-  const twoPhaseV2 = patched("agent-task-two-phase-v2");
-  const requireV2 = patched("agent-task-require-v2");
-  const postDeliveryFailureReporting = patched(
-    "agent-task-post-delivery-failure-report",
-  );
   const emailActivities = reportEmailActivities;
   await waitUntilRunAt(input.runAt);
   setWorkflowPhase("**Phase:** preparing an isolated work directory");
@@ -152,26 +114,24 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
   let terminalFailure: { error: unknown } | undefined;
 
   try {
-    if (requireV2 && input.contractVersion !== 2) {
+    if (input.contractVersion !== 2) {
       throw new Error(
         "New agent task executions require contractVersion 2; v1 is replay-only",
       );
     }
     workdir = await workdirActivities.prepareAgentTaskWorkdir({ input });
     setWorkflowPhase("**Phase:** running the agent task");
-    const result = await executeAgentTask(input, workdir.workdir, twoPhaseV2);
+    const result = await executeAgentTask(input, workdir.workdir);
     setWorkflowPhase("**Phase:** delivering the agent task report");
     reportAttempted = true;
     await emailActivities.sendAgentTaskEmail({ input, result });
     reportDelivered = true;
-    await dispatchFollowUp(input, result, !v2Reporting);
+    await dispatchFollowUp(input, result);
   } catch (error: unknown) {
     terminalFailure = { error };
     const failureStage = agentTaskFailureStageFor({
-      v2Reporting,
       reportAttempted,
       reportDelivered,
-      postDeliveryFailureReporting,
     });
     if (failureStage !== undefined) {
       setWorkflowPhase("**Phase:** reporting an agent task failure");
@@ -197,12 +157,7 @@ export async function agentTaskWorkflow(input: AgentTaskInput): Promise<void> {
     try {
       await workdirActivities.cleanupAgentTaskWorkdir(workdir);
     } catch (error: unknown) {
-      if (
-        v2Reporting &&
-        reportDelivered &&
-        postDeliveryFailureReporting &&
-        !failureReportAttempted
-      ) {
+      if (reportDelivered && !failureReportAttempted) {
         try {
           await emailActivities.sendAgentTaskFailureReport({
             input,

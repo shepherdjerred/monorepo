@@ -2856,7 +2856,12 @@ model MatchProcessingReceipt {
 /// closed-vocabulary columns so a bad writer cannot brick the row.
 model MatchNotificationIntent {
   intentKey       String  @id
-  riotMatchId     String
+  /// The subject union lets non-match notifications use the same durable send state.
+  /// A NULL subjectId on a match row is accepted while older application pods
+  /// are still writing through the previous schema; new writers set both.
+  subjectKind     String  @default("match") // match | duel | dare
+  subjectId       String?
+  riotMatchId     String? // match subjects only; retained for match fan-out lookup
   kind            String // NotificationIntentKind: postmatch | prematch | settlement | dare-summary | hall-record-break
   originKind      String // NotificationIntentOrigin kind: live | recovery
   recoveryBatchId String? // recovery origin only: the batch whose policy governs delivery
@@ -2881,6 +2886,7 @@ model MatchNotificationIntent {
 
   @@index([state, freshnessDeadline])
   @@index([riotMatchId])
+  @@index([subjectKind, subjectId])
   @@index([recoveryBatchId])
 }
 

@@ -18,19 +18,9 @@ import type {
   DependencyChangeKind,
 } from "#shared/deps-summary-types.ts";
 
-const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
-// The catalog lived here before it became its own workspace, and `versions.ts`
-// was already a projection of it. Reading history across that move therefore
-// needs all three eras: the current catalog, the catalog at its former path,
-// and only then the pre-catalog literal `versions.ts`.
-const PRIOR_VERSION_CATALOG_PATH =
-  "packages/homelab/src/cdk8s/src/version-catalog.json";
-const LEGACY_VERSIONS_PATH = "packages/homelab/src/cdk8s/src/versions.ts";
-export const CATALOG_HISTORY_PATHS = [
-  VERSION_CATALOG_PATH,
-  PRIOR_VERSION_CATALOG_PATH,
-  LEGACY_VERSIONS_PATH,
-] as const;
+// The catalog moved here on 2026-08-14. Report windows start at the last
+// accepted weekly checkpoint, so every window reads this path only.
+export const VERSION_CATALOG_PATH = "packages/version-catalog/src/catalog.json";
 const REPO_URL = "https://github.com/shepherdjerred/monorepo.git";
 const CHECKPOINT_KEY = "reports/state/deps-summary-weekly.json";
 
@@ -139,119 +129,11 @@ function parseCatalog(text: string): CatalogEntry[] {
   return CatalogSchema.parse(JSON.parse(text)).entries;
 }
 
-function inferLegacyArtifactType(
-  datasource: string | undefined,
-  value: string,
-  name: string,
-): CatalogEntry["artifactType"] {
-  if (datasource === "helm" || name === "agent-stack-k8s" || name === "kueue") {
-    return "helm-chart";
-  }
-  if (datasource === "npm") return "package";
-  return datasource === "docker" || value.includes("@sha256:")
-    ? "image"
-    : "source";
-}
-
-function legacyKey(trimmed: string): string | undefined {
-  return (
-    /^"([^"]+)"\s*:/.exec(trimmed)?.[1] ?? /^([\w-]+)\s*:/.exec(trimmed)?.[1]
-  );
-}
-
-function legacyAnnotation(comments: string[]): RegExpExecArray | undefined {
-  return comments
-    .map((comment) =>
-      /renovate: datasource=(\S+)(?: registryUrl=(\S+))? versioning=(\S+)(?: packageName=(\S+))?/.exec(
-        comment,
-      ),
-    )
-    .find((match) => match !== null);
-}
-
-function legacyCatalogEntry(
-  key: string,
-  value: string,
-  comments: string[],
-): CatalogEntry {
-  const annotation = legacyAnnotation(comments);
-  const datasource = annotation?.[1];
-  const registryUrl = annotation?.[2];
-  const versioning = annotation?.[3];
-  const packageName = annotation?.[4];
-  return CatalogEntrySchema.parse({
-    name: key,
-    value,
-    category: key.startsWith("shepherdjerred/") ? "internal-image" : "upstream",
-    artifactType: inferLegacyArtifactType(datasource, value, key),
-    management:
-      datasource === undefined || versioning === undefined
-        ? { managed: false }
-        : {
-            managed: true,
-            datasource,
-            versioning,
-            ...(registryUrl === undefined ? {} : { registryUrl }),
-            ...(packageName === undefined ? {} : { packageName }),
-          },
-  });
-}
-
-export function parseLegacyVersionsSource(source: string): CatalogEntry[] {
-  const objectStart = source.indexOf("const versions = {");
-  const objectEnd = source.indexOf("\n};", objectStart);
-  if (objectStart === -1 || objectEnd === -1) {
-    throw new Error("legacy versions.ts has no versions object");
-  }
-  const lines = source.slice(objectStart, objectEnd).split("\n");
-  const entries: CatalogEntry[] = [];
-  let comments: string[] = [];
-  for (let index = 1; index < lines.length; index += 1) {
-    const line = lines[index] ?? "";
-    const trimmed = line.trim();
-    if (trimmed.startsWith("//")) {
-      comments.push(trimmed.replace(/^\/\/\s?/, ""));
-      continue;
-    }
-    const key = legacyKey(trimmed);
-    if (key === undefined) {
-      if (trimmed !== "" && !/^"[^"]+",?$/.test(trimmed)) comments = [];
-      continue;
-    }
-    const inlineValue = /:\s*"([^"]+)"/.exec(trimmed)?.[1];
-    const nextValue = /^"([^"]+)"/.exec((lines[index + 1] ?? "").trim())?.[1];
-    const value = inlineValue ?? nextValue;
-    if (value === undefined)
-      throw new Error(`legacy version ${key} has no value`);
-    entries.push(legacyCatalogEntry(key, value, comments));
-    comments = [];
-  }
-  return entries;
-}
-
-async function tryGitShow(
-  git: SimpleGit,
-  ref: string,
-  path: string,
-): Promise<string | undefined> {
-  try {
-    return await git.show([`${ref}:${path}`]);
-  } catch {
-    return undefined;
-  }
-}
-
 export async function catalogAt(
   git: SimpleGit,
   ref: string,
 ): Promise<CatalogEntry[]> {
-  const catalog = await tryGitShow(git, ref, VERSION_CATALOG_PATH);
-  if (catalog !== undefined) return parseCatalog(catalog);
-  const priorCatalog = await tryGitShow(git, ref, PRIOR_VERSION_CATALOG_PATH);
-  if (priorCatalog !== undefined) return parseCatalog(priorCatalog);
-  const legacy = await tryGitShow(git, ref, LEGACY_VERSIONS_PATH);
-  if (legacy !== undefined) return parseLegacyVersionsSource(legacy);
-  throw new Error(`no version catalog exists at ${ref}`);
+  return parseCatalog(await git.show([`${ref}:${VERSION_CATALOG_PATH}`]));
 }
 
 function mapEntries(entries: CatalogEntry[]): Map<string, CatalogEntry> {
@@ -417,7 +299,7 @@ export async function collectDependencyChanges(
       "--reverse",
       `${baseSha}..${headSha}`,
       "--",
-      ...CATALOG_HISTORY_PATHS,
+      VERSION_CATALOG_PATH,
     ]);
     const commits = rawCommits.trim().split("\n").filter(Boolean);
     const catalogCommits: {

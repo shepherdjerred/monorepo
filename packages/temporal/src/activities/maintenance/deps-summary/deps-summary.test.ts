@@ -6,11 +6,10 @@ import { simpleGit } from "simple-git";
 import { z } from "zod/v4";
 import {
   catalogAt,
-  CATALOG_HISTORY_PATHS,
   CatalogEntrySchema,
   DEPS_SUMMARY_CLONE_ARGS,
   deriveDependencyChanges,
-  parseLegacyVersionsSource,
+  VERSION_CATALOG_PATH,
   type CatalogEntry,
 } from "./deps-summary.ts";
 
@@ -62,27 +61,6 @@ describe("dependency summary collection", () => {
     expect(
       DEPS_SUMMARY_CLONE_ARGS.some((arg) => arg.startsWith("--shallow")),
     ).toBe(false);
-  });
-
-  it("parses multiline, bare-key, and digest legacy entries", () => {
-    const source = `const versions = {
-  // renovate: datasource=helm registryUrl=https://charts.example.test versioning=semver
-  chart: "1.2.3",
-  // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
-  "owner/image":
-    "2.0.0@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-};`;
-    const entries = parseLegacyVersionsSource(source);
-    expect(entries.map((entry) => entry.name)).toEqual([
-      "chart",
-      "owner/image",
-    ]);
-    expect(entries[0]?.artifactType).toBe("helm-chart");
-    const secondEntry = entries[1];
-    if (secondEntry === undefined) {
-      throw new Error("Expected a second dependency summary entry");
-    }
-    expect(secondEntry.value.endsWith("a".repeat(64))).toBe(true);
   });
 
   it("preserves intermediate upgrades and reverts chronologically", () => {
@@ -166,102 +144,47 @@ describe("dependency summary collection", () => {
 });
 
 describe("dependency catalog history", () => {
-  it("reads every catalog era across the workspace move", async () => {
+  it("reads the catalog at a revision and fails loudly where none exists", async () => {
     const directory = await mkdtemp(path.join(tmpdir(), "deps-summary-git-"));
     try {
       const git = simpleGit(directory);
       await git.init();
       await git.addConfig("user.email", "test@example.test");
       await git.addConfig("user.name", "test");
+      await Bun.write(path.join(directory, "README.md"), "no catalog yet\n");
+      await git.add(["README.md"]);
+      await git.commit("before the catalog");
+      const beforeShaRaw = await git.revparse(["HEAD"]);
+      const beforeSha = beforeShaRaw.trim();
 
-      const legacyVersions = `const versions = {
-  // renovate: datasource=docker registryUrl=https://ghcr.io versioning=semver
-  "owner/image": "1.0.0",
-};
-export default versions;
-`;
-      const catalogJson = (value: string) =>
+      await mkdir(path.join(directory, path.dirname(VERSION_CATALOG_PATH)), {
+        recursive: true,
+      });
+      await Bun.write(
+        path.join(directory, VERSION_CATALOG_PATH),
         JSON.stringify({
           schemaVersion: 1,
           entries: [
             {
               name: "owner/image",
-              value,
+              value: "2.0.0",
               category: "upstream",
               artifactType: "image",
-              management: {
-                managed: true,
-                datasource: "docker",
-                registryUrl: "https://ghcr.io",
-                versioning: "semver",
-              },
+              management: { managed: false },
             },
           ],
-        });
-      // The projection that replaced the literal object once the catalog became
-      // the source of truth. It parses as TypeScript but has no versions object.
-      const projection = `import catalog from "../version-catalog.json";
-export default Object.fromEntries(catalog.entries.map((e) => [e.name, e.value]));
-`;
-
-      const write = async (file: string, contents: string) => {
-        const target = path.join(directory, file);
-        await mkdir(path.dirname(target), { recursive: true });
-        await Bun.write(target, contents);
-      };
-
-      await write("packages/homelab/src/cdk8s/src/versions.ts", legacyVersions);
-      await git.add(".");
-      await git.commit("legacy literal versions");
-      const rawLegacySha = await git.revparse(["HEAD"]);
-      const legacySha = rawLegacySha.trim();
-
-      await write("packages/homelab/src/cdk8s/src/versions.ts", projection);
-      await write(
-        "packages/homelab/src/cdk8s/src/version-catalog.json",
-        catalogJson("2.0.0"),
+        }),
       );
-      await git.add(".");
-      await git.commit("catalog at its former path");
-      const rawPriorSha = await git.revparse(["HEAD"]);
-      const priorSha = rawPriorSha.trim();
+      await git.add([VERSION_CATALOG_PATH]);
+      await git.commit("add the catalog");
+      const catalogShaRaw = await git.revparse(["HEAD"]);
+      const catalogSha = catalogShaRaw.trim();
 
-      await rm(
-        path.join(
-          directory,
-          "packages/homelab/src/cdk8s/src/version-catalog.json",
-        ),
-      );
-      await write(
-        "packages/version-catalog/src/catalog.json",
-        catalogJson("3.0.0"),
-      );
-      await git.add(".");
-      await git.commit("move the catalog to its own workspace");
-      const rawCurrentSha = await git.revparse(["HEAD"]);
-      const currentSha = rawCurrentSha.trim();
-
-      const legacyEntries = await catalogAt(git, legacySha);
-      // Without the pre-move path this fell through to the projection and threw.
-      const priorEntries = await catalogAt(git, priorSha);
-      const currentEntries = await catalogAt(git, currentSha);
-      expect(legacyEntries[0]?.value).toBe("1.0.0");
-      expect(priorEntries[0]?.value).toBe("2.0.0");
-      expect(currentEntries[0]?.value).toBe("3.0.0");
+      const entries = await catalogAt(git, catalogSha);
+      expect(entries.map((entry) => entry.value)).toEqual(["2.0.0"]);
+      await expect(catalogAt(git, beforeSha)).rejects.toThrow();
     } finally {
       await rm(directory, { recursive: true, force: true });
     }
-  });
-
-  it("walks every catalog path when listing revisions", () => {
-    expect(CATALOG_HISTORY_PATHS).toContain(
-      "packages/homelab/src/cdk8s/src/version-catalog.json",
-    );
-    expect(CATALOG_HISTORY_PATHS).toContain(
-      "packages/version-catalog/src/catalog.json",
-    );
-    expect(CATALOG_HISTORY_PATHS).toContain(
-      "packages/homelab/src/cdk8s/src/versions.ts",
-    );
   });
 });

@@ -94,6 +94,13 @@ export const ConfigSchema = z.strictObject({
      */
     peerUserbotIds: z.array(UserIdSchema).default([]),
   }),
+  /** PinchTab is browser bootstrap/credential config; sports playback itself is gated by Flipt. */
+  pinchtab: z
+    .strictObject({
+      baseUrl: z.url().optional(),
+      token: z.string().min(1).optional(),
+    })
+    .default({}),
   library: z.strictObject({
     /** Writable directory scanned for ad-hoc videos. */
     videosDir: z.string().min(1),

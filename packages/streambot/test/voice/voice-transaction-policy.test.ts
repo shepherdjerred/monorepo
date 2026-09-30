@@ -79,6 +79,7 @@ describe("voice transaction policy", () => {
       "list_chapters",
       "get_queue",
       "get_now_playing",
+      "list_sports",
     ]);
   });
 

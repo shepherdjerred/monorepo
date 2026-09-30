@@ -17,6 +17,7 @@ import {
   encodeControlId,
 } from "@shepherdjerred/streambot/discord/player-card/player-controls.ts";
 import type { PlaybackView } from "@shepherdjerred/streambot/machine/view.ts";
+import { sportsEventForSource } from "@shepherdjerred/streambot/sports/sports-resolver.ts";
 
 /** Cells in the progress bar (one knob plus the track around it). */
 const PROGRESS_BAR_CELLS = 24;
@@ -214,6 +215,31 @@ function button(
  */
 function buildRows(view: PlaybackView): readonly (readonly ButtonSpec[])[] {
   const noItem = view.current === null;
+  const liveSports =
+    view.current?.source?.kind === "url" &&
+    sportsEventForSource(view.current.source.url) !== null;
+  if (liveSports) {
+    return [
+      [
+        button(ControlAction.Skip, "⏭ Skip", "primary", noItem),
+        button(ControlAction.Stop, "⏹ Stop", "danger", false),
+      ],
+      [
+        button(
+          ControlAction.VolumeDown,
+          "🔉",
+          "secondary",
+          view.volume <= VOLUME_MIN_PERCENT,
+        ),
+        button(
+          ControlAction.VolumeUp,
+          "🔊",
+          "secondary",
+          view.volume >= VOLUME_MAX_PERCENT,
+        ),
+      ],
+    ];
+  }
   const noPosition = view.positionSeconds === null;
   const seekDisabled = noItem || noPosition;
   // Audio-only items have no picture to burn subtitles into, and `prepareStream` hard-throws when

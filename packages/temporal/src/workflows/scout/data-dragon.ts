@@ -1,4 +1,4 @@
-import { patched, proxyActivities } from "@temporalio/workflow";
+import { proxyActivities } from "@temporalio/workflow";
 import type { DataDragonActivities } from "#activities/data-dragon/data-dragon.ts";
 import type {
   DataDragonVersionState,
@@ -335,24 +335,17 @@ export async function runScoutDataDragonUpdate(
       report = dataDragonReport(startedAt, mode, state, result);
     }
   } catch (error) {
-    if (
-      state !== undefined &&
-      patched("data-dragon-workflow-record-terminal-failure")
-    ) {
+    if (state !== undefined) {
       await recordDataDragonFailure({
         ...state,
         mode,
         reason: resolveTerminalFailureReason(error),
       });
     }
-    if (patched("data-dragon-report-envelope-v1")) {
-      await deliverActivityReport(failureReport(startedAt, mode, error, state));
-    }
+    await deliverActivityReport(failureReport(startedAt, mode, error, state));
     throw error;
   }
 
-  if (patched("data-dragon-report-envelope-v1")) {
-    await deliverActivityReport(report);
-  }
+  await deliverActivityReport(report);
   return result;
 }

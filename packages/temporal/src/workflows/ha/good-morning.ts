@@ -2,7 +2,6 @@ import {
   ActivityFailure,
   ApplicationFailure,
   log,
-  patched,
   proxyActivities,
   sleep,
 } from "@temporalio/workflow";
@@ -34,7 +33,6 @@ const BEDROOM_MEDIA = "media_player.bedroom" as const;
 // get-up degrades to Bedroom-only playback when that happens.
 const MASTER_BATHROOM_MEDIA = "media_player.master_bathroom" as const;
 const EXTRA_MEDIA_PLAYERS = [MASTER_BATHROOM_MEDIA] as const;
-const OPTIONAL_MEDIA_PLAYER_PATCH = "good-morning-optional-media-player-v1";
 const BEDROOM_DIMMED = "scene.bedroom_dimmed" as const;
 const BEDROOM_BRIGHT = "scene.bedroom_bright" as const;
 const MASTER_BATHROOM_HEAT = "climate.master_bathroom" as const;
@@ -51,9 +49,6 @@ const MORNING_HEAT_TEMP_C = 30;
 // at/below 20°C OR the outdoor temperature is at/below 15°C.
 const HEAT_INDOOR_THRESHOLD_C = 20;
 const HEAT_OUTDOOR_THRESHOLD_C = 15;
-const CONDITIONAL_FLOOR_HEAT_PATCH = "good-morning-conditional-floor-heat-v1";
-const DEGRADED_WAKE_SENSOR_PATCH = "good-morning-degraded-sensor-wake-v1";
-const LEGACY_MORNING_HEAT_TEMP_C = 40;
 const MORNING_HEAT_DURATION = "60 minutes" as const;
 // The floor ramps ~8.3°C/hour (measured 2026-07-09: 22.3→30.6°C in the 60-min
 // wake window), so hitting 30°C from a ~22°C start needs ~1 hour of lead.
@@ -208,23 +203,18 @@ export async function goodMorningPreheat(): Promise<void> {
     return;
   }
 
-  const useConditionalFloorHeat = patched(CONDITIONAL_FLOOR_HEAT_PATCH);
-  if (useConditionalFloorHeat) {
-    const decision = await floorHeatDecision();
-    if (!decision.heat) {
-      log.info(
-        `good_morning_preheat: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), skipping heat`,
-      );
-      await setOutcome("skipped", "not-cold");
-      return;
-    }
+  const decision = await floorHeatDecision();
+  if (!decision.heat) {
+    log.info(
+      `good_morning_preheat: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), skipping heat`,
+    );
+    await setOutcome("skipped", "not-cold");
+    return;
   }
 
   await callServiceUnchecked("climate", "set_temperature", {
     entity_id: MASTER_BATHROOM_HEAT,
-    temperature: useConditionalFloorHeat
-      ? MORNING_HEAT_TEMP_C
-      : LEGACY_MORNING_HEAT_TEMP_C,
+    temperature: MORNING_HEAT_TEMP_C,
     hvac_mode: "heat",
   });
 
@@ -259,43 +249,34 @@ export async function goodMorningWakeUp(): Promise<void> {
   // started it 2h15m ago; this is the fallback if the preheat run was skipped
   // or paused). On warm mornings the heat stays off; the rest of the wake
   // routine (notification, media, lights) is unconditional.
-  let heat = true;
+  let heat: boolean;
   let sensorUnavailable = false;
-  if (patched(CONDITIONAL_FLOOR_HEAT_PATCH)) {
-    try {
-      const decision = await floorHeatDecision();
-      heat = decision.heat;
-      if (heat) {
-        await callServiceUnchecked("climate", "set_temperature", {
-          entity_id: MASTER_BATHROOM_HEAT,
-          temperature: MORNING_HEAT_TEMP_C,
-          hvac_mode: "heat",
-        });
-      } else {
-        log.info(
-          `good_morning_wake_up: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), heat stays off`,
-        );
-      }
-    } catch (error: unknown) {
-      if (
-        !patched(DEGRADED_WAKE_SENSOR_PATCH) ||
-        !(error instanceof ApplicationFailure) ||
-        error.type !== "TemperatureSensorUnavailableError"
-      ) {
-        throw error;
-      }
-      sensorUnavailable = true;
-      heat = false;
-      log.warn(
-        "good_morning_wake_up: bathroom temperature unavailable, skipping heat activation and continuing wake routine",
+  try {
+    const decision = await floorHeatDecision();
+    heat = decision.heat;
+    if (heat) {
+      await callServiceUnchecked("climate", "set_temperature", {
+        entity_id: MASTER_BATHROOM_HEAT,
+        temperature: MORNING_HEAT_TEMP_C,
+        hvac_mode: "heat",
+      });
+    } else {
+      log.info(
+        `good_morning_wake_up: not cold (indoor ${String(decision.indoorC)}°C, outdoor ${String(decision.outdoorC)}°C), heat stays off`,
       );
     }
-  } else {
-    await callServiceUnchecked("climate", "set_temperature", {
-      entity_id: MASTER_BATHROOM_HEAT,
-      temperature: LEGACY_MORNING_HEAT_TEMP_C,
-      hvac_mode: "heat",
-    });
+  } catch (error: unknown) {
+    if (
+      !(error instanceof ApplicationFailure) ||
+      error.type !== "TemperatureSensorUnavailableError"
+    ) {
+      throw error;
+    }
+    sensorUnavailable = true;
+    heat = false;
+    log.warn(
+      "good_morning_wake_up: bathroom temperature unavailable, skipping heat activation and continuing wake routine",
+    );
   }
 
   await sendNotification("Good Morning", "Good Morning! Time to wake up.");
@@ -354,34 +335,6 @@ export async function goodMorningGetUp(): Promise<void> {
     entity_id: BEDROOM_BRIGHT,
     transition: 60,
   });
-
-  if (!patched(OPTIONAL_MEDIA_PLAYER_PATCH)) {
-    for (const player of EXTRA_MEDIA_PLAYERS) {
-      await callServiceUnchecked("media_player", "volume_set", {
-        entity_id: player,
-        volume_level: 0,
-      });
-    }
-
-    await callServiceUnchecked("media_player", "join", {
-      entity_id: BEDROOM_MEDIA,
-      group_members: EXTRA_MEDIA_PLAYERS,
-    });
-
-    const allPlayers = [BEDROOM_MEDIA, ...EXTRA_MEDIA_PLAYERS] as const;
-    for (let step = 0; step < 2; step += 1) {
-      for (const player of allPlayers) {
-        await callServiceUnchecked("media_player", "volume_up", {
-          entity_id: player,
-        });
-      }
-      if (step < 1) {
-        await sleep("5 seconds");
-      }
-    }
-    await setOutcome("executed", "getup-routine-complete");
-    return;
-  }
 
   let mediaDegraded = false;
   const availableExtraPlayers: string[] = [];

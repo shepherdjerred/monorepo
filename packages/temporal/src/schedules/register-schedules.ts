@@ -96,6 +96,12 @@ export const DELETED_SCHEDULE_IDS = [
   // `llm-billed-cost-hourly`, which covers every OpenAI project and Anthropic
   // workspace now that each app calls its provider directly.
   "openai-complimentary-usage-hourly",
+  // The Riot tournament lobby poller was retired with the Tournament API
+  // integration; its orphaned Schedule kept starting no-op
+  // `scoutRealtimePollWorkflow` runs every 20 seconds.
+  "scout-prod-tournament-lobby-poll",
+  // The protobufjs v8 watch retired once @temporalio/proto moved to ^8.
+  "protobufjs-v8-watch-weekly",
 ] as const;
 
 /**
@@ -106,37 +112,30 @@ export const DELETED_SCHEDULE_IDS = [
  * beta-only schedule listed there would never actually be deleted.
  */
 const DELETED_BETA_SCHEDULE_IDS = [
-  // The weekly parlay feature was retired: its workflow types are no longer in
-  // the bundle, so the live beta schedule must be deleted on startup rather
-  // than left firing a missing workflow.
-  "scout-weekly-parlay",
+  // Beta twin of scout-prod-tournament-lobby-poll.
+  "scout-beta-tournament-lobby-poll",
 ] as const;
 
 // Schedule deletion prevents future starts but does not stop an execution that
 // was already started. The retired workflow types stay on this migration list
 // for one reconciliation so the gateway can terminate those executions before
 // the queue-owning workers receive a bundle without their handlers.
-const RETIRED_WORKFLOW_TYPES = [
-  { workflowType: "observeReviewSignalsWorkflow", namespace: "prod" },
+type RetiredWorkflowType = {
+  readonly workflowType: string;
+  readonly namespace: TemporalNamespace;
+};
+
+const RETIRED_WORKFLOW_TYPES: readonly RetiredWorkflowType[] = [
+  // Keep terminating this workflow until the live OpenAI schedule above is
+  // removed by reconciliation.
   {
     workflowType: "runOpenAiComplimentaryUsageReconciliation",
     namespace: "prod",
   },
-  // A weekly parlay execution stays open for a week, so a deploy can easily
-  // land mid-run. Deleting the Schedule only stops future starts; without
-  // these the open execution would keep retrying tasks against workers whose
-  // bundle no longer carries its handler. Both ran in beta, which is why the
-  // namespace travels with the entry — terminating only in prod would have
-  // left exactly the executions this is here to stop.
-  { workflowType: "runScoutWeeklyParlayWorkflow", namespace: "beta" },
-  { workflowType: "runScoutWeeklyParlayCatchupWorkflow", namespace: "beta" },
-  // The retired CI I/O observation runs up to 2 hours daily, so a deploy can
-  // land mid-run. Terminate the open execution during reconciliation.
-  { workflowType: "runCiIoImpact", namespace: "prod" },
-] as const satisfies readonly {
-  workflowType: string;
-  namespace: TemporalNamespace;
-}[];
+  // A run can start after the pre-deploy query but before this reconciliation
+  // removes its schedule, so drain it before workers drop the handler.
+  { workflowType: "runProtobufWatch", namespace: "prod" },
+] as const;
 
 export async function terminateRetiredWorkflowExecutions(
   client: {
@@ -152,8 +151,9 @@ export async function terminateRetiredWorkflowExecutions(
     };
   },
   namespace: TemporalNamespace,
+  retiredTypes: readonly RetiredWorkflowType[] = RETIRED_WORKFLOW_TYPES,
 ): Promise<void> {
-  const retired = RETIRED_WORKFLOW_TYPES.filter(
+  const retired = retiredTypes.filter(
     (entry) => namespace === "dev" || entry.namespace === namespace,
   );
   for (const { workflowType } of retired) {

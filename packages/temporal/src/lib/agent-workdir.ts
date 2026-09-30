@@ -1,12 +1,8 @@
 /**
  * Ephemeral workspace management for agent-task activities that need a
- * checkout on disk (the name is legacy — this originally served the
- * removed PR-review bot; it is now used by the generic agent-task flow).
+ * checkout on disk. This module owns:
  *
- * Any activity that needs the PR/repo head source on disk uses this. This
- * module owns:
- *
- *   1. Creating a temp directory at /tmp/pr-review-workdir/<workflowId>/.
+ *   1. Creating a temp directory at /tmp/agent-workdir/<workflowId>/.
  *   2. Cloning the requested ref into that directory with optional
  *      `GIT_ASKPASS` authentication (per the AGENTS.md ban on
  *      `x-access-token` URL embedding).
@@ -19,12 +15,12 @@
  * Failure mode: every step throws on error. We deliberately do NOT
  * silently fall back to an empty workdir — that would mask a deployment
  * misconfiguration (missing `git`, invalid credentials, network outage)
- * as a successful-but-empty review.
+ * as a successful-but-empty run.
  */
 
 import { z } from "zod/v4";
 
-const WORKDIR_ROOT = "/tmp/pr-review-workdir";
+const WORKDIR_ROOT = "/tmp/agent-workdir";
 
 /**
  * Optional authentication for private repositories. Public agent-task
