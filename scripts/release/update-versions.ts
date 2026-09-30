@@ -4,6 +4,7 @@ import { rm } from "node:fs/promises";
 
 import { setupGitAuth } from "../lib/github-auth.ts";
 import {
+  findSupersededPendingPinKeys,
   mergePinCandidates,
   mergePinStates,
   mergeVersionCatalogSources,
@@ -143,10 +144,45 @@ async function prepareAttempt(
       await readBranchFile(git, mergeBase, PIN_STATE_FILE_REL),
     );
     validateStateAgainstVersions(baseState, baseVersions);
+    const historyCommits = await git(
+      [
+        "rev-list",
+        "--first-parent",
+        "--full-history",
+        "--reverse",
+        `${mergeBase}..origin/main`,
+        "--",
+        PIN_STATE_FILE_REL,
+      ],
+      { capture: true },
+    );
+    const mainHistory: ReturnType<typeof parsePinCandidatesState>[] = [];
+    for (const commit of historyCommits.stdout
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)) {
+      mainHistory.push(
+        parsePinCandidatesState(
+          await readBranchFile(git, commit, PIN_STATE_FILE_REL),
+        ),
+      );
+    }
+    const supersededPendingKeys = findSupersededPendingPinKeys(
+      mainState,
+      pendingState,
+      baseState,
+      mainHistory,
+    );
+    if (supersededPendingKeys.size > 0) {
+      console.log(
+        `Preserving main resets for pending image pins: ${[...supersededPendingKeys].join(", ")}`,
+      );
+    }
     catalogSource = mergeVersionCatalogSources(
       mainSource,
       pendingSource,
       baseSource,
+      supersededPendingKeys,
     );
     const mergedVersions = parseVersionCatalogSource(catalogSource);
     // Preserve pins changed only on the generated branch. For keys unchanged
@@ -156,6 +192,7 @@ async function prepareAttempt(
       aggregate,
       pendingState,
       baseState,
+      supersededPendingKeys,
     );
     const { state: activePendingState, retiredKeys } = retainCurrentImagePins(
       mergedPendingState,

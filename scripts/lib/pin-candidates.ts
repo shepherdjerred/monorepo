@@ -100,6 +100,7 @@ export function mergeVersionCatalogSources(
   mainSource: string,
   pendingSource: string,
   baseSource: string,
+  supersededPendingKeys: ReadonlySet<string> = new Set(),
 ): string {
   const main = parseVersionCatalogText(mainSource);
   const pending = parseVersionCatalogText(pendingSource);
@@ -119,11 +120,13 @@ export function mergeVersionCatalogSources(
     const mainEntry = mainEntries.get(name);
     const pendingEntry = pendingEntries.get(name);
     const baseEntry = baseEntries.get(name);
-    const mergedEntry = sameVersionCatalogEntry(pendingEntry, baseEntry)
+    const mergedEntry = supersededPendingKeys.has(name)
       ? mainEntry
-      : sameVersionCatalogEntry(mainEntry, baseEntry)
-        ? pendingEntry
-        : mainEntry;
+      : sameVersionCatalogEntry(pendingEntry, baseEntry)
+        ? mainEntry
+        : sameVersionCatalogEntry(mainEntry, baseEntry)
+          ? pendingEntry
+          : mainEntry;
     if (mergedEntry !== undefined) entries.push(mergedEntry);
   }
 
@@ -215,6 +218,36 @@ function samePinState(
         left.gitSha === right.gitSha;
 }
 
+/**
+ * Find pending pins that main carried after the merge base and later changed
+ * away from. This catches generated PRs squash-merged into main and then
+ * explicitly reset before the pending branch itself is rewritten.
+ */
+export function findSupersededPendingPinKeys(
+  main: PinCandidatesState,
+  pending: PinCandidatesState,
+  base: PinCandidatesState,
+  mainHistory: readonly PinCandidatesState[],
+): Set<string> {
+  const superseded = new Set<string>();
+  for (const [key, pendingPin] of Object.entries(pending.pins)) {
+    if (
+      samePinState(pendingPin, base.pins[key]) ||
+      samePinState(main.pins[key], pendingPin)
+    ) {
+      continue;
+    }
+    if (
+      mainHistory.some((snapshot) =>
+        samePinState(snapshot.pins[key], pendingPin),
+      )
+    ) {
+      superseded.add(key);
+    }
+  }
+  return superseded;
+}
+
 function mergePinStateEntry(
   key: string,
   main: PinStatePin | undefined,
@@ -245,6 +278,7 @@ export function mergePinStates(
   main: PinCandidatesState,
   pending: PinCandidatesState,
   base: PinCandidatesState,
+  supersededPendingKeys: ReadonlySet<string> = new Set(),
 ): PinCandidatesState {
   const pins = new Map(Object.entries(main.pins));
   const keys = new Set([
@@ -254,12 +288,14 @@ export function mergePinStates(
   ]);
 
   for (const key of keys) {
-    const result = mergePinStateEntry(
-      key,
-      main.pins[key],
-      pending.pins[key],
-      base.pins[key],
-    );
+    const result = supersededPendingKeys.has(key)
+      ? main.pins[key]
+      : mergePinStateEntry(
+          key,
+          main.pins[key],
+          pending.pins[key],
+          base.pins[key],
+        );
     if (result === undefined) pins.delete(key);
     else pins.set(key, result);
   }

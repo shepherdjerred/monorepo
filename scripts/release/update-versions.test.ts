@@ -9,6 +9,7 @@ import {
   resetVersionBumpBranch,
 } from "./update-versions.ts";
 import {
+  findSupersededPendingPinKeys,
   mergePinCandidates,
   mergePinStates,
   mergeVersionCatalogSources,
@@ -204,6 +205,18 @@ describe("key-wise monotonic arbitration", () => {
     expect(mergePinStates(empty, pending, empty)).toEqual(pending);
   });
 
+  test("does not restore a squash-merged pin that main later reset", () => {
+    const base = mergePinCandidates(empty, batch(17_395, "v17395", A));
+    const pending = mergePinCandidates(base, batch(17_396, "v17396", B));
+    const main = base;
+    const superseded = findSupersededPendingPinKeys(main, pending, base, [
+      pending,
+    ]);
+
+    expect(superseded).toEqual(new Set([KEY]));
+    expect(mergePinStates(main, pending, base, superseded)).toEqual(main);
+  });
+
   test("keeps the newer pin when main and pending both advance a key", () => {
     const base = mergePinCandidates(empty, batch(10, "v10", A));
     const main = mergePinCandidates(base, batch(11, "v11", B));
@@ -311,6 +324,21 @@ describe("version catalog integrity", () => {
     );
     expect(rewrittenSource).toContain(`"name": "${pendingOnly}"`);
     expect(rewrittenSource).toContain(`"value": "v18031@${B}"`);
+  });
+
+  test("does not restore a squash-merged catalog pin that main later reset", () => {
+    const baseSource = catalogSource([{ name: KEY, value: `v17395@${A}` }]);
+    const mainSource = catalogSource([{ name: KEY, value: `v17395@${A}` }]);
+    const pendingSource = catalogSource([{ name: KEY, value: `v17396@${B}` }]);
+
+    const merged = mergeVersionCatalogSources(
+      mainSource,
+      pendingSource,
+      baseSource,
+      new Set([KEY]),
+    );
+
+    expect(parseVersionCatalogSource(merged).get(KEY)).toBe(`v17395@${A}`);
   });
 
   test("leaves Scout beta notes untouched when rewriting the pin", async () => {
