@@ -211,6 +211,7 @@ function schedulesForStage(stage: ScoutStage): ScheduleDefinition[] {
       args: [{ stage, kind: "progression-reconciliation" }],
       every: "1 minute",
       catchupWindow: CATCHUP_TIGHT,
+      initiallyActive: true,
     }),
     intervalSchedule(stage, {
       name: "report-lake-fold",

@@ -103,19 +103,25 @@ alone does not establish queue ownership or product behavior.
 
 ## Enable the durable reconciliation schedules
 
-The [two reconciliation Schedules](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/scout-schedule-definitions.ts)
-are created paused on each stage.
+Check the [Scout schedule inventory](/reference/temporal-workflows/#scout) for
+activation defaults. `pipeline-reconciliation-v2` is created paused; new
+`progression-reconciliation` registrations start active after the outbox cutover.
 
-1. Keep both paused until the matching Scout Workflow bundle passes replay and
-   the stage has healthy Workflow and background Activity pollers.
+1. Before activation, replay the matching Scout Workflow bundle and confirm
+   healthy Workflow and background Activity pollers in the stage. Ensure these
+   preconditions are met before registering Schedules in a new namespace.
 2. Unpause `pipeline-reconciliation-v2` in beta. Confirm it drives a pending
    intent before enabling new V2 notification kinds. Repeat after production's
    own rollout checks.
-3. When the Hall and Duel V1 drains are ready to retire, unpause
-   `progression-reconciliation` and observe one successful run. Then deploy the
-   change that removes reconciliation from the
-   [`progression-outbox` Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/temporal/activities.ts).
-   Keep the old outbox Schedule until its rows are drained or dispositioned.
+3. Before deploying the bundle that removes reconciliation from
+   `progression-outbox`, confirm the Hall and Duel legacy outboxes have no open
+   rows, unpause `progression-reconciliation`, and observe one successful run
+   in that stage. After the bundle deploys, the
+   [`progression-outbox` Activity](https://github.com/shepherdjerred/monorepo/blob/main/packages/scout-for-lol/packages/backend/src/temporal/activities.ts)
+   only delivers legacy Hall and Duel rows; the dedicated Schedule owns
+   reconciliation. New registrations start the dedicated Schedule active;
+   existing operator pauses are preserved. Keep the old outbox Schedule enabled
+   while rows remain and retain it until they are drained or dispositioned.
 
 ## Start the beta Workflow Deployment ramp
 

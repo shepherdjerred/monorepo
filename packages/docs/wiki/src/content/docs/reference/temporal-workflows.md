@@ -97,6 +97,8 @@ changing model identity.
 
 ## Scout
 
+Schedule defaults: [Scout schedule definitions](https://github.com/shepherdjerred/monorepo/blob/main/packages/temporal/src/schedules/scout-schedule-definitions.ts).
+
 | Workflow                   | Trigger                           | Brain                  | Output                         |
 | -------------------------- | --------------------------------- | ---------------------- | ------------------------------ |
 | data-dragon version check  | 06:00 Sun–Fri                     | deterministic          | heartbeat + **auto-merge PR**  |
@@ -108,7 +110,7 @@ changing model identity.
 | competition updates        | every minute                      | deterministic          | due Discord standings          |
 | clash snapshot             | every 15 minutes                  | deterministic          | Clash-v1 schedule and roster   |
 | notification intent expiry | every 5 minutes                   | deterministic          | overdue intents to `expired`   |
-| progression reconciliation | every minute, initially paused    | deterministic          | resume interrupted starts      |
+| progression reconciliation | every minute, initially active    | deterministic          | resume interrupted starts      |
 | V2 pipeline reconciliation | every minute, initially paused    | deterministic          | re-drive stalled V2 work       |
 | realtime and post-match    | fixed Schedules                   | deterministic          | match child Workflows          |
 | initial history            | reconciliation                    | deterministic          | paged S3/lake ingestion        |

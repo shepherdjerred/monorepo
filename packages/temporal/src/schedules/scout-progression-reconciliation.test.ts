@@ -3,13 +3,14 @@ import { ScoutBackgroundJobInputSchema } from "@scout-for-lol/temporal";
 import { scoutPipelineReconciliationV2InputCodec } from "@scout-for-lol/temporal/workflow-contracts-v2";
 import { describe, expect, test } from "vitest";
 import { SCHEDULES } from "./schedule-definitions.ts";
+import { buildScheduleState } from "./schedule-state.ts";
 
 const PAUSE_NOTE =
   "Paused until the matching Scout Temporal feature family is enabled and legacy work is drained";
 
 describe("Scout progression and V2 pipeline reconciliation schedules", () => {
   test.each(["beta", "prod"] as const)(
-    "declares paused one-minute cutover schedules for %s",
+    "activates progression reconciliation and keeps V2 pipeline paused for %s",
     (stage) => {
       const progression = SCHEDULES.find(
         (candidate) =>
@@ -24,7 +25,20 @@ describe("Scout progression and V2 pipeline reconciliation schedules", () => {
         overlap: ScheduleOverlapPolicy.SKIP,
         catchupWindow: "5 minutes",
       });
-      expect(progression?.initialPauseNote).toBe(PAUSE_NOTE);
+      expect(progression?.initialPauseNote).toBeUndefined();
+      expect(buildScheduleState(progression ?? {}, {})).toEqual({
+        paused: false,
+      });
+      expect(
+        buildScheduleState(
+          progression ?? {},
+          {},
+          {
+            paused: true,
+            note: "operator pause",
+          },
+        ),
+      ).toEqual({ paused: true, note: "operator pause" });
       expect(ScoutBackgroundJobInputSchema.parse(progression?.args[0])).toEqual(
         { stage, kind: "progression-reconciliation" },
       );
