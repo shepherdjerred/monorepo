@@ -1,12 +1,7 @@
 import { z } from "zod";
-import { resolveLakeDir } from "#src/report-lake/paths.ts";
+import { resolveMatchIdsSource } from "#src/reports/duckdb/community/match-source.ts";
 import { withDuckDBConnection } from "#src/reports/duckdb/instance.ts";
 import { bindParams } from "#src/reports/duckdb/lake-reads.ts";
-import {
-  buildMatchesSource,
-  listParam,
-  resolveLakeFiles,
-} from "#src/reports/duckdb/lake.ts";
 
 const MatchSupportRowSchema = z.object({
   match_id: z.string(),
@@ -21,12 +16,7 @@ export async function fetchMatchSupport(options: {
 }): Promise<
   readonly { match_id: string; queue_id: number; game_mode: string }[]
 > {
-  if (options.matchIds.length === 0) return [];
-  const files = await resolveLakeFiles(options.lakeDir ?? resolveLakeDir());
-  const source = buildMatchesSource(files, {
-    sql: "match_id IN (SELECT unnest(?))",
-    params: [listParam(options.matchIds)],
-  });
+  const source = await resolveMatchIdsSource(options.matchIds, options.lakeDir);
   if (source === undefined) return [];
   return await withDuckDBConnection(
     async (session) => {
