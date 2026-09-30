@@ -185,6 +185,31 @@ export function serializeIntentPayload(intent: NotificationIntent): string {
   return JSON.stringify(notificationIntentCodec.serialize(intent));
 }
 
+/** Rebuild the state machine from indexed columns and check its wire payload. */
+function intentFromRow(raw: RawIntentRow): NotificationIntent {
+  const payloadIntent = notificationIntentCodec.parse(JSON.parse(raw.payload));
+  const intent = NotificationIntentSchema.parse({
+    key: raw.intentKey,
+    kind: raw.kind,
+    origin: originCandidate(raw),
+    target: targetCandidate(raw),
+    freshnessDeadline: raw.freshnessDeadline.toISOString(),
+    createdAt: raw.createdAt.toISOString(),
+    attemptCount: raw.attemptCount,
+    ...failureCandidate(raw),
+    ...(payloadIntent.announcement === undefined
+      ? {}
+      : { announcement: payloadIntent.announcement }),
+    state: stateCandidate(raw),
+  });
+  if (!Bun.deepEquals(intent, payloadIntent, true)) {
+    throw new Error(
+      `Intent ${raw.intentKey}: the payload envelope disagrees with the row's columns`,
+    );
+  }
+  return intent;
+}
+
 export function matchNotificationIntentRowToRecord(
   row: unknown,
 ): MatchNotificationIntentRecord {
@@ -198,32 +223,14 @@ export function matchNotificationIntentRowToRecord(
       `Intent ${raw.intentKey}: expected a match subject with matching subjectId and riotMatchId`,
     );
   }
-  const payloadIntent = notificationIntentCodec.parse(JSON.parse(raw.payload));
+  const intent = intentFromRow(raw);
   const record = MatchNotificationIntentRecordSchema.parse({
     matchId: raw.riotMatchId,
-    intent: {
-      key: raw.intentKey,
-      kind: raw.kind,
-      origin: originCandidate(raw),
-      target: targetCandidate(raw),
-      freshnessDeadline: raw.freshnessDeadline.toISOString(),
-      createdAt: raw.createdAt.toISOString(),
-      attemptCount: raw.attemptCount,
-      ...failureCandidate(raw),
-      ...(payloadIntent.announcement === undefined
-        ? {}
-        : { announcement: payloadIntent.announcement }),
-      state: stateCandidate(raw),
-    },
+    intent,
   });
   if (record.intent.kind === "duel-status") {
     throw new Error(
       `Intent ${raw.intentKey}: duel-status requires a Duel subject`,
-    );
-  }
-  if (!Bun.deepEquals(record.intent, payloadIntent, true)) {
-    throw new Error(
-      `Intent ${raw.intentKey}: the payload envelope disagrees with the row's columns`,
     );
   }
   return record;
@@ -246,30 +253,10 @@ export function notificationIntentRowToRecord(
       `Intent ${raw.intentKey}: unsupported or inconsistent ${raw.subjectKind} subject`,
     );
   }
-  const payloadIntent = notificationIntentCodec.parse(JSON.parse(raw.payload));
-  const record = DuelNotificationIntentRecordSchema.parse({
+  return DuelNotificationIntentRecordSchema.parse({
     duelId: raw.subjectId,
-    intent: {
-      key: raw.intentKey,
-      kind: raw.kind,
-      origin: originCandidate(raw),
-      target: targetCandidate(raw),
-      freshnessDeadline: raw.freshnessDeadline.toISOString(),
-      createdAt: raw.createdAt.toISOString(),
-      attemptCount: raw.attemptCount,
-      ...failureCandidate(raw),
-      ...(payloadIntent.announcement === undefined
-        ? {}
-        : { announcement: payloadIntent.announcement }),
-      state: stateCandidate(raw),
-    },
+    intent: intentFromRow(raw),
   });
-  if (!Bun.deepEquals(record.intent, payloadIntent, true)) {
-    throw new Error(
-      `Intent ${raw.intentKey}: the payload envelope disagrees with the row's columns`,
-    );
-  }
-  return record;
 }
 
 function targetColumns(target: NotificationTarget): {
@@ -362,6 +349,25 @@ export function notificationIntentTransitionPatch(
   };
 }
 
+/** Columns that have the same owner for every supported subject. */
+function intentColumns(
+  intent: NotificationIntent,
+): Omit<
+  MatchNotificationIntentRow,
+  "subjectKind" | "subjectId" | "riotMatchId"
+> {
+  return {
+    intentKey: intent.key,
+    kind: intent.kind,
+    ...originColumns(intent.origin),
+    ...targetColumns(intent.target),
+    ...notificationIntentStateColumns(intent),
+    freshnessDeadline: dateFromIsoInstant(intent.freshnessDeadline),
+    payload: serializeIntentPayload(intent),
+    createdAt: dateFromIsoInstant(intent.createdAt),
+  };
+}
+
 export function matchNotificationIntentRecordToRow(
   record: MatchNotificationIntentRecord,
 ): MatchNotificationIntentRow {
@@ -371,17 +377,10 @@ export function matchNotificationIntentRecordToRow(
     );
   }
   return {
-    intentKey: record.intent.key,
+    ...intentColumns(record.intent),
     subjectKind: "match",
     subjectId: record.matchId,
     riotMatchId: record.matchId,
-    kind: record.intent.kind,
-    ...originColumns(record.intent.origin),
-    ...targetColumns(record.intent.target),
-    ...notificationIntentStateColumns(record.intent),
-    freshnessDeadline: dateFromIsoInstant(record.intent.freshnessDeadline),
-    payload: serializeIntentPayload(record.intent),
-    createdAt: dateFromIsoInstant(record.intent.createdAt),
   };
 }
 
@@ -391,16 +390,9 @@ export function notificationIntentRecordToRow(
 ): MatchNotificationIntentRow {
   if ("matchId" in record) return matchNotificationIntentRecordToRow(record);
   return {
-    intentKey: record.intent.key,
+    ...intentColumns(record.intent),
     subjectKind: "duel",
     subjectId: record.duelId,
     riotMatchId: null,
-    kind: record.intent.kind,
-    ...originColumns(record.intent.origin),
-    ...targetColumns(record.intent.target),
-    ...notificationIntentStateColumns(record.intent),
-    freshnessDeadline: dateFromIsoInstant(record.intent.freshnessDeadline),
-    payload: serializeIntentPayload(record.intent),
-    createdAt: dateFromIsoInstant(record.intent.createdAt),
   };
 }
