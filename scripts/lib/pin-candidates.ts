@@ -11,9 +11,6 @@ const DigestSchema = z
   .string()
   .regex(/^sha256:[0-9a-f]{64}$/, "digest must be canonical sha256");
 const VersionSchema = z.string().min(1);
-const CandidateSchema = z
-  .object({ version: VersionSchema, digest: DigestSchema })
-  .strict();
 /**
  * The commit an image was built from, as baked into its `GIT_SHA`.
  *
@@ -28,9 +25,15 @@ const CandidateSchema = z
 const GitShaSchema = z
   .string()
   .regex(/^[0-9a-f]{40}$/, "gitSha must be a 40-character lowercase commit");
+const CandidateSchema = z
+  .object({
+    version: VersionSchema,
+    digest: DigestSchema,
+    gitSha: GitShaSchema.optional(),
+  })
+  .strict();
 const PinSchema = CandidateSchema.extend({
   buildNumber: z.number().int().positive(),
-  gitSha: GitShaSchema.optional(),
 });
 
 export const PinCandidatesSchema = z

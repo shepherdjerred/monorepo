@@ -138,12 +138,36 @@ describe("pin candidate schema", () => {
     ).toEqual({});
   });
 
+  test("preserves the baked routing commit through candidate state", () => {
+    const gitSha = "f".repeat(40);
+    const candidate = parsePinCandidates(
+      JSON.stringify({
+        schema: "pin-candidates/v1",
+        buildNumber: 42,
+        candidates: {
+          [KEY]: { version: "v42", digest: A, gitSha },
+        },
+      }),
+    );
+    const state = mergePinCandidates(
+      { schema: "pin-candidates-state/v1", pins: {} },
+      candidate,
+    );
+    expect(state.pins[KEY]).toEqual({
+      buildNumber: 42,
+      version: "v42",
+      digest: A,
+      gitSha,
+    });
+  });
+
   test.each([
     '{"schema":"pin-candidates/v1","buildNumber":0,"candidates":{}}',
     '{"schema":"pin-candidates/v1","buildNumber":1,"candidates":{},"extra":1}',
     `{"schema":"pin-candidates/v1","buildNumber":1,"candidates":{"x":{"version":"","digest":"${A}"}}}`,
     '{"schema":"pin-candidates/v1","buildNumber":1,"candidates":{"x":{"version":"v1","digest":"SHA256:AA"}}}',
     `{"schema":"pin-candidates/v1","buildNumber":1,"candidates":{"x":{"version":"v1","digest":"${A}","extra":1}}}`,
+    `{"schema":"pin-candidates/v1","buildNumber":1,"candidates":{"x":{"version":"v1","digest":"${A}","gitSha":"short"}}}`,
   ])("rejects malformed input: %s", (input) => {
     expect(() => parsePinCandidates(input)).toThrow();
   });

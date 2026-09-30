@@ -22,9 +22,9 @@
       "buildNumber": 1003373
     },
     "shepherdjerred/discord-plays-pokemon": {
-      "buildNumber": 1003373,
       "version": "2.0.0-1003373",
-      "digest": "sha256:8eb85a5881ff5bca84ae4ff9730ba668c094f8ea1df177515bc6a33359f36234"
+      "digest": "sha256:8eb85a5881ff5bca84ae4ff9730ba668c094f8ea1df177515bc6a33359f36234",
+      "buildNumber": 1003373
     },
     "shepherdjerred/obsidian-headless": {
       "version": "2.0.0-16936",
@@ -37,15 +37,15 @@
       "buildNumber": 16936
     },
     "shepherdjerred/scout-for-lol/beta": {
-      "buildNumber": 1003424,
-      "version": "2.0.0-1003424",
-      "digest": "sha256:1ea3b3efcf282e063500dff092444b309156ebbd9644188edc3c40cb5ee20302"
+      "buildNumber": 1003507,
+      "version": "2.0.0-1003507",
+      "digest": "sha256:b519334c3f397f44457056a95bda54a57f0e5eff9a8a70ab8540595170e5543c"
     },
     "shepherdjerred/scout-for-lol/beta/workflows/candidate": {
-      "version": "2.0.0-1003424",
-      "digest": "sha256:1ea3b3efcf282e063500dff092444b309156ebbd9644188edc3c40cb5ee20302",
-      "buildNumber": 1003424,
-      "gitSha": "cd4a12e206c3667fe53477ee73088b72e57fa2c6"
+      "buildNumber": 1003507,
+      "version": "2.0.0-1003507",
+      "digest": "sha256:b519334c3f397f44457056a95bda54a57f0e5eff9a8a70ab8540595170e5543c",
+      "gitSha": "56f22c5ec456ee2389ac02a5aa30298457bfe74a"
     },
     "shepherdjerred/starlight-karma-bot/beta": {
       "version": "2.0.0-1003373",
@@ -68,9 +68,9 @@
       "buildNumber": 1003373
     },
     "shepherdjerred/temporal-worker": {
-      "buildNumber": 1003473,
-      "version": "2.0.0-1003473",
-      "digest": "sha256:0a8833f8526f342f32a57ae33a566039449aac4372f6666005ac3df79aaf4e46"
+      "buildNumber": 1003507,
+      "version": "2.0.0-1003507",
+      "digest": "sha256:f6561b454a96028294d43d9c9eb56ae80ae5d189f0696835a7546cef19b091f0"
     },
     "shepherdjerred/temporal-worker/workflows/candidate": {
       "version": "2.0.0-1002826",
@@ -93,9 +93,9 @@
       "buildNumber": 1003373
     },
     "shepherdjerred/woodpecker-config-extension": {
-      "buildNumber": 1003373,
       "version": "2.0.0-1003373",
-      "digest": "sha256:563c128d87efe7619317d4cb48ac72ffdba5abdeba8d7c4f087e8443fa8963d7"
+      "digest": "sha256:563c128d87efe7619317d4cb48ac72ffdba5abdeba8d7c4f087e8443fa8963d7",
+      "buildNumber": 1003373
     }
   }
 }
