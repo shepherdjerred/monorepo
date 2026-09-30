@@ -36,6 +36,8 @@ const stubs = vi.hoisted(() => ({
   fetchChannelForDelivery: vi.fn(),
   send: vi.fn(),
   isPolicyEnabled: vi.fn(),
+  hallInstallationRetirementOfV2: vi.fn(),
+  freshBotMember: vi.fn(),
 }));
 
 vi.mock("#src/configuration/flags.ts", async () => ({
@@ -85,6 +87,12 @@ vi.mock("#src/discord/utils/channel.ts", () => ({
   fetchChannelForDelivery: stubs.fetchChannelForDelivery,
 }));
 vi.mock("#src/discord/client.ts", () => ({ client: {} }));
+vi.mock("#src/temporal/v2/notification/intent-audience.ts", () => ({
+  hallInstallationRetirementOfV2: stubs.hallInstallationRetirementOfV2,
+}));
+vi.mock("#src/lib/discord/bot-rest.ts", () => ({
+  freshBotMember: stubs.freshBotMember,
+}));
 vi.mock("#src/league/discord/channel.ts", async () => {
   const { channelModuleWithSend } =
     await import("#src/temporal/v2/notification-delivery.test-fixtures.ts");
@@ -102,6 +110,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   stubs.fetchChannelForDelivery.mockResolvedValue({ guildId: undefined });
   stubs.isPolicyEnabled.mockResolvedValue(true);
+  stubs.hallInstallationRetirementOfV2.mockResolvedValue(undefined);
+  stubs.freshBotMember.mockResolvedValue({
+    joined_at: "2026-09-01T00:00:00.000Z",
+  });
   stubs.buildSettlementNotificationMessageV2.mockResolvedValue({
     content: "the pool settled",
     embeds: [],
@@ -305,6 +317,7 @@ function hallRecordWith(records: unknown[]): unknown {
       key: HALL_INTENT_KEY,
       kind: "hall-record-break",
       origin: { kind: "live" },
+      createdAt: "2026-09-12T00:00:00.000Z",
       target: { kind: "channel", channelId: CHANNEL_ID },
       announcement: {
         kind: "scout-hall-record-break-announcement",

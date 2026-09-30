@@ -46,6 +46,10 @@ export type ExecuteReportQueryParams = {
   now?: Date;
   onPlan?: ((plan: ScoutQlPlan) => void) | undefined;
   rangeOverride?: TemporalRange;
+  /** Raise the ordinary display ceiling for bounded callers such as Explore. */
+  rowLimitCeiling?: number | undefined;
+  /** Stops in-flight lake reads when the caller stops or times out its work. */
+  abortSignal?: AbortSignal | undefined;
   /** The Discord servers a global-scope asker belongs to. Guild-scoped reports
    * resolve aliases from their own scope, including scheduled reports. */
   askerGuildIds?: string[] | undefined;
@@ -70,7 +74,10 @@ export class InvalidSavedQueryError extends Error {
  * rather than matching nothing.
  */
 async function resolvePlanPlayerRefs(
-  params: Pick<ExecuteReportQueryParams, "askerGuildIds" | "scope">,
+  params: Pick<
+    ExecuteReportQueryParams,
+    "abortSignal" | "askerGuildIds" | "scope"
+  >,
   plan: ScoutQlPlan,
 ): Promise<Map<number, string[]> | undefined> {
   if (plan.playerRefs.length === 0) return undefined;
@@ -85,6 +92,7 @@ async function resolvePlanPlayerRefs(
     // Global callers without an asker have no permission-bounded alias scope.
     // A guild report always does: its execution scope is the boundary.
     aliasScopeAvailable: guildIds.length > 0,
+    abortSignal: params.abortSignal,
   });
 }
 
@@ -163,6 +171,7 @@ async function runReportQueryPlan(
       plan,
       competitionId: resolveCompetitionId(params, plan),
       now: params.now ?? new Date(),
+      rowLimitCeiling: params.rowLimitCeiling,
     });
   }
   const now = params.now ?? new Date();
@@ -172,7 +181,7 @@ async function runReportQueryPlan(
       : undefined;
   const { range, competition } = await planQueryRange(params, plan, now);
   const playerPuuids = await resolvePlanPlayerRefs(params, plan);
-  const limit = effectiveRowLimit(plan);
+  const limit = effectiveRowLimit(plan, params.rowLimitCeiling);
   const current = await runPlanAggregation({
     plan,
     scope: params.scope,
@@ -180,6 +189,7 @@ async function runReportQueryPlan(
     limit,
     playerPuuids,
     playerIds,
+    abortSignal: params.abortSignal,
   });
   const context = resolveTemporalContext(plan, range);
   if (context === null) {
@@ -201,6 +211,7 @@ async function runReportQueryPlan(
           limit,
           playerPuuids,
           playerIds,
+          abortSignal: params.abortSignal,
         });
   return resultFromPlanRows({
     plan,

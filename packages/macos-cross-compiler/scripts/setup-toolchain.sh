@@ -37,10 +37,13 @@ cp "$apple"/clang-darwin/*.a "$clang_resource/lib/darwin/"
 
 # ── 1. Developer directory, with Xcode's version record beside it as in
 # Xcode.app/Contents (Swift Build reads <developer dir>/../version.plist).
+# Each platform's testing libraries (XCTest, Swift Testing) live in its
+# Developer/Library/Frameworks and Developer/usr/lib, as in Xcode.
 for platform in MacOSX iPhoneOS; do
   dir=$apple/Developer/Platforms/$platform.platform
-  mkdir -p "$dir/Developer/SDKs" "$dir/Developer/usr/lib" "$dir/Developer/Library/Frameworks"
+  mkdir -p "$dir/Developer/SDKs"
   cp "$apple/platforms/$platform.platform/Info.plist" "$apple/platforms/$platform.platform/version.plist" "$dir/"
+  cp -R "$apple/platforms/$platform.platform/Developer/Library" "$apple/platforms/$platform.platform/Developer/usr" "$dir/Developer/"
   ln -s "$sdks/$platform.sdk" "$dir/Developer/SDKs/$platform.sdk"
 done
 

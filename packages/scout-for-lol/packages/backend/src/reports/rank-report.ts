@@ -64,6 +64,7 @@ export type RankReportInput = {
   plan: ScoutQlPlan;
   competitionId: number;
   now: Date;
+  rowLimitCeiling?: number | undefined;
 };
 
 type RankGroup = {
@@ -93,7 +94,12 @@ export async function rankReportResult(
   return resultFromPlanRows({
     plan: input.plan,
     rows: withoutComparison(
-      aggregateRankLeaderboard(input.plan, leaderboard, showsRankNames),
+      aggregateRankLeaderboard(
+        input.plan,
+        leaderboard,
+        showsRankNames,
+        input.rowLimitCeiling,
+      ),
     ),
     rowsScanned: leaderboard.length,
     // A snapshot answers "as of now"; it has no window to state.
@@ -117,8 +123,9 @@ export function aggregateRankLeaderboard(
   plan: ScoutQlPlan,
   leaderboard: RankedLeaderboardEntry[],
   showsRankNames: boolean,
+  rowLimitCeiling?: number,
 ): PlanAggregateRow[] {
-  const limit = effectiveRowLimit(plan);
+  const limit = effectiveRowLimit(plan, rowLimitCeiling);
   const where = plan.where;
   const survivors =
     where === undefined

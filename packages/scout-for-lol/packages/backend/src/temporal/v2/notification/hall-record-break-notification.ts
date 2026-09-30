@@ -85,6 +85,13 @@ function hallAnnouncementOf(
   return announcement;
 }
 
+/** The guild attested by a valid Hall intent's payload and durable key. */
+export function hallRecordBreakGuildV2(
+  record: MatchNotificationIntentRecord,
+): DiscordGuildId {
+  return hallAnnouncementOf(record).guildId;
+}
+
 export function buildHallRecordBreakNotificationMessageV2(
   record: MatchNotificationIntentRecord,
 ): MessageCreateOptions {

@@ -8,6 +8,10 @@ struct Toolchain {
   let root = URL(fileURLWithPath: ProcessInfo.processInfo.environment["APPLE_CROSS_ROOT"] ?? "/opt/apple")
   var resourceDirectory: URL { root.appendingPathComponent("swift-resource") }
   func sdk(_ name: String) -> URL { root.appendingPathComponent("sdks/\(name)") }
+  /// A platform's own Developer directory, which holds XCTest and Swift Testing.
+  func platformDeveloper(_ platform: Platform) -> URL {
+    root.appendingPathComponent("Developer/Platforms/\(platform.supportedPlatform).platform/Developer")
+  }
   var macroPlugin: String { root.appendingPathComponent("plugins/AppleMacros").path + "#SwiftUIMacros,PreviewsMacros" }
 
   /// Xcode's version record, as staged beside the developer directory:
