@@ -676,13 +676,21 @@ frozen domain machine. The Activities live in `src/temporal/v2/notification-*`
 and `src/temporal/v2/notification/`, and three facts about the lane are
 load-bearing for anyone extending it.
 
+The row's `subjectKind` and `subjectId` name the event being announced.
+Existing match intents use `match` and the Riot match id; `riotMatchId` remains
+indexed for match fan-out. The schema also reserves `duel` and `dare` subjects
+for their later notification producers, where `riotMatchId` is absent. During
+the schema rollout, a match row with a NULL `subjectId` is read from its
+required `riotMatchId` because older application pods still write that shape.
+New writers populate both match columns, and the database rejects a mismatch.
+
 ### An intent says what it announces and where it came from
 
 Every intent carries a `kind` (`postmatch` | `prematch` | `settlement` |
 `dare-summary` | `hall-record-break`) and an `origin`
 (`live`, or `recovery` naming the batch that minted it). Both are fixed at
 mint, mirrored into columns, and versioned in the payload envelope
-(`notificationIntentCodec` version 2; a version-1 payload derives its kind from
+(`notificationIntentCodec` version 3; a version-1 payload derives its kind from
 the key prefix the two producers of that version used, and refuses any other
 prefix). The kind selects the renderer and the message builder: a `prematch`
 intent is rendered from the archived spectator snapshot and delivered as v1's
