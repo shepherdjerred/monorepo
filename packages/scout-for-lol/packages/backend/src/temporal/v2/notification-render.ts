@@ -156,7 +156,7 @@ async function commitNotificationImage(
  */
 async function attestNotificationArtifact(
   riotMatchId: RiotMatchId,
-  kind: Exclude<NotificationIntentKind, "duel-status">,
+  kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
   evidence: ScoutV2NotificationRenderEvidence,
 ): Promise<ScoutDurableCommitV2> {
   return durableCommitV2(
@@ -262,7 +262,7 @@ async function renderPrematchArtifact(
  * they attest `none` and nothing is committed to the store.
  */
 async function renderByKind(
-  kind: Exclude<NotificationIntentKind, "duel-status">,
+  kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
   riotMatchId: RiotMatchId,
   fence: ScoutEffectFenceV2,
   postmatchMode: ScoutV2PostmatchRenderMode,
@@ -282,7 +282,7 @@ async function renderByKind(
 /** The claim one (match, kind) render is guarded under; see the module doc. */
 export function notificationRenderEffectKey(
   riotMatchId: RiotMatchId,
-  kind: Exclude<NotificationIntentKind, "duel-status">,
+  kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
 ): string {
   return `v2-notification-render:${kind}:${riotMatchId}`;
 }
@@ -292,7 +292,7 @@ const NOTIFICATION_RENDER_EFFECT_KIND = "v2-notification-render";
 /** The standing receipt as the fence's takeover probe reports it. */
 async function standingArtifact(
   riotMatchId: RiotMatchId,
-  kind: Exclude<NotificationIntentKind, "duel-status">,
+  kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">,
 ): Promise<{ fact: ScoutDurableCommitV2; effects: number } | null> {
   const standing = await readNotificationArtifactV2(riotMatchId, kind);
   return standing === null
@@ -304,14 +304,17 @@ export async function renderNotificationArtifactV2(
   input: ScoutIntentRefV2,
 ): Promise<ScoutNotificationRenderV2Result> {
   const record = await requireIntentRecordV2(input.intentKey);
-  if ("duelId" in record) {
-    // The versioned announcement on the intent is the whole Duel message.
+  if ("duelId" in record || "dareId" in record) {
+    // The versioned announcement on the intent is the whole status message.
     // There is no match artifact to render or attest under a Riot match ID.
     return ScoutNotificationRenderV2ResultSchema.parse({ outcome: "rendered" });
   }
-  if (record.intent.kind === "duel-status") {
+  if (
+    record.intent.kind === "duel-status" ||
+    record.intent.kind === "dare-status"
+  ) {
     throw new Error(
-      `Intent ${input.intentKey}: duel-status requires a Duel subject`,
+      `Intent ${input.intentKey}: ${record.intent.kind} requires its own subject`,
     );
   }
   return ScoutNotificationRenderV2ResultSchema.parse({
@@ -335,7 +338,7 @@ export async function renderNotificationArtifactV2(
  */
 export async function renderMatchNotificationArtifactV2(args: {
   riotMatchId: RiotMatchId;
-  kind: Exclude<NotificationIntentKind, "duel-status">;
+  kind: Exclude<NotificationIntentKind, "duel-status" | "dare-status">;
   postmatchMode: ScoutV2PostmatchRenderMode;
 }): Promise<"rendered" | "reused"> {
   const { riotMatchId, kind } = args;

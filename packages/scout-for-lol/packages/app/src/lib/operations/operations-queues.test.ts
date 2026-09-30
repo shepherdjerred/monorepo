@@ -76,6 +76,41 @@ function notificationRow(state: string, freshnessDeadline: string) {
 }
 
 describe("projecting the reads", () => {
+  test("shows Dare subjects without a Riot match inspector link", () => {
+    const queues = operationsQueues(
+      {
+        ...QUEUES,
+        stalledNotifications: [
+          {
+            intentKey: "dare-stalled",
+            dareId: 902,
+            state: "ready",
+            freshnessDeadline: FUTURE,
+            attemptCount: 0,
+          },
+        ],
+        unknownDeliveries: [
+          {
+            intentKey: "dare-unknown",
+            dareId: 902,
+            attemptCount: 1,
+            attemptNonce: "dare-attempt-1",
+            state: "unknown-delivery",
+          },
+        ],
+      },
+      NOW,
+    );
+    const stalled = queues.find(
+      (queue) => queue.id === "stalled-notifications",
+    );
+    const unknown = queues.find((queue) => queue.id === "unknown-deliveries");
+    expect(stalled?.rows[0]?.facts[0]).toEqual({ label: "Dare", value: "902" });
+    expect(stalled?.rows[0]?.inspectMatchId).toBeNull();
+    expect(unknown?.rows[0]?.facts[0]).toEqual({ label: "Dare", value: "902" });
+    expect(unknown?.rows[0]?.inspectMatchId).toBeNull();
+  });
+
   test("shows Duel subjects without a Riot match inspector link", () => {
     const duelId = "00000000-0000-4000-8000-000000000903";
     const queues = operationsQueues(

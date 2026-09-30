@@ -52,8 +52,25 @@ export const DuelNotificationIntentRecordSchema = z.strictObject({
   ),
 });
 
+/** One lifecycle or progress DM has a numeric Dare subject. */
+export type DareNotificationIntentRecord = z.infer<
+  typeof DareNotificationIntentRecordSchema
+>;
+export const DareNotificationIntentRecordSchema = z.strictObject({
+  dareId: z.number().int().positive(),
+  intent: NotificationIntentSchema.refine(
+    (intent) =>
+      intent.kind === "dare-status" &&
+      intent.origin.kind === "live" &&
+      intent.target.kind === "dm",
+    { message: "Dare intents must be live dare-status DMs" },
+  ),
+});
+
 export type NotificationIntentRecord =
-  MatchNotificationIntentRecord | DuelNotificationIntentRecord;
+  | MatchNotificationIntentRecord
+  | DuelNotificationIntentRecord
+  | DareNotificationIntentRecord;
 
 /** The columns owned by the state machine, written on every transition. */
 export type NotificationIntentStateColumns = {
@@ -72,7 +89,7 @@ export type NotificationIntentStateColumns = {
 /** Column shape of a MatchNotificationIntent row, minus DB-managed columns. */
 export type MatchNotificationIntentRow = NotificationIntentStateColumns & {
   intentKey: string;
-  subjectKind: "match" | "duel";
+  subjectKind: "match" | "duel" | "dare";
   subjectId: string;
   riotMatchId: string | null;
   kind: string;
@@ -228,9 +245,12 @@ export function matchNotificationIntentRowToRecord(
     matchId: raw.riotMatchId,
     intent,
   });
-  if (record.intent.kind === "duel-status") {
+  if (
+    record.intent.kind === "duel-status" ||
+    record.intent.kind === "dare-status"
+  ) {
     throw new Error(
-      `Intent ${raw.intentKey}: duel-status requires a Duel subject`,
+      `Intent ${raw.intentKey}: ${record.intent.kind} requires a non-match subject`,
     );
   }
   return record;
@@ -244,19 +264,28 @@ export function notificationIntentRowToRecord(
   if (raw.subjectKind === "match") {
     return matchNotificationIntentRowToRecord(raw);
   }
-  if (
-    raw.subjectKind !== "duel" ||
-    raw.subjectId === null ||
-    raw.riotMatchId !== null
-  ) {
+  if (raw.subjectId === null || raw.riotMatchId !== null) {
     throw new Error(
       `Intent ${raw.intentKey}: unsupported or inconsistent ${raw.subjectKind} subject`,
     );
   }
-  return DuelNotificationIntentRecordSchema.parse({
-    duelId: raw.subjectId,
-    intent: intentFromRow(raw),
-  });
+  switch (raw.subjectKind) {
+    case "duel":
+      return DuelNotificationIntentRecordSchema.parse({
+        duelId: raw.subjectId,
+        intent: intentFromRow(raw),
+      });
+    case "dare": {
+      const dareId = Number(raw.subjectId);
+      if (!Number.isSafeInteger(dareId) || String(dareId) !== raw.subjectId) {
+        throw new Error(`Intent ${raw.intentKey}: invalid Dare subject ID`);
+      }
+      return DareNotificationIntentRecordSchema.parse({
+        dareId,
+        intent: intentFromRow(raw),
+      });
+    }
+  }
 }
 
 function targetColumns(target: NotificationTarget): {
@@ -371,9 +400,12 @@ function intentColumns(
 export function matchNotificationIntentRecordToRow(
   record: MatchNotificationIntentRecord,
 ): MatchNotificationIntentRow {
-  if (record.intent.kind === "duel-status") {
+  if (
+    record.intent.kind === "duel-status" ||
+    record.intent.kind === "dare-status"
+  ) {
     throw new Error(
-      `Intent ${record.intent.key}: duel-status requires a Duel subject`,
+      `Intent ${record.intent.key}: ${record.intent.kind} requires a non-match subject`,
     );
   }
   return {
@@ -389,6 +421,14 @@ export function notificationIntentRecordToRow(
   record: NotificationIntentRecord,
 ): MatchNotificationIntentRow {
   if ("matchId" in record) return matchNotificationIntentRecordToRow(record);
+  if ("dareId" in record) {
+    return {
+      ...intentColumns(record.intent),
+      subjectKind: "dare",
+      subjectId: record.dareId.toString(),
+      riotMatchId: null,
+    };
+  }
   return {
     ...intentColumns(record.intent),
     subjectKind: "duel",

@@ -18,6 +18,8 @@ import {
   resetFlagOverrides,
 } from "#src/configuration/flags.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
+import { notificationIntentRowToRecord } from "#src/database/durable/intent-row.ts";
+import { dareStatusAnnouncementCodec } from "#src/betting/dares/presentation/notify/dare-status-message.ts";
 import {
   testAccountId,
   testChannelId,
@@ -212,11 +214,20 @@ async function activeDare(key: string): Promise<number> {
 
 /** The outbox rows standing for one Dare, as `category/kind`. */
 async function outboxKinds(dareId: number): Promise<string[]> {
-  const rows = await db.bucksDareNotificationEvent.findMany({
-    where: { dareId },
-    orderBy: { id: "asc" },
+  const rows = await db.matchNotificationIntent.findMany({
+    where: { subjectKind: "dare", subjectId: dareId.toString() },
+    orderBy: { intentKey: "asc" },
   });
-  return rows.map((row) => `${row.category}/${row.kind}`);
+  return rows.map((row) => {
+    const record = notificationIntentRowToRecord(row);
+    if (!("dareId" in record) || record.intent.announcement === undefined) {
+      throw new Error("Expected a Dare status intent");
+    }
+    const announcement = dareStatusAnnouncementCodec.parse(
+      record.intent.announcement,
+    );
+    return `${announcement.category}/${announcement.kind}`;
+  });
 }
 
 /** A match that does NOT resolve the Dare, so its capture stays open. */

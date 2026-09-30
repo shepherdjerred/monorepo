@@ -11,6 +11,7 @@ import type {
   NotificationFailure,
   NotificationUnsentSuppressionReason,
   NotificationTarget,
+  NotificationIntentKind,
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import {
   ScoutNotificationDeliveryV2ResultSchema,
@@ -19,7 +20,7 @@ import {
 import type { ScoutIntentAttemptRefV2 } from "@scout-for-lol/temporal/contracts-v2";
 import { client } from "#src/discord/client.ts";
 import { fetchChannelForDelivery } from "#src/discord/utils/channel.ts";
-import { sendDM } from "#src/discord/utils/dm.ts";
+import { sendDM, type DmStatus } from "#src/discord/utils/dm.ts";
 import {
   isMissingChannelError,
   isPermissionError,
@@ -32,7 +33,10 @@ import {
 import { deliveryAttemptNonce } from "#src/durable/match/delivery-intents.ts";
 import { freshBotMember } from "#src/lib/discord/bot-rest.ts";
 import { prisma } from "#src/database/index.ts";
-import type { MatchNotificationIntentRecord } from "#src/database/durable/intent-row.ts";
+import type {
+  MatchNotificationIntentRecord,
+  NotificationIntentRecord,
+} from "#src/database/durable/intent-row.ts";
 import { ArchivedObjectUnusableError } from "#src/report-store/s3-raw-source.ts";
 import { UndeliverableContentError } from "#src/temporal/v2/notification/undeliverable-content.ts";
 import {
@@ -42,6 +46,10 @@ import {
 import { hallInstallationRetirementOfV2 } from "#src/temporal/v2/notification/intent-audience.ts";
 import { buildAttestedMessageV2 } from "#src/temporal/v2/notification/notification-message.ts";
 import { duelStatusSuppressionV2 } from "#src/temporal/v2/notification/duel-status-notification.ts";
+import {
+  dareStatusAnnouncementOf,
+  dareStatusSuppressionV2,
+} from "#src/temporal/v2/notification/dare-status-notification.ts";
 import {
   PreSendBudgetExpiredError,
   withPreSendBudget,
@@ -211,7 +219,8 @@ async function sendWithoutReply(
  * `sendDM` is the only path allowed to message a user — it owns the DmAuditLog
  * row and the non-core message budget — so this routes through it rather than
  * opening a second send path. It never throws and never returns a message id:
- * every outcome it can report is definite, so a DM is never `unknown`.
+ * a failed send can be ambiguous because the Discord request may have landed
+ * before the helper caught the error.
  *
  * A DM cannot carry the report image. `sendDM` sends content and embeds, not
  * files, and a match report IS its attachment — so an intent that would deliver
@@ -223,13 +232,25 @@ async function sendWithoutReply(
 async function sendToAccount(
   message: MessageCreateOptions,
   accountId: DiscordAccountId,
+  kind: NotificationIntentKind,
+  guildId: DiscordGuildId | undefined,
 ): Promise<ScoutNotificationDeliveryV2Result> {
   const status = await sendDM({
     client,
     userId: accountId,
     message: message.content ?? "",
-    kind: "match_notification",
+    kind: kind === "dare-status" ? "dare_notification" : "match_notification",
+    ...(guildId === undefined ? {} : { guildId }),
+    suppressMentions: kind === "dare-status",
+    prisma,
   });
+  return classifyDmSendStatus(status);
+}
+
+/** A caught DM send error may follow a successful Discord write. */
+export function classifyDmSendStatus(
+  status: DmStatus,
+): ScoutNotificationDeliveryV2Result {
   switch (status) {
     case "sent":
       return { outcome: "delivered" };
@@ -244,11 +265,12 @@ async function sendToAccount(
         failure: { classification: "terminal", reason: "budget-exhausted" },
       };
     case "deferred":
-    case "failed":
       return {
         outcome: "failed",
         failure: { classification: "retryable", reason: "service-unavailable" },
       };
+    case "failed":
+      return { outcome: "unknown" };
   }
 }
 
@@ -257,6 +279,7 @@ async function deliverToTarget(args: {
   target: NotificationTarget;
   attemptNonce: string;
   guildId: DiscordGuildId | undefined;
+  kind: NotificationIntentKind;
 }): Promise<ScoutNotificationDeliveryV2Result> {
   switch (args.target.kind) {
     case "channel":
@@ -267,7 +290,12 @@ async function deliverToTarget(args: {
         guildId: args.guildId,
       });
     case "dm":
-      return await sendToAccount(args.message, args.target.accountId);
+      return await sendToAccount(
+        args.message,
+        args.target.accountId,
+        args.kind,
+        args.guildId,
+      );
   }
 }
 
@@ -309,6 +337,7 @@ type PreparedSend =
       readonly message: MessageCreateOptions;
       readonly target: NotificationTarget;
       readonly guildId: DiscordGuildId | undefined;
+      readonly kind: NotificationIntentKind;
     }
   | { readonly phase: "failed"; readonly failure: NotificationFailure }
   | {
@@ -357,12 +386,50 @@ async function hallPreSendSuppression(
     : undefined;
 }
 
+function notificationSubjectId(record: NotificationIntentRecord): string {
+  return "matchId" in record
+    ? record.matchId
+    : "duelId" in record
+      ? record.duelId
+      : record.dareId.toString();
+}
+
+function unsupportedDmAnnouncement(record: NotificationIntentRecord): boolean {
+  return (
+    record.intent.target.kind === "dm" &&
+    ANNOUNCEMENT_INTENT_KINDS.has(record.intent.kind) &&
+    record.intent.kind !== "dare-status"
+  );
+}
+
+async function deliveryGuildOf(
+  record: NotificationIntentRecord,
+): Promise<DiscordGuildId | undefined> {
+  const target = record.intent.target;
+  if (target.kind === "channel")
+    return await resolveDeliveryGuild(target.channelId);
+  return "dareId" in record
+    ? dareStatusAnnouncementOf(record).guildId
+    : undefined;
+}
+
+async function preSendSuppressionOf(
+  record: NotificationIntentRecord,
+  guildId: DiscordGuildId | undefined,
+): Promise<NotificationUnsentSuppressionReason | undefined> {
+  return "matchId" in record
+    ? await hallPreSendSuppression(record, guildId)
+    : "duelId" in record
+      ? await duelStatusSuppressionV2(record)
+      : await dareStatusSuppressionV2(record);
+}
+
 async function prepareNotificationSend(
   input: ScoutIntentAttemptRefV2,
   abortSignal: AbortSignal,
 ): Promise<PreparedSend> {
   const record = await requireIntentRecordV2(input.intentKey);
-  const subjectId = "matchId" in record ? record.matchId : record.duelId;
+  const subjectId = notificationSubjectId(record);
   const target = record.intent.target;
   // The send boundary's own reading of the policy. `beginNotificationSendV2`
   // already refused a held intent before minting this attempt, so reaching
@@ -375,10 +442,7 @@ async function prepareNotificationSend(
       `Intent ${input.intentKey} reached the send while held by policy ${gate.policy} for a ${gate.target} target; nothing was sent`,
     );
   }
-  if (
-    target.kind === "dm" &&
-    ANNOUNCEMENT_INTENT_KINDS.has(record.intent.kind)
-  ) {
+  if (unsupportedDmAnnouncement(record)) {
     // A settlement recap or a Dare result is a channel announcement: v1 has no
     // DM shape for either — its private settlement receipts are a separate,
     // budgeted fan-out this kind does not port — so a DM target is a producer
@@ -391,18 +455,12 @@ async function prepareNotificationSend(
       failure: { classification: "terminal", reason: "target-not-found" },
     };
   }
-  const guildId =
-    target.kind === "channel"
-      ? await resolveDeliveryGuild(target.channelId)
-      : undefined;
-
+  let guildId: DiscordGuildId | undefined;
   let message: MessageCreateOptions;
   try {
+    guildId = await deliveryGuildOf(record);
     message = await buildAttestedMessageV2(record, abortSignal, guildId);
-    const reason =
-      "matchId" in record
-        ? await hallPreSendSuppression(record, guildId)
-        : await duelStatusSuppressionV2(record);
+    const reason = await preSendSuppressionOf(record, guildId);
     if (reason !== undefined) return { phase: "suppressed", reason };
   } catch (error) {
     if (error instanceof ArchivedObjectUnusableError) {
@@ -434,7 +492,7 @@ async function prepareNotificationSend(
       failure: { classification: "terminal", reason: "target-not-found" },
     };
   }
-  return { phase: "ready", message, target, guildId };
+  return { phase: "ready", message, target, guildId, kind: record.intent.kind };
 }
 
 /**
@@ -506,6 +564,7 @@ export async function deliverNotificationV2(
       target: prepared.target,
       attemptNonce: input.attemptNonce,
       guildId: prepared.guildId,
+      kind: prepared.kind,
     }),
   );
 }

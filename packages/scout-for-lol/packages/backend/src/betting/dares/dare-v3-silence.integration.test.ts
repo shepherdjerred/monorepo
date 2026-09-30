@@ -160,8 +160,8 @@ describe("the version-3 Dare notification gate", () => {
     });
 
     expect(
-      await db.bucksDareNotificationEvent.findMany({
-        where: { dareId: dare.id },
+      await db.matchNotificationIntent.findMany({
+        where: { subjectKind: "dare", subjectId: dare.id.toString() },
       }),
     ).toEqual([]);
     // And the callout it would have posted is retired with the settlement.
@@ -186,8 +186,8 @@ describe("the version-3 Dare notification gate", () => {
     });
 
     expect(
-      await db.bucksDareNotificationEvent.findMany({
-        where: { dareId: dare.id },
+      await db.matchNotificationIntent.findMany({
+        where: { subjectKind: "dare", subjectId: dare.id.toString() },
       }),
     ).not.toEqual([]);
   });

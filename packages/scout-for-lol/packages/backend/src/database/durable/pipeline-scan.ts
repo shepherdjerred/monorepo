@@ -178,6 +178,7 @@ const INTENT_TRUTH_WINDOW = {
   "hall-record-break": "after-result",
   // A Duel has no Riot match result at mint; its own series clock decides freshness.
   "duel-status": "after-result",
+  "dare-status": "after-result",
 } satisfies Record<NotificationIntentKind, "before-result" | "after-result">;
 
 const BEFORE_RESULT_INTENT_KINDS: readonly string[] = Object.entries(

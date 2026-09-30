@@ -8,7 +8,20 @@ import { transitionIntent } from "#src/database/durable/intent-repository.ts";
 import type { NotificationIntentRecord } from "#src/database/durable/intent-row.ts";
 import { hallRecordBreakSuppressionV2 } from "#src/temporal/v2/notification/hall-record-break-notification.ts";
 import { duelStatusSuppressionV2 } from "#src/temporal/v2/notification/duel-status-notification.ts";
+import { dareStatusSuppressionV2 } from "#src/temporal/v2/notification/dare-status-notification.ts";
 import { MalformedAnnouncementIntentError } from "#src/temporal/v2/notification/announcement-codecs.ts";
+
+async function deferMalformedAnnouncement(
+  check: () => Promise<NotificationPolicySuppressionReason | undefined>,
+): Promise<NotificationPolicySuppressionReason | undefined> {
+  try {
+    return await check();
+  } catch (error) {
+    // The pre-send phase records malformed content terminally.
+    if (error instanceof MalformedAnnouncementIntentError) return undefined;
+    throw error;
+  }
+}
 
 /**
  * Whether the intent's KIND forbids sending it now, and why.
@@ -32,28 +45,24 @@ async function kindSuppressionOfV2(
   record: NotificationIntentRecord,
 ): Promise<NotificationPolicySuppressionReason | undefined> {
   switch (record.intent.kind) {
+    case "dare-status":
+      if (!("dareId" in record))
+        throw new Error("Dare status requires a Dare subject");
+      return await deferMalformedAnnouncement(
+        async () => await dareStatusSuppressionV2(record),
+      );
     case "duel-status":
       if (!("duelId" in record))
         throw new Error("Duel status requires a Duel subject");
-      try {
-        return await duelStatusSuppressionV2(record);
-      } catch (error) {
-        if (error instanceof MalformedAnnouncementIntentError) return undefined;
-        throw error;
-      }
+      return await deferMalformedAnnouncement(
+        async () => await duelStatusSuppressionV2(record),
+      );
     case "hall-record-break":
       if (!("matchId" in record))
         throw new Error("Hall notification requires a match subject");
-      try {
-        return await hallRecordBreakSuppressionV2(record);
-      } catch (error) {
-        // A payload that cannot even name its guild is undeliverable content,
-        // which the send's pre-send phase parks terminally as
-        // `content-unavailable`. Deciding it here would need the very payload
-        // that is broken, so the policy defers to the phase built to say so.
-        if (error instanceof MalformedAnnouncementIntentError) return undefined;
-        throw error;
-      }
+      return await deferMalformedAnnouncement(
+        async () => await hallRecordBreakSuppressionV2(record),
+      );
     case "postmatch":
     case "prematch":
     case "settlement":

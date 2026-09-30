@@ -299,6 +299,7 @@ describe("announcement kinds", () => {
     "settlement",
     "dare-summary",
     "duel-status",
+    "dare-status",
     "hall-record-break",
   ] as const)("a %s intent must carry an announcement", (kind) => {
     expect(() =>
@@ -318,6 +319,7 @@ describe("announcement kinds", () => {
 
   test("the announcement kinds are exactly the kinds that carry a payload", () => {
     expect([...ANNOUNCEMENT_INTENT_KINDS].sort()).toEqual([
+      "dare-status",
       "dare-summary",
       "duel-status",
       "hall-record-break",
