@@ -43,6 +43,18 @@ function withRequestOptions(
           { name: "music", value: "music" },
           { name: "video", value: "video" },
         ),
+    )
+    .addStringOption((o) =>
+      o
+        .setName("provider")
+        .setDescription(
+          "Choose for sports requests; auto tries StreamEast first",
+        )
+        .addChoices(
+          { name: "auto (StreamEast first)", value: "auto" },
+          { name: "StreamEast", value: "streameast" },
+          { name: "TVSportsLive", value: "tvsportslive" },
+        ),
     );
 }
 
@@ -279,6 +291,11 @@ export const commandDefinitions = [
         )
         .addSubcommand((sub) =>
           sub.setName("leave").setDescription("Leave your voice channel"),
+        )
+        .addSubcommand((sub) =>
+          sub
+            .setName("sports")
+            .setDescription("Show live and upcoming sports listings for today"),
         ),
     )
     .addSubcommandGroup((group) =>

@@ -25,7 +25,6 @@ Message bodies go on `gen_ai.input.messages` / `gen_ai.output.messages`
 | `traceClaudeAgent` (`./wrappers/claude-agent`)                                 | A Claude Agent SDK message stream (async generator) |
 | `attachCodexTrace` (`./wrappers/codex`)                                        | A Codex exec session, spans per turn/tool call      |
 | `createCodexJsonlParser`, `pumpCodexStdout`, `addCodexUsage` (`./codex-jsonl`) | Codex JSONL event stream parsing                    |
-| `traceTextStream` (`./wrappers/text-stream`)                                   | A generic streamed text response                    |
 
 All of these are re-exported from the package root; the per-wrapper subpaths
 listed above exist so a consumer only type-checks against the peer SDKs it
@@ -74,7 +73,7 @@ design, and Tempo is already the store for trace, session, and user ids.
 
 ## Archive pipeline (full-content spans)
 
-`LlmArchiveSpanProcessor` (`./span-processor`) wraps an inner `SpanProcessor`
+`LlmArchiveSpanProcessor` (package root) wraps an inner `SpanProcessor`
 (typically a `BatchSpanProcessor` over an OTLP exporter). On span end, if the
 span carries known LLM body attributes (OTel GenAI keys, Codex tool
 stdout/stderr, or Vercel AI SDK legacy keys), it:

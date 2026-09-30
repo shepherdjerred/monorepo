@@ -8,11 +8,7 @@ import type { RuntimePaths } from "#src/runtime/paths.ts";
 import { requireSuccess, type CommandRunner } from "#src/runtime/process.ts";
 import { writeInfo } from "#src/runtime/output.ts";
 
-const REQUIRED_LABELS = [
-  "agent:ready",
-  "agent:codex",
-  "agent:needs-human",
-] as const;
+const REQUIRED_LABELS = ["agent:codex", "agent:needs-human"] as const;
 
 export async function doctor(input: {
   config: Config;

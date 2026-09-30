@@ -27,7 +27,7 @@ function botPr(
     title: dataDragonPrTitle(version),
     url: "https://github.com/shepherdjerred/monorepo/pull/1",
     baseRefName: "main",
-    headRefName: `chore/scout-data-dragon-${version}-6d94e121`,
+    headRefName: branchName(version),
     isCrossRepository: false,
     author: { is_bot: true, login: `app/${APP_SLUG}` },
     ...overrides,
@@ -67,10 +67,10 @@ describe("isDataDragonBranch", () => {
     ).toBe(true);
   });
 
-  test("matches the legacy random-suffixed branch shape", () => {
+  test("rejects the retired random-suffixed branch shape", () => {
     expect(
       isDataDragonBranch("chore/scout-data-dragon-16.15.1-6d94e121", "16.15.1"),
-    ).toBe(true);
+    ).toBe(false);
   });
 
   test("does not match a different version's deterministic branch", () => {
@@ -82,15 +82,6 @@ describe("isDataDragonBranch", () => {
   test("rejects a wrong-version branch", () => {
     expect(
       isDataDragonBranch("chore/scout-data-dragon-16.15.0-6d94e121", "16.15.1"),
-    ).toBe(false);
-  });
-
-  test("rejects a non-hex / wrong-length suffix", () => {
-    expect(
-      isDataDragonBranch("chore/scout-data-dragon-16.15.1-zzzzzzzz", "16.15.1"),
-    ).toBe(false);
-    expect(
-      isDataDragonBranch("chore/scout-data-dragon-16.15.1-6d94e1", "16.15.1"),
     ).toBe(false);
   });
 

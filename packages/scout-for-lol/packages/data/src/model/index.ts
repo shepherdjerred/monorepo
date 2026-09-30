@@ -16,6 +16,8 @@ export * from "./bucks/dare-contract-v3.ts";
 export * from "./bucks/dare-progress.ts";
 export * from "./bucks/dare-paraphrase-corpus.ts";
 export * from "./reports/lake-columns.ts";
+export * from "./reports/loadout-columns.ts";
+export * from "./reports/match-team-lake-columns.ts";
 export * from "./riot/lane.ts";
 export * from "./riot/league-account.ts";
 export * from "./riot/league-points.ts";

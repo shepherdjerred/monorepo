@@ -157,26 +157,31 @@ describe("agentActivityRetryFor", () => {
 });
 
 describe("agentTaskFailureStageFor", () => {
-  test("preserves old history ordering when the post-delivery patch is absent", () => {
+  test("reports an execution failure before any report was attempted", () => {
     expect(
       agentTaskFailureStageFor({
-        v2Reporting: true,
-        reportAttempted: true,
-        reportDelivered: true,
-        postDeliveryFailureReporting: false,
+        reportAttempted: false,
+        reportDelivered: false,
       }),
-    ).toBeUndefined();
+    ).toBe("execution");
   });
 
-  test("enables follow-up failure reporting for patched executions", () => {
+  test("reports a follow-up failure after the report was delivered", () => {
     expect(
       agentTaskFailureStageFor({
-        v2Reporting: true,
         reportAttempted: true,
         reportDelivered: true,
-        postDeliveryFailureReporting: true,
       }),
     ).toBe("follow-up-dispatch");
+  });
+
+  test("sends no second report when report delivery itself failed", () => {
+    expect(
+      agentTaskFailureStageFor({
+        reportAttempted: true,
+        reportDelivered: false,
+      }),
+    ).toBeUndefined();
   });
 });
 

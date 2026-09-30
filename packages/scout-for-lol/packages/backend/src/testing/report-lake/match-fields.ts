@@ -24,3 +24,20 @@ export function augmentFields(
     augment_6_id: augmentIds?.[5] ?? null,
   };
 }
+
+/** Flash + Ignite, Precision (Conqueror) over Resolve, with common shards. */
+export const DEFAULT_SCOUTQL_LOADOUT = {
+  summoner1_id: 4,
+  summoner2_id: 14,
+  perk_primary_style: 8000,
+  perk_sub_style: 8400,
+  perk0: 8010,
+  perk1: 9111,
+  perk2: 9104,
+  perk3: 8299,
+  perk4: 8444,
+  perk5: 8242,
+  stat_perk_offense: 5005,
+  stat_perk_flex: 5008,
+  stat_perk_defense: 5011,
+};

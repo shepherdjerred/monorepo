@@ -45,6 +45,8 @@ import {
   type CompiledPlanColumns,
 } from "#src/reports/duckdb/select-sql.ts";
 import { buildFactsCte } from "#src/reports/duckdb/facts-cte.ts";
+import { LOADOUT_NAME_DEPENDENCIES } from "#src/reports/duckdb/loadout-sql.ts";
+import { LOADOUT_COLUMNS } from "@scout-for-lol/data/model/reports/lake-columns.ts";
 import {
   buildLookupSources,
   enforceScopeGuards,
@@ -108,6 +110,9 @@ type SplitWhere = {
   /** Conjuncts touching identity columns — compiled against the facts CTE. */
   residual: ScoutQlPredicate[];
 };
+
+/** Loadout ids, which a scan selects only when a plan reads one. */
+const LOADOUT: ReadonlySet<string> = new Set(LOADOUT_COLUMNS);
 
 function splitWhere(
   where: ScoutQlPredicate | undefined,
@@ -179,6 +184,8 @@ function buildFactsPipeline(
     eventLookups?: EventLookupFlags | undefined;
     /** A grouping keys on the player, so rows without one are dropped. */
     playerGrouped?: boolean;
+    /** Loadout name columns the plan names. */
+    loadoutNames?: ReadonlySet<string>;
   },
 ): FactsPipeline | undefined {
   const factsContext: ExprContext = {
@@ -211,7 +218,13 @@ function buildFactsPipeline(
     ? combineAnd(pushedFragments)
     : combineAnd([range, ...pushedFragments]);
   const source = match(kind.columnSource)
-    .with("match", () => buildMatchesSource(input.files, pushdown))
+    .with("match", () =>
+      buildMatchesSource(
+        input.files,
+        pushdown,
+        [...extras.projected].filter((name) => LOADOUT.has(name)),
+      ),
+    )
     .with("prematch", () => buildPrematchSource(input.files, pushdown))
     .with("match-team", () => buildMatchTeamsSource(input.files, pushdown))
     .with("match-team-ban", () =>
@@ -244,6 +257,7 @@ function buildFactsPipeline(
     columnSource: kind.columnSource,
     source,
     ...lookups,
+    loadoutNames: extras.loadoutNames,
     projected: [...extras.projected],
     extraItems: extras.extraItems,
   });
@@ -322,6 +336,9 @@ export function compileScoutQlPlanQuery(
     teamLookup:
       kind.columnSource === "match" &&
       [...referenced].some((name) => TEAM_LOOKUP_COLUMNS.has(name)),
+    loadoutNames: new Set(
+      [...referenced].filter((name) => LOADOUT_NAME_DEPENDENCIES.has(name)),
+    ),
     frameGold:
       kind.columnSource === "timeline-frame"
         ? {

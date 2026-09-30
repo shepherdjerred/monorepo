@@ -15,12 +15,22 @@ import {
   DEFAULT_TIMEOUT_SECONDS,
   parseMaxBlockingPriority,
   resolveReviewGateProvider,
+  resolveReviewGateProviders,
 } from "./wait-for-review.ts";
 import {
+  confirmPass,
+  PASS_CONFIRMATION_TICKS,
+  verifyPassBeforeAccepting,
+} from "../lib/review/review-gate-poll.ts";
+import {
+  type BlockingPolicy,
   codexProvider,
   qodoProvider,
   REVIEW_GATE_BLOCKED_EXIT_CODE,
+  type ReviewThread,
 } from "@shepherdjerred/code-review";
+import type { ReviewStateResult } from "@shepherdjerred/code-review/github";
+import type { ProviderObservation } from "../lib/review/review-gate-observe.ts";
 
 describe("resolveReviewGateProvider", () => {
   test("defaults direct invocations to Codex", () => {
@@ -44,6 +54,63 @@ describe("resolveReviewGateProvider", () => {
     expect(() => resolveReviewGateProvider("unknown")).toThrow(
       "CI review gate requires Codex",
     );
+  });
+});
+
+function withReviewEnv(
+  providers: string | undefined,
+  provider: string | undefined,
+  fn: () => void,
+): void {
+  const savedProviders = Bun.env["REVIEW_PROVIDERS"];
+  const savedProvider = Bun.env["REVIEW_PROVIDER"];
+  if (providers === undefined) delete Bun.env["REVIEW_PROVIDERS"];
+  else Bun.env["REVIEW_PROVIDERS"] = providers;
+  if (provider === undefined) delete Bun.env["REVIEW_PROVIDER"];
+  else Bun.env["REVIEW_PROVIDER"] = provider;
+  try {
+    fn();
+  } finally {
+    if (savedProviders === undefined) delete Bun.env["REVIEW_PROVIDERS"];
+    else Bun.env["REVIEW_PROVIDERS"] = savedProviders;
+    if (savedProvider === undefined) delete Bun.env["REVIEW_PROVIDER"];
+    else Bun.env["REVIEW_PROVIDER"] = savedProvider;
+  }
+}
+
+function gateProviderIds(): string[] {
+  return resolveReviewGateProviders().map((provider) => provider.id);
+}
+
+describe("resolveReviewGateProviders", () => {
+  test("defaults to the required provider with no configuration", () => {
+    withReviewEnv(undefined, undefined, () => {
+      expect(gateProviderIds()).toEqual(["codex"]);
+    });
+  });
+
+  test("keeps the legacy singular contract", () => {
+    withReviewEnv(undefined, "codex", () => {
+      expect(gateProviderIds()).toEqual(["codex"]);
+    });
+    withReviewEnv(undefined, "qodo", () => {
+      expect(() => gateProviderIds()).toThrow("CI review gate requires Codex");
+    });
+  });
+
+  test("accepts a comma list with normalization and dedupe", () => {
+    withReviewEnv(" codex , Qodo,coderabbit,codex,", undefined, () => {
+      expect(gateProviderIds()).toEqual(["codex", "qodo", "coderabbit"]);
+    });
+  });
+
+  test("fails loudly on unknown or empty provider lists", () => {
+    withReviewEnv("codex,unknown", undefined, () => {
+      expect(() => gateProviderIds()).toThrow("Unknown review provider");
+    });
+    withReviewEnv(" , ", undefined, () => {
+      expect(() => gateProviderIds()).toThrow("at least one provider");
+    });
   });
 });
 
@@ -299,5 +366,153 @@ describe("review gate source", () => {
     expect(quotaBranch).toMatch(
       /out of quota[\s\S]*exit 0\nfi\nexit "\$GATE_STATUS"/u,
     );
+  });
+});
+
+describe("confirmPass", () => {
+  test("accepts a pass only on consecutive passing ticks", () => {
+    expect(PASS_CONFIRMATION_TICKS).toBe(2);
+    const first = confirmPass(true, 0);
+    expect(first).toEqual({ streak: 1, accepted: false });
+    expect(confirmPass(true, first.streak)).toEqual({
+      streak: 2,
+      accepted: true,
+    });
+  });
+
+  test("a waiting tick resets the streak", () => {
+    const first = confirmPass(true, 0);
+    const reset = confirmPass(false, first.streak);
+    expect(reset).toEqual({ streak: 0, accepted: false });
+    expect(confirmPass(true, reset.streak).accepted).toBe(false);
+  });
+});
+
+describe("verifyPassBeforeAccepting", () => {
+  const policy: BlockingPolicy = {
+    alwaysBlockingPriority: 1,
+    maxBlockingPriority: 3,
+    lowSeverity: "first-review-or-accompanied",
+  };
+  const config = {
+    repo: "shepherdjerred/monorepo",
+    number: 3189,
+    head: "abc123",
+    token: "token",
+    policy,
+  };
+  const reviewed: ReviewStateResult = {
+    state: "reviewed",
+    completionSignal: "review-at-head",
+    reviewedCommit: "abc123",
+    reviewedAt: "2026-09-27T04:00:00Z",
+    staleReaction: false,
+    skipReason: null,
+    blockedReason: null,
+  };
+  function observed(): ProviderObservation[] {
+    return [
+      {
+        provider: codexProvider,
+        skipped: false,
+        skipReason: null,
+        state: reviewed,
+        threads: [],
+        headRefOid: "abc123",
+        headPushedAt: null,
+        nextAttempt: 1,
+        decision: null,
+      },
+    ];
+  }
+
+  test("accepts when the re-fetch is still clean", async () => {
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: observed(),
+        fetchShared: async () => new Map([[codexProvider.id, []]]),
+        resolveCompletion: async () => reviewed,
+      }),
+    ).resolves.toBe(true);
+  });
+
+  test("a P0 posted after the tick's fetch fails fast", async () => {
+    const veto: ReviewThread = {
+      authorLogin: "chatgpt-codex-connector",
+      isResolved: false,
+      isOutdated: false,
+      path: "src/example.ts",
+      line: 1,
+      url: null,
+      priority: 0,
+      title: "Critical finding.",
+      threadId: "thread-1",
+      commentId: null,
+      raisedInReview: null,
+    };
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: observed(),
+        fetchShared: async () => new Map([[codexProvider.id, [veto]]]),
+        resolveCompletion: async () => reviewed,
+      }),
+    ).rejects.toThrow(/veto the gate/);
+  });
+
+  test("fails closed with nothing to re-check", async () => {
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: [],
+        fetchShared: async () => new Map(),
+      }),
+    ).resolves.toBe(false);
+  });
+
+  test("fails closed when the shared snapshot omits a provider", async () => {
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: observed(),
+        fetchShared: async () => new Map(),
+        resolveCompletion: async () => reviewed,
+      }),
+    ).resolves.toBe(false);
+  });
+
+  test("resolves completion before fetching findings", async () => {
+    // A P0 posted between the findings fetch and the completion lookup
+    // must not slip past terminal verification: completion is resolved
+    // first, then the shared findings snapshot is fetched.
+    const order: string[] = [];
+    await verifyPassBeforeAccepting({
+      ...config,
+      observed: observed(),
+      fetchShared: async () => {
+        order.push("fetch");
+        return new Map([[codexProvider.id, []]]);
+      },
+      resolveCompletion: async () => {
+        order.push("resolve");
+        return reviewed;
+      },
+    });
+    expect(order).toEqual(["resolve", "fetch"]);
+  });
+
+  test("a freshly unresolved provider keeps polling instead of accepting", async () => {
+    // The confirming tick saw reviewed; a dismissal afterwards must not be
+    // accepted — the fresh state says reviewing, so verification declines
+    // and the loop keeps polling instead of returning success.
+    await expect(
+      verifyPassBeforeAccepting({
+        ...config,
+        observed: observed(),
+        fetchShared: async () => new Map([[codexProvider.id, []]]),
+        resolveCompletion: async () => ({ ...reviewed, state: "reviewing" }),
+      }),
+    ).resolves.toBe(false);
   });
 });

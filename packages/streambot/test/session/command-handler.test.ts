@@ -678,20 +678,63 @@ describe("CommandHandler permissions", () => {
 describe("CommandHandler queue edits + volume + loop", () => {
   test("move and shuffle dispatch and ack", async () => {
     const h = makeHandler({
-      view: { ...EMPTY_VIEW, queue: [] },
+      view: {
+        ...EMPTY_VIEW,
+        queue: [
+          {
+            title: "Item A",
+            requesterId: uid(REQUESTER),
+            chapters: [],
+            kind: "search",
+            mediaKind: null,
+            sourceId: "search:Item A",
+            durationSeconds: null,
+          },
+        ],
+      },
     });
     const move = fakeInteraction({
       sub: "move",
-      integers: { from: 1, to: 3 },
+      integers: { from: 1, to: 1 },
     });
     await h.handler.run(move.interaction);
-    expect(h.events[0]).toEqual({ type: "MOVE", from: 1, to: 3 });
-    expect(move.replies[0]).toBe("Moved item 1 → 3.");
+    expect(h.events[0]).toEqual({ type: "MOVE", from: 1, to: 1 });
+    expect(move.replies[0]).toBe("Moved Item A to position 1.");
 
     const shuffle = fakeInteraction({ sub: "shuffle" });
     await h.handler.run(shuffle.interaction);
     expect(h.events[1]).toEqual({ type: "SHUFFLE" });
   });
+
+  test.each(["move", "shuffle", "loop"])(
+    "explains why live sports cannot %s",
+    async (sub) => {
+      const current = viewWithCurrent(REQUESTER).current;
+      if (current === null) throw new Error("Expected current item");
+      const h = makeHandler({
+        view: {
+          ...EMPTY_VIEW,
+          current: {
+            ...current,
+            source: {
+              kind: "url",
+              url: "https://v2.streameast.ga/nfl/bears-vs-packers/",
+            },
+          },
+        },
+      });
+      const interaction = fakeInteraction({
+        sub,
+        strings: { mode: "queue" },
+        integers: { from: 1, to: 1 },
+      });
+      await h.handler.run(interaction.interaction);
+      expect(interaction.replies[0]).toBe(
+        "Live sports support play, skip/stop, and volume only.",
+      );
+      expect(h.events).toEqual([]);
+    },
+  );
 
   test("volume applies live when playing, otherwise defers to next video", async () => {
     const live = makeHandler({ volumeApplied: true });

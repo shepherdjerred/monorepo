@@ -15,6 +15,78 @@ import {
 } from "./github-http.ts";
 import type { ReviewProvider, ReviewThread } from "./types.ts";
 
+/**
+ * Append the findings a provider renders only in its own review bodies
+ * (CodeRabbit's outside-diff sections) to the parsed threads, ahead of
+ * attribution. Providers without a body parser contribute nothing. Each
+ * finding carries its review, so attribution places it in the same ordinal
+ * space as the addressable threads and the merge step can collapse a finding
+ * with its thread copy.
+ */
+export function appendReviewBodyFindings(
+  parsed: ParsedReviewThread[],
+  providerReviews: readonly ProviderReview[],
+  provider: ReviewProvider,
+  head: string | null,
+): void {
+  const parseBodies = provider.parseReviewBodyFindings;
+  if (parseBodies === null) return;
+  // Dismissed reviews are out: completion ignores them, so a dismissed
+  // re-review must neither contribute findings nor supersede the still-live
+  // ones — otherwise a dismissal would silently retire a P0 a clean sibling
+  // could then pass over.
+  const snapshots = providerReviews
+    .filter(
+      (review) =>
+        isProviderAuthor(provider, review.authorLogin) &&
+        review.state !== "DISMISSED",
+    )
+    .map((review) => ({
+      id: review.id,
+      submittedAt: review.submittedAt,
+      body: review.body,
+      commitOid: review.commitOid,
+    }));
+  // Only the latest review OF THE HEAD supersedes: SHAs carry no order, so a
+  // delayed review of another commit — submitted after the head review yet
+  // reading older code — never retires the head verdict, and it cannot
+  // resurrect a P0 the head review already cleared. With no orderable head
+  // review the provider has not spoken for this head, so everything stays
+  // current and the gate waits rather than passes over an unreviewed head.
+  // The latest review that read the head is its verdict. A timestamp tie
+  // establishes no order, so a tied head leaves no verdict and everything
+  // stays current.
+  let verdictId: string | null = null;
+  let verdictAt: string | null = null;
+  for (const snapshot of snapshots) {
+    if (
+      head === null ||
+      snapshot.commitOid !== head ||
+      snapshot.submittedAt === null
+    ) {
+      continue;
+    }
+    if (verdictAt !== null && snapshot.submittedAt <= verdictAt) {
+      if (snapshot.submittedAt === verdictAt) verdictId = null;
+      continue;
+    }
+    verdictId = snapshot.id;
+    verdictAt = snapshot.submittedAt;
+  }
+  for (const finding of parseBodies(snapshots)) {
+    if (verdictId !== null && finding.reviewId !== verdictId) {
+      finding.thread.isOutdated = true;
+    }
+    parsed.push({
+      thread: finding.thread,
+      review: {
+        id: finding.reviewId,
+        submittedAt: finding.reviewSubmittedAt,
+      },
+    });
+  }
+}
+
 export const REVIEW_THREADS_QUERY = `
 query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
   repository(owner: $owner, name: $name) {
@@ -55,11 +127,26 @@ export type ParsedReviewThread = {
   review: { id: string; submittedAt: string | null } | null;
 };
 
-/** A provider review, including clean reviews that opened no threads. */
+/**
+ * A provider review, including clean reviews that opened no threads. `body`
+ * feeds providers whose findings live partly in the review itself
+ * (CodeRabbit's outside-diff sections); `commitOid` ties a review to the head
+ * it read without a second lookup.
+ */
 export type ProviderReview = {
   id: string;
   submittedAt: string | null;
   authorLogin: string | null;
+  body: string | null;
+  commitOid: string | null;
+  /**
+   * The GitHub review state (APPROVED, CHANGES_REQUESTED, COMMENTED,
+   * DISMISSED, PENDING); null when the listing did not fetch it. Dismissed
+   * reviews are excluded from body findings: completion ignores them, so a
+   * dismissed re-review must neither contribute findings nor supersede the
+   * still-live ones.
+   */
+  state: string | null;
 };
 
 export const REVIEW_REVIEWS_QUERY = `
@@ -71,6 +158,9 @@ query($owner: String!, $name: String!, $number: Int!, $cursor: String) {
         nodes {
           id
           submittedAt
+          state
+          body
+          commit { oid }
           author { login }
         }
       }
@@ -104,11 +194,15 @@ export function parseReviewPage(payload: unknown): {
     const id = stringField(review, "id");
     if (id === null) return [];
     const author = recordField(review, "author");
+    const commit = recordField(review, "commit");
     return [
       {
         id,
         submittedAt: stringField(review, "submittedAt"),
         authorLogin: author === null ? null : stringField(author, "login"),
+        body: stringField(review, "body"),
+        commitOid: commit === null ? null : stringField(commit, "oid"),
+        state: stringField(review, "state"),
       },
     ];
   });
@@ -118,6 +212,68 @@ export function parseReviewPage(payload: unknown): {
     hasNextPage: pageInfo !== null && boolField(pageInfo, "hasNextPage"),
     endCursor: pageInfo === null ? null : stringField(pageInfo, "endCursor"),
   };
+}
+
+/**
+ * Provider-agnostic listing info for one review-threads page: the live head
+ * plus pagination, without parsing any thread. Lets {@link fetchReviewListing}
+ * paginate once for every provider instead of once per provider, so terminal
+ * acceptance partitions a single snapshot.
+ */
+export function threadListingPageInfo(payload: unknown): {
+  headRefOid: string | null;
+  hasNextPage: boolean;
+  endCursor: string | null;
+} {
+  const pullRequest = listingPullRequest(payload, "reviewThreads");
+  const reviewThreads = recordField(pullRequest, "reviewThreads");
+  if (reviewThreads === null) {
+    throw new Error("GitHub GraphQL response did not include reviewThreads");
+  }
+  const pageInfo = recordField(reviewThreads, "pageInfo");
+  return {
+    headRefOid: stringField(pullRequest, "headRefOid"),
+    hasNextPage: pageInfo !== null && boolField(pageInfo, "hasNextPage"),
+    endCursor: pageInfo === null ? null : stringField(pageInfo, "endCursor"),
+  };
+}
+
+/**
+ * Provider-agnostic listing info for one reviews page, mirroring
+ * {@link threadListingPageInfo}.
+ */
+export function reviewListingPageInfo(payload: unknown): {
+  hasNextPage: boolean;
+  endCursor: string | null;
+} {
+  const pullRequest = listingPullRequest(payload, "reviews");
+  const reviews = recordField(pullRequest, "reviews");
+  if (reviews === null) {
+    throw new Error("GitHub GraphQL response did not include reviews");
+  }
+  const pageInfo = recordField(reviews, "pageInfo");
+  return {
+    hasNextPage: pageInfo !== null && boolField(pageInfo, "hasNextPage"),
+    endCursor: pageInfo === null ? null : stringField(pageInfo, "endCursor"),
+  };
+}
+
+function listingPullRequest(
+  payload: unknown,
+  connection: string,
+): Record<string, unknown> {
+  const payloadRecord = asRecord(payload);
+  const data =
+    payloadRecord === null ? null : recordField(payloadRecord, "data");
+  const repository = data === null ? null : recordField(data, "repository");
+  const pullRequest =
+    repository === null ? null : recordField(repository, "pullRequest");
+  if (pullRequest === null) {
+    throw new Error(
+      `GitHub GraphQL response did not include repository.pullRequest for ${connection}`,
+    );
+  }
+  return pullRequest;
 }
 
 export function parseThreadPage(

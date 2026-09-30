@@ -1,0 +1,35 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "cross-compilers - Build macOS, iOS, and Windows apps on Linux",
+  description = "Linux container images that build native macOS, iOS, Mac Catalyst, and Windows software: Swift, C, C++, Objective-C, Rust, .NET, and WinUI, with no Mac or Windows machine in the loop.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <meta name="color-scheme" content="dark light" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+  </head>
+  <body class="bg-white text-stone-900 antialiased dark:bg-stone-950 dark:text-stone-100">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-sky-500 focus:px-3 focus:py-2 focus:text-sm focus:font-medium focus:text-white"
+    >
+      Skip to content
+    </a>
+    <slot />
+  </body>
+</html>
