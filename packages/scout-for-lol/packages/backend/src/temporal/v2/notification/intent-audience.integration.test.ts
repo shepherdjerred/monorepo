@@ -10,6 +10,7 @@ import {
 } from "@scout-for-lol/domain/notifications/intent.ts";
 import type { ScoutIntentAttemptRefV2 } from "@scout-for-lol/temporal/contracts-v2";
 import type * as InstalledGuildsModule from "#src/lib/discord/installed-guilds.ts";
+import type * as ChannelModule from "#src/league/discord/channel.ts";
 import { createTestDatabase } from "#src/testing/test-database.ts";
 import {
   testChannelId,
@@ -79,11 +80,10 @@ vi.mock("#src/discord/utils/channel.ts", () => ({
   fetchChannelForDelivery: stubs.fetchChannelForDelivery,
 }));
 vi.mock("#src/discord/client.ts", () => ({ client: {} }));
-vi.mock("#src/league/discord/channel.ts", async () => {
-  const { channelModuleWithSend } =
-    await import("#src/temporal/v2/notification-delivery.test-fixtures.ts");
-  return await channelModuleWithSend(stubs.send);
-});
+vi.mock("#src/league/discord/channel.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof ChannelModule>()),
+  send: stubs.send,
+}));
 
 // Everything that can reach the production client is imported only after
 // DATABASE_URL points at this suite's database.
