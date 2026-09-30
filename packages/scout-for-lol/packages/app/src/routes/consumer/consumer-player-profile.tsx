@@ -99,10 +99,11 @@ function masteryPoints(points: number): string {
 }
 
 export function ConsumerPlayerProfile() {
+  const { playerId } = useConsumerPlayerParams();
   const { filters, setFilters } = usePlayerProfileUrlState();
   return (
     <ConsumerPlayerProfileContent
-      key={filterKey(filters)}
+      key={`${playerId.toString()}:${filterKey(filters)}`}
       filters={filters}
       onFiltersChange={(nextFilters, kind) => {
         setFilters(nextFilters);

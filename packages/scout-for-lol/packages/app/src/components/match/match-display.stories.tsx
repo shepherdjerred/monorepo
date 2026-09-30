@@ -7,6 +7,7 @@ import {
 } from "./match-scoreboard.tsx";
 import { MatchObjectivesSummary } from "./match-objectives-summary.tsx";
 import { ChampionIcon } from "./champion-icon.tsx";
+import { MatchLoadoutDisplay } from "./match-loadout.tsx";
 import {
   ChampionComparisonTable,
   type ChampionComparisonRow,
@@ -397,6 +398,24 @@ export const RolePaired: Story = {
     <RolePairedMatchScoreboard
       teams={ROLE_PAIRED_TEAMS}
       matchups={ROLE_MATCHUPS}
+    />
+  ),
+};
+
+export const HistoricalRuneLoadout: Story = {
+  args: { teams: [] },
+  render: () => (
+    <MatchLoadoutDisplay
+      loadout={{
+        ...SAMPLE_LOADOUT,
+        runes: {
+          primaryStyleId: 8000,
+          primaryRuneIds: [8005, 8009, 9103, 8014],
+          secondaryStyleId: 8100,
+          secondaryRuneIds: [8138, 8135],
+          statShardIds: { offense: 5005, flex: 5008, defense: 5002 },
+        },
+      }}
     />
   ),
 };

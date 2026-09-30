@@ -3,7 +3,10 @@ import { z } from "zod";
 import { first } from "remeda";
 import { $ } from "bun";
 import { SummonerSchema } from "#src/data-dragon/summoner.ts";
-import { RuneTreeSchema } from "#src/data-dragon/runes.ts";
+import {
+  HistoricalRuneAssetSchema,
+  RuneTreeSchema,
+} from "#src/data-dragon/runes.ts";
 import {
   ItemSchema,
   ChampionListSchema,
@@ -57,6 +60,9 @@ const CLASSIC_BACKGROUND_PATH = `${IMG_DIR}/background/classic-jade.png`;
 // the current catalog. Keep their original names and icons in the pinned cache.
 const HISTORICAL_ARENA_AUGMENT_VERSION = "15.23";
 const HISTORICAL_ARENA_AUGMENT_IDS = [71, 250] as const;
+// Match-V5 can retain runes after Riot removes them from the current patch.
+const HISTORICAL_RUNE_VERSION = "14.24.1";
+const HISTORICAL_RUNE_IDS = [8138] as const;
 
 /**
  * CommunityDragon *centered* splash art (≈1280×720) keyed by numeric champion
@@ -1258,6 +1264,51 @@ async function downloadRuneImages(runes: RuneTreeData): Promise<number> {
   return runeImages.length;
 }
 
+async function downloadHistoricalRuneAssets(): Promise<number> {
+  const archive = await downloadAsset(
+    HISTORICAL_RUNE_VERSION,
+    "runesReforged.json",
+    RuneTreeSchema,
+  );
+  const archivedRunes = archive.flatMap((tree) =>
+    tree.slots.flatMap((slot, slotIndex) =>
+      slot.runes.map((rune) => ({
+        ...rune,
+        treeId: tree.id,
+        treeName: tree.name,
+        slot: slotIndex,
+      })),
+    ),
+  );
+  const runes = HISTORICAL_RUNE_IDS.map((id) => {
+    const rune = archivedRunes.find((candidate) => candidate.id === id);
+    if (rune === undefined) {
+      throw new Error(`Historical rune ${id.toString()} is missing`);
+    }
+    return rune;
+  });
+  const cache = HistoricalRuneAssetSchema.parse({
+    sourceVersion: HISTORICAL_RUNE_VERSION,
+    runes,
+  });
+  await Bun.write(
+    `${ASSETS_DIR}/historical-runes.json`,
+    JSON.stringify(cache, null, 2),
+  );
+  for (const rune of cache.runes) {
+    const filename = rune.icon.split("/").at(-1);
+    if (filename === undefined) {
+      throw new Error(`Historical rune ${rune.id.toString()} has no icon`);
+    }
+    await downloadImage(
+      `${BASE_URL}/cdn/img/${rune.icon}`,
+      `${IMG_DIR}/rune/${filename}`,
+    );
+  }
+  console.log(`✓ Cached ${String(cache.runes.length)} historical runes`);
+  return cache.runes.length;
+}
+
 const LANE_ICON_MAP: Record<string, string> = {
   top: "icon-position-top.png",
   jungle: "icon-position-jungle.png",
@@ -1681,6 +1732,7 @@ async function main(): Promise<void> {
     // assets/champion/{Key}.json files.
     await generateAbilityFacts(cdVersion, championNames);
     const runeImagesCount = await downloadRuneImages(runes);
+    const historicalRuneImagesCount = await downloadHistoricalRuneAssets();
     const augmentImagesCount = await downloadAugmentImages(
       communityDragonUrl,
       arenaAugmentsUrl,
@@ -1722,6 +1774,7 @@ async function main(): Promise<void> {
       itemImagesCount +
       championImagesCount +
       runeImagesCount +
+      historicalRuneImagesCount +
       augmentImagesCount +
       laneImagesCount +
       loadingImagesCount +
@@ -1745,6 +1798,9 @@ async function main(): Promise<void> {
       `  - ${String(classicImagesCount)} League Classic champion asset sets`,
     );
     console.log(`  - ${String(runeImagesCount)} rune images`);
+    console.log(
+      `  - ${String(historicalRuneImagesCount)} historical rune images`,
+    );
     console.log(`  - ${String(augmentImagesCount)} augment images`);
     console.log(`  - ${String(laneImagesCount)} lane position icons`);
     console.log(
