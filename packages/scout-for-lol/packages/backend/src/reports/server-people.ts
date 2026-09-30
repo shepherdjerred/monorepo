@@ -65,12 +65,14 @@ export function mergeServerPeople(
 export async function loadServerPeople(
   accountsParquet: string | undefined,
   serverIds: readonly DiscordGuildId[],
+  abortSignal?: AbortSignal,
 ): Promise<ServerPerson[]> {
   if (accountsParquet === undefined || serverIds.length === 0) return [];
   const accounts = await runQuery(
     "SELECT DISTINCT server_id, puuid, player_id, player_alias, discord_id FROM read_parquet(?) WHERE server_id IN (SELECT unnest(?))",
     [listParam([accountsParquet]), listParam([...serverIds])],
     AccountRowSchema,
+    abortSignal,
   );
   return mergeServerPeople(accounts);
 }

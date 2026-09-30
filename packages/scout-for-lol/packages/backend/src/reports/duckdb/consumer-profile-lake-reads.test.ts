@@ -11,6 +11,7 @@ import type {
 import {
   fetchChampionComparisons,
   fetchFullMatch,
+  fetchMatchSupport,
   fetchTimelineCoverage,
   fetchTimelineEventPage,
   fetchTimelineFramePage,
@@ -247,6 +248,19 @@ describe("consumer profile lake reads", () => {
   test("returns the complete stored scoreboard", async () => {
     const rows = await fetchFullMatch({ matchId, lakeDir });
     expect(rows.map((row) => row.champion_name)).toEqual(["Ashe", "Garen"]);
+  });
+
+  test("aborts the post-query match support read when its caller stops", async () => {
+    const controller = new AbortController();
+    controller.abort();
+
+    await expect(
+      fetchMatchSupport({
+        matchIds: [matchId],
+        lakeDir,
+        abortSignal: controller.signal,
+      }),
+    ).rejects.toMatchObject({ name: "AbortError" });
   });
 
   test("keeps chronological event and frame pages, filters, and unknown event fields", async () => {

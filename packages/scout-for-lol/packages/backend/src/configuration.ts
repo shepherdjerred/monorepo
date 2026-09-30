@@ -278,11 +278,19 @@ function computeConfiguration() {
       .asString(),
     reportDuckDbThreads: env
       .get("REPORT_DUCKDB_THREADS")
-      .default("2")
+      .default("4")
       .asIntPositive(),
     reportDuckDbMemoryLimit: env
       .get("REPORT_DUCKDB_MEMORY_LIMIT")
-      .default("512MB")
+      .default("3GB")
+      .asString(),
+    // Where a query that outgrows memory_limit spills, and how much it may.
+    // Unset keeps DuckDB's in-memory default (no spilling); the pods that
+    // serve reports and Explore set it to a scratch volume.
+    reportDuckDbTempDir: getOptionalEnvVar("REPORT_DUCKDB_TEMP_DIR"),
+    reportDuckDbMaxTempSize: env
+      .get("REPORT_DUCKDB_MAX_TEMP_SIZE")
+      .default("7GiB")
       .asString(),
     // Scout's review and report models are OpenAI, so "inference is
     // configured" means the runtime can see OpenAI credentials. Asked of the
@@ -463,6 +471,12 @@ const configuration: Configuration = {
   },
   get inferenceConfigured() {
     return getConfiguration().inferenceConfigured;
+  },
+  get reportDuckDbTempDir() {
+    return getConfiguration().reportDuckDbTempDir;
+  },
+  get reportDuckDbMaxTempSize() {
+    return getConfiguration().reportDuckDbMaxTempSize;
   },
   get reportAiModel() {
     return getConfiguration().reportAiModel;

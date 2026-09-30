@@ -65,7 +65,7 @@ const CreationTargetSchema = z.strictObject({
   competition: CreationTargetEntitySchema,
   /**
    * Inlined only when exactly one guild is eligible. The binding budget is
-   * `EXPLORE_MAX_STEPS` (14), not the tool-call ceiling, so saving the
+   * `EXPLORE_MAX_STEPS`, not the tool-call ceiling, so saving the
    * `list_guild_channels` round trip in the common case is worth the bytes.
    */
   channels: z

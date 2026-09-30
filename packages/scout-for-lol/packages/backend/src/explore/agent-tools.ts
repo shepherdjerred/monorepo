@@ -4,7 +4,7 @@ import {
   type DiscordAccountId,
   EXPLORE_MAX_PREVIEW_CALLS,
   EXPLORE_MAX_TOOL_CALLS,
-  ReportAiModelPreviewSummarySchema,
+  EXPLORE_MODEL_PREVIEW_MAX_ROWS,
   ReportQueryTextSchema,
   type DiscordChannelId,
   type ExploreMessage,
@@ -41,7 +41,10 @@ import {
   matchIdsInPreview,
 } from "#src/explore-match/match-view.ts";
 import { scoutExploreToolCallsTotal } from "#src/metrics/explore.ts";
-import { reportQueryPreviewSummary } from "#src/reports/ai/report-query-preview-summary.ts";
+import {
+  reportQueryModelPreviewSummary,
+  reportQueryPreviewSummary,
+} from "#src/reports/ai/report-query-preview-summary.ts";
 import {
   createFormatTool,
   createValidateTool,
@@ -196,6 +199,7 @@ export function createExploreTools(options: ExploreToolsOptions) {
         const found = await resolvePlayerIdentities({
           query: inputData.query,
           guildIds: turn.guildIds,
+          abortSignal: params.abortSignal,
         });
         return {
           candidates: found.map((identity) => ({
@@ -259,6 +263,8 @@ export function createExploreTools(options: ExploreToolsOptions) {
           scope: turn.scope,
           askerGuildIds: turn.guildIds,
           queryText: validation.formattedQueryText,
+          rowLimitCeiling: EXPLORE_MODEL_PREVIEW_MAX_ROWS,
+          abortSignal: params.abortSignal,
           onPlan: (plan) => {
             source = plan.source;
             planFacts.emptyReason = emptyResultReason(plan);
@@ -283,13 +289,16 @@ export function createExploreTools(options: ExploreToolsOptions) {
           };
         }
         const preview = reportQueryPreviewSummary(result);
-        const modelPreview = ReportAiModelPreviewSummarySchema.parse(preview);
+        const modelPreview = reportQueryModelPreviewSummary(result);
         state.lastPreview = preview;
         state.lastVisualization = result.visualization ?? null;
         state.lastQueryMatchIds = matchIdsInPreview(preview, source);
         const cardSupportRows =
           params.surface === "web" || params.surface === "voice"
-            ? await fetchMatchSupport([...state.lastQueryMatchIds])
+            ? await fetchMatchSupport({
+                matchIds: [...state.lastQueryMatchIds],
+                abortSignal: params.abortSignal,
+              })
             : [];
         state.lastMatchIds = new Set(
           cardSupportRows

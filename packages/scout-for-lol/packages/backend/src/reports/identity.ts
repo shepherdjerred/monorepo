@@ -63,11 +63,15 @@ export async function runQuery<T>(
   sql: string,
   params: BoundParam[],
   schema: z.ZodType<T>,
+  abortSignal?: AbortSignal,
 ): Promise<T[]> {
-  return await withDuckDBConnection(async (session) => {
-    const rows = await session.run(sql, bindParams(session, params));
-    return rows.map((row) => schema.parse(row));
-  });
+  return await withDuckDBConnection(
+    async (session) => {
+      const rows = await session.run(sql, bindParams(session, params));
+      return rows.map((row) => schema.parse(row));
+    },
+    abortSignal === undefined ? {} : { abortSignal },
+  );
 }
 
 /**
@@ -131,10 +135,14 @@ function nameComparison(
 async function lookupTrackedAccounts(
   accountsParquet: string | undefined,
   guildIds: string[],
-  needle: string,
-  match: PlayerMatchMode,
+  options: {
+    needle: string;
+    match: PlayerMatchMode;
+    abortSignal?: AbortSignal | undefined;
+  },
 ): Promise<z.infer<typeof AccountRowSchema>[]> {
   if (accountsParquet === undefined || guildIds.length === 0) return [];
+  const { needle, match, abortSignal } = options;
   const playerAlias = nameComparison("lower(player_alias)", needle, match);
   const accountAlias = nameComparison("lower(account_alias)", needle, match);
   return await runQuery(
@@ -162,6 +170,7 @@ async function lookupTrackedAccounts(
       scalarParam(accountAlias.value),
     ],
     AccountRowSchema,
+    abortSignal,
   );
 }
 
@@ -176,6 +185,7 @@ async function lookupAccountsByPuuids(
   accountsParquet: string | undefined,
   guildIds: string[],
   puuids: string[],
+  abortSignal?: AbortSignal,
 ): Promise<z.infer<typeof AccountRowSchema>[]> {
   if (
     accountsParquet === undefined ||
@@ -202,6 +212,7 @@ async function lookupAccountsByPuuids(
              AND discord_id IN (SELECT discord_id FROM seed WHERE discord_id IS NOT NULL))`,
     [listParam([accountsParquet]), listParam(guildIds), listParam(puuids)],
     AccountRowSchema,
+    abortSignal,
   );
 }
 
@@ -209,6 +220,7 @@ async function lookupAccountsByPuuids(
 async function riotIdHistory(
   source: SqlFragment,
   puuids: string[],
+  abortSignal?: AbortSignal,
 ): Promise<z.infer<typeof IdentityRowSchema>[]> {
   return await runQuery(
     `SELECT puuid,
@@ -222,6 +234,7 @@ async function riotIdHistory(
       ORDER BY max(game_creation_at) DESC`,
     [...source.params, listParam(puuids)],
     IdentityRowSchema,
+    abortSignal,
   );
 }
 
@@ -230,6 +243,7 @@ async function lookupByRiotId(
   source: SqlFragment,
   needle: string,
   match: PlayerMatchMode,
+  abortSignal?: AbortSignal,
 ): Promise<string[]> {
   const full = nameComparison(
     "lower(concat_ws('#', riot_id_game_name, riot_id_tagline))",
@@ -243,6 +257,7 @@ async function lookupByRiotId(
       WHERE ${full.sql} OR ${gameName.sql}`,
     [...source.params, scalarParam(full.value), scalarParam(gameName.value)],
     z.object({ puuid: z.string() }),
+    abortSignal,
   );
   return rows.map((row) => row.puuid);
 }
@@ -328,6 +343,8 @@ export async function resolvePlayerIdentities(input: {
   /** The asker's Discord servers. Empty means Riot-ID lookup only. */
   guildIds: string[];
   lakeDir?: string | undefined;
+  /** Stops each account and match-history scan when the Explore turn stops. */
+  abortSignal?: AbortSignal | undefined;
   /**
    * `exact` is what `player('…')` needs: a reference either names one person
    * or it is ambiguous, and a prefix would silently widen that. `prefix` is
@@ -352,8 +369,7 @@ export async function resolvePlayerIdentities(input: {
   const accounts = await lookupTrackedAccounts(
     files.accountsParquet,
     input.guildIds,
-    needle,
-    match,
+    { needle, match, abortSignal: input.abortSignal },
   );
   // A PUUID joins duplicate tracking rows across servers; Discord identity
   // joins separate accounts across servers; and (server, player) joins the
@@ -367,7 +383,12 @@ export async function resolvePlayerIdentities(input: {
   }
 
   const claimed = new Set(candidates.flatMap((candidate) => candidate.puuids));
-  const riotIdMatches = await lookupByRiotId(source, needle, match);
+  const riotIdMatches = await lookupByRiotId(
+    source,
+    needle,
+    match,
+    input.abortSignal,
+  );
   // Expand every tracked Riot-ID match in one accounts scan. The old loop did
   // one accounts query and one complete match-history scan per candidate, so a
   // common bare name made latency grow with the number of matching accounts.
@@ -375,6 +396,7 @@ export async function resolvePlayerIdentities(input: {
     files.accountsParquet,
     input.guildIds,
     riotIdMatches.filter((puuid) => !claimed.has(puuid)),
+    input.abortSignal,
   );
   const ownerByPuuid = new Map<string, z.infer<typeof AccountRowSchema>[]>();
   for (const group of groupAccountsByPerson(expandedAccounts)) {
@@ -407,9 +429,11 @@ export async function resolvePlayerIdentities(input: {
   // Riot game name is.
   if (candidates.length === 0) return [];
   const history = historyByPuuid(
-    await riotIdHistory(source, [
-      ...new Set(candidates.flatMap((candidate) => candidate.puuids)),
-    ]),
+    await riotIdHistory(
+      source,
+      [...new Set(candidates.flatMap((candidate) => candidate.puuids))],
+      input.abortSignal,
+    ),
   );
   return candidates.flatMap((candidate) => {
     const identity = summarise(
@@ -437,6 +461,7 @@ export async function resolvePlayerRefPuuids(input: {
   /** False when the caller has no asker, e.g. a scheduled report. */
   aliasScopeAvailable?: boolean;
   lakeDir?: string | undefined;
+  abortSignal?: AbortSignal | undefined;
 }): Promise<Map<number, string[]>> {
   const byIndex = new Map<number, string[]>();
   for (const [index, ref] of input.playerRefs.entries()) {
@@ -444,6 +469,7 @@ export async function resolvePlayerRefPuuids(input: {
       query: ref,
       guildIds: input.guildIds,
       lakeDir: input.lakeDir,
+      abortSignal: input.abortSignal,
     });
     if (identities.length === 0) {
       throw new Error(
